@@ -56,16 +56,18 @@ fn root() {
     if *first_run {
         first_run_key.set(false);
         panel(|state_node| {
-            text("Panel 1", state_node)
-        }, state_node.clone());
+            text("Panel 1", &state_node);
+            text("A", &state_node);
+        }, &state_node);
     }
     panel(|state_node| {
-        text("Panel 2", state_node);
-    }, state_node);
+        text("Panel 2", &state_node);
+        text("B", &state_node);
+    }, &state_node);
 }
 
 #[topo::nested]
-fn panel(children: impl FnOnce(State<Node>), state_parent_node: State<Node>) {
+fn panel(children: impl FnOnce(State<Node>), state_parent_node: &State<Node>) {
     log!("panel");
 
     let state_node = state(|| {
@@ -78,7 +80,7 @@ fn panel(children: impl FnOnce(State<Node>), state_parent_node: State<Node>) {
 }
 
 #[topo::nested]
-fn text(text: &str, state_parent_node: State<Node>) {  
+fn text(text: &str, state_parent_node: &State<Node>) {  
     log!("text");
 
     let state_node = state(|| {
