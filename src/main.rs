@@ -39,6 +39,7 @@ fn document() -> web_sys::Document {
 fn main() {
     log!("main");
     console_error_panic_hook::set_once();
+
     runtime_run_once();
     runtime_run_once();
 }
@@ -47,66 +48,51 @@ fn main() {
 fn root() {
     log!("root");
 
-    let mut children = Vec::new();
+    let state_node = state(|| Node {
+        node_ws: web_sys::Node::from(document().get_element_by_id(ELEMENT_ID).expect("root element"))
+    });
 
     let (first_run, first_run_key) = state(|| true);
     if *first_run {
         first_run_key.set(false);
-        children.push(
-            panel(vec![
-                text("Panel 1")
-            ])
-        );
+        panel(|state_node| {
+            text("Panel 1", state_node)
+        }, state_node.clone());
     }
-    children.push(
-        panel(vec![
-            text("Panel 2")
-        ])
-    );
+    panel(|state_node| {
+        text("Panel 2", state_node);
+    }, state_node);
+}
 
-    let state_node = state(|| Node {
-        node_ws: web_sys::Node::from(document().get_element_by_id(ELEMENT_ID).expect("root element"))
+#[topo::nested]
+fn panel(children: impl FnOnce(State<Node>), state_parent_node: State<Node>) {
+    log!("panel");
+
+    let state_node = state(|| {
+        let el_ws = document().create_element("div").expect("element");
+        let node_ws = web_sys::Node::from(el_ws);
+        (*state_parent_node.0).node_ws.append_child(&node_ws);
+        Node { node_ws: web_sys::Node::from(node_ws) }
     });
-    for child in children {
-        child(state_node.clone());
-    }
+    children(state_node);
 }
 
 #[topo::nested]
-fn panel(children: Vec<Box<dyn FnOnce(State<Node>)>>) -> Box<dyn FnOnce(State<Node>)> {
-    Box::new(move |(parent_node, _): (Commit<Node>, _)| {
-        log!("panel");
+fn text(text: &str, state_parent_node: State<Node>) {  
+    log!("text");
 
-        let state_node = state(|| {
-            let el_ws = document().create_element("div").expect("element");
-            let node_ws = web_sys::Node::from(el_ws);
-            (*parent_node).node_ws.append_child(&node_ws);
-            Node { node_ws: web_sys::Node::from(node_ws) }
-        });
-        for child in children {
-            child(state_node.clone());
-        }
-    }) 
-}
+    let state_node = state(|| {
+        let el_ws = document().create_element("span").expect("element");
+        let node_ws = web_sys::Node::from(el_ws);
 
-#[topo::nested]
-fn text(text: &'static str) -> Box<dyn FnOnce(State<Node>)> {   
-    Box::new(move |(parent_node, _): (Commit<Node>, _)| {
-        log!("text");
+        let text_node_ws = document().create_text_node(&text).unchecked_into::<web_sys::Node>();
 
-        let state_node = state(|| {
-            let el_ws = document().create_element("span").expect("element");
-            let node_ws = web_sys::Node::from(el_ws);
+        node_ws.append_child(&text_node_ws);
 
-            let text_node_ws = document().create_text_node(&text).unchecked_into::<web_sys::Node>();
-
-            node_ws.append_child(&text_node_ws);
-
-            (*parent_node).node_ws.append_child(&node_ws);
-            Node { node_ws }
-        });
-        log!("text: {}", text);
-    }) 
+        (*state_parent_node.0).node_ws.append_child(&node_ws);
+        Node { node_ws }
+    });
+    log!("text: {}", text);
 }
 
 struct Node {
