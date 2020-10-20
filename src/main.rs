@@ -90,19 +90,39 @@ fn root() {
 
     row(cx.inc_index().clone(), |mut cx| {
         column(cx.inc_index().clone(), |mut cx| {
-            el( cx.inc_index().clone(), |mut cx| {
-                text(cx.inc_index().clone(), "A1"); 
+            row(cx.inc_index().clone(), |mut cx| {
+                el( cx.inc_index().clone(), |mut cx| {
+                    text(cx.inc_index().clone(), "A1"); 
+                });
+                el( cx.inc_index().clone(), |mut cx| {
+                    text(cx.inc_index().clone(), "X"); 
+                });
             });
-            el(cx.inc_index().clone(), |mut cx| { 
-                text(cx.inc_index().clone(), "A2");
+            row(cx.inc_index().clone(), |mut cx| {
+                el( cx.inc_index().clone(), |mut cx| {
+                    text(cx.inc_index().clone(), "A2"); 
+                });
+                el( cx.inc_index().clone(), |mut cx| {
+                    text(cx.inc_index().clone(), "X"); 
+                });
             });
         });
         column(cx.inc_index().clone(), |mut cx| {
-            el(cx.inc_index().clone(), |mut cx| {
-                text(cx.inc_index().clone(), "B1");
+            row(cx.inc_index().clone(), |mut cx| {
+                el( cx.inc_index().clone(), |mut cx| {
+                    text(cx.inc_index().clone(), "B1"); 
+                });
+                el( cx.inc_index().clone(), |mut cx| {
+                    text(cx.inc_index().clone(), "X"); 
+                });
             });
-            el(cx.inc_index().clone(), |mut cx| { 
-                text(cx.inc_index().clone(), "B2");
+            row(cx.inc_index().clone(), |mut cx| {
+                el( cx.inc_index().clone(), |mut cx| {
+                    text(cx.inc_index().clone(), "B2"); 
+                });
+                el( cx.inc_index().clone(), |mut cx| {
+                    text(cx.inc_index().clone(), "X"); 
+                });
             });
         });
     });
@@ -127,9 +147,10 @@ fn row(mut cx: Cx, children: impl FnOnce(Cx)) {
 
     let state_node = state(|| {
         let el_ws = document().create_element("div").expect("element");
+        el_ws.set_attribute("class", "row").expect("set class attribute");
         let node_ws = web_sys::Node::from(el_ws);
         let parent_node_ws = &(*cx.state_node.0).node_ws;
-        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("append node");
+        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("insert node");
         Node { node_ws }
     });
     cx.state_node = state_node;
@@ -143,9 +164,10 @@ fn column(mut cx: Cx, children: impl FnOnce(Cx)) {
 
     let state_node = state(|| {
         let el_ws = document().create_element("div").expect("element");
+        el_ws.set_attribute("class", "column").expect("set class attribute");
         let node_ws = web_sys::Node::from(el_ws);
         let parent_node_ws = &(*cx.state_node.0).node_ws;
-        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("append node");
+        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("insert node");
         Node { node_ws }
     });
     cx.state_node = state_node;
@@ -159,9 +181,10 @@ fn el(mut cx: Cx, children: impl FnOnce(Cx)) {
 
     let state_node = state(|| {
         let el_ws = document().create_element("div").expect("element");
+        el_ws.set_attribute("class", "el").expect("set class attribute");
         let node_ws = web_sys::Node::from(el_ws);
         let parent_node_ws = &(*cx.state_node.0).node_ws;
-        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("append node");
+        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("insert node");
         Node { node_ws }
     });
     cx.state_node = state_node;
@@ -176,7 +199,7 @@ fn text(mut cx: Cx, text: &str) {
     let state_node = state(|| {
         let node_ws = document().create_text_node(&text).unchecked_into::<web_sys::Node>();
         let parent_node_ws = &(*cx.state_node.0).node_ws;
-        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("append node");
+        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("insert node");
         Node { node_ws }
     });
     cx.state_node = state_node;
