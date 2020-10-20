@@ -18,7 +18,20 @@ type State<T> = (Commit<T>, Key<T>);
 
 #[derive(Clone)]
 struct Cx {
+    index: u32,
     state_node: State<Node>,
+}
+
+impl Cx {
+    fn inc_index(&mut self) -> &mut Self {
+        self.index += 1;
+        self
+    } 
+
+    fn reset_index(&mut self) -> &mut Self {
+        self.index = 0;
+        self
+    } 
 }
 
 struct Node {
@@ -27,8 +40,9 @@ struct Node {
 
 impl Drop for Node {
     fn drop(&mut self) {
-        let parent = self.node_ws.parent_node().expect("parent Node");
-        parent.remove_child(&self.node_ws);
+        if let Some(parent) = self.node_ws.parent_node() {
+            parent.remove_child(&self.node_ws);
+        }
         log!("Node dropped");
     }
 }
@@ -68,23 +82,27 @@ fn root() {
     let state_node = state(|| Node {
         node_ws: web_sys::Node::from(document().get_element_by_id(ELEMENT_ID).expect("root element"))
     });
-    let cx = Cx { state_node };
 
-    row(cx.clone(), |cx| {
-        column(cx.clone(), |cx| {
-            el( cx.clone(), |cx| {
-                text(cx.clone(), "A1"); 
+    let mut cx = Cx { 
+        index: 0,
+        state_node 
+    };
+
+    row(cx.inc_index().clone(), |mut cx| {
+        column(cx.inc_index().clone(), |mut cx| {
+            el( cx.inc_index().clone(), |mut cx| {
+                text(cx.inc_index().clone(), "A1"); 
             });
-            el(cx.clone(), |cx| { 
-                text(cx.clone(), "A2");
+            el(cx.inc_index().clone(), |mut cx| { 
+                text(cx.inc_index().clone(), "A2");
             });
         });
-        column(cx.clone(), |cx| {
-            el(cx.clone(), |cx| {
-                text(cx.clone(), "B1");
+        column(cx.inc_index().clone(), |mut cx| {
+            el(cx.inc_index().clone(), |mut cx| {
+                text(cx.inc_index().clone(), "B1");
             });
-            el(cx.clone(), |cx| { 
-                text(cx.clone(), "B2");
+            el(cx.inc_index().clone(), |mut cx| { 
+                text(cx.inc_index().clone(), "B2");
             });
         });
     });
@@ -110,10 +128,12 @@ fn row(mut cx: Cx, children: impl FnOnce(Cx)) {
     let state_node = state(|| {
         let el_ws = document().create_element("div").expect("element");
         let node_ws = web_sys::Node::from(el_ws);
-        (*cx.state_node.0).node_ws.append_child(&node_ws).expect("append element node");
+        let parent_node_ws = &(*cx.state_node.0).node_ws;
+        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("append node");
         Node { node_ws }
     });
     cx.state_node = state_node;
+    cx.reset_index();
     children(cx);
 }
 
@@ -124,10 +144,12 @@ fn column(mut cx: Cx, children: impl FnOnce(Cx)) {
     let state_node = state(|| {
         let el_ws = document().create_element("div").expect("element");
         let node_ws = web_sys::Node::from(el_ws);
-        (*cx.state_node.0).node_ws.append_child(&node_ws).expect("append element node");
+        let parent_node_ws = &(*cx.state_node.0).node_ws;
+        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("append node");
         Node { node_ws }
     });
     cx.state_node = state_node;
+    cx.reset_index();
     children(cx);
 }
 
@@ -138,10 +160,12 @@ fn el(mut cx: Cx, children: impl FnOnce(Cx)) {
     let state_node = state(|| {
         let el_ws = document().create_element("div").expect("element");
         let node_ws = web_sys::Node::from(el_ws);
-        (*cx.state_node.0).node_ws.append_child(&node_ws).expect("append element node");
+        let parent_node_ws = &(*cx.state_node.0).node_ws;
+        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("append node");
         Node { node_ws }
     });
     cx.state_node = state_node;
+    cx.reset_index();
     children(cx);
 }
 
@@ -151,7 +175,8 @@ fn text(mut cx: Cx, text: &str) {
 
     let state_node = state(|| {
         let node_ws = document().create_text_node(&text).unchecked_into::<web_sys::Node>();
-        (*cx.state_node.0).node_ws.append_child(&node_ws).expect("append text node");
+        let parent_node_ws = &(*cx.state_node.0).node_ws;
+        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("append node");
         Node { node_ws }
     });
     cx.state_node = state_node;

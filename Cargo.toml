@@ -16,6 +16,7 @@ features = [
     "Document",
     "Element",
     "Node",
+    "NodeList",
     "Text",
     "Window",
 ]
