@@ -1,6 +1,12 @@
 use wasm_bindgen::{prelude::*, JsCast};
-use moxie::{runtime::Runtime, state, Commit, Key};
-use std::cell::RefCell;
+
+mod hooks_state_functions;
+mod state_access;
+mod store;
+mod unmount;
+
+use state_access::{StateAccess, CloneState};
+use hooks_state_functions::use_state;
 
 const ELEMENT_ID: &str = "app";
 
@@ -14,12 +20,14 @@ extern "C" {
     fn log(input: &str);
 }
 
-type State<T> = (Commit<T>, Key<T>);
+fn runtime_run_once() {
+    root();
+}
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 struct Cx {
     index: u32,
-    state_node: State<Node>,
+    state_node: StateAccess<Node>,
 }
 
 impl Cx {
@@ -34,6 +42,7 @@ impl Cx {
     } 
 }
 
+#[derive(Clone)]
 struct Node {
     node_ws: web_sys::Node,
 }
@@ -47,15 +56,6 @@ impl Drop for Node {
     }
 }
 
-thread_local! {
-    static RUNTIME: RefCell<Runtime> = RefCell::new(Runtime::new());
-}
-
-fn runtime_run_once() {
-    RUNTIME.with(|runtime| {
-        runtime.borrow_mut().run_once(root);
-    });
-}
 
 fn window() -> web_sys::Window {
     web_sys::window().expect("window")
@@ -71,15 +71,23 @@ fn main() {
     log!("main");
     console_error_panic_hook::set_once();
 
+    // for revision in 0..2 {
+    //     log!("revision: {}", revision);
+    //     root();
+    // }
+
+    log!("revision: 0");
     runtime_run_once();
-    // runtime_run_once();
+
+    log!("revision: 1");
+    runtime_run_once();
 }
 
 #[topo::nested]
 fn root() {
     log!("root");
 
-    let state_node = state(|| Node {
+    let state_node = use_state(|| Node {
         node_ws: web_sys::Node::from(document().get_element_by_id(ELEMENT_ID).expect("root element"))
     });
 
@@ -94,7 +102,7 @@ fn root() {
                 el( cx.inc_index().clone(), |mut cx| {
                     text(cx.inc_index().clone(), "A1"); 
                 });
-                el( cx.inc_index().clone(), |mut cx| {
+                button( cx.inc_index().clone(), || log!("delete A1"), |mut cx| {
                     text(cx.inc_index().clone(), "X"); 
                 });
             });
@@ -102,7 +110,7 @@ fn root() {
                 el( cx.inc_index().clone(), |mut cx| {
                     text(cx.inc_index().clone(), "A2"); 
                 });
-                el( cx.inc_index().clone(), |mut cx| {
+                button( cx.inc_index().clone(), || log!("delete A2"), |mut cx| {
                     text(cx.inc_index().clone(), "X"); 
                 });
             });
@@ -112,7 +120,7 @@ fn root() {
                 el( cx.inc_index().clone(), |mut cx| {
                     text(cx.inc_index().clone(), "B1"); 
                 });
-                el( cx.inc_index().clone(), |mut cx| {
+                button( cx.inc_index().clone(), || log!("delete B1"), |mut cx| {
                     text(cx.inc_index().clone(), "X"); 
                 });
             });
@@ -120,89 +128,92 @@ fn root() {
                 el( cx.inc_index().clone(), |mut cx| {
                     text(cx.inc_index().clone(), "B2"); 
                 });
-                el( cx.inc_index().clone(), |mut cx| {
+                button( cx.inc_index().clone(), || log!("delete B2"), |mut cx| {
                     text(cx.inc_index().clone(), "X"); 
                 });
             });
         });
     });
-
-    // let (first_run, first_run_key) = state(|| true);
-    // if *first_run {
-    //     first_run_key.set(false);
-    //     panel(|cx| {
-    //         text("Panel 1", cx.clone());
-    //         text("A", cx.clone());
-    //     }, cx.clone());
-    // }
-    // panel(|cx| {
-    //     text("Panel 2", cx.clone());
-    //     text("B", cx.clone());
-    // }, cx.clone());
 }
 
 #[topo::nested]
-fn row(mut cx: Cx, children: impl FnOnce(Cx)) {
-    log!("row");
+fn button(cx: Cx, on_press: impl FnOnce(), children: impl FnOnce(Cx)) {
+    log!("button, index: {}", cx.index);
 
-    let state_node = state(|| {
-        let el_ws = document().create_element("div").expect("element");
-        el_ws.set_attribute("class", "row").expect("set class attribute");
-        let node_ws = web_sys::Node::from(el_ws);
-        let parent_node_ws = &(*cx.state_node.0).node_ws;
-        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("insert node");
-        Node { node_ws }
+    let first_run = use_state(|| true);
+    if first_run.get() {
+        first_run.set(false);
+
+        let state_node = el(cx, |cx| {
+            children(cx)
+        });
+        state_node.update(|node| {
+            let element = node.node_ws.unchecked_ref::<web_sys::Element>();
+            element.set_attribute("class", "button");
+            element.set_attribute("role", "button");
+            element.set_attribute("tabindex", "0");
+        });
+    }
+}
+
+#[topo::nested]
+fn row(cx: Cx, children: impl FnOnce(Cx)) {
+    log!("row, index: {}", cx.index);
+
+    let state_node = el(cx, |cx| {
+        children(cx)
     });
-    cx.state_node = state_node;
-    cx.reset_index();
-    children(cx);
-}
-
-#[topo::nested]
-fn column(mut cx: Cx, children: impl FnOnce(Cx)) {
-    log!("column");
-
-    let state_node = state(|| {
-        let el_ws = document().create_element("div").expect("element");
-        el_ws.set_attribute("class", "column").expect("set class attribute");
-        let node_ws = web_sys::Node::from(el_ws);
-        let parent_node_ws = &(*cx.state_node.0).node_ws;
-        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("insert node");
-        Node { node_ws }
+    state_node.update(|node| {
+        let element = node.node_ws.unchecked_ref::<web_sys::Element>();
+        element.set_attribute("class", "row");
     });
-    cx.state_node = state_node;
-    cx.reset_index();
-    children(cx);
 }
 
 #[topo::nested]
-fn el(mut cx: Cx, children: impl FnOnce(Cx)) {
-    log!("el");
+fn column(cx: Cx, children: impl FnOnce(Cx)) {
+    log!("column, index: {}", cx.index);
 
-    let state_node = state(|| {
+    let state_node = el(cx, |cx| {
+        children(cx)
+    });
+    state_node.update(|node| {
+        let element = node.node_ws.unchecked_ref::<web_sys::Element>();
+        element.set_attribute("class", "column");
+    });
+}
+
+#[topo::nested]
+fn el(mut cx: Cx, children: impl FnOnce(Cx)) -> StateAccess<Node> {
+    // log!("el, index: {}", cx.index);
+
+    let state_node = use_state(|| {
         let el_ws = document().create_element("div").expect("element");
         el_ws.set_attribute("class", "el").expect("set class attribute");
         let node_ws = web_sys::Node::from(el_ws);
-        let parent_node_ws = &(*cx.state_node.0).node_ws;
-        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("insert node");
+        cx.state_node.update(|node| {
+            let parent_node_ws = &node.node_ws;
+            parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("insert node");
+        });
         Node { node_ws }
     });
     cx.state_node = state_node;
     cx.reset_index();
     children(cx);
+    state_node
 }
 
 #[topo::nested]
 fn text(mut cx: Cx, text: &str) {  
-    log!("text");
+    log!("text, index: {}", cx.index);
 
-    let state_node = state(|| {
+    let state_node = use_state(|| {
         let node_ws = document().create_text_node(&text).unchecked_into::<web_sys::Node>();
-        let parent_node_ws = &(*cx.state_node.0).node_ws;
-        parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("insert node");
+        cx.state_node.update(|node| {
+            let parent_node_ws = &node.node_ws;
+            parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(cx.index + 1).as_ref()).expect("insert node");
+        });
         Node { node_ws }
     });
     cx.state_node = state_node;
-    // log!("text cx: {:#?}", cx);
 }
 
