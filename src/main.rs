@@ -1,12 +1,13 @@
 use wasm_bindgen::{prelude::*, JsCast};
 
-mod hooks_state_functions;
-mod state_access;
-mod store;
-mod unmount;
+// mod hooks_state_functions;
+mod state;
+// mod store;
+// mod unmount;
 
-use state_access::{StateAccess, CloneState};
-use hooks_state_functions::use_state;
+// use state_access::{StateAccess, CloneState};
+// use hooks_state_functions::use_state;
+use state::{State, CloneState, use_state};
 
 const ELEMENT_ID: &str = "app";
 
@@ -27,7 +28,7 @@ fn runtime_run_once() {
 #[derive(Copy, Clone)]
 struct Cx {
     index: u32,
-    state_node: StateAccess<Node>,
+    state_node: State<Node>,
 }
 
 impl Cx {
@@ -96,6 +97,8 @@ fn root() {
         state_node 
     };
 
+    let first_run = use_state(|| true);
+
     row(cx.inc_index().clone(), |mut cx| {
         column(cx.inc_index().clone(), |mut cx| {
             row(cx.inc_index().clone(), |mut cx| {
@@ -115,25 +118,33 @@ fn root() {
                 });
             });
         });
-        column(cx.inc_index().clone(), |mut cx| {
-            row(cx.inc_index().clone(), |mut cx| {
-                el( cx.inc_index().clone(), |mut cx| {
-                    text(cx.inc_index().clone(), "B1"); 
+        if first_run.get() {
+            log!("FIRST RUN!");
+
+            column(cx.inc_index().clone(), |mut cx| {
+                row(cx.inc_index().clone(), |mut cx| {
+                    el( cx.inc_index().clone(), |mut cx| {
+                        text(cx.inc_index().clone(), "B1"); 
+                    });
+                    button( cx.inc_index().clone(), || log!("delete B1"), |mut cx| {
+                        text(cx.inc_index().clone(), "X"); 
+                    });
                 });
-                button( cx.inc_index().clone(), || log!("delete B1"), |mut cx| {
-                    text(cx.inc_index().clone(), "X"); 
+                row(cx.inc_index().clone(), |mut cx| {
+                    el( cx.inc_index().clone(), |mut cx| {
+                        text(cx.inc_index().clone(), "B2"); 
+                    });
+                    button( cx.inc_index().clone(), || log!("delete B2"), |mut cx| {
+                        text(cx.inc_index().clone(), "X"); 
+                    });
                 });
             });
-            row(cx.inc_index().clone(), |mut cx| {
-                el( cx.inc_index().clone(), |mut cx| {
-                    text(cx.inc_index().clone(), "B2"); 
-                });
-                button( cx.inc_index().clone(), || log!("delete B2"), |mut cx| {
-                    text(cx.inc_index().clone(), "X"); 
-                });
-            });
-        });
+        }
     });
+
+    if first_run.get() {
+        first_run.set(false);
+    }
 }
 
 #[topo::nested]
@@ -183,7 +194,7 @@ fn column(cx: Cx, children: impl FnOnce(Cx)) {
 }
 
 #[topo::nested]
-fn el(mut cx: Cx, children: impl FnOnce(Cx)) -> StateAccess<Node> {
+fn el(mut cx: Cx, children: impl FnOnce(Cx)) -> State<Node> {
     // log!("el, index: {}", cx.index);
 
     let state_node = use_state(|| {
