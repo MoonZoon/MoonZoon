@@ -22,7 +22,7 @@ extern "C" {
 }
 
 fn runtime_run_once() {
-    root();
+    state::runtime_run_once(|| root());
 }
 
 #[derive(Copy, Clone)]
@@ -77,10 +77,13 @@ fn main() {
     //     root();
     // }
 
-    log!("revision: 0");
+    log!("-------- revision: 0 --------");
     runtime_run_once();
 
-    log!("revision: 1");
+    log!("-------- revision: 1 --------");
+    runtime_run_once();
+
+    log!("-------- revision: 3 --------");
     runtime_run_once();
 }
 
@@ -151,20 +154,15 @@ fn root() {
 fn button(cx: Cx, on_press: impl FnOnce(), children: impl FnOnce(Cx)) {
     log!("button, index: {}", cx.index);
 
-    let first_run = use_state(|| true);
-    if first_run.get() {
-        first_run.set(false);
-
-        let state_node = el(cx, |cx| {
-            children(cx)
-        });
-        state_node.update(|node| {
-            let element = node.node_ws.unchecked_ref::<web_sys::Element>();
-            element.set_attribute("class", "button");
-            element.set_attribute("role", "button");
-            element.set_attribute("tabindex", "0");
-        });
-    }
+    let state_node = el(cx, |cx| {
+        children(cx)
+    });
+    state_node.update(|node| {
+        let element = node.node_ws.unchecked_ref::<web_sys::Element>();
+        element.set_attribute("class", "button");
+        element.set_attribute("role", "button");
+        element.set_attribute("tabindex", "0");
+    });
 }
 
 #[topo::nested]

@@ -8,6 +8,15 @@ thread_local! {
     static STATES: RefCell<StateMap> = RefCell::new(StateMap::new());
 }
 
+pub fn runtime_run_once(root: impl FnOnce()) {
+    root();
+    STATES.with(|states| {
+        states
+            .borrow_mut()
+            .remove_unused_and_toggle_revision()
+    });
+}
+
 #[topo::nested]
 pub fn use_state<T: 'static, F: FnOnce() -> T>(creator: F) -> State<T> {
     use_state_current(creator)
@@ -17,60 +26,95 @@ pub fn use_state_current<T: 'static, F: FnOnce() -> T>(creator: F) -> State<T> {
     let id = topo::CallId::current();
 
     let id_exists = STATES.with(|states| {
-        states.borrow().contains_key(&id)
+        states.borrow().contains_id(&id)
     });
 
-    if !id_exists {
-        let value = creator();
-        STATES.with(|states| {
-            states.borrow_mut().insert(id, value);
-        });
-    }
+    let data = if !id_exists {
+        Some(creator())
+    } else {
+        None
+    };
+
+    STATES.with(|states| {
+        let mut state_map = states.borrow_mut();
+        if let Some(data) = data {
+            state_map.insert(id, data);
+        } else {
+            state_map.update_revision(&id);
+        }
+    });
 
     State::new(id)
 }
 
-struct StateMap(HashMap<topo::CallId, Box<dyn Any>>);
+struct StateMap {
+    states: HashMap<topo::CallId, StateMapValue>,
+    revision: bool,
+}
+
+struct StateMapValue {
+    data: Box<dyn Any>,
+    revision: bool,
+}
 
 impl StateMap {
     fn new() -> Self {
-        Self(HashMap::new())
+        Self {
+            states: HashMap::new(),
+            revision: false,
+        }
     }
 
-    fn get<T: 'static>(&self, key: &topo::CallId) -> Option<&T> {
+    fn data<T: 'static>(&self, id: &topo::CallId) -> Option<&T> {
         self
-            .0
-            .get(key)?
+            .states
+            .get(id)?
+            .data
             .downcast_ref::<Option<T>>()?
             .as_ref()
     }
 
-    fn get_mut<T: 'static>(&mut self, key: &topo::CallId) -> Option<&mut T> {
+    fn insert(&mut self, id: topo::CallId, data: impl Any) {
         self
-            .0
-            .get_mut(key)?
-            .downcast_mut::<Option<T>>()?
-            .as_mut()
+            .states
+            .insert(id, StateMapValue { 
+                data: Box::new(Some(data)), 
+                revision: self.revision 
+            });
     }
 
-    fn insert(&mut self, key: topo::CallId, value: impl Any) {
+    fn remove<T: 'static>(&mut self, id: &topo::CallId) -> Option<T> {
         self
-            .0
-            .insert(key, Box::new(Some(value)));
-    }
-
-    fn remove<T: 'static>(&mut self, key: &topo::CallId) -> Option<T> {
-        self
-            .0
-            .remove(&key)?
+            .states
+            .remove(&id)?
+            .data
             .downcast_mut::<Option<T>>()?
             .take()
     }
 
-    fn contains_key(&self, key: &topo::CallId) -> bool {
+    fn contains_id(&self, id: &topo::CallId) -> bool {
         self
-            .0
-            .contains_key(&key)
+            .states
+            .contains_key(&id)
+    }
+
+    fn update_revision(&mut self, id: &topo::CallId) {
+        let revision = self.revision;
+        self
+            .states
+            .get_mut(&id)
+            .map(|state_map_value| {
+                state_map_value.revision = revision
+            }); 
+    }
+
+    fn remove_unused_and_toggle_revision(&mut self) {
+        let current_revision = self.revision;
+        self
+            .states
+            .retain(|_, StateMapValue { revision, .. }| *revision == current_revision);
+
+        self.revision = !current_revision;
     }
 }
 
@@ -101,18 +145,18 @@ impl<T> State<T>
 where
     T: 'static,
 {
-    pub fn new(id: topo::CallId) -> State<T> {
+    fn new(id: topo::CallId) -> State<T> {
         State {
             id,
             phantom_data: PhantomData,
         }
     }
 
-    pub fn set(self, value: T) {
+    pub fn set(self, data: T) {
         STATES.with(|states| {
             states
                 .borrow_mut()
-                .insert(self.id, value)
+                .insert(self.id, data)
         });
     }
 
@@ -130,9 +174,9 @@ where
     // }
 
     pub fn update<F: FnOnce(&mut T) -> ()>(self, updater: F) {
-        let mut value = self.remove().expect("a state value with the given key");
-        updater(&mut value);
-        self.set(value);
+        let mut data = self.remove().expect("a state data with the given id");
+        updater(&mut data);
+        self.set(data);
     }
 
     // pub fn state_exists(self) -> bool {
@@ -142,9 +186,9 @@ where
     pub fn get_with<F: FnOnce(&T) -> U, U>(self, getter: F) -> U {
         STATES.with(|states| {
             let state_map = states.borrow();
-            let value = state_map.get(&self.id)
-                .expect("a state value with the given key");
-            getter(value)
+            let data = state_map.data(&self.id)
+                .expect("a state data with the given id");
+            getter(data)
         })
     }
 }
