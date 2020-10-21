@@ -149,7 +149,7 @@ fn root() {
                     ],
                 ],
         ]}),
-    ].build(cx.inc_index().clone());
+    ].build(cx);
 
     if first_run.get() {
         first_run.set(false);

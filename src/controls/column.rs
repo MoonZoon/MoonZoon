@@ -17,7 +17,7 @@ macro_rules! column {
 
 #[derive(Default)]
 pub struct Column<'a> {
-    children: Option<Children<'a>>,
+    children: Vec<Box<dyn Control + 'a>>,
 }
 
 impl<'a> Column<'a> {
@@ -32,10 +32,8 @@ impl<'a> Control for Column<'a> {
         log!("column, index: {}", cx.index);
 
         let state_node = raw_el(cx, |mut cx| {
-            if let Some(children) = self.children.take() {
-                for mut child in children.0 {
-                    child.build(cx.inc_index().clone());
-                }
+            for mut child in &mut self.children {
+                child.build(cx.inc_index().clone());
             }
         });
         state_node.update(|node| {
@@ -51,11 +49,7 @@ pub trait ApplyToColumn<'a> {
 
 impl<'a, T: Control + 'a> ApplyToColumn<'a> for T {
     fn apply_to_column(self, column: &mut Column<'a>) {
-        if let Some(children) = &mut column.children {
-            children.0.push(Box::new(self));
-        } else {
-            column.children = Some(Children(vec![Box::new(self)]));
-        }
+        column.children.push(Box::new(self));
     }
 } 
 
@@ -66,13 +60,3 @@ impl<'a, T: Control + 'a> ApplyToColumn<'a> for Option<T> {
         }
     }
 } 
-
-pub struct Children<'a>(Vec<Box<dyn Control + 'a>>);
-pub fn children<'a>(children: Vec<Box<dyn Control + 'a>>) -> Children<'a> {
-    Children(children)
-}
-impl<'a> ApplyToColumn<'a> for Children<'a> {
-    fn apply_to_column(self, column: &mut Column<'a>) {
-        column.children = Some(self);
-    }
-}
