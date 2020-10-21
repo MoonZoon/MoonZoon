@@ -153,7 +153,7 @@ fn root() {
 fn button(cx: Cx, on_press: impl FnOnce(), children: impl FnOnce(Cx)) {
     log!("button, index: {}", cx.index);
 
-    let state_node = el(cx, |cx| {
+    let state_node = raw_el(cx, |cx| {
         children(cx)
     });
     state_node.update(|node| {
@@ -168,7 +168,7 @@ fn button(cx: Cx, on_press: impl FnOnce(), children: impl FnOnce(Cx)) {
 fn row(cx: Cx, children: impl FnOnce(Cx)) {
     log!("row, index: {}", cx.index);
 
-    let state_node = el(cx, |cx| {
+    let state_node = raw_el(cx, |cx| {
         children(cx)
     });
     state_node.update(|node| {
@@ -181,7 +181,7 @@ fn row(cx: Cx, children: impl FnOnce(Cx)) {
 fn column(cx: Cx, children: impl FnOnce(Cx)) {
     log!("column, index: {}", cx.index);
 
-    let state_node = el(cx, |cx| {
+    let state_node = raw_el(cx, |cx| {
         children(cx)
     });
     state_node.update(|node| {
@@ -191,7 +191,27 @@ fn column(cx: Cx, children: impl FnOnce(Cx)) {
 }
 
 #[topo::nested]
-fn el(mut cx: Cx, children: impl FnOnce(Cx)) -> State<Node> {
+fn el(cx: Cx, children: impl FnOnce(Cx)) {
+    log!("el, index: {}", cx.index);
+
+    let state_node = raw_el(cx, |cx| {
+        children(cx)
+    });
+    state_node.update(|node| {
+        let element = node.node_ws.unchecked_ref::<web_sys::Element>();
+        element.set_attribute("class", "element");
+    });
+}
+
+#[topo::nested]
+fn text(cx: Cx, text: &str) {
+    log!("text, index: {}", cx.index);
+
+    raw_text(cx, text);
+}
+
+#[topo::nested]
+fn raw_el(mut cx: Cx, children: impl FnOnce(Cx)) -> State<Node> {
     // log!("el, index: {}", cx.index);
 
     let state_node = use_state(|| {
@@ -211,7 +231,7 @@ fn el(mut cx: Cx, children: impl FnOnce(Cx)) -> State<Node> {
 }
 
 #[topo::nested]
-fn text(mut cx: Cx, text: &str) {  
+fn raw_text(mut cx: Cx, text: &str) {  
     log!("text, index: {}", cx.index);
 
     let state_node = use_state(|| {
