@@ -15,11 +15,11 @@ macro_rules! column {
 }
 
 #[derive(Default)]
-pub struct Column {
-    children: Option<Children>,
+pub struct Column<'a> {
+    children: Option<Children<'a>>,
 }
 
-impl Column {
+impl<'a> Column<'a> {
     pub fn new() -> Self {
         Self::default()
     }
@@ -40,16 +40,16 @@ impl Column {
     }
 }
 
-pub trait ApplyToColumn {
-    fn apply_to_column(self, column: &mut Column);
+pub trait ApplyToColumn<'a> {
+    fn apply_to_column(self, column: &mut Column<'a>);
 }
 
-pub struct Children(Box<dyn FnOnce(Cx)>);
-pub fn children(children: impl FnOnce(Cx) + 'static) -> Children {
+pub struct Children<'a>(Box<dyn FnOnce(Cx) + 'a>);
+pub fn children<'a>(children: impl FnOnce(Cx) + 'a) -> Children<'a> {
     Children(Box::new(children))
 }
-impl ApplyToColumn for Children {
-    fn apply_to_column(self, column: &mut Column) {
+impl<'a> ApplyToColumn<'a> for Children<'a> {
+    fn apply_to_column(self, column: &mut Column<'a>) {
         column.children = Some(self);
     }
 }

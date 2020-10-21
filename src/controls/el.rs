@@ -15,11 +15,11 @@ macro_rules! el {
 }
 
 #[derive(Default)]
-pub struct El {
-    child: Option<Child>,
+pub struct El<'a> {
+    child: Option<Child<'a>>,
 }
 
-impl El {
+impl<'a> El<'a> {
     pub fn new() -> Self {
         Self::default()
     }
@@ -40,16 +40,16 @@ impl El {
     }
 }
 
-pub trait ApplyToEl {
-    fn apply_to_el(self, el: &mut El);
+pub trait ApplyToEl<'a> {
+    fn apply_to_el(self, el: &mut El<'a>);
 }
 
-pub struct Child(Box<dyn FnOnce(Cx)>);
-pub fn child(child: impl FnOnce(Cx) + 'static) -> Child {
+pub struct Child<'a>(Box<dyn FnOnce(Cx) + 'a>);
+pub fn child<'a>(child: impl FnOnce(Cx) + 'a) -> Child<'a> {
     Child(Box::new(child))
 }
-impl ApplyToEl for Child {
-    fn apply_to_el(self, el: &mut El) {
+impl<'a> ApplyToEl<'a> for Child<'a> {
+    fn apply_to_el(self, el: &mut El<'a>) {
         el.child = Some(self);
     }
 }

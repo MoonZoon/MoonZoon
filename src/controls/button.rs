@@ -15,12 +15,12 @@ macro_rules! button {
 }
 
 #[derive(Default)]
-pub struct Button {
-    label: Option<Label>,
-    on_press: Option<OnPress>,
+pub struct Button<'a> {
+    label: Option<Label<'a>>,
+    on_press: Option<OnPress<'a>>,
 }
 
-impl Button {
+impl<'a> Button<'a> {
     pub fn new() -> Self {
         Self::default()
     }
@@ -43,26 +43,26 @@ impl Button {
     }
 }
 
-pub trait ApplyToButton {
-    fn apply_to_button(self, button: &mut Button);
+pub trait ApplyToButton<'a> {
+    fn apply_to_button(self, button: &mut Button<'a>);
 }
 
-pub struct Label(Box<dyn FnOnce(Cx)>);
-pub fn label(label: impl FnOnce(Cx) + 'static) -> Label {
+pub struct Label<'a>(Box<dyn FnOnce(Cx) + 'a>);
+pub fn label<'a>(label: impl FnOnce(Cx) + 'a) -> Label<'a> {
     Label(Box::new(label))
 }
-impl ApplyToButton for Label {
-    fn apply_to_button(self, button: &mut Button) {
+impl<'a> ApplyToButton<'a> for Label<'a> {
+    fn apply_to_button(self, button: &mut Button<'a>) {
         button.label = Some(self);
     }
 }
 
-pub struct OnPress(Box<dyn FnOnce()>);
-pub fn on_press(on_press: impl FnOnce() + 'static) -> OnPress {
+pub struct OnPress<'a>(Box<dyn FnOnce() + 'a>);
+pub fn on_press<'a>(on_press: impl FnOnce() + 'a) -> OnPress<'a> {
     OnPress(Box::new(on_press))
 }
-impl ApplyToButton for OnPress {
-    fn apply_to_button(self, button: &mut Button) {
+impl<'a> ApplyToButton<'a> for OnPress<'a> {
+    fn apply_to_button(self, button: &mut Button<'a>) {
         button.on_press = Some(self);
     }
 }

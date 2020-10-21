@@ -102,9 +102,9 @@ fn root() {
     let first_run = use_state(|| true);
 
     row![
-        row::children(move |mut cx| {
+        row::children(|mut cx| {
             column![
-                column::children(move |mut cx| {
+                column::children(|mut cx| {
                     row![
                         row::children(|mut cx| {
                             el![
@@ -138,7 +138,7 @@ fn root() {
                 log!("FIRST RUN!");
 
                 column![
-                    column::children(move |mut cx| {
+                    column::children(|mut cx| {
                         row![
                             row::children(|mut cx| {
                                 el![
