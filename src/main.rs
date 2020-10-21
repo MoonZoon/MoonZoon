@@ -100,68 +100,68 @@ fn root() {
         state_node 
     };
 
-    let first_run = use_state(|| true);
+    // let first_run = use_state(|| true);
 
     row![
-        row::children(|mut cx| {
-            column![
-                column::children(|mut cx| {
-                    row![
-                        row::children(|mut cx| {
-                            el![
+        row::children(vec![
+            Box::new(column![
+                column::children(vec![
+                    Box::new(row![
+                        row::children(vec![
+                            Box::new(el![
                                 el::child(text!["A1"]),
-                            ].build(cx.inc_index().clone());
-                            button![
+                            ]),
+                            Box::new(button![
                                 button::label(text!["X"]),
                                 button::on_press(|| log!("delete A1")),
-                            ].build(cx.inc_index().clone());
-                        }),
-                    ].build(cx.inc_index().clone());
-                    row![
-                        row::children(|mut cx| {
-                            el![
+                            ]),
+                        ]),
+                    ]),
+                    Box::new(row![
+                        row::children(vec![
+                            Box::new(el![
                                 el::child(text!["A2"]),
-                            ].build(cx.inc_index().clone());
-                            button![
+                            ]),
+                            Box::new(button![
                                 button::label(text!["X"]),
                                 button::on_press(|| log!("delete A2")),
-                            ].build(cx.inc_index().clone());
-                        }),
-                    ].build(cx.inc_index().clone());
-                }),
-            ].build(cx.inc_index().clone());
+                            ]),
+                        ]),
+                    ]),
+                ]),
+            ]),
 
-            if first_run.get() {
-                log!("FIRST RUN!");
+            // if first_run.get() {
+            //     log!("FIRST RUN!");
 
-                column![
-                    column::children(|mut cx| {
-                        row![
-                            row::children(|mut cx| {
-                                el![
+                Box::new(column![
+                    column::children(vec![
+                        Box::new(row![
+                            row::children(vec![
+                                Box::new(el![
                                     el::child(text!["B1"]),
-                                ].build(cx.inc_index().clone());
-                                button![
+                                ]),
+                                Box::new(button![
                                     button::label(text!["X"]),
                                     button::on_press(|| log!("delete B1")),
-                                ].build(cx.inc_index().clone());
-                            }),
-                        ].build(cx.inc_index().clone());
-                        row![
-                            row::children(|mut cx| {
-                                el![
+                                ]),
+                            ]),
+                        ]),
+                        Box::new(row![
+                            row::children(vec![
+                                Box::new(el![
                                     el::child(text!["B2"]),
-                                ].build(cx.inc_index().clone());
-                                button![
+                                ]),
+                                Box::new(button![
                                     button::label(text!["X"]),
                                     button::on_press(|| log!("delete B2")),
-                                ].build(cx.inc_index().clone());
-                            }),
-                        ].build(cx.inc_index().clone());
-                    }),
-                ].build(cx.inc_index().clone());
-            }
-        }),
+                                ]),
+                            ]),
+                        ]),
+                    ]),
+                ]),
+            // }
+        ]),
     ].build(cx.inc_index().clone());
 
     // if first_run.get() {

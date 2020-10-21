@@ -31,9 +31,11 @@ impl<'a> Control for Column<'a> {
     fn build(&mut self, cx: Cx) {
         log!("column, index: {}", cx.index);
 
-        let state_node = raw_el(cx, |cx| {
+        let state_node = raw_el(cx, |mut cx| {
             if let Some(children) = self.children.take() {
-                (children.0)(cx)
+                for mut child in children.0 {
+                    child.build(cx.inc_index().clone());
+                }
             }
         });
         state_node.update(|node| {
@@ -47,9 +49,9 @@ pub trait ApplyToColumn<'a> {
     fn apply_to_column(self, column: &mut Column<'a>);
 }
 
-pub struct Children<'a>(Box<dyn FnOnce(Cx) + 'a>);
-pub fn children<'a>(children: impl FnOnce(Cx) + 'a) -> Children<'a> {
-    Children(Box::new(children))
+pub struct Children<'a>(Vec<Box<dyn Control + 'a>>);
+pub fn children<'a>(children: Vec<Box<dyn Control + 'a>>) -> Children<'a> {
+    Children(children)
 }
 impl<'a> ApplyToColumn<'a> for Children<'a> {
     fn apply_to_column(self, column: &mut Column<'a>) {
