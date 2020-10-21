@@ -59,6 +59,14 @@ impl<'a, T: Control + 'a> ApplyToColumn<'a> for T {
     }
 } 
 
+impl<'a, T: Control + 'a> ApplyToColumn<'a> for Option<T> {
+    fn apply_to_column(self, column: &mut Column<'a>) {
+        if let Some(control) = self {
+            control.apply_to_column(column);
+        }
+    }
+} 
+
 pub struct Children<'a>(Vec<Box<dyn Control + 'a>>);
 pub fn children<'a>(children: Vec<Box<dyn Control + 'a>>) -> Children<'a> {
     Children(children)

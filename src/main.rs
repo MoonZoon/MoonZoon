@@ -6,6 +6,7 @@ mod hooks;
 mod state;
 mod runtime;
 mod state_map;
+mod bool_ext;
 
 use hooks::use_state;
 use state::{State, CloneState};
@@ -18,6 +19,7 @@ use controls::{
     row::{self, ApplyToRow},
     text::{self, ApplyToText},
 };
+use bool_ext::BoolExt;
 
 const ELEMENT_ID: &str = "app";
 
@@ -100,7 +102,7 @@ fn root() {
         state_node 
     };
 
-    // let first_run = use_state(|| true);
+    let first_run = use_state(|| true);
 
     row![
         column![
@@ -124,8 +126,8 @@ fn root() {
             ],
         ],
 
-        // if first_run.get() {
-        //     log!("FIRST RUN!");
+        first_run.get().map_true({
+            log!("FIRST RUN!");
 
             column![
                 row![
@@ -146,13 +148,12 @@ fn root() {
                         button::on_press(|| log!("delete B2")),
                     ],
                 ],
-            ],
-        // }
+        ]}),
     ].build(cx.inc_index().clone());
 
-    // if first_run.get() {
-    //     first_run.set(false);
-    // }
+    if first_run.get() {
+        first_run.set(false);
+    }
 }
 
 #[topo::nested]

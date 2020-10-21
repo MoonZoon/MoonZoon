@@ -57,6 +57,14 @@ impl<'a, T: Control + 'a> ApplyToRow<'a> for T {
             row.children = Some(Children(vec![Box::new(self)]));
         }
     }
+}
+
+impl<'a, T: Control + 'a> ApplyToRow<'a> for Option<T> {
+    fn apply_to_row(self, row: &mut Row<'a>) {
+        if let Some(control) = self {
+            control.apply_to_row(row);
+        }
+    }
 } 
 
 pub struct Children<'a>(Vec<Box<dyn Control + 'a>>);
