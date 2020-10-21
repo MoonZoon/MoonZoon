@@ -1,13 +1,12 @@
 use wasm_bindgen::{prelude::*, JsCast};
 
-// mod hooks_state_functions;
+mod hooks;
 mod state;
-// mod store;
-// mod unmount;
+mod runtime;
+mod state_map;
 
-// use state_access::{StateAccess, CloneState};
-// use hooks_state_functions::use_state;
-use state::{State, CloneState, use_state};
+use hooks::use_state;
+use state::{State, CloneState};
 
 const ELEMENT_ID: &str = "app";
 
@@ -22,7 +21,7 @@ extern "C" {
 }
 
 fn runtime_run_once() {
-    state::runtime_run_once(|| root());
+    runtime::run_once(|| root());
 }
 
 #[derive(Copy, Clone)]
@@ -105,18 +104,18 @@ fn root() {
     row(cx.inc_index().clone(), |mut cx| {
         column(cx.inc_index().clone(), |mut cx| {
             row(cx.inc_index().clone(), |mut cx| {
-                el( cx.inc_index().clone(), |mut cx| {
+                el(cx.inc_index().clone(), |mut cx| {
                     text(cx.inc_index().clone(), "A1"); 
                 });
-                button( cx.inc_index().clone(), || log!("delete A1"), |mut cx| {
+                button(cx.inc_index().clone(), || log!("delete A1"), |mut cx| {
                     text(cx.inc_index().clone(), "X"); 
                 });
             });
             row(cx.inc_index().clone(), |mut cx| {
-                el( cx.inc_index().clone(), |mut cx| {
+                el(cx.inc_index().clone(), |mut cx| {
                     text(cx.inc_index().clone(), "A2"); 
                 });
-                button( cx.inc_index().clone(), || log!("delete A2"), |mut cx| {
+                button(cx.inc_index().clone(), || log!("delete A2"), |mut cx| {
                     text(cx.inc_index().clone(), "X"); 
                 });
             });
@@ -126,18 +125,18 @@ fn root() {
 
             column(cx.inc_index().clone(), |mut cx| {
                 row(cx.inc_index().clone(), |mut cx| {
-                    el( cx.inc_index().clone(), |mut cx| {
+                    el(cx.inc_index().clone(), |mut cx| {
                         text(cx.inc_index().clone(), "B1"); 
                     });
-                    button( cx.inc_index().clone(), || log!("delete B1"), |mut cx| {
+                    button(cx.inc_index().clone(), || log!("delete B1"), |mut cx| {
                         text(cx.inc_index().clone(), "X"); 
                     });
                 });
                 row(cx.inc_index().clone(), |mut cx| {
-                    el( cx.inc_index().clone(), |mut cx| {
+                    el(cx.inc_index().clone(), |mut cx| {
                         text(cx.inc_index().clone(), "B2"); 
                     });
-                    button( cx.inc_index().clone(), || log!("delete B2"), |mut cx| {
+                    button(cx.inc_index().clone(), || log!("delete B2"), |mut cx| {
                         text(cx.inc_index().clone(), "X"); 
                     });
                 });
