@@ -11,6 +11,7 @@ use hooks::use_state;
 use state::{State, CloneState};
 use console::log;
 use controls::{
+    Control,
     button::{self, ApplyToButton},
     column::{self, ApplyToColumn},
     el::{self, ApplyToEl},
@@ -108,12 +109,10 @@ fn root() {
                     row![
                         row::children(|mut cx| {
                             el![
-                                el::child(|mut cx| { 
-                                    text!["A1"].build(cx.inc_index().clone());
-                                }),
+                                el::child(text!["A1"]),
                             ].build(cx.inc_index().clone());
                             button![
-                                button::label(|mut cx| text!["X"].build(cx.inc_index().clone())),
+                                button::label(text!["X"]),
                                 button::on_press(|| log!("delete A1")),
                             ].build(cx.inc_index().clone());
                         }),
@@ -121,12 +120,10 @@ fn root() {
                     row![
                         row::children(|mut cx| {
                             el![
-                                el::child(|mut cx| { 
-                                    text!["A2"].build(cx.inc_index().clone());
-                                }),
+                                el::child(text!["A2"]),
                             ].build(cx.inc_index().clone());
                             button![
-                                button::label(|mut cx| text!["X"].build(cx.inc_index().clone())),
+                                button::label(text!["X"]),
                                 button::on_press(|| log!("delete A2")),
                             ].build(cx.inc_index().clone());
                         }),
@@ -142,12 +139,10 @@ fn root() {
                         row![
                             row::children(|mut cx| {
                                 el![
-                                    el::child(|mut cx| { 
-                                        text!["B1"].build(cx.inc_index().clone());
-                                    }),
+                                    el::child(text!["B1"]),
                                 ].build(cx.inc_index().clone());
                                 button![
-                                    button::label(|mut cx| text!["X"].build(cx.inc_index().clone())),
+                                    button::label(text!["X"]),
                                     button::on_press(|| log!("delete B1")),
                                 ].build(cx.inc_index().clone());
                             }),
@@ -155,12 +150,10 @@ fn root() {
                         row![
                             row::children(|mut cx| {
                                 el![
-                                    el::child(|mut cx| { 
-                                        text!["B2"].build(cx.inc_index().clone());
-                                    }),
+                                    el::child(text!["B2"]),
                                 ].build(cx.inc_index().clone());
                                 button![
-                                    button::label(|mut cx| text!["X"].build(cx.inc_index().clone())),
+                                    button::label(text!["X"]),
                                     button::on_press(|| log!("delete B2")),
                                 ].build(cx.inc_index().clone());
                             }),
@@ -171,9 +164,9 @@ fn root() {
         }),
     ].build(cx.inc_index().clone());
 
-    if first_run.get() {
-        first_run.set(false);
-    }
+    // if first_run.get() {
+    //     first_run.set(false);
+    // }
 }
 
 #[topo::nested]

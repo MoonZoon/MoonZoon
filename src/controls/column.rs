@@ -1,5 +1,6 @@
 use wasm_bindgen::JsCast;
 use crate::{Cx, raw_el, log};
+use crate::controls::Control;
 
 #[macro_export]
 macro_rules! column {
@@ -23,13 +24,15 @@ impl<'a> Column<'a> {
     pub fn new() -> Self {
         Self::default()
     }
+}
 
+impl<'a> Control for Column<'a> {
     #[topo::nested]
-    pub fn build(self, cx: Cx) {
+    fn build(&mut self, cx: Cx) {
         log!("column, index: {}", cx.index);
 
         let state_node = raw_el(cx, |cx| {
-            if let Some(children) = self.children {
+            if let Some(children) = self.children.take() {
                 (children.0)(cx)
             }
         });

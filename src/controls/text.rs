@@ -1,4 +1,5 @@
 use crate::{Cx, raw_text, log};
+use crate::controls::Control;
 
 #[macro_export]
 macro_rules! text {
@@ -22,16 +23,11 @@ impl Text {
     pub fn new() -> Self {
         Self::default()
     }
+}
 
+impl Control for Text {
     #[topo::nested]
-    fn text(cx: Cx, text: &str) {
-        log!("text, index: {}", cx.index);
-
-        raw_text(cx, text);
-    }
-
-    #[topo::nested]
-    pub fn build(self, cx: Cx) {
+    fn build(&mut self, cx: Cx) {
         log!("text, index: {}", cx.index);
 
         raw_text(cx, &self.text);

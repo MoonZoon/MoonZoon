@@ -1,5 +1,6 @@
 use wasm_bindgen::JsCast;
 use crate::{Cx, raw_el, log};
+use crate::controls::Control;
 
 #[macro_export]
 macro_rules! el {
@@ -23,14 +24,16 @@ impl<'a> El<'a> {
     pub fn new() -> Self {
         Self::default()
     }
+}
 
+impl<'a> Control for El<'a> {
     #[topo::nested]
-    pub fn build(self, cx: Cx) {
+    fn build(&mut self, cx: Cx) {
         log!("el, index: {}", cx.index);
 
         let state_node = raw_el(cx, |cx| {
-            if let Some(child) = self.child {
-                (child.0)(cx)
+            if let Some(mut child) = self.child.take() {
+                child.0.build(cx)
             }
         });
         state_node.update(|node| {
@@ -44,8 +47,8 @@ pub trait ApplyToEl<'a> {
     fn apply_to_el(self, el: &mut El<'a>);
 }
 
-pub struct Child<'a>(Box<dyn FnOnce(Cx) + 'a>);
-pub fn child<'a>(child: impl FnOnce(Cx) + 'a) -> Child<'a> {
+pub struct Child<'a>(Box<dyn Control + 'a>);
+pub fn child<'a>(child: impl Control + 'a) -> Child<'a> {
     Child(Box::new(child))
 }
 impl<'a> ApplyToEl<'a> for Child<'a> {

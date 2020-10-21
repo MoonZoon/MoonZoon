@@ -1,5 +1,6 @@
 use wasm_bindgen::JsCast;
 use crate::{Cx, raw_el, log};
+use crate::controls::Control;
 
 #[macro_export]
 macro_rules! button {
@@ -24,14 +25,16 @@ impl<'a> Button<'a> {
     pub fn new() -> Self {
         Self::default()
     }
+}
 
+impl<'a> Control for Button<'a> {
     #[topo::nested]
-    pub fn build(self, cx: Cx) {
+    fn build(&mut self, cx: Cx) {
         log!("button, index: {}", cx.index);
 
-        let state_node = raw_el(cx, |cx| {
-            if let Some(label) = self.label {
-                (label.0)(cx)
+        let state_node = raw_el(cx, |cx: Cx| {
+            if let Some(mut label) = self.label.take() {
+                label.0.build(cx);
             }
         });
         state_node.update(|node| {
@@ -47,8 +50,8 @@ pub trait ApplyToButton<'a> {
     fn apply_to_button(self, button: &mut Button<'a>);
 }
 
-pub struct Label<'a>(Box<dyn FnOnce(Cx) + 'a>);
-pub fn label<'a>(label: impl FnOnce(Cx) + 'a) -> Label<'a> {
+pub struct Label<'a>(Box<dyn Control + 'a>);
+pub fn label<'a>(label: impl Control + 'a) -> Label<'a> {
     Label(Box::new(label))
 }
 impl<'a> ApplyToButton<'a> for Label<'a> {
