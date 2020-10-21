@@ -25,7 +25,7 @@ fn runtime_run_once() {
 }
 
 #[derive(Copy, Clone)]
-struct Cx {
+pub struct Cx {
     index: u32,
     state_node: State<Node>,
 }
@@ -86,6 +86,78 @@ fn main() {
     runtime_run_once();
 }
 
+mod button {
+    use wasm_bindgen::JsCast;
+    use super::{Cx, raw_el, log};
+
+    #[derive(Default)]
+    pub struct Button {
+        label: Option<Label>,
+        on_press: Option<OnPress>,
+    }
+
+    impl Button {
+        pub fn new() -> Self {
+            Self::default()
+        }
+
+        #[topo::nested]
+        pub fn build(self, cx: Cx) {
+            log!("button, index: {}", cx.index);
+
+            let state_node = raw_el(cx, |cx| {
+                if let Some(label) = self.label {
+                    (label.0)(cx)
+                }
+            });
+            state_node.update(|node| {
+                let element = node.node_ws.unchecked_ref::<web_sys::Element>();
+                element.set_attribute("class", "button");
+                element.set_attribute("role", "button");
+                element.set_attribute("tabindex", "0");
+            });
+        }
+    }
+
+    pub trait ApplyToButton {
+        fn apply_to_button(self, button: &mut Button);
+    }
+
+    pub struct Label(Box<dyn FnOnce(Cx)>);
+    pub fn label(label: impl FnOnce(Cx) + 'static) -> Label {
+        Label(Box::new(label))
+    }
+    impl ApplyToButton for Label {
+        fn apply_to_button(self, button: &mut Button) {
+            button.label = Some(self);
+        }
+    }
+
+    pub struct OnPress(Box<dyn FnOnce()>);
+    pub fn on_press(on_press: impl FnOnce() + 'static) -> OnPress {
+        OnPress(Box::new(on_press))
+    }
+    impl ApplyToButton for OnPress {
+        fn apply_to_button(self, button: &mut Button) {
+            button.on_press = Some(self);
+        }
+    }
+}
+
+use button::ApplyToButton;
+
+macro_rules! button {
+    ( $($item:expr),* $(,)?) => {
+        {
+            let mut button = button::Button::new();
+            $(
+                $item.apply_to_button(&mut button);
+            )*
+            button
+        }
+    }
+}
+
 #[topo::nested]
 fn root() {
     log!("root");
@@ -107,9 +179,10 @@ fn root() {
                 el(cx.inc_index().clone(), |mut cx| {
                     text(cx.inc_index().clone(), "A1"); 
                 });
-                button(cx.inc_index().clone(), || log!("delete A1"), |mut cx| {
-                    text(cx.inc_index().clone(), "X"); 
-                });
+                button![
+                    button::label(|mut cx| text(cx.inc_index().clone(), "X")),
+                    button::on_press(|| log!("delete A1")),
+                ].build(cx.inc_index().clone());
             });
             row(cx.inc_index().clone(), |mut cx| {
                 el(cx.inc_index().clone(), |mut cx| {
