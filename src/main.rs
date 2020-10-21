@@ -103,65 +103,51 @@ fn root() {
     // let first_run = use_state(|| true);
 
     row![
-        row::children(vec![
-            Box::new(column![
-                column::children(vec![
-                    Box::new(row![
-                        row::children(vec![
-                            Box::new(el![
-                                el::child(text!["A1"]),
-                            ]),
-                            Box::new(button![
-                                button::label(text!["X"]),
-                                button::on_press(|| log!("delete A1")),
-                            ]),
-                        ]),
-                    ]),
-                    Box::new(row![
-                        row::children(vec![
-                            Box::new(el![
-                                el::child(text!["A2"]),
-                            ]),
-                            Box::new(button![
-                                button::label(text!["X"]),
-                                button::on_press(|| log!("delete A2")),
-                            ]),
-                        ]),
-                    ]),
-                ]),
-            ]),
+        column![
+            row![
+                el![
+                    el::child(text!["A1"]),
+                ],
+                button![
+                    button::label(text!["X"]),
+                    button::on_press(|| log!("delete A1")),
+                ],
+            ],
+            row![
+                el![
+                    el::child(text!["A2"]),
+                ],
+                button![
+                    button::label(text!["X"]),
+                    button::on_press(|| log!("delete A2")),
+                ],
+            ],
+        ],
 
-            // if first_run.get() {
-            //     log!("FIRST RUN!");
+        // if first_run.get() {
+        //     log!("FIRST RUN!");
 
-                Box::new(column![
-                    column::children(vec![
-                        Box::new(row![
-                            row::children(vec![
-                                Box::new(el![
-                                    el::child(text!["B1"]),
-                                ]),
-                                Box::new(button![
-                                    button::label(text!["X"]),
-                                    button::on_press(|| log!("delete B1")),
-                                ]),
-                            ]),
-                        ]),
-                        Box::new(row![
-                            row::children(vec![
-                                Box::new(el![
-                                    el::child(text!["B2"]),
-                                ]),
-                                Box::new(button![
-                                    button::label(text!["X"]),
-                                    button::on_press(|| log!("delete B2")),
-                                ]),
-                            ]),
-                        ]),
-                    ]),
-                ]),
-            // }
-        ]),
+            column![
+                row![
+                    el![
+                        el::child(text!["B1"]),
+                    ],
+                    button![
+                        button::label(text!["X"]),
+                        button::on_press(|| log!("delete B1")),
+                    ],
+                ],
+                row![
+                    el![
+                        el::child(text!["B2"]),
+                    ],
+                    button![
+                        button::label(text!["X"]),
+                        button::on_press(|| log!("delete B2")),
+                    ],
+                ],
+            ],
+        // }
     ].build(cx.inc_index().clone());
 
     // if first_run.get() {

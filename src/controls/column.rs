@@ -49,6 +49,16 @@ pub trait ApplyToColumn<'a> {
     fn apply_to_column(self, column: &mut Column<'a>);
 }
 
+impl<'a, T: Control + 'a> ApplyToColumn<'a> for T {
+    fn apply_to_column(self, column: &mut Column<'a>) {
+        if let Some(children) = &mut column.children {
+            children.0.push(Box::new(self));
+        } else {
+            column.children = Some(Children(vec![Box::new(self)]));
+        }
+    }
+} 
+
 pub struct Children<'a>(Vec<Box<dyn Control + 'a>>);
 pub fn children<'a>(children: Vec<Box<dyn Control + 'a>>) -> Children<'a> {
     Children(children)

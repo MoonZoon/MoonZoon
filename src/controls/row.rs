@@ -49,6 +49,16 @@ pub trait ApplyToRow<'a> {
     fn apply_to_row(self, row: &mut Row<'a>);
 }
 
+impl<'a, T: Control + 'a> ApplyToRow<'a> for T {
+    fn apply_to_row(self, row: &mut Row<'a>) {
+        if let Some(children) = &mut row.children {
+            children.0.push(Box::new(self));
+        } else {
+            row.children = Some(Children(vec![Box::new(self)]));
+        }
+    }
+} 
+
 pub struct Children<'a>(Vec<Box<dyn Control + 'a>>);
 pub fn children<'a>(children: Vec<Box<dyn Control + 'a>>) -> Children<'a> {
     Children(children)
