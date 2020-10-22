@@ -50,6 +50,14 @@ pub trait ApplyToButton<'a> {
     fn apply_to_button(self, button: &mut Button<'a>);
 }
 
+impl<'a, T: ApplyToButton<'a>> ApplyToButton<'a> for Option<T> {
+    fn apply_to_button(self, button: &mut Button<'a>) {
+        if let Some(applicable_to_button) = self {
+            applicable_to_button.apply_to_button(button)
+        }
+    }
+} 
+
 impl<'a, T: Control + 'a> ApplyToButton<'a> for T {
     fn apply_to_button(self, button: &mut Button<'a>) {
          button.label = Some(Box::new(self));

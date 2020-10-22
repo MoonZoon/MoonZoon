@@ -47,16 +47,16 @@ pub trait ApplyToColumn<'a> {
     fn apply_to_column(self, column: &mut Column<'a>);
 }
 
-impl<'a, T: Control + 'a> ApplyToColumn<'a> for T {
+impl<'a, T: ApplyToColumn<'a>> ApplyToColumn<'a> for Option<T> {
     fn apply_to_column(self, column: &mut Column<'a>) {
-        column.children.push(Box::new(self));
+        if let Some(applicable_to_column) = self {
+            applicable_to_column.apply_to_column(column)
+        }
     }
 } 
 
-impl<'a, T: Control + 'a> ApplyToColumn<'a> for Option<T> {
+impl<'a, T: Control + 'a> ApplyToColumn<'a> for T {
     fn apply_to_column(self, column: &mut Column<'a>) {
-        if let Some(control) = self {
-            control.apply_to_column(column);
-        }
+        column.children.push(Box::new(self));
     }
 } 

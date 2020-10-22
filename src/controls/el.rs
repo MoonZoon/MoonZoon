@@ -47,6 +47,14 @@ pub trait ApplyToEl<'a> {
     fn apply_to_el(self, el: &mut El<'a>);
 }
 
+impl<'a, T: ApplyToEl<'a>> ApplyToEl<'a> for Option<T> {
+    fn apply_to_el(self, el: &mut El<'a>) {
+        if let Some(applicable_to_el) = self {
+            applicable_to_el.apply_to_el(el)
+        }
+    }
+} 
+
 impl<'a, T: Control + 'a> ApplyToEl<'a> for T {
     fn apply_to_el(self, el: &mut El<'a>) {
         el.child = Some(Box::new(self));

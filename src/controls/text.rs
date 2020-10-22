@@ -38,6 +38,14 @@ pub trait ApplyToText {
     fn apply_to_text(self, text: &mut Text);
 }
 
+impl<T: ApplyToText> ApplyToText for Option<T> {
+    fn apply_to_text(self, text: &mut Text) {
+        if let Some(applicable_to_text) = self {
+            applicable_to_text.apply_to_text(text)
+        }
+    }
+} 
+
 impl  ApplyToText for String {
     fn apply_to_text(self, text: &mut Text) {
         text.text = self
