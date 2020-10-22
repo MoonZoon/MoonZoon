@@ -17,7 +17,7 @@ macro_rules! button {
 
 #[derive(Default)]
 pub struct Button<'a> {
-    label: Option<Label<'a>>,
+    label: Option<Box<dyn Control + 'a>>,
     on_press: Option<OnPress<'a>>,
 }
 
@@ -33,8 +33,8 @@ impl<'a> Control for Button<'a> {
         log!("button, index: {}", cx.index);
 
         let state_node = raw_el(cx, |cx: Cx| {
-            if let Some(mut label) = self.label.take() {
-                label.0.build(cx);
+            if let Some(label) = self.label.as_mut() {
+                label.build(cx);
             }
         });
         state_node.update(|node| {
@@ -50,15 +50,11 @@ pub trait ApplyToButton<'a> {
     fn apply_to_button(self, button: &mut Button<'a>);
 }
 
-pub struct Label<'a>(Box<dyn Control + 'a>);
-pub fn label<'a>(label: impl Control + 'a) -> Label<'a> {
-    Label(Box::new(label))
-}
-impl<'a> ApplyToButton<'a> for Label<'a> {
+impl<'a, T: Control + 'a> ApplyToButton<'a> for T {
     fn apply_to_button(self, button: &mut Button<'a>) {
-        button.label = Some(self);
+         button.label = Some(Box::new(self));
     }
-}
+} 
 
 pub struct OnPress<'a>(Box<dyn FnOnce() + 'a>);
 pub fn on_press<'a>(on_press: impl FnOnce() + 'a) -> OnPress<'a> {

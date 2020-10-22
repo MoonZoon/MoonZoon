@@ -108,19 +108,19 @@ fn root() {
         column![
             row![
                 el![
-                    el::child(text!["A1"]),
+                    text!["A1"],
                 ],
                 button![
-                    button::label(text!["X"]),
+                    text!["X"],
                     button::on_press(|| log!("delete A1")),
                 ],
             ],
             row![
                 el![
-                    el::child(text!["A2"]),
+                    text!["A2"],
                 ],
                 button![
-                    button::label(text!["X"]),
+                    text!["X"],
                     button::on_press(|| log!("delete A2")),
                 ],
             ],
@@ -132,19 +132,19 @@ fn root() {
             column![
                 row![
                     el![
-                        el::child(text!["B1"]),
+                        text!["B1"],
                     ],
                     button![
-                        button::label(text!["X"]),
+                        text!["X"],
                         button::on_press(|| log!("delete B1")),
                     ],
                 ],
                 row![
                     el![
-                        el::child(text!["B2"]),
+                        text!["B2"],
                     ],
                     button![
-                        button::label(text!["X"]),
+                        text!["X"],
                         button::on_press(|| log!("delete B2")),
                     ],
                 ],

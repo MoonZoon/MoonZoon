@@ -17,7 +17,7 @@ macro_rules! el {
 
 #[derive(Default)]
 pub struct El<'a> {
-    child: Option<Child<'a>>,
+    child: Option<Box<dyn Control + 'a>>,
 }
 
 impl<'a> El<'a> {
@@ -32,8 +32,8 @@ impl<'a> Control for El<'a> {
         log!("el, index: {}", cx.index);
 
         let state_node = raw_el(cx, |cx| {
-            if let Some(mut child) = self.child.take() {
-                child.0.build(cx)
+            if let Some(child) = self.child.as_mut() {
+                child.build(cx)
             }
         });
         state_node.update(|node| {
@@ -47,12 +47,8 @@ pub trait ApplyToEl<'a> {
     fn apply_to_el(self, el: &mut El<'a>);
 }
 
-pub struct Child<'a>(Box<dyn Control + 'a>);
-pub fn child<'a>(child: impl Control + 'a) -> Child<'a> {
-    Child(Box::new(child))
-}
-impl<'a> ApplyToEl<'a> for Child<'a> {
+impl<'a, T: Control + 'a> ApplyToEl<'a> for T {
     fn apply_to_el(self, el: &mut El<'a>) {
-        el.child = Some(self);
+        el.child = Some(Box::new(self));
     }
-}
+} 
