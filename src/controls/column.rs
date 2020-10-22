@@ -32,7 +32,7 @@ impl<'a> Control for Column<'a> {
         log!("column, index: {}", cx.index);
 
         let state_node = raw_el(cx, |mut cx| {
-            for mut child in &mut self.children {
+            for child in &mut self.children {
                 child.build(cx.inc_index().clone());
             }
         });

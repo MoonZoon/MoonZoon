@@ -97,7 +97,7 @@ fn root() {
         node_ws: web_sys::Node::from(document().get_element_by_id(ELEMENT_ID).expect("root element"))
     });
 
-    let mut cx = Cx { 
+    let cx = Cx { 
         index: 0,
         state_node 
     };
@@ -178,7 +178,7 @@ fn raw_el(mut cx: Cx, children: impl FnOnce(Cx)) -> State<Node> {
 
 #[topo::nested]
 fn raw_text(mut cx: Cx, text: &str) {  
-    log!("text, index: {}", cx.index);
+    // log!("text, index: {}", cx.index);
 
     let state_node = use_state(|| {
         let node_ws = document().create_text_node(&text).unchecked_into::<web_sys::Node>();

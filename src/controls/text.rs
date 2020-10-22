@@ -1,5 +1,6 @@
 use crate::{Cx, raw_text, log};
 use crate::controls::Control;
+use std::borrow::Cow;
 
 #[macro_export]
 macro_rules! text {
@@ -15,17 +16,17 @@ macro_rules! text {
 }
 
 #[derive(Default)]
-pub struct Text {
-    text: String,
+pub struct Text<'a> {
+    text: Cow<'a, str>,
 }
 
-impl Text {
+impl<'a> Text<'a> {
     pub fn new() -> Self {
         Self::default()
     }
 }
 
-impl Control for Text {
+impl<'a> Control for Text<'a> {
     #[topo::nested]
     fn build(&mut self, cx: Cx) {
         log!("text, index: {}", cx.index);
@@ -34,26 +35,26 @@ impl Control for Text {
     }
 }
 
-pub trait ApplyToText {
-    fn apply_to_text(self, text: &mut Text);
+pub trait ApplyToText<'a> {
+    fn apply_to_text(self, text: &mut Text<'a>);
 }
 
-impl<T: ApplyToText> ApplyToText for Option<T> {
-    fn apply_to_text(self, text: &mut Text) {
+impl<'a, T: ApplyToText<'a>> ApplyToText<'a> for Option<T> {
+    fn apply_to_text(self, text: &mut Text<'a>) {
         if let Some(applicable_to_text) = self {
             applicable_to_text.apply_to_text(text)
         }
     }
 } 
 
-impl  ApplyToText for String {
-    fn apply_to_text(self, text: &mut Text) {
-        text.text = self
+impl<'a> ApplyToText<'a> for String {
+    fn apply_to_text(self, text: &mut Text<'a>) {
+        text.text = Cow::from(self);
     }
 }
 
-impl ApplyToText for &str {
-    fn apply_to_text(self, text: &mut Text) {
-        text.text = self.to_owned()
+impl<'a> ApplyToText<'a> for &'a str {
+    fn apply_to_text(self, text: &mut Text<'a>) {
+        text.text = Cow::from(self);
     }
 }
