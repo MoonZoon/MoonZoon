@@ -45,7 +45,6 @@ impl Cx {
     } 
 }
 
-#[derive(Clone)]
 struct Node {
     node_ws: web_sys::Node,
 }
