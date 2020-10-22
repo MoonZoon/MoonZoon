@@ -62,12 +62,23 @@ impl StateMap {
             }); 
     }
 
-    pub(crate) fn remove_unused_and_toggle_revision(&mut self) {
+    pub(crate) fn remove_unused_and_toggle_revision(&mut self) -> Vec<Box<dyn Any>> {
         let current_revision = self.revision;
-        self
-            .states
-            .retain(|_, StateMapValue { revision, .. }| *revision == current_revision);
+        
+        let mut unused_data = Vec::new();
+        let mut used_states = HashMap::new();
+        
+        // @TODO: refactor once `HashMap::drain_filter` is stable (https://github.com/rust-lang/rust/issues/59618)
+        for (id, value) in self.states.drain() {
+            if value.revision == current_revision {
+                used_states.insert(id, value);
+            } else {
+                unused_data.push(value.data);
+            }
+        }
+        self.states = used_states;
 
         self.revision = !current_revision;
+        unused_data
     }
 }

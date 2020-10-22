@@ -62,9 +62,11 @@ where
         self.set(data);
     }
 
-    // pub fn state_exists(self) -> bool {
-    //     state_exists_for_topo_id::<T>(self.id)
-    // }
+    pub fn exists(self) -> bool {
+        STATES.with(|states| {
+            states.borrow().contains_id(&self.id)
+        })
+    }
 
     pub fn get_with<F: FnOnce(&T) -> U, U>(self, getter: F) -> U {
         STATES.with(|states| {

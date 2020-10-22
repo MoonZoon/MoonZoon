@@ -94,6 +94,9 @@ impl Listener {
 
 impl Drop for Listener{
     fn drop(&mut self) {
+        if !self.state_node.exists() {
+            return;
+        }
         self.state_node.update(|node| {
             node
                 .node_ws
