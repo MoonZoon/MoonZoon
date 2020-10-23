@@ -2,6 +2,16 @@ use crate::runtime::STATES;
 use crate::state::{State, CloneState};
 
 #[topo::nested]
+pub fn do_once<T>(f: impl FnOnce() -> T) -> Option<T> {
+    let has_done = use_state(|| false);
+    if has_done.get(){
+        return None;
+    }
+    has_done.set(true);
+    Some(f())
+}
+
+#[topo::nested]
 pub fn use_state<T: 'static, F: FnOnce() -> T>(creator: F) -> State<T> {
     use_state_current(creator)
 }

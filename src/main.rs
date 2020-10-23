@@ -8,7 +8,7 @@ mod runtime;
 mod state_map;
 mod bool_ext;
 
-use hooks::use_state;
+use hooks::{use_state, do_once};
 use state::{State, CloneState};
 use console::log;
 use controls::{
@@ -101,8 +101,6 @@ fn root() {
         state_node 
     };
 
-    let first_run = use_state(|| true);
-
     row![
         column![
             row![
@@ -125,7 +123,7 @@ fn root() {
             ],
         ],
 
-        first_run.get().map_true({
+        do_once(|| {
             log!("FIRST RUN!");
 
             column![
@@ -147,12 +145,9 @@ fn root() {
                         button::on_press(|| log!("delete B2")),
                     ],
                 ],
-        ]}),
+            ]
+        }),
     ].build(cx);
-
-    if first_run.get() {
-        first_run.set(false);
-    }
 }
 
 #[topo::nested]
