@@ -1,6 +1,33 @@
 type TodoId = Ulid;
 type Todos = BTreeMap<TodoId, Model<Todo>>;
 
+// ------ Routes ------
+
+#[Route]
+enum Route {
+    #[path("/active")]
+    Active,
+    #[path("/completed")]
+    Completed,
+    #[path("/")]
+    Root,
+    Unknown,
+}
+
+#[Cache]
+fn route() -> Cache<Route> {
+    let url = watch(zoon::model::url());   // cycle dependency?
+
+    use_cache(url.changed(), || {
+        url.map(Route::from)
+    })
+}
+
+#[Update]
+fn set_route(route: Route) {
+    zoon::model::url().update(Url::from)
+}
+
 // ------ Filters ------
 
 // derive Iter / to_vec
@@ -17,10 +44,14 @@ fn filters() -> Model<Vec<Filter>> {
 
 #[Cache]
 fn selected_filter() -> Cache<Filter> {
-    let url = watch(zoon::model::url());
+    let route = watch(selected_route());
 
-    use_cache(url.changed(), || {
-        url.map(Filter::from)
+    use_cache(route.changed(), || {
+        match route.get() {
+            Route::Active => Filter::Active,
+            Route::Completed => Filter::Completed,
+            _ => Filter::All,
+        }
     })
 }
 
@@ -58,10 +89,10 @@ fn new_todo(title: String) -> Model<Todo> {
         title,
         completed: false,
     });
+
+    todos().update(|todos| todos.insert(todo_id, todo));
     todo.on_remove(|todo| todos().update(|todos| todos.remove(todo.id)));
     
-    todos().update(|todos| todos.insert(todo_id, todo));
-
     todo
 }
 
