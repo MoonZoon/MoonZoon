@@ -18,9 +18,9 @@ fn decrement() {
 #[View]
 fn view() -> Row {
     column![
-        button![text!("-"), button::on_press(decrement)],
-        text!(counter.get()),
-        button![text!("-"), button::on_press(increment)],
+        button![text!["-"], button::on_press(decrement)],
+        text![counter.get()],
+        button![text!["-"], button::on_press(increment)],
     ]
 }
 

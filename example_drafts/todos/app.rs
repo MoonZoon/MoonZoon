@@ -1,3 +1,9 @@
+use zoon::*;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
+use ulid::Ulid;
+
+
 type TodoId = Ulid;
 type Todos = BTreeMap<TodoId, Model<Todo>>;
 
@@ -16,7 +22,7 @@ enum Route {
 
 #[Cache]
 fn route() -> Cache<Route> {
-    let url = watch(zoon::model::url());   // cycle dependency?
+    let url = watch(zoon::model::url());
 
     use_cache(url.changed(), || {
         url.map(Route::from)
@@ -47,7 +53,7 @@ fn selected_filter() -> Cache<Filter> {
     let route = watch(selected_route());
 
     use_cache(route.changed(), || {
-        match route.get() {
+        match route.inner() {
             Route::Active => Filter::Active,
             Route::Completed => Filter::Completed,
             _ => Filter::All,
@@ -81,19 +87,37 @@ fn new_todo_title() -> Model<String> {
 }
 
 #[Update]
-fn new_todo(title: String) -> Model<Todo> {
-    let todo_id = TodoId::new();
+fn set_new_todo_title(title: String) {
+    new_todo_title().set(title);
+}
 
+#[Update]
+fn create_todo(title: &str) {
+    let title = title.trim();
+    if title.is_empty() {
+        return;
+    }
+
+    let todo_id = TodoId::new();
     let mut todo = new_model(|| Todo {
         id: todo_id,
-        title,
+        title: title.trim(),
         completed: false,
     });
 
     todos().update(|todos| todos.insert(todo_id, todo));
-    todo.on_remove(|todo| todos().update(|todos| todos.remove(todo.id)));
-    
-    todo
+    new_todo_title().update(|title| title.clear());
+}
+
+#[Update]
+fn remove_todo(todo: Model<Todo>) {
+    todos().update(|todos| todos.remove(todo.inner().id));
+    todo.remove();
+}
+
+#[Update]
+fn toggle_todo(todo: Model<Todo>) {
+    todo.update(|todo| *todo.checked = !todo.checked);
 }
 
 // -- all --
@@ -101,6 +125,23 @@ fn new_todo(title: String) -> Model<Todo> {
 #[Model]
 fn todos() -> Model<Todos> {
     use_model(BTreeMap::new)
+}
+
+#[Update]
+fn check_or_uncheck_all(checked: bool) {
+    if are_all_completed().inner() {
+        todos().update(|todos| {
+            for todo in todos.values() {
+                toggle_todo(todo)
+            }
+        })
+    } else {
+        active_todos().update(|todos| {
+            for todo in todos.values() {
+                toggle_todo(todo)
+            }
+        })
+    }
 }
 
 #[Cache]
@@ -117,7 +158,7 @@ fn todos_exist() -> Cache<bool> {
     let todos_count = watch(todos_count());
 
     use_cache(todos_count.changed(), || {
-        todos_count().get() != 0
+        todos_count().inner() != 0
     })
 }
 
@@ -146,7 +187,7 @@ fn completed_exist() -> Cache<bool> {
     let todos_count = watch(completed_count());
 
     use_cache(todos_count.changed(), || {
-        todos_count().get() != 0
+        todos_count().inner() != 0
     })
 }
 
@@ -156,7 +197,7 @@ fn are_all_completed() -> Cache<bool> {
     let completed_count = watch(completed_count());
 
     use_cache(total_count.changed() || completed_count.changed(), || {
-        total_count.get() == completed_count.get()
+        total_count.inner() == completed_count.inner()
     })
 }
 
@@ -187,7 +228,7 @@ fn filtered_todos() -> Cache<Todos> {
     let selected_filter = watch(selected_filter());
 
     use_cache(selected_filter.changed(), || {
-        match selected_filter.get() {
+        match selected_filter.inner() {
             Filter::All => todos(),
             Filter::Active => active_todos(),
             Filter::Completed => completed_todos(),
