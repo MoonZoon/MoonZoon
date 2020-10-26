@@ -169,7 +169,12 @@ fn completed_todos() -> Cache<Todos> {
     let todos = watch(todos);
 
     use_cache(todos.changed(), || {
-        todos.map(|todos| ...)
+        todos.map(|todos| {
+            todos
+                .iter()
+                .filter(|_, todo| todo.completed)
+                .collect()
+        })
     })
 }
 
@@ -208,7 +213,12 @@ fn active_todos() -> Cache<Todos> {
     let todos = watch(todos());
 
     use_cache(todos.changed(), || {
-        todos.map(|todos| ...)
+        todos.map(|todos| {
+            todos
+                .iter()
+                .filter(|_, todo| !todo.completed)
+                .collect()
+        })
     })
 }
 
