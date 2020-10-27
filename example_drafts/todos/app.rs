@@ -31,7 +31,7 @@ fn route() -> Cache<Route> {
 
 #[Update]
 fn set_route(route: Route) {
-    zoon::model::url().update(Url::from)
+    zoon::model::url().set(Url::from(route))
 }
 
 // ------ Filters ------

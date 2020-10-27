@@ -13,7 +13,7 @@ pub fn view() -> View {
             center_x(),
             header(),
             main(),
-            app::todos_exist().map_true(footer),
+            footer(),
         ]
     ]
 }
@@ -65,7 +65,10 @@ fn main() -> Column {
             app::todos_exist().map_true(toggle_all_checkbox),
             new_todo_title(),
         ],
-        app::todos_exist().map_true(todos),
+        app::todos_exist().map_true(|| elements![
+            todos(),
+            status_bar(),
+        ]),
     ]
 }
 
@@ -75,7 +78,7 @@ fn toggle_all_checkbox() -> Checkbox {
     checkbox![
         checkbox::checked(checked),
         checkbox::on_change(app::check_or_uncheck_all),
-        label_hidden("Toggle All"),
+        input::label_hidden("Toggle All"),
         el![
             font::color(hsla(0, 0, if checked { 48.4 } else { 91.3 })),
             font::size(22),
@@ -85,11 +88,12 @@ fn toggle_all_checkbox() -> Checkbox {
     ]
 }
 
+#[View]
 fn new_todo_title() -> TextInput {
     text_input![
         focus_on_load(),
         text_input::on_change(app::set_new_todo_title),
-        label_hidden("New Todo Title"),
+        input::label_hidden("New Todo Title"),
         placeholder![
             font::italic(),
             font::light(),
@@ -116,7 +120,7 @@ fn completed_todo_checkbox_icon() -> &'static str {
 }
 
 #[View]
-fn todo(todo: Model<Todo>) {
+fn todo(todo: Model<Todo>) -> Row {
     let selected_todo = app::selected_todo();
     let selected = todo.map(|t| t.id) == selected_todo.map(|t| t.id);
     let completed = todo.map(|t| t.completed);
@@ -143,7 +147,17 @@ fn todo(todo: Model<Todo>) {
         ],
         if selected {
             text_input![
-
+                width!(fill()),
+                paddingXY(16, 12),
+                border::solid(),
+                border::width!(1),
+                border::color(hsl(0, 0, 63.2)),
+                border::inner_shadow!(
+                    shadow::offsetXY(-1, 5),
+                    shadow::size(0),
+                    shadow::color(hsla(0, 0, 0, 0.2)),
+                ),
+                todo.map(|t| t.title.clone()),
             ].into_element()
         } else {
             label![
@@ -162,8 +176,8 @@ fn todo(todo: Model<Todo>) {
 fn remove_todo_button(todo: Model<Todo>) -> Button {
     let hovered = use_state(|| false);
     button![
-        size::width![20],
-        size::height![20],
+        size::width!(20),
+        size::height!(20),
         font::size(30),
         font::color(hsl(12.2, 34.7, 68.2)),
         hovered(hovered),
@@ -174,7 +188,7 @@ fn remove_todo_button(todo: Model<Todo>) -> Button {
 }
 
 #[View]
-fn footer() {
+fn status_bar() -> Row {
     C.text(app::active_count())
     filters()
     if app::completed_exist() {
@@ -183,12 +197,17 @@ fn footer() {
 }
 
 #[View]
-fn filters() {
+fn filters() -> Row {
     app::filters().iter().map(filter)  
 }
 
 #[View]
-fn filter(filter: Filter) {
+fn filter(filter: Filter) -> Button {
     let selected_filter = app::selected_filter();
     C.button(is_selected)
+}
+
+#[View]
+fn footer() -> Column {
+    
 }
