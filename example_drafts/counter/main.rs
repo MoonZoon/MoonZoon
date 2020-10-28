@@ -16,11 +16,11 @@ fn decrement() {
 }
 
 #[View]
-fn view() -> Row {
+fn view() -> Column {
     column![
-        button![text!["-"], button::on_press(decrement)],
-        text![counter.get()],
-        button![text!["-"], button::on_press(increment)],
+        button![button::on_press(decrement), "-"],
+        counter.inner(),
+        button![button::on_press(increment), "+"],
     ]
 }
 

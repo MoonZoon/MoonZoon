@@ -10,12 +10,13 @@ type Todos = BTreeMap<TodoId, Model<Todo>>;
 // ------ Routes ------
 
 #[Route]
+#[derive(Copy, Clone)]
 enum Route {
-    #[path("/active")]
+    #[path("active")]
     Active,
-    #[path("/completed")]
+    #[path("completed")]
     Completed,
-    #[path("/")]
+    #[path()]
     Root,
     Unknown,
 }
@@ -36,11 +37,11 @@ fn set_route(route: Route) {
 
 // ------ Filters ------
 
-// derive Iter / to_vec
+#[derive(Copy, Clone, Eq, PartialEq, EnumIter)]
 enum Filter {
     All,
-    Completed,
     Active,
+    Completed,
 }
 
 #[Model]
@@ -71,6 +72,16 @@ struct SelectedTodo {
 #[Model]
 fn selected_todo() -> Model<SelectedTodo> {
     use_model(|| None)
+}
+
+#[Update]
+fn select_todo(todo: Model<Todo>) {
+    let todo = todo.inner();
+    
+    selected_todo.set(SelectedTodo {
+        id: todo.id,
+        title: todo.title,
+    });
 }
 
 // ------ Todos ------
@@ -176,6 +187,13 @@ fn completed_todos() -> Cache<Todos> {
                 .collect()
         })
     })
+}
+
+#[Update]
+fn remove_completed() {
+    for todo in completed_todos().inner().values() {
+        remove_todo(todo);
+    }
 }
 
 #[Cache]

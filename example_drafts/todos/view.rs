@@ -45,22 +45,23 @@ fn main() -> Column {
             shadow::offsetXY(0, 2),
             shadow::size(0),
             shadow::blur(4),
-            shadow::color(hsla(0, 0, 0, 0.2)),
+            shadow::color(hsla(0, 0, 0, 20)),
         ),
         border::shadow!(
             shadow::offsetXY(0, 25),
             shadow::size(0),
             shadow::blur(50),
-            shadow::color(hsla(0, 0, 0, 0.1)),
+            shadow::color(hsla(0, 0, 0, 10)),
         ),
         row![
             width!(fill()),
-            background::color(hsla(0, 0, 0, 0.003)),
+            background::color(hsla(0, 0, 0, 0.3)),
             padding!(16),
-            border::inner_shadow!(
+            border::shadow!(
+                shadow::inner(),
                 shadow::offsetXY(-2, 1),
                 shadow::size(0),
-                shadow::color(hsla(0, 0, 0, 0.03)),
+                shadow::color(hsla(0, 0, 0, 3)),
             ),
             app::todos_exist().map_true(toggle_all_checkbox),
             new_todo_title(),
@@ -90,14 +91,16 @@ fn toggle_all_checkbox() -> Checkbox {
 
 #[View]
 fn new_todo_title() -> TextInput {
+    focused = use_state(|| true);
     text_input![
-        focus_on_load(),
+        focused(focused.inner()),
+        on_focused_change(|f| focused.set(f)),
         text_input::on_change(app::set_new_todo_title),
         input::label_hidden("New Todo Title"),
         placeholder![
             font::italic(),
             font::light(),
-            font::color(hsla(0, 0, 0, 0.4)),
+            font::color(hsla(0, 0, 0, 40)),
             placeholder::text("what needs to be done?"),
         ],
         app::new_todo_title().inner(),
@@ -132,7 +135,7 @@ fn todo(todo: Model<Todo>) -> Row {
         font::size(24),
         padding!(15),
         spacing(10),
-        hovered(row_hovered),
+        on_hovered_change(|h| row_hovered.set(h)),
         checkbox![
             id(checkbox_id.inner()),
             checkbox::checked(completed),
@@ -152,10 +155,11 @@ fn todo(todo: Model<Todo>) -> Row {
                 border::solid(),
                 border::width!(1),
                 border::color(hsl(0, 0, 63.2)),
-                border::inner_shadow!(
+                border::shadow!(
+                    shadow::inner(),
                     shadow::offsetXY(-1, 5),
                     shadow::size(0),
-                    shadow::color(hsla(0, 0, 0, 0.2)),
+                    shadow::color(hsla(0, 0, 0, 20)),
                 ),
                 todo.map(|t| t.title.clone()),
             ].into_element()
@@ -165,6 +169,7 @@ fn todo(todo: Model<Todo>) -> Row {
                 checked.map_true(font::strike),
                 font::regular(),
                 font::color(hsl(0, 0, 32.7)),
+                on_double_click(|| select_todo(todo)),
                 todo.map(|t| t.title.clone()),
             ].into_element()
         },
@@ -180,34 +185,92 @@ fn remove_todo_button(todo: Model<Todo>) -> Button {
         size::height!(20),
         font::size(30),
         font::color(hsl(12.2, 34.7, 68.2)),
-        hovered(hovered),
+        on_hovered_change(|h| row_hovered.set(h)),
+        font::color(if hovered().inner() { hsl(10.5, 37.7, 48.8) } else { hsl(12.2, 34.7, 68.2) }),
         button::on_press(|| app::remove_todo(todo)),
-        hovered.inner().map_true(|| font::color(hsl(10.5, 37.7, 48.8))),
         "×",
     ]
 }
 
 #[View]
 fn status_bar() -> Row {
-    C.text(app::active_count())
-    filters()
-    if app::completed_exist() {
-        C.button("Clear completed")
-    }
+    row![
+        active_items_count(),
+        filters(),
+        app::completed_exist().map_true(clear_completed_button),
+    ]
+}
+
+#[View]
+fn active_items_count() -> Paragraph {
+    let active_count = app::active_count().inner();
+    paragraph![
+        el![
+            font::bold(),
+            active_count,
+        ],
+        format!(" item{} left", if active_count == 1 { "" } else { "s" }),
+    ]
 }
 
 #[View]
 fn filters() -> Row {
-    app::filters().iter().map(filter)  
+    row![
+        app::filters().iter().map(filter)  
+    ]
 }
 
 #[View]
-fn filter(filter: Filter) -> Button {
-    let selected_filter = app::selected_filter();
-    C.button(is_selected)
+fn filter(filter: app::Filter) -> Button {
+    let selected = app::selected_filter().inner() == filter;
+    let (title, route) = match filter {
+        app::Filter::All => ("All", app::Route::root()),
+        app::Filter::Active => ("Active", app::Route::active()),
+        app::Filter::Completed => ("Completed", app::Route::completed()),
+    };
+    let border_alpha = if selected { 20 } else if hovered { 10 } else { 10 };
+    button![
+        paddingXY(7, 3),
+        border::solid(),
+        border::width!(1),
+        border::color(hsla(12.2, 72.8, 40.2, border_alpha),
+        button::on_press(|| app::set_route(route)),
+        title,
+    ]
+}
+
+#[View]
+fn clear_completed_button() -> Button {
+    let hovered = use_state(|| false);
+    button![
+        on_hovered_change(|h| row_hovered.set(h)),
+        hovered.inner().map_true(font::underline),
+        button::on_press(app::remove_completed),
+        "Clear completed",
+    ]
 }
 
 #[View]
 fn footer() -> Column {
-    
+    column![
+        paragraph![
+            "Double-click to edit a todo",
+        ],
+        paragraph![
+            "Created by ",
+            link![
+                link::new_tab(),
+                link::url("https://github.com/MartinKavik"),
+                "Martin Kavík",
+            ],
+        ],
+        paragraph![
+            "Part of ",
+            link![
+                link::new_tab(),
+                link::url("http://todomvc.com"),
+                "TodoMVC",
+            ],
+        ],
+    ]
 }
