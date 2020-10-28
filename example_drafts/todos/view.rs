@@ -37,6 +37,8 @@ fn header() -> El {
 
 #[View]
 fn panel() -> Column {
+    let todos_exist = app::todos_exist().inner();
+
     column![
         region::section(),
         width!(fill()),
@@ -54,7 +56,7 @@ fn panel() -> Column {
             shadow::color(hsla(0, 0, 0, 10)),
         ),
         panel_header(),
-        app::todos_exist().inner().map_true(|| elements![
+        todos_exist().map_true(|| elements![
             todos(),
             panel_footer(),
         ]),
@@ -63,6 +65,8 @@ fn panel() -> Column {
 
 #[View]
 fn panel_header() -> Row {
+    let todos_exist = app::todos_exist().inner();
+
     row![
         width!(fill()),
         background::color(hsla(0, 0, 0, 0.3)),
@@ -73,7 +77,7 @@ fn panel_header() -> Row {
             shadow::size(0),
             shadow::color(hsla(0, 0, 0, 3)),
         ),
-        app::todos_exist().map_true(toggle_all_checkbox),
+        todos_exist.map_true(toggle_all_checkbox),
         new_todo_title(),
     ]
 }
@@ -81,6 +85,7 @@ fn panel_header() -> Row {
 #[View]
 fn toggle_all_checkbox() -> Checkbox {
     let checked = app::are_all_completed().inner();
+
     checkbox![
         checkbox::checked(checked),
         checkbox::on_change(app::check_or_uncheck_all),
@@ -96,7 +101,9 @@ fn toggle_all_checkbox() -> Checkbox {
 
 #[View]
 fn new_todo_title() -> TextInput {
-    focused = use_state(|| true);
+    let new_todo_title = app::new_todo_title().inner();
+    let focused = use_state(|| true);
+
     text_input![
         focused(focused.inner()),
         on_focused_change(|f| focused.set(f)),
@@ -108,14 +115,16 @@ fn new_todo_title() -> TextInput {
             font::color(hsla(0, 0, 0, 40)),
             placeholder::text("what needs to be done?"),
         ],
-        app::new_todo_title().inner(),
+        new_todo_title,
     ]
 }
 
 #[View]
 fn todos() -> Column {
+    let filtered_todos = app::filtered_todos();
+
     column![
-        app::filtered_todos().iter().map(todo)
+        filtered_todos.map(|todos| todos.values().map(todo))
     ]
 }
 
@@ -130,11 +139,10 @@ fn completed_todo_checkbox_icon() -> &'static str {
 #[View]
 fn todo(todo: Model<app::Todo>) -> Row {
     let selected_todo_id = app::selected_todo().map(|t| t.map(|t| t.id));
-    let selected = Some(todo.map(|t| t.id)) == selected_todo_id;
-
     let checkbox_id = use_state(ElementId::new);
     let row_hovered = use_state(|| false);
 
+    let selected = Some(todo.map(|t| t.id)) == selected_todo_id;
     row![
         font::size(24),
         padding!(15),
@@ -180,6 +188,7 @@ fn todo_label(checkbox_id: State<ElementId>, todo: Model<app::Todo>) -> Label {
 fn selected_todo_title() -> TextInput {
     let selected_todo = app::selected_todo().inner().expect("selected todo");
     let focused = use_state(|| true);
+
     text_input![
         width!(fill()),
         paddingXY(16, 12),
@@ -211,6 +220,7 @@ fn selected_todo_title() -> TextInput {
 #[View]
 fn remove_todo_button(todo: Model<app::Todo>) -> Button {
     let hovered = use_state(|| false);
+
     button![
         size::width!(20),
         size::height!(20),
@@ -225,16 +235,19 @@ fn remove_todo_button(todo: Model<app::Todo>) -> Button {
 
 #[View]
 fn panel_footer() -> Row {
+    let completed_exist = app::completed_exist();
+
     row![
         active_items_count(),
         filters(),
-        app::completed_exist().map_true(clear_completed_button),
+        completed_exist.map_true(clear_completed_button),
     ]
 }
 
 #[View]
 fn active_items_count() -> Paragraph {
     let active_count = app::active_count().inner();
+
     paragraph![
         el![
             font::bold(),
@@ -246,20 +259,23 @@ fn active_items_count() -> Paragraph {
 
 #[View]
 fn filters() -> Row {
+    let filters = app::filters();
+
     row![
-        app::filters().iter().map(filter)  
+        filters.map(|filters| filters.iter().map(filter))  
     ]
 }
 
 #[View]
 fn filter(filter: app::Filter) -> Button {
     let selected = app::selected_filter().inner() == filter;
+
     let (title, route) = match filter {
         app::Filter::All => ("All", app::Route::root()),
         app::Filter::Active => ("Active", app::Route::active()),
         app::Filter::Completed => ("Completed", app::Route::completed()),
     };
-    let border_alpha = if selected { 20 } else if hovered { 10 } else { 10 };
+    let border_alpha = if selected { 20 } else if hovered { 10 } else { 0 };
     button![
         paddingXY(7, 3),
         border::solid(),
@@ -273,8 +289,9 @@ fn filter(filter: app::Filter) -> Button {
 #[View]
 fn clear_completed_button() -> Button {
     let hovered = use_state(|| false);
+
     button![
-        on_hovered_change(|h| row_hovered.set(h)),
+        on_hovered_change(|h| hovered.set(h)),
         hovered.inner().map_true(font::underline),
         button::on_press(app::remove_completed),
         "Clear completed",
