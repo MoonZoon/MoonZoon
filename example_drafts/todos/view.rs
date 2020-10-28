@@ -12,7 +12,7 @@ pub fn view() -> View {
             width!(fill(), minimum(230), maximum(550)),
             center_x(),
             header(),
-            main(),
+            panel(),
             footer(),
         ]
     ]
@@ -36,7 +36,7 @@ fn header() -> El {
 }
 
 #[View]
-fn main() -> Column {
+fn panel() -> Column {
     column![
         region::section(),
         width!(fill()),
@@ -53,23 +53,28 @@ fn main() -> Column {
             shadow::blur(50),
             shadow::color(hsla(0, 0, 0, 10)),
         ),
-        row![
-            width!(fill()),
-            background::color(hsla(0, 0, 0, 0.3)),
-            padding!(16),
-            border::shadow!(
-                shadow::inner(),
-                shadow::offsetXY(-2, 1),
-                shadow::size(0),
-                shadow::color(hsla(0, 0, 0, 3)),
-            ),
-            app::todos_exist().map_true(toggle_all_checkbox),
-            new_todo_title(),
-        ],
-        app::todos_exist().map_true(|| elements![
+        panel_header(),
+        app::todos_exist().inner().map_true(|| elements![
             todos(),
-            status_bar(),
+            panel_footer(),
         ]),
+    ]
+}
+
+#[View]
+fn panel_header() -> Row {
+    row![
+        width!(fill()),
+        background::color(hsla(0, 0, 0, 0.3)),
+        padding!(16),
+        border::shadow!(
+            shadow::inner(),
+            shadow::offsetXY(-2, 1),
+            shadow::size(0),
+            shadow::color(hsla(0, 0, 0, 3)),
+        ),
+        app::todos_exist().map_true(toggle_all_checkbox),
+        new_todo_title(),
     ]
 }
 
@@ -125,9 +130,7 @@ fn completed_todo_checkbox_icon() -> &'static str {
 #[View]
 fn todo(todo: Model<app::Todo>) -> Row {
     let selected_todo_id = app::selected_todo().map(|t| t.map(|t| t.id));
-
     let selected = Some(todo.map(|t| t.id)) == selected_todo_id;
-    let completed = todo.map(|t| t.completed);
 
     let checkbox_id = use_state(ElementId::new);
     let row_hovered = use_state(|| false);
@@ -137,31 +140,39 @@ fn todo(todo: Model<app::Todo>) -> Row {
         padding!(15),
         spacing(10),
         on_hovered_change(|h| row_hovered.set(h)),
-        checkbox![
-            id(checkbox_id.inner()),
-            checkbox::checked(completed),
-            checkbox::on_change(|_| app::toggle_todo(todo)),
-            el![
-                background::image(if completed {
-                    completed_todo_checkbox_icon()
-                } else {
-                    active_todo_checkbox_icon()
-                }),
-            ],
-        ],
-        if selected {
-            selected_todo_title().into_element()
-        } else {
-            label![
-                label::for_input(checkbox_id.inner()),
-                checked.map_true(font::strike),
-                font::regular(),
-                font::color(hsl(0, 0, 32.7)),
-                on_double_click(|| select_todo(Some(todo))),
-                todo.map(|t| t.title.clone()),
-            ].into_element()
-        },
+        todo_checkbox(checkbox_id, todo),
+        selected.map_false(|| todo_label(checkbox_id, todo)),
+        selected.map_true(selected_todo_title),
         row_hovered.inner().map_true(|| remove_todo_button(todo)),
+    ]
+}
+
+#[View]
+fn todo_checkbox(checkbox_id: State<ElementId>, todo: Model<app::Todo>) -> CheckBox {
+    let completed = todo.map(|t| t.completed);
+    checkbox![
+        id(checkbox_id.inner()),
+        checkbox::checked(completed),
+        checkbox::on_change(|_| app::toggle_todo(todo)),
+        el![
+            background::image(if completed {
+                completed_todo_checkbox_icon()
+            } else {
+                active_todo_checkbox_icon()
+            }),
+        ],
+    ]
+}
+
+#[View]
+fn todo_label(checkbox_id: State<ElementId>, todo: Model<app::Todo>) -> Label {
+    label![
+        label::for_input(checkbox_id.inner()),
+        checked.map_true(font::strike),
+        font::regular(),
+        font::color(hsl(0, 0, 32.7)),
+        on_double_click(|| select_todo(Some(todo))),
+        todo.map(|t| t.title.clone()),
     ]
 }
 
@@ -186,8 +197,8 @@ fn selected_todo_title() -> TextInput {
             focused.set(f);
             if f { app::save_selected_todo() };
         }),
-        on_key_down(|key| {
-            match key {
+        on_key_down(|event| {
+            match event.key {
                 ESCAPE_KEY =>  app::select_todo(None),
                 ENTER_KEY => app::save_selected_todo(),
             }
@@ -213,7 +224,7 @@ fn remove_todo_button(todo: Model<app::Todo>) -> Button {
 }
 
 #[View]
-fn status_bar() -> Row {
+fn panel_footer() -> Row {
     row![
         active_items_count(),
         filters(),
@@ -253,7 +264,7 @@ fn filter(filter: app::Filter) -> Button {
         paddingXY(7, 3),
         border::solid(),
         border::width!(1),
-        border::color(hsla(12.2, 72.8, 40.2, border_alpha),
+        border::color(hsla(12.2, 72.8, 40.2, border_alpha)),
         button::on_press(|| app::set_route(route)),
         title,
     ]
