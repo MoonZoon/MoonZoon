@@ -1,5 +1,5 @@
 use zoon::*;
-use crate::model;
+use crate::app;
 
 #[View]
 pub fn view() -> View {
@@ -123,9 +123,10 @@ fn completed_todo_checkbox_icon() -> &'static str {
 }
 
 #[View]
-fn todo(todo: Model<Todo>) -> Row {
-    let selected_todo = app::selected_todo();
-    let selected = todo.map(|t| t.id) == selected_todo.map(|t| t.id);
+fn todo(todo: Model<app::Todo>) -> Row {
+    let selected_todo_id = app::selected_todo().map(|t| t.map(|t| t.id));
+
+    let selected = Some(todo.map(|t| t.id)) == selected_todo_id;
     let completed = todo.map(|t| t.completed);
 
     let checkbox_id = use_state(ElementId::new);
@@ -149,27 +150,14 @@ fn todo(todo: Model<Todo>) -> Row {
             ],
         ],
         if selected {
-            text_input![
-                width!(fill()),
-                paddingXY(16, 12),
-                border::solid(),
-                border::width!(1),
-                border::color(hsl(0, 0, 63.2)),
-                border::shadow!(
-                    shadow::inner(),
-                    shadow::offsetXY(-1, 5),
-                    shadow::size(0),
-                    shadow::color(hsla(0, 0, 0, 20)),
-                ),
-                todo.map(|t| t.title.clone()),
-            ].into_element()
+            selected_todo_title().into_element()
         } else {
             label![
                 label::for_input(checkbox_id.inner()),
                 checked.map_true(font::strike),
                 font::regular(),
                 font::color(hsl(0, 0, 32.7)),
-                on_double_click(|| select_todo(todo)),
+                on_double_click(|| select_todo(Some(todo))),
                 todo.map(|t| t.title.clone()),
             ].into_element()
         },
@@ -178,7 +166,39 @@ fn todo(todo: Model<Todo>) -> Row {
 }
 
 #[View]
-fn remove_todo_button(todo: Model<Todo>) -> Button {
+fn selected_todo_title() -> TextInput {
+    let selected_todo = app::selected_todo().inner().expect("selected todo");
+    let focused = use_state(|| true);
+    text_input![
+        width!(fill()),
+        paddingXY(16, 12),
+        border::solid(),
+        border::width!(1),
+        border::color(hsl(0, 0, 63.2)),
+        border::shadow!(
+            shadow::inner(),
+            shadow::offsetXY(-1, 5),
+            shadow::size(0),
+            shadow::color(hsla(0, 0, 0, 20)),
+        ),
+        focused(focused.inner()),
+        on_focused_change(|f| {
+            focused.set(f);
+            if f { app::save_selected_todo() };
+        }),
+        on_key_down(|key| {
+            match key {
+                ESCAPE_KEY =>  app::select_todo(None),
+                ENTER_KEY => app::save_selected_todo(),
+            }
+        }),
+        text_input::on_change(app::set_selected_todo_title),
+        selected_todo.title,
+    ]
+}
+
+#[View]
+fn remove_todo_button(todo: Model<app::Todo>) -> Button {
     let hovered = use_state(|| false);
     button![
         size::width!(20),

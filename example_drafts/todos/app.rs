@@ -65,23 +65,38 @@ fn selected_filter() -> Cache<Filter> {
 // ------ SelectedTodo ------
 
 struct SelectedTodo {
-    id: TodoId,
+    todo: Model<Todo>,
     title: String,
 }
 
 #[Model]
-fn selected_todo() -> Model<SelectedTodo> {
+fn selected_todo() -> Model<Option<SelectedTodo>> {
     use_model(|| None)
 }
 
 #[Update]
-fn select_todo(todo: Model<Todo>) {
-    let todo = todo.inner();
-    
-    selected_todo.set(SelectedTodo {
-        id: todo.id,
-        title: todo.title,
-    });
+fn select_todo(todo: Option<Model<Todo>>) {
+    if Some(todo) = todo {
+        selected_todo.set(SelectedTodo {
+            todo,
+            title: todo.map(|t| t.title.clone()),
+        });
+    } else {
+        selected_todo.set(None);
+    }
+}
+
+#[Update]
+fn set_selected_todo_title(title: String) {
+    selected_todo().update(move |todo| todo.title = title);
+}
+
+#[Update]
+fn save_selected_todo() {
+    if let Some(selected_todo) = selected_todo().take_inner() {
+        let todo = selected_todo.todo;
+        todo.update(|todo| todo.title = selected_todo.title);
+    }
 }
 
 // ------ Todos ------
@@ -122,6 +137,11 @@ fn create_todo(title: &str) {
 
 #[Update]
 fn remove_todo(todo: Model<Todo>) {
+    let Some(selected_todo_id) = selected_todo().map(|t| t.map(|t| t.id)) {
+        if selected_todo_id == todo.map(|t| t.id) {
+            selected_todo().set(None);
+        }
+    }
     todos().update(|todos| todos.remove(todo.inner().id));
     todo.remove();
 }
