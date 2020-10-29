@@ -23,9 +23,7 @@ enum Route {
 
 #[Cache]
 fn route() -> Route {
-    let url = zoon::model::url();
-
-    url.map(Route::from)
+    zoon::model::url().map(Route::from)
 }
 
 #[Update]
@@ -49,9 +47,7 @@ fn filters() -> Vec<Filter> {
 
 #[Cache]
 fn selected_filter() -> Filter {
-    let route = selected_route();
-
-    match route.inner() {
+    match route().inner() {
         Route::Active => Filter::Active,
         Route::Completed => Filter::Completed,
         _ => Filter::All,
@@ -75,7 +71,7 @@ fn select_todo(todo: Option<Model<Todo>>) {
     if Some(todo) = todo {
         selected_todo.set(SelectedTodo {
             todo,
-            title: todo.map(|t| t.title.clone()),
+            title: todo.map(|todo| todo.title.clone()),
         });
     } else {
         selected_todo.set(None);
@@ -84,12 +80,16 @@ fn select_todo(todo: Option<Model<Todo>>) {
 
 #[Update]
 fn set_selected_todo_title(title: String) {
-    selected_todo().update(move |todo| todo.title = title);
+    selected_todo().update(move |selected_todo| {
+        if let Some(selected_todo) = selected_todo {
+            selected_todo.title = title;
+        }  
+    });
 }
 
 #[Update]
 fn save_selected_todo() {
-    if let Some(selected_todo) = selected_todo().take_inner() {
+    if let Some(selected_todo) = selected_todo().map_mut(Option::take) {
         let todo = selected_todo.todo;
         todo.update(|todo| todo.title = selected_todo.title);
     }
@@ -128,23 +128,27 @@ fn create_todo(title: &str) {
     });
 
     todos().update(|todos| todos.insert(todo_id, todo));
-    new_todo_title().update(|title| title.clear());
+    new_todo_title().update(String::clear);
 }
 
 #[Update]
 fn remove_todo(todo: Model<Todo>) {
-    let Some(selected_todo_id) = selected_todo().map(|t| t.map(|t| t.id)) {
-        if selected_todo_id == todo.map(|t| t.id) {
+    let todo_id = todo.map(|todo| todo.id);
+    let selected_todo_id = selected_todo().map(|selected_todo| {
+        selected_todo?.todo.map(|todo| Some(todo.id))
+    });
+    if let Some(selected_todo_id) = selected_todo_id {
+        if selected_todo_id == todo_id {
             selected_todo().set(None);
         }
     }
-    todos().update(|todos| todos.remove(todo.inner().id));
+    todos().update(|todos| todos.remove(todo_id));
     todo.remove();
 }
 
 #[Update]
 fn toggle_todo(todo: Model<Todo>) {
-    todo.update(|todo| *todo.checked = !todo.checked);
+    todo.update(|todo| todo.checked = !todo.checked);
 }
 
 // -- all --
@@ -157,31 +161,19 @@ fn todos() -> Todos {
 #[Update]
 fn check_or_uncheck_all(checked: bool) {
     if are_all_completed().inner() {
-        todos().update(|todos| {
-            for todo in todos.values() {
-                toggle_todo(todo)
-            }
-        })
+        todos().update_ref(|todos| todos.values().for_each(toggle_todo));
     } else {
-        active_todos().update(|todos| {
-            for todo in todos.values() {
-                toggle_todo(todo)
-            }
-        })
+        active_todos().update_ref(|todos| todos.values().for_each(toggle_todo));
     }
 }
 
 #[Cache]
 fn todos_count() -> usize {
-    let todos = todos();
-
-    todos.map(BTreeMap::len)
+    todos().map(BTreeMap::len)
 }
 
 #[Cache]
 fn todos_exist() -> bool {
-    let todos_count = todos_count();
-
     todos_count().inner() != 0
 }
 
@@ -189,9 +181,7 @@ fn todos_exist() -> bool {
 
 #[Cache]
 fn completed_todos() -> Todos {
-    let todos = todos();
-
-    todos.map(|todos| {
+    todos().map(|todos| {
         todos
             .iter()
             .filter(|_, todo| todo.completed)
@@ -201,40 +191,29 @@ fn completed_todos() -> Todos {
 
 #[Update]
 fn remove_completed() {
-    for todo in completed_todos().inner().values() {
-        remove_todo(todo);
-    }
+    completed_todos().update_ref(|todos| todos.values().for_each(remove_todo));
 }
 
 #[Cache]
 fn completed_count() -> usize {
-    let todos = completed_todos();
-
-    todos.map(BTreeMap::len)
+    completed_todos().map(BTreeMap::len)
 }
 
 #[Cache]
 fn completed_exist() -> bool {
-    let todos_count = completed_count();
-
-    todos_count().inner() != 0
+    completed_count().inner() != 0
 }
 
 #[Cache]
 fn are_all_completed() -> bool {
-    let total_count = todos_count();
-    let completed_count = completed_count();
-
-    total_count.inner() == completed_count.inner()
+    todos_count().inner() == completed_count().inner()
 }
 
 // -- active --
 
 #[Cache]
 fn active_todos() -> Todos {
-    let todos = todos();
-
-    todos.map(|todos| {
+    todos().map(|todos| {
         todos
             .iter()
             .filter(|_, todo| !todo.completed)
@@ -244,18 +223,14 @@ fn active_todos() -> Todos {
 
 #[Cache]
 fn active_count() -> usize {
-    let todos = active_todos();
-
-    todos.map(BTreeMap::len)
+    active_todos().map(BTreeMap::len)
 }
 
 // -- filtered --
 
 #[Cache]
 fn filtered_todos() -> Todos {
-    let selected_filter = selected_filter();
-
-    match selected_filter.inner() {
+    match selected_filter().inner() {
         Filter::All => todos(),
         Filter::Active => active_todos(),
         Filter::Completed => completed_todos(),
