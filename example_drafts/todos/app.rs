@@ -22,12 +22,10 @@ enum Route {
 }
 
 #[Cache]
-fn route() -> Cache<Route> {
-    let url = watch(zoon::model::url());
+fn route() -> Route {
+    let url = zoon::model::url();
 
-    use_cache(url.changed(), || {
-        url.map(Route::from)
-    })
+    url.map(Route::from)
 }
 
 #[Update]
@@ -45,21 +43,19 @@ enum Filter {
 }
 
 #[Model]
-fn filters() -> Model<Vec<Filter>> {
-    use_model(|| Filter::iter().collect())
+fn filters() -> Vec<Filter> {
+    Filter::iter().collect()
 }
 
 #[Cache]
-fn selected_filter() -> Cache<Filter> {
-    let route = watch(selected_route());
+fn selected_filter() -> Filter {
+    let route = selected_route();
 
-    use_cache(route.changed(), || {
-        match route.inner() {
-            Route::Active => Filter::Active,
-            Route::Completed => Filter::Completed,
-            _ => Filter::All,
-        }
-    })
+    match route.inner() {
+        Route::Active => Filter::Active,
+        Route::Completed => Filter::Completed,
+        _ => Filter::All,
+    }
 }
 
 // ------ SelectedTodo ------
@@ -70,8 +66,8 @@ struct SelectedTodo {
 }
 
 #[Model]
-fn selected_todo() -> Model<Option<SelectedTodo>> {
-    use_model(|| None)
+fn selected_todo() -> Option<SelectedTodo> {
+    None
 }
 
 #[Update]
@@ -108,8 +104,8 @@ struct Todo {
 }
 
 #[Model]
-fn new_todo_title() -> Model<String> {
-    use_model(String::new)
+fn new_todo_title() -> String {
+    String::new
 }
 
 #[Update]
@@ -154,8 +150,8 @@ fn toggle_todo(todo: Model<Todo>) {
 // -- all --
 
 #[Model]
-fn todos() -> Model<Todos> {
-    use_model(BTreeMap::new)
+fn todos() -> Todos {
+    BTreeMap::new
 }
 
 #[Update]
@@ -176,36 +172,30 @@ fn check_or_uncheck_all(checked: bool) {
 }
 
 #[Cache]
-fn todos_count() -> Cache<usize> {
-    let todos = watch(todos());
+fn todos_count() -> usize {
+    let todos = todos();
 
-    use_cache(todos.changed(), || {
-        todos.map(BTreeMap::len)
-    })
+    todos.map(BTreeMap::len)
 }
 
 #[Cache]
-fn todos_exist() -> Cache<bool> {
-    let todos_count = watch(todos_count());
+fn todos_exist() -> bool {
+    let todos_count = todos_count();
 
-    use_cache(todos_count.changed(), || {
-        todos_count().inner() != 0
-    })
+    todos_count().inner() != 0
 }
 
 // -- completed --
 
 #[Cache]
-fn completed_todos() -> Cache<Todos> {
-    let todos = watch(todos);
+fn completed_todos() -> Todos {
+    let todos = todos();
 
-    use_cache(todos.changed(), || {
-        todos.map(|todos| {
-            todos
-                .iter()
-                .filter(|_, todo| todo.completed)
-                .collect()
-        })
+    todos.map(|todos| {
+        todos
+            .iter()
+            .filter(|_, todo| todo.completed)
+            .collect()
     })
 }
 
@@ -217,69 +207,57 @@ fn remove_completed() {
 }
 
 #[Cache]
-fn completed_count() -> Cache<usize> {
-    let todos = watch(completed_todos());
+fn completed_count() -> usize {
+    let todos = completed_todos();
 
-    use_cache(completed_count.changed(), || {
-        completed_count.map(BTreeMap::len)
-    })
+    todos.map(BTreeMap::len)
 }
 
 #[Cache]
-fn completed_exist() -> Cache<bool> {
-    let todos_count = watch(completed_count());
+fn completed_exist() -> bool {
+    let todos_count = completed_count();
 
-    use_cache(todos_count.changed(), || {
-        todos_count().inner() != 0
-    })
+    todos_count().inner() != 0
 }
 
 #[Cache]
-fn are_all_completed() -> Cache<bool> {
-    let total_count = watch(todos_count());
-    let completed_count = watch(completed_count());
+fn are_all_completed() -> bool {
+    let total_count = todos_count();
+    let completed_count = completed_count();
 
-    use_cache(total_count.changed() || completed_count.changed(), || {
-        total_count.inner() == completed_count.inner()
-    })
+    total_count.inner() == completed_count.inner()
 }
 
 // -- active --
 
 #[Cache]
-fn active_todos() -> Cache<Todos> {
-    let todos = watch(todos());
+fn active_todos() -> Todos {
+    let todos = todos();
 
-    use_cache(todos.changed(), || {
-        todos.map(|todos| {
-            todos
-                .iter()
-                .filter(|_, todo| !todo.completed)
-                .collect()
-        })
+    todos.map(|todos| {
+        todos
+            .iter()
+            .filter(|_, todo| !todo.completed)
+            .collect()
     })
 }
 
 #[Cache]
-fn active_count() -> Cache<usize> {
-    let todos = watch(active_todos());
+fn active_count() -> usize {
+    let todos = active_todos();
 
-    use_cache(todos.changed(), || {
-        todos.map(BTreeMap::len)
-    })
+    todos.map(BTreeMap::len)
 }
 
 // -- filtered --
 
 #[Cache]
-fn filtered_todos() -> Cache<Todos> {
-    let selected_filter = watch(selected_filter());
+fn filtered_todos() -> Todos {
+    let selected_filter = selected_filter();
 
-    use_cache(selected_filter.changed(), || {
-        match selected_filter.inner() {
-            Filter::All => todos(),
-            Filter::Active => active_todos(),
-            Filter::Completed => completed_todos(),
-        }
-    })
+    match selected_filter.inner() {
+        Filter::All => todos(),
+        Filter::Active => active_todos(),
+        Filter::Completed => completed_todos(),
+    }
 }
