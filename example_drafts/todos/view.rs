@@ -102,11 +102,11 @@ fn toggle_all_checkbox() -> Checkbox {
 #[View]
 fn new_todo_title() -> TextInput {
     let new_todo_title = app::new_todo_title().inner();
-    let focused = use_state(|| true);
+    let focus = use_state(|| true);
 
     text_input![
-        focused(focused.inner()),
-        on_focused_change(|f| focused.set(f)),
+        focus(focused.inner()),
+        on_focus_change(focus.setter()),
         text_input::on_change(app::set_new_todo_title),
         input::label_hidden("New Todo Title"),
         placeholder![
@@ -187,7 +187,7 @@ fn todo_label(checkbox_id: State<ElementId>, todo: Model<app::Todo>) -> Label {
 #[View]
 fn selected_todo_title() -> TextInput {
     let selected_todo = app::selected_todo().inner().expect("selected todo");
-    let focused = use_state(|| true);
+    let focus = use_state(|| true);
 
     text_input![
         width!(fill()),
@@ -201,15 +201,16 @@ fn selected_todo_title() -> TextInput {
             shadow::size(0),
             shadow::color(hsla(0, 0, 0, 20)),
         ),
-        focused(focused.inner()),
-        on_focused_change(|f| {
-            focused.set(f);
-            if f { app::save_selected_todo() };
+        focus(focused.inner()),
+        on_focus_change(|focused| {
+            focus.set(focused);
+            if !focused { app::save_selected_todo() };
         }),
         on_key_down(|event| {
             match event.key {
                 ESCAPE_KEY =>  app::select_todo(None),
                 ENTER_KEY => app::save_selected_todo(),
+                _ => (),
             }
         }),
         text_input::on_change(app::set_selected_todo_title),
@@ -219,15 +220,15 @@ fn selected_todo_title() -> TextInput {
 
 #[View]
 fn remove_todo_button(todo: Model<app::Todo>) -> Button {
-    let hovered = use_state(|| false);
+    let hover = use_state(|| false);
 
     button![
         size::width!(20),
         size::height!(20),
         font::size(30),
         font::color(hsl(12.2, 34.7, 68.2)),
-        on_hovered_change(|h| row_hovered.set(h)),
-        font::color(if hovered().inner() { hsl(10.5, 37.7, 48.8) } else { hsl(12.2, 34.7, 68.2) }),
+        on_hover_change(row_hovered.setter()),
+        font::color(if hover().inner() { hsl(10.5, 37.7, 48.8) } else { hsl(12.2, 34.7, 68.2) }),
         button::on_press(|| app::remove_todo(todo)),
         "×",
     ]
@@ -288,10 +289,10 @@ fn filter(filter: app::Filter) -> Button {
 
 #[View]
 fn clear_completed_button() -> Button {
-    let hovered = use_state(|| false);
+    let hover = use_state(|| false);
 
     button![
-        on_hovered_change(|h| hovered.set(h)),
+        on_hovered_change(hovered.setter()),
         hovered.inner().map_true(font::underline),
         button::on_press(app::remove_completed),
         "Clear completed",
