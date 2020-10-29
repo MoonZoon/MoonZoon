@@ -5,7 +5,6 @@ use ulid::Ulid;
 
 
 type TodoId = Ulid;
-type Todos = BTreeMap<TodoId, Model<Todo>>;
 
 // ------ Routes ------
 
@@ -120,14 +119,13 @@ fn create_todo(title: &str) {
         return;
     }
 
-    let todo_id = TodoId::new();
     let mut todo = new_model(|| Todo {
-        id: todo_id,
+        id: TodoId::new(),
         title: title.trim(),
         completed: false,
     });
 
-    todos().update(|todos| todos.insert(todo_id, todo));
+    todos().update(|todos| todos.push(todo));
     new_todo_title().update(String::clear);
 }
 
@@ -142,7 +140,11 @@ fn remove_todo(todo: Model<Todo>) {
             selected_todo().set(None);
         }
     }
-    todos().update(|todos| todos.remove(todo_id));
+    todos().update(|todos| {
+        if let Some(position) = todos.iter().position(|t| t == todo) {
+            todos.remove(position);
+        }
+    });
     todo.remove();
 }
 
@@ -154,22 +156,22 @@ fn toggle_todo(todo: Model<Todo>) {
 // -- all --
 
 #[Model]
-fn todos() -> Todos {
-    BTreeMap::new
+fn todos() -> Vec<Todo> {
+    Vec::new
 }
 
 #[Update]
 fn check_or_uncheck_all(checked: bool) {
     if are_all_completed().inner() {
-        todos().update_ref(|todos| todos.values().for_each(toggle_todo));
+        todos().update_ref(|todos| todos.iter().for_each(toggle_todo));
     } else {
-        active_todos().update_ref(|todos| todos.values().for_each(toggle_todo));
+        active_todos().update_ref(|todos| todos.iter().for_each(toggle_todo));
     }
 }
 
 #[Cache]
 fn todos_count() -> usize {
-    todos().map(BTreeMap::len)
+    todos().map(Vec::len)
 }
 
 #[Cache]
@@ -180,23 +182,23 @@ fn todos_exist() -> bool {
 // -- completed --
 
 #[Cache]
-fn completed_todos() -> Todos {
+fn completed_todos() -> Vec<Todo> {
     todos().map(|todos| {
         todos
             .iter()
-            .filter(|_, todo| todo.completed)
+            .filter(|todo| todo.map(|todo| todo.completed))
             .collect()
     })
 }
 
 #[Update]
 fn remove_completed() {
-    completed_todos().update_ref(|todos| todos.values().for_each(remove_todo));
+    completed_todos().update_ref(|todos| todos.iter().for_each(remove_todo));
 }
 
 #[Cache]
 fn completed_count() -> usize {
-    completed_todos().map(BTreeMap::len)
+    completed_todos().map(Vec::len)
 }
 
 #[Cache]
@@ -212,27 +214,16 @@ fn are_all_completed() -> bool {
 // -- active --
 
 #[Cache]
-fn active_todos() -> Todos {
+fn active_todos() -> Vec<Todo> {
     todos().map(|todos| {
         todos
             .iter()
-            .filter(|_, todo| !todo.completed)
+            .filter(|todo| todo.map(|todo| !todo.completed))
             .collect()
     })
 }
 
 #[Cache]
 fn active_count() -> usize {
-    active_todos().map(BTreeMap::len)
-}
-
-// -- filtered --
-
-#[Cache]
-fn filtered_todos() -> Todos {
-    match selected_filter().inner() {
-        Filter::All => todos(),
-        Filter::Active => active_todos(),
-        Filter::Completed => completed_todos(),
-    }
+    active_todos().map(Vec::len)
 }
