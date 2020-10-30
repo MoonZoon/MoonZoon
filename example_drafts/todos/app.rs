@@ -227,3 +227,14 @@ fn active_todos() -> Vec<Todo> {
 fn active_count() -> usize {
     active_todos().map(Vec::len)
 }
+
+// -- filtered --
+
+#[Cache]
+fn filtered_todos() -> Cache<Vec<Todo>> {
+    match app::selected_filter().inner() {
+        Filter::All => app::todos().to_cache(),
+        Filter::Active => app::active_todos(),
+        Filter::Completed => app::completed_todos(),
+    }
+}

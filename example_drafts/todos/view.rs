@@ -121,14 +121,8 @@ fn new_todo_title() -> TextInput {
 
 #[View]
 fn todos() -> Column {
-    let filtered_todos = match app::selected_filter().inner() {
-        Filter::All => app::todos().to_cache(),
-        Filter::Active => app::active_todos(),
-        Filter::Completed => app::completed_todos(),
-    };
-
     column![
-        filtered_todos.map(|todos| todos.iter().map(todo))
+        filtered_todos.inner().map(|todos| todos.iter().map(todo))
     ]
 }
 
