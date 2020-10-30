@@ -67,7 +67,7 @@ fn select_todo(todo: Option<Model<Todo>>) {
 
 #[Model]
 fn selected_todo_title() -> Option<String> {
-    selected_todo().map(|todo| todo?.map(|todo| todo.title.clone()))
+    selected_todo().map(|todo| todo?.try_map(|todo| todo.title.clone()))
 }
 
 #[Update]
@@ -79,7 +79,7 @@ fn set_selected_todo_title(title: String) {
 fn save_selected_todo() {
     if let Some(title) = selected_todo_title().map_mut(Option::take) {
         if let Some(todo) = selected_todo().map_mut(Option::take) {
-            todo.update(move |todo| todo.title = title);
+            todo.try_update(move |todo| todo.title = title);
         }
     }
 }
@@ -129,12 +129,12 @@ fn remove_todo(todo: Model<Todo>) {
             todos.remove(position);
         }
     });
-    todo.remove();
+    todo.try_remove();
 }
 
 #[Update]
 fn toggle_todo(todo: Model<Todo>) {
-    todo.update(|todo| todo.checked = !todo.checked);
+    todo.try_update(|todo| todo.checked = !todo.checked);
 }
 
 // -- all --
@@ -170,7 +170,7 @@ fn completed_todos() -> Vec<Todo> {
     todos().map(|todos| {
         todos
             .iter()
-            .filter(|todo| todo.map(|todo| todo.completed))
+            .filter(|todo| todo.try_map(|todo| todo.completed).unwrap_or_default())
             .collect()
     })
 }
@@ -202,7 +202,7 @@ fn active_todos() -> Vec<Todo> {
     todos().map(|todos| {
         todos
             .iter()
-            .filter(|todo| todo.map(|todo| !todo.completed))
+            .filter(|todo| todo.try_map(|todo| !todo.completed).unwrap_or_default())
             .collect()
     })
 }
