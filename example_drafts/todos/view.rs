@@ -136,11 +136,10 @@ fn completed_todo_checkbox_icon() -> &'static str {
 
 #[View]
 fn todo(todo: Model<app::Todo>) -> Row {
-    let selected_todo_id = app::selected_todo().map(|t| t.map(|t| t.id));
+    let selected = Some(todo) == app::selected_todo();
     let checkbox_id = use_state(ElementId::new);
     let row_hovered = use_state(|| false);
 
-    let selected = Some(todo.map(|t| t.id)) == selected_todo_id;
     row![
         font::size(24),
         padding!(15),

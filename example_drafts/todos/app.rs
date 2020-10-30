@@ -55,42 +55,32 @@ fn selected_filter() -> Filter {
 
 // ------ SelectedTodo ------
 
-struct SelectedTodo {
-    todo: Model<Todo>,
-    title: String,
-}
-
 #[Model]
-fn selected_todo() -> Option<SelectedTodo> {
+fn selected_todo() -> Option<Model<Todo>> {
     None
 }
 
 #[Update]
 fn select_todo(todo: Option<Model<Todo>>) {
-    if Some(todo) = todo {
-        selected_todo.set(SelectedTodo {
-            todo,
-            title: todo.map(|todo| todo.title.clone()),
-        });
-    } else {
-        selected_todo.set(None);
-    }
+    selected_todo().set(todo)
+}
+
+#[Model]
+fn selected_todo_title() -> Option<String> {
+    selected_todo().map(|todo| todo?.map(|todo| todo.title.clone()))
 }
 
 #[Update]
 fn set_selected_todo_title(title: String) {
-    selected_todo().update(move |selected_todo| {
-        if let Some(selected_todo) = selected_todo {
-            selected_todo.title = title;
-        }  
-    });
+    selected_todo_title().set(title)
 }
 
 #[Update]
 fn save_selected_todo() {
-    if let Some(selected_todo) = selected_todo().map_mut(Option::take) {
-        let todo = selected_todo.todo;
-        todo.update(|todo| todo.title = selected_todo.title);
+    if let Some(title) = selected_todo_title().map_mut(Option::take) {
+        if let Some(todo) = selected_todo().map_mut(Option::take) {
+            todo.update(move |todo| todo.title = title);
+        }
     }
 }
 
@@ -121,7 +111,7 @@ fn create_todo(title: &str) {
 
     let mut todo = new_model(|| Todo {
         id: TodoId::new(),
-        title: title.trim(),
+        title,
         completed: false,
     });
 
@@ -131,14 +121,8 @@ fn create_todo(title: &str) {
 
 #[Update]
 fn remove_todo(todo: Model<Todo>) {
-    let todo_id = todo.map(|todo| todo.id);
-    let selected_todo_id = selected_todo().map(|selected_todo| {
-        selected_todo?.todo.map(|todo| Some(todo.id))
-    });
-    if let Some(selected_todo_id) = selected_todo_id {
-        if selected_todo_id == todo_id {
-            selected_todo().set(None);
-        }
+    if Some(todo) = selected_todo() {
+        selected_todo().set(None);
     }
     todos().update(|todos| {
         if let Some(position) = todos.iter().position(|t| t == todo) {
