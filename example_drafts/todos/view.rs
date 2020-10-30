@@ -154,7 +154,7 @@ fn todo(todo: Model<app::Todo>) -> Row {
 
 #[View]
 fn todo_checkbox(checkbox_id: State<ElementId>, todo: Model<app::Todo>) -> CheckBox {
-    let completed = todo.map(|t| t.completed);
+    let completed = todo.try_map(|todo| todo.completed).unwrap_or_default();
     checkbox![
         id(checkbox_id.inner()),
         checkbox::checked(completed),
@@ -177,7 +177,7 @@ fn todo_label(checkbox_id: State<ElementId>, todo: Model<app::Todo>) -> Label {
         font::regular(),
         font::color(hsl(0, 0, 32.7)),
         on_double_click(|| select_todo(Some(todo))),
-        todo.map(|t| t.title.clone()),
+        todo.try_map(|todo| todo.title.clone()),
     ]
 }
 
@@ -211,7 +211,7 @@ fn selected_todo_title() -> TextInput {
             }
         }),
         text_input::on_change(app::set_selected_todo_title),
-        selected_todo.title,
+        selected_todo.try_map(|todo| todo.title.clone()),
     ]
 }
 
