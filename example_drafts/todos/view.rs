@@ -122,7 +122,7 @@ fn new_todo_title() -> TextInput {
 #[View]
 fn todos() -> Column {
     column![
-        filtered_todos.inner().map(|todos| todos.iter().map(todo))
+        filtered_todos.inner().map(|todos| todos.iter().rev().map(todo))
     ]
 }
 
