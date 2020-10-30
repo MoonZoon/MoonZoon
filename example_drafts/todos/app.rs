@@ -1,7 +1,10 @@
 use zoon::*;
+use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use ulid::Ulid;
+
+const STORAGE_KEY: &str = "todos-zoon";
 
 type TodoId = Ulid;
 
@@ -85,6 +88,7 @@ fn save_selected_todo() {
 
 // ------ Todos ------
 
+#[derive(Deserialize, Serialize)]
 struct Todo {
     id: TodoId,
     title: String,
@@ -113,6 +117,7 @@ fn create_todo(title: &str) {
         title,
         completed: false,
     });
+    todo.on_change(store_todos);
 
     todos().update(|todos| todos.push(todo));
     new_todo_title().update(String::clear);
@@ -140,7 +145,12 @@ fn toggle_todo(todo: Model<Todo>) {
 
 #[Model]
 fn todos() -> Vec<Todo> {
-    Vec::new
+    LocalStorage::get(STORAGE_KEY).unwrap_or_default()
+}
+
+#[Sub]
+fn store_todos() {
+    todos().update_ref(|todos| LocalStorage::insert(STORAGE_KEY, todos));
 }
 
 #[Update]
