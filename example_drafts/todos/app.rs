@@ -3,7 +3,6 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use ulid::Ulid;
 
-
 type TodoId = Ulid;
 
 // ------ Routes ------
@@ -121,7 +120,7 @@ fn create_todo(title: &str) {
 
 #[Update]
 fn remove_todo(todo: Model<Todo>) {
-    if Some(todo) = selected_todo() {
+    if Some(todo) == selected_todo() {
         selected_todo().set(None);
     }
     todos().update(|todos| {
