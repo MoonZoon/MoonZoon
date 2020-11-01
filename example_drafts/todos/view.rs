@@ -1,7 +1,7 @@
 use zoon::*;
 use crate::app;
 
-#[View]
+#[view]
 pub fn view() -> View {
     view![
         font::size(14),
@@ -18,7 +18,7 @@ pub fn view() -> View {
     ]
 }
 
-#[View]
+#[view]
 fn header() -> El {
     el![
         region::header(),
@@ -35,7 +35,7 @@ fn header() -> El {
     ]
 }
 
-#[View]
+#[view]
 fn panel() -> Column {
     let todos_exist = app::todos_exist().inner();
 
@@ -63,7 +63,7 @@ fn panel() -> Column {
     ]
 }
 
-#[View]
+#[view]
 fn panel_header() -> Row {
     let todos_exist = app::todos_exist().inner();
 
@@ -82,7 +82,7 @@ fn panel_header() -> Row {
     ]
 }
 
-#[View]
+#[view]
 fn toggle_all_checkbox() -> Checkbox {
     let checked = app::are_all_completed().inner();
 
@@ -99,7 +99,7 @@ fn toggle_all_checkbox() -> Checkbox {
     ]
 }
 
-#[View]
+#[view]
 fn new_todo_title() -> TextInput {
     let new_todo_title = app::new_todo_title().inner();
     let focus = use_state(|| true);
@@ -119,7 +119,7 @@ fn new_todo_title() -> TextInput {
     ]
 }
 
-#[View]
+#[view]
 fn todos() -> Column {
     column![
         filtered_todos.inner().map(|todos| todos.iter().rev().map(todo))
@@ -134,7 +134,7 @@ fn completed_todo_checkbox_icon() -> &'static str {
     "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%22-10%20-18%20100%20135%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22none%22%20stroke%3D%22%23bddad5%22%20stroke-width%3D%223%22/%3E%3Cpath%20fill%3D%22%235dc2af%22%20d%3D%22M72%2025L42%2071%2027%2056l-4%204%2020%2020%2034-52z%22/%3E%3C/svg%3E"
 }
 
-#[View]
+#[view]
 fn todo(todo: Model<app::Todo>) -> Row {
     let selected = Some(todo) == app::selected_todo();
     let checkbox_id = use_state(ElementId::new);
@@ -152,7 +152,7 @@ fn todo(todo: Model<app::Todo>) -> Row {
     ]
 }
 
-#[View]
+#[view]
 fn todo_checkbox(checkbox_id: State<ElementId>, todo: Model<app::Todo>) -> CheckBox {
     let completed = todo.try_map(|todo| todo.completed).unwrap_or_default();
     checkbox![
@@ -169,7 +169,7 @@ fn todo_checkbox(checkbox_id: State<ElementId>, todo: Model<app::Todo>) -> Check
     ]
 }
 
-#[View]
+#[view]
 fn todo_label(checkbox_id: State<ElementId>, todo: Model<app::Todo>) -> Label {
     label![
         label::for_input(checkbox_id.inner()),
@@ -181,7 +181,7 @@ fn todo_label(checkbox_id: State<ElementId>, todo: Model<app::Todo>) -> Label {
     ]
 }
 
-#[View]
+#[view]
 fn selected_todo_title() -> TextInput {
     let selected_todo = app::selected_todo().inner().expect("selected todo");
     let focus = use_state(|| true);
@@ -215,7 +215,7 @@ fn selected_todo_title() -> TextInput {
     ]
 }
 
-#[View]
+#[view]
 fn remove_todo_button(todo: Model<app::Todo>) -> Button {
     let hover = use_state(|| false);
 
@@ -231,7 +231,7 @@ fn remove_todo_button(todo: Model<app::Todo>) -> Button {
     ]
 }
 
-#[View]
+#[view]
 fn panel_footer() -> Row {
     let completed_exist = app::completed_exist();
 
@@ -242,7 +242,7 @@ fn panel_footer() -> Row {
     ]
 }
 
-#[View]
+#[view]
 fn active_items_count() -> Paragraph {
     let active_count = app::active_count().inner();
 
@@ -255,7 +255,7 @@ fn active_items_count() -> Paragraph {
     ]
 }
 
-#[View]
+#[view]
 fn filters() -> Row {
     let filters = app::filters();
 
@@ -264,7 +264,7 @@ fn filters() -> Row {
     ]
 }
 
-#[View]
+#[view]
 fn filter(filter: app::Filter) -> Button {
     let selected = app::selected_filter().inner() == filter;
 
@@ -284,7 +284,7 @@ fn filter(filter: app::Filter) -> Button {
     ]
 }
 
-#[View]
+#[view]
 fn clear_completed_button() -> Button {
     let hover = use_state(|| false);
 
@@ -296,7 +296,7 @@ fn clear_completed_button() -> Button {
     ]
 }
 
-#[View]
+#[view]
 fn footer() -> Column {
     column![
         paragraph![

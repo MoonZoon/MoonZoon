@@ -6,25 +6,25 @@ enum Color {
     Blue,
 }
 
-#[Model]
+#[model]
 fn color() -> Color {
     Color::A
 }
 
-#[Update]
+#[update]
 fn toggle_color() {
     use Color::{Red, Blue};
     color().update(|color| if let Red = color { Blue } else { Red });
 }
 
-#[Cache]
+#[cache]
 fn fill_style() -> JsValue {
     let color = if let Color::Red = color.inner() { "red" } else { "blue" };
     JsValue::from(color)
 }
 
 
-#[View]
+#[view]
 fn view() -> Row {
     let fill_style = fill_style(); 
 
@@ -35,7 +35,7 @@ fn view() -> Row {
             canvas::on_ready(|canvas| {
                 let ctx = canvas.context_2d();
                 ctx.lineWidth = 10;
-                fill_style.do(|style| ctx.set_fill_style(style));
+                fill_style.use_ref(|style| ctx.set_fill_style(style));
                 // Wall
                 ctx.strokeRect(75., 140., 150., 110.);
                 // Door

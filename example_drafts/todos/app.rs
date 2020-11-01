@@ -8,26 +8,26 @@ const STORAGE_KEY: &str = "todos-zoon";
 
 type TodoId = Ulid;
 
-// ------ Routes ------
+// ------ Route ------
 
-#[Route]
+#[route]
 #[derive(Copy, Clone)]
 enum Route {
-    #[path("active")]
+    #[route("active")]
     Active,
-    #[path("completed")]
+    #[route("completed")]
     Completed,
-    #[path()]
+    #[route()]
     Root,
     Unknown,
 }
 
-#[Cache]
+#[cache]
 fn route() -> Route {
     zoon::model::url().map(Route::from)
 }
 
-#[Update]
+#[update]
 fn set_route(route: Route) {
     zoon::model::url().set(Url::from(route))
 }
@@ -41,12 +41,12 @@ enum Filter {
     Completed,
 }
 
-#[Model]
+#[model]
 fn filters() -> Vec<Filter> {
     Filter::iter().collect()
 }
 
-#[Cache]
+#[cache]
 fn selected_filter() -> Filter {
     match route().inner() {
         Route::Active => Filter::Active,
@@ -57,27 +57,27 @@ fn selected_filter() -> Filter {
 
 // ------ SelectedTodo ------
 
-#[Model]
+#[model]
 fn selected_todo() -> Option<Model<Todo>> {
     None
 }
 
-#[Update]
+#[update]
 fn select_todo(todo: Option<Model<Todo>>) {
     selected_todo().set(todo)
 }
 
-#[Model]
+#[model]
 fn selected_todo_title() -> Option<String> {
     selected_todo().map(|todo| todo?.try_map(|todo| todo.title.clone()))
 }
 
-#[Update]
+#[update]
 fn set_selected_todo_title(title: String) {
     selected_todo_title().set(title)
 }
 
-#[Update]
+#[update]
 fn save_selected_todo() {
     if let Some(title) = selected_todo_title().map_mut(Option::take) {
         if let Some(todo) = selected_todo().map_mut(Option::take) {
@@ -95,17 +95,17 @@ struct Todo {
     completed: bool,
 }
 
-#[Model]
+#[model]
 fn new_todo_title() -> String {
     String::new
 }
 
-#[Update]
+#[update]
 fn set_new_todo_title(title: String) {
     new_todo_title().set(title);
 }
 
-#[Update]
+#[update]
 fn create_todo(title: &str) {
     let title = title.trim();
     if title.is_empty() {
@@ -123,7 +123,7 @@ fn create_todo(title: &str) {
     new_todo_title().update(String::clear);
 }
 
-#[Update]
+#[update]
 fn remove_todo(todo: Model<Todo>) {
     if Some(todo) == selected_todo() {
         selected_todo().set(None);
@@ -136,45 +136,45 @@ fn remove_todo(todo: Model<Todo>) {
     todo.try_remove();
 }
 
-#[Update]
+#[update]
 fn toggle_todo(todo: Model<Todo>) {
     todo.try_update(|todo| todo.checked = !todo.checked);
 }
 
 // -- all --
 
-#[Model]
+#[model]
 fn todos() -> Vec<Todo> {
     LocalStorage::get(STORAGE_KEY).unwrap_or_default()
 }
 
-#[Sub]
+#[sub]
 fn store_todos() {
-    todos().do(|todos| LocalStorage::insert(STORAGE_KEY, todos));
+    todos().use_ref(|todos| LocalStorage::insert(STORAGE_KEY, todos));
 }
 
-#[Update]
+#[update]
 fn check_or_uncheck_all(checked: bool) {
     if are_all_completed().inner() {
-        todos().do(|todos| todos.iter().for_each(toggle_todo));
+        todos().use_ref(|todos| todos.iter().for_each(toggle_todo));
     } else {
-        active_todos().do(|todos| todos.iter().for_each(toggle_todo));
+        active_todos().use_ref(|todos| todos.iter().for_each(toggle_todo));
     }
 }
 
-#[Cache]
+#[cache]
 fn todos_count() -> usize {
     todos().map(Vec::len)
 }
 
-#[Cache]
+#[cache]
 fn todos_exist() -> bool {
     todos_count().inner() != 0
 }
 
 // -- completed --
 
-#[Cache]
+#[cache]
 fn completed_todos() -> Vec<Todo> {
     todos().map(|todos| {
         todos
@@ -184,29 +184,29 @@ fn completed_todos() -> Vec<Todo> {
     })
 }
 
-#[Update]
+#[update]
 fn remove_completed() {
-    completed_todos().do(|todos| todos.iter().for_each(remove_todo));
+    completed_todos().use_ref(|todos| todos.iter().for_each(remove_todo));
 }
 
-#[Cache]
+#[cache]
 fn completed_count() -> usize {
     completed_todos().map(Vec::len)
 }
 
-#[Cache]
+#[cache]
 fn completed_exist() -> bool {
     completed_count().inner() != 0
 }
 
-#[Cache]
+#[cache]
 fn are_all_completed() -> bool {
     todos_count().inner() == completed_count().inner()
 }
 
 // -- active --
 
-#[Cache]
+#[cache]
 fn active_todos() -> Vec<Todo> {
     todos().map(|todos| {
         todos
@@ -216,14 +216,14 @@ fn active_todos() -> Vec<Todo> {
     })
 }
 
-#[Cache]
+#[cache]
 fn active_count() -> usize {
     active_todos().map(Vec::len)
 }
 
 // -- filtered --
 
-#[Cache]
+#[cache]
 fn filtered_todos() -> Cache<Vec<Todo>> {
     match app::selected_filter().inner() {
         Filter::All => app::todos().to_cache(),

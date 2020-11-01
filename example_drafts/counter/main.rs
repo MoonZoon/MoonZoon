@@ -1,21 +1,21 @@
 use zoon::*;
 
-#[Model]
+#[model]
 fn counter() -> i32 {
     0
 }
 
-#[Update]
+#[update]
 fn increment() {
     counter().update(|c| *c += 1);
 }
 
-#[Update]
+#[update]
 fn decrement() {
     counter().update(|c| *c -= 1);
 }
 
-#[View]
+#[view]
 fn view() -> Column {
     column![
         button![button::on_press(decrement), "-"],
