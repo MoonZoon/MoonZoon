@@ -150,15 +150,15 @@ fn todos() -> Vec<Todo> {
 
 #[Sub]
 fn store_todos() {
-    todos().update_ref(|todos| LocalStorage::insert(STORAGE_KEY, todos));
+    todos().do(|todos| LocalStorage::insert(STORAGE_KEY, todos));
 }
 
 #[Update]
 fn check_or_uncheck_all(checked: bool) {
     if are_all_completed().inner() {
-        todos().update_ref(|todos| todos.iter().for_each(toggle_todo));
+        todos().do(|todos| todos.iter().for_each(toggle_todo));
     } else {
-        active_todos().update_ref(|todos| todos.iter().for_each(toggle_todo));
+        active_todos().do(|todos| todos.iter().for_each(toggle_todo));
     }
 }
 
@@ -186,7 +186,7 @@ fn completed_todos() -> Vec<Todo> {
 
 #[Update]
 fn remove_completed() {
-    completed_todos().update_ref(|todos| todos.iter().for_each(remove_todo));
+    completed_todos().do(|todos| todos.iter().for_each(remove_todo));
 }
 
 #[Cache]
