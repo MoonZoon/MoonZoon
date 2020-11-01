@@ -25,5 +25,5 @@ fn view() -> Column {
 }
 
 fn main() {
-    zoon::start("app")
+    zoon::start("app", view)
 }

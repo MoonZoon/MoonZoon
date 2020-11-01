@@ -1,33 +1,15 @@
 use zoon::*;
 
-// ------ Route ------
+mod admin;
 
 #[route]
 #[derive(Copy, Clone)]
 enum Route {
-    #[route("admin", "report", frequency)]
-    AdminReport(Option<Frequency>),
+    #[route("admin", ..admin)]
+    Admin(admin::Route),
     #[route()]
     Root,
     Unknown,
-}
-
-#[route_arg]
-#[derive(Copy, Clone)]
-enum Frequency {
-    #[route_arg("daily")]
-    Daily,
-    #[route_arg("weekly")]
-    Weekly,
-}
-
-impl Frequency {
-    fn as_str(&self) -> &'static str {
-        match self {
-            Self::Daily => "daily",
-            Self::Weekly => "weekly",
-        }
-    }
 }
 
 #[cache]
@@ -35,27 +17,50 @@ fn route() -> Route {
     zoon::model::url().map(Route::from)
 }
 
-#[sub]
-fn update_frequency() {
-    route().map(|route| {
-        if let app::Route::AdminReport(Some(frequency)) = route {
-            frequency().set(frequency)
-        }
-    })
-}
-
-#[model]
-fn frequency() -> Frequency {
-    Frequency::Daily
-}
-
-#[cache]
-fn frequency_for_link() -> Frequency {
-    use Frequency::{Daily, Weekly};
-    if let Daily = frequency().inner() { Weekly } else { Daily }
-}
-
 #[model]
 fn logged_user() -> &'static str {
     "John Doe"
+}
+
+#[view]
+fn view() -> Column {
+    column![
+        header(),
+        page(),
+    ]
+}
+
+#[view]
+fn header() -> Row {
+    row![
+        link![
+            link::url(Route::root())
+            "Home"
+        ],
+        link![
+            link::url(Route::admin().report().frequency(None)),
+            "Report"
+        ],
+    ]
+}
+
+#[view]
+fn page() -> El {
+    let route = route().inner();
+
+    match route {
+        Route::Admin(_) => {
+            admin::view()
+        }
+        Route::Root => {
+            el![
+                "welcome home!",
+            ]
+        }
+        Route::Unknown => {
+            el![
+                "404"
+            ]
+        }
+    }
 }

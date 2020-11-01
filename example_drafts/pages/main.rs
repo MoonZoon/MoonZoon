@@ -1,6 +1,5 @@
 mod app;
-mod view;
 
 fn main() {
-    zoon::start("app");
+    zoon::start("app", app::view)
 }

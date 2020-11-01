@@ -57,5 +57,5 @@ fn view() -> Row {
 }
 
 fn main() {
-    zoon::start("app")
+    zoon::start("app", view)
 }
