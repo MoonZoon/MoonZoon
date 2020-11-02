@@ -1,5 +1,7 @@
 use zoon::*;
 
+// @TODO remove: https://stackoverflow.com/a/56479446
+
 #[model]
 fn counter() -> i32 {
     0
