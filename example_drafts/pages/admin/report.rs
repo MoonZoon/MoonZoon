@@ -37,7 +37,7 @@ zoons!{
         }
     }
 
-    #[sub]
+    #[subscription]
     fn update_frequency() {
         route().map(|route| {
             if let Some(Route::Frequency(Some(frequency))) = route {

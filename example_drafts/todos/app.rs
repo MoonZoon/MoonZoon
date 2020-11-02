@@ -27,12 +27,12 @@ zoons!{
 
     #[cache]
     fn route() -> Route {
-        zoon::model::url().map(Route::from)
+        zoon::url().map(Route::from)
     }
 
     #[update]
     fn set_route(route: Route) {
-        zoon::model::url().set(Url::from(route))
+        zoon::url().set(Url::from(route))
     }
 
     // ------ Filters ------
@@ -151,7 +151,7 @@ zoons!{
         LocalStorage::get(STORAGE_KEY).unwrap_or_default()
     }
 
-    #[sub]
+    #[subscription]
     fn store_todos() {
         todos().use_ref(|todos| LocalStorage::insert(STORAGE_KEY, todos));
     }
