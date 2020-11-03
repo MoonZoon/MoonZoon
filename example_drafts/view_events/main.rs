@@ -12,6 +12,8 @@ zoons!{
         watching_enabled().update(|enabled| *enabled = !enabled);
     }
 
+    // -- mouse --
+
     #[model]
     fn mouse_position() -> mouse::Position {
         mouse::Position::default()
@@ -22,6 +24,8 @@ zoons!{
         mouse_position().set(mouse.position);
     }
 
+    // -- keyboard --
+
     #[model]
     fn last_key() -> String {
         String::new()
@@ -31,6 +35,8 @@ zoons!{
     fn update_last_key(key: keyboard::Key) {
         last_key().set(key.id.to_string());
     }
+
+    // -- view --
 
     #[view]
     fn view() -> View {

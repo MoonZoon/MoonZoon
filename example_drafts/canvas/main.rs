@@ -25,7 +25,6 @@ zoons!{
         JsValue::from(color)
     }
 
-
     #[view]
     fn view() -> Row {
         let fill_style = fill_style(); 

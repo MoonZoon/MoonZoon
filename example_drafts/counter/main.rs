@@ -9,12 +9,12 @@ zoons!{
 
     #[update]
     fn increment() {
-        counter().update(|c| *c += 1);
+        counter().update(|counter| *counter += 1);
     }
 
     #[update]
     fn decrement() {
-        counter().update(|c| *c -= 1);
+        counter().update(|counter| *counter -= 1);
     }
 
     #[view]
