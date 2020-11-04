@@ -15,13 +15,13 @@ zoons!{
     // -- mouse --
 
     #[model]
-    fn mouse_position() -> mouse::Position {
-        mouse::Position::default()
+    fn mouse_position() -> Point {
+        Point::new(0, 0)
     }
 
     #[update]
-    fn update_mouse_position(mouse: Mouse) {
-        mouse_position().set(mouse.position);
+    fn update_mouse_position(event: OnMouseMove) {
+        mouse_position().set(event.position);
     }
 
     // -- keyboard --
@@ -32,8 +32,8 @@ zoons!{
     }
 
     #[update]
-    fn update_last_key(key: keyboard::Key) {
-        last_key().set(key.id.to_string());
+    fn update_last_key(event: OnKeyDown) {
+        last_key().set(event.key.to_string());
     }
 
     // -- view --

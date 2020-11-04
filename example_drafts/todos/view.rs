@@ -205,10 +205,10 @@ zoons!{
                 focus.set(focused);
                 if !focused { app::save_selected_todo() };
             }),
-            on_key_down(|key| {
-                match key.id {
-                    keyboard::KeyId::Escape =>  app::select_todo(None),
-                    keyboard::KeyId::Enter => app::save_selected_todo(),
+            on_key_down(|event| {
+                match event.key {
+                    Key::Escape =>  app::select_todo(None),
+                    Key::Enter => app::save_selected_todo(),
                     _ => (),
                 }
             }),
