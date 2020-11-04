@@ -17,7 +17,7 @@ zoons!{
 
     #[cache]
     fn route() -> Route {
-        zoon::url().map(Route::from)
+        url().map(Route::from)
     }
 
     #[model]

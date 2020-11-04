@@ -27,12 +27,12 @@ zoons!{
 
     #[cache]
     fn route() -> Route {
-        zoon::url().map(Route::from)
+        url().map(Route::from)
     }
 
     #[update]
     fn set_route(route: Route) {
-        zoon::url().set(Url::from(route))
+        url().set(Url::from(route))
     }
 
     // ------ Filters ------
