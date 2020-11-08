@@ -1,4 +1,5 @@
 use zoon::*;
+use std::ops::Not;
 use crate::app;
 
 zoons!{
@@ -58,7 +59,7 @@ zoons!{
                 shadow::color(hsla(0, 0, 0, 10)),
             ),
             panel_header(),
-            todos_exist().map_true(|| elements![
+            todos_exist().then(|| elements![
                 todos(),
                 panel_footer(),
             ]),
@@ -79,7 +80,7 @@ zoons!{
                 shadow::size(0),
                 shadow::color(hsla(0, 0, 0, 3)),
             ),
-            todos_exist.map_true(toggle_all_checkbox),
+            todos_exist.then(toggle_all_checkbox),
             new_todo_title(),
         ]
     }
@@ -148,9 +149,9 @@ zoons!{
             spacing(10),
             on_hovered_change(|h| row_hovered.set(h)),
             todo_checkbox(checkbox_id, todo),
-            selected.map_false(|| todo_label(checkbox_id, todo)),
-            selected.map_true(selected_todo_title),
-            row_hovered.inner().map_true(|| remove_todo_button(todo)),
+            selected.not().then(|| todo_label(checkbox_id, todo)),
+            selected.then(selected_todo_title),
+            row_hovered.inner().then(|| remove_todo_button(todo)),
         ]
     }
 
@@ -175,7 +176,7 @@ zoons!{
     fn todo_label(checkbox_id: State<ElementId>, todo: Model<app::Todo>) -> Label {
         label![
             label::for_input(checkbox_id.inner()),
-            checked.map_true(font::strike),
+            checked.then(font::strike),
             font::regular(),
             font::color(hsl(0, 0, 32.7)),
             on_double_click(|| select_todo(Some(todo))),
@@ -240,7 +241,7 @@ zoons!{
         row![
             active_items_count(),
             filters(),
-            completed_exist.map_true(clear_completed_button),
+            completed_exist.then(clear_completed_button),
         ]
     }
 
@@ -292,7 +293,7 @@ zoons!{
 
         button![
             on_hovered_change(hovered.setter()),
-            hovered.inner().map_true(font::underline),
+            hovered.inner().then(font::underline),
             button::on_press(app::remove_completed),
             "Clear completed",
         ]

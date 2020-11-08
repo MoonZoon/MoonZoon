@@ -43,7 +43,7 @@ zoons!{
         let enabled = watching_enabled().inner();
 
         view![
-            enabled.map_true(|| vec![
+            enabled.then(|| vec![
                 on_mouse_move(update_mouse_position),
                 on_key_down(update_last_key),
             ]),

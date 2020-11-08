@@ -1,4 +1,5 @@
 use zoon::*;
+use std::ops::Not;
 
 zoons!{
 
@@ -71,7 +72,7 @@ zoons!{
                 } else {
                     color::green().set_l(66),
                 }),
-                enabled.map_false(|| button::on_press(start_stopwatch)),
+                enabled.not().then(|| button::on_press(start_stopwatch)),
                 "Start",
             ],
             button![
@@ -80,7 +81,7 @@ zoons!{
                 } else {
                     color::gray(),
                 }),
-                enabled.map_true(|| button::on_press(stop_stopwatch)),
+                enabled.then(|| button::on_press(stop_stopwatch)),
                 "Stop",
             ],
         ]
@@ -98,7 +99,7 @@ zoons!{
                 } else {
                     color::green().set_l(66),
                 }),
-                enabled.map_false(|| button::on_press(start_timeout)),
+                enabled.not().then(|| button::on_press(start_timeout)),
                 "Start 2s timeout",
             ],
             button![
@@ -107,7 +108,7 @@ zoons!{
                 } else {
                     color::gray(),
                 }),
-                enabled.map_true(|| button::on_press(stop_timeout)),
+                enabled.then(|| button::on_press(stop_timeout)),
                 "Stop",
             ],
         ]
