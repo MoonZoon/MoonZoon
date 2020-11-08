@@ -100,7 +100,7 @@ zoons!{
 
     #[model]
     fn new_todo_title() -> String {
-        String::new
+        String::new()
     }
 
     #[update]
@@ -147,7 +147,7 @@ zoons!{
     // -- all --
 
     #[model]
-    fn todos() -> Vec<Todo> {
+    fn todos() -> Vec<Model<Todo>> {
         LocalStorage::get(STORAGE_KEY).unwrap_or_default()
     }
 
@@ -178,7 +178,7 @@ zoons!{
     // -- completed --
 
     #[cache]
-    fn completed_todos() -> Vec<Todo> {
+    fn completed_todos() -> Vec<Model<Todo>> {
         todos().map(|todos| {
             todos
                 .iter()
@@ -210,7 +210,7 @@ zoons!{
     // -- active --
 
     #[cache]
-    fn active_todos() -> Vec<Todo> {
+    fn active_todos() -> Vec<Model<Todo>> {
         todos().map(|todos| {
             todos
                 .iter()
@@ -227,7 +227,7 @@ zoons!{
     // -- filtered --
 
     #[cache]
-    fn filtered_todos() -> Cache<Vec<Todo>> {
+    fn filtered_todos() -> Cache<Vec<Model<Todo>>> {
         match app::selected_filter().inner() {
             Filter::All => app::todos().to_cache(),
             Filter::Active => app::active_todos(),

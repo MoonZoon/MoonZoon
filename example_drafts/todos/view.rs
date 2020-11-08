@@ -125,7 +125,7 @@ zoons!{
     #[view]
     fn todos() -> Column {
         column![
-            filtered_todos.inner().map(|todos| todos.iter().rev().map(todo))
+            app::filtered_todos().inner().map(|todos| todos.iter().rev().map(todo))
         ]
     }
 
