@@ -108,7 +108,7 @@ zoons!{
         let focus = use_state(|| true);
 
         text_input![
-            focus(focused.inner()),
+            focus(focus.inner()),
             on_focus_change(focus.setter()),
             text_input::on_change(app::set_new_todo_title),
             input::label_hidden("New Todo Title"),
@@ -201,7 +201,7 @@ zoons!{
                 shadow::size(0),
                 shadow::color(hsla(0, 0, 0, 20)),
             ),
-            focus(focused.inner()),
+            focus(focus.inner()),
             on_focus_change(|focused| {
                 focus.set(focused);
                 if !focused { app::save_selected_todo() };

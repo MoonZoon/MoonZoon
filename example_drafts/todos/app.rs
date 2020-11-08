@@ -115,7 +115,7 @@ zoons!{
             return;
         }
 
-        let mut todo = new_model(|| Todo {
+        let mut todo = Model::new(Todo {
             id: TodoId::new(),
             title,
             completed: false,
