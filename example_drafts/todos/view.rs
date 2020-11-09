@@ -105,11 +105,9 @@ zoons!{
     #[view]
     fn new_todo_title() -> TextInput {
         let new_todo_title = app::new_todo_title().inner();
-        let focus = use_state(|| true);
 
         text_input![
-            focus(focus.inner()),
-            on_focus_change(focus.setter()),
+            do_once(|| focus(true)),
             text_input::on_change(app::set_new_todo_title),
             input::label_hidden("New Todo Title"),
             placeholder![
@@ -187,7 +185,6 @@ zoons!{
     #[view]
     fn selected_todo_title() -> TextInput {
         let selected_todo = app::selected_todo().inner().expect("selected todo");
-        let focus = use_state(|| true);
 
         text_input![
             width!(fill()),
@@ -201,9 +198,8 @@ zoons!{
                 shadow::size(0),
                 shadow::color(hsla(0, 0, 0, 20)),
             ),
-            focus(focus.inner()),
+            do_once(|| focus(true)),
             on_focus_change(|focused| {
-                focus.set(focused);
                 if !focused { app::save_selected_todo() };
             }),
             on_key_down(|event| {
