@@ -53,6 +53,7 @@ zoons!{
         column![
             received_messages(),
             new_message_panel(),
+            username_panel(),
         ]
     }
 
@@ -98,6 +99,26 @@ zoons!{
             button![
                 button::on_press(send_message), 
                 "Send",
+            ],
+        ]
+    }
+
+    #[view]
+    fn username_panel() -> Row {
+        let input_id = use_state(ElementId::new);
+        let username = username().inner();
+        row![
+            label![
+                label::for_input(input_id.inner()),
+                "Username:",
+            ],
+            text_input![
+                id(input_id.inner()),
+                text_input::on_change(set_username),
+                placeholder![
+                    placeholder::text("Joe"),
+                ],
+                username,
             ],
         ]
     }

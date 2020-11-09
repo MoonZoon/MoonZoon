@@ -122,8 +122,10 @@ zoons!{
 
     #[view]
     fn todos() -> Column {
+        let filtered_todo = app::filtered_todos().inner();
+
         column![
-            app::filtered_todos().inner().map(|todos| todos.iter().rev().map(todo))
+            filtered_todo.map(|todos| todos.iter().rev().map(todo))
         ]
     }
 
@@ -156,6 +158,7 @@ zoons!{
     #[view]
     fn todo_checkbox(checkbox_id: State<ElementId>, todo: Model<app::Todo>) -> CheckBox {
         let completed = todo.try_map(|todo| todo.completed).unwrap_or_default();
+
         checkbox![
             id(checkbox_id.inner()),
             checkbox::checked(completed),
