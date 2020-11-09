@@ -18,22 +18,23 @@ zoons!{
         Vec::new()
     }
 
+    #[model]
+    fn connection() -> Connection<UpMsg, DownMsg> {
+        Connection::new("localhost:9000", |msg| {
+            if let DownMsg::MessageReceived(message) = msg {
+                messages().update(|messages| messages.push(Model::new(message)));
+            }
+        })
+    }
+
     #[update]
     fn send_message(text: String) {
-        up_queue().update(|queue| {
-            queue.push(UpMsg::SendMessage(Message {
+        connection().use_ref(|connection| {
+            connection.send_msg(UpMsg::SendMessage(Message {
                 username: username().inner(),
                 text,
             }));
-        };)
-    }
-
-    #[subscription]
-    fn message_received() {
-        let msg = down_queue().map_mut(MsgQueue::pop);    // @TODO infinite loop?
-        if let Some(DownMsg::MessageReceived(message)) = msg {
-            messages().update(|messages| messages.push(Model::new(message)));
-        }
+        });
     }
 
     #[view]
