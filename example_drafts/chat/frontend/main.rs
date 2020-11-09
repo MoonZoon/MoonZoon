@@ -82,7 +82,7 @@ zoons!{
         let new_message_text = new_message_text().inner();
         row![
             text_input![
-                do_once(|| focus(true)),
+                do_once(focus),
                 text_input::on_change(set_new_message_text),
                 input::label_hidden("New message text"),
                 placeholder![

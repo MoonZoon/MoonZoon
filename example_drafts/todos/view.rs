@@ -107,7 +107,7 @@ zoons!{
         let new_todo_title = app::new_todo_title().inner();
 
         text_input![
-            do_once(|| focus(true)),
+            do_once(focus),
             text_input::on_change(app::set_new_todo_title),
             input::label_hidden("New Todo Title"),
             placeholder![
@@ -145,7 +145,7 @@ zoons!{
             font::size(24),
             padding!(15),
             spacing(10),
-            on_hovered_change(|h| row_hovered.set(h)),
+            on_hovered_change(row_hovered.setter()),
             todo_checkbox(checkbox_id, todo),
             selected.not().then(|| todo_label(checkbox_id, todo)),
             selected.then(selected_todo_title),
@@ -198,13 +198,11 @@ zoons!{
                 shadow::size(0),
                 shadow::color(hsla(0, 0, 0, 20)),
             ),
-            do_once(|| focus(true)),
-            on_focus_change(|focused| {
-                if !focused { app::save_selected_todo() };
-            }),
+            do_once(focus),
+            on_blur(app::save_selected_todo),
             on_key_down(|event| {
                 match event.key {
-                    Key::Escape =>  app::select_todo(None),
+                    Key::Escape => app::select_todo(None),
                     Key::Enter => app::save_selected_todo(),
                     _ => (),
                 }
@@ -216,15 +214,15 @@ zoons!{
 
     #[view]
     fn remove_todo_button(todo: Model<app::Todo>) -> Button {
-        let hover = use_state(|| false);
+        let hovered = use_state(|| false);
 
         button![
             size::width!(20),
             size::height!(20),
             font::size(30),
             font::color(hsl(12.2, 34.7, 68.2)),
-            on_hover_change(row_hovered.setter()),
-            font::color(if hover().inner() { hsl(10.5, 37.7, 48.8) } else { hsl(12.2, 34.7, 68.2) }),
+            on_hovered_change(hovered.setter()),
+            font::color(if hovered().inner() { hsl(10.5, 37.7, 48.8) } else { hsl(12.2, 34.7, 68.2) }),
             button::on_press(|| app::remove_todo(todo)),
             "×",
         ]
@@ -266,6 +264,7 @@ zoons!{
     #[view]
     fn filter(filter: app::Filter) -> Button {
         let selected = app::selected_filter().inner() == filter;
+        let hovered = use_state(|| false);
 
         let (title, route) = match filter {
             app::Filter::All => ("All", app::Route::root()),
@@ -274,6 +273,7 @@ zoons!{
         };
         let border_alpha = if selected { 20 } else if hovered { 10 } else { 0 };
         button![
+            on_hovered_change(hovered.setter()),
             paddingXY(7, 3),
             border::solid(),
             border::width!(1),
@@ -285,7 +285,7 @@ zoons!{
 
     #[view]
     fn clear_completed_button() -> Button {
-        let hover = use_state(|| false);
+        let hovered = use_state(|| false);
 
         button![
             on_hovered_change(hovered.setter()),
