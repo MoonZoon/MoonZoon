@@ -9,7 +9,7 @@ zoons!{
     #[route]
     #[derive(Copy, Clone)]
     enum Route {
-        #[route("report", ..report)]
+        #[route("report", ..)]
         Report(report::Route),
     }
 

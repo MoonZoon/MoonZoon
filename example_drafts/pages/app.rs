@@ -8,7 +8,7 @@ zoons!{
     #[route]
     #[derive(Copy, Clone)]
     enum Route {
-        #[route("admin", ..admin)]
+        #[route("admin", ..)]
         Admin(admin::Route),
         #[route()]
         Root,
