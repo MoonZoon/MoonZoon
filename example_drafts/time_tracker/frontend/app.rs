@@ -111,4 +111,13 @@ zoons!{
         menu_opened().set(false);
     }
 
+    // ------ Connection ------
+
+    #[model]
+    fn connection() -> Connection<UpMsg, DownMsg> {
+        Connection::new("localhost:9000", |msg| {
+            ()
+        })
+    }
+
 }
