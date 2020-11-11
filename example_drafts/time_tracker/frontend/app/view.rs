@@ -34,20 +34,12 @@ zoons!{
     }
 
     #[view]
-    fn hamburger() -> Checkbox {
+    fn hamburger() -> Button {
         let menu_opened = super::menu_opened().inner();
-        checkbox![
-            checkbox::checked(menu_opened),
-            checkbox::on_change(super::toggle_menu),
-            input::label_hidden("Toggle Menu"),
+        button![
+            button::on_press(super::toggle_menu),
             on_click(super::menu_part_clicked),
-            el![
-                if menu_opened {
-                    "X"
-                } else {
-                    "☰"
-                }
-            ],
+            if menu_opened { "X" } else { "☰" }
         ]
     }
 
