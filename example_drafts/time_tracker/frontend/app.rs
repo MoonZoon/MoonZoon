@@ -144,8 +144,16 @@ zoons!{
     #[model]
     fn connection() -> Connection<UpMsg, DownMsg> {
         Connection::new("localhost:9000", |msg| {
-            ()
+            down_msg().set(Some(msg));
+            down_msg_received().set(());
         })
     }
 
+    #[model]
+    fn down_msg_received() {}
+
+    #[model]
+    fn down_msg() -> Option<DownMsg> {
+        None
+    }
 }
