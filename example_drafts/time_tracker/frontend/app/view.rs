@@ -35,7 +35,6 @@ zoons!{
 
     #[view]
     fn hamburger() -> Checkbox {
-        // @TODO aria-expanded? svg? animations? aria-label=menu?
         let menu_opened = super::menu_opened().inner();
         checkbox![
             checkbox::checked(menu_opened),
@@ -43,10 +42,10 @@ zoons!{
             input::label_hidden("Toggle Menu"),
             on_click(super::menu_part_clicked),
             el![
-                if checked {
+                if menu_opened {
                     "X"
                 } else {
-                    "E"
+                    "☰"
                 }
             ],
         ]
