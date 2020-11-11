@@ -8,6 +8,7 @@ zoons!{
     fn view() -> View {
         view![
             viewport::on_width_change(super::update_viewport_width),
+            on_click(super::view_clicked),
             column![
                 header(),
                 menu_panel(),
@@ -40,6 +41,7 @@ zoons!{
             checkbox::checked(menu_opened),
             checkbox::on_change(super::toggle_menu),
             input::label_hidden("Toggle Menu"),
+            on_click(super::menu_part_clicked),
             el![
                 if checked {
                     "X"
@@ -61,6 +63,7 @@ zoons!{
         Some(column![
             menu_links(),
             username_or_login_button(),
+            on_click(super::menu_part_clicked),
         ])
     }
 

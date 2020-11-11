@@ -65,6 +65,12 @@ zoons!{
         url().map(Route::from)
     }
 
+    #[subscription]
+    fn on_route_change() {
+        route();
+        close_menu();
+    }
+
     #[update]
     fn set_route(route: Route) {
         url().set(Url::from(route))
@@ -108,7 +114,29 @@ zoons!{
 
     #[update]
     fn close_menu() {
-        menu_opened().set(false);
+        if menu_opened().inner() {
+            toggle_menu();
+        }
+    }
+
+    #[model]
+    fn close_menu_on_view_click() -> bool {
+        true
+    }
+
+    #[update]
+    fn menu_part_clicked() {
+        close_menu_on_view_click().set(false)
+    }
+
+    // ------ View ------
+
+    #[update]
+    fn view_clicked() {
+        if !close_menu_on_view_click().inner() {
+            return close_menu_on_view_click.set(true);
+        } 
+        close_menu();
     }
 
     // ------ Connection ------
