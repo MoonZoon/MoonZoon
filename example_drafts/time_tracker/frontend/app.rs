@@ -144,16 +144,10 @@ zoons!{
     #[model]
     fn connection() -> Connection<UpMsg, DownMsg> {
         Connection::new("localhost:9000", |msg| {
-            down_msg().set(Some(msg));
-            down_msg_received().set(());
+            if let DownMsg::ClientsAndProjectsClients(clients) = msg {
+                crate::clients_and_projects::set_clients(clients);
+            } 
         })
     }
 
-    #[model]
-    fn down_msg_received() {}
-
-    #[model]
-    fn down_msg() -> Option<DownMsg> {
-        None
-    }
 }
