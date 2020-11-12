@@ -2,13 +2,20 @@ use zoon::*;
 use ulid::Ulid;
 use crate::app;
 
-pub mod view;
+pub mod els;
 
 type ClientId = Ulid;
 type ProjectId = Ulid;
 
 zoons!{
-    append_zoons![view]
+    append_zoons![els]
+
+    #[subscription]
+    fn on_route_change() {
+        if let app::Route::ClientsAndProjects = route() {
+            app::send_up_msg(UpMsg::GetClientsAndProjectsClients);
+        }
+    }
 
     #[derive(Debug)]
     pub struct Client {
@@ -43,7 +50,7 @@ zoons!{
     }
 
     #[update]
-    fn set_clients(clients: Vec<shared::ClientsAndProjectsClient>) {
+    fn set_clients(clients: Vec<shared::clients_and_projects::Client>) {
         clients.set(....)
     }
 

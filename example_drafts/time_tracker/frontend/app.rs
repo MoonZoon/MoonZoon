@@ -2,11 +2,11 @@ use zoon::*;
 use shared::{UpMsg, DownMsg, User};
 use std::mem;
 
-mod view;
+mod els;
 
 zoons!{
     append_zoons![
-        view,
+        els,
         crate::login,
         crate::clients_and_projects,
         crate::time_tracker,
@@ -153,5 +153,12 @@ zoons!{
     #[var]
     fn down_msg() -> Var<Option<DownMsg>> {
         Var::new(None)
+    }
+
+    #[update]
+    fn send_up_msg(msg: UpMsg) {
+        connection().use_ref(move |connection| {
+            connection.send(msg);
+        })
     }
 }

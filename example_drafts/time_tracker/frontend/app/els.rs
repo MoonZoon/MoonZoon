@@ -93,11 +93,11 @@ zoons!{
             width!(fill()),
             height!(fill()),
             match super::route().inner() {
-                super::Route::Login => crate::login::view::page(),
-                super::Route::ClientsAndProjects => crate::clients_and_projects::view::page(),
-                super::Route::TimeTracker => crate::time_tracker::view::page(),
-                super::Route::TimeBlocks => crate::time_blocks::view::page(),
-                super::Route::Home => crate::home::view::page(),
+                super::Route::Login => crate::login::els::page(),
+                super::Route::ClientsAndProjects => crate::clients_and_projects::els::page(),
+                super::Route::TimeTracker => crate::time_tracker::els::page(),
+                super::Route::TimeBlocks => crate::time_blocks::els::page(),
+                super::Route::Home => crate::home::els::page(),
                 super::Route::Unknown => panic!("cannot display unknown page"),
             }
         ]

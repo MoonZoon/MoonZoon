@@ -1,7 +1,7 @@
 use zoon::*;
 
-pub mod view;
+pub mod els;
 
 zoons!{
-    append_zoons![view]
+    append_zoons![els]
 }
