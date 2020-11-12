@@ -5,12 +5,12 @@ zoons!{
 
     // -- stopwatch --
 
-    #[model]
+    #[var]
     fn seconds() -> u32 {
         0
     }
 
-    #[model]
+    #[var]
     fn stopwatch() -> Option<Timer> {
         None
     }
@@ -27,12 +27,12 @@ zoons!{
 
     #[update]
     fn increment_seconds() {
-        seconds().update(|seconds| *seconds += 1);
+        seconds().update(|seconds| seconds + 1);
     }
 
     // -- timeout --
 
-    #[model]
+    #[var]
     fn timeout() -> Option<Timer> {
         None
     }
@@ -49,8 +49,8 @@ zoons!{
 
     // -- view --
 
-    #[view]
-    fn view() -> Column {
+    #[el]
+    fn root() -> Column {
         column![
             spacing(30),
             stopwatch_panel(),
@@ -58,7 +58,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn stopwatch_panel() -> Row {
         let seconds = seconds().inner();
         let enabled = stopwatch().map(Option::is_some);
@@ -87,7 +87,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn timeout_panel() -> Row {
         let enabled = timeout().map(Option::is_some);
 

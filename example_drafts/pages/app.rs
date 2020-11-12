@@ -20,20 +20,20 @@ zoons!{
         url().map(Route::from)
     }
 
-    #[model]
+    #[var]
     fn logged_user() -> &'static str {
         "John Doe"
     }
 
-    #[view]
-    fn view() -> Column {
+    #[el]
+    fn root() -> Column {
         column![
             header(),
             page(),
         ]
     }
 
-    #[view]
+    #[el]
     fn header() -> Row {
         row![
             link![
@@ -47,13 +47,13 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn page() -> El {
         let route = route().inner();
 
         match route {
             Route::Admin(_) => {
-                admin::view()
+                admin::root()
             }
             Route::Root => {
                 el![

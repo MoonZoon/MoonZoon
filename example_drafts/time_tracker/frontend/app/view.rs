@@ -4,8 +4,8 @@ const MENU_BREAKPOINT: f64 = 600.;
 
 zoons!{
     
-    #[view]
-    fn view() -> View {
+    #[el]
+    fn root() -> View {
         view![
             viewport::on_width_change(super::update_viewport_width),
             on_click(super::view_clicked),
@@ -17,7 +17,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn header() -> Row {
         let show_links = super::viewport_width().inner() > MENU_BREAKPOINT;
         let show_hamburger = !show_links;
@@ -33,7 +33,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn hamburger() -> Button {
         let menu_opened = super::menu_opened().inner();
         button![
@@ -43,7 +43,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn menu_panel() -> Option<Column> {
         if !super::menu_opened().inner() {
             return None
@@ -58,7 +58,7 @@ zoons!{
         ])
     }
 
-    #[view]
+    #[el]
     fn menu_links() -> Vec<Link> {
         vec![
             link![
@@ -76,7 +76,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn username_or_login_button() -> Element {
         if let Some(user) = super::user().inner() {
             return user.name.into_element(),
@@ -87,7 +87,7 @@ zoons!{
         ].into_element()
     }
 
-    #[view]
+    #[el]
     fn page() -> Element {
         el![
             width!(fill()),

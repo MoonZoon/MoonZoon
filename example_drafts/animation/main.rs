@@ -41,12 +41,12 @@ zoons!{
         }
     }
 
-    #[model]
+    #[var]
     fn car() -> Car {
         Car::default()
     }
 
-    #[model]
+    #[var]
     fn viewport_width() -> f64 {
         0
     }
@@ -69,12 +69,12 @@ zoons!{
             car.set(Car::default)
         } else {
             // Move car at least 1px to the right
-            car.update(|car| car.x += f64::max(1., delta / 1000. * car.speed));
+            car.update_mut(|car| car.x += f64::max(1., delta / 1000. * car.speed));
         }
     }
 
-    #[view]
-    fn view() -> View {
+    #[el]
+    fn root() -> View {
         view![
             viewport::on_width_change(update_viewport_width),
             view::on_animation_frame(move_car),
@@ -87,7 +87,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn sky() -> El {
         el![
             width!(fill()),
@@ -96,7 +96,7 @@ zoons!{
         ]
     } 
 
-    #[view]
+    #[el]
     fn road() -> El {
         el![
             width!(fill()),
@@ -105,7 +105,7 @@ zoons!{
         ]
     } 
 
-    #[view]
+    #[el]
     fn car() -> Column {
         let car = car().inner();
         column![
@@ -119,7 +119,7 @@ zoons!{
         ]
     } 
 
-    #[view]
+    #[el]
     fn windows() -> El {
         let car = car().inner();
         el![
@@ -131,7 +131,7 @@ zoons!{
         ]
     } 
 
-    #[view]
+    #[el]
     fn body() -> Row {
         let car = car().inner();
         let first_wheel_x = use_reset_state!(true, || car.width * 0.15);
@@ -147,7 +147,7 @@ zoons!{
         ]
     } 
 
-    #[view]
+    #[el]
     fn wheel(x: State<f64>) -> El {
         let car = car().inner();
         let x = x.inner();

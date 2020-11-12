@@ -3,7 +3,7 @@ use crate::app;
 
 zoons!{
     
-    #[view]
+    #[el]
     fn page() -> Column {
         column![
             

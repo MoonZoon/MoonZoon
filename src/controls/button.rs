@@ -1,7 +1,7 @@
 use wasm_bindgen::{closure::Closure, JsCast};
 use crate::{Cx, raw_el, log, Node};
 use crate::controls::Control;
-use crate::hooks::use_state;
+use crate::hooks::el_var;
 use crate::state::State;
 use std::{cell::RefCell, rc::Rc};
 
@@ -48,7 +48,7 @@ impl<'a> Control for Button<'a> {
         });
 
         if let Some(on_press) = self.on_press.take() {
-            let state_listener = use_state(|| Listener::new("click", state_node));
+            let state_listener = el_var(|| Listener::new("click", state_node));
             state_listener.update(|listener| listener.set_handler(on_press.0));
         }
     }

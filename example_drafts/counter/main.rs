@@ -2,23 +2,23 @@ use zoon::*;
 
 zoons!{
 
-    #[model]
+    #[var]
     fn counter() -> i32 {
         0
     }
 
     #[update]
     fn increment() {
-        counter().update(|counter| *counter += 1);
+        counter().update(|counter| counter + 1);
     }
 
     #[update]
     fn decrement() {
-        counter().update(|counter| *counter -= 1);
+        counter().update(|counter| counter - 1);
     }
 
-    #[view]
-    fn view() -> Column {
+    #[el]
+    fn root() -> Column {
         column![
             button![button::on_press(decrement), "-"],
             counter().inner(),

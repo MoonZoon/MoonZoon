@@ -15,7 +15,7 @@ use crate::state_access::{StateAccess, CloneState};
 /// });
 #[topo::nested]
 pub fn do_once<F: FnMut() -> ()>(mut func: F) -> StateAccess<bool> {
-    let has_done = use_state(|| false);
+    let has_done = el_var(|| false);
     if !has_done.get() {
         func();
         has_done.set(true);
@@ -35,7 +35,7 @@ pub fn do_once<F: FnMut() -> ()>(mut func: F) -> StateAccess<bool> {
 /// # Examples
 ///
 /// ```
-/// let my_string =  use_state(|| "foo".to_string());
+/// let my_string =  el_var(|| "foo".to_string());
 /// ...
 /// ...
 ///  // Maybe in a Callback...
@@ -49,14 +49,14 @@ pub fn do_once<F: FnMut() -> ()>(mut func: F) -> StateAccess<bool> {
 /// to be read via their accessor in a more restrictive way.
 // in a parent context.
 #[topo::nested]
-pub fn use_state<T: 'static, F: FnOnce() -> T>(data_fn: F) -> StateAccess<T> {
-    use_state_current(data_fn)
+pub fn el_var<T: 'static, F: FnOnce() -> T>(data_fn: F) -> StateAccess<T> {
+    el_var_current(data_fn)
 }
 
 ///
 ///  Uses the current topological id to create a new state accessor
 ///
-pub fn use_state_current<T: 'static, F: FnOnce() -> T>(data_fn: F) -> StateAccess<T> {
+pub fn el_var_current<T: 'static, F: FnOnce() -> T>(data_fn: F) -> StateAccess<T> {
     let id = topo::CallId::current();
     let ctx = get_state_slotted_key_struct_if_in_context();
 
@@ -71,9 +71,9 @@ pub fn use_state_current<T: 'static, F: FnOnce() -> T>(data_fn: F) -> StateAcces
 
 #[topo::nested]
 pub fn new_state<T: 'static, F: FnOnce() -> T>(data_fn: F) -> StateAccess<T> {
-    let count = use_state(|| 0);
+    let count = el_var(|| 0);
     count.update(|c| *c += 1);
-    topo::call_in_slot(&count.get(), || use_state_current(data_fn))
+    topo::call_in_slot(&count.get(), || el_var_current(data_fn))
 }
 
 /// Sets the state of type T keyed to the given TopoId
@@ -203,5 +203,5 @@ pub fn execute_and_remove_unmounts() {
 
 #[topo::nested]
 pub fn on_unmount<F: Fn() -> () + 'static>(unmount_fn: F) -> StateAccess<Unmount> {
-    use_state(|| Unmount::new(unmount_fn))
+    el_var(|| Unmount::new(unmount_fn))
 }

@@ -8,7 +8,7 @@ zoons!{
         Blue,
     }
 
-    #[model]
+    #[var]
     fn color() -> Color {
         Color::A
     }
@@ -25,8 +25,8 @@ zoons!{
         JsValue::from(color)
     }
 
-    #[view]
-    fn view() -> Row {
+    #[el]
+    fn root() -> Row {
         let fill_style = fill_style(); 
 
         row![

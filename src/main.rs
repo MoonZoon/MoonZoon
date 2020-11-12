@@ -8,7 +8,7 @@ mod runtime;
 mod state_map;
 mod bool_ext;
 
-use hooks::{use_state, do_once};
+use hooks::{el_var, do_once};
 use state::{State, CloneState};
 use console::log;
 use controls::{
@@ -92,7 +92,7 @@ fn main() {
 fn root() {
     log!("root");
 
-    let state_node = use_state(|| Node {
+    let state_node = el_var(|| Node {
         node_ws: web_sys::Node::from(document().get_element_by_id(ELEMENT_ID).expect("root element"))
     });
 
@@ -154,7 +154,7 @@ fn root() {
 fn raw_el(mut cx: Cx, children: impl FnOnce(Cx)) -> State<Node> {
     // log!("el, index: {}", cx.index);
 
-    let state_node = use_state(|| {
+    let state_node = el_var(|| {
         let el_ws = document().create_element("div").expect("element");
         el_ws.set_attribute("class", "el").expect("set class attribute");
         let node_ws = web_sys::Node::from(el_ws);
@@ -174,7 +174,7 @@ fn raw_el(mut cx: Cx, children: impl FnOnce(Cx)) -> State<Node> {
 fn raw_text(mut cx: Cx, text: &str) {  
     // log!("text, index: {}", cx.index);
 
-    let state_node = use_state(|| {
+    let state_node = el_var(|| {
         let node_ws = document().create_text_node(&text).unchecked_into::<web_sys::Node>();
         cx.state_node.update(|node| {
             let parent_node_ws = &node.node_ws;

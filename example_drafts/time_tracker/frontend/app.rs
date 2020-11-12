@@ -78,7 +78,7 @@ zoons!{
 
     // ------ User ------
 
-    #[model]
+    #[var]
     fn user() -> Option<User> {
         None
     }
@@ -90,7 +90,7 @@ zoons!{
 
     // ------ Viewport ------
 
-    #[model]
+    #[var]
     fn viewport_width() -> f64 {
         0
     }
@@ -102,14 +102,14 @@ zoons!{
 
     // ------ Menu ------
 
-    #[model]
+    #[var]
     fn menu_opened() -> bool {
         false
     }
 
     #[update]
     fn toggle_menu() {
-        menu_opened().update(|opened| *opened = !opened);
+        menu_opened().update(not);
     }
 
     #[update]
@@ -119,7 +119,7 @@ zoons!{
         }
     }
 
-    #[model]
+    #[var]
     fn close_menu_on_view_click() -> bool {
         true
     }
@@ -141,17 +141,17 @@ zoons!{
 
     // ------ Connection ------
 
-    #[model]
+    #[var]
     fn connection() -> Connection<UpMsg, DownMsg> {
         Connection::new("localhost:9000", |msg| {
-            down_msg().update(|down_msg| {
+            down_msg().update_mut(|down_msg| {
                 down_msg.inner().set(Some(msg));
             })
         })
     }
 
-    #[model]
-    fn down_msg() -> Model<Option<DownMsg>> {
-        Model::new(None)
+    #[var]
+    fn down_msg() -> Var<Option<DownMsg>> {
+        Var::new(None)
     }
 }

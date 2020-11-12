@@ -4,8 +4,8 @@ use crate::app;
 
 zoons!{
 
-    #[view]
-    pub fn view() -> View {
+    #[el]
+    pub fn root() -> View {
         view![
             font::size(14),
             font::family!("Helvetica Neue", "Helvetica", "Arial", font::sans_serif()),
@@ -21,7 +21,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn header() -> El {
         el![
             region::header(),
@@ -38,7 +38,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn panel() -> Column {
         let todos_exist = app::todos_exist().inner();
 
@@ -66,7 +66,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn panel_header() -> Row {
         let todos_exist = app::todos_exist().inner();
 
@@ -85,7 +85,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn toggle_all_checkbox() -> Checkbox {
         let checked = app::are_all_completed().inner();
 
@@ -102,7 +102,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn new_todo_title() -> TextInput {
         let new_todo_title = app::new_todo_title().inner();
 
@@ -120,7 +120,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn todos() -> Column {
         let filtered_todo = app::filtered_todos().inner();
 
@@ -137,11 +137,11 @@ zoons!{
         "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%22-10%20-18%20100%20135%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22none%22%20stroke%3D%22%23bddad5%22%20stroke-width%3D%223%22/%3E%3Cpath%20fill%3D%22%235dc2af%22%20d%3D%22M72%2025L42%2071%2027%2056l-4%204%2020%2020%2034-52z%22/%3E%3C/svg%3E"
     }
 
-    #[view]
-    fn todo(todo: Model<app::Todo>) -> Row {
+    #[el]
+    fn todo(todo: Var<app::Todo>) -> Row {
         let selected = Some(todo) == app::selected_todo();
-        let checkbox_id = use_state(ElementId::new);
-        let row_hovered = use_state(|| false);
+        let checkbox_id = el_var(ElementId::new);
+        let row_hovered = el_var(|| false);
 
         row![
             font::size(24),
@@ -155,8 +155,8 @@ zoons!{
         ]
     }
 
-    #[view]
-    fn todo_checkbox(checkbox_id: State<ElementId>, todo: Model<app::Todo>) -> CheckBox {
+    #[el]
+    fn todo_checkbox(checkbox_id: State<ElementId>, todo: Var<app::Todo>) -> CheckBox {
         let completed = todo.try_map(|todo| todo.completed).unwrap_or_default();
 
         checkbox![
@@ -173,8 +173,8 @@ zoons!{
         ]
     }
 
-    #[view]
-    fn todo_label(checkbox_id: State<ElementId>, todo: Model<app::Todo>) -> Label {
+    #[el]
+    fn todo_label(checkbox_id: State<ElementId>, todo: Var<app::Todo>) -> Label {
         label![
             label::for_input(checkbox_id.inner()),
             checked.then(font::strike),
@@ -185,7 +185,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn selected_todo_title() -> TextInput {
         let selected_todo = app::selected_todo().inner().expect("selected todo");
 
@@ -215,9 +215,9 @@ zoons!{
         ]
     }
 
-    #[view]
-    fn remove_todo_button(todo: Model<app::Todo>) -> Button {
-        let hovered = use_state(|| false);
+    #[el]
+    fn remove_todo_button(todo: Var<app::Todo>) -> Button {
+        let hovered = el_var(|| false);
 
         button![
             size::width!(20),
@@ -231,7 +231,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn panel_footer() -> Row {
         let completed_exist = app::completed_exist();
 
@@ -242,7 +242,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn active_items_count() -> Paragraph {
         let active_count = app::active_count().inner();
 
@@ -255,7 +255,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn filters() -> Row {
         let filters = app::filters();
 
@@ -264,10 +264,10 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn filter(filter: app::Filter) -> Button {
         let selected = app::selected_filter().inner() == filter;
-        let hovered = use_state(|| false);
+        let hovered = el_var(|| false);
 
         let (title, route) = match filter {
             app::Filter::All => ("All", app::Route::root()),
@@ -286,9 +286,9 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn clear_completed_button() -> Button {
-        let hovered = use_state(|| false);
+        let hovered = el_var(|| false);
 
         button![
             on_hovered_change(hovered.setter()),
@@ -298,7 +298,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn footer() -> Column {
         column![
             paragraph![

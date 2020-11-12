@@ -14,31 +14,31 @@ zoons!{
     pub struct Client {
         id: ClientId,
         name: String,
-        projects: Vec<Model<Project>>,
+        projects: Vec<Var<Project>>,
     }
 
     #[derive(Debug)]
     struct Project {
         id: ProjectId,
         name: String,
-        client: Model<Client>, 
+        client: Var<Client>, 
     }
 
-    #[model]
-    fn clients() -> Option<Vec<Model<Client>>> {
+    #[var]
+    fn clients() -> Option<Vec<Var<Client>>> {
         None
     }
 
     #[subscription]
     fn handle_down_msg() {
-        app::down_msg().inner().try_update_owned(|down_msg| {
+        app::down_msg().inner().try_update(|down_msg| {
             match down_msg {
                 Some(DownMsg::ClientsAndProjectsClients(clients)) => {
-                    set_clients(clients)
+                    set_clients(clients);
+                    None
                 }
-                _ => return down_msg
+                _ => down_msg
             }
-            None
         });
     }
 

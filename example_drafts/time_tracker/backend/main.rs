@@ -2,7 +2,7 @@ use moon::*;
 use shared::{UpMsg, DownMsg, Message};
 
 moons!{
-    #[model]
+    #[var]
     fn connector() -> Connector<UpMsg, DownMsg> {
         Connector::new("9000", |msg| {
             if let UpMsg::SendMessage(message) = msg {

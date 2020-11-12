@@ -44,7 +44,7 @@ zoons!{
         Completed,
     }
 
-    #[model]
+    #[var]
     fn filters() -> Vec<Filter> {
         Filter::iter().collect()
     }
@@ -60,17 +60,17 @@ zoons!{
 
     // ------ SelectedTodo ------
 
-    #[model]
-    fn selected_todo() -> Option<Model<Todo>> {
+    #[var]
+    fn selected_todo() -> Option<Var<Todo>> {
         None
     }
 
     #[update]
-    fn select_todo(todo: Option<Model<Todo>>) {
+    fn select_todo(todo: Option<Var<Todo>>) {
         selected_todo().set(todo)
     }
 
-    #[model]
+    #[var]
     fn selected_todo_title() -> Option<String> {
         selected_todo().map(|todo| todo?.try_map(|todo| todo.title.clone()))
     }
@@ -84,7 +84,7 @@ zoons!{
     fn save_selected_todo() {
         if let Some(title) = selected_todo_title().map_mut(Option::take) {
             if let Some(todo) = selected_todo().map_mut(Option::take) {
-                todo.try_update(move |todo| todo.title = title);
+                todo.try_update_mut(move |todo| todo.title = title);
             }
         }
     }
@@ -98,7 +98,7 @@ zoons!{
         completed: bool,
     }
 
-    #[model]
+    #[var]
     fn new_todo_title() -> String {
         String::new()
     }
@@ -115,23 +115,23 @@ zoons!{
             return;
         }
 
-        let mut todo = Model::new(Todo {
+        let mut todo = Var::new(Todo {
             id: TodoId::new(),
             title,
             completed: false,
         });
         todo.on_change(store_todos);
 
-        todos().update(|todos| todos.push(todo));
-        new_todo_title().update(String::clear);
+        todos().update_mut(|todos| todos.push(todo));
+        new_todo_title().update_mut(String::clear);
     }
 
     #[update]
-    fn remove_todo(todo: Model<Todo>) {
+    fn remove_todo(todo: Var<Todo>) {
         if Some(todo) == selected_todo() {
             selected_todo().set(None);
         }
-        todos().update(|todos| {
+        todos().update_mut(|todos| {
             if let Some(position) = todos.iter().position(|t| t == todo) {
                 todos.remove(position);
             }
@@ -140,14 +140,14 @@ zoons!{
     }
 
     #[update]
-    fn toggle_todo(todo: Model<Todo>) {
-        todo.try_update(|todo| todo.checked = !todo.checked);
+    fn toggle_todo(todo: Var<Todo>) {
+        todo.try_update_mut(|todo| todo.checked = !todo.checked);
     }
 
     // -- all --
 
-    #[model]
-    fn todos() -> Vec<Model<Todo>> {
+    #[var]
+    fn todos() -> Vec<Var<Todo>> {
         LocalStorage::get(STORAGE_KEY).unwrap_or_default()
     }
 
@@ -178,7 +178,7 @@ zoons!{
     // -- completed --
 
     #[cache]
-    fn completed_todos() -> Vec<Model<Todo>> {
+    fn completed_todos() -> Vec<Var<Todo>> {
         todos().map(|todos| {
             todos
                 .iter()
@@ -210,7 +210,7 @@ zoons!{
     // -- active --
 
     #[cache]
-    fn active_todos() -> Vec<Model<Todo>> {
+    fn active_todos() -> Vec<Var<Todo>> {
         todos().map(|todos| {
             todos
                 .iter()
@@ -227,7 +227,7 @@ zoons!{
     // -- filtered --
 
     #[cache]
-    fn filtered_todos() -> Cache<Vec<Model<Todo>>> {
+    fn filtered_todos() -> Cache<Vec<Var<Todo>>> {
         match app::selected_filter().inner() {
             Filter::All => app::todos().to_cache(),
             Filter::Active => app::active_todos(),

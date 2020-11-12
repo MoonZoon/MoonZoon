@@ -2,19 +2,19 @@ use zoon::*;
 
 zoons!{
 
-    #[model]
+    #[var]
     fn watching_enabled() -> bool {
         false
     }
 
     #[update]
     fn toggle_watching() {
-        watching_enabled().update(|enabled| *enabled = !enabled);
+        watching_enabled().update(not);
     }
 
     // -- mouse --
 
-    #[model]
+    #[var]
     fn mouse_position() -> Point {
         Point::new(0, 0)
     }
@@ -26,7 +26,7 @@ zoons!{
 
     // -- keyboard --
 
-    #[model]
+    #[var]
     fn last_key() -> String {
         String::new()
     }
@@ -38,8 +38,8 @@ zoons!{
 
     // -- view --
 
-    #[view]
-    fn view() -> View {
+    #[el]
+    fn root() -> View {
         let enabled = watching_enabled().inner();
 
         view![
@@ -51,8 +51,8 @@ zoons!{
         ]
     }
 
-    #[view]
-    fn control_panel() -> View {
+    #[el]
+    fn control_panel() -> Column {
         let position = mouse_position().inner();
         let key = last_key();
         let enabled = watching_enabled().inner();

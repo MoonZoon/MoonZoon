@@ -22,9 +22,9 @@ zoons!{
         }
     }
 
-    #[view]
-    fn view() -> El {
-        report::view()
+    #[el]
+    fn root() -> El {
+        report::root()
     }
 
 }

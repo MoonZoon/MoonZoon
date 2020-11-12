@@ -4,7 +4,7 @@ use std::mem;
 
 zoons!{
 
-    #[model]
+    #[var]
     fn username() -> String {
         "John".to_owned()
     }
@@ -14,12 +14,12 @@ zoons!{
         username().set(username);
     }
 
-    #[model]
-    fn messages() -> Vec<Model<Message>> {
+    #[var]
+    fn messages() -> Vec<Var<Message>> {
         Vec::new()
     }
 
-    #[model]
+    #[var]
     fn new_message_text() -> String {
         String::new()
     }
@@ -29,11 +29,11 @@ zoons!{
         new_message_text().set(text);
     }
 
-    #[model]
+    #[var]
     fn connection() -> Connection<UpMsg, DownMsg> {
         Connection::new("localhost:9000", |msg| {
             if let DownMsg::MessageReceived(message) = msg {
-                messages().update(|messages| messages.push(Model::new(message)));
+                messages().update_mut(|messages| messages.push(Var::new(message)));
             }
         })
     }
@@ -48,8 +48,8 @@ zoons!{
         });
     }
 
-    #[view]
-    fn view() -> Column {
+    #[el]
+    fn root() -> Column {
         column![
             received_messages(),
             new_message_panel(),
@@ -57,15 +57,15 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn received_messages() -> Column [
         column![
             messages().map(|messages| messages.iter().map(received_message)),
         ]
     ]
 
-    #[view]
-    fn received_message(message: Model<Message>) -> Row {
+    #[el]
+    fn received_message(message: Var<Message>) -> Row {
         let message = message.inner();
         row![
             column![
@@ -78,7 +78,7 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn new_message_panel() -> Row {
         let new_message_text = new_message_text().inner();
         row![
@@ -103,9 +103,9 @@ zoons!{
         ]
     }
 
-    #[view]
+    #[el]
     fn username_panel() -> Row {
-        let input_id = use_state(ElementId::new);
+        let input_id = el_var(ElementId::new);
         let username = username().inner();
         row![
             label![

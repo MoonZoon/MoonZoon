@@ -46,7 +46,7 @@ zoons!{
         })
     }
 
-    #[model]
+    #[var]
     fn frequency() -> Frequency {
         Frequency::Daily
     }
@@ -57,8 +57,8 @@ zoons!{
         if let Daily = frequency().inner() { Weekly } else { Daily }
     }
 
-    #[view]
-    fn view() -> El {
+    #[el]
+    fn root() -> El {
         let logged_user = app::logged_user().inner();
         let frequency = frequency().inner().as_str();
         let frequency_for_link = frequency_for_link().inner();

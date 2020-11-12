@@ -3,7 +3,7 @@ use crate::state::{State, CloneState};
 
 #[topo::nested]
 pub fn do_once<T>(f: impl FnOnce() -> T) -> Option<T> {
-    let has_done = use_state(|| false);
+    let has_done = el_var(|| false);
     if has_done.get(){
         return None;
     }
@@ -12,18 +12,18 @@ pub fn do_once<T>(f: impl FnOnce() -> T) -> Option<T> {
 }
 
 #[topo::nested]
-pub fn use_state<T: 'static, F: FnOnce() -> T>(creator: F) -> State<T> {
-    use_state_current(creator)
+pub fn el_var<T: 'static, F: FnOnce() -> T>(creator: F) -> State<T> {
+    el_var_current(creator)
 }
 
 #[topo::nested]
 pub fn new_state<T: 'static, F: FnOnce() -> T>(creator: F) -> State<T> {
-    let count = use_state(|| 0);
+    let count = el_var(|| 0);
     count.update(|count| *count += 1);
-    topo::call_in_slot(&count.get(), || use_state_current(creator))
+    topo::call_in_slot(&count.get(), || el_var_current(creator))
 }
 
-fn use_state_current<T: 'static, F: FnOnce() -> T>(creator: F) -> State<T> {
+fn el_var_current<T: 'static, F: FnOnce() -> T>(creator: F) -> State<T> {
     let id = topo::CallId::current();
 
     let id_exists = STATES.with(|states| {
