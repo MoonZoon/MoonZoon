@@ -134,8 +134,8 @@ zoons!{
     #[el]
     fn body() -> Row {
         let car = car().inner();
-        let first_wheel_x = use_reset_state!(true, || car.width * 0.15);
-        let second_wheel_x = use_reset_state!(true, || car.width * 0.6);
+        let first_wheel_x = el_var_reset(true, || car.width * 0.15);
+        let second_wheel_x = el_var_reset(true, || car.width * 0.6);
         row![
             background::color(car.color),
             width!(fill()),
@@ -148,7 +148,7 @@ zoons!{
     } 
 
     #[el]
-    fn wheel(x: State<f64>) -> El {
+    fn wheel(x: ElVar<f64>) -> El {
         let car = car().inner();
         let x = x.inner();
         let wheel_radius = car.height * 0.4;

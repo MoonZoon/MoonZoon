@@ -156,7 +156,7 @@ zoons!{
     }
 
     #[el]
-    fn todo_checkbox(checkbox_id: State<ElementId>, todo: Var<app::Todo>) -> CheckBox {
+    fn todo_checkbox(checkbox_id: ElVar<ElementId>, todo: Var<app::Todo>) -> CheckBox {
         let completed = todo.try_map(|todo| todo.completed).unwrap_or_default();
 
         checkbox![
@@ -174,7 +174,7 @@ zoons!{
     }
 
     #[el]
-    fn todo_label(checkbox_id: State<ElementId>, todo: Var<app::Todo>) -> Label {
+    fn todo_label(checkbox_id: ElVar<ElementId>, todo: Var<app::Todo>) -> Label {
         label![
             label::for_input(checkbox_id.inner()),
             checked.then(font::strike),
