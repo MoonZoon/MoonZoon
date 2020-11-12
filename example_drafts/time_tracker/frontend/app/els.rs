@@ -2,7 +2,7 @@ use zoons::*;
 
 const MENU_BREAKPOINT: f64 = 600.;
 
-zoons!{
+blocks!{
     
     #[el]
     fn root() -> View {

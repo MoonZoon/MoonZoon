@@ -2,7 +2,7 @@ use zoon::*;
 use shared::{UpMsg, DownMsg, Message};
 use std::mem;
 
-zoons!{
+blocks!{
 
     #[var]
     fn username() -> String {

@@ -1,6 +1,6 @@
 use zoon::*;
 
-zoons!{
+blocks!{
 
     #[var]
     fn watching_enabled() -> bool {

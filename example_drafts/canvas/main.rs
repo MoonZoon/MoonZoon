@@ -1,6 +1,6 @@
 use zoon::*;
 
-zoons!{
+blocks!{
 
     #[derive(Copy, Clone)]
     enum Color {

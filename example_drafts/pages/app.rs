@@ -2,8 +2,8 @@ use zoon::*;
 
 mod admin;
 
-zoons!{
-    append_zoons![admin]
+blocks!{
+    append_blocks![admin]
 
     #[route]
     #[derive(Copy, Clone)]

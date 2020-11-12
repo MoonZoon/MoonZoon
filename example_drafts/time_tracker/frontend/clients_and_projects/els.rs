@@ -1,7 +1,7 @@
 use zoon::*;
 use crate::app;
 
-zoons!{
+blocks!{
 
     #[el]
     fn page() -> Column {

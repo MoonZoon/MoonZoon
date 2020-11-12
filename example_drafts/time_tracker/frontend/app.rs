@@ -4,8 +4,8 @@ use std::mem;
 
 mod els;
 
-zoons!{
-    append_zoons![
+blocks!{
+    append_blocks![
         els,
         crate::login,
         crate::clients_and_projects,

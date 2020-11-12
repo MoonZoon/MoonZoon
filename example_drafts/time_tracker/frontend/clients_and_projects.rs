@@ -7,33 +7,14 @@ pub mod els;
 type ClientId = Ulid;
 type ProjectId = Ulid;
 
-zoons!{
-    append_zoons![els]
+blocks!{
+    append_blocks![els]
 
     #[subscription]
     fn on_route_change() {
         if let app::Route::ClientsAndProjects = route() {
             app::send_up_msg(UpMsg::GetClientsAndProjectsClients);
         }
-    }
-
-    #[derive(Debug)]
-    pub struct Client {
-        id: ClientId,
-        name: String,
-        projects: Vec<Var<Project>>,
-    }
-
-    #[derive(Debug)]
-    struct Project {
-        id: ProjectId,
-        name: String,
-        client: Var<Client>, 
-    }
-
-    #[var]
-    fn clients() -> Option<Vec<Var<Client>>> {
-        None
     }
 
     #[subscription]
@@ -47,6 +28,20 @@ zoons!{
                 _ => down_msg
             }
         });
+    }
+
+    // ------ Client ------
+
+    #[derive(Debug)]
+    pub struct Client {
+        id: ClientId,
+        name: String,
+        projects: Vec<Var<Project>>,
+    }
+
+    #[var]
+    fn clients() -> Option<Vec<Var<Client>>> {
+        None
     }
 
     #[update]
@@ -74,6 +69,15 @@ zoons!{
 
         }).collect();
         clients().set(Some(clients));
+    }
+
+    // ------ Project ------
+
+    #[derive(Debug)]
+    struct Project {
+        id: ProjectId,
+        name: String,
+        client: Var<Client>, 
     }
 
 }

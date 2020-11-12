@@ -1,7 +1,7 @@
 use moon::*;
 use shared::{UpMsg, DownMsg, Message};
 
-moons!{
+blocks!{
     #[var]
     fn connector() -> Connector<UpMsg, DownMsg> {
         Connector::new("9000", |msg| {

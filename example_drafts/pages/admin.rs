@@ -3,8 +3,8 @@ use crate::app;
 
 mod report;
 
-zoons!{
-    append_zoons![report]
+blocks!{
+    append_blocks![report]
 
     #[route]
     #[derive(Copy, Clone)]

@@ -1,6 +1,6 @@
 use zoon::*;
 
-zoons!{
+blocks!{
 
     #[var]
     fn counter() -> i32 {

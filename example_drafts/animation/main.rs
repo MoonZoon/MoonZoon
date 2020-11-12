@@ -1,7 +1,7 @@
 use zoon::*;
 use rand::prelude::*;
 
-zoons!{
+blocks!{
 
     #[derive(Copy, Clone, Debug)]
     struct Car {

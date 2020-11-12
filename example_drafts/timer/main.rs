@@ -1,7 +1,7 @@
 use zoon::*;
 use std::ops::Not;
 
-zoons!{
+blocks!{
 
     // -- stopwatch --
 

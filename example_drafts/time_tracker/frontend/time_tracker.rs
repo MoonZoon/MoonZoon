@@ -2,6 +2,6 @@ use zoon::*;
 
 pub mod els;
 
-zoons!{
-    append_zoons![els]
+blocks!{
+    append_blocks![els]
 }

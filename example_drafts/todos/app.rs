@@ -10,8 +10,8 @@ const STORAGE_KEY: &str = "todos-zoon";
 
 type TodoId = Ulid;
 
-zoons!{
-    append_zoons![els]
+blocks!{
+    append_blocks![els]
 
     // ------ Route ------
 
@@ -230,10 +230,10 @@ zoons!{
 
     #[cache]
     fn filtered_todos() -> Cache<Vec<Var<Todo>>> {
-        match app::selected_filter().inner() {
-            Filter::All => app::todos().to_cache(),
-            Filter::Active => app::active_todos(),
-            Filter::Completed => app::completed_todos(),
+        match selected_filter().inner() {
+            Filter::All => todos().to_cache(),
+            Filter::Active => active_todos(),
+            Filter::Completed => completed_todos(),
         }
     }
 
