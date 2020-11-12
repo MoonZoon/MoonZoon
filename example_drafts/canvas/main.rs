@@ -28,7 +28,6 @@ zoons!{
     #[el]
     fn root() -> Row {
         let fill_style = fill_style(); 
-
         row![
             canvas![
                 canvas::width(300),
@@ -60,5 +59,5 @@ zoons!{
 }
 
 fn main() {
-    start!(zoons)
+    start!()
 }

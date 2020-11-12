@@ -4,12 +4,14 @@ use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use ulid::Ulid;
 
+mod els;
+
 const STORAGE_KEY: &str = "todos-zoon";
 
 type TodoId = Ulid;
 
 zoons!{
-    append_zoons![crate::view::zoons]
+    append_zoons![els]
 
     // ------ Route ------
 

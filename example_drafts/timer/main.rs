@@ -47,7 +47,7 @@ zoons!{
         timeout().set(None);
     }
 
-    // -- view --
+    // -- el --
 
     #[el]
     fn root() -> Column {
@@ -62,7 +62,6 @@ zoons!{
     fn stopwatch_panel() -> Row {
         let seconds = seconds().inner();
         let enabled = stopwatch().map(Option::is_some);
-
         row![
             spacing(10),
             format!("Seconds: {}", seconds),
@@ -90,7 +89,6 @@ zoons!{
     #[el]
     fn timeout_panel() -> Row {
         let enabled = timeout().map(Option::is_some);
-
         row![
             spacing(10),
             button![
@@ -117,5 +115,5 @@ zoons!{
 }
 
 fn main() {
-    start!(zoons)
+    start!()
 }

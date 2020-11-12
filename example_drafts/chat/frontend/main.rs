@@ -126,5 +126,5 @@ zoons!{
 }
 
 fn main() {
-    start!(zoons)
+    start!()
 }

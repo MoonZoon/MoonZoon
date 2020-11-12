@@ -3,7 +3,7 @@ use zoon::*;
 mod admin;
 
 zoons!{
-    append_zoons![admin::zoons]
+    append_zoons![admin]
 
     #[route]
     #[derive(Copy, Clone)]
@@ -50,10 +50,9 @@ zoons!{
     #[el]
     fn page() -> El {
         let route = route().inner();
-
         match route {
             Route::Admin(_) => {
-                admin::root()
+                admin::page()
             }
             Route::Root => {
                 el![

@@ -58,11 +58,10 @@ zoons!{
     }
 
     #[el]
-    fn root() -> El {
+    fn page() -> El {
         let logged_user = app::logged_user().inner();
         let frequency = frequency().inner().as_str();
         let frequency_for_link = frequency_for_link().inner();
-
         el![
             row![
                 format!(

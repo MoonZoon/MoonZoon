@@ -36,12 +36,11 @@ zoons!{
         last_key().set(event.key.to_string());
     }
 
-    // -- view --
+    // -- el --
 
     #[el]
     fn root() -> View {
         let enabled = watching_enabled().inner();
-
         view![
             enabled.then(|| vec![
                 on_mouse_move(update_mouse_position),
@@ -56,7 +55,6 @@ zoons!{
         let position = mouse_position().inner();
         let key = last_key();
         let enabled = watching_enabled().inner();
-
         column![
             format!("X: {}, Y: {}", position.x, position.y),
             key.map(|key| format!("Key: {}", key)),
@@ -69,5 +67,5 @@ zoons!{
 }
 
 fn main() {
-    start!(zoons)
+    start!()
 }

@@ -1,5 +1,5 @@
 mod app;
 
 fn main() {
-    start!(app::zoons)
+    start!(app)
 }

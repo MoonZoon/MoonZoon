@@ -4,7 +4,7 @@ use crate::app;
 mod report;
 
 zoons!{
-    append_zoons![report::zoons]
+    append_zoons![report]
 
     #[route]
     #[derive(Copy, Clone)]
@@ -23,8 +23,8 @@ zoons!{
     }
 
     #[el]
-    fn root() -> El {
-        report::root()
+    fn page() -> El {
+        report::page()
     }
 
 }

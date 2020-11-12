@@ -1,6 +1,5 @@
 use zoon::*;
 use std::ops::Not;
-use crate::app;
 
 zoons!{
 
@@ -40,8 +39,7 @@ zoons!{
 
     #[el]
     fn panel() -> Column {
-        let todos_exist = app::todos_exist().inner();
-
+        let todos_exist = super::todos_exist().inner();
         column![
             region::section(),
             width!(fill()),
@@ -68,8 +66,7 @@ zoons!{
 
     #[el]
     fn panel_header() -> Row {
-        let todos_exist = app::todos_exist().inner();
-
+        let todos_exist = super::todos_exist().inner();
         row![
             width!(fill()),
             background::color(hsla(0, 0, 0, 0.3)),
@@ -87,11 +84,10 @@ zoons!{
 
     #[el]
     fn toggle_all_checkbox() -> Checkbox {
-        let checked = app::are_all_completed().inner();
-
+        let checked = super::are_all_completed().inner();
         checkbox![
             checkbox::checked(checked),
-            checkbox::on_change(app::check_or_uncheck_all),
+            checkbox::on_change(super::check_or_uncheck_all),
             input::label_hidden("Toggle All"),
             el![
                 font::color(hsla(0, 0, if checked { 48.4 } else { 91.3 })),
@@ -104,11 +100,10 @@ zoons!{
 
     #[el]
     fn new_todo_title() -> TextInput {
-        let new_todo_title = app::new_todo_title().inner();
-
+        let new_todo_title = super::new_todo_title().inner();
         text_input![
             do_once(focus),
-            text_input::on_change(app::set_new_todo_title),
+            text_input::on_change(super::set_new_todo_title),
             input::label_hidden("New Todo Title"),
             placeholder![
                 font::italic(),
@@ -122,8 +117,7 @@ zoons!{
 
     #[el]
     fn todos() -> Column {
-        let filtered_todo = app::filtered_todos().inner();
-
+        let filtered_todo = super::filtered_todos().inner();
         column![
             filtered_todo.map(|todos| todos.iter().rev().map(todo))
         ]
@@ -138,11 +132,10 @@ zoons!{
     }
 
     #[el]
-    fn todo(todo: Var<app::Todo>) -> Row {
-        let selected = Some(todo) == app::selected_todo();
+    fn todo(todo: Var<super::Todo>) -> Row {
+        let selected = Some(todo) == super::selected_todo();
         let checkbox_id = el_var(ElementId::new);
         let row_hovered = el_var(|| false);
-
         row![
             font::size(24),
             padding!(15),
@@ -156,13 +149,12 @@ zoons!{
     }
 
     #[el]
-    fn todo_checkbox(checkbox_id: ElVar<ElementId>, todo: Var<app::Todo>) -> CheckBox {
+    fn todo_checkbox(checkbox_id: ElVar<ElementId>, todo: Var<super::Todo>) -> CheckBox {
         let completed = todo.try_map(|todo| todo.completed).unwrap_or_default();
-
         checkbox![
             id(checkbox_id.inner()),
             checkbox::checked(completed),
-            checkbox::on_change(|_| app::toggle_todo(todo)),
+            checkbox::on_change(|_| super::toggle_todo(todo)),
             el![
                 background::image(if completed {
                     completed_todo_checkbox_icon()
@@ -174,7 +166,7 @@ zoons!{
     }
 
     #[el]
-    fn todo_label(checkbox_id: ElVar<ElementId>, todo: Var<app::Todo>) -> Label {
+    fn todo_label(checkbox_id: ElVar<ElementId>, todo: Var<super::Todo>) -> Label {
         label![
             label::for_input(checkbox_id.inner()),
             checked.then(font::strike),
@@ -187,8 +179,7 @@ zoons!{
 
     #[el]
     fn selected_todo_title() -> TextInput {
-        let selected_todo = app::selected_todo().inner().expect("selected todo");
-
+        let selected_todo = super::selected_todo().inner().expect("selected todo");
         text_input![
             width!(fill()),
             paddingXY(16, 12),
@@ -202,23 +193,22 @@ zoons!{
                 shadow::color(hsla(0, 0, 0, 20)),
             ),
             do_once(focus),
-            on_blur(app::save_selected_todo),
+            on_blur(super::save_selected_todo),
             on_key_down(|event| {
                 match event.key {
-                    Key::Escape => app::select_todo(None),
-                    Key::Enter => app::save_selected_todo(),
+                    Key::Escape => super::select_todo(None),
+                    Key::Enter => super::save_selected_todo(),
                     _ => (),
                 }
             }),
-            text_input::on_change(app::set_selected_todo_title),
+            text_input::on_change(super::set_selected_todo_title),
             selected_todo.try_map(|todo| todo.title.clone()),
         ]
     }
 
     #[el]
-    fn remove_todo_button(todo: Var<app::Todo>) -> Button {
+    fn remove_todo_button(todo: Var<super::Todo>) -> Button {
         let hovered = el_var(|| false);
-
         button![
             size::width!(20),
             size::height!(20),
@@ -226,15 +216,14 @@ zoons!{
             font::color(hsl(12.2, 34.7, 68.2)),
             on_hovered_change(hovered.setter()),
             font::color(if hovered().inner() { hsl(10.5, 37.7, 48.8) } else { hsl(12.2, 34.7, 68.2) }),
-            button::on_press(|| app::remove_todo(todo)),
+            button::on_press(|| super::remove_todo(todo)),
             "×",
         ]
     }
 
     #[el]
     fn panel_footer() -> Row {
-        let completed_exist = app::completed_exist();
-
+        let completed_exist = super::completed_exist();
         row![
             active_items_count(),
             filters(),
@@ -244,8 +233,7 @@ zoons!{
 
     #[el]
     fn active_items_count() -> Paragraph {
-        let active_count = app::active_count().inner();
-
+        let active_count = super::active_count().inner();
         paragraph![
             el![
                 font::bold(),
@@ -257,22 +245,20 @@ zoons!{
 
     #[el]
     fn filters() -> Row {
-        let filters = app::filters();
-
+        let filters = super::filters();
         row![
             filters.map(|filters| filters.iter().map(filter))  
         ]
     }
 
     #[el]
-    fn filter(filter: app::Filter) -> Button {
-        let selected = app::selected_filter().inner() == filter;
+    fn filter(filter: super::Filter) -> Button {
+        let selected = super::selected_filter().inner() == filter;
         let hovered = el_var(|| false);
-
         let (title, route) = match filter {
-            app::Filter::All => ("All", app::Route::root()),
-            app::Filter::Active => ("Active", app::Route::active()),
-            app::Filter::Completed => ("Completed", app::Route::completed()),
+            super::Filter::All => ("All", super::Route::root()),
+            super::Filter::Active => ("Active", super::Route::active()),
+            super::Filter::Completed => ("Completed", super::Route::completed()),
         };
         let border_alpha = if selected { 20 } else if hovered { 10 } else { 0 };
         button![
@@ -281,7 +267,7 @@ zoons!{
             border::solid(),
             border::width!(1),
             border::color(hsla(12.2, 72.8, 40.2, border_alpha)),
-            button::on_press(|| app::set_route(route)),
+            button::on_press(|| super::set_route(route)),
             title,
         ]
     }
@@ -289,11 +275,10 @@ zoons!{
     #[el]
     fn clear_completed_button() -> Button {
         let hovered = el_var(|| false);
-
         button![
             on_hovered_change(hovered.setter()),
             hovered.inner().then(font::underline),
-            button::on_press(app::remove_completed),
+            button::on_press(super::remove_completed),
             "Clear completed",
         ]
     }
