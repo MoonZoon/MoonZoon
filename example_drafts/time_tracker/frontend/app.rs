@@ -1,6 +1,7 @@
 use zoon::*;
 use shared::{UpMsg, DownMsg, User};
 use std::mem;
+use std::collections::HashSet;
 
 mod els;
 
@@ -139,11 +140,26 @@ blocks!{
         close_menu();
     }
 
+    // ------ Unfinished mutations ------
+
+    #[var]
+    fn unfinished_mutations() -> HashSet<CorId> {
+        HashSet::new()
+    }
+
+    #[cache]
+    fn saving() -> bool {
+        !unfinished_mutations().map(HashSet::is_empty)
+    }
+
     // ------ Connection ------
 
     #[var]
     fn connection() -> Connection<UpMsg, DownMsg> {
-        Connection::new("localhost:9000", |msg| {
+        Connection::new("localhost:9000", |msg, cor_id| {
+            unfinished_mutations().update_mut(|cor_ids| {
+                cor_ids.remove(cor_id);
+            });
             down_msg().update_mut(|down_msg| {
                 down_msg.inner().set(Some(msg));
             })
@@ -156,9 +172,15 @@ blocks!{
     }
 
     #[update]
-    fn send_up_msg(msg: UpMsg) {
-        connection().use_ref(move |connection| {
-            connection.send(msg);
-        })
+    fn send_up_msg(mutation: bool, msg: UpMsg) {
+        let cor_id = connection().map(move |connection| {
+            connection.send(msg)
+        });
+        if mutation {
+            unfinished_mutations().update(|cor_ids| {
+                cor_ids.insert(cor_id);
+            });
+        }
     }
+
 }

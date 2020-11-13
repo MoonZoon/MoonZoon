@@ -13,7 +13,7 @@ blocks!{
     #[subscription]
     fn on_route_change() {
         if let app::Route::ClientsAndProjects = route() {
-            app::send_up_msg(UpMsg::GetClientsAndProjectsClients);
+            app::send_up_msg(false, UpMsg::GetClientsAndProjectsClients);
         }
     }
 
@@ -69,6 +69,19 @@ blocks!{
 
         }).collect();
         clients().set(Some(clients));
+    }
+
+    #[update]
+    fn add_client() {
+        let client = Client {
+            id: ClientId::new(),
+            name: String::new(),
+            projects: Vec::new(),
+        };
+        app::send_up_msg(true, UpMsg::AddClient(client.id));
+        clients().update_mut(move |clients| {
+            clients.push(Var::new(client));
+        });
     }
 
     // ------ Project ------
