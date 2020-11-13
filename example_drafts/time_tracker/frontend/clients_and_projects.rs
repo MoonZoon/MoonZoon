@@ -14,6 +14,8 @@ blocks!{
     #[subscription]
     fn on_route_change() {
         if let app::Route::ClientsAndProjects = route() {
+            added_project().set(None);
+            added_client().set(None);
             app::send_up_msg(false, UpMsg::GetClientsAndProjectsClients);
         }
     }
@@ -42,6 +44,11 @@ blocks!{
 
     #[var]
     fn clients() -> Option<Vec<Var<Client>>> {
+        None
+    }
+
+    #[var]
+    fn added_client() -> Option<Var<Client>> {
         None
     }
 
@@ -82,6 +89,8 @@ blocks!{
         app::send_up_msg(true, UpMsg::AddClient(client.id));
         clients().update_mut(move |clients| {
             if let Some(clients) = clients {
+                let client = Var::new(client);
+                added_client().set(Some(client));
                 clients.push(Var::new(client));
             }
         });
@@ -120,6 +129,11 @@ blocks!{
         client: Var<Client>, 
     }
 
+    #[var]
+    fn added_project() -> Option<Var<Project>> {
+        None
+    }
+
     #[update]
     fn add_project(client: Var<Client>) {
         let project = Project {
@@ -129,7 +143,9 @@ blocks!{
         };
         client.try_update_mut(move |client| {
             app::send_up_msg(true, UpMsg::AddProject(client.id, project.id));
-            client.projects.push(Var::new(project));
+            let project = Var::new(project);
+            added_project().set(Some(project));
+            client.projects.push(project);
         });
     }
 

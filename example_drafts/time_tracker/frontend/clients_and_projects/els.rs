@@ -6,27 +6,19 @@ blocks!{
     #[el]
     fn page() -> Column {
         column![
-            page_title();
-            add_client_button();
+            el![
+                region::h1(),
+                "Clients & Projects",
+            ],
+            button![
+                button::on_press(super::add_client),
+                "Add Client",
+            ];
             client_panels();
         ]
     }
 
-    #[el]
-    fn page_title() -> El {
-        el![
-            region::h1(),
-            "Clients & Projects",
-        ]
-    }
-
-    #[el]
-    fn add_client_button() -> Button {
-        button![
-            button::on_press(super::add_client),
-            "Add Client",
-        ]
-    }
+    // ------ Client ------
 
     #[el]
     fn client_panels() -> Column {
@@ -41,18 +33,20 @@ blocks!{
 
     #[el]
     fn client_panel(client: Var<super::Client>) -> Column {
-        row![
-            client_name(client),
-            button![
-                button::on_press(|| super::remove_client(client)),
-                "D",
+        column![
+            row![
+                client_name(client),
+                button![
+                    button::on_press(|| super::remove_client(client)),
+                    "D",
+                ],
             ],
-        ],
-        button![
-            button::on_press(|| super::add_project(client)),
-            "Add Project",
-        ],
-        project_panels(client),
+            button![
+                button::on_press(|| super::add_project(client)),
+                "Add Project",
+            ],
+            project_panels(client),
+        ]
     }
 
     #[el]
@@ -63,7 +57,11 @@ blocks!{
                 .unwrap_or_default()
         });
         text_input![
-            do_once(focus),
+            do_once(|| {
+                super::added_client().map(|added_client| {
+                    (added_client == Some(client)).then(focus)
+                })
+            }),
             text_input::on_change(|new_name| name.set(new_name)),
             on_blur(|| name.use_ref(|name| {
                 super::rename_client(client, name);
@@ -71,6 +69,8 @@ blocks!{
             name.inner(),
         ]
     }
+
+    // ------ Project ------
 
     #[el]
     fn project_panels(client: Var<super::Client>) -> Column {
@@ -94,14 +94,18 @@ blocks!{
     }
 
     #[el]
-    fn project_name(client: Var<super::Client>) -> TextInput {
+    fn project_name(project: Var<super::Project>) -> TextInput {
         let name = el_var(|| {
             project
                 .try_map(|project| project.name.clone())
                 .unwrap_or_default()
         });
         text_input![
-            do_once(focus),
+            do_once(|| {
+                super::added_project().map(|added_project| {
+                    (added_project == Some(project)).then(focus)
+                })
+            }),
             text_input::on_change(|new_name| name.set(new_name)),
             on_blur(|| name.use_ref(|name| {
                 super::rename_project(project, name);
