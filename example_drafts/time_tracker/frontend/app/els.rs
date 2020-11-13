@@ -1,6 +1,6 @@
 use zoons::*;
 
-const MENU_BREAKPOINT: f64 = 600.;
+const MENU_BREAKPOINT: f64 = 700.;
 
 blocks!{
     
@@ -21,14 +21,14 @@ blocks!{
     fn header() -> Row {
         let show_links = super::viewport_width().inner() > MENU_BREAKPOINT;
         let show_hamburger = !show_links;
+        let saving = super::saving();
         row![
             el![
                 font::bold(),
                 "TT",
             ],
-            show_links.then(|| row![
-                menu_links()
-            ]),
+            show_links.then(|| row![menu_links()]),
+            saving.then(|| el!["Saving..."]),
             show_hamburger.then(hamburger),
         ]
     }
