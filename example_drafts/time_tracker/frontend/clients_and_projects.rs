@@ -1,5 +1,6 @@
 use zoon::*;
 use ulid::Ulid;
+use std::borrow::Cow;
 use crate::app;
 
 pub mod els;
@@ -80,7 +81,33 @@ blocks!{
         };
         app::send_up_msg(true, UpMsg::AddClient(client.id));
         clients().update_mut(move |clients| {
-            clients.push(Var::new(client));
+            if let Some(clients) = clients {
+                clients.push(Var::new(client));
+            }
+        });
+    } 
+
+    #[update]
+    fn remove_client(client: Var<Client>) {
+        clients().update_mut(|clients| {
+            if let Some(clients) = clients {
+                if let Some(position) = clients.iter().position(|c| c == client) {
+                    clients.remove(position);
+                }
+            }
+        });
+        if let Some(client) = client.try_remove() {
+            for project in client.projects {
+                remove_project(project);
+            }
+            app::send_up_msg(true, UpMsg::RemoveClient(client.id));
+        }
+    }
+
+    #[update]
+    fn rename_client(client: Var<Project>, name: &str) {
+        client.try_use_ref(|client| {
+            app::send_up_msg(true, UpMsg::RenameClient(client.id, Cow::from(name)));
         });
     }
 
@@ -91,6 +118,38 @@ blocks!{
         id: ProjectId,
         name: String,
         client: Var<Client>, 
+    }
+
+    #[update]
+    fn add_project(client: Var<Client>) {
+        let project = Project {
+            id: ProjectId::new(),
+            name: String::new(),
+            client,
+        };
+        client.try_update_mut(move |client| {
+            app::send_up_msg(true, UpMsg::AddProject(client.id, project.id));
+            client.projects.push(Var::new(project));
+        });
+    }
+
+    #[update]
+    fn remove_project(project: Var<Project>) {
+        if let Some(removed_project) = project.try_remove() {
+            app::send_up_msg(true, UpMsg::RemoveProject(removed_project.id));
+            removed_project.client().try_update_mut(|client| {
+                if let Some(position) = client.projects.iter().position(|p| p == project) {
+                    clients.projects.remove(position);
+                }
+            });
+        }
+    }
+
+    #[update]
+    fn rename_project(project: Var<Project>, name: &str) {
+        project.try_update_mut(|project| {
+            app::send_up_msg(true, UpMsg::RenameProject(project.id, Cow::from(name)));
+        });
     }
 
 }
