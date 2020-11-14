@@ -1,8 +1,5 @@
 use serde::{Deserialize, Serialize};
-use ulid::Ulid;
-
-type ClientId = Ulid;
-type ProjectId = Ulid;
+use super::{ClientId, ProjectId};
 
 #[derive(Serialize, Deserialize)]
 pub struct Client {

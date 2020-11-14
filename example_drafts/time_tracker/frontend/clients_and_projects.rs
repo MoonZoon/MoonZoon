@@ -2,11 +2,9 @@ use zoon::*;
 use ulid::Ulid;
 use std::borrow::Cow;
 use crate::app;
+use shared::{ClientId, ProjectId};
 
 pub mod els;
-
-type ClientId = Ulid;
-type ProjectId = Ulid;
 
 blocks!{
     append_blocks![els]
@@ -153,7 +151,7 @@ blocks!{
     fn remove_project(project: Var<Project>) {
         if let Some(removed_project) = project.try_remove() {
             app::send_up_msg(true, UpMsg::RemoveProject(removed_project.id));
-            removed_project.client().try_update_mut(|client| {
+            removed_project.client.try_update_mut(|client| {
                 if let Some(position) = client.projects.iter().position(|p| p == project) {
                     clients.projects.remove(position);
                 }
@@ -163,7 +161,7 @@ blocks!{
 
     #[update]
     fn rename_project(project: Var<Project>, name: &str) {
-        project.try_update_mut(|project| {
+        project.try_use_ref(|project| {
             app::send_up_msg(true, UpMsg::RenameProject(project.id, Cow::from(name)));
         });
     }
