@@ -53,26 +53,21 @@ blocks!{
     #[update]
     fn set_clients(clients: Vec<shared::clients_and_projects::Client>) {
         let clients = clients.into_iter().map(|client| {
-
             let client_var = Var::new(Client {
                 id: client.id,
                 name: client.name,
                 projects: Vec::new(),
             });
-
-            let projects = client.projects.into_iter().map(|project| {
-                let project_var = Var::new(Project {
-                    id: project.id,
-                    name: project.name,
-                    client: client_var,
-                });
-            }).collect();
-
-            client_var.update_mut(move |client| {
-                client.projects = projects;
+            client_var.update_mut(|new_client| {
+                new_client.projects = client.projects.into_iter().map(|project| {
+                    Var::new(Project {
+                        id: project.id,
+                        name: project.name,
+                        client: client_var,
+                    })
+                }).collect()
             });
             client_var
-
         }).collect();
         clients().set(Some(clients));
     }
