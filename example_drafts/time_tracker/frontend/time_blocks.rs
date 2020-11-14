@@ -49,26 +49,36 @@ blocks!{
     #[update]
     fn set_clients(clients: Vec<shared::time_blocks::Client>) {
         let clients = clients.into_iter().map(|client| {
-
             let client_var = Var::new(Client {
                 id: client.id,
                 name: client.name,
-                projects: Vec::new(),
+                time_blocks: Vec::new(),
+                tracked: client.tracked,
             });
-
-            let projects = client.projects.into_iter().map(|project| {
-                let project_var = Var::new(Project {
-                    id: project.id,
-                    name: project.name,
-                    client: client_var,
-                });
-            }).collect();
-
-            client_var.update_mut(move |client| {
-                client.projects = projects;
+            client_var.update_mut(|new_client| {
+                new_client.time_blocks = client.time_blocks.into_iter().map(|time_block| {
+                    let time_block_var = Var::new(TimeBlock {
+                        id: time_block.id,
+                        name: time_block.name,
+                        status: time_block.status,
+                        duration: time_block.duration,
+                        invoice: None,
+                        client: client_var,
+                    });
+                    if let Some(invoice) = time_block.invoice {
+                        time_block_var.update_mut(|new_time_block| {
+                            new_time_block.invoice = Some(Invoice {
+                                id: invoice.id,
+                                custom_id: invoice.custom_id,
+                                url: invoice.url, 
+                                time_block: time_block_var, 
+                            });
+                        });
+                    }
+                    time_block_var
+                }).collect()
             });
             client_var
-
         }).collect();
         clients().set(Some(clients));
     }
