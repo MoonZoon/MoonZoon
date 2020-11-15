@@ -39,6 +39,7 @@ blocks!{
         name: String,
         time_blocks: Vec<Var<TimeBlock>>,
         tracked: Duration,
+        statistics: Var<Statistics>,
     }
 
     #[var]
@@ -54,6 +55,7 @@ blocks!{
                 name: client.name,
                 time_blocks: Vec::new(),
                 tracked: client.tracked,
+                statistics: Var::new(Statistics::default()),
             });
             client_var.update_mut(|new_client| {
                 new_client.time_blocks = client.time_blocks.into_iter().map(|time_block| {
@@ -78,15 +80,32 @@ blocks!{
                     time_block_var
                 }).collect()
             });
+            recompute_statistics(client_var);
             client_var
         }).collect();
         clients().set(Some(clients));
     }
 
+    // ------ Statistics ------
+
+    #[derive(Default, Copy, Clone)]
+    struct Statistics {
+        tracked: f64,
+        to_block: f64,
+        blocked: f64,
+        unpaid: f64,
+        paid: f64,
+    }
+
+    #[update]
+    fn recompute_statistics(client: Var<Client>) {
+
+    }
+
     // ------ TimeBlock ------
 
     #[derive(Debug)]
-    struct TimeBlocks {
+    struct TimeBlock {
         id: TimeBLockId,
         name: String,
         status: TimeBlockStatus,
@@ -94,6 +113,20 @@ blocks!{
         invoice: Option<Var<Invoice>>,
         client: Var<Client>, 
     }
+
+    #[var]
+    fn time_block_event_handler() -> VarEventHandler<TimeBlock> {
+        VarEventHandler::new(|event, time_block| {
+            match event {
+                VarEvent::Create => (),
+                VarEvent::Change => (),
+                VarEvent::Remove => (),
+            }
+            let client = time_block.map(|time_block| time_block.client);
+            recompute_statistics(client);
+        })
+    }
+
 
     #[var]
     fn added_time_block() -> Option<Var<TimeBlock>> {

@@ -29,10 +29,11 @@ blocks!{
 
     #[el]
     fn client_panel(client: Var<super::Client>) -> Column {
+        let statistics = client.try_map(|client| client.statistics).expect("client statistics");
         column![
             row![
                 el![client],
-                statistics(),
+                statistics(statistics),
             ],
             button![
                 button::on_press(|| super::add_time_block(client)),
@@ -43,16 +44,18 @@ blocks!{
     }
 
     #[el]
-    fn statistics(client: Var<super::Client>) -> Row {
+    fn statistics(statistics: Var<super::Statistics>) -> Row {
+        let statistics = statistics.try_inner().expect("statistics data");
+        let format = |value: f64| format!("{:.1}", value);
         row![
             column![
-                row!["Blocked", 20.],
-                row!["Unpaid", 20.],
-                row!["Paid", 0.],
+                row!["Blocked", format(statistics.blocked)],
+                row!["Unpaid", format(statistics.unpaid)],
+                row!["Paid", format(statistics.paid)],
             ],
             column![
-                row!["Tracked", 7.3],
-                row!["To Block", -12.7],
+                row!["Tracked", format(statistics.tracked)],
+                row!["To Block", format(statistics.to_block)],
             ],
         ]
     }
