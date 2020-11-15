@@ -101,6 +101,21 @@ blocks!{
     }
 
     #[var]
+    fn todo_event_handler() -> VarEventHandler<Todo> {
+        VarEventHandler::new(|event, todo| match event {
+            VarEvent::Create => todos().update_mut(|todos| todos.push(todo)),
+            VarEvent::Change => todos().mark_updated(),
+            VarEvent::Remove => {
+                todos().update_mut(|todos| {
+                    if let Some(position) = todos.iter().position(|t| t == todo) {
+                        todos.remove(position);
+                    }
+                });
+            }
+        })
+    }
+
+    #[var]
     fn new_todo_title() -> String {
         String::new()
     }
@@ -122,9 +137,6 @@ blocks!{
             title,
             completed: false,
         });
-        todo.on_change(store_todos);
-
-        todos().update_mut(|todos| todos.push(todo));
         new_todo_title().update_mut(String::clear);
     }
 
@@ -133,11 +145,6 @@ blocks!{
         if Some(todo) == selected_todo() {
             selected_todo().set(None);
         }
-        todos().update_mut(|todos| {
-            if let Some(position) = todos.iter().position(|t| t == todo) {
-                todos.remove(position);
-            }
-        });
         todo.try_remove();
     }
 
