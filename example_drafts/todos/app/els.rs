@@ -111,16 +111,16 @@ blocks!{
                 font::color(hsla(0, 0, 0, 40)),
                 placeholder::text("what needs to be done?"),
             ],
-            on_key_down(|event| matches!(event.key, Key::Enter).then(super::create_todo)),
+            on_key_down(|event| if let Key::Enter = event.key { super::create_todo() }),
             new_todo_title,
         ]
     }
 
     #[el]
     fn todos() -> Column {
-        let filtered_todo = super::filtered_todos().inner();
+        let filtered_todos = super::filtered_todos().inner();
         column![
-            filtered_todo.map(|todos| todos.iter().rev().map(todo))
+            filtered_todos.map(|todos| todos.iter().map(todo))
         ]
     }
 

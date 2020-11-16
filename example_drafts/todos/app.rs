@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use strum::IntoEnumIterator;
 use strum_macros::EnumIter;
 use ulid::Ulid;
+use im::Vector;
 
 mod els;
 
@@ -103,13 +104,14 @@ blocks!{
     #[var]
     fn todo_event_handler() -> VarEventHandler<Todo> {
         VarEventHandler::new(|event, todo| match event {
-            VarCreated => todos().update_mut(|todos| todos.push(todo)),
+            VarCreated => todos().update_mut(|todos| todos.push_front(todo)),
             VarChanged => todos().mark_updated(),
             VarRemoved => {
+                if Some(todo) == selected_todo().inner() {
+                    selected_todo().set(None);
+                }
                 todos().update_mut(|todos| {
-                    if let Some(position) = todos.iter().position(|t| t == todo) {
-                        todos.remove(position);
-                    }
+                    todos.remove(todos.index_of(todo).expect("todo index"));
                 });
             }
         })
@@ -142,9 +144,6 @@ blocks!{
 
     #[update]
     fn remove_todo(todo: Var<Todo>) {
-        if Some(todo) == selected_todo() {
-            selected_todo().set(None);
-        }
         todo.try_remove();
     }
 
@@ -156,7 +155,7 @@ blocks!{
     // -- all --
 
     #[var]
-    fn todos() -> Vec<Var<Todo>> {
+    fn todos() -> Vector<Var<Todo>> {
         LocalStorage::get(STORAGE_KEY).unwrap_or_default()
     }
 
@@ -167,16 +166,18 @@ blocks!{
 
     #[update]
     fn check_or_uncheck_all(checked: bool) {
-        if are_all_completed().inner() {
-            todos().use_ref(|todos| todos.iter().for_each(toggle_todo));
-        } else {
-            active_todos().use_ref(|todos| todos.iter().for_each(toggle_todo));
+        stop!{
+            if are_all_completed().inner() {
+                todos().use_ref(|todos| todos.iter().for_each(toggle_todo));
+            } else {
+                active_todos().use_ref(|todos| todos.iter().for_each(toggle_todo));
+            }
         }
     }
 
     #[cache]
     fn todos_count() -> usize {
-        todos().map(Vec::len)
+        todos().map(Vector::len)
     }
 
     #[cache]
@@ -187,23 +188,22 @@ blocks!{
     // -- completed --
 
     #[cache]
-    fn completed_todos() -> Vec<Var<Todo>> {
-        todos().map(|todos| {
-            todos
-                .iter()
-                .filter(|todo| todo.try_map(|todo| todo.completed).unwrap_or_default())
-                .collect()
-        })
+    fn completed_todos() -> Vector<Var<Todo>> {
+        let mut todos = todos().inner();
+        todos.retain(|todo| todo.try_map(|todo| todo.completed).unwrap_or_default())
+        todos
     }
 
     #[update]
     fn remove_completed() {
-        completed_todos().use_ref(|todos| todos.iter().for_each(remove_todo));
+        stop!{
+            completed_todos().use_ref(|todos| todos.iter().for_each(remove_todo));
+        }
     }
 
     #[cache]
     fn completed_count() -> usize {
-        completed_todos().map(Vec::len)
+        completed_todos().map(Vector::len)
     }
 
     #[cache]
@@ -219,24 +219,21 @@ blocks!{
     // -- active --
 
     #[cache]
-    fn active_todos() -> Vec<Var<Todo>> {
-        todos().map(|todos| {
-            todos
-                .iter()
-                .filter(|todo| todo.try_map(|todo| !todo.completed).unwrap_or_default())
-                .collect()
-        })
+    fn active_todos() -> Vector<Var<Todo>> {
+        let mut todos = todos().inner();
+        todos.retain(|todo| todo.try_map(|todo| !todo.completed).unwrap_or_default())
+        todos
     }
 
     #[cache]
     fn active_count() -> usize {
-        active_todos().map(Vec::len)
+        active_todos().map(Vector::len)
     }
 
     // -- filtered --
 
     #[cache]
-    fn filtered_todos() -> Cache<Vec<Var<Todo>>> {
+    fn filtered_todos() -> Cache<Vector<Var<Todo>>> {
         match selected_filter().inner() {
             Filter::All => todos().to_cache(),
             Filter::Active => active_todos(),
