@@ -126,18 +126,18 @@ blocks!{
     }
 
     #[update]
-    fn create_todo(title: &str) {
-        let title = title.trim();
+    fn create_todo() {
+        let title = new_todo_title().map(String::trim);
         if title.is_empty() {
             return;
         }
+        new_todo_title().update_mut(String::clear);
 
         let mut todo = Var::new(Todo {
             id: TodoId::new(),
             title,
             completed: false,
         });
-        new_todo_title().update_mut(String::clear);
     }
 
     #[update]

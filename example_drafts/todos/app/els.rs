@@ -111,6 +111,7 @@ blocks!{
                 font::color(hsla(0, 0, 0, 40)),
                 placeholder::text("what needs to be done?"),
             ],
+            on_key_down(|event| matches!(event.key, Key::Enter).then(super::create_todo)),
             new_todo_title,
         ]
     }
