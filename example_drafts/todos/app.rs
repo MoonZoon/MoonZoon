@@ -103,9 +103,9 @@ blocks!{
     #[var]
     fn todo_event_handler() -> VarEventHandler<Todo> {
         VarEventHandler::new(|event, todo| match event {
-            VarEvent::Create => todos().update_mut(|todos| todos.push(todo)),
-            VarEvent::Change => todos().mark_updated(),
-            VarEvent::Remove => {
+            VarCreated => todos().update_mut(|todos| todos.push(todo)),
+            VarChanged => todos().mark_updated(),
+            VarRemoved => {
                 todos().update_mut(|todos| {
                     if let Some(position) = todos.iter().position(|t| t == todo) {
                         todos.remove(position);

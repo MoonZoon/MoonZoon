@@ -118,9 +118,9 @@ blocks!{
     fn time_block_event_handler() -> VarEventHandler<TimeBlock> {
         VarEventHandler::new(|event, time_block| {
             match event {
-                VarEvent::Create => (),
-                VarEvent::Change => (),
-                VarEvent::Remove => (),
+                VarCreated => (),
+                VarChanged => (),
+                VarRemoved => (),
             }
             let client = time_block.map(|time_block| time_block.client);
             recompute_statistics(client);
