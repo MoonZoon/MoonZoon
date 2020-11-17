@@ -33,7 +33,7 @@ blocks!{
     fn connection() -> Connection<UpMsg, DownMsg> {
         Connection::new("localhost:9000", |msg, _| {
             if let DownMsg::MessageReceived(message) = msg {
-                messages().update_mut(|messages| messages.push(Var::new(message)));
+                messages().update_mut(|messages| messages.push(var(message)));
             }
         })
     }

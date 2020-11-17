@@ -50,16 +50,16 @@ blocks!{
     #[update]
     fn set_clients(clients: Vec<shared::time_blocks::Client>) {
         let clients = clients.into_iter().map(|client| {
-            let client_var = Var::new(Client {
+            let client_var = var(Client {
                 id: client.id,
                 name: client.name,
                 time_blocks: Vec::new(),
                 tracked: client.tracked,
-                statistics: Var::new(Statistics::default()),
+                statistics: var(Statistics::default()),
             });
             client_var.update_mut(|new_client| {
                 new_client.time_blocks = client.time_blocks.into_iter().map(|time_block| {
-                    let time_block_var = Var::new(TimeBlock {
+                    let time_block_var = var(TimeBlock {
                         id: time_block.id,
                         name: time_block.name,
                         status: time_block.status,
@@ -118,7 +118,7 @@ blocks!{
     fn time_block_event_handler() -> VarEventHandler<TimeBlock> {
         VarEventHandler::new(|event, time_block| {
             match event {
-                VarCreated => (),
+                VarAdded => (),
                 VarChanged => (),
                 VarRemoved => (),
             }
@@ -155,7 +155,7 @@ blocks!{
                 true, 
                 UpMsg::AddTimeBlock(client.id, time_block.id, time_block.duration)
             );
-            let time_block = Var::new(time_block);
+            let time_block = var(time_block);
             added_time_block().set(Some(time_block));
             client.time_blocks.push(time_block);
         });
@@ -216,7 +216,7 @@ blocks!{
         };
         time_block.try_update_mut(move |time_block| {
             app::send_up_msg(true, UpMsg::AddInvoice(time_block.id, invoice.id));
-            time_block.invoice = Some(Var::new(invoice));
+            time_block.invoice = Some(var(invoice));
         });
     }
 

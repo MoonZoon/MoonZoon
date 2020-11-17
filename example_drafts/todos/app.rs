@@ -104,7 +104,7 @@ blocks!{
     #[var]
     fn todo_event_handler() -> VarEventHandler<Todo> {
         VarEventHandler::new(|event, todo| match event {
-            VarCreated => todos().update_mut(|todos| todos.push_front(todo)),
+            VarAdded => todos().update_mut(|todos| todos.push_front(todo)),
             VarChanged => todos().mark_updated(),
             VarRemoved => {
                 if Some(todo) == selected_todo().inner() {
@@ -135,7 +135,7 @@ blocks!{
         }
         new_todo_title().update_mut(String::clear);
 
-        let mut todo = Var::new(Todo {
+        var(Todo {
             id: TodoId::new(),
             title,
             completed: false,

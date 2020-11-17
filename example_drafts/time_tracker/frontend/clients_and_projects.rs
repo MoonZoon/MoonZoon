@@ -12,6 +12,7 @@ blocks!{
     #[subscription]
     fn on_route_change() {
         if let app::Route::ClientsAndProjects = route() {
+            set_clients(None);
             added_project().set(None);
             added_client().set(None);
             app::send_up_msg(false, UpMsg::GetClientsAndProjectsClients);
@@ -23,7 +24,7 @@ blocks!{
         app::down_msg().inner().try_update(|down_msg| {
             match down_msg {
                 Some(DownMsg::ClientsAndProjectsClients(clients)) => {
-                    set_clients(clients);
+                    set_clients(Some(clients));
                     None
                 }
                 _ => down_msg
@@ -41,6 +42,38 @@ blocks!{
     }
 
     #[var]
+    fn client_event_handler() -> VarEventHandler<Client> {
+        VarEventHandler::new(|event, client| {
+            match event {
+                VarAdded => {
+                    clients().update_mut(|clients| {
+                        if let Some(clients) = clients {
+                            clients.push(client);
+                        }
+                    });
+                },
+                VarChanged => (),
+                VarRemoved => {
+                    client.use_ref(|client| {
+                        stop!{
+                            for project in &client.projects {
+                                project.try_remove();
+                            }
+                        }
+                    });
+                    clients().update_mut(|clients| {
+                        if let Some(clients) = clients {
+                            if let Some(position) = clients.iter().position(|c| c == client) {
+                                clients.remove(position);
+                            }
+                        }
+                    });
+                },
+            }
+        })
+    }
+
+    #[var]
     fn clients() -> Option<Vec<Var<Client>>> {
         None
     }
@@ -51,57 +84,45 @@ blocks!{
     }
 
     #[update]
-    fn set_clients(clients: Vec<shared::clients_and_projects::Client>) {
-        let clients = clients.into_iter().map(|client| {
-            let client_var = Var::new(Client {
-                id: client.id,
-                name: client.name,
-                projects: Vec::new(),
-            });
-            client_var.update_mut(|new_client| {
-                new_client.projects = client.projects.into_iter().map(|project| {
-                    Var::new(Project {
+    fn set_clients(clients: Option<Vec<shared::clients_and_projects::Client>>) {
+        let clients = match {
+            Some(clients) => clients,
+            None => return clients().set(None);
+        };
+        stop!{
+            clients().set(Some(Vec::new()));
+            clients.into_iter().for_each(|client| {
+                let client_var = var(Client {
+                    id: client.id,
+                    name: client.name,
+                    projects: Vec::new(),
+                });
+                for project in client.projects {
+                    var(Project {
                         id: project.id,
                         name: project.name,
                         client: client_var,
-                    })
-                }).collect()
+                    });
+                }
             });
-            client_var
-        }).collect();
-        clients().set(Some(clients));
+        }
     }
 
     #[update]
     fn add_client() {
-        let client = Client {
-            id: ClientId::new(),
+        let id = ClientId::new();
+        let client = var(Client {
+            id,
             name: String::new(),
             projects: Vec::new(),
-        };
-        app::send_up_msg(true, UpMsg::AddClient(client.id));
-        clients().update_mut(move |clients| {
-            if let Some(clients) = clients {
-                let client = Var::new(client);
-                added_client().set(Some(client));
-                clients.push(Var::new(client));
-            }
         });
+        added_client().set(Some(client));
+        app::send_up_msg(true, UpMsg::AddClient(id));
     } 
 
     #[update]
     fn remove_client(client: Var<Client>) {
-        clients().update_mut(|clients| {
-            if let Some(clients) = clients {
-                if let Some(position) = clients.iter().position(|c| c == client) {
-                    clients.remove(position);
-                }
-            }
-        });
         if let Some(client) = client.try_remove() {
-            for project in client.projects {
-                remove_project(project);
-            }
             app::send_up_msg(true, UpMsg::RemoveClient(client.id));
         }
     }
@@ -123,34 +144,53 @@ blocks!{
     }
 
     #[var]
+    fn project_event_handler() -> VarEventHandler<Project> {
+        VarEventHandler::new(|event, project| {
+            match event {
+                VarAdded => {
+                    project.use_ref(|project| {
+                        project.client.try_update_mut(|client| {
+                            client.projects.push(project);
+                        });
+                    })
+                },
+                VarChanged => (),
+                VarRemoved => {
+                    project.use_ref(|project| {
+                        project.client.try_update_mut(|client| {
+                            if let Some(position) = client.projects.iter().position(|p| p == project) {
+                                clients.projects.remove(position);
+                            }
+                        })
+                    })
+                },
+            }
+        })
+    }
+
+    #[var]
     fn added_project() -> Option<Var<Project>> {
         None
     }
 
     #[update]
     fn add_project(client: Var<Client>) {
-        let project = Project {
-            id: ProjectId::new(),
+        let client_id = client.try_map(|client| client.id).expect("client id");
+        let project_id = ProjectId::new();
+
+        let project = var(Project {
+            id: project_id,
             name: String::new(),
             client,
-        };
-        client.try_update_mut(move |client| {
-            app::send_up_msg(true, UpMsg::AddProject(client.id, project.id));
-            let project = Var::new(project);
-            added_project().set(Some(project));
-            client.projects.push(project);
         });
+        added_project().set(Some(project));
+        app::send_up_msg(true, UpMsg::AddProject(client_id, project_id));
     }
 
     #[update]
     fn remove_project(project: Var<Project>) {
-        if let Some(removed_project) = project.try_remove() {
-            app::send_up_msg(true, UpMsg::RemoveProject(removed_project.id));
-            removed_project.client.try_update_mut(|client| {
-                if let Some(position) = client.projects.iter().position(|p| p == project) {
-                    clients.projects.remove(position);
-                }
-            });
+        if let Some(project) = project.try_remove() {
+            app::send_up_msg(true, UpMsg::RemoveProject(project.id));
         }
     }
 

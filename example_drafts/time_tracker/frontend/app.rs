@@ -168,7 +168,7 @@ blocks!{
 
     #[var]
     fn down_msg() -> Var<Option<DownMsg>> {
-        Var::new(None)
+        var(None)
     }
 
     #[update]
