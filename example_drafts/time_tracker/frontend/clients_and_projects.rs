@@ -91,7 +91,7 @@ blocks!{
         };
         stop!{
             clients().set(Some(Vec::new()));
-            clients.into_iter().for_each(|client| {
+            for client in clients {
                 let client_var = var(Client {
                     id: client.id,
                     name: client.name,
@@ -104,7 +104,7 @@ blocks!{
                         client: client_var,
                     });
                 }
-            });
+            }
         }
     }
 
@@ -146,22 +146,19 @@ blocks!{
     #[var]
     fn project_event_handler() -> VarEventHandler<Project> {
         VarEventHandler::new(|event, project| {
+            let client = || project.try_map(|project| project.client).expect("client");
             match event {
                 VarAdded => {
-                    project.use_ref(|project| {
-                        project.client.try_update_mut(|client| {
-                            client.projects.push(project);
-                        });
-                    })
+                    client().try_update_mut(|client| {
+                        client.projects.push(project);
+                    });
                 },
                 VarChanged => (),
                 VarRemoved => {
-                    project.use_ref(|project| {
-                        project.client.try_update_mut(|client| {
-                            if let Some(position) = client.projects.iter().position(|p| p == project) {
-                                clients.projects.remove(position);
-                            }
-                        })
+                    client().try_update_mut(|client| {
+                        if let Some(position) = client.projects.iter().position(|p| p == project) {
+                            client.projects.remove(position);
+                        }
                     })
                 },
             }

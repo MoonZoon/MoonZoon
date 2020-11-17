@@ -1,6 +1,7 @@
 use zoon::*;
 use ulid::Ulid;
 use std::borrow::Cow;
+use std::collections::HashSet;
 use chrono::{prelude::*, Duration};
 use crate::app;
 use shared::{ClientId, TimeBlockId, InvoiceId, TimeBlockStatus};
@@ -13,6 +14,7 @@ blocks!{
     #[subscription]
     fn on_route_change() {
         if let app::Route::ClientsAndProjects = route() {
+            set_clients(None);
             added_time_block().set(None);
             app::send_up_msg(false, UpMsg::GetTimeBlocksClients);
         }
@@ -23,7 +25,7 @@ blocks!{
         app::down_msg().inner().try_update(|down_msg| {
             match down_msg {
                 Some(DownMsg::TimeBlocksClients(clients)) => {
-                    set_clients(clients);
+                    set_clients(Some(clients));
                     None
                 }
                 _ => down_msg
@@ -43,22 +45,47 @@ blocks!{
     }
 
     #[var]
+    fn client_event_handler() -> VarEventHandler<Client> {
+        VarEventHandler::new(|event, client| {
+            match event {
+                VarAdded => {
+                    clients().update_mut(|clients| {
+                        if let Some(clients) = clients {
+                            clients.push(client);
+                        }
+                    });
+                    add_client_to_recompute_queue(client);
+                },
+                VarChanged => {
+                    add_client_to_recompute_queue(client);
+                },
+                VarRemoved => (),
+            }
+        })
+    }
+
+    #[var]
     fn clients() -> Option<Vec<Var<Client>>> {
         None
     }
 
     #[update]
     fn set_clients(clients: Vec<shared::time_blocks::Client>) {
-        let clients = clients.into_iter().map(|client| {
-            let client_var = var(Client {
-                id: client.id,
-                name: client.name,
-                time_blocks: Vec::new(),
-                tracked: client.tracked,
-                statistics: var(Statistics::default()),
-            });
-            client_var.update_mut(|new_client| {
-                new_client.time_blocks = client.time_blocks.into_iter().map(|time_block| {
+        let clients = match {
+            Some(clients) => clients,
+            None => return clients().set(None);
+        };
+        stop!{
+            clients().set(Some(Vec::new()));
+            for client in clients {
+                let client_var = var(Client {
+                    id: client.id,
+                    name: client.name,
+                    time_blocks: Vec::new(),
+                    tracked: client.tracked,
+                    statistics: var(Statistics::default()),
+                });
+                for time_block in client.time_blocks {
                     let time_block_var = var(TimeBlock {
                         id: time_block.id,
                         name: time_block.name,
@@ -68,22 +95,16 @@ blocks!{
                         client: client_var,
                     });
                     if let Some(invoice) = time_block.invoice {
-                        time_block_var.update_mut(|new_time_block| {
-                            new_time_block.invoice = Some(Invoice {
-                                id: invoice.id,
-                                custom_id: invoice.custom_id,
-                                url: invoice.url, 
-                                time_block: time_block_var, 
-                            });
+                        var(Invoice {
+                            id: invoice.id,
+                            custom_id: invoice.custom_id,
+                            url: invoice.url, 
+                            time_block: time_block_var, 
                         });
                     }
-                    time_block_var
-                }).collect()
-            });
-            recompute_statistics(client_var);
-            client_var
-        }).collect();
-        clients().set(Some(clients));
+                }
+            }
+        }
     }
 
     // ------ Statistics ------
@@ -98,8 +119,23 @@ blocks!{
     }
 
     #[update]
-    fn recompute_statistics(client: Var<Client>) {
+    fn add_client_to_recompute_queue(client: Var<Client>) {
+        recompute_queue().update_mut(|queue_var| {
+            queue_var.try_update_mut(|queue| queue.insert(client))
+        });
+    }
 
+    #[var]
+    fn recompute_queue() -> Var<HashSet<Var<Client>>> {
+        var(HashSet::new())
+    }
+
+    #[subscription]
+    fn recompute_statistics() {
+        let clients = recompute_queue().inner().map_mut(mem::take);
+        for client in clients {
+
+        }
     }
 
     // ------ TimeBlock ------
@@ -117,13 +153,22 @@ blocks!{
     #[var]
     fn time_block_event_handler() -> VarEventHandler<TimeBlock> {
         VarEventHandler::new(|event, time_block| {
+            let client = time_block.try_map(|time_block| time_block.client).expect("client");
             match event {
-                VarAdded => (),
-                VarChanged => (),
-                VarRemoved => (),
+                VarAdded => {
+                    client.try_update_mut(|client| {
+                        client.time_blocks.push(time_block);
+                    });
+                },
+                VarChanged => client.mark_changed(),
+                VarRemoved => {
+                    client.try_update_mut(|client| {
+                        if let Some(position) = client.time_blocks.iter().position(|tb| tb == time_block) {
+                            clients.time_blocks.remove(position);
+                        }
+                    })
+                },
             }
-            let client = time_block.map(|time_block| time_block.client);
-            recompute_statistics(client);
         })
     }
 
@@ -142,34 +187,29 @@ blocks!{
                 .map(|time_block| time_block.duration)
         }).flatten();
 
-        let time_block = TimeBlock {
-            id: TimeBlockId::new(),
+        let duration = previous_duration.unwrap_or_else(|| Duration::hours(20));
+        let client_id = client.try_map(|client| client.id).expect("client id");
+        let time_block_id = TimeBlockId::new();
+
+        let time_block = var(TimeBlock {
+            id: time_block_id,
             name: String::new(),
             status: TimeBlockStatus::default(),
-            duration: previous_duration.unwrap_or_else(|| Duration::hours(20)),
+            duration,
             invoice: None,
             client,
-        };
-        client.try_update_mut(move |client| {
-            app::send_up_msg(
-                true, 
-                UpMsg::AddTimeBlock(client.id, time_block.id, time_block.duration)
-            );
-            let time_block = var(time_block);
-            added_time_block().set(Some(time_block));
-            client.time_blocks.push(time_block);
         });
+        added_time_block().set(Some(time_block));
+        app::send_up_msg(
+            true, 
+            UpMsg::AddTimeBlock(client_id, time_block_id, duration)
+        );
     }
 
     #[update]
     fn remove_time_block(time_block: Var<TimeBlock>) {
-        if let Some(removed_time_block) = time_block.try_remove() {
-            app::send_up_msg(true, UpMsg::RemoveTimeBlock(removed_time_block.id));
-            removed_time_block.client.try_update_mut(|client| {
-                if let Some(position) = client.time_blocks.iter().position(|tb| tb == time_block) {
-                    clients.time_blocks.remove(position);
-                }
-            });
+        if let Some(time_block) = time_block.try_remove() {
+            app::send_up_msg(true, UpMsg::RemoveTimeBlock(time_block.id));
         }
     }
 
@@ -206,27 +246,43 @@ blocks!{
         time_block: Var<TimeBlock>, 
     }
 
+    #[var]
+    fn invoice_event_handler() -> VarEventHandler<Invoice> {
+        VarEventHandler::new(|event, invoice| {
+            let time_block = || invoice.try_map(|invoice| invoice.time_block).expect("time_block");
+            match event {
+                VarAdded => {
+                    time_block().try_update_mut(|time_block| {
+                        time_block.invoice = Some(invoice);
+                    });
+                },
+                VarChanged => (),
+                VarRemoved => {
+                    time_block().try_update_mut(|time_block| {
+                        time_block.invoice = None;
+                    });
+                },
+            }
+        })
+    }
+
     #[update]
     fn add_invoice(time_block: Var<TimeBlock>) {
-        let invoice = Invoice {
-            id: InvoiceId::new(),
+        let time_block_id = time_block.try_map(|time_block| time_block.id).expect("client id");
+        let invoice_id = InvoiceId::new();
+        var(Invoice {
+            id: invoice_id,
             custom_id: String::new(),
             url: String::new(),
             time_block,
-        };
-        time_block.try_update_mut(move |time_block| {
-            app::send_up_msg(true, UpMsg::AddInvoice(time_block.id, invoice.id));
-            time_block.invoice = Some(var(invoice));
         });
+        app::send_up_msg(true, UpMsg::AddInvoice(time_block_id, invoice_id));
     }
 
     #[update]
     fn remove_invoice(invoice: Var<Invoice>) {
-        if let Some(removed_invoice) = invoice.try_remove() {
-            app::send_up_msg(true, UpMsg::RemoveInvoice(removed_invoice.id));
-            removed_invoice.time_block.try_update_mut(|time_block| {
-                time_block.invoice = None;
-            });
+        if let Some(invoice) = invoice.try_remove() {
+            app::send_up_msg(true, UpMsg::RemoveInvoice(invoice.id));
         }
     }
 
