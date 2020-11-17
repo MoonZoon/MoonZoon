@@ -134,7 +134,33 @@ blocks!{
     fn recompute_statistics() {
         let clients = recompute_queue().inner().map_mut(mem::take);
         for client in clients {
+            client.use_ref(|client| {
+                let tracked = client.tracked.num_seconds() as f64 / 3600.;
+                let mut non_billable = 0.;
+                let mut unpaid = 0.;
+                let mut paid = 0.;
 
+                for time_block in &client.time_blocks {
+                    time_block.use_ref(|time_block| {
+                        let duration = time_block.duration as f64;
+                        use TimeBlockStatus::*;
+                        match time_block.status {
+                            NonBillable => non_billable += duration,
+                            Unpaid => unpaid += duration,
+                            NonBillable => paid += duration,
+                        }
+                    })
+                }
+                let blocked = non_billable + unpaid + paid;
+                
+                client.statistics.set(Statistics {
+                    tracked,
+                    to_block: tracked - blocked,
+                    blocked,
+                    unpaid,
+                    paid,
+                });
+            })
         }
     }
 
