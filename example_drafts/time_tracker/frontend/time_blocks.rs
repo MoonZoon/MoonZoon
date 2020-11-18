@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::collections::HashSet;
 use chrono::{prelude::*, Duration};
 use crate::app;
-use shared::{ClientId, TimeBlockId, InvoiceId, TimeBlockStatus};
+pub use shared::{ClientId, TimeBlockId, InvoiceId, TimeBlockStatus};
 
 pub mod els;
 
@@ -152,7 +152,7 @@ blocks!{
                     })
                 }
                 let blocked = non_billable + unpaid + paid;
-                
+
                 client.statistics.set(Statistics {
                     tracked,
                     to_block: tracked - blocked,
@@ -294,7 +294,7 @@ blocks!{
 
     #[update]
     fn add_invoice(time_block: Var<TimeBlock>) {
-        let time_block_id = time_block.try_map(|time_block| time_block.id).expect("client id");
+        let time_block_id = time_block.try_map(|time_block| time_block.id).expect("time_block id");
         let invoice_id = InvoiceId::new();
         var(Invoice {
             id: invoice_id,

@@ -89,6 +89,7 @@ blocks!{
             ],
             row![
                 status_switch(time_block),
+                invoice.is_none().then(|| attach_invoice_button(time_block)),
             ],
             invoice.map(|invoice| {
                 row![
@@ -143,12 +144,38 @@ blocks!{
     }
 
     #[el]
-    fn status_switch(time_block: Var<super::TimeBlock>) -> TextInput {
+    fn status_switch(time_block: Var<super::TimeBlock>) -> Row {
+        let current_status = time_block.try_map(|time_block| time_block.status)
+            .expect("time_block status");
+
+        let button = |index: u8, text: &'static str, status: super::TimeBlockStatus| {
+            let active = status == current_status;
+            button![
+                active.then(|| background::color(color::green)),
+                button::on_press(|| super::set_time_block_status(time_block, status)),
+                (index == 0).then(|| border::rounded!(left(fully()))),
+                (index == 2).then(|| border::rounded!(right(fully()))),
+                text,
+            ]
+        };
+        row![
+            button(0, "Non-billable", super::TimeBlockStatus::NonBillable),
+            button(1, "Unpaid", super::TimeBlockStatus::NonBillable),
+            button(2, "Paid", super::TimeBlockStatus::NonBillable),
+        ]
+    }
+
+    #[el]
+    fn attach_invoice_button(time_block: Var<super::TimeBlock>) -> Button {
+        button![
+            button::on_press(|| super::add_invoice(time_block)),
+            "Attach Invoice",
+        ]
     }
 
     // ------ Invoice ------
 
     #[el]
-    fn invoice_panel(time_block: Var<super::TimeBlock>) -> TextInput {
+    fn invoice_panel(invoice: Var<super::Invoice>) -> TextInput {
     }
 }
