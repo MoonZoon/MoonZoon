@@ -57,11 +57,7 @@ blocks!{
                 .unwrap_or_default()
         });
         text_input![
-            do_once(|| {
-                super::added_client().map(|added_client| {
-                    (added_client == Some(client)).then(focus)
-                })
-            }),
+            do_once(super::added_client().inner().contains(client).then(focus)),
             text_input::on_change(|new_name| name.set(new_name)),
             on_blur(|| name.use_ref(|name| {
                 super::rename_client(client, name);
@@ -101,11 +97,7 @@ blocks!{
                 .unwrap_or_default()
         });
         text_input![
-            do_once(|| {
-                super::added_project().map(|added_project| {
-                    (added_project == Some(project)).then(focus)
-                })
-            }),
+            do_once(super::added_project().inner().contains(project).then(focus)),
             text_input::on_change(|new_name| name.set(new_name)),
             on_blur(|| name.use_ref(|name| {
                 super::rename_project(project, name);
