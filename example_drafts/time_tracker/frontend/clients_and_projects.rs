@@ -21,7 +21,7 @@ blocks!{
 
     #[subscription]
     fn handle_down_msg() {
-        app::down_msg().inner().try_update(|down_msg| {
+        app::down_msg().inner().update(|down_msg| {
             match down_msg {
                 Some(DownMsg::ClientsAndProjectsClients(clients)) => {
                     set_clients(Some(clients));
@@ -47,9 +47,7 @@ blocks!{
             match event {
                 VarAdded => {
                     clients().update_mut(|clients| {
-                        if let Some(clients) = clients {
-                            clients.push(client);
-                        }
+                        clients.unwrap().push(client);
                     });
                 },
                 VarChanged => (),
@@ -57,16 +55,14 @@ blocks!{
                     client.use_ref(|client| {
                         stop!{
                             for project in &client.projects {
-                                project.try_remove();
+                                project.remove();
                             }
                         }
                     });
                     clients().update_mut(|clients| {
-                        if let Some(clients) = clients {
-                            if let Some(position) = clients.iter().position(|c| c == client) {
-                                clients.remove(position);
-                            }
-                        }
+                        let clients = clients.unwrap();
+                        let position = clients.iter().position(|c| c == client);
+                        clients.remove(position.unwrap());
                     });
                 },
             }
@@ -122,14 +118,14 @@ blocks!{
 
     #[update]
     fn remove_client(client: Var<Client>) {
-        if let Some(client) = client.try_remove() {
-            app::send_up_msg(true, UpMsg::RemoveClient(client.id));
-        }
+        let id = client.remove().id;
+        app::send_up_msg(true, UpMsg::RemoveClient(id));
     }
 
     #[update]
     fn rename_client(client: Var<Project>, name: &str) {
-        client.try_use_ref(|client| {
+        client.update_mut(|client| {
+            client.name = name.to_owned();
             app::send_up_msg(true, UpMsg::RenameClient(client.id, Cow::from(name)));
         });
     }
@@ -146,20 +142,20 @@ blocks!{
     #[var]
     fn project_event_handler() -> VarEventHandler<Project> {
         VarEventHandler::new(|event, project| {
-            let client = || project.try_map(|project| project.client).expect("client");
+            let client = || project.map(|project| project.client);
             match event {
                 VarAdded => {
-                    client().try_update_mut(|client| {
+                    client().update_mut(|client| {
                         client.projects.push(project);
                     });
                 },
                 VarChanged => (),
                 VarRemoved => {
-                    client().try_update_mut(|client| {
-                        if let Some(position) = client.projects.iter().position(|p| p == project) {
-                            client.projects.remove(position);
-                        }
-                    })
+                    client().update_mut(|client| {
+                        let projects = &mut client.projects;
+                        let position = projects.iter().position(|p| p == project);
+                        projects.remove(position.unwrap());
+                    });
                 },
             }
         })
@@ -172,7 +168,7 @@ blocks!{
 
     #[update]
     fn add_project(client: Var<Client>) {
-        let client_id = client.try_map(|client| client.id).expect("client id");
+        let client_id = client.map(|client| client.id);
         let project_id = ProjectId::new();
 
         let project = var(Project {
@@ -186,14 +182,14 @@ blocks!{
 
     #[update]
     fn remove_project(project: Var<Project>) {
-        if let Some(project) = project.try_remove() {
-            app::send_up_msg(true, UpMsg::RemoveProject(project.id));
-        }
+        let id = project.remove().id;
+        app::send_up_msg(true, UpMsg::RemoveProject(id));
     }
 
     #[update]
     fn rename_project(project: Var<Project>, name: &str) {
-        project.try_use_ref(|project| {
+        project.update_mut(|project| {
+            project.name = name.to_owned();
             app::send_up_msg(true, UpMsg::RenameProject(project.id, Cow::from(name)));
         });
     }

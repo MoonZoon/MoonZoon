@@ -51,7 +51,7 @@ blocks!{
 
     #[el]
     fn client_name(client: Var<super::Client>) -> TextInput {
-        let name = el_var(|| client.try_map_or_default(|client| client.name.clone());
+        let name = el_var(|| client.map(|client| client.name.clone());
         text_input![
             do_once(super::added_client().inner().contains(client).then(focus)),
             text_input::on_change(|new_name| name.set(new_name)),
@@ -68,7 +68,7 @@ blocks!{
     fn project_panels(client: Var<super::Client>) -> Column {
         column![
             spacing(20),
-            client.try_map(|client| {
+            client.map(|client| {
                 client.projects.iter().rev().map(project_panel)
             })
         ]
@@ -87,11 +87,7 @@ blocks!{
 
     #[el]
     fn project_name(project: Var<super::Project>) -> TextInput {
-        let name = el_var(|| {
-            project
-                .try_map(|project| project.name.clone())
-                .unwrap_or_default()
-        });
+        let name = el_var(|| project.map(|project| project.name.clone());
         text_input![
             do_once(super::added_project().inner().contains(project).then(focus)),
             text_input::on_change(|new_name| name.set(new_name)),

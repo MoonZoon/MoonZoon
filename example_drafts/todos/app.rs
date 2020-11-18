@@ -75,7 +75,9 @@ blocks!{
 
     #[var]
     fn selected_todo_title() -> Option<String> {
-        selected_todo().map(|todo| todo?.try_map(|todo| todo.title.clone()))
+        let todo = selected_todo().inner()?;
+        let title = todo.map(|todo| todo.title.clone());
+        Some(title)
     }
 
     #[update]
@@ -85,11 +87,9 @@ blocks!{
 
     #[update]
     fn save_selected_todo() {
-        if let Some(title) = selected_todo_title().map_mut(Option::take) {
-            if let Some(todo) = selected_todo().map_mut(Option::take) {
-                todo.try_update_mut(move |todo| todo.title = title);
-            }
-        }
+        let title = selected_todo_title().map_mut(Option::take);
+        let todo = selected_todo().map_mut(Option::take);
+        todo.update_mut(move |todo| todo.title = title);
     }
 
     // ------ Todos ------
@@ -111,7 +111,7 @@ blocks!{
                     selected_todo().set(None);
                 }
                 todos().update_mut(|todos| {
-                    todos.remove(todos.index_of(todo).expect("todo index"));
+                    todos.remove(todos.index_of(todo).unwrap());
                 });
             }
         })
@@ -144,12 +144,12 @@ blocks!{
 
     #[update]
     fn remove_todo(todo: Var<Todo>) {
-        todo.try_remove();
+        todo.remove();
     }
 
     #[update]
     fn toggle_todo(todo: Var<Todo>) {
-        todo.try_update_mut(|todo| todo.checked = !todo.checked);
+        todo.update_mut(|todo| todo.checked = !todo.checked);
     }
 
     // -- all --
@@ -190,7 +190,7 @@ blocks!{
     #[cache]
     fn completed_todos() -> Vector<Var<Todo>> {
         let mut todos = todos().inner();
-        todos.retain(|todo| todo.try_map_or_default(|todo| todo.completed))
+        todos.retain(|todo| todo.map(|todo| todo.completed))
         todos
     }
 
@@ -221,7 +221,7 @@ blocks!{
     #[cache]
     fn active_todos() -> Vector<Var<Todo>> {
         let mut todos = todos().inner();
-        todos.retain(|todo| todo.try_map_or_default(|todo| !todo.completed));
+        todos.retain(|todo| todo.map(|todo| !todo.completed));
         todos
     }
 

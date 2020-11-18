@@ -29,10 +29,10 @@ blocks!{
 
     #[el]
     fn client_panel(client: Var<super::Client>) -> Column {
-        let statistics = client.try_map(|client| client.statistics).expect("client statistics");
+        let statistics = client.map(|client| client.statistics);
         column![
             row![
-                el![client.try_map(|client| client.name.clone())],
+                el![client.map(|client| client.name.clone())],
                 statistics(statistics),
             ],
             button![
@@ -45,7 +45,7 @@ blocks!{
 
     #[el]
     fn statistics(statistics: Var<super::Statistics>) -> Row {
-        let statistics = statistics.try_inner().expect("statistics data");
+        let statistics = statistics.inner();
         let format = |value: f64| format!("{:.1}", value);
         row![
             column![
@@ -66,7 +66,7 @@ blocks!{
     fn time_block_panels(client: Var<super::Client>) -> Column {
         column![
             spacing(20),
-            client.try_map(|client| {
+            client.map(|client| {
                 client.time_blocks.iter().rev().map(time_block_panel)
             })
         ]
@@ -74,7 +74,7 @@ blocks!{
 
     #[el]
     fn time_block_panel(time_block: Var<super::TimeBlock>) -> Column {
-        let invoice = time_block.try_map(|time_block| time_block.invoice).flatten();
+        let invoice = time_block.map(|time_block| time_block.invoice);
         column![
             row![
                 time_block_name(time_block),
@@ -102,7 +102,7 @@ blocks!{
     #[el]
     fn time_block_name(time_block: Var<super::TimeBlock>) -> TextInput {
         let name = el_var(|| {
-            time_block.try_map_or_default(|time_block| time_block.name.clone())
+            time_block.map(|time_block| time_block.name.clone())
         });
         text_input![
             do_once(super::added_time_block().inner().contains(time_block).then(focus)),
@@ -116,11 +116,9 @@ blocks!{
 
     #[el]
     fn duration(time_block: Var<super::TimeBlock>) -> TextInput {
-        let saved_duration = || {
-            time_block.try_map_or_default(|time_block| {
-                format!("{:.1}", time_block.duration.num_seconds as f64 / 3600.)
-            })
-        };
+        let saved_duration = || time_block.map(|time_block| {
+            format!("{:.1}", time_block.duration.num_seconds as f64 / 3600.)
+        });
         let duration = el_var(saved_duration);
         text_input![
             text_input::on_change(|new_duration| duration.set(new_duration)),
@@ -141,8 +139,7 @@ blocks!{
 
     #[el]
     fn status_switch(time_block: Var<super::TimeBlock>) -> Row {
-        let current_status = time_block.try_map(|time_block| time_block.status)
-            .expect("time_block status");
+        let current_status = time_block.map(|time_block| time_block.status);
 
         let button = |index: u8, text: &'static str, status: super::TimeBlockStatus| {
             let active = status == current_status;
@@ -173,8 +170,8 @@ blocks!{
 
     #[el]
     fn invoice_panel(invoice: Var<super::Invoice>) -> Column {
-        let custom_id = el_var(|| invoice.try_map_or_default(|invoice| invoice.custom_id));
-        let url = el_var(|| invoice.try_map_or_default(|invoice| invoice.url));
+        let custom_id = el_var(|| invoice.map(|invoice| invoice.custom_id));
+        let url = el_var(|| invoice.map(|invoice| invoice.url));
         column![
             row![
                 "Invoice ID",,

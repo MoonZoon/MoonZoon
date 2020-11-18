@@ -151,7 +151,7 @@ blocks!{
 
     #[el]
     fn todo_checkbox(checkbox_id: ElVar<ElementId>, todo: Var<super::Todo>) -> CheckBox {
-        let completed = todo.try_map_or_default(|todo| todo.completed);
+        let completed = todo.map(|todo| todo.completed);
         checkbox![
             id(checkbox_id.inner()),
             checkbox::checked(completed),
@@ -174,13 +174,13 @@ blocks!{
             font::regular(),
             font::color(hsl(0, 0, 32.7)),
             on_double_click(|| select_todo(Some(todo))),
-            todo.try_map(|todo| todo.title.clone()),
+            todo.map(|todo| todo.title.clone()),
         ]
     }
 
     #[el]
     fn selected_todo_title() -> TextInput {
-        let selected_todo = super::selected_todo().inner().expect("selected todo");
+        let selected_todo = super::selected_todo().inner().unwrap();
         text_input![
             width!(fill()),
             paddingXY(16, 12),
@@ -203,7 +203,7 @@ blocks!{
                 }
             }),
             text_input::on_change(super::set_selected_todo_title),
-            selected_todo.try_map(|todo| todo.title.clone()),
+            selected_todo.map(|todo| todo.title.clone()),
         ]
     }
 
