@@ -176,6 +176,38 @@ blocks!{
     // ------ Invoice ------
 
     #[el]
-    fn invoice_panel(invoice: Var<super::Invoice>) -> TextInput {
+    fn invoice_panel(invoice: Var<super::Invoice>) -> Column {
+        let custom_id = el_var(|| invoice.try_map(|invoice| invoice.custom_id).unwrap_or_default());
+        let url = el_var(|| invoice.try_map(|invoice| invoice.url).unwrap_or_default());
+        column![
+            row![
+                "Invoice ID",,
+                text_input![
+                    text_input::on_change(|new_custom_id| custom_id.set(new_custom_id))
+                    on_blur(|| custom_id.use_ref(|custom_id| {
+                        super::set_invoice_custom_id(invoice, custom_id);
+                    })),
+                    custom_id.inner(),
+                ],
+                button![
+                    button::on_press(|| super::remove_invoice(invoice)),
+                    "D",
+                ]
+            ],
+            row![
+                "URL",
+                text_input![
+                    text_input::on_change(|new_url| url.set(new_url))
+                    on_blur(|| url.use_ref(|url| {
+                        super::set_invoice_url(invoice, url);
+                    })),
+                    url.inner(),
+                ],
+                link![
+                    link::url(url),
+                    "L",
+                ],
+            ],
+        ]
     }
 }
