@@ -190,7 +190,7 @@ blocks!{
     #[cache]
     fn completed_todos() -> Vector<Var<Todo>> {
         let mut todos = todos().inner();
-        todos.retain(|todo| todo.try_map(|todo| todo.completed).unwrap_or_default())
+        todos.retain(|todo| todo.try_map_or_default(|todo| todo.completed))
         todos
     }
 
@@ -221,7 +221,7 @@ blocks!{
     #[cache]
     fn active_todos() -> Vector<Var<Todo>> {
         let mut todos = todos().inner();
-        todos.retain(|todo| todo.try_map(|todo| !todo.completed).unwrap_or_default())
+        todos.retain(|todo| todo.try_map_or_default(|todo| !todo.completed));
         todos
     }
 

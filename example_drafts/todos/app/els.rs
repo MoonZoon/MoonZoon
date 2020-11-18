@@ -151,7 +151,7 @@ blocks!{
 
     #[el]
     fn todo_checkbox(checkbox_id: ElVar<ElementId>, todo: Var<super::Todo>) -> CheckBox {
-        let completed = todo.try_map(|todo| todo.completed).unwrap_or_default();
+        let completed = todo.try_map_or_default(|todo| todo.completed);
         checkbox![
             id(checkbox_id.inner()),
             checkbox::checked(completed),

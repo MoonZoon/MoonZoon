@@ -22,7 +22,7 @@ blocks!{
         column![
             spacing(30),
             clients.map(|clients| {
-                clients.unwrap_or_default().iter().rev().map(client_panel)
+                clients.map(|clients| clients.iter().rev().map(client_panel))
             }),
         ]
     }
@@ -102,9 +102,7 @@ blocks!{
     #[el]
     fn time_block_name(time_block: Var<super::TimeBlock>) -> TextInput {
         let name = el_var(|| {
-            time_block
-                .try_map(|time_block| time_block.name.clone())
-                .unwrap_or_default()
+            time_block.try_map_or_default(|time_block| time_block.name.clone())
         });
         text_input![
             do_once(super::added_time_block().inner().contains(time_block).then(focus)),
@@ -119,11 +117,9 @@ blocks!{
     #[el]
     fn duration(time_block: Var<super::TimeBlock>) -> TextInput {
         let saved_duration = || {
-            time_block
-                .try_map(|time_block| {
-                    format!("{:.1}", time_block.duration.num_seconds as f64 / 3600.)
-                })
-                .unwrap_or_default()
+            time_block.try_map_or_default(|time_block| {
+                format!("{:.1}", time_block.duration.num_seconds as f64 / 3600.)
+            })
         };
         let duration = el_var(saved_duration);
         text_input![
@@ -177,8 +173,8 @@ blocks!{
 
     #[el]
     fn invoice_panel(invoice: Var<super::Invoice>) -> Column {
-        let custom_id = el_var(|| invoice.try_map(|invoice| invoice.custom_id).unwrap_or_default());
-        let url = el_var(|| invoice.try_map(|invoice| invoice.url).unwrap_or_default());
+        let custom_id = el_var(|| invoice.try_map_or_default(|invoice| invoice.custom_id));
+        let url = el_var(|| invoice.try_map_or_default(|invoice| invoice.url));
         column![
             row![
                 "Invoice ID",,

@@ -314,14 +314,16 @@ blocks!{
 
     #[update]
     fn set_invoice_custom_id(invoice: Var<Invoice>, custom_id: &str) {
-        invoice.try_use_ref(|invoice| {
+        invoice.try_update(|invoice| {
+            invoice.custom_id = custom_id.to_owned();
             app::send_up_msg(true, UpMsg::SetInvoiceCustomId(invoice.id, Cow::from(custom_id)));
         });
     }
 
     #[update]
     fn set_invoice_url(invoice: Var<Invoice>, url: &str) {
-        invoice.try_use_ref(|invoice| {
+        invoice.try_update(|invoice| {
+            invoice.url = url.to_owned();
             app::send_up_msg(true, UpMsg::SetInvoiceUrl(invoice.id, Cow::from(url)));
         });
     }
