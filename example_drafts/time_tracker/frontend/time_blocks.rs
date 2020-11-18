@@ -313,7 +313,7 @@ blocks!{
 
     #[update]
     fn set_invoice_custom_id(invoice: Var<Invoice>, custom_id: &str) {
-        invoice.update(|invoice| {
+        invoice.update_mut(|invoice| {
             invoice.custom_id = custom_id.to_owned();
             app::send_up_msg(true, UpMsg::SetInvoiceCustomId(invoice.id, Cow::from(custom_id)));
         });
@@ -321,7 +321,7 @@ blocks!{
 
     #[update]
     fn set_invoice_url(invoice: Var<Invoice>, url: &str) {
-        invoice.update(|invoice| {
+        invoice.update_mut(|invoice| {
             invoice.url = url.to_owned();
             app::send_up_msg(true, UpMsg::SetInvoiceUrl(invoice.id, Cow::from(url)));
         });

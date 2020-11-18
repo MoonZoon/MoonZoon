@@ -170,18 +170,11 @@ blocks!{
 
     #[el]
     fn invoice_panel(invoice: Var<super::Invoice>) -> Column {
-        let custom_id = el_var(|| invoice.map(|invoice| invoice.custom_id));
-        let url = el_var(|| invoice.map(|invoice| invoice.url));
+        let url = invoice.map(|invoice| invoice.url.clone());
         column![
             row![
-                "Invoice ID",,
-                text_input![
-                    text_input::on_change(|new_custom_id| custom_id.set(new_custom_id))
-                    on_blur(|| custom_id.use_ref(|custom_id| {
-                        super::set_invoice_custom_id(invoice, custom_id);
-                    })),
-                    custom_id.inner(),
-                ],
+                "Invoice ID",
+                custom_id_input(invoice),
                 button![
                     button::on_press(|| super::remove_invoice(invoice)),
                     "D",
@@ -189,18 +182,36 @@ blocks!{
             ],
             row![
                 "URL",
-                text_input![
-                    text_input::on_change(|new_url| url.set(new_url))
-                    on_blur(|| url.use_ref(|url| {
-                        super::set_invoice_url(invoice, url);
-                    })),
-                    url.inner(),
-                ],
+                url_input(invoice),
                 link![
                     link::url(url),
                     "L",
                 ],
             ],
+        ]
+    }
+
+    #[el]
+    fn custom_id_input(invoice: Var<super::Invoice>) -> TextInput {
+        let custom_id = el_var(|| invoice.map(|invoice| invoice.custom_id.clone()));
+        text_input![
+            text_input::on_change(|new_custom_id| custom_id.set(new_custom_id))
+            on_blur(|| custom_id.use_ref(|custom_id| {
+                super::set_invoice_custom_id(invoice, custom_id);
+            })),
+            custom_id.inner(),
+        ]
+    }
+
+    #[el]
+    fn url_input(invoice: Var<super::Invoice>) -> TextInput {
+        let url = el_var(|| invoice.map(|invoice| invoice.url.clone()));
+        text_input![
+            text_input::on_change(|new_url| url.set(new_url))
+            on_blur(|| url.use_ref(|url| {
+                super::set_invoice_url(invoice, url);
+            })),
+            url.inner(),
         ]
     }
 }
