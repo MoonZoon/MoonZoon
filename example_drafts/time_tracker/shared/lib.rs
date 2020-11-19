@@ -5,17 +5,20 @@ use std::borrow::Cow;
 
 mod clients_and_projects;
 mod time_blocks;
+mod time_tracker;
 
 pub type ClientId = Ulid;
 pub type ProjectId = Ulid;
 pub type TimeBlockId = Ulid;
 pub type InvoiceId = Ulid;
+pub type TimeEntryId = Ulid;
 
 #[derive(Serialize, Deserialize)]
 pub enum UpMsg<'a> {
-    // ------ Client ------
     GetClientsAndProjectsClients,
     GetTimeBlocksClients,
+    GetTimeTrackerClients,
+    // ------ Client ------
     AddClient(ClientId),
     RemoveClient(ClientId),
     RenameClient(ClientId, Cow<'a, str>),
@@ -34,13 +37,20 @@ pub enum UpMsg<'a> {
     RemoveInvoice(InvoiceId),
     SetInvoiceCustomId(InvoiceId, Cow<'a, str>),
     SetInvoiceUrl(InvoiceId, Cow<'a, str>),
+    // ------ TimeEntry ------
+    AddTimeEntry(ProjectId, time_tracker::TimeEntry),
+    RemoveTimeEntry(TimeEntryId),
+    RenameTimeEntry(TimeEntryId, Cow<'a, str>),
+    SetTimeEntryStarted(TimeEntryId, DateTime<Local>),
+    SetTimeEntryStopped(TimeEntryId, DateTime<Local>),
 }
 
 #[derive(Serialize, Deserialize)]
 pub enum DownMsg {
-    // ------ Client ------
     ClientsAndProjectsClients(Vec<clients_and_projects::Client>),
     TimeBlocksClients(Vec<time_blocks::Client>),
+    TimeTrackerClients(Vec<time_tracker::Client>),
+    // ------ Client ------
     ClientAdded,
     ClientRemoved,
     // ------ Project ------
@@ -58,5 +68,11 @@ pub enum DownMsg {
     InvoiceRemoved,
     InvoiceCustomIdSet,
     InvoiceUrlSet,
+    // ------ TimeEntry ------
+    TimeEntryAdded,
+    TimeEntryRemoved,
+    TimeEntryRenamed,
+    TimeEntryStartedSet,
+    TimeEntryStoppedSet,
 }
 
