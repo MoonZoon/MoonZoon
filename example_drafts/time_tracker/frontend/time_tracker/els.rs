@@ -54,11 +54,7 @@ blocks!{
                 el![project.map(|project| project.name.clone())],
                 start_stop_button(project),
             ],
-            button![
-                button::on_press(|| super::add_time_block(client)),
-                "Add Time Block",
-            ],
-            time_block_panels(client),
+            time_entry_panels(client),
         ]
     }
 
@@ -66,11 +62,13 @@ blocks!{
     fn start_stop_button(project: Var<super::Project>) -> Button {
         if let Some(time_entry) = project.map(|project| project.active_time_entry) {
             button![
+                background::color(color::yellow()),
                 button::on_press(|| super::set_time_entry_stopped(time_entry, Local::now())),
                 "Stop",
             ]
         } else {
             button![
+                background::color(color::green()),
                 button::on_press(|| super::add_time_entry(project)),
                 "Start",
             ]
@@ -80,7 +78,7 @@ blocks!{
     // ------ TimeEntry ------
 
     #[el]
-    fn client_panels() -> Column {
+    fn time_entry_panels() -> Column {
         let clients = super::clients();
         column![
             spacing(30),
