@@ -136,7 +136,7 @@ blocks!{
                         }
                     });
                 },
-                VarChanged => (),
+                VarUpdated => (),
                 VarRemoved => {
                     project().update_mut(|project| {
                         let time_entries = &mut project.time_entries;

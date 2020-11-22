@@ -56,7 +56,7 @@ blocks!{
                     });
                     add_client_to_recompute_queue(client);
                 },
-                VarChanged => {
+                VarUpdated => {
                     add_client_to_recompute_queue(client);
                 },
                 VarRemoved => (),
@@ -186,7 +186,7 @@ blocks!{
                         client.time_blocks.push(time_block);
                     });
                 },
-                VarChanged => client.mark_changed(),
+                VarUpdated => client.mark_updated(),
                 VarRemoved => {
                     client.update_mut(|client| {
                         let time_blocks = &mut client.time_blocks;
@@ -282,7 +282,7 @@ blocks!{
                         time_block.invoice = Some(invoice);
                     });
                 },
-                VarChanged => (),
+                VarUpdated => (),
                 VarRemoved => {
                     time_block().update_mut(|time_block| {
                         time_block.invoice = None;

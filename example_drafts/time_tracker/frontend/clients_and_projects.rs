@@ -50,7 +50,7 @@ blocks!{
                         clients.unwrap().push(client);
                     });
                 },
-                VarChanged => (),
+                VarUpdated => (),
                 VarRemoved => {
                     client.use_ref(|client| {
                         stop!{
@@ -149,7 +149,7 @@ blocks!{
                         client.projects.push(project);
                     });
                 },
-                VarChanged => (),
+                VarUpdated => (),
                 VarRemoved => {
                     client().update_mut(|client| {
                         let projects = &mut client.projects;

@@ -105,7 +105,7 @@ blocks!{
     fn todo_event_handler() -> VarEventHandler<Todo> {
         VarEventHandler::new(|event, todo| match event {
             VarAdded => todos().update_mut(|todos| todos.push_front(todo)),
-            VarChanged => todos().mark_changed(),
+            VarUpdated => todos().mark_updated(),
             VarRemoved => {
                 if Some(todo) == selected_todo().inner() {
                     selected_todo().set(None);
