@@ -5,6 +5,10 @@ use hhmmss::Hhmmss;
 
 const DURATION_BREAKPOINT: f64 = 800.;
 
+// -- Notifications --
+struct RecomputeDuration;
+struct RecomputeStopped;
+
 blocks!{
 
     #[el]
@@ -94,8 +98,14 @@ blocks!{
     #[el]
     fn time_entry_panel(time_entry: Var<super::TimeEntry>) -> Column {
         let show_duration_row = app::viewport_width().inner() < DURATION_BREAKPOINT;
+        let active = time_entry.map(|time_entry| time_entry.stopped.is_none());
 
-        // let started_str = el_var(|| time)
+        if active {
+            el_ref(|| Timer::new(1_000, || {
+                notify(RecomputeDuration);
+                notify(RecomputeStopped);
+            }))
+        }
 
         column![
             row![
@@ -111,13 +121,13 @@ blocks!{
                 ]
             }),
             row![
-                started_input(),
+                started_inputs(time_entry),
                 show_duration_row.not().then(|| {
                     column![
                         duration_input(time_entry)
                     ]
                 }),
-                stopped_input(),
+                stopped_inputs(time_entry),
             ]
         ]
     }
@@ -138,32 +148,57 @@ blocks!{
 
     #[el]
     fn duration_input(time_entry: Var<super::TimeEntry>) -> TextInput {
-        let started = time_entry.map(|time_entry| time_entry.started);
-        let stopped = time_entry.map(|time_entry| time_entry.stopped);
-        let duration: Duration = if let Some(stopped) = stopped {
-            stopped - started
-        } else {
-            // @TODO timer
-            Local::now() - started
-        }
+        let (active, started, stopped) = time_entry.map(|time_entry| (
+            time_entry.stopped.is_none(),
+            time_entry.started,
+            time_entry.stopped.unwrap_or_else(Local::now)
+        ));
+        let recompute = listen(|_: RecomputeDuration| ()).is_some();
+        let duration = el_var_reset(recompute, || (stopped - started).hhmmss());
         // 3:40:20
         text_input![
-            duration.hhmmss()
-        ],
+            active.not().then(|| text_input::on_change(|new_duration| duration.set(new_duration))),
+            active.not().then(|| on_blur(|| {
+                let new_duration = (|| {
+                    let duration = duration.inner();
+                    let negative = duration.chars().next()? == '-';
+                    if negative {
+                        duration.remove(0);
+                    }
+                    let mut duration_parts = duration.split(':');
+                    let hours: i64 = duration_parts.next()?.parse().ok()?;
+                    let minutes: i64 = duration_parts.next()?.parse().ok()?;
+                    let seconds: i64 = duration_parts.next()?.parse().ok()?;
+
+                    let mut total_seconds = hours * 3600 + minutes * 60 + seconds;
+                    if negative {
+                        total_seconds = -total_seconds;
+                    }
+                    Some(Duration::seconds(total_seconds))
+                })();
+                if let Some(new_duration) = new_duration {
+                    notify(RecomputeStopped);
+                    return super::set_time_entry_stopped(time_entry, started + duration)
+                }
+                duration.remove()
+            })),
+            duration.inner()
+        ]
     }
 
     #[el]
     fn started_inputs(time_entry: Var<super::TimeEntry>) -> Column {
-        let started = time_entry.map(|time_entry| time_entry.started);
-        let formatted_started_date = || started.format("%F").to_string();
-        let formatted_started_time = || started.format("%X").to_string();
-        let started_date = el_ref(formatted_started_date);
-        let started_time = el_ref(formatted_started_time);
+        let (active, started) = time_entry.map(|time_entry| (
+            time_entry.stopped.is_none(),
+            time_entry.started,
+        ));
+        let started_date = el_ref(|| started.format("%F").to_string());
+        let started_time = el_ref(|| started.format("%X").to_string());
         column![
             // 2020-11-03
             text_input![
-                text_input::on_change(|date| started_date.set(date)),
-                on_blur(|| {
+                active.not().then(|| text_input::on_change(|date| started_date.set(date))),
+                active.not().then(|| on_blur(|| {
                     let new_started = (|| {
                         let date = started_date.map(|date| {
                             NaiveDate::parse_from_str(&date, "%F").ok() 
@@ -172,16 +207,17 @@ blocks!{
                         Local.from_local_date(&date).and_time(time).single()
                     })();
                     if Some(new_started) = new_started {
+                        notify(RecomputeDuration);
                         return super::set_time_entry_started(time_entry, started);
                     }
-                    started_date.set(formatted_started_date());
-                }),
+                    started_date.remove();
+                })),
                 started_date.inner(),
             ],
             // 14:17:34
             text_input![
-                text_input::on_change(|time| started_time.set(time)),
-                on_blur(|| {
+                active.not().then(|| text_input::on_change(|time| started_time.set(time))),
+                active.not().then(|| on_blur(|| {
                     let new_started = (|| {
                         let time = started_time.map(|time| {
                             NaiveTime::parse_from_str(&time, "%X").ok() 
@@ -190,10 +226,11 @@ blocks!{
                         Local.from_local_date(&date).and_time(time).single()
                     })();
                     if Some(new_started) = new_started {
+                        notify(RecomputeDuration);
                         return super::set_time_entry_started(time_entry, started);
                     }
-                    started_time.set(formatted_started_time());
-                }),
+                    started_time.remove();
+                })),
                 started_time.inner(),
             ],
         ]
@@ -201,16 +238,18 @@ blocks!{
 
     #[el]
     fn stopped_inputs(time_entry: Var<super::TimeEntry>) -> Column {
-        let stopped = time_entry.map(|time_entry| time_entry.stopped).unwrap_or_else(Local::now);
-        let formatted_stopped_date = || stopped.format("%F").to_string();
-        let formatted_stopped_time = || stopped.format("%X").to_string();
-        let stopped_date = el_ref(formatted_stopped_date);
-        let stopped_time = el_ref(formatted_stopped_time);
+        let (active, stopped) = time_entry.map(|time_entry| (
+            time_entry.stopped.is_none(),
+            time_entry.stopped.unwrap_or_else(Local::now),
+        ));
+        let recompute = listen(|_: RecomputeStopped| ()).is_some();
+        let stopped_date = el_ref_reset(recompute, || stopped.format("%F").to_string());
+        let stopped_time = el_ref_reset(recompute, || stopped.format("%X").to_string());
         column![
             // 2020-11-03
             text_input![
-                text_input::on_change(|date| stopped_date.set(date)),
-                on_blur(|| {
+                active.not().then(|| text_input::on_change(|date| stopped_date.set(date))),
+                active.not().then(|| on_blur(|| {
                     let new_stopped = (|| {
                         let date = stopped_date.map(|date| {
                             NaiveDate::parse_from_str(&date, "%F").ok() 
@@ -219,16 +258,17 @@ blocks!{
                         Local.from_local_date(&date).and_time(time).single()
                     })();
                     if Some(new_stopped) = new_stopped {
+                        notify(RecomputeDuration);
                         return super::set_time_entry_stopped(time_entry, stopped);
                     }
-                    stopped_date.set(formatted_stopped_date());
-                }),
+                    stopped_date.remove();
+                })),
                 stopped_date.inner(),
             ],
             // 14:17:34
             text_input![
-                text_input::on_change(|time| stopped_time.set(time)),
-                on_blur(|| {
+                active.not().then(|| text_input::on_change(|time| stopped_time.set(time))),
+                active.not().then(|| on_blur(|| {
                     let new_stopped = (|| {
                         let time = stopped_time.map(|time| {
                             NaiveTime::parse_from_str(&time, "%X").ok() 
@@ -237,10 +277,11 @@ blocks!{
                         Local.from_local_date(&date).and_time(time).single()
                     })();
                     if Some(new_stopped) = new_stopped {
+                        notify(RecomputeDuration);
                         return super::set_time_entry_stopped(time_entry, stopped);
                     }
-                    stopped_time.set(formatted_stopped_time());
-                }),
+                    stopped_time.remove();
+                })),
                 stopped_time.inner(),
             ],
         ]
