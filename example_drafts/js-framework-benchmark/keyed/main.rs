@@ -225,7 +225,7 @@ blocks!{
         ]
     }
 
-    #[el]
+    #[el(row)]
     fn row(row: Var<Row>) -> RawEl {
         let is_selected = selected_row().inner().inner() == Some(row);
         raw_el![
