@@ -18,12 +18,12 @@ blocks!{
 
     #[el]
     fn client_panels() -> Column {
-        let clients = super::clients();
+        let clients = super::clients().map(|clients| {
+            clients.map(|clients| clients.iter_vars().rev().map(client_panel))
+        });
         column![
             spacing(30),
-            clients.map(|clients| {
-                clients.map(|clients| clients.iter().rev().map(client_panel))
-            }),
+            clients,
         ]
     }
 
@@ -64,17 +64,18 @@ blocks!{
 
     #[el]
     fn time_block_panels(client: Var<super::Client>) -> Column {
+        let time_blocks = client.map(|client| {
+            client.time_blocks.iter_vars().rev().map(time_block_panel)
+        });
         column![
             spacing(20),
-            client.map(|client| {
-                client.time_blocks.iter().rev().map(time_block_panel)
-            })
+            time_blocks,
         ]
     }
 
     #[el]
     fn time_block_panel(time_block: Var<super::TimeBlock>) -> Column {
-        let invoice = time_block.map(|time_block| time_block.invoice);
+        let invoice = time_block.map(|time_block| time_block.invoice.var());
         column![
             row![
                 time_block_name(time_block),

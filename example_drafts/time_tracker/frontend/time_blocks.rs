@@ -37,18 +37,18 @@ blocks!{
     pub struct Client {
         id: ClientId,
         name: String,
-        time_blocks: Vec<Var<TimeBlock>>,
+        time_blocks: Vec<VarC<TimeBlock>>,
         tracked: Duration,
-        statistics: Var<Statistics>,
+        statistics: VarC<Statistics>,
     }
 
     #[var]
-    fn client_update_handler() -> VarUpdateHandler<TimeBlock> {
-        VarUpdateHandler::new(add_client_to_recompute_queue)
+    fn client_update_handler() -> VarUpdateHandler<Client> {
+        VarUpdateHandler::new(|client| notify(RecomputeStatistics(client)))
     }
 
     #[var]
-    fn clients() -> Option<Vec<Var<Client>>> {
+    fn clients() -> Option<Vec<VarC<Client>>> {
         None
     }
 
@@ -97,7 +97,7 @@ blocks!{
                     client_var.update_mut(|new_client| {
                         new_client.time_blocks = new_time_blocks(client_var.var(), client.time_blocks);
                     });
-                    add_client_to_recompute_queue(client.var());
+                    notify(RecomputeStatistics(client.var()))
                     client_var
                 }).collect()
             };
@@ -116,23 +116,12 @@ blocks!{
         paid: f64,
     }
 
-    #[update]
-    fn add_client_to_recompute_queue(client: Var<Client>) {
-        recompute_queue().update_mut(|queue_var| {
-            queue_var.update_mut(|queue| queue.insert(client))
-        });
-    }
-
-    #[var]
-    fn recompute_queue() -> Var<HashSet<Var<Client>>> {
-        var(HashSet::new())
-    }
+    struct RecomputeStatistics(Client);
 
     #[subscription]
     fn recompute_statistics() {
-        let clients = recompute_queue().inner().map_mut(mem::take);
-        for client in clients {
-            client.se_ref(|client| {
+        listen(|RecomputeStatistics(client)| {
+            client.use_ref(|client| {
                 let tracked = client.tracked.num_seconds() as f64 / 3600.;
                 let mut non_billable = 0.;
                 let mut unpaid = 0.;
@@ -159,7 +148,7 @@ blocks!{
                     paid,
                 });
             })
-        }
+        })
     }
 
     // ------ TimeBlock ------
@@ -170,7 +159,7 @@ blocks!{
         name: String,
         status: TimeBlockStatus,
         duration: Duration,
-        invoice: Option<Var<Invoice>>,
+        invoice: Option<VarC<Invoice>>,
         client: Var<Client>, 
     }
 
