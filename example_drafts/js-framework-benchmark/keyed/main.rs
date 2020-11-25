@@ -119,7 +119,6 @@ blocks!{
         rows().update_mut(|rows| {
             rows.clear();
         })
-        selected_row().set(None);
     }
 
     #[update]
@@ -137,7 +136,7 @@ blocks!{
         });
         row.mark_updated();
         if let Some(old_selected) = old_selected {
-            old_selected.mark_updated();
+            old_selected.try_mark_updated();
         }
     }
 
@@ -147,9 +146,6 @@ blocks!{
             let position = rows.iter_vars().position(|r| r == row).unwrap();
             rows.remove(position);
         });
-        if matches!(selected_row().inner(), Some(selected_row) if selected_row == row) {
-            selected_row().set(None)
-        }
     }
 
     #[el]
