@@ -65,7 +65,7 @@ blocks!{
     }
 
     #[var]
-    fn rows() -> Vec<VarH<Row>> {
+    fn rows() -> Vec<VarC<Row>> {
         Vec::new()
     }
 
@@ -74,7 +74,7 @@ blocks!{
         rows().map(Vec::len)
     }
 
-    fn create_row() -> VarH<Row> {
+    fn create_row() -> VarC<Row> {
         let id = previous_id().map_mut(|id| {
             *id += 1;
             id

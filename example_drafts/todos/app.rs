@@ -149,7 +149,7 @@ blocks!{
     // -- all --
 
     #[var]
-    fn todos() -> Vector<VarH<Todo>> {
+    fn todos() -> Vector<VarC<Todo>> {
         LocalStorage::get(STORAGE_KEY).unwrap_or_default()
     }
 
@@ -182,7 +182,7 @@ blocks!{
     // -- completed --
 
     #[cache]
-    fn completed_todos() -> Vector<VarH<Todo>> {
+    fn completed_todos() -> Vector<VarC<Todo>> {
         let mut todos = todos().inner();
         todos.retain(|todo| todo.map(|todo| todo.completed))
         todos
@@ -213,7 +213,7 @@ blocks!{
     // -- active --
 
     #[cache]
-    fn active_todos() -> Vector<VarH<Todo>> {
+    fn active_todos() -> Vector<VarC<Todo>> {
         let mut todos = todos().inner();
         todos.retain(|todo| todo.map(|todo| !todo.completed));
         todos
@@ -227,7 +227,7 @@ blocks!{
     // -- filtered --
 
     #[cache]
-    fn filtered_todos() -> Cache<Vector<VarH<Todo>>> {
+    fn filtered_todos() -> Cache<Vector<VarC<Todo>>> {
         match selected_filter().inner() {
             Filter::All => todos().to_cache(),
             Filter::Active => active_todos(),

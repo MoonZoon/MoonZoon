@@ -15,7 +15,7 @@ blocks!{
     }
 
     #[var]
-    fn messages() -> Vec<VarH<Message>> {
+    fn messages() -> Vec<VarC<Message>> {
         Vec::new()
     }
 
