@@ -15,7 +15,7 @@ blocks!{
     }
 
     #[var]
-    fn messages() -> Vec<Var<Message>> {
+    fn messages() -> Vec<VarH<Message>> {
         Vec::new()
     }
 
@@ -60,7 +60,9 @@ blocks!{
     #[el]
     fn received_messages() -> Column [
         column![
-            messages().map(|messages| messages.iter().map(received_message)),
+            messages().map(|messages| {
+                messages.iter().map(VarH::var).map(received_message)
+            }),
         ]
     ]
 

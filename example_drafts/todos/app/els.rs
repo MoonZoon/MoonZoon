@@ -120,7 +120,9 @@ blocks!{
     fn todos() -> Column {
         let filtered_todos = super::filtered_todos().inner();
         column![
-            filtered_todos.map(|todos| todos.iter().map(VarH::var).map(todo))
+            filtered_todos.map(|todos| {
+                todos.iter().map(VarH::var).map(todo)
+            })
         ]
     }
 
