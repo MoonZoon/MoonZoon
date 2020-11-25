@@ -136,7 +136,7 @@ blocks!{
             selected_todo().set(None);
         }
         todos().update_mut(|todos| {
-            let position = todos.iter().position(|todo_h| todo_h.var() == todo).unwrap();
+            let position = todos.iter_vars().position(|t| t == todo).unwrap();
             todos.remove(position);
         });
     }

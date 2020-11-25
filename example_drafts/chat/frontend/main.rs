@@ -59,10 +59,11 @@ blocks!{
 
     #[el]
     fn received_messages() -> Column [
+        let messages = messages().map(|messages| {
+            messages.iter_vars().map(received_message)
+        });
         column![
-            messages().map(|messages| {
-                messages.iter().map(VarH::var).map(received_message)
-            }),
+            messages
         ]
     ]
 

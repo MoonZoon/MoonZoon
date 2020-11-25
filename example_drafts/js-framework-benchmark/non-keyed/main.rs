@@ -60,12 +60,12 @@ blocks!{
     }
 
     #[var]
-    fn selected_row() -> Var<Option<Var<Row>>> {
-        var(None)
+    fn selected_row() -> Option<Var<Row>> {
+        None
     }
 
     #[var]
-    fn rows() -> Vec<Var<Row>> {
+    fn rows() -> Vec<VarH<Row>> {
         Vec::new()
     }
 
@@ -74,7 +74,7 @@ blocks!{
         rows().map(Vec::len)
     }
 
-    fn create_row() -> Var<Row> {
+    fn create_row() -> VarH<Row> {
         let id = previous_id().map_mut(|id| {
             *id += 1;
             id
@@ -91,9 +91,6 @@ blocks!{
     #[update]
     fn create_rows(count: usize) {
         rows.update_mut(|rows| {
-            stop!{
-                rows.iter().for_each(Var::remove);
-            }
             *rows = (0..count).map(|_| create_row()).collect();
         });
     }
@@ -111,8 +108,7 @@ blocks!{
         rows().use_ref(|rows| {
             stop![
                 for position in (0..len).step_by(step) {
-                    let row = rows[position];
-                    row.update_mut(|row| row.label += " !!!");
+                    rows[position].update_mut(|row| row.label += " !!!");
                 }
             ]
         })
@@ -121,11 +117,9 @@ blocks!{
     #[update]
     fn clear_rows() {
         rows().update_mut(|rows| {
-            stop!{
-                rows.iter().for_each(Var::remove);
-            }
             rows.clear();
         })
+        selected_row().set(None);
     }
 
     #[update]
@@ -137,10 +131,11 @@ blocks!{
     }
 
     #[update]
-    fn select(row: Var<Row>) {
-        let old_selected = selected_row().inner().map_mut(|selected_row| {
+    fn select_row(row: Var<Row>) {
+        let old_selected = selected_row().map_mut(|selected_row| {
             selected_row.replace(row)
         });
+        row.mark_updated();
         if let Some(old_selected) = old_selected {
             old_selected.mark_updated();
         }
@@ -149,10 +144,12 @@ blocks!{
     #[update]
     fn remove(row: Var<Row>) {
         rows().update_mut(|rows| {
-            let position = rows.iter().position(|r| r == row).unwrap();
+            let position = rows.iter_vars().position(|r| r == row).unwrap();
             rows.remove(position);
         });
-        row.remove();
+        if matches!(selected_row().inner(), Some(selected_row) if selected_row == row) {
+            selected_row().set(None)
+        }
     }
 
     #[el]
@@ -214,20 +211,22 @@ blocks!{
 
     #[el]
     fn table() -> RawEl {
+        let rows = rows().map(|rows| rows.iter_vars().map(row));
         raw_el![
             tag("table"),
             attr("class", "table table-hover table-striped test-data"),
             raw_el![
                 tag("tbody"),
                 attr("id", "tbody"),
-                rows().map(|rows| rows.iter().map(row)),
+                rows,
             ]
         ]
     }
 
     #[el]
     fn row(row: Var<Row>) -> RawEl {
-        let is_selected = selected_row().inner().inner() == Some(row);
+        let selected_row = selected_row().unwatch().inner();
+        let is_selected = selected_row == Some(row);
         raw_el![
             tag("tr"),
             is_selected.then(|| attr("class", "danger")),
@@ -268,6 +267,7 @@ blocks!{
 
     #[el]
     fn row_remove_button(row: Var<Row>) -> RawEl {
+        row.unwatch();
         raw_el![
             tag("td"),
             attr("class", "col-md-1"),
