@@ -102,22 +102,6 @@ blocks!{
     }
 
     #[var]
-    fn todo_event_handler() -> VarEventHandler<Todo> {
-        VarEventHandler::new(|event, todo| match event {
-            VarAdded => todos().update_mut(|todos| todos.push_front(todo)),
-            VarUpdated => todos().mark_updated(),
-            VarRemoved => {
-                if Some(todo) == selected_todo().inner() {
-                    selected_todo().set(None);
-                }
-                todos().update_mut(|todos| {
-                    todos.remove(todos.index_of(todo).unwrap());
-                });
-            }
-        })
-    }
-
-    #[var]
     fn new_todo_title() -> String {
         String::new()
     }
@@ -128,23 +112,33 @@ blocks!{
     }
 
     #[update]
-    fn create_todo() {
+    fn add_todo() {
         let title = new_todo_title().map(String::trim);
         if title.is_empty() {
             return;
         }
         new_todo_title().update_mut(String::clear);
 
-        var(Todo {
-            id: TodoId::new(),
-            title,
-            completed: false,
-        });
+        todos().update_mut(|todos| {
+            let todo = var(Todo {
+                id: TodoId::new(),
+                title,
+                completed: false,
+            });
+            todo.on_update(|_| todos().mark_updated());
+            todos.push_front(todo);
+        })
     }
 
     #[update]
     fn remove_todo(todo: Var<Todo>) {
-        todo.remove();
+        if Some(todo) == selected_todo().inner() {
+            selected_todo().set(None);
+        }
+        todos().update_mut(|todos| {
+            let position = todos.iter().position(|todo_h| todo_h.var() == todo).unwrap();
+            todos.remove(position);
+        });
     }
 
     #[update]
@@ -155,7 +149,7 @@ blocks!{
     // -- all --
 
     #[var]
-    fn todos() -> Vector<Var<Todo>> {
+    fn todos() -> Vector<VarH<Todo>> {
         LocalStorage::get(STORAGE_KEY).unwrap_or_default()
     }
 
@@ -188,7 +182,7 @@ blocks!{
     // -- completed --
 
     #[cache]
-    fn completed_todos() -> Vector<Var<Todo>> {
+    fn completed_todos() -> Vector<VarH<Todo>> {
         let mut todos = todos().inner();
         todos.retain(|todo| todo.map(|todo| todo.completed))
         todos
@@ -219,7 +213,7 @@ blocks!{
     // -- active --
 
     #[cache]
-    fn active_todos() -> Vector<Var<Todo>> {
+    fn active_todos() -> Vector<VarH<Todo>> {
         let mut todos = todos().inner();
         todos.retain(|todo| todo.map(|todo| !todo.completed));
         todos
@@ -233,7 +227,7 @@ blocks!{
     // -- filtered --
 
     #[cache]
-    fn filtered_todos() -> Cache<Vector<Var<Todo>>> {
+    fn filtered_todos() -> Cache<Vector<VarH<Todo>>> {
         match selected_filter().inner() {
             Filter::All => todos().to_cache(),
             Filter::Active => active_todos(),
