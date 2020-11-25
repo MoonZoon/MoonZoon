@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use std::collections::HashSet;
 use chrono::{prelude::*, Duration};
 use crate::app;
-pub use shared::{ClientId, TimeBlockId, InvoiceId, TimeBlockStatus};
+pub use shared::{ClientId, TimeBlockId, InvoiceId, TimeBlockStatus, DownMsg};
 
 pub mod els;
 
@@ -22,15 +22,13 @@ blocks!{
 
     #[subscription]
     fn handle_down_msg() {
-        app::down_msg().inner().update(|down_msg| {
-            match down_msg {
-                Some(DownMsg::TimeBlocksClients(clients)) => {
-                    set_clients(Some(clients));
-                    None
-                }
-                _ => down_msg
+        listen(|msg: Option<DownMsg>| {
+            if let Some(DownMsg::TimeBlocksClients(clients)) = msg {
+                set_clients(Some(clients));
+                return None
             }
-        });
+            msg
+        })
     }
 
     // ------ Client ------

@@ -160,15 +160,8 @@ blocks!{
             unfinished_mutations().update_mut(|cor_ids| {
                 cor_ids.remove(cor_id);
             });
-            down_msg().update_mut(|down_msg| {
-                down_msg.inner().set(Some(msg));
-            })
+            notify(Some(msg));
         })
-    }
-
-    #[var]
-    fn down_msg() -> Var<Option<DownMsg>> {
-        var(None)
     }
 
     #[update]

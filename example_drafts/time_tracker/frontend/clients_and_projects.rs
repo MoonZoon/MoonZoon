@@ -2,7 +2,7 @@ use zoon::*;
 use ulid::Ulid;
 use std::borrow::Cow;
 use crate::app;
-use shared::{ClientId, ProjectId};
+use shared::{ClientId, ProjectId, DownMsg};
 
 pub mod els;
 
@@ -21,15 +21,13 @@ blocks!{
 
     #[subscription]
     fn handle_down_msg() {
-        app::down_msg().inner().update(|down_msg| {
-            match down_msg {
-                Some(DownMsg::ClientsAndProjectsClients(clients)) => {
-                    set_clients(Some(clients));
-                    None
-                }
-                _ => down_msg
+        listen(|msg: Option<DownMsg>| {
+            if let Some(DownMsg::ClientsAndProjectsClients(clients)) = msg {
+                set_clients(Some(clients));
+                return None
             }
-        });
+            msg
+        })
     }
 
     // ------ Client ------

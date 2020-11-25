@@ -153,7 +153,7 @@ blocks!{
             time_entry.started,
             time_entry.stopped.unwrap_or_else(Local::now)
         ));
-        let recompute = listen(|_: RecomputeDuration| ()).is_some();
+        let recompute = listen_ref(|_: RecomputeDuration| ()).is_some();
         let duration = el_var_reset(recompute, || (stopped - started).hhmmss());
         // 3:40:20
         text_input![
@@ -242,7 +242,7 @@ blocks!{
             time_entry.stopped.is_none(),
             time_entry.stopped.unwrap_or_else(Local::now),
         ));
-        let recompute = listen(|_: RecomputeStopped| ()).is_some();
+        let recompute = listen_ref(|_: RecomputeStopped| ()).is_some();
         let stopped_date = el_ref_reset(recompute, || stopped.format("%F").to_string());
         let stopped_time = el_ref_reset(recompute, || stopped.format("%X").to_string());
         column![

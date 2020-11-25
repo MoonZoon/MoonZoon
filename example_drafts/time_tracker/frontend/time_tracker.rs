@@ -1,4 +1,5 @@
 use zoon::*;
+use shared::DownMsg;
 
 pub mod els;
 
@@ -15,15 +16,13 @@ blocks!{
 
     #[subscription]
     fn handle_down_msg() {
-        app::down_msg().inner().update(|down_msg| {
-            match down_msg {
-                Some(DownMsg::TimeTrackerClients(clients)) => {
-                    set_clients(Some(clients));
-                    None
-                }
-                _ => down_msg
+        listen(|msg: Option<DownMsg>| {
+            if let Some(DownMsg::TimeTrackerClients(clients)) = msg {
+                set_clients(Some(clients));
+                return None
             }
-        });
+            msg
+        })
     }
 
     // ------ Client ------
