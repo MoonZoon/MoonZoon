@@ -102,6 +102,11 @@ blocks!{
     }
 
     #[var]
+    fn todo_update_handler() -> VarUpdateHandler<Todo> {
+        VarUpdateHandler::new(|_| todos().mark_updated())
+    }
+
+    #[var]
     fn new_todo_title() -> String {
         String::new()
     }
@@ -125,7 +130,6 @@ blocks!{
                 title,
                 completed: false,
             });
-            todo.on_update(|_| todos().mark_updated());
             todos.push_front(todo);
         })
     }

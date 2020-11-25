@@ -22,12 +22,12 @@ blocks!{
 
     #[el]
     fn client_panels() -> Column {
-        let clients = super::clients();
+        let clients = super::clients().map(|clients| {
+            clients.unwrap_or_default().iter_vars().rev().map(client_panel)
+        });
         column![
             spacing(30),
-            clients.map(|clients| {
-                clients.unwrap_or_default().iter().rev().map(client_panel)
-            }),
+            clients,
         ]
     }
 

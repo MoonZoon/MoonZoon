@@ -36,39 +36,11 @@ blocks!{
     pub struct Client {
         id: ClientId,
         name: String,
-        projects: Vec<Var<Project>>,
+        projects: Vec<VarC<Project>>,
     }
 
     #[var]
-    fn client_event_handler() -> VarEventHandler<Client> {
-        VarEventHandler::new(|event, client| {
-            match event {
-                VarAdded => {
-                    clients().update_mut(|clients| {
-                        clients.unwrap().push(client);
-                    });
-                },
-                VarUpdated => (),
-                VarRemoved => {
-                    client.use_ref(|client| {
-                        stop!{
-                            for project in &client.projects {
-                                project.remove();
-                            }
-                        }
-                    });
-                    clients().update_mut(|clients| {
-                        let clients = clients.unwrap();
-                        let position = clients.iter().position(|c| c == client);
-                        clients.remove(position.unwrap());
-                    });
-                },
-            }
-        })
-    }
-
-    #[var]
-    fn clients() -> Option<Vec<Var<Client>>> {
+    fn clients() -> Option<Vec<VarC<Client>>> {
         None
     }
 
@@ -84,22 +56,29 @@ blocks!{
             None => return clients().set(None);
         };
         stop!{
-            clients().set(Some(Vec::new()));
-            for client in clients {
-                let client_var = var(Client {
-                    id: client.id,
-                    name: client.name,
-                    projects: Vec::new(),
-                });
-                for project in client.projects {
+            let new_projects = |client: Var<Client>, projects: Vec<shared::clients_and_projects::Project>| {
+                projects.into_iter().map(|project| {
                     var(Project {
                         id: project.id,
                         name: project.name,
-                        client: client_var,
+                        client,
+                    })
+                }).collect()
+            };
+            let new_clients = |clients: Vec<shared::clients_and_projects::Client>| {
+                clients.into_iter().map(|client| {
+                    let client_var = var(Client {
+                        id: client.id,
+                        name: client.name,
+                        projects: Vec::new(),
                     });
-                }
-            }
-        }
+                    client_var.update_mut(|new_client| {
+                        new_client.projects = new_projects(client_var.var(), client.projects);
+                    });
+                    client_var
+                }).collect()
+            };
+            clients().set(Some(new_clients(clients)));
     }
 
     #[update]
@@ -110,13 +89,22 @@ blocks!{
             name: String::new(),
             projects: Vec::new(),
         });
-        added_client().set(Some(client));
+        added_client().set(Some(client.var()));
+        clients().update_mut(move |clients| {
+            clients.unwrap().push(client);
+        });
         app::send_up_msg(true, UpMsg::AddClient(id));
     } 
 
     #[update]
     fn remove_client(client: Var<Client>) {
-        let id = client.remove().id;
+        let id = clients().map_mut(|clients| {
+            let clients = clients.as_mut().unwrap();
+            let position = clients.iter_vars().position(|c| c == client).unwrap();
+            let id = clients[position].id;
+            clients.remove(position);
+            id
+        });
         app::send_up_msg(true, UpMsg::RemoveClient(id));
     }
 
@@ -138,28 +126,6 @@ blocks!{
     }
 
     #[var]
-    fn project_event_handler() -> VarEventHandler<Project> {
-        VarEventHandler::new(|event, project| {
-            let client = || project.map(|project| project.client);
-            match event {
-                VarAdded => {
-                    client().update_mut(|client| {
-                        client.projects.push(project);
-                    });
-                },
-                VarUpdated => (),
-                VarRemoved => {
-                    client().update_mut(|client| {
-                        let projects = &mut client.projects;
-                        let position = projects.iter().position(|p| p == project);
-                        projects.remove(position.unwrap());
-                    });
-                },
-            }
-        })
-    }
-
-    #[var]
     fn added_project() -> Option<Var<Project>> {
         None
     }
@@ -174,13 +140,23 @@ blocks!{
             name: String::new(),
             client,
         });
-        added_project().set(Some(project));
+        added_project().set(Some(project.var()));
+        client().update_mut(|client| {
+            client.projects.push(project);
+        });
         app::send_up_msg(true, UpMsg::AddProject(client_id, project_id));
     }
 
     #[update]
     fn remove_project(project: Var<Project>) {
-        let id = project.remove().id;
+        let client = project.map(|project| project.client);
+        let id = client().map_mut(|client| {
+            let projects = &mut client.projects;
+            let position = projects.iter().position(|p| p == project).unwrap();
+            let id = projects[position].id;
+            projects.remove(position);
+            id
+        });
         app::send_up_msg(true, UpMsg::RemoveProject(id));
     }
 
