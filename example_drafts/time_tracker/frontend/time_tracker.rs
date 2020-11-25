@@ -31,60 +31,61 @@ blocks!{
     pub struct Client {
         id: ClientId,
         name: String,
-        projects: Vec<Var<Project>>,
+        projects: Vec<VarC<Project>>,
     }
 
     #[var]
-    fn client_event_handler() -> VarEventHandler<Client> {
-        VarEventHandler::new(|event, client| {
-            if let VarAdded = event {
-                clients().update_mut(|clients| {
-                    if let Some(clients) = clients {
-                        clients.push(client);
-                    }
-                });
-            }
-        })
-    }
-
-    #[var]
-    fn clients() -> Option<Vec<Var<Client>>> {
+    fn clients() -> Option<Vec<VarC<Client>>> {
         None
     }
 
     #[update]
-    fn set_clients(clients: Vec<shared::time_blocks::Client>) {
+    fn set_clients(clients: Vec<shared::time_tracker::Client>) {
         let clients = match {
             Some(clients) => clients,
             None => return clients().set(None);
         };
         stop!{
-            clients().set(Some(Vec::new()));
-            for client in clients {
-                let client_var = var(Client {
-                    id: client.id,
-                    name: client.name,
-                    projects: Vec::new(),
-                });
-                for project in client.projects {
+            let new_time_entries = |project: Var<Project>, time_entries: Vec<shared::time_tracker::TimeEntry>| {
+                time_entries.into_iter().map(|time_entry| {
+                    var(TimeEntry {
+                        id: time_entry.id,
+                        name: time_entry.name,
+                        started: time_entry.started,
+                        stopped: time_entry.stopped,
+                        project,
+                    })
+                }).collect()
+            };
+            let new_projects = |client: Var<Client>, projects: Vec<shared::time_tracker::Project>| {
+                projects.into_iter().map(|project| {
                     let project_var = var(Project {
                         id: project.id,
                         name: project.name,
                         active_time_entry: None,
                         time_entries: vec::new(),
-                        client: client_var,
-                    });  
-                    for time_entry in project.time_entries {
-                        let time_entry_var = var(TimeEntry {
-                            id: time_entry.id,
-                            name: time_entry.name,
-                            started: time_entry.started,
-                            stopped: time_entry.stopped,
-                            project: project_var,
-                        });                    
-                    }                  
-                }
-            }
+                        client,
+                    });
+                    project_var.update_mut(|new_project| {
+                        new_project.time_entries = new_time_entries(project_var.var(), project.time_entries);
+                    });
+                    project_var
+                }).collect()
+            };
+            let new_clients = |clients: Vec<shared::time_tracker::Client>| {
+                clients.into_iter().map(|client| {
+                    let client_var = var(Client {
+                        id: client.id,
+                        name: client.name,
+                        projects: Vec::new(),
+                    });
+                    client_var.update_mut(|new_client| {
+                        new_client.projects = new_projects(client_var.var(), client.projects);
+                    });
+                    client_var
+                }).collect()
+            };
+            clients().set(Some(new_clients(clients)));
         }
     }
 
@@ -95,18 +96,7 @@ blocks!{
         id: ProjectId,
         name: String,
         active_time_entry: Option<Var<TimeEntry>>,
-        time_entries: Vec<Var<TimeEntry>>,
-    }
-
-    #[var]
-    fn project_event_handler() -> VarEventHandler<Client> {
-        VarEventHandler::new(|event, project| {
-            if let VarAdded = event {
-                project.client.update_mut(|client| {
-                    client.projects.push(project)
-                });
-            }
-        })
+        time_entries: Vec<VarC<TimeEntry>>,
     }
 
     // ------ TimeEntry ------
@@ -120,37 +110,6 @@ blocks!{
         project: Var<Project>,
     }
 
-    #[var]
-    fn time_entry_event_handler() -> VarEventHandler<TimeEntry> {
-        VarEventHandler::new(|event, time_entry| {
-            let project = || time_entry.map(|time_entry| time_entry.project);
-            let stopped = time_entry.map(|time_entry| time_entry.stopped);
-            match event {
-                VarAdded => {
-                    project().update_mut(|project| {
-                        project.time_entries.push(time_entry);
-
-                        if stopped.is_none() {
-                            project.active_time_entry = Some(time_entry);
-                        }
-                    });
-                },
-                VarUpdated => (),
-                VarRemoved => {
-                    project().update_mut(|project| {
-                        let time_entries = &mut project.time_entries;
-                        let position = time_entries.iter().position(|te| te == time_entry);
-                        time_entries.remove(position.unwrap());
-
-                        if project.active_time_entry == Some(time_entry) {
-                            project.active_time_entry = None;
-                        }
-                    });
-                },
-            }
-        })
-    }
-
     #[update]
     fn add_time_entry(project: Var<Project>) {
         let project_id = project.map(|project| project.id);
@@ -161,20 +120,33 @@ blocks!{
             started: Local::now(),
             stopped: None,
         };
-
-        var(TimeEntry {
+        let time_entry_var = var(TimeEntry {
             id: time_entry.id,
             name: time_entry.name.clone(),
             started: time_entry.started,
             stopped: time_entry.stopped,
             project,
         });
+        project.update_mut(|project| {
+            project.active_time_entry = Some(time_entry_var.var());
+        });
         app::send_up_msg(true, UpMsg::AddTimeEntry(project_id, time_entry));
     }
 
     #[update]
     fn remove_time_entry(time_entry: Var<TimeEntry>) {
-        let id = time_entry.remove().id;
+        let (project, id) = time_entry.map(|time_entry| {
+            (time_entry.project.var(), time_entry.id)
+        });
+        project().update_mut(|project| {
+            let time_entries = &mut project.time_entries;
+            let position = time_entries.iter_vars().position(|te| te == time_entry);
+            time_entries.remove(position.unwrap());
+
+            if project.active_time_entry == Some(time_entry) {
+                project.active_time_entry = None;
+            }
+        });
         app::send_up_msg(true, UpMsg::RemoveTimeEntry(id));
     }
 

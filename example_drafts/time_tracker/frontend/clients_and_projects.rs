@@ -79,6 +79,7 @@ blocks!{
                 }).collect()
             };
             clients().set(Some(new_clients(clients)));
+        }
     }
 
     #[update]
@@ -98,12 +99,11 @@ blocks!{
 
     #[update]
     fn remove_client(client: Var<Client>) {
-        let id = clients().map_mut(|clients| {
+        let id = client.map(|client| client.id);
+        clients().update_mut(|clients| {
             let clients = clients.as_mut().unwrap();
-            let position = clients.iter_vars().position(|c| c == client).unwrap();
-            let id = clients[position].id;
-            clients.remove(position);
-            id
+            let position = clients.iter_vars().position(|c| c == client);
+            clients.remove(position.unwrap());
         });
         app::send_up_msg(true, UpMsg::RemoveClient(id));
     }

@@ -26,12 +26,12 @@ blocks!{
 
     #[el]
     fn client_panels() -> Column {
-        let clients = super::clients();
+        let clients = super::clients().map(|clients| {
+            clients.map(|clients| clients.iter_vars().rev().map(client_panel))
+        });
         column![
             spacing(30),
-            clients.map(|clients| {
-                clients.map(|clients| clients.iter().rev().map(client_panel))
-            }),
+            clients,
         ]
     }
 
@@ -47,11 +47,12 @@ blocks!{
 
     #[el]
     fn project_panels(client: Var<super::Client>) -> Column {
+        let projects = client.map(|client| {
+            client.projects.iter_vars().rev().map(project_panel)
+        });
         column![
             spacing(20),
-            client.map(|client| {
-                client.projects.iter().rev().map(project_panel)
-            }),
+            projects,
         ]
     }
 
@@ -87,11 +88,12 @@ blocks!{
 
     #[el]
     fn time_entry_panels(project: Var<super::Project>) -> Column {
+        let time_entries = project.map(|project| {
+            project.time_entries.iter_vars().rev().map(time_entry_panel)
+        });
         column![
             spacing(20),
-            project.map(|project| {
-                project.time_entries.iter().rev().map(time_entry_panel)
-            }),
+            time_entries,
         ]
     }
 
@@ -101,7 +103,7 @@ blocks!{
         let active = time_entry.map(|time_entry| time_entry.stopped.is_none());
 
         if active {
-            el_ref(|| Timer::new(1_000, || {
+            el_var(|| Timer::new(1_000, || {
                 notify(RecomputeDuration);
                 notify(RecomputeStopped);
             }))
@@ -192,8 +194,8 @@ blocks!{
             time_entry.stopped.is_none(),
             time_entry.started,
         ));
-        let started_date = el_ref(|| started.format("%F").to_string());
-        let started_time = el_ref(|| started.format("%X").to_string());
+        let started_date = el_var(|| started.format("%F").to_string());
+        let started_time = el_var(|| started.format("%X").to_string());
         column![
             // 2020-11-03
             text_input![
@@ -243,8 +245,8 @@ blocks!{
             time_entry.stopped.unwrap_or_else(Local::now),
         ));
         let recompute = listen_ref(|RecomputeStopped| ()).is_some();
-        let stopped_date = el_ref_reset(recompute, || stopped.format("%F").to_string());
-        let stopped_time = el_ref_reset(recompute, || stopped.format("%X").to_string());
+        let stopped_date = el_var_reset(recompute, || stopped.format("%F").to_string());
+        let stopped_time = el_var_reset(recompute, || stopped.format("%X").to_string());
         column![
             // 2020-11-03
             text_input![

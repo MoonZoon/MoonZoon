@@ -209,13 +209,11 @@ blocks!{
 
     #[update]
     fn remove_time_block(time_block: Var<TimeBlock>) {
-        let client = time_block.map(|time_block| time_block.client);
-        let id = client.update_mut(|client| {
+        let (client, id) = time_block.map(|time_block| (time_block.client, time_block.id));
+        client.update_mut(|client| {
             let time_blocks = &mut client.time_blocks;
-            let position = time_blocks.iter_vars().position(|tb| tb == time_block).unwrap();
-            let id = time_blocks[position].id;
-            time_blocks.remove(position);
-            id
+            let position = time_blocks.iter_vars().position(|tb| tb == time_block);
+            time_blocks.remove(position.unwrap());
         });
         app::send_up_msg(true, UpMsg::RemoveTimeBlock(id));
     }
