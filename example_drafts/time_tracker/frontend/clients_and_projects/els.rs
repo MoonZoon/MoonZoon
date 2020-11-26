@@ -53,7 +53,7 @@ blocks!{
     fn client_name(client: Var<super::Client>) -> TextInput {
         let name = el_var(|| client.map(|client| client.name.clone());
         text_input![
-            do_once(super::added_client().inner().contains(client).then(focus)),
+            do_once(|| super::setting_clients().inner().not().then(focus)).flatten(),,
             text_input::on_change(|new_name| name.set(new_name)),
             on_blur(|| name.use_ref(|name| {
                 super::rename_client(client, name);
@@ -90,7 +90,7 @@ blocks!{
     fn project_name(project: Var<super::Project>) -> TextInput {
         let name = el_var(|| project.map(|project| project.name.clone());
         text_input![
-            do_once(super::added_project().inner().contains(project).then(focus)),
+            do_once(|| super::setting_clients().inner().not().then(focus)).flatten(),,
             text_input::on_change(|new_name| name.set(new_name)),
             on_blur(|| name.use_ref(|name| {
                 super::rename_project(project, name);

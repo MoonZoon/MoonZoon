@@ -15,7 +15,6 @@ blocks!{
     fn on_route_change() {
         if let app::Route::ClientsAndProjects = route() {
             set_clients(None);
-            added_time_block().set(None);
             app::send_up_msg(false, UpMsg::GetTimeBlocksClients);
         }
     }
@@ -52,12 +51,18 @@ blocks!{
         None
     }
 
+    #[var]
+    fn setting_clients() -> bool {
+        false
+    }
+
     #[update]
     fn set_clients(clients: Vec<shared::time_blocks::Client>) {
         let clients = match {
             Some(clients) => clients,
             None => return clients().set(None);
         };
+        setting_clients().set(true);
         stop!{
             let new_invoice = |time_block: Var<TimeBlock>, invoice: Option<shared::time_blocks::Invoice>| {
                 invoice.map(|invoice| {
@@ -103,6 +108,7 @@ blocks!{
             };
             clients().set(Some(new_clients(clients)));
         }
+        setting_clients().set(false);
     }
 
     // ------ Statistics ------
@@ -171,11 +177,6 @@ blocks!{
         })
     }
 
-    #[var]
-    fn added_time_block() -> Option<Var<TimeBlock>> {
-        None
-    }
-
     #[update]
     fn add_time_block(client: Var<Client>) {
         let previous_duration = client.map(|client| {
@@ -197,7 +198,6 @@ blocks!{
             invoice: None,
             client,
         });
-        added_time_block().set(Some(time_block.var()));
         client().update_mut(|client| {
             client.time_blocks.push(time_block);
         });

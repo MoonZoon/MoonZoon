@@ -13,8 +13,6 @@ blocks!{
     fn on_route_change() {
         if let app::Route::ClientsAndProjects = route() {
             set_clients(None);
-            added_project().set(None);
-            added_client().set(None);
             app::send_up_msg(false, UpMsg::GetClientsAndProjectsClients);
         }
     }
@@ -45,8 +43,8 @@ blocks!{
     }
 
     #[var]
-    fn added_client() -> Option<Var<Client>> {
-        None
+    fn setting_clients() -> bool {
+        false
     }
 
     #[update]
@@ -55,6 +53,7 @@ blocks!{
             Some(clients) => clients,
             None => return clients().set(None);
         };
+        setting_clients().set(true);
         stop!{
             let new_projects = |client: Var<Client>, projects: Vec<shared::clients_and_projects::Project>| {
                 projects.into_iter().map(|project| {
@@ -80,6 +79,7 @@ blocks!{
             };
             clients().set(Some(new_clients(clients)));
         }
+        setting_clients().set(false);
     }
 
     #[update]
@@ -90,7 +90,6 @@ blocks!{
             name: String::new(),
             projects: Vec::new(),
         });
-        added_client().set(Some(client.var()));
         clients().update_mut(move |clients| {
             clients.unwrap().push(client);
         });
@@ -125,11 +124,6 @@ blocks!{
         client: Var<Client>, 
     }
 
-    #[var]
-    fn added_project() -> Option<Var<Project>> {
-        None
-    }
-
     #[update]
     fn add_project(client: Var<Client>) {
         let client_id = client.map(|client| client.id);
@@ -140,7 +134,6 @@ blocks!{
             name: String::new(),
             client,
         });
-        added_project().set(Some(project.var()));
         client().update_mut(|client| {
             client.projects.push(project);
         });

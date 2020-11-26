@@ -106,7 +106,7 @@ blocks!{
             time_block.map(|time_block| time_block.name.clone())
         });
         text_input![
-            do_once(super::added_time_block().inner().contains(time_block).then(focus)),
+            do_once(|| super::setting_clients().inner().not().then(focus)).flatten(),
             text_input::on_change(|new_name| name.set(new_name)),
             on_blur(|| name.use_ref(|name| {
                 super::rename_time_block(time_block, name);
