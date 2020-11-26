@@ -85,8 +85,27 @@ blocks!{
     }
 
     #[update]
-    fn set_user(user: User) {
-        user().set(user)
+    fn login(password: &str) {
+        send_up_msg(false, UpMsg::Login(Cow::from(password)));
+    }
+
+    #[subscription]
+    fn handle_down_msg() {
+        listen(|msg: Option<DownMsg>| {
+            if let Some(DownMsg::LoggedIn(user)) = msg {
+                user().set(Some(user));
+                set_route(Route::home());
+                return None
+            }
+            msg
+        })
+    }
+
+    #[update]
+    fn logout() {
+        send_up_msg(false, UpMsg::Logout);
+        user().set(None);
+        set_route(Route::home());
     }
 
     // ------ Viewport ------

@@ -19,7 +19,7 @@ blocks!{
 
     #[el]
     fn header() -> Row {
-        let show_links = super::viewport_width().inner() > MENU_BREAKPOINT;
+        let show_links_and_controls = super::viewport_width().inner() > MENU_BREAKPOINT;
         let show_hamburger = !show_links;
         let saving = super::saving();
         row![
@@ -27,8 +27,9 @@ blocks!{
                 font::bold(),
                 "TT",
             ],
-            show_links.then(|| row![menu_links()]),
+            show_link_and_controls.then(|| row![menu_links()]),
             saving.then(|| el!["Saving..."]),
+            show_link_and_controls.then(auth_controls),
             show_hamburger.then(hamburger),
         ]
     }
@@ -53,7 +54,7 @@ blocks!{
         }
         Some(column![
             menu_links(),
-            username_or_login_button(),
+            auth_controls(),
             on_click(super::menu_part_clicked),
         ])
     }
@@ -77,6 +78,14 @@ blocks!{
     }
 
     #[el]
+    fn auth_controls() -> Row {
+        row![
+            username_or_login_button(),
+            logout_button(),
+        ]
+    }
+
+    #[el]
     fn username_or_login_button() -> Element {
         if let Some(user) = super::user().inner() {
             return user.name.into_element(),
@@ -85,6 +94,17 @@ blocks!{
             link::url(super::Route::login()),
             "Log in",
         ].into_element()
+    }
+
+    #[el]
+    fn logout_button() -> Option<Button> {
+        let logged_in = super::user().map(Option::is_some);
+        logged_in.then({
+            button![
+                button::on_press(super::logout),
+                "Log out",
+            ]
+        })
     }
 
     #[el]

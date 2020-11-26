@@ -13,8 +13,16 @@ pub type TimeBlockId = Ulid;
 pub type InvoiceId = Ulid;
 pub type TimeEntryId = Ulid;
 
+pub struct User {
+    name: String,
+}
+
 #[derive(Serialize, Deserialize)]
 pub enum UpMsg<'a> {
+    // ------ Auth ------
+    Login(Cow<'a, str>),
+    Logout,
+    // ------ Page data ------
     GetClientsAndProjectsClients,
     GetTimeBlocksClients,
     GetTimeTrackerClients,
@@ -47,6 +55,11 @@ pub enum UpMsg<'a> {
 
 #[derive(Serialize, Deserialize)]
 pub enum DownMsg {
+    // ------ Auth ------
+    InvalidPassword,
+    LoggedIn(User),
+    LoggedOut,
+    // ------ Page data ------
     ClientsAndProjectsClients(Vec<clients_and_projects::Client>),
     TimeBlocksClients(Vec<time_blocks::Client>),
     TimeTrackerClients(Vec<time_tracker::Client>),
