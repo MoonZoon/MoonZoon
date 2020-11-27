@@ -267,7 +267,6 @@ blocks!{
 
     #[el]
     fn row_remove_button(row: Var<Row>) -> RawEl {
-        row.unwatch();
         raw_el![
             tag("td"),
             attr("class", "col-md-1"),
