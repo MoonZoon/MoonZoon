@@ -66,6 +66,7 @@ pub enum DownMsg {
     // ------ Client ------
     ClientAdded,
     ClientRemoved,
+    ClientRenamed,
     // ------ Project ------
     ProjectAdded,
     ProjectRemoved,
