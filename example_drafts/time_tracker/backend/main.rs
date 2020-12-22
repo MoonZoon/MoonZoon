@@ -1,8 +1,12 @@
 use moon::*;
-use shared::{UpMsg, DownMsg, Message};
-use ulid::Ulid;
+use shared::{UpMsg, DownMsg, Message, ClientId, ProjectId};
+
+mod client;
+mod project;
 
 blocks!{
+    append_actors![client, project]
+
     #[var]
     fn connector() -> Connector<UpMsg, DownMsg> {
         Connector::new("9000", up_msg_handler)
@@ -14,64 +18,40 @@ blocks!{
 
     fn up_msg_handler(msg: UpMsg) -> DownMsg {
         match msg {
+            // ------ Page data ------
+            UpMsg::GetClientsAndProjectsClients => {
+
+            }
+            // ------ Client ------
             UpMsg::AddClient(client_id) => {
-                actor(Client { id: client_id });
+                new_actor(Client { id: client_id });
                 DownMsg::ClientAdded
             },
             UpMsg::RemoveClient(client_id) => {
-                let client = get_actor("Clients", client_id);
+                let client = client::by_id(client_id)[0];
                 client.send_in_msg(InMsg::Remove);
                 DownMsg::ClientRemoved
             },
             UpMsg::RenameClient(client_id, name) => {
-                let client = get_actor("Clients", client_id);
+                let client = client::by_id(client_id)[0];
                 client.send_in_msg(InMsg::Rename(name.to_string()));
                 DownMsg::ClientRenamed
             },
-        }
-    }
-
-    // #[update]
-    // fn broadcast_message(message: Message) {
-    //     connector().use_ref(move |connector| {
-    //         connector.broadcast(DownMsg::MessageReceived(message))
-    //     })
-    // }
-}
-
-actor!{
-    type ClientId = Ulid;
-
-    #[new_actor]
-    struct Client {
-        id: ClientId,
-    }  
-
-    #[p_var]
-    fn id() -> ClientId {
-        p_var("id", &["Clients"], |_| new_actor().id)
-    }
-
-    #[p_var]
-    fn name() -> String {
-        p_var("name", &[], |_| String::new())
-    }
-
-    #[in_msg]
-    enum InMsg {
-        Remove,
-        Rename(String),
-    }
-
-    #[in_msg_handler]
-    fn in_msg_handler(in_msg: InMsg) {
-        match msg {
-            InMsg::Remove => {
-                remove_actor();
-            }
-            InMsg::Rename(name) => {
-                name().set(name);
-            }
+            // ------ Project ------
+            UpMsg::AddProject(client_id, project_id) => {
+                new_actor(Project { client: client_id, id: project_id });
+                DownMsg::ProjectAdded
+            },
+            UpMsg::RemoveProject(project_id) => {
+                let project = project::by_id(project_id)[0];
+                project.send_in_msg(InMsg::Remove);
+                DownMsg::ProjectRemoved
+            },
+            UpMsg::RenameProject(project_id, name) => {
+                let project = project::by_id(project_id)[0];
+                project.send_in_msg(InMsg::Rename(name.to_string()));
+                DownMsg::ProjectRenamed
+            },
         }
     }
 }
