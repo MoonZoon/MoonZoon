@@ -32,21 +32,14 @@ actor!{
         p_var("client", &[by_client()], |_| args().client)
     }
 
-    #[in_msg]
-    enum InMsg {
-        Remove,
-        Rename(String),
-    }
-
-    #[in_msg_handler]
-    fn in_msg_handler(in_msg: InMsg) {
-        match msg {
-            InMsg::Remove => {
-                remove_actor();
-            }
-            InMsg::Rename(name) => {
-                name().set(name);
-            }
+    #[actor]
+    struct ProjectActor {
+        async fn remove(&self) {
+            self.remove_actor().await
+        }
+    
+        async fn rename(&self, name: String) {
+            name().set(name).await
         }
     }
 }

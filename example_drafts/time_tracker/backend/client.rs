@@ -1,5 +1,5 @@
 use shared::ClientId;
-use crate::project;
+use crate::project::{self, ProjectActor};
 
 actor!{
     #[args]
@@ -22,24 +22,21 @@ actor!{
         p_var("name", &[], |_| String::new())
     }
 
-    #[in_msg]
-    enum InMsg {
-        Remove,
-        Rename(String),
-    }
-
-    #[in_msg_handler]
-    fn in_msg_handler(in_msg: InMsg) {
-        match msg {
-            InMsg::Remove => {
-                for project in project::by_id().get(id().inner()) {
-                    project.send_in_msg(project::InMsg::Remove)
-                }
-                remove_actor();
-            }
-            InMsg::Rename(name) => {
-                name().set(name);
-            }
+    #[actor]
+    struct ClientActor {
+        async fn remove(&self) {
+            let futures = project::by_id()
+                .get(id().inner())
+                .iter()
+                .map(ProjectActor::remove)
+                .collect();
+    
+            join_all(futures).await;
+            self.remove_actor().await
+        }
+    
+        async fn rename(&self, name: String) {
+            name().set(name).await
         }
     }
 }
