@@ -20,7 +20,10 @@ blocks!{
         match msg {
             // ------ Page data ------
             UpMsg::GetClientsAndProjectsClients => {
-
+                // let mut shared_clients: Vec<shared::clients_and_projects::Client> = Vec::new();
+                // for (id, client) in client::by_id() {
+                //     let projects
+                // }
             }
             // ------ Client ------
             UpMsg::AddClient(client_id) => {
@@ -28,12 +31,12 @@ blocks!{
                 DownMsg::ClientAdded
             },
             UpMsg::RemoveClient(client_id) => {
-                let client = client::by_id(client_id)[0];
+                let client = client::by_id().get(client_id)[0];
                 client.send_in_msg(InMsg::Remove);
                 DownMsg::ClientRemoved
             },
             UpMsg::RenameClient(client_id, name) => {
-                let client = client::by_id(client_id)[0];
+                let client = client::by_id().get(client_id)[0];
                 client.send_in_msg(InMsg::Rename(name.to_string()));
                 DownMsg::ClientRenamed
             },
@@ -43,12 +46,12 @@ blocks!{
                 DownMsg::ProjectAdded
             },
             UpMsg::RemoveProject(project_id) => {
-                let project = project::by_id(project_id)[0];
+                let project = project::by_id().get(project_id)[0];
                 project.send_in_msg(InMsg::Remove);
                 DownMsg::ProjectRemoved
             },
             UpMsg::RenameProject(project_id, name) => {
-                let project = project::by_id(project_id)[0];
+                let project = project::by_id().get(project_id)[0];
                 project.send_in_msg(InMsg::Rename(name.to_string()));
                 DownMsg::ProjectRenamed
             },

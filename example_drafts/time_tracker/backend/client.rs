@@ -32,7 +32,7 @@ actor!{
     fn in_msg_handler(in_msg: InMsg) {
         match msg {
             InMsg::Remove => {
-                for project in project::by_id(id().inner()) {
+                for project in project::by_id().get(id().inner()) {
                     project.send_in_msg(project::InMsg::Remove)
                 }
                 remove_actor();
