@@ -4,8 +4,8 @@ use shared::{UpMsg, DownMsg, Message, ClientId, ProjectId};
 mod client;
 mod project;
 
-async fn up_msg_handler(msg: UpMsg) -> impl Into<Option<DownMsg>> {
-    match msg {
+async fn up_msg_handler(msg: UpMsg) -> Option<DownMsg> {
+    let down_msg = match msg {
         // ------ Page data ------
         UpMsg::GetClientsAndProjectsClients => {
             let shared_clients_futs = client::by_id().iter().map(|(client_id, client)| {
@@ -57,7 +57,8 @@ async fn up_msg_handler(msg: UpMsg) -> impl Into<Option<DownMsg>> {
             project::by_id().get(project_id)[0].rename(name.to_string()).await;
             DownMsg::ProjectRenamed
         },
-    }
+    };
+    Some(down_msg)
 }
 
 fn main() {

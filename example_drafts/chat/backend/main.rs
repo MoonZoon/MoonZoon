@@ -1,24 +1,13 @@
 use moon::*;
 use shared::{UpMsg, DownMsg, Message};
 
-blocks!{
-    #[var]
-    fn connector() -> Connector<UpMsg, DownMsg> {
-        Connector::new("9000", |msg| {
-            if let UpMsg::SendMessage(message) = msg {
-                broadcast_message(message);
-            }
-        })
+async fn up_msg_handler(msg: UpMsg) -> Option<DownMsg> {
+    if let UpMsg::SendMessage(message) = msg {
+        broadcast_down_message(message).await;
     }
-
-    #[update]
-    fn broadcast_message(message: Message) {
-        connector().use_ref(move |connector| {
-            connector.broadcast(DownMsg::MessageReceived(message))
-        })
-    }
+    None
 }
 
 fn main() {
-    start!()
+    start!(up_msg_handler);
 }
