@@ -1,4 +1,5 @@
-use shared::{ClientId, ProjectId};
+use shared::{ClientId, ProjectId, TimeEntryId};
+use crate::time_entry::{self, TimeEntryActor};
 
 actor!{
     #[args]
@@ -35,11 +36,24 @@ actor!{
     #[actor]
     struct ProjectActor {
         async fn remove(&self) {
+            let remove_time_entry_futs = time_entry::by_project()
+                .get(id().inner().await)
+                .iter()
+                .map(|(_, time_entry)| time_entry.remove());
+
+            join_all(remove_time_entry_futs).await;
             self.remove_actor().await
         }
     
         async fn rename(&self, name: String) {
             name().set(name).await
+        }
+
+        async fn time_entries(&self) -> Vec<(TimeEntryId, TimeEntryActor)> {
+            time_entry::by_project()
+                .get(id().inner().await)
+                .iter()
+                .collect()
         }
 
         async fn id(&self) -> ProjectId {

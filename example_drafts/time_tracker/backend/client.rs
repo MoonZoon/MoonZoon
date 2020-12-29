@@ -1,5 +1,6 @@
-use shared::ClientId;
+use shared::{ClientId, ProjectId, TimeBlockId};
 use crate::project::{self, ProjectActor};
+use crate::time_block::{self, TimeBlockActor};
 
 actor!{
     #[args]
@@ -29,7 +30,13 @@ actor!{
                 .get(id().inner().await)
                 .iter()
                 .map(|(_, project)| project.remove());
-            join_all(remove_project_futs).await;
+
+            let remove_time_block_futs = time_block::by_client()
+                .get(id().inner().await)
+                .iter()
+                .map(|(_, time_block)| time_block.remove());
+
+            join_all(remove_project_futs.chain(remove_time_block_futs)).await;
             self.remove_actor().await
         }
     
@@ -39,6 +46,13 @@ actor!{
 
         async fn projects(&self) -> Vec<(ProjectId, ProjectActor)> {
             project::by_client()
+                .get(id().inner().await)
+                .iter()
+                .collect()
+        }
+
+        async fn time_blocks(&self) -> Vec<(TimeBlockId, TimeBlockActor)> {
+            time_blocks::by_client()
                 .get(id().inner().await)
                 .iter()
                 .collect()
