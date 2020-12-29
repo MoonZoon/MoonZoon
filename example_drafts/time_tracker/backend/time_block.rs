@@ -11,37 +11,37 @@ actor!{
     }  
 
     #[index]
-    fn by_id() -> TimeBlockId {
+    fn by_id() -> Index<TimeBlockId, TimeBlockActor> {
         index("time_block_by_id", |_| id())
     }
 
     #[index]
-    fn by_client() -> ClientId {
+    fn by_client() -> Index<ClientId, TimeBlockActor> {
         index("time_block_by_client", |_| client())
     }
 
     #[p_var]
-    fn id() -> TimeBlockId {
+    fn id() -> PVar<TimeBlockId> {
         p_var("id", |_| args().id)
     }
 
     #[p_var]
-    fn name() -> String {
+    fn name() -> PVar<String> {
         p_var("name", |_| String::new())
     }
 
     #[p_var]
-    fn status() -> TimeBlockStatus {
+    fn status() -> PVar<TimeBlockStatus> {
         p_var("status", |_| TimeBlockStatus::Unpaid)
     }
 
     #[p_var]
-    fn duration() -> Duration {
+    fn duration() -> PVar<Duration> {
         p_var("duration", |_| args().duration)
     }
 
     #[p_var]
-    fn client() -> ClientId {
+    fn client() -> PVar<ClientId> {
         p_var("client", |_| args().client)
     }
 

@@ -9,27 +9,27 @@ actor!{
     }  
 
     #[index]
-    fn by_id() -> ProjectId {
+    fn by_id() -> Index<ProjectId, ProjectActor> {
         index("project_by_id", |_| id())
     }
 
     #[index]
-    fn by_client() -> ClientId {
+    fn by_client() -> Index<ProjectId, ProjectActor> {
         index("project_by_client", |_| client())
     }
 
     #[p_var]
-    fn id() -> ProjectId {
+    fn id() -> PVar<ProjectId> {
         p_var("id", |_| args().id)
     }
 
     #[p_var]
-    fn name() -> String {
+    fn name() -> PVar<String> {
         p_var("name", |_| String::new())
     }
 
     #[p_var]
-    fn client() -> ClientId {
+    fn client() -> PVar<ClientId> {
         p_var("client", |_| args().client)
     }
 

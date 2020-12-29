@@ -9,17 +9,17 @@ actor!{
     }  
 
     #[index]
-    fn by_id() -> ClientId {
+    fn by_id() -> Index<ClientId, ClientActor> {
         index("client_by_id", |_| id())
     }
 
     #[p_var]
-    fn id() -> ClientId {
+    fn id() -> PVar<ClientId> {
         p_var("id", |_| args().id)
     }
 
     #[p_var]
-    fn name() -> String {
+    fn name() -> PVar<String> {
         p_var("name", |_| String::new())
     }
 

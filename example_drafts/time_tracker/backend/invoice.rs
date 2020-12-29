@@ -9,32 +9,32 @@ actor!{
     }  
 
     #[index]
-    fn by_id() -> InvoiceId {
+    fn by_id() -> Index<InvoiceId, InvoiceActor> {
         index("invoice_by_id", |_| id())
     }
 
     #[index]
-    fn by_time_block() -> ClientId {
+    fn by_time_block() -> Index<ClientId, InvoiceActor> {
         index("invoice_by_time_block", |_| time_block())
     }
 
     #[p_var]
-    fn id() -> InvoiceId {
+    fn id() -> PVar<InvoiceId> {
         p_var("id", |_| args().id)
     }
 
     #[p_var]
-    fn custom_id() -> String {
+    fn custom_id() -> PVar<String> {
         p_var("custom_id", |_| String::new())
     }
 
     #[p_var]
-    fn url() -> String {
+    fn url() -> PVar<String> {
         p_var("url", |_| String::new())
     }
 
     #[p_var]
-    fn time_block() -> ClientId {
+    fn time_block() -> PVar<ClientId> {
         p_var("time_block", |_| args().time_block)
     }
 

@@ -9,37 +9,37 @@ actor!{
     }  
 
     #[index]
-    fn by_id() -> TimeEntryId {
+    fn by_id() -> Index<TimeEntryId, TimeEntryActor> {
         index("time_entry_by_id", |_| id())
     }
 
     #[index]
-    fn by_project() -> ProjectId {
+    fn by_project() -> Index<ProjectId, TimeEntryActor> {
         index("time_entry_by_project", |_| client())
     }
 
     #[p_var]
-    fn id() -> TimeEntryId {
+    fn id() -> PVar<TimeEntryId> {
         p_var("id", |_| args().time_entry.id)
     }
 
     #[p_var]
-    fn name() -> String {
+    fn name() -> PVar<String> {
         p_var("name", |_| args().time_entry.name.clone())
     }
 
     #[p_var]
-    fn started() -> DateTime<Local> {
+    fn started() -> PVar<DateTime<Local>> {
         p_var("started", |_| args().time_entry.started)
     }
 
     #[p_var]
-    fn stopped() -> Option<DateTime<Local>> {
+    fn stopped() -> PVar<Option<DateTime<Local>>> {
         p_var("stopped", |_| args().time_entry.stopped)
     }
 
     #[p_var]
-    fn project() -> ProjectId {
+    fn project() -> PVar<ProjectId> {
         p_var("project", |_| args().project)
     }
 
