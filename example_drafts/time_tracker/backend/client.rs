@@ -68,7 +68,30 @@ actor!{
         }
 
         async fn tracked(&self) -> Duration {
-            
+            let now = chrono::Local::now();
+            let duration_futs = project::by_client()
+                .get(id().inner().await)
+                .iter()
+                .map(|(_, project)| async {
+                    let duration_futs = project
+                        .time_entries()
+                        .await
+                        .iter()
+                        .map(|(_, time_entry)| async {
+                            let (started, stopped) = join(
+                                time_entry.started(), time_entry.stopped()
+                            ).await;
+                            stopped.unwrap_or(now) - started
+                        });
+                    join_all(durations_futs)
+                        .await
+                        .iter()
+                        .fold(Duration::seconds(0), Duration::add)
+                });
+            join_all(durations_futs)
+                .await
+                .iter()
+                .fold(Duration::seconds(0), Duration::add)
         }
     }
 }
