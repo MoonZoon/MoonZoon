@@ -9,10 +9,14 @@ actor!{
         id: ClientId,
     }  
 
+    // ------ Indices ------
+
     #[index]
     fn by_id() -> Index<ClientId, ClientActor> {
         index("client_by_id", |_| id())
     }
+
+    // ------ PVars ------
 
     #[p_var]
     fn id() -> PVar<ClientId> {
@@ -24,8 +28,11 @@ actor!{
         p_var("name", |_| String::new())
     }
 
+    // ------ Actor ------
+
     #[actor]
-    struct ClientActor {
+    struct ClientActor;
+    impl ClientActor {
         async fn remove(&self) {
             let remove_project_futs = project::by_client()
                 .get(id().inner().await)

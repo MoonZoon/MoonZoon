@@ -5,10 +5,14 @@ actor!{
     #[args]
     struct UserArgs;
 
+    // ------ Indices ------
+
     #[index]
     fn by_id() -> Index<UserId, UserActor> {
         index("user_by_id", |_| id())
     }
+
+    // ------ PVars ------
 
     #[p_var]
     fn id() -> PVar<UserId> {
@@ -30,8 +34,11 @@ actor!{
         p_var("token", |_| BTreeSet::new())
     }
 
+    // ------ Actor ------
+
     #[actor]
-    struct UserActor { 
+    struct UserActor;
+    impl UserActor {
         async fn login(&self, password: String) -> Option<shared::User> {
             if password().inner().await == password {
                 let access_token = AccessToken::new();

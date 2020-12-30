@@ -8,6 +8,8 @@ actor!{
         id: ProjectId,
     }  
 
+    // ------ Indices ------
+
     #[index]
     fn by_id() -> Index<ProjectId, ProjectActor> {
         index("project_by_id", |_| id())
@@ -17,6 +19,8 @@ actor!{
     fn by_client() -> Index<ProjectId, ProjectActor> {
         index("project_by_client", |_| client())
     }
+
+    // ------ PVars ------
 
     #[p_var]
     fn id() -> PVar<ProjectId> {
@@ -33,8 +37,11 @@ actor!{
         p_var("client", |_| args().client)
     }
 
+    // ------ Actor ------
+
     #[actor]
-    struct ProjectActor {
+    struct ProjectActor;
+    impl ProjectActor {
         async fn remove(&self) {
             let remove_time_entry_futs = time_entry::by_project()
                 .get(id().inner().await)

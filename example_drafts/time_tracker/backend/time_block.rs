@@ -10,6 +10,8 @@ actor!{
         duration: Duration,
     }  
 
+    // ------ Indices ------
+
     #[index]
     fn by_id() -> Index<TimeBlockId, TimeBlockActor> {
         index("time_block_by_id", |_| id())
@@ -19,6 +21,8 @@ actor!{
     fn by_client() -> Index<ClientId, TimeBlockActor> {
         index("time_block_by_client", |_| client())
     }
+
+    // ------ PVars ------
 
     #[p_var]
     fn id() -> PVar<TimeBlockId> {
@@ -45,8 +49,11 @@ actor!{
         p_var("client", |_| args().client)
     }
 
+    // ------ Actor ------
+
     #[actor]
-    struct TimeBlocktActor {
+    struct TimeBlocktActor;
+    impl TimeBlockActor {
         async fn remove(&self) {
             let invoice = invoice::by_time_block().get(id().inner().await).first();
             if let Some((_, invoice)) = invoice {

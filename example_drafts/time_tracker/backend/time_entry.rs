@@ -8,6 +8,8 @@ actor!{
         time_entry: shared::time_tracker::TimeEntry,
     }  
 
+    // ------ Indices ------
+
     #[index]
     fn by_id() -> Index<TimeEntryId, TimeEntryActor> {
         index("time_entry_by_id", |_| id())
@@ -17,6 +19,8 @@ actor!{
     fn by_project() -> Index<ProjectId, TimeEntryActor> {
         index("time_entry_by_project", |_| client())
     }
+
+    // ------ PVars ------
 
     #[p_var]
     fn id() -> PVar<TimeEntryId> {
@@ -43,8 +47,11 @@ actor!{
         p_var("project", |_| args().project)
     }
 
+    // ------ Actor ------
+
     #[actor]
-    struct TimeEntryActor {
+    struct TimeEntryActor;
+    impl TimeEntryActor {
         async fn remove(&self) {
             self.remove_actor().await
         }
