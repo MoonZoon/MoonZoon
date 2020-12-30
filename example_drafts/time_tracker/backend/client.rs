@@ -5,7 +5,7 @@ use chrono::{prelude::*, Duration};
 
 actor!{
     #[args]
-    struct Client {
+    struct ClientArgs {
         id: ClientId,
     }  
 

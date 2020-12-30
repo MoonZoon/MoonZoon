@@ -4,7 +4,7 @@ use chrono::{prelude::*, Duration};
 
 actor!{
     #[args]
-    struct TimeBlock {
+    struct TimeBlockArgs {
         client: ClientId,
         id: TimeBlockId,
         duration: Duration,

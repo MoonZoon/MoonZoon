@@ -6,9 +6,34 @@ mod invoice;
 mod project;
 mod time_block;
 mod time_entry;
+mod user;
+
+use client::{self, ClientArgs};
+use invoice::{self, InvoiceArgs};
+use project::{self, ProjectArgs};
+use time_block::{self, TimeBlockArgs};
+use time_entry::{self, TimeEntryArgs};
+use user::{self, UserArgs};
+
+async fn init() {
+    new_actor(UserArgs).await;
+}
 
 async fn request_handler(req: Request) {
     let down_msg = match req.up_msg {
+
+        // ------ Auth ------
+        UpMsg::Login(password) => {
+            if let Some(user) = user::by_id()[0].login(password).await {
+                DownMsg::LoggedIn(user)
+            } else {
+                DownMsg::InvalidPassword
+            }
+        }
+        UpMsg::Logout(access_token) => {
+            user::by_id()[0].logout(access_token).await;
+            DownMsg::LoggedOut
+        }
 
         // ------ Page data ------
         UpMsg::GetClientsAndProjectsClients => {
@@ -118,7 +143,7 @@ async fn request_handler(req: Request) {
 
         // ------ Client ------
         UpMsg::AddClient(id) => {
-            new_actor(Client { id }).await;
+            new_actor(ClientArgs { id }).await;
             DownMsg::ClientAdded
         },
         UpMsg::RemoveClient(id) => {
@@ -132,7 +157,7 @@ async fn request_handler(req: Request) {
 
         // ------ Project ------
         UpMsg::AddProject(client, id) => {
-            new_actor(Project { client, id }).await;
+            new_actor(ProjectArgs { client, id }).await;
             DownMsg::ProjectAdded
         },
         UpMsg::RemoveProject(id) => {
@@ -146,7 +171,7 @@ async fn request_handler(req: Request) {
 
         // ------ TimeBlock ------
         UpMsg::AddTimeBlock(client, id, duration) => {
-            new_actor(TimeBlock { client, id, duration }).await;
+            new_actor(TimeBlockArgs { client, id, duration }).await;
             DownMsg::TimeBlockAdded
         },
         UpMsg::RemoveTimeBlock(id) => {
@@ -168,7 +193,7 @@ async fn request_handler(req: Request) {
 
         // ------ Invoice ------
         UpMsg::AddInvoice(time_block, id) => {
-            new_actor(Invoice { time_block, id }).await;
+            new_actor(InvoiceArgs { time_block, id }).await;
             DownMsg::InvoiceAdded
         },
         UpMsg::RemoveInvoice(id) => {
@@ -186,7 +211,7 @@ async fn request_handler(req: Request) {
 
         // ------ TimeEntry ------
         UpMsg::AddTimeEntry(project, time_entry) => {
-            new_actor(TimeEntry { project, time_entry }).await;
+            new_actor(TimeEntryArgs { project, time_entry }).await;
             DownMsg::TimeEntryAdded
         },
         UpMsg::RemoveTimeEntry(id) => {
@@ -206,9 +231,17 @@ async fn request_handler(req: Request) {
             DownMsg::TimeEntryStoppedSet
         },
     };
+
     connected_client::by_id().get(req.client_id)[0].send_down_msg(down_msg, req.cor_id).await
 }
 
 fn main() {
-    start!(request_handler, actors![client, invoice, project, time_block, time_entry]);
+    start!(init, request_handler, actors![
+        client, 
+        invoice, 
+        project, 
+        time_block, 
+        time_entry,
+        user,
+    ]);
 }

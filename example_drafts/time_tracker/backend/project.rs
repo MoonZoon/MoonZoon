@@ -3,7 +3,7 @@ use crate::time_entry::{self, TimeEntryActor};
 
 actor!{
     #[args]
-    struct Project {
+    struct ProjectArgs {
         client: ClientId,
         id: ProjectId,
     }  

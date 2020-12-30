@@ -12,16 +12,21 @@ pub type ProjectId = Ulid;
 pub type TimeBlockId = Ulid;
 pub type InvoiceId = Ulid;
 pub type TimeEntryId = Ulid;
+pub type UserId = Ulid;
+
+pub type AccessToken = Ulid;
 
 pub struct User {
+    id: UserId,
     name: String,
+    access_token: AccessToken,
 }
 
 #[derive(Serialize, Deserialize)]
 pub enum UpMsg<'a> {
     // ------ Auth ------
     Login(Cow<'a, str>),
-    Logout,
+    Logout(AccessToken),
     // ------ Page data ------
     GetClientsAndProjectsClients,
     GetTimeBlocksClients,

@@ -3,7 +3,7 @@ use chrono::prelude::*;
 
 actor!{
     #[args]
-    struct TimeEntry {
+    struct TimeEntryArgs {
         project: ProjectId,
         time_entry: shared::time_tracker::TimeEntry,
     }  

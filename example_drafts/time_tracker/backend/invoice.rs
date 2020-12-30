@@ -3,7 +3,7 @@ use crate::project::{self, ProjectActor};
 
 actor!{
     #[args]
-    struct Invoice {
+    struct InvoiceArgs {
         time_block: TimeBlockId,
         id: InvoiceId,
     }  
