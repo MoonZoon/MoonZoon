@@ -26,7 +26,7 @@ pub struct User {
 pub enum UpMsg<'a> {
     // ------ Auth ------
     Login(Cow<'a, str>),
-    Logout(AccessToken),
+    Logout,
     // ------ Page data ------
     GetClientsAndProjectsClients,
     GetTimeBlocksClients,

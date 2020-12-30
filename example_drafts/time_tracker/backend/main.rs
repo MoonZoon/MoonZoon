@@ -1,5 +1,5 @@
 use moon::*;
-use shared::{UpMsg, DownMsg, Message, ClientId, ProjectId};
+use shared::{UpMsg, DownMsg, Message, ClientId, ProjectId, AccessToken};
 
 mod client;
 mod invoice;
@@ -19,6 +19,21 @@ async fn init() {
     new_actor(UserArgs).await;
 }
 
+async fn check_access(access_token: Option<AccessToken>) -> bool {
+    if let Some(access_token) = access_token {
+        user::by_id()[0].logged_in(req.access_token).await
+    }
+    false
+}
+
+macro_rules! check_access {
+    ($req:ident) => {
+        if !check_access($req.access_token).await {
+            return DownMsg::AccessDenied
+        }
+    };
+}
+
 async fn request_handler(req: Request) {
     let down_msg = match req.up_msg {
 
@@ -30,13 +45,15 @@ async fn request_handler(req: Request) {
                 DownMsg::InvalidPassword
             }
         }
-        UpMsg::Logout(access_token) => {
-            user::by_id()[0].logout(access_token).await;
+        UpMsg::Logout => {
+            check_access!(req);
+            user::by_id()[0].logout(req.access_token.unwrap()).await;
             DownMsg::LoggedOut
         }
 
         // ------ Page data ------
         UpMsg::GetClientsAndProjectsClients => {
+            check_access!(req);
             let shared_projects_futs = |projects| projects.iter().map(|(id, project)| {
                 async {
                     shared::clients_and_projects::Project {
@@ -63,6 +80,7 @@ async fn request_handler(req: Request) {
             )
         }
         UpMsg::TimeBlocksClients => {
+            check_access!(req);
             let shared_invoice_fut = |invoice| {
                 async {
                     let invoice = if let Some((id, invoice)) = invoice {
@@ -103,6 +121,7 @@ async fn request_handler(req: Request) {
             )
         }
         UpMsg::TimeTrackerClients => {
+            check_access!(req);
             let shared_time_entries_futs = |time_entries| time_entries.iter().map(|(id, time_entry)| {
                 async {
                     let (name, started, stopped) = join!(
@@ -143,95 +162,114 @@ async fn request_handler(req: Request) {
 
         // ------ Client ------
         UpMsg::AddClient(id) => {
+            check_access!(req);
             new_actor(ClientArgs { id }).await;
             DownMsg::ClientAdded
         },
         UpMsg::RemoveClient(id) => {
+            check_access!(req);
             client::by_id().get(id)[0].remove().await;
             DownMsg::ClientRemoved
         },
         UpMsg::RenameClient(id, name) => {
+            check_access!(req);
             client::by_id().get(id)[0].rename(name.to_string()).await;
             DownMsg::ClientRenamed
         },
 
         // ------ Project ------
         UpMsg::AddProject(client, id) => {
+            check_access!(req);
             new_actor(ProjectArgs { client, id }).await;
             DownMsg::ProjectAdded
         },
         UpMsg::RemoveProject(id) => {
+            check_access!(req);
             project::by_id().get(id)[0].remove().await;
             DownMsg::ProjectRemoved
         },
         UpMsg::RenameProject(id, name) => {
+            check_access!(req);
             project::by_id().get(id)[0].rename(name.to_string()).await;
             DownMsg::ProjectRenamed
         },
 
         // ------ TimeBlock ------
         UpMsg::AddTimeBlock(client, id, duration) => {
+            check_access!(req);
             new_actor(TimeBlockArgs { client, id, duration }).await;
             DownMsg::TimeBlockAdded
         },
         UpMsg::RemoveTimeBlock(id) => {
+            check_access!(req);
             time_block::by_id().get(id)[0].remove().await;
             DownMsg::TimeBlockRemoved
         },
         UpMsg::RenameTimeBlock(id, name) => {
+            check_access!(req);
             time_block::by_id().get(id)[0].rename(name.to_string()).await;
             DownMsg::TimeBlockRenamed
         },
         UpMsg::SetTimeBlockStatus(id, status) => {
+            check_access!(req);
             time_block::by_id().get(id)[0].set_status(status).await;
             DownMsg::TimeBlockStatusSet
         },
         UpMsg::SetTimeBlockDuration(id, duration) => {
+            check_access!(req);
             time_block::by_id().get(id)[0].set_duration(duration).await;
             DownMsg::TimeBlockDurationSet
         },
 
         // ------ Invoice ------
         UpMsg::AddInvoice(time_block, id) => {
+            check_access!(req);
             new_actor(InvoiceArgs { time_block, id }).await;
             DownMsg::InvoiceAdded
         },
         UpMsg::RemoveInvoice(id) => {
+            check_access!(req);
             invoice::by_id().get(id)[0].remove().await;
             DownMsg::InvoiceRemoved
         },
         UpMsg::SetInvoiceCustomId(id, custom_id) => {
+            check_access!(req);
             invoice::by_id().get(id)[0].set_custom_id(custom_id.to_string()).await;
             DownMsg::InvoiceCustomIdSet
         },
         UpMsg::SetInvoiceUrl(id, url) => {
+            check_access!(req);
             invoice::by_id().get(id)[0].set_url(url.to_string()).await;
             DownMsg::InvoiceUrlSet
         },
 
         // ------ TimeEntry ------
         UpMsg::AddTimeEntry(project, time_entry) => {
+            check_access!(req);
             new_actor(TimeEntryArgs { project, time_entry }).await;
             DownMsg::TimeEntryAdded
         },
         UpMsg::RemoveTimeEntry(id) => {
+            check_access!(req);
             time_entry::by_id().get(id)[0].remove().await;
             DownMsg::TimeEntryRemoved
         },
         UpMsg::RenameTimeEntry(id, name) => {
+            check_access!(req);
             time_entry::by_id().get(id)[0].rename(name.to_string()).await;
             DownMsg::TimeEntryRenamed
         },
         UpMsg::SetTimeEntryStarted(id, started) => {
+            check_access!(req);
             time_entry::by_id().get(id)[0].set_started(started).await;
             DownMsg::TimeEntryStartedSet
         },
         UpMsg::SetTimeEntryStopped(id, stopped) => {
+            check_access!(req);
             time_entry::by_id().get(id)[0].set_stopped(stopped).await;
             DownMsg::TimeEntryStoppedSet
         },
     };
-
     connected_client::by_id().get(req.client_id)[0].send_down_msg(down_msg, req.cor_id).await
 }
 
