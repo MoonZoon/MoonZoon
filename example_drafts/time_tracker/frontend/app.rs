@@ -175,18 +175,18 @@ blocks!{
 
     #[var]
     fn connection() -> Connection<UpMsg, DownMsg> {
-        Connection::new("localhost:9000", |msg, cor_id| {
+        Connection::new(|down_msg, cor_id| {
             unfinished_mutations().update_mut(|cor_ids| {
                 cor_ids.remove(cor_id);
             });
-            notify(Some(msg));
+            notify(Some(down_msg));
         })
     }
 
     #[update]
     fn send_up_msg(mutation: bool, msg: UpMsg) {
         let cor_id = connection().map(move |connection| {
-            connection.send(msg)
+            connection.send_up_msg(msg)
         });
         if mutation {
             unfinished_mutations().update(|cor_ids| {

@@ -32,7 +32,7 @@ async fn request_handler(req: Request) {
                     shared::clients_and_projects::Client { id, name, projects }
                 }
             });
-            
+
             DownMsg::ClientsAndProjectsClients(
                 join_all(shared_clients_futs).await
             )
@@ -206,7 +206,7 @@ async fn request_handler(req: Request) {
             DownMsg::TimeEntryStoppedSet
         },
     };
-    connected_client::by_id().get(req.client_id)[0].send_down_msg(down_msg).await
+    connected_client::by_id().get(req.client_id)[0].send_down_msg(down_msg, req.cor_id).await
 }
 
 fn main() {
