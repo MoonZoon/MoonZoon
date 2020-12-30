@@ -7,8 +7,8 @@ mod project;
 mod time_block;
 mod time_entry;
 
-async fn up_msg_handler(msg: UpMsg) -> Option<DownMsg> {
-    let down_msg = match msg {
+async fn request_handler(req: Request) {
+    let down_msg = match req.up_msg {
         // ------ Page data ------
         UpMsg::GetClientsAndProjectsClients => {
             let shared_clients_futs = client::by_id().iter().map(|(client_id, client)| {
@@ -125,9 +125,9 @@ async fn up_msg_handler(msg: UpMsg) -> Option<DownMsg> {
             DownMsg::TimeEntryStoppedSet
         },
     };
-    Some(down_msg)
+    connected_client::by_id().get(req.client_id)[0].send_down_msg(down_msg).await
 }
 
 fn main() {
-    start!(up_msg_handler, actors![client, project]);
+    start!(request_handler, actors![client, invoice, project, time_block, time_entry]);
 }

@@ -1,13 +1,14 @@
 use moon::*;
 use shared::{UpMsg, DownMsg, Message};
 
-async fn up_msg_handler(msg: UpMsg) -> Option<DownMsg> {
-    if let UpMsg::SendMessage(message) = msg {
-        broadcast_down_message(message).await;
+async fn request_handler(req: Request) {
+    if let UpMsg::SendMessage(message) = req.up_msg {
+        join_all(connected_client::by_id().iter().map(|(_, client)| {
+            client.send_down_msg(message)
+        })).await
     }
-    None
 }
 
 fn main() {
-    start!(up_msg_handler);
+    start!(request_handler);
 }
