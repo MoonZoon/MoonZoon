@@ -64,6 +64,7 @@ pub enum DownMsg {
     InvalidPassword,
     LoggedIn(User),
     LoggedOut,
+    AccessDenied,
     // ------ Page data ------
     ClientsAndProjectsClients(Vec<clients_and_projects::Client>),
     TimeBlocksClients(Vec<time_blocks::Client>),
