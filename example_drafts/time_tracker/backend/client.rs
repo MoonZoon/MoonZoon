@@ -1,6 +1,7 @@
 use shared::{ClientId, ProjectId, TimeBlockId};
 use crate::project::{self, ProjectActor};
 use crate::time_block::{self, TimeBlockActor};
+use chrono::{prelude::*, Duration};
 
 actor!{
     #[args]
@@ -64,6 +65,10 @@ actor!{
 
         async fn name(&self) -> String {
             name().inner().await
+        }
+
+        async fn tracked(&self) -> Duration {
+            
         }
     }
 }
