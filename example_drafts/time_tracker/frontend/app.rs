@@ -5,6 +5,8 @@ use std::collections::HashSet;
 
 mod els;
 
+const USER_STORAGE_KEY: &str = "time_tracker-moonzoon-user";
+
 blocks!{
     append_blocks![
         els,
@@ -81,7 +83,12 @@ blocks!{
 
     #[var]
     fn user() -> Option<User> {
-        None
+        LocalStorage::get(USER_STORAGE_KEY).unwrap_or_default()
+    }
+
+    #[subscription]
+    fn store_user() {
+        user().use_ref(|user| LocalStorage::insert(USER_STORAGE_KEY, user));
     }
 
     #[update]
@@ -186,7 +193,10 @@ blocks!{
     #[update]
     fn send_up_msg(mutation: bool, msg: UpMsg) {
         let cor_id = connection().map(move |connection| {
-            connection.send_up_msg(msg)
+            let access_token = user().map(|user| { 
+                user.map(|user| user.access_token)
+            });
+            connection.send_up_msg(msg, access_token);
         });
         if mutation {
             unfinished_mutations().update(|cor_ids| {
