@@ -16,7 +16,9 @@ use time_entry::{self, TimeEntryArgs};
 use user::{self, UserArgs};
 
 async fn init() {
-    new_actor(UserArgs).await;
+    if user::by_id().is_empty() {
+        new_actor(UserArgs).await;
+    }
 }
 
 async fn check_access(access_token: Option<AccessToken>) -> bool {
