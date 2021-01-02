@@ -1,4 +1,4 @@
-use shared::{ClientId, InvoiceId, TimeBlockId, time_blocks::TimeBlockStatus};
+use shared::{ClientId, TimeBlockId, time_blocks::TimeBlockStatus};
 use crate::invoice::{self, InvoiceActor};
 use chrono::{prelude::*, Duration};
 
@@ -55,7 +55,7 @@ actor!{
     struct TimeBlocktActor;
     impl TimeBlockActor {
         async fn remove(&self) {
-            let invoice = invoice::by_time_block().get(id().inner().await).first();
+            let invoice = invoice::by_time_block().actors(id().inner().await).first();
             if let Some((_, invoice)) = invoice {
                 invoice.remove().await;
             }
@@ -90,9 +90,9 @@ actor!{
             duration().inner().await
         }
 
-        async fn invoice(&self) -> Option<(InvoiceId, InvoiceActor)> {
+        async fn invoice(&self) -> Option<InvoiceActor> {
             invoice::by_time_block()
-                .get(id().inner().await)
+                .actors(id().inner().await)
                 .first()
         }
     }

@@ -56,18 +56,16 @@ async fn request_handler(req: Request) {
         // ------ Page data ------
         UpMsg::GetClientsAndProjectsClients => {
             check_access!(req);
-            let shared_projects_futs = |projects| projects.iter().map(|(id, project)| {
+            let shared_projects_futs = |projects| projects.iter().map(|project| {
+                let (id, name) = join(project.id(), project.name()).await;
                 async {
-                    shared::clients_and_projects::Project {
-                        id,
-                        name: project.name().await
-                    }
+                    shared::clients_and_projects::Project { id, name }
                 }
             });
 
             let shared_clients_futs = client::by_id().iter().map(|(id, client)| {
                 async {
-                    let (name, projects) = join(
+                    let (name, projects) = join!(
                         client.name(), 
                         client.projects().then(|projects| {
                             join_all(shared_projects_futs(projects))
@@ -85,8 +83,12 @@ async fn request_handler(req: Request) {
             check_access!(req);
             let shared_invoice_fut = |invoice| {
                 async {
-                    let invoice = if let Some((id, invoice)) = invoice {
-                        let (custom_id, url) = join(invoice.custom_id(), invoice.url()).await;
+                    if let Some(invoice) = invoice {
+                        let (id, custom_id, url) = join!(
+                            invoice.id(),
+                            invoice.custom_id(), 
+                            invoice.url(),
+                        ).await;
                         Some(shared::time_blocks::Invoice { id, custom_id, url })
                     } else {
                         None
@@ -94,9 +96,10 @@ async fn request_handler(req: Request) {
                 }
             };
 
-            let shared_time_blocks_futs = |time_blocks| time_blocks.iter().map(|(id, time_block)| {
+            let shared_time_blocks_futs = |time_blocks| time_blocks.iter().map(|time_block| {
                 async {
-                    let (name, status, duration, invoice) = join!(
+                    let (id, name, status, duration, invoice) = join!(
+                        time_block.id(),
                         time_block.name(), 
                         time_block.status(), 
                         time_block.duration(), 
@@ -124,18 +127,22 @@ async fn request_handler(req: Request) {
         }
         UpMsg::TimeTrackerClients => {
             check_access!(req);
-            let shared_time_entries_futs = |time_entries| time_entries.iter().map(|(id, time_entry)| {
+            let shared_time_entries_futs = |time_entries| time_entries.iter().map(|time_entry| {
                 async {
-                    let (name, started, stopped) = join!(
-                        time_entry.name(), time_entry.started(), time_entry.stopped()
+                    let (id, name, started, stopped) = join!(
+                        time_entry.id(),
+                        time_entry.name(), 
+                        time_entry.started(), 
+                        time_entry.stopped(),
                     );
                     shared::time_tracker::TimeEntry { id, name, started, stopped }
                 }
             });
 
-            let shared_projects_futs = |projects| projects.iter().map(|(id, project)| {
+            let shared_projects_futs = |projects| projects.iter().map(|project| {
                 async {
-                    let (name, time_entries) = join(
+                    let (id, name, time_entries) = join!(
+                        project.id(),
                         project.name(), 
                         project.time_entries().then(|time_entries| {
                             join_all(shared_time_entries_futs(time_entries))
@@ -170,12 +177,12 @@ async fn request_handler(req: Request) {
         },
         UpMsg::RemoveClient(id) => {
             check_access!(req);
-            client::by_id().get(id)[0].remove().await;
+            client::by_id().actors(id)[0].remove().await;
             DownMsg::ClientRemoved
         },
         UpMsg::RenameClient(id, name) => {
             check_access!(req);
-            client::by_id().get(id)[0].rename(name.to_string()).await;
+            client::by_id().actors(id)[0].rename(name.to_string()).await;
             DownMsg::ClientRenamed
         },
 
@@ -187,12 +194,12 @@ async fn request_handler(req: Request) {
         },
         UpMsg::RemoveProject(id) => {
             check_access!(req);
-            project::by_id().get(id)[0].remove().await;
+            project::by_id().actors(id)[0].remove().await;
             DownMsg::ProjectRemoved
         },
         UpMsg::RenameProject(id, name) => {
             check_access!(req);
-            project::by_id().get(id)[0].rename(name.to_string()).await;
+            project::by_id().actors(id)[0].rename(name.to_string()).await;
             DownMsg::ProjectRenamed
         },
 
@@ -204,22 +211,22 @@ async fn request_handler(req: Request) {
         },
         UpMsg::RemoveTimeBlock(id) => {
             check_access!(req);
-            time_block::by_id().get(id)[0].remove().await;
+            time_block::by_id().actors(id)[0].remove().await;
             DownMsg::TimeBlockRemoved
         },
         UpMsg::RenameTimeBlock(id, name) => {
             check_access!(req);
-            time_block::by_id().get(id)[0].rename(name.to_string()).await;
+            time_block::by_id().actors(id)[0].rename(name.to_string()).await;
             DownMsg::TimeBlockRenamed
         },
         UpMsg::SetTimeBlockStatus(id, status) => {
             check_access!(req);
-            time_block::by_id().get(id)[0].set_status(status).await;
+            time_block::by_id().actors(id)[0].set_status(status).await;
             DownMsg::TimeBlockStatusSet
         },
         UpMsg::SetTimeBlockDuration(id, duration) => {
             check_access!(req);
-            time_block::by_id().get(id)[0].set_duration(duration).await;
+            time_block::by_id().actors(id)[0].set_duration(duration).await;
             DownMsg::TimeBlockDurationSet
         },
 
@@ -231,17 +238,17 @@ async fn request_handler(req: Request) {
         },
         UpMsg::RemoveInvoice(id) => {
             check_access!(req);
-            invoice::by_id().get(id)[0].remove().await;
+            invoice::by_id().actors(id)[0].remove().await;
             DownMsg::InvoiceRemoved
         },
         UpMsg::SetInvoiceCustomId(id, custom_id) => {
             check_access!(req);
-            invoice::by_id().get(id)[0].set_custom_id(custom_id.to_string()).await;
+            invoice::by_id().actors(id)[0].set_custom_id(custom_id.to_string()).await;
             DownMsg::InvoiceCustomIdSet
         },
         UpMsg::SetInvoiceUrl(id, url) => {
             check_access!(req);
-            invoice::by_id().get(id)[0].set_url(url.to_string()).await;
+            invoice::by_id().actors(id)[0].set_url(url.to_string()).await;
             DownMsg::InvoiceUrlSet
         },
 
@@ -253,26 +260,29 @@ async fn request_handler(req: Request) {
         },
         UpMsg::RemoveTimeEntry(id) => {
             check_access!(req);
-            time_entry::by_id().get(id)[0].remove().await;
+            time_entry::by_id().actors(id)[0].remove().await;
             DownMsg::TimeEntryRemoved
         },
         UpMsg::RenameTimeEntry(id, name) => {
             check_access!(req);
-            time_entry::by_id().get(id)[0].rename(name.to_string()).await;
+            time_entry::by_id().actors(id)[0].rename(name.to_string()).await;
             DownMsg::TimeEntryRenamed
         },
         UpMsg::SetTimeEntryStarted(id, started) => {
             check_access!(req);
-            time_entry::by_id().get(id)[0].set_started(started).await;
+            time_entry::by_id().actors(id)[0].set_started(started).await;
             DownMsg::TimeEntryStartedSet
         },
         UpMsg::SetTimeEntryStopped(id, stopped) => {
             check_access!(req);
-            time_entry::by_id().get(id)[0].set_stopped(stopped).await;
+            time_entry::by_id().actors(id)[0].set_stopped(stopped).await;
             DownMsg::TimeEntryStoppedSet
         },
     };
-    connected_client::by_id().get(req.client_id)[0].send_down_msg(down_msg, req.cor_id).await
+    connected_client::by_id()
+        .actors(req.client_id)[0]
+        .send_down_msg(down_msg, req.cor_id)
+        .await
 }
 
 fn main() {

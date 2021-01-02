@@ -35,14 +35,14 @@ actor!{
     impl ClientActor {
         async fn remove(&self) {
             let remove_project_futs = project::by_client()
-                .get(id().inner().await)
+                .actors(id().inner().await)
                 .iter()
-                .map(|(_, project)| project.remove());
+                .map(ProjectActor::remove);
 
             let remove_time_block_futs = time_block::by_client()
-                .get(id().inner().await)
+                .actors(id().inner().await)
                 .iter()
-                .map(|(_, time_block)| time_block.remove());
+                .map(TimeBlockActor::remove);
 
             join_all(remove_project_futs.chain(remove_time_block_futs)).await;
             self.remove_actor().await
@@ -52,18 +52,12 @@ actor!{
             name().set(name).await
         }
 
-        async fn projects(&self) -> Vec<(ProjectId, ProjectActor)> {
-            project::by_client()
-                .get(id().inner().await)
-                .iter()
-                .collect()
+        async fn projects(&self) -> Vec<ProjectActor> {
+            project::by_client().actors(id().inner().await)
         }
 
-        async fn time_blocks(&self) -> Vec<(TimeBlockId, TimeBlockActor)> {
-            time_blocks::by_client()
-                .get(id().inner().await)
-                .iter()
-                .collect()
+        async fn time_blocks(&self) -> Vec<TimeBlockActor> {
+            time_blocks::by_client().actors(id().inner().await)
         }
 
         async fn id(&self) -> ClientId {
@@ -89,7 +83,7 @@ actor!{
                         .time_entries()
                         .await
                         .iter()
-                        .map(|(_, time_entry)| time_entry_duration_fut(time_entry));
+                        .map(time_entry_duration_fut);
                 join_all(durations_futs)
                     .await
                     .iter()
@@ -97,9 +91,9 @@ actor!{
             };
 
             let duration_futs = project::by_client()
-                .get(id().inner().await)
+                .actors(id().inner().await)
                 .iter()
-                .map(|(_, project)| project_duration_fut(project));
+                .map(project_duration_fut);
             join_all(duration_futs)
                 .await
                 .iter()

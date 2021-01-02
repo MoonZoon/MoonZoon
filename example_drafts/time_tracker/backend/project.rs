@@ -1,4 +1,4 @@
-use shared::{ClientId, ProjectId, TimeEntryId};
+use shared::{ClientId, ProjectId};
 use crate::time_entry::{self, TimeEntryActor};
 
 actor!{
@@ -44,9 +44,9 @@ actor!{
     impl ProjectActor {
         async fn remove(&self) {
             let remove_time_entry_futs = time_entry::by_project()
-                .get(id().inner().await)
+                .actors(id().inner().await)
                 .iter()
-                .map(|(_, time_entry)| time_entry.remove());
+                .map(TimeEntryActor::remove);
 
             join_all(remove_time_entry_futs).await;
             self.remove_actor().await
@@ -56,11 +56,8 @@ actor!{
             name().set(name).await
         }
 
-        async fn time_entries(&self) -> Vec<(TimeEntryId, TimeEntryActor)> {
-            time_entry::by_project()
-                .get(id().inner().await)
-                .iter()
-                .collect()
+        async fn time_entries(&self) -> Vec<TimeEntryActor> {
+            time_entry::by_project().actors(id().inner().await)
         }
 
         async fn id(&self) -> ProjectId {
