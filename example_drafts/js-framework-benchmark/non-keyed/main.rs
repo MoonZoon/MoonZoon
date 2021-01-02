@@ -44,12 +44,12 @@ type ID = usize;
 
 blocks!{
 
-    #[var]
+    #[s_var]
     fn generator() -> SmallRng {
         SmallRng::from_entropy()
     }
 
-    #[var]
+    #[s_var]
     fn previous_id() -> ID {
         0
     }
@@ -59,12 +59,12 @@ blocks!{
         label: String,
     }
 
-    #[var]
+    #[s_var]
     fn selected_row() -> Option<Var<Row>> {
         None
     }
 
-    #[var]
+    #[s_var]
     fn rows() -> Vec<VarC<Row>> {
         Vec::new()
     }
@@ -85,7 +85,7 @@ blocks!{
             COLOURS.choose(generator).unwrap(),
             NOUNS.choose(generator).unwrap(),
         );
-        var(Row { id, label })
+        new_var_c(Row { id, label })
     }
 
     #[update]

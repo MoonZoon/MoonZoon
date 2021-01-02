@@ -37,12 +37,12 @@ blocks!{
         projects: Vec<VarC<Project>>,
     }
 
-    #[var]
+    #[s_var]
     fn clients() -> Option<Vec<VarC<Client>>> {
         None
     }
 
-    #[var]
+    #[s_var]
     fn setting_clients() -> bool {
         false
     }
@@ -57,7 +57,7 @@ blocks!{
         stop!{
             let new_projects = |client: Var<Client>, projects: Vec<shared::clients_and_projects::Project>| {
                 projects.into_iter().map(|project| {
-                    var(Project {
+                    new_var_c(Project {
                         id: project.id,
                         name: project.name,
                         client,
@@ -66,7 +66,7 @@ blocks!{
             };
             let new_clients = |clients: Vec<shared::clients_and_projects::Client>| {
                 clients.into_iter().map(|client| {
-                    let client_var = var(Client {
+                    let client_var = new_var_c(Client {
                         id: client.id,
                         name: client.name,
                         projects: Vec::new(),
@@ -85,7 +85,7 @@ blocks!{
     #[update]
     fn add_client() {
         let id = ClientId::new();
-        let client = var(Client {
+        let client = new_var_c(Client {
             id,
             name: String::new(),
             projects: Vec::new(),
@@ -129,7 +129,7 @@ blocks!{
         let client_id = client.map(|client| client.id);
         let project_id = ProjectId::new();
 
-        let project = var(Project {
+        let project = new_var_c(Project {
             id: project_id,
             name: String::new(),
             client,

@@ -34,7 +34,7 @@ blocks!{
         projects: Vec<VarC<Project>>,
     }
 
-    #[var]
+    #[s_var]
     fn clients() -> Option<Vec<VarC<Client>>> {
         None
     }
@@ -48,7 +48,7 @@ blocks!{
         stop!{
             let new_time_entries = |project: Var<Project>, time_entries: Vec<shared::time_tracker::TimeEntry>| {
                 time_entries.into_iter().map(|time_entry| {
-                    var(TimeEntry {
+                    new_var_c(TimeEntry {
                         id: time_entry.id,
                         name: time_entry.name,
                         started: time_entry.started,
@@ -59,7 +59,7 @@ blocks!{
             };
             let new_projects = |client: Var<Client>, projects: Vec<shared::time_tracker::Project>| {
                 projects.into_iter().map(|project| {
-                    let project_var = var(Project {
+                    let project_var = new_var_c(Project {
                         id: project.id,
                         name: project.name,
                         active_time_entry: None,
@@ -74,7 +74,7 @@ blocks!{
             };
             let new_clients = |clients: Vec<shared::time_tracker::Client>| {
                 clients.into_iter().map(|client| {
-                    let client_var = var(Client {
+                    let client_var = new_var_c(Client {
                         id: client.id,
                         name: client.name,
                         projects: Vec::new(),
@@ -120,7 +120,7 @@ blocks!{
             started: Local::now(),
             stopped: None,
         };
-        let time_entry_var = var(TimeEntry {
+        let time_entry_var = new_var_c(TimeEntry {
             id: time_entry.id,
             name: time_entry.name.clone(),
             started: time_entry.started,

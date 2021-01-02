@@ -41,12 +41,12 @@ blocks!{
         }
     }
 
-    #[var]
+    #[s_var]
     fn car() -> Car {
         Car::default()
     }
 
-    #[var]
+    #[s_var]
     fn viewport_width() -> f64 {
         0
     }

@@ -5,12 +5,12 @@ blocks!{
 
     // -- stopwatch --
 
-    #[var]
+    #[s_var]
     fn seconds() -> u32 {
         0
     }
 
-    #[var]
+    #[s_var]
     fn stopwatch() -> Option<Timer> {
         None
     }
@@ -32,7 +32,7 @@ blocks!{
 
     // -- timeout --
 
-    #[var]
+    #[s_var]
     fn timeout() -> Option<Timer> {
         None
     }

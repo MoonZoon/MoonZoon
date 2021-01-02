@@ -4,7 +4,7 @@ use std::mem;
 
 blocks!{
 
-    #[var]
+    #[s_var]
     fn username() -> String {
         "John".to_owned()
     }
@@ -14,12 +14,12 @@ blocks!{
         username().set(username);
     }
 
-    #[var]
+    #[s_var]
     fn messages() -> Vec<VarC<Message>> {
         Vec::new()
     }
 
-    #[var]
+    #[s_var]
     fn new_message_text() -> String {
         String::new()
     }
@@ -29,11 +29,11 @@ blocks!{
         new_message_text().set(text);
     }
 
-    #[var]
+    #[s_var]
     fn connection() -> Connection<UpMsg, DownMsg> {
         Connection::new(|down_msg, _| {
             if let DownMsg::MessageReceived(message) = down_msg {
-                messages().update_mut(|messages| messages.push(var(message)));
+                messages().update_mut(|messages| messages.push(new_var_c(message)));
             }
         })
     }

@@ -46,7 +46,7 @@ blocks!{
         })
     }
 
-    #[var]
+    #[s_var]
     fn frequency() -> Frequency {
         Frequency::Daily
     }

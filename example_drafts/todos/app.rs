@@ -47,7 +47,7 @@ blocks!{
         Completed,
     }
 
-    #[var]
+    #[s_var]
     fn filters() -> Vec<Filter> {
         Filter::iter().collect()
     }
@@ -63,7 +63,7 @@ blocks!{
 
     // ------ SelectedTodo ------
 
-    #[var]
+    #[s_var]
     fn selected_todo() -> Option<Var<Todo>> {
         None
     }
@@ -73,7 +73,7 @@ blocks!{
         selected_todo().set(todo)
     }
 
-    #[var]
+    #[s_var]
     fn selected_todo_title() -> Option<String> {
         let todo = selected_todo().inner()?;
         let title = todo.map(|todo| todo.title.clone());
@@ -101,12 +101,12 @@ blocks!{
         completed: bool,
     }
 
-    #[var]
+    #[s_var]
     fn todo_update_handler() -> VarUpdateHandler<Todo> {
         VarUpdateHandler::new(|_| todos().mark_updated())
     }
 
-    #[var]
+    #[s_var]
     fn new_todo_title() -> String {
         String::new()
     }
@@ -125,7 +125,7 @@ blocks!{
         new_todo_title().update_mut(String::clear);
 
         todos().update_mut(|todos| {
-            let todo = var(Todo {
+            let todo = new_var_c(Todo {
                 id: TodoId::new(),
                 title,
                 completed: false,
@@ -152,7 +152,7 @@ blocks!{
 
     // -- all --
 
-    #[var]
+    #[s_var]
     fn todos() -> Vector<VarC<Todo>> {
         LocalStorage::get(STORAGE_KEY).unwrap_or_default()
     }

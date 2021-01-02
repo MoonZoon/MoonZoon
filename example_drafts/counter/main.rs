@@ -2,7 +2,7 @@ use zoon::*;
 
 blocks!{
 
-    #[var]
+    #[s_var]
     fn counter() -> i32 {
         0
     }

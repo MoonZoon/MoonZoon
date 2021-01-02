@@ -2,7 +2,7 @@ use zoon::*;
 
 blocks!{
 
-    #[var]
+    #[s_var]
     fn watching_enabled() -> bool {
         false
     }
@@ -14,7 +14,7 @@ blocks!{
 
     // -- mouse --
 
-    #[var]
+    #[s_var]
     fn mouse_position() -> Point {
         Point::new(0, 0)
     }
@@ -26,7 +26,7 @@ blocks!{
 
     // -- keyboard --
 
-    #[var]
+    #[s_var]
     fn last_key() -> String {
         String::new()
     }

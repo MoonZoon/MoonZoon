@@ -24,7 +24,7 @@ blocks!{
         })
     }
 
-    #[var]
+    #[s_var]
     fn password() -> String {
         String::new()
     }
@@ -34,7 +34,7 @@ blocks!{
         password().set(password)
     }
 
-    #[var]
+    #[s_var]
     fn invalid_password() -> bool {
         false
     }

@@ -20,7 +20,7 @@ blocks!{
         url().map(Route::from)
     }
 
-    #[var]
+    #[s_var]
     fn logged_user() -> &'static str {
         "John Doe"
     }

@@ -81,7 +81,7 @@ blocks!{
 
     // ------ User ------
 
-    #[var]
+    #[s_var]
     fn user() -> Option<User> {
         LocalStorage::get(USER_STORAGE_KEY).unwrap_or_default()
     }
@@ -117,7 +117,7 @@ blocks!{
 
     // ------ Viewport ------
 
-    #[var]
+    #[s_var]
     fn viewport_width() -> f64 {
         0
     }
@@ -129,7 +129,7 @@ blocks!{
 
     // ------ Menu ------
 
-    #[var]
+    #[s_var]
     fn menu_opened() -> bool {
         false
     }
@@ -146,7 +146,7 @@ blocks!{
         }
     }
 
-    #[var]
+    #[s_var]
     fn close_menu_on_view_click() -> bool {
         true
     }
@@ -168,7 +168,7 @@ blocks!{
 
     // ------ Unfinished mutations ------
 
-    #[var]
+    #[s_var]
     fn unfinished_mutations() -> HashSet<CorId> {
         HashSet::new()
     }
@@ -180,7 +180,7 @@ blocks!{
 
     // ------ Connection ------
 
-    #[var]
+    #[s_var]
     fn connection() -> Connection<UpMsg, DownMsg> {
         Connection::new(|down_msg, cor_id| {
             unfinished_mutations().update_mut(|cor_ids| {

@@ -8,7 +8,7 @@ blocks!{
         Blue,
     }
 
-    #[var]
+    #[s_var]
     fn color() -> Color {
         Color::A
     }

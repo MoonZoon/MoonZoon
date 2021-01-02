@@ -41,17 +41,17 @@ blocks!{
         statistics: VarC<Statistics>,
     }
 
-    #[var]
+    #[s_var]
     fn client_update_handler() -> VarUpdateHandler<Client> {
         VarUpdateHandler::new(|client| notify(RecomputeStatistics(client)))
     }
 
-    #[var]
+    #[s_var]
     fn clients() -> Option<Vec<VarC<Client>>> {
         None
     }
 
-    #[var]
+    #[s_var]
     fn setting_clients() -> bool {
         false
     }
@@ -66,7 +66,7 @@ blocks!{
         stop!{
             let new_invoice = |time_block: Var<TimeBlock>, invoice: Option<shared::time_blocks::Invoice>| {
                 invoice.map(|invoice| {
-                    var(Invoice {
+                    new_var_c(Invoice {
                         id: invoice.id,
                         custom_id: invoice.custom_id,
                         url: invoice.url, 
@@ -76,7 +76,7 @@ blocks!{
             };
             let new_time_blocks = |client: Var<Client>, time_blocks: Vec<shared::time_blocks::TimeBlock>| {
                 time_blocks.into_iter().map(|time_block| {
-                    let time_block_var = var(TimeBlock {
+                    let time_block_var = new_var_c(TimeBlock {
                         id: time_block.id,
                         name: time_block.name,
                         status: time_block.status,
@@ -92,12 +92,12 @@ blocks!{
             };
             let new_clients = |clients: Vec<shared::time_blocks::Client>| {
                 clients.into_iter().map(|client| {
-                    let client_var = var(Client {
+                    let client_var = new_var_c(Client {
                         iid: client.id,
                         name: client.name,
                         time_blocks: Vec::new(),
                         tracked: client.tracked,
-                        statistics: var(Statistics::default()),
+                        statistics: new_var_c(Statistics::default()),
                     });
                     client_var.update_mut(|new_client| {
                         new_client.time_blocks = new_time_blocks(client_var.var(), client.time_blocks);
@@ -169,7 +169,7 @@ blocks!{
         client: Var<Client>, 
     }
 
-    #[var]
+    #[s_var]
     fn time_block_update_handler() -> VarUpdateHandler<TimeBlock> {
         VarUpdateHandler::new(|time_block| {
             let client = time_block.map(|time_block| time_block.client);
@@ -190,7 +190,7 @@ blocks!{
         let client_id = client.map(|client| client.id);
         let time_block_id = TimeBlockId::new();
 
-        let time_block = var(TimeBlock {
+        let time_block = new_var_c(TimeBlock {
             id: time_block_id,
             name: String::new(),
             status: TimeBlockStatus::default(),
@@ -257,7 +257,7 @@ blocks!{
         let time_block_id = time_block.map(|time_block| time_block.id);
         let invoice_id = InvoiceId::new();
 
-        let invoice = var(Invoice {
+        let invoice = new_var_c(Invoice {
             id: invoice_id,
             custom_id: String::new(),
             url: String::new(),
