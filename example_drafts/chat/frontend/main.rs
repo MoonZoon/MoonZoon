@@ -31,8 +31,8 @@ blocks!{
 
     #[var]
     fn connection() -> Connection<UpMsg, DownMsg> {
-        Connection::new("localhost:9000", |msg, _| {
-            if let DownMsg::MessageReceived(message) = msg {
+        Connection::new(|down_msg, _| {
+            if let DownMsg::MessageReceived(message) = down_msg {
                 messages().update_mut(|messages| messages.push(var(message)));
             }
         })
@@ -41,10 +41,10 @@ blocks!{
     #[update]
     fn send_message() {
         connection().use_ref(|connection| {
-            connection.send_msg(UpMsg::SendMessage(Message {
+            connection.send_up_msg(UpMsg::SendMessage(Message {
                 username: username().inner(),
                 text: new_message_text().map_mut(mem::take),
-            }));
+            }), None);
         });
     }
 
