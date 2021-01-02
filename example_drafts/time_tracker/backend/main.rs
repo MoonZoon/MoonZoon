@@ -23,7 +23,11 @@ async fn init() {
 
 async fn check_access(access_token: Option<AccessToken>) -> bool {
     if let Some(access_token) = access_token {
-        user::by_id()[0].logged_in(req.access_token).await
+        user::by_id()
+            .first_actor()
+            .unwrap()
+            .logged_in(req.access_token)
+            .await
     }
     false
 }
@@ -41,15 +45,21 @@ async fn request_handler(req: Request) {
 
         // ------ Auth ------
         UpMsg::Login(password) => {
-            if let Some(user) = user::by_id()[0].login(password).await {
-                DownMsg::LoggedIn(user)
-            } else {
-                DownMsg::InvalidPassword
-            }
+            user::by_id()
+                .first_actor()
+                .unwrap()
+                .login(password)
+                .await
+                .map(DownMsg::LoggedIn)
+                .unwrap_or_else(|| DownMsg::InvalidPassword)
         }
         UpMsg::Logout => {
             check_access!(req);
-            user::by_id()[0].logout(req.access_token.unwrap()).await;
+            user::by_id()
+                .first_actor()
+                .unwrap()
+                .logout(req.access_token.unwrap())
+                .await;
             DownMsg::LoggedOut
         }
 
@@ -177,12 +187,12 @@ async fn request_handler(req: Request) {
         },
         UpMsg::RemoveClient(id) => {
             check_access!(req);
-            client::by_id().actors(id)[0].remove().await;
+            client::by_id().actors(id).first().unwrap().remove().await;
             DownMsg::ClientRemoved
         },
         UpMsg::RenameClient(id, name) => {
             check_access!(req);
-            client::by_id().actors(id)[0].rename(name.to_string()).await;
+            client::by_id().actors(id).first().unwrap().rename(name.to_string()).await;
             DownMsg::ClientRenamed
         },
 
@@ -194,12 +204,12 @@ async fn request_handler(req: Request) {
         },
         UpMsg::RemoveProject(id) => {
             check_access!(req);
-            project::by_id().actors(id)[0].remove().await;
+            project::by_id().actors(id).first().unwrap().remove().await;
             DownMsg::ProjectRemoved
         },
         UpMsg::RenameProject(id, name) => {
             check_access!(req);
-            project::by_id().actors(id)[0].rename(name.to_string()).await;
+            project::by_id().actors(id).first().unwrap().rename(name.to_string()).await;
             DownMsg::ProjectRenamed
         },
 
@@ -211,22 +221,22 @@ async fn request_handler(req: Request) {
         },
         UpMsg::RemoveTimeBlock(id) => {
             check_access!(req);
-            time_block::by_id().actors(id)[0].remove().await;
+            time_block::by_id().actors(id).first().unwrap().remove().await;
             DownMsg::TimeBlockRemoved
         },
         UpMsg::RenameTimeBlock(id, name) => {
             check_access!(req);
-            time_block::by_id().actors(id)[0].rename(name.to_string()).await;
+            time_block::by_id().actors(id).first().unwrap().rename(name.to_string()).await;
             DownMsg::TimeBlockRenamed
         },
         UpMsg::SetTimeBlockStatus(id, status) => {
             check_access!(req);
-            time_block::by_id().actors(id)[0].set_status(status).await;
+            time_block::by_id().actors(id).first().unwrap().set_status(status).await;
             DownMsg::TimeBlockStatusSet
         },
         UpMsg::SetTimeBlockDuration(id, duration) => {
             check_access!(req);
-            time_block::by_id().actors(id)[0].set_duration(duration).await;
+            time_block::by_id().actors(id).first().unwrap().set_duration(duration).await;
             DownMsg::TimeBlockDurationSet
         },
 
@@ -238,17 +248,17 @@ async fn request_handler(req: Request) {
         },
         UpMsg::RemoveInvoice(id) => {
             check_access!(req);
-            invoice::by_id().actors(id)[0].remove().await;
+            invoice::by_id().actors(id).first().unwrap().remove().await;
             DownMsg::InvoiceRemoved
         },
         UpMsg::SetInvoiceCustomId(id, custom_id) => {
             check_access!(req);
-            invoice::by_id().actors(id)[0].set_custom_id(custom_id.to_string()).await;
+            invoice::by_id().actors(id).first().unwrap().set_custom_id(custom_id.to_string()).await;
             DownMsg::InvoiceCustomIdSet
         },
         UpMsg::SetInvoiceUrl(id, url) => {
             check_access!(req);
-            invoice::by_id().actors(id)[0].set_url(url.to_string()).await;
+            invoice::by_id().actors(id).first().unwrap().set_url(url.to_string()).await;
             DownMsg::InvoiceUrlSet
         },
 
@@ -260,27 +270,29 @@ async fn request_handler(req: Request) {
         },
         UpMsg::RemoveTimeEntry(id) => {
             check_access!(req);
-            time_entry::by_id().actors(id)[0].remove().await;
+            time_entry::by_id().actors(id).first().unwrap().remove().await;
             DownMsg::TimeEntryRemoved
         },
         UpMsg::RenameTimeEntry(id, name) => {
             check_access!(req);
-            time_entry::by_id().actors(id)[0].rename(name.to_string()).await;
+            time_entry::by_id().actors(id).first().unwrap().rename(name.to_string()).await;
             DownMsg::TimeEntryRenamed
         },
         UpMsg::SetTimeEntryStarted(id, started) => {
             check_access!(req);
-            time_entry::by_id().actors(id)[0].set_started(started).await;
+            time_entry::by_id().actors(id).first().unwrap().set_started(started).await;
             DownMsg::TimeEntryStartedSet
         },
         UpMsg::SetTimeEntryStopped(id, stopped) => {
             check_access!(req);
-            time_entry::by_id().actors(id)[0].set_stopped(stopped).await;
+            time_entry::by_id().actors(id).first().unwrap().set_stopped(stopped).await;
             DownMsg::TimeEntryStoppedSet
         },
     };
     connected_client::by_id()
-        .actors(req.client_id)[0]
+        .actors(req.client_id)
+        .first()
+        .unwrap()
         .send_down_msg(down_msg, req.cor_id)
         .await
 }
