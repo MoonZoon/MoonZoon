@@ -1,27 +1,6 @@
-[package]
-version = "0.1.0"
-name = "counter"
-repository = "https://github.com/MartinKavik/MoonZoon"
-authors = ["Martin Kavík <martin@kavik.cz>"]
-description = "Counter - MoonZoon example"
-categories = ["MoonZoon", "example"]
-license = "MIT"
-readme = "./README.md"
-edition = "2018"
+[workspace]
 
-[lib]
-crate-type = ["cdylib"]
-
-[dev-dependencies]
-wasm-bindgen-test = "0.3.19"
-
-[dependencies]
-zoon = { git = "https://github.com/MartinKavik/MoonZoon" }
-
-[profile.release]
-lto = true
-opt-level = 'z'
-codegen-units = 1
-
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = ['-Os']
+members = [
+    "frontend",
+    "backend",
+]

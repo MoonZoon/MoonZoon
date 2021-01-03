@@ -1,3 +1,5 @@
+#![no_std]
+
 use zoon::*;
 
 blocks!{
@@ -28,6 +30,7 @@ blocks!{
 
 }
 
-fn main() {
+#[wasm_bindgen(start)]
+pub fn start() {
     start!()
 }
