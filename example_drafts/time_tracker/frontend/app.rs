@@ -88,7 +88,13 @@ blocks!{
 
     #[subscription]
     fn store_user() {
-        user().use_ref(|user| LocalStorage::insert(USER_STORAGE_KEY, user));
+        user().use_ref(|user| {
+            if let Some(user) = user {
+                LocalStorage::insert(USER_STORAGE_KEY, user);
+            } else {
+                LocalStorage::remove(USER_STORAGE_KEY);
+            }
+        });
     }
 
     #[update]
