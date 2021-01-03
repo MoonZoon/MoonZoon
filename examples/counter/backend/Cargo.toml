@@ -10,7 +10,8 @@ readme = "../README.md"
 edition = "2018"
 
 [dependencies]
-moon = { git = "https://github.com/MartinKavik/MoonZoon" }
+# moon = { git = "https://github.com/MartinKavik/MoonZoon" }
+moon = { path = "../moon" }
 
 [profile.release]
 lto = true

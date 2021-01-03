@@ -21,6 +21,10 @@ async fn init() {
     }
 }
 
+async fn frontend() -> Frontend {
+    Frontend::new().title("Time tracker example")
+}
+
 async fn check_access(access_token: Option<AccessToken>) -> bool {
     if let Some(access_token) = access_token {
         user::by_id()
@@ -40,7 +44,7 @@ macro_rules! check_access {
     };
 }
 
-async fn request_handler(req: Request) {
+async fn up_msg_handler(req: UpMsgRequest) {
     let down_msg = match req.up_msg {
 
         // ------ Auth ------
@@ -298,7 +302,7 @@ async fn request_handler(req: Request) {
 }
 
 fn main() {
-    start!(init, request_handler, actors![
+    start!(init, frontend, up_msg_handler, actors![
         client, 
         invoice, 
         project, 
