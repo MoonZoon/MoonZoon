@@ -1,0 +1,15 @@
+[package]
+version = "0.1.0"
+name = "shared"
+repository = "https://github.com/MartinKavik/MoonZoon"
+authors = ["Martin Kavík <martin@kavik.cz>"]
+description = "Time Tracker - MoonZoon example"
+categories = ["MoonZoon", "example"]
+license = "MIT"
+readme = "../README.md"
+edition = "2018"
+
+[dependencies]
+chrono = "0.4.19"
+ulid = "0.4.1"
+serde = "1.0.118"

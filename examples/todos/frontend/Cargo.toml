@@ -1,6 +1,6 @@
 [package]
 version = "0.1.0"
-name = "counter_frontend"
+name = "frontend"
 repository = "https://github.com/MartinKavik/MoonZoon"
 authors = ["Martin Kavík <martin@kavik.cz>"]
 description = "Todos - MoonZoon example"
@@ -17,7 +17,7 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 # zoon = { git = "https://github.com/MartinKavik/MoonZoon" }
-zoon = { path = "../zoon" }
+zoon = { path = "../../../zoon" }
 
 [profile.release]
 lto = true

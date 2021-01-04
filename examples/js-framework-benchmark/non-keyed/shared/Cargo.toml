@@ -1,0 +1,10 @@
+[package]
+version = "0.1.0"
+name = "shared"
+repository = "https://github.com/MartinKavik/MoonZoon"
+authors = ["Martin Kavík <martin@kavik.cz>"]
+description = "Benchmark - MoonZoon example"
+categories = ["MoonZoon", "example"]
+license = "MIT"
+readme = "../README.md"
+edition = "2018"
