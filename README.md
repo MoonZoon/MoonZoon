@@ -8,6 +8,8 @@
 
 ---
 
+### _"We don't want to lose time and money due to millions of unnecessary micro-decisions and bikeshedding."_
+
 **MoonZoon** is a Rust Fullstack Framework.
 
 <div style="display: flex; flex-wrap: wrap;">
@@ -320,6 +322,29 @@ The **Time Tracker** example part:
    ```
 
 ## FAQ
+1. _"Why another frontend framework? Are you mad??"_
+   - Because I have some problems with the existing ones. For example:
+
+        <details>
+        <summary>Problems with existing frontend frameworks</summary>
+
+        - I'm not brave enough to write apps and merge pull requests written in a dynamic language.
+        - I'm tired of configuring Webpack-like bundlers and fixing bugs caused by incorrectly typed JS libraries to Typescript.
+        - I want to share code between the client and server and I want server-side rendering and I don't want to switch context (language, ecosystem, best practices, etc.) while I'm writing both frontend and server.
+        - I don't want to reread the entire stackoverflow.com and MDN docs to find out why my image on the website has incorrect size.
+        - I don't want to be afraid to refactor styles.
+        - I don't want to write code on the backend instead on the frontend because frontend is just too slow.
+        - Who have time and energy to properly learn, write and constantly think about accessibility and write unit tests that take into account weird things like `null` or `undefined`?
+        - I'm tired of searching for missing semicolons and brackets in HTML and CSS when it silently fails in the runtime.
+        - I don't want to choose a CSS framework, bundler, state manager, router, app plugins, bundler plugins, CSS compiler plugins, test framework and debug their incompatibilities and learn new apis everytime I want to create a new project.
+        - Why the layout is broken on iPhone, the app crashes on Safari, it's slow on Chrome and scrollbars don't work on Windows? 
+        - I just want to send a message to a server. I don't want to handle retrying, set headers, set timeout, correctly serialize everything, handle errors by numbers, constantly think about cookies, domains, protocols, etc.
+        - What about SEO?
+        - Should I use standard routing, hash routing, query parameters, custom base paths? Is everything correctly encoded and decoded?
+        - etc.
+        
+        </details>
+
 1. _"Hey Martin, what about [Seed](https://seed-rs.org/)?"_
    - Zoon and Seed have very different features and goals. I assume we will be able to implement some interesting features inspired by Zoon in Seed, if needed. I'll maintain Seed as usual.
 
@@ -328,5 +353,13 @@ The **Time Tracker** example part:
 # Backend - Moon
 
 ---
+
+# Current State
+
+# Next Steps
+
+# Contributing
+
+# OpenHope
 
 
