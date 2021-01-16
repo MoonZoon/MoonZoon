@@ -24,27 +24,27 @@ actor!{
 
     #[p_var]
     fn id() -> PVar<TimeEntryId> {
-        p_var("id", |_| args().time_entry.id)
+        p_var("id", |_| args().map(|args| args.time_entry.id))
     }
 
     #[p_var]
     fn name() -> PVar<String> {
-        p_var("name", |_| args().time_entry.name.clone())
+        p_var("name", |_| args().map(|args| args.time_entry.name.clone()))
     }
 
     #[p_var]
     fn started() -> PVar<DateTime<Local>> {
-        p_var("started", |_| args().time_entry.started)
+        p_var("started", |_| args().map(|args| args.time_entry.id))
     }
 
     #[p_var]
     fn stopped() -> PVar<Option<DateTime<Local>>> {
-        p_var("stopped", |_| args().time_entry.stopped)
+        p_var("stopped", |_| args().map(|args| args.time_entry.stopped))
     }
 
     #[p_var]
     fn project() -> PVar<ProjectId> {
-        p_var("project", |_| args().project)
+        p_var("project", |_| args().map(|args| args.time_entry.project))
     }
 
     // ------ Actor ------

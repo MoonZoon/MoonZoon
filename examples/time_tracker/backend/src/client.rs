@@ -20,7 +20,7 @@ actor!{
 
     #[p_var]
     fn id() -> PVar<ClientId> {
-        p_var("id", |_| args().id)
+        p_var("id", |_| args().map(|args| args.id))
     }
 
     #[p_var]

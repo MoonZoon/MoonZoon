@@ -1,5 +1,4 @@
 use shared::{InvoiceId, TimeBlockId};
-use crate::project::{self, ProjectActor};
 
 actor!{
     #[args]
@@ -24,7 +23,7 @@ actor!{
 
     #[p_var]
     fn id() -> PVar<InvoiceId> {
-        p_var("id", |_| args().id)
+        p_var("id", |_| args().map(|args| args.id))
     }
 
     #[p_var]
@@ -39,7 +38,7 @@ actor!{
 
     #[p_var]
     fn time_block() -> PVar<ClientId> {
-        p_var("time_block", |_| args().time_block)
+        p_var("time_block", |_| args().map(|args| args.time_block))
     }
 
     // ------ Actor ------

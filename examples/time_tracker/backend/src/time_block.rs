@@ -26,7 +26,7 @@ actor!{
 
     #[p_var]
     fn id() -> PVar<TimeBlockId> {
-        p_var("id", |_| args().id)
+        p_var("id", |_| args().map(|args| args.id))
     }
 
     #[p_var]
@@ -41,12 +41,12 @@ actor!{
 
     #[p_var]
     fn duration() -> PVar<Duration> {
-        p_var("duration", |_| args().duration)
+        p_var("duration", |_| args().map(|args| args.duration))
     }
 
     #[p_var]
     fn client() -> PVar<ClientId> {
-        p_var("client", |_| args().client)
+        p_var("client", |_| args().map(|args| args.client))
     }
 
     // ------ Actor ------
