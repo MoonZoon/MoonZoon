@@ -396,7 +396,7 @@ fn main() {
 
 ## Actors
 
-The **Time Tracker** example part:
+The **Time Tracker** example parts:
 
 ```rust
 fn main() {
@@ -408,10 +408,21 @@ fn main() {
 }
 ...
 
-new_actor(InvoiceArgs { time_block, id }).await;
+async fn up_msg_handler(req: UpMsgRequest) {
+    let down_msg = match req.up_msg {
+        ...
+        // ------ Invoice ------
+        UpMsg::AddInvoice(time_block, id) => {
+            check_access!(req);
+            new_actor(InvoiceArgs { time_block, id }).await;
+            DownMsg::InvoiceAdded
+        },
+        ...
+    }
+}
+```
 
-...
-
+```rust
 use shared::{InvoiceId, TimeBlockId};
 
 actor!{
