@@ -168,6 +168,70 @@ The **Todos** example part:
 
 - All elements should be _accessible_ by default or at least make it easy to set it correctly.
 
+## Color & Size
+
+### Color
+
+```rust
+background::color(hsl(0, 0, 100)),
+border::shadow!(
+    shadow::offsetXY(0, 2),
+    shadow::size(0),
+    shadow::blur(4),
+    shadow::color(hsla(0, 0, 0, 20)),
+),
+font::color(if hovered().inner() { hsl(12, 35, 60) } else { hsl(10, 30, 50) }),
+```
+
+The most commonly used color code systems are:
+- HEX - `#ffff00`, 
+- RGB - `rgb(255, 255, 0)` 
+- HSL - `hsl(60, 100%, 50%)` 
+
+However when you want to create color pallets, themes, to make sure the button is a bit lighter or darker on hover or to make the text more readable, you often want to set saturation and lightness directly. Also it's nice to identify the hue on the first look when you are reading the code. These two conditions basically renders HEX and RGB unusable.  
+
+But there is also a problem with HSL. Let's compare these two colors:
+<div style="display: flex; flex-wrap: wrap; margin-bottom: 10px;">
+    <div style="background-color: hsl(60, 100%, 50%); color: black; padding: 4px 10px; border-radius: 2px;">
+        hsl - 60, 100%, 50%
+    </div>
+    <div style="background-color: hsl(240, 100%, 50%); color: white; padding: 4px 10px; border-radius: 2px;">
+        hsl - 240, 100%, 50%
+    </div>
+</div>
+
+Are we sure they have the same lightness? I don't think so. The human eye perceives yellow as brighter than blue. Fortunately there is a color system that takes into account this perception: [HSLuv](https://www.hsluv.org/).
+
+<div style="display: flex; flex-wrap: wrap; margin-bottom: 10px">
+    <div style="background-color: hsl(60, 100%, 50%); color: black; padding: 4px 10px; border-radius: 2px;">
+        HSLuv - 85.9, 100%, 97.1%
+    </div>
+    <div style="background-color: hsl(240, 100%, 50%); color: white; padding: 4px 10px; border-radius: 2px;">
+        HSLuv - 265.9, 100%, 32.3%
+    </div>
+</div>
+
+That's why Zoon uses only HSLuv, represented in code as `hsl(h, s, l)` or `hsla(h, s, l, a)`, where:
+- `h` ;  _hue_  ; 0 - 360
+- `s` ;  _saturation_  ; 0 - 100
+- `l` ;  _lightness_  ; 0 - 100
+- `a` ;  _alpha channel / opacity_ ; 0 (transparent) - 100 (opaque)
+
+<details>
+<summary>Other examples why color theory and design in general are difficult</summary>
+
+- The human eye recognizes differences between lighter tones better than between darker tones. This fact is important for creating color palettes.
+- Too extreme contrast weakens reading stamina - you shouldn't use pure black and white too often (unless you are creating a special theme for low vision users).
+- Relatively many people are at least slightly color blind. It means, for example:
+   - Red "Stop button" has to have also a text label.
+   - Do you want to show different routes on the map? Use rather different line styles (e.g. dashed, dottted) instead of different colors.
+   - The guy over there maybe doesn't know his T-shirt isn't gray but pink. (It's a typical issue for _deutan color blindness_; ~5% of men.)
+   - Pick colors and labels for charts carefully - some charts could become useless for color blind people or when you decide to print them in a gray-scale mode. (HSLuv mode can help here a bit because you can pick colors with different lightness values.) 
+
+</details>
+
+### Size
+
 ## View & Viewport
 
 The **Time Tracker** example part:
@@ -323,7 +387,7 @@ The **Time Tracker** example part:
 
 ## FAQ
 1. _"Why another frontend framework? Are you mad??"_
-   - Because I have some problems with the existing ones. For example:
+   - Because I have some problems with the existing ones. Some examples:
 
         <details>
         <summary>Problems with existing frontend frameworks</summary>
