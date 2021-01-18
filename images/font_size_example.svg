@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 237 110" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <g transform="matrix(1.56426,0,0,1.19733,0,0)">
+        <rect x="0" y="0" width="151.507" height="91.871" style="fill:white;"/>
+    </g>
+    <g transform="matrix(1,0,0,1,-123.721,-118.884)">
+        <text x="123.721px" y="158.997px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:56px;">Moon</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-123.721,-48.8837)">
+        <text x="123.721px" y="158.997px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:56px;">Zoon</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-27.2309,-30)">
+        <g transform="matrix(1,-0,-0,1,27.2309,30)">
+            <path d="M169.229,6L164.729,0L160.229,6L169.229,6Z" style="fill:rgb(13,40,242);"/>
+            <path d="M169.229,34L164.729,40L160.229,34L169.229,34Z" style="fill:rgb(13,40,242);"/>
+            <path d="M164.729,4.8L164.729,35.2" style="fill:none;stroke:rgb(13,40,242);stroke-width:2px;"/>
+        </g>
+    </g>
+    <g transform="matrix(1,0,0,1,-27.2309,-30)">
+        <g transform="matrix(1,-0,-0,1,27.2309,30)">
+            <path d="M169.229,76L164.729,70L160.229,76L169.229,76Z" style="fill:rgb(13,40,242);"/>
+            <path d="M169.229,104L164.729,110L160.229,104L169.229,104Z" style="fill:rgb(13,40,242);"/>
+            <path d="M164.729,74.8L164.729,105.2" style="fill:none;stroke:rgb(13,40,242);stroke-width:2px;"/>
+        </g>
+    </g>
+    <g transform="matrix(1,0,0,1,-48.7267,-30)">
+        <g transform="matrix(1,-0,-0,1,48.7267,30)">
+            <path d="M169.229,46L164.729,40L160.229,46L169.229,46Z" style="fill:rgb(13,40,242);"/>
+            <path d="M169.229,64L164.729,70L160.229,64L169.229,64Z" style="fill:rgb(13,40,242);"/>
+            <path d="M164.729,44.8L164.729,65.2" style="fill:none;stroke:rgb(13,40,242);stroke-width:2px;"/>
+        </g>
+    </g>
+    <g transform="matrix(2.45186,0,0,1,-410.851,-30)">
+        <path d="M167.567,30L264.227,30" style="fill:none;stroke:rgb(13,40,242);stroke-width:1.07px;"/>
+    </g>
+    <g transform="matrix(2.45186,0,0,1,-410.851,10)">
+        <path d="M167.567,30L264.227,30" style="fill:none;stroke:rgb(13,40,242);stroke-width:0.53px;"/>
+    </g>
+    <g transform="matrix(2.45186,0,0,1,-410.851,40)">
+        <path d="M167.567,30L264.227,30" style="fill:none;stroke:rgb(13,40,242);stroke-width:0.53px;"/>
+    </g>
+    <g transform="matrix(2.45186,0,0,1,-410.851,80)">
+        <path d="M167.567,30L264.227,30" style="fill:none;stroke:rgb(13,40,242);stroke-width:1.07px;"/>
+    </g>
+    <g transform="matrix(1,0,0,1,-26.913,-28.1193)">
+        <text x="206.896px" y="55.762px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:21.703px;">40px</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-27.2309,41.8807)">
+        <text x="206.896px" y="55.762px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:21.703px;">40px</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-27.5488,6.88073)">
+        <text x="206.896px" y="55.762px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:21.703px;">30px</text>
+    </g>
+</svg>

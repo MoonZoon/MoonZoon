@@ -200,7 +200,7 @@ But there is also a problem with HSL. Let's compare these two colors:
     </div>
 </div>
 
-Are we sure they have the same lightness? I don't think so. The human eye perceives yellow as brighter than blue. Fortunately there is a color system that takes into account this perception: [HSLuv](https://www.hsluv.org/).
+Are we sure they have the same lightness `50%`? I don't think so. The human eye perceives yellow as brighter than blue. Fortunately there is a color system that takes into account this perception: [HSLuv](https://www.hsluv.org/).
 
 <div style="display: flex; flex-wrap: wrap; margin-bottom: 10px">
     <div style="background-color: hsl(60, 100%, 50%); color: black; padding: 4px 10px; border-radius: 2px;">
@@ -211,7 +211,7 @@ Are we sure they have the same lightness? I don't think so. The human eye percei
     </div>
 </div>
 
-That's why Zoon uses only HSLuv, represented in code as `hsl(h, s, l)` or `hsla(h, s, l, a)`, where:
+That's why Zoon uses only HSLuv, represented in the code as `hsl(h, s, l)` or `hsla(h, s, l, a)`, where:
 - `h` ;  _hue_  ; 0 - 360
 - `s` ;  _saturation_  ; 0 - 100
 - `l` ;  _lightness_  ; 0 - 100
@@ -231,6 +231,96 @@ That's why Zoon uses only HSLuv, represented in code as `hsl(h, s, l)` or `hsla(
 </details>
 
 ### Size
+
+**Units**
+
+CSS supports `cm`, `mm`, `in`, `px`, `pt`, `pc`, `em`, `ex`, `ch`, `rem`, `vw`, `vh`, `vmin`, `vmax` and `%`. I'm sure there were reasons for each of them, but let's just use `px`. Zoon may transform pixels to relative CSS units like `rem` or do other computations under the hood to improve accessibility.
+
+**Font Size**
+
+Have you ever ever tried to align an Element with Text? An example:
+
+<div style="display: flex; font-size: 20px; border-top: solid 1.5px red;">
+    <div style="background-color: gray; padding: 5px 10px; border-radius: 2px;">
+        E
+    </div>
+    <div style="margin: 0; padding: 0 10px; vertical-align: top;" >
+        Text
+    </div>
+</div>
+
+Notice the space between the red line and `T` - it shouldn't be there. It's an incredibly difficult task, especially with CSS.
+
+You will be able to resolve it in CSS with some new properties, mainly with [leading-trim](https://www.w3.org/TR/css-inline-3/#leading-trim). 
+One of the comments for the article [Leading-Trim: The Future of Digital Typesetting](https://medium.com/microsoft-design/leading-trim-the-future-of-digital-typesetting-d082d84b202):
+> _"This has been a huge annoyance to me for decades! I hope this gets standardized and implemented quickly, thank you for setting this in motion!_" - Tim Etler
+
+Typography is one of the most complex parts of (web) design. But we have to somehow simplify it for our purposes. So I suggest to make the _font size_ an alias for the [_cap height_](https://en.wikipedia.org/wiki/Cap_height). It means the code:
+
+```rust
+paragraph![
+    font::size(40),
+    spacing(30),
+    "Moon",
+    "Zoon",
+]
+```
+
+would be rendered as:
+
+<svg width="100%" height="110" viewBox="0 0 237 110" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <g transform="matrix(1.56426,0,0,1.19733,0,0)">
+        <rect x="0" y="0" width="151.507" height="91.871" style="fill:white;"/>
+    </g>
+    <g transform="matrix(1,0,0,1,-123.721,-118.884)">
+        <text x="123.721px" y="158.997px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:56px;">Moon</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-123.721,-48.8837)">
+        <text x="123.721px" y="158.997px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:56px;">Zoon</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-27.2309,-30)">
+        <g transform="matrix(1,-0,-0,1,27.2309,30)">
+            <path d="M169.229,6L164.729,0L160.229,6L169.229,6Z" style="fill:rgb(13,40,242);"/>
+            <path d="M169.229,34L164.729,40L160.229,34L169.229,34Z" style="fill:rgb(13,40,242);"/>
+            <path d="M164.729,4.8L164.729,35.2" style="fill:none;stroke:rgb(13,40,242);stroke-width:2px;"/>
+        </g>
+    </g>
+    <g transform="matrix(1,0,0,1,-27.2309,-30)">
+        <g transform="matrix(1,-0,-0,1,27.2309,30)">
+            <path d="M169.229,76L164.729,70L160.229,76L169.229,76Z" style="fill:rgb(13,40,242);"/>
+            <path d="M169.229,104L164.729,110L160.229,104L169.229,104Z" style="fill:rgb(13,40,242);"/>
+            <path d="M164.729,74.8L164.729,105.2" style="fill:none;stroke:rgb(13,40,242);stroke-width:2px;"/>
+        </g>
+    </g>
+    <g transform="matrix(1,0,0,1,-48.7267,-30)">
+        <g transform="matrix(1,-0,-0,1,48.7267,30)">
+            <path d="M169.229,46L164.729,40L160.229,46L169.229,46Z" style="fill:rgb(13,40,242);"/>
+            <path d="M169.229,64L164.729,70L160.229,64L169.229,64Z" style="fill:rgb(13,40,242);"/>
+            <path d="M164.729,44.8L164.729,65.2" style="fill:none;stroke:rgb(13,40,242);stroke-width:2px;"/>
+        </g>
+    </g>
+    <g transform="matrix(2.45186,0,0,1,-410.851,-30)">
+        <path d="M167.567,30L264.227,30" style="fill:none;stroke:rgb(13,40,242);stroke-width:1.07px;"/>
+    </g>
+    <g transform="matrix(2.45186,0,0,1,-410.851,10)">
+        <path d="M167.567,30L264.227,30" style="fill:none;stroke:rgb(13,40,242);stroke-width:0.53px;"/>
+    </g>
+    <g transform="matrix(2.45186,0,0,1,-410.851,40)">
+        <path d="M167.567,30L264.227,30" style="fill:none;stroke:rgb(13,40,242);stroke-width:0.53px;"/>
+    </g>
+    <g transform="matrix(2.45186,0,0,1,-410.851,80)">
+        <path d="M167.567,30L264.227,30" style="fill:none;stroke:rgb(13,40,242);stroke-width:1.07px;"/>
+    </g>
+    <g transform="matrix(1,0,0,1,-26.913,-28.1193)">
+        <text x="206.896px" y="55.762px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:21.703px;">40px</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-27.2309,41.8807)">
+        <text x="206.896px" y="55.762px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:21.703px;">40px</text>
+    </g>
+    <g transform="matrix(1,0,0,1,-27.5488,6.88073)">
+        <text x="206.896px" y="55.762px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:21.703px;">30px</text>
+    </g>
+</svg>
 
 ## View & Viewport
 
