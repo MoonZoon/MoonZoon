@@ -1,5 +1,7 @@
 # Frontend - Zoon
 
+---
+
 ## Basics
 
 The **Counter** example:
@@ -66,6 +68,8 @@ pub fn start() {
 1. Elements dependent on changed data are effectively rerendered in the DOM. 
    - _Note_: When a parent element has to be rerendered, it doesn't mean that all its descendants have to be rerendered as well - each `#[el]` block may depend on different variables.
 
+---
+
 ## Elements & Styles
 
 The **Todos** example part:
@@ -101,9 +105,8 @@ The **Todos** example part:
 
 - All elements should be _accessible_ by default or at least make it easy to set it correctly.
 
-## Color & Size
-
-### Color
+---
+## Color
 
 ```rust
 background::color(hsl(0, 0, 100)),
@@ -121,28 +124,17 @@ The most commonly used color code systems are:
 - RGB - `rgb(255, 255, 0)` 
 - HSL - `hsl(60, 100%, 50%)` 
 
-However when you want to create color pallets, themes, to make sure the button is a bit lighter or darker on hover or to make the text more readable, you often want to set saturation and lightness directly. Also it's nice to identify the hue on the first look when you are reading the code. These two conditions basically renders HEX and RGB unusable.  
+However when you want to create color palettes, themes, to make sure the button is a bit lighter or darker on hover or to make the text more readable, you often want to set saturation and lightness directly. Also it's nice to identify the hue on the first look when you are reading the code. These two conditions basically renders HEX and RGB unusable.  
 
 But there is also a problem with HSL. Let's compare these two colors:
-<div style="display: flex; flex-wrap: wrap; margin-bottom: 10px;">
-    <div style="background-color: hsl(60, 100%, 50%); color: black; padding: 4px 10px; border-radius: 2px;">
-        hsl - 60, 100%, 50%
-    </div>
-    <div style="background-color: hsl(240, 100%, 50%); color: white; padding: 4px 10px; border-radius: 2px;">
-        hsl - 240, 100%, 50%
-    </div>
-</div>
+
+<img src="images/yellow_hsl.svg" height="30px">
+<img src="images/blue_hsl.svg" height="30px">
 
 Are we sure they have the same lightness `50%`? I don't think so. The human eye perceives yellow as brighter than blue. Fortunately there is a color system that takes into account this perception: [HSLuv](https://www.hsluv.org/).
 
-<div style="display: flex; flex-wrap: wrap; margin-bottom: 10px">
-    <div style="background-color: hsl(60, 100%, 50%); color: black; padding: 4px 10px; border-radius: 2px;">
-        HSLuv - 85.9, 100%, 97.1%
-    </div>
-    <div style="background-color: hsl(240, 100%, 50%); color: white; padding: 4px 10px; border-radius: 2px;">
-        HSLuv - 265.9, 100%, 32.3%
-    </div>
-</div>
+<img src="images/yellow_hsluv.svg" height="30px">
+<img src="images/blue_hsluv.svg" height="30px">
 
 That's why Zoon uses only HSLuv, represented in the code as `hsl(h, s, l)` or `hsla(h, s, l, a)`, where:
 - `h` ;  _hue_  ; 0 - 360
@@ -163,32 +155,31 @@ That's why Zoon uses only HSLuv, represented in the code as `hsl(h, s, l)` or `h
 
 </details>
 
-### Size
+---
 
-**Units**
+## Size
+
+### Units
 
 CSS supports `cm`, `mm`, `in`, `px`, `pt`, `pc`, `em`, `ex`, `ch`, `rem`, `vw`, `vh`, `vmin`, `vmax` and `%`. I'm sure there were reasons for each of them, but let's just use `px`. Zoon may transform pixels to relative CSS units like `rem` or do other computations under the hood to improve accessibility.
 
-**Font Size**
+### Font Size
 
-Have you ever ever tried to align an Element with Text? An example:
+Have you ever ever tried to align an element with a text block? An example:
 
-<div style="display: flex; font-size: 20px; border-top: solid 1.5px red;">
-    <div style="background-color: gray; padding: 5px 10px; border-radius: 2px;">
-        E
-    </div>
-    <div style="margin: 0; padding: 0 10px; vertical-align: top;" >
-        Text
-    </div>
-</div>
+<img src="images/element_text_alignment.svg" height="100px">
 
-Notice the space between the red line and `T` - it shouldn't be there. It's an incredibly difficult task, especially with CSS.
+How we can measure or even remove the space above the `Zoon` text? It's an incredibly difficult task because the space is different for each font and it's impossible in CSS without error-prone ugly hacks.
 
-You will be able to resolve it in CSS with some new properties, mainly with [leading-trim](https://www.w3.org/TR/css-inline-3/#leading-trim). 
+You will be able to resolve it in the future CSS with some new properties, mainly with [leading-trim](https://www.w3.org/TR/css-inline-3/#leading-trim). 
 One of the comments for the article [Leading-Trim: The Future of Digital Typesetting](https://medium.com/microsoft-design/leading-trim-the-future-of-digital-typesetting-d082d84b202):
 > _"This has been a huge annoyance to me for decades! I hope this gets standardized and implemented quickly, thank you for setting this in motion!_" - Tim Etler
 
-Typography is one of the most complex parts of (web) design. But we have to somehow simplify it for our purposes. So I suggest to make the _font size_ an alias for the [_cap height_](https://en.wikipedia.org/wiki/Cap_height). It means the code:
+_
+
+Typography is one of the most complex parts of (web) design. But we have to somehow simplify it for our purposes. 
+
+So I suggest to make the _font size_ an alias for the [_cap height_](https://en.wikipedia.org/wiki/Cap_height). And the _font size_ would be also equal to the line height. It means the code:
 
 ```rust
 paragraph![
@@ -201,59 +192,9 @@ paragraph![
 
 would be rendered as:
 
-<svg width="100%" height="110" viewBox="0 0 237 110" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.5;">
-    <g transform="matrix(1.56426,0,0,1.19733,0,0)">
-        <rect x="0" y="0" width="151.507" height="91.871" style="fill:white;"/>
-    </g>
-    <g transform="matrix(1,0,0,1,-123.721,-118.884)">
-        <text x="123.721px" y="158.997px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:56px;">Moon</text>
-    </g>
-    <g transform="matrix(1,0,0,1,-123.721,-48.8837)">
-        <text x="123.721px" y="158.997px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:56px;">Zoon</text>
-    </g>
-    <g transform="matrix(1,0,0,1,-27.2309,-30)">
-        <g transform="matrix(1,-0,-0,1,27.2309,30)">
-            <path d="M169.229,6L164.729,0L160.229,6L169.229,6Z" style="fill:rgb(13,40,242);"/>
-            <path d="M169.229,34L164.729,40L160.229,34L169.229,34Z" style="fill:rgb(13,40,242);"/>
-            <path d="M164.729,4.8L164.729,35.2" style="fill:none;stroke:rgb(13,40,242);stroke-width:2px;"/>
-        </g>
-    </g>
-    <g transform="matrix(1,0,0,1,-27.2309,-30)">
-        <g transform="matrix(1,-0,-0,1,27.2309,30)">
-            <path d="M169.229,76L164.729,70L160.229,76L169.229,76Z" style="fill:rgb(13,40,242);"/>
-            <path d="M169.229,104L164.729,110L160.229,104L169.229,104Z" style="fill:rgb(13,40,242);"/>
-            <path d="M164.729,74.8L164.729,105.2" style="fill:none;stroke:rgb(13,40,242);stroke-width:2px;"/>
-        </g>
-    </g>
-    <g transform="matrix(1,0,0,1,-48.7267,-30)">
-        <g transform="matrix(1,-0,-0,1,48.7267,30)">
-            <path d="M169.229,46L164.729,40L160.229,46L169.229,46Z" style="fill:rgb(13,40,242);"/>
-            <path d="M169.229,64L164.729,70L160.229,64L169.229,64Z" style="fill:rgb(13,40,242);"/>
-            <path d="M164.729,44.8L164.729,65.2" style="fill:none;stroke:rgb(13,40,242);stroke-width:2px;"/>
-        </g>
-    </g>
-    <g transform="matrix(2.45186,0,0,1,-410.851,-30)">
-        <path d="M167.567,30L264.227,30" style="fill:none;stroke:rgb(13,40,242);stroke-width:1.07px;"/>
-    </g>
-    <g transform="matrix(2.45186,0,0,1,-410.851,10)">
-        <path d="M167.567,30L264.227,30" style="fill:none;stroke:rgb(13,40,242);stroke-width:0.53px;"/>
-    </g>
-    <g transform="matrix(2.45186,0,0,1,-410.851,40)">
-        <path d="M167.567,30L264.227,30" style="fill:none;stroke:rgb(13,40,242);stroke-width:0.53px;"/>
-    </g>
-    <g transform="matrix(2.45186,0,0,1,-410.851,80)">
-        <path d="M167.567,30L264.227,30" style="fill:none;stroke:rgb(13,40,242);stroke-width:1.07px;"/>
-    </g>
-    <g transform="matrix(1,0,0,1,-26.913,-28.1193)">
-        <text x="206.896px" y="55.762px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:21.703px;">40px</text>
-    </g>
-    <g transform="matrix(1,0,0,1,-27.2309,41.8807)">
-        <text x="206.896px" y="55.762px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:21.703px;">40px</text>
-    </g>
-    <g transform="matrix(1,0,0,1,-27.5488,6.88073)">
-        <text x="206.896px" y="55.762px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:21.703px;">30px</text>
-    </g>
-</svg>
+<img src="images/font_size_example.svg" height="110px">
+
+---
 
 ## View & Viewport
 
@@ -275,8 +216,10 @@ The **Time Tracker** example part:
 ```
 
 - `view` represents the root container for the web page.
-- `viewport` represents a part of the _view_ currently visible by the user. It could be used for scrolling and to write responsive elements.
+- `viewport` represents a part of the _view_ currently visible by the user. It could be used for scrolling and to help with writing responsive elements.
 - The _view/viewport_ concept will be probably used for scrollable elements, too.  
+
+---
 
 ## Built-in libraries / API
 - They will be probably written as standalone crates or they'll need to be activated by feature flags.
@@ -345,6 +288,8 @@ The **Time Tracker** example part:
     }
 ```
 
+_
+
 - A more complete example with _guards_ and Zoon's function `url()`. 
 - See `examples/time_tracker` for the entire code.
 
@@ -396,17 +341,20 @@ The **Time Tracker** example part:
     }
 ```
 
+---
+
 ## SEO
 
 - When the request comes from a robot (e.g. _Googlebot_), then MoonZoon renders elements to a HTML string and sends it back to the robot. (It's basically a limited _Server-Side Rendering_.)  
 
-- You'll be able to configure the default page title, _The Open Graph Metadata_ and other things in the Moon app.
-   - Example (draft API design):
-   ```rust
-   async fn frontend() -> Frontend {
-       Frontend::new().title("Time Tracker example")
-   }
-   ```
+- You'll be able to configure the default page title, _The Open Graph Metadata_ and other things in the Moon app. The example (draft API design):
+    ```rust
+    async fn frontend() -> Frontend {
+        Frontend::new().title("Time Tracker example")
+    }
+    ```
+
+---
 
 ## FAQ
 1. _"Why another frontend framework? Are you mad??"_

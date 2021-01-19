@@ -1,5 +1,7 @@
 # Backend - Moon
 
+---
+
 ## Basics
 
 The **Chat** example:
@@ -38,6 +40,8 @@ fn main() {
 1. We need to find the needed _actors_. They are stored in _indices_. `connected_client::by_id` is a Moon's system index where each value is an actor representing a connected Zoon app.
 1. All public actor functions are asynchronous so we have to `await` them an ideally call them all at once in this example to improve the performance a bit. 
    - _Note_: The requested actor may live in another server or it doesn't live at all - then the Moon has to start it and load its state into the memory before it can process your call. And all those operations and the business logic processing take some time, so asynchronicity allows you to spend the time in better ways than just waiting.  
+
+---
 
 ## Actors
 

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 237 110" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:1.5;">
+    <g transform="matrix(1.56426,0,0,1.19733,0,0)">
+        <rect x="0" y="0" width="151.507" height="91.871" style="fill:white;"/>
+    </g>
+    <g transform="matrix(1,0,0,1,-17.1605,-103.884)">
+        <text x="123.721px" y="158.997px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:56px;">Zoon</text>
+    </g>
+    <g transform="matrix(1,0,0,0.375,-58.5607,-11.25)">
+        <g transform="matrix(1,-0,-0,2.66667,58.5607,30)">
+            <path d="M136.797,4.531L133.399,0L130,4.531L136.797,4.531Z" style="fill:rgb(242,13,13);"/>
+            <path d="M136.797,10.469L133.399,15L130,10.469L136.797,10.469Z" style="fill:rgb(242,13,13);"/>
+            <path d="M133.399,3.625L133.399,11.375" style="fill:none;stroke:rgb(242,13,13);stroke-width:1.51px;"/>
+        </g>
+    </g>
+    <g transform="matrix(0.715826,0,0,0.715826,-9.88764,-26.7609)">
+        <text x="206.896px" y="55.762px" style="font-family:'ArialMT', 'Arial', sans-serif;font-size:21.703px;fill:rgb(242,13,13);">?</text>
+    </g>
+    <g transform="matrix(1.00781,0,0,1,0,0)">
+        <rect x="0" y="0" width="94.264" height="110" style="fill:rgb(13,40,242);"/>
+    </g>
+</svg>

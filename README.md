@@ -14,26 +14,30 @@
 
 **MoonZoon** is a Rust Fullstack Framework.
 
-<div style="display: flex; flex-wrap: wrap;">
-    <ul style="border-right: 1px solid; padding-right: 1rem">
-        <li>NO Javascript</li>
-        <li>NO HTML</li>
-        <li>NO CSS</li>
-        <li>NO REST</li>
-        <li>NO GraphQL</li>
-        <li>NO SQL</li>
-        <li>NO Analysis Paralysis
-    </ul>
-    <ul>
-        <li>Rust</li>
-        <li>Fast</li>
-        <li>Simple</li>
-        <li>Scalable</li>
-        <li>SEO</li>
-        <li>Offline Support</li>
-        <li>Easy Deploy</li>
-    </ul>
-</div>
+<table>
+    <td>
+        <ul>
+            <li>NO Javascript</li>
+            <li>NO HTML</li>
+            <li>NO CSS</li>
+            <li>NO REST</li>
+            <li>NO GraphQL</li>
+            <li>NO SQL</li>
+            <li>NO Analysis Paralysis
+        </ul>
+    </td>
+    <td>
+        <ul>
+            <li>Rust</li>
+            <li>Fast</li>
+            <li>Simple</li>
+            <li>Scalable</li>
+            <li>SEO</li>
+            <li>Offline Support</li>
+            <li>Easy Deploy</li>
+        </ul>
+    </td>
+</table>
 
 ---
 
