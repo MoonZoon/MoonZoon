@@ -220,9 +220,51 @@ We'll use the **Time Tracker** example parts to demonstrate how to define an _ac
 
 ---
 
-## Authentication
+## Auth
 
-TODO Opaque / JWT / Encrypted LocalStorage vs Cookies..
+Authentication and Authorization are:
+- Probably the most reinvented wheels on the backend. 
+- Very difficult to implement without introducing security holes.
+- Painful to integrate into your product because of regulations like _GDPR_ or _Cookie Law_.
+- Annoying for your users.  
+
+Every project may have very different requirements for authentication. However most projects use standard login + password. And this standard mechanism is also very useful for testing.
+
+MoonZoon will allow you from the beginning to send a token in the request's header so you have at least a basic foundation to integrate, for instance, _JWT_ auth.
+
+_
+
+Defining the basic auth behavior is really a tough task:
+
+- Should we use _LocalStorage_ or _Cookies_ to store tokens? (I'm sure you can find many articles and people which claim that only _LocalStorage_ or only _Cookies_ is the right choice). 
+   - I would generally  prefer _LocalStorage_ because it's much easier to work with and once the _XSS_ attack is successful, not even correctly set _Cookies_ can save you. But with MoonZoon, both client and server will be probably attached to the same domain so we can take full advantage of cookie security features. So it depends.  
+
+- Can we assume all apps communicate over HTTPS?
+
+- There are also ways to register and log in without sending password to the server (see [Seed's E2E encryption example](https://github.com/seed-rs/seed/tree/master/examples/e2e_encryption) for more info.) Do we need it?
+
+- Is _E2E encryption_ required?
+
+- We need to take into account legal requirements:
+  - Do we need user's email? Is user's nick a real name? It has to be compatible with GDPR and we need to mention it in our _Terms and Policies_ and other other documents. 
+  - The user has to agree with the usage of their data before the registration and he has to be able to delete the data. 
+  - etc. 
+
+_
+
+
+Also there are some passwordless auth methods:
+- Through SMS or email.
+- _WebAuthn_. It could be a good way to eliminate passwords and usernames.
+  - https://webauthn.guide/
+  - https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API
+  - https://github.com/herrjemand/awesome-webauthn
+  - https://crates.io/crates/webauthn-rs + related articles on https://fy.blackhats.net.au
+  - https://medium.com/webauthnworks/introduction-to-webauthn-api-5fd1fb46c285
+
+_
+
+So let's wait a bit until we see clear requirements and how technologies like _WebAuthn_ work in practice before we try to design special auth libraries and finalize MoonZoon API. Your opinions on the [chat](https://discord.gg/eGduTxK2Es) are very welcome!
 
 ---
 
