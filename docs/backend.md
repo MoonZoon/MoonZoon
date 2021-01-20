@@ -39,117 +39,207 @@ fn main() {
 ### 2. Calling Actor Functions
 1. We need to find the needed _actors_. They are stored in _indices_. `connected_client::by_id` is a Moon's system index where each value is an actor representing a connected Zoon app.
 1. All public actor functions are asynchronous so we have to `await` them an ideally call them all at once in this example to improve the performance a bit. 
-   - _Note_: The requested actor may live in another server or it doesn't live at all - then the Moon has to start it and load its state into the memory before it can process your call. And all those operations and the business logic processing take some time, so asynchronicity allows you to spend the time in better ways than just waiting.  
+   - _Note_: The requested actor may live in another server or it doesn't live at all - then the Moon has to start it and load its state into the main memory before it can process your call. And all those operations and the business logic processing take some time, so asynchronicity allows you to spend the time in better ways than just waiting.  
 
 ---
 
 ## Actors
 
-The **Time Tracker** example parts:
+We'll use the **Time Tracker** example parts to demonstrate how to define an _actor_ and create its instances.
 
-```rust
-fn main() {
-    start!(init, frontend, up_msg_handler, actors![
-        client, 
-        invoice, 
-        ...
-    ]);
-}
-...
+1. Each actor should be placed in a standalone module / file - e.g. `backend/src/invoice.rs`.
 
-async fn up_msg_handler(req: UpMsgRequest) {
-    let down_msg = match req.up_msg {
-        ...
-        // ------ Invoice ------
-        UpMsg::AddInvoice(time_block, id) => {
-            check_access!(req);
-            new_actor(InvoiceArgs { time_block, id }).await;
-            DownMsg::InvoiceAdded
-        },
-        ...
-    }
-}
-```
+1. Let's add the "actor skeleton" into the file (we'll talk about individual parts later):
 
-```rust
-use shared::{InvoiceId, TimeBlockId};
+    ```rust
+    use shared::{InvoiceId, TimeBlockId};
 
-actor!{
-    #[args]
-    struct InvoiceArgs {
-        time_block: TimeBlockId,
-        id: InvoiceId,
-    }  
+    actor!{
+        #[args]
+        struct InvoiceArgs {
+            time_block: TimeBlockId,
+            id: InvoiceId,
+        }  
 
-    // ------ Indices ------
+        // ------ Indices ------
 
-    #[index]
-    fn by_id() -> Index<InvoiceId, InvoiceActor> {
-        index("invoice_by_id", |_| id())
-    }
+        // ------ PVars ------
 
-    #[index]
-    fn by_time_block() -> Index<ClientId, InvoiceActor> {
-        index("invoice_by_time_block", |_| time_block())
-    }
+        // ------ Actor ------
 
-    // ------ PVars ------
+        #[actor]
+        struct InvoiceActor;
+        impl InvoiceActor {
 
-    #[p_var]
-    fn id() -> PVar<InvoiceId> {
-        p_var("id", |_| args().map(|args| args.id))
-    }
-
-    #[p_var]
-    fn custom_id() -> PVar<String> {
-        p_var("custom_id", |_| String::new())
-    }
-
-    #[p_var]
-    fn url() -> PVar<String> {
-        p_var("url", |_| String::new())
-    }
-
-    #[p_var]
-    fn time_block() -> PVar<ClientId> {
-        p_var("time_block", |_| args().map(|args| args.time_block))
-    }
-
-    // ------ Actor ------
-
-    #[actor]
-    struct InvoiceActor;
-    impl InvoiceActor {
-        async fn remove(&self) {
-            self.remove_actor().await
-        }
-    
-        async fn set_custom_id(&self, custom_id: String) {
-            custom_id().set(custom_id).await
-        }
-
-        async fn set_url(&self, url: String) {
-            url().set(url).await
-        }
-
-        async fn id(&self) -> InvoiceId {
-            id().inner().await
-        }
-
-        async fn custom_id(&self) -> String {
-            custom_id().inner().await
-        }
-
-        async fn url(&self) -> String {
-            url().inner().await
         }
     }
-}
+    ```
 
-```
+1. We need to register the actor:
 
-### Args
+    ```rust
+    fn main() {
+        start!(init, frontend, up_msg_handler, actors![
+            client, 
+            invoice, 
+            ...
+        ]);
+    }
+    ```
 
-### Indices
+1. And we can already create actor instances as needed:
 
-### PVars
+    ```rust
+    use invoice::{self, InvoiceArgs};
+    ...
+    async fn up_msg_handler(req: UpMsgRequest) {
+        let down_msg = match req.up_msg {
+            ...
+            // ------ Invoice ------
+            UpMsg::AddInvoice(time_block, id) => {
+                check_access!(req);
+                new_actor(InvoiceArgs { time_block, id }).await;
+                DownMsg::InvoiceAdded
+            },
+            ...
+        }
+    }
+    ```
+
+    - `new_actor` is the Moon's async function. In this case, it creates a new `invoice` actor and returns `InvoiceActor`.
+       
+    - `InvoiceActor` represents a copyable reference to the `invoice` actor instance. The instance is either _active_ (loaded in the main memory) or only stored in a persistent storage.
+
+1. Let's add `PVar`s to our actor:
+
+    ```rust
+        // ------ PVars ------
+
+        #[p_var]
+        fn id() -> PVar<InvoiceId> {
+            p_var("id", |_| args().map(|args| args.id))
+        }
+
+        #[p_var]
+        fn custom_id() -> PVar<String> {
+            p_var("custom_id", |_| String::new())
+        }
+
+        #[p_var]
+        fn url() -> PVar<String> {
+            p_var("url", |_| String::new())
+        }
+
+        #[p_var]
+        fn time_block() -> PVar<ClientId> {
+            p_var("time_block", |_| args().map(|args| args.time_block))
+        }
+    ```
+    - `PVar` is a _**P**ersistent **Var**iable_. It represents a copyable reference to the Moon's internal persistent storage. (The file system and PostgreSQL would be probably the first supported storages.)
+
+    - Most `PVar`'s methods are async because they may need to communicate with the storage. Read operations are fast when the actor is active and the needed `PVar` value has been cached in memory by Moon.  
+
+    - The Moon's function `p_var` loads the value according to the _identifier_ from the storage and deserializes it to the required Rust type. Or it creates a new record in the storage with the serialized default value provided by its second argument.
+
+    - The first `p_var`'s parameter is the _identifier_ - e.g. `"url"`. The _identifier_ should be unique among other actor's `PVar`s. 
+
+    - The second `p_var`'s parameter is a callback that is invoked when:
+       - A new record will be created. Then the callback's only argument is `None`.
+       - The deserialization fails. Then the callback's argument contains `PVarError` with the serialized old value. It allows you to convert the data to a new type.
+
+    - The Moon's function `args` returns a wrapper for an `InvoiceArgs` instance.
+
+1. Now we can define accessors and other helpers for `InvoiceActor`:
+
+    ```rust
+        // ------ Actor ------
+
+        #[actor]
+        struct InvoiceActor;
+        impl InvoiceActor {
+            async fn remove(&self) {
+                self.remove_actor().await
+            }
+        
+            async fn set_custom_id(&self, custom_id: String) {
+                custom_id().set(custom_id).await
+            }
+
+            async fn set_url(&self, url: String) {
+                url().set(url).await
+            }
+
+            async fn id(&self) -> InvoiceId {
+                id().inner().await
+            }
+
+            async fn custom_id(&self) -> String {
+                custom_id().inner().await
+            }
+
+            async fn url(&self) -> String {
+                url().inner().await
+            }
+        }
+
+    ```
+
+    - The `InvoiceActor` struct implements also some predefined methods. E.g. `remove_actor()` allows you to remove the instance and delete the associated data.
+
+1. And the last part - indices:
+
+    ```rust
+        // ------ Indices ------
+
+        #[index]
+        fn by_id() -> Index<InvoiceId, InvoiceActor> {
+            index("invoice_by_id", |_| id())
+        }
+
+        #[index]
+        fn by_time_block() -> Index<ClientId, InvoiceActor> {
+            index("invoice_by_time_block", |_| time_block())
+        }
+    ```
+
+    - Indices allow us to get actor instance references (e.g. `InvoiceActor`). They are basically key-value stores, where the value is an array of actor references.
+
+    - The Moon's function `index` returns the requested index reference `Index` by the _identifier_. Or it creates a new index in the persistent storage with the serialized key provided by its second argument.
+
+    - The first `index`'s parameter is _identifier_ - e.g. `"invoice_by_id"`. It should be unique among all indices.
+
+    - The second `index`'s parameter is a callback that is invoked when:
+       - A new index will be created. Then the callback's only argument is `None`.
+       - Serialized old keys have different type than the required one. Then the callback's argument contains `IndexError`. It allows you to convert the keys to a new type.
+
+    - The callback provided in the `index` arguments has to return `PVar`. Then index keys will be automatically synchronized with the `PVar` value. 
+
+---
+
+## Authentication
+
+TODO Opaque / JWT / Encrypted LocalStorage vs Cookies..
+
+---
+
+## FAQ
+
+1. _"Why another backend framework? Are you mad??"_
+   - In the context of my goal to remove all accidental complexity, I treat most popular backend frameworks as low-level building blocks. You are able to write everything with them, but you still have to think about REST API endpoints, choose and connect a database, manage actors manually, setup servers, somehow test serverless functions, etc. Moon will be probably based on one of those frameworks - this way you don't have to care about low-level things, however you can when you need more control. 
+
+1. _"Those are pretty weird actors!"_
+   - Yeah, actually, they are called _Virtual Actors_. I recommend to read [Orleans – Virtual Actors](https://www.microsoft.com/en-us/research/project/orleans-virtual-actors/).
+
+1. _"Why virtual actors and not microservices / event sourcing / standard actors / CRDTs / blockchain / orthogonal persistence / ..?"_
+   - Virtual actors allow you to start with a small simple project and they won't stop you while you grow. 
+   - You can combine virtual actors with other concepts - why don't leverage event sourcing to manage the actor state? 
+   - There is a chance the architecture and security will be improved by implementing actors as single-threaded isolated Wasm modules.
+   - There are open-source virtual actor frameworks battle-tested in production. And there are also related research papers - especially for Orleans.
+
+1. _"What about transactions, backups, autoscaling, deploying, storage configuration, ..?"_
+   - I try to respect Gall’s Law - "A complex system that works is invariably found to have evolved from a simple system that worked."
+   - So let's start with a single server, simple implementation and minimum features. "Deploy to Heroku" button would be nice.
+   - There are research papers about virtual actors and things like transactions. It will take time but the architecture will allow to add many new features if needed.
+
+1. _"The API looks weird!"_
+   - Well, I would like to make it compilable on the stable Rust so I can't use some unstable features that would make the API a bit better. Or I wasn't able to find a simpler and nicer API - please let me know why and how do you want to improve it. Or we have just different experience and feel for graphic stuff. 
