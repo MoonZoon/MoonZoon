@@ -56,7 +56,7 @@ actor!{
     impl TimeBlockActor {
         async fn remove(&self) {
             let invoice = invoice::by_time_block().actors(id().inner().await).first();
-            if let Some((_, invoice)) = invoice {
+            if let Some(invoice) = invoice {
                 invoice.remove().await;
             }
             self.remove_actor().await;

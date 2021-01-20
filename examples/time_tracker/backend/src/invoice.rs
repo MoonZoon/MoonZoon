@@ -15,7 +15,7 @@ actor!{
     }
 
     #[index]
-    fn by_time_block() -> Index<ClientId, InvoiceActor> {
+    fn by_time_block() -> Index<TimeBlockId, InvoiceActor> {
         index("invoice_by_time_block", |_| time_block())
     }
 

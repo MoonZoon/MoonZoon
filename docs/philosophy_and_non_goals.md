@@ -38,3 +38,5 @@
 **e)** Deliver all features at once. Don't expect to deploy scalable realtime apps on a stable cloud with the first MoonZoon release.
 
 **f)** Beginner friendliness. It should be a side-effect of a well-designed API and good documentation.
+
+**g)** The API optimized for the code writing. Readability and good error messages are the most important features.

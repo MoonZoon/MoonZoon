@@ -197,12 +197,16 @@ We'll use the **Time Tracker** example parts to demonstrate how to define an _ac
         }
 
         #[index]
-        fn by_time_block() -> Index<ClientId, InvoiceActor> {
+        fn by_time_block() -> Index<TimeBlockId, InvoiceActor> {
             index("invoice_by_time_block", |_| time_block())
         }
     ```
 
-    - Indices allow us to get actor instance references (e.g. `InvoiceActor`). They are basically key-value stores, where the value is an array of actor references.
+    - Indices allow us to get actor instance references (e.g. `InvoiceActor`). They are basically key-value stores, where the value is an array of actor references. Example (an API draft):
+
+        ```rust
+        invoice::by_time_block().actors(time_block_id).first();
+        ```
 
     - The Moon's function `index` returns the requested index reference `Index` by the _identifier_. Or it creates a new index in the persistent storage with the serialized key provided by its second argument.
 
@@ -240,6 +244,3 @@ TODO Opaque / JWT / Encrypted LocalStorage vs Cookies..
    - I try to respect Gall’s Law - "A complex system that works is invariably found to have evolved from a simple system that worked."
    - So let's start with a single server, simple implementation and minimum features. "Deploy to Heroku" button would be nice.
    - There are research papers about virtual actors and things like transactions. It will take time but the architecture will allow to add many new features if needed.
-
-1. _"The API looks weird!"_
-   - Well, I would like to make it compilable on the stable Rust so I can't use some unstable features that would make the API a bit better. Or I wasn't able to find a simpler and nicer API - please let me know why and how do you want to improve it. Or we have just different experience and feel for graphic stuff. 

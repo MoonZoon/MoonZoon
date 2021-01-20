@@ -380,8 +380,5 @@ _
         
         </details>
 
-1. _"The API looks weird!"_
-   - Well, I would like to make it compilable on the stable Rust so I can't use some unstable features that would make the API a bit better. Or I wasn't able to find a simpler and nicer API - please let me know why and how do you want to improve it. Or we have just different experience and feel for graphic stuff. 
-
 1. _"Hey Martin, what about [Seed](https://seed-rs.org/)?"_
    - Zoon and Seed have very different features and goals. I assume we will be able to implement some interesting features inspired by Zoon in Seed, if needed. I'll maintain Seed as usual.
