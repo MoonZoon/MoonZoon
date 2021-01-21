@@ -18,12 +18,13 @@
     <td>
         <ul>
             <li>NO Javascript</li>
-            <li>NO HTML</li>
             <li>NO CSS</li>
+            <li>NO HTML</li>
             <li>NO REST</li>
             <li>NO GraphQL</li>
             <li>NO SQL</li>
-            <li>NO Analysis Paralysis
+            <li>NO Analysis Paralysis</li>
+            <li>NO Wheel Reinventing</li>
         </ul>
     </td>
     <td>
@@ -33,8 +34,9 @@
             <li>Simple</li>
             <li>Scalable</li>
             <li>SEO</li>
-            <li>Offline Support</li>
+            <li>Authentication</li>
             <li>Easy Deploy</li>
+            <li>Offline Support</li>
         </ul>
     </td>
 </table>

@@ -256,11 +256,15 @@ _
 Also there are some passwordless auth methods:
 - Through SMS or email.
 - _WebAuthn_. It could be a good way to eliminate passwords and usernames.
-  - https://webauthn.guide/
-  - https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API
-  - https://github.com/herrjemand/awesome-webauthn
-  - https://crates.io/crates/webauthn-rs + related articles on https://fy.blackhats.net.au
-  - https://medium.com/webauthnworks/introduction-to-webauthn-api-5fd1fb46c285
+  1. https://webauthn.guide/
+  1. https://webauthn.io/
+  1. https://webauthn.me/
+  1. https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API
+  1. https://github.com/herrjemand/awesome-webauthn
+  1. https://crates.io/crates/webauthn-rs + related articles on https://fy.blackhats.net.au
+  1. https://medium.com/webauthnworks/introduction-to-webauthn-api-5fd1fb46c285
+  1. https://sec.okta.com/articles/2020/04/webauthn-great-and-it-sucks
+  1. https://levelup.gitconnected.com/what-is-webauthn-logging-in-with-touch-id-and-windows-hello-on-the-web-c886b58f99c3
 
 _
 
