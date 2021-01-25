@@ -63,8 +63,8 @@ pub fn start() {
 1. The user clicks the decrement button.
 1. The function `decrement` is invoked.
 1. `counter`'s value is decremented. 
-   - _Note_: The function `counter` actually returns `SVar<i32>` (_**S**tatic **Var**iable_) - basically a copyable wrapper for a typed reference to the Zoon's internal storage.
-1. `root` element listens for `counter` changes - it's automatically recomputed and Zoon waits for the browser to allow rendering.
+   - _Note_: The function `counter` actually returns `SVar<i32>` (_**S**tatic **Var**iable_). _SVar_ is basically a copyable wrapper for a reference to the Zoon's internal storage.
+1. `root` element listens for `counter` changes - `root` is automatically recomputed and Zoon waits for the browser to allow rendering.
 1. Elements dependent on changed data are effectively rerendered in the DOM. 
    - _Note_: When a parent element has to be rerendered, it doesn't mean that all its descendants have to be rerendered as well - each `#[el]` block may depend on different variables.
 
@@ -95,15 +95,15 @@ The **Todos** example part:
 
 - The blocks marked `#[el]` are functions that can contain its own state. The state variables (e.g. `ElVar<bool>`, _**El**ement **Var**iable_) are created by the `el_var` function and are dropped when their container (aka _function instance_ or _component_) is removed from the element tree.
 
-- `[#el]` blocks accept only _Zoon variables_ like `SVar` or `ElVar` as arguments.
+- `[#el]` blocks accept only _Zoon Variables_ like `SVar` or `ElVar` as arguments.
 
 - Element macros (e.g. `row`) accepts only compatible attributes and children.
 
-- Also concepts or events like _focus_, _hover_ and _breakpoints_ are handled by Zoon.
+- Concepts / events like _focus_, _hover_ and _breakpoints_ are handled directly by Zoon.
 
 - There isn't something like _margins_ or _selectors_.
 
-- All elements should be _accessible_ by default or at least make it easy to set it correctly.
+- All elements should be _accessible_ by default.
 
 ---
 ## Color
@@ -122,9 +122,18 @@ font::color(if hovered().inner() { hsl(12, 35, 60) } else { hsl(10, 30, 50) }),
 The most commonly used color code systems are:
 - HEX - `#ffff00`, 
 - RGB - `rgb(255, 255, 0)` 
-- HSL - `hsl(60, 100%, 50%)` 
+- HSL - `hsl(60, 100%, 50%)`
 
-However when you want to create color palettes, themes, to make sure the button is a bit lighter or darker on hover or to make the text more readable, you often want to set saturation and lightness directly. Also it's nice to identify the hue on the first look when you are reading the code. These two conditions basically renders HEX and RGB unusable.  
+_
+
+However when you want to:
+- create color palettes and themes
+- make sure the button is slightly lighter or darker on hover
+- make the text more readable
+
+you often need to set saturation and lightness directly. Also it's nice to identify the hue on the first look when you are reading the code. These two conditions basically renders HEX and RGB unusable.
+
+_
 
 But there is also a problem with HSL. Let's compare these two colors:
 
@@ -366,14 +375,14 @@ _
         - I'm not brave enough to write apps and merge pull requests written in a dynamic language.
         - I'm tired of configuring Webpack-like bundlers and fixing bugs caused by incorrectly typed JS libraries to Typescript.
         - I want to share code between the client and server and I want server-side rendering and I don't want to switch context (language, ecosystem, best practices, etc.) while I'm writing both frontend and server.
-        - I don't want to reread the entire stackoverflow.com and MDN docs to find out why my image on the website has incorrect size.
+        - I don't want to read the entire stackoverflow.com and MDN docs to find out why my image on the website has incorrect size.
         - I don't want to be afraid to refactor styles.
         - I don't want to write code on the backend instead on the frontend because frontend is just too slow.
         - Who have time and energy to properly learn, write and constantly think about accessibility and write unit tests that take into account weird things like `null` or `undefined`?
         - I'm tired of searching for missing semicolons and brackets in HTML and CSS when it silently fails in the runtime.
-        - I don't want to choose a CSS framework, bundler, state manager, router, app plugins, bundler plugins, CSS compiler plugins, test framework and debug their incompatibilities and learn new apis everytime I want to create a new project.
+        - I don't want to choose a CSS framework, bundler, state manager, router, bundler plugins, CSS preprocessor plugins, test framework and debug their incompatibilities and learn new apis everytime I want to create a new web project.
         - Why the layout is broken on iPhone, the app crashes on Safari, it's slow on Chrome and scrollbars don't work on Windows? 
-        - I just want to send a message to a server. I don't want to handle retrying, set headers, set timeout, correctly serialize everything, handle errors by numbers, constantly think about cookies, domains, protocols, etc.
+        - I just want to send a message to a server. I don't want to handle retrying, set headers, set timeout, correctly serialize everything, handle errors by their numbers, constantly think about cookies, domains, protocols, XSS, CSRF, etc.
         - What about SEO?
         - Should I use standard routing, hash routing, query parameters, custom base paths? Is everything correctly encoded and decoded?
         - etc.
