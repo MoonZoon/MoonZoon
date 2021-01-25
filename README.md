@@ -25,6 +25,7 @@
             <li>NO SQL</li>
             <li>NO Analysis Paralysis</li>
             <li>NO Wheel Reinventing</li>
+            <li>NO Passwords*</li>
         </ul>
     </td>
     <td>
@@ -34,12 +35,15 @@
             <li>Simple</li>
             <li>Scalable</li>
             <li>SEO</li>
-            <li>Authentication</li>
+            <li>Auth</li>
+            <li>MoonZoon CLI</li>
             <li>Easy Deploy</li>
             <li>Offline Support</li>
         </ul>
     </td>
 </table>
+
+\* Authentication methods are described in [Backend](docs/backend.md).md
 
 ---
 
