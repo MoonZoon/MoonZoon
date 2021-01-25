@@ -260,6 +260,7 @@ Also there are some passwordless auth methods:
   1. https://webauthn.io/
   1. https://webauthn.me/
   1. https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API
+  1. https://www.w3.org/TR/webauthn/
   1. https://github.com/herrjemand/awesome-webauthn
   1. https://crates.io/crates/webauthn-rs + related articles on https://fy.blackhats.net.au
   1. https://medium.com/webauthnworks/introduction-to-webauthn-api-5fd1fb46c285
