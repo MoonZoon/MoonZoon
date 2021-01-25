@@ -82,10 +82,12 @@
         However steep learning curve isn't bad: 
         - It means that Rust doesn't hide real complexity behind too simple models.
         - It's almost impossible for complete beginners to publish incomplete/buggy libraries. 
+        
+        _
 
         Rust is designed so well that I feel nervous while I'm writing in other languages - I have to do compiler's work again in my head and think about weird things like typos in code, `null`s, `undefined`s, memory leaks, accidental mutations, how to write fast code without mutability, etc. It generates significant cognitive load so I can't focus so much on business logic and other important stuff.
 
-        I don't believe that you should use the most suitable language for specific domain or problem at all costs. I think consistency among your / company projects and simplicity should have the highest priority. And Rust is a very universal language so I think it's a good choice for almost all cases.
+        I don't believe that you should use the most suitable language for a specific domain or problem at all costs. I think consistency among your / company projects, productivity and simplicity should have the highest priority. And Rust is a very universal language so I think it's a good choice for almost all cases.
 
         There are also things that should be improved (and are improving):
         1. Compilation is still slow, but it's not so frustrating now.
@@ -95,7 +97,9 @@
         </details>
 
 1. _"The API looks weird!"_
-   - Well, I would like to make it compilable on the stable Rust so I can't use some unstable features that would make the API a bit better. Or I wasn't able to find a simpler and nicer API - please let me know why and how do you want to improve it. Or we have just different experience and feel for graphic stuff.
+   - I would like to make it compilable on the stable Rust so I can't use some unstable features that would make the API a bit better. 
+   - Or I wasn't able to find a simpler and nicer API - please let me know why and how do you want to improve it. 
+   - Or we have just different experience and feel for graphic stuff.
 
 1. _"Who is developing it?"_
    - Martin Kavík (a [Seed](https://seed-rs.org/) maintainer, Rust freelance developer) with the help of the awesome community.
