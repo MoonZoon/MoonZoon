@@ -216,21 +216,17 @@ We'll use the **Time Tracker** example parts to demonstrate how to define an _ac
        - A new index will be created. Then the callback's only argument is `None`.
        - Serialized old keys have different type than the required one. Then the callback's argument contains `IndexError`. It allows you to convert the keys to a new type.
 
-    - The callback provided in the `index` arguments has to return `PVar`. Then index keys will be automatically synchronized with the `PVar` value. 
+    - The callback provided in the second `index`'s argument has to return `PVar`. Index keys will be automatically synchronized with the associated `PVar` value. 
 
 ---
 
 ## Auth
 
 Authentication and Authorization are:
-- Probably the most reinvented wheels on the backend. 
+- Probably the most reinvented wheels. 
 - Very difficult to implement without introducing security holes.
 - Painful to integrate into your product because of regulations like _GDPR_ or _Cookie Law_.
 - Annoying for your users.  
-
-Every project may have very different requirements for authentication. However most projects use standard login + password. And this standard mechanism is also very useful for testing.
-
-MoonZoon will allow you from the beginning to send a token in the request's header so you have at least a basic foundation to integrate, for instance, _JWT_ auth.
 
 _
 
@@ -241,14 +237,16 @@ Defining the basic auth behavior is really a tough task:
 
 - Can we assume all apps communicate over HTTPS?
 
-- There are also ways to register and log in without sending password to the server (see [Seed's E2E encryption example](https://github.com/seed-rs/seed/tree/master/examples/e2e_encryption) for more info.) Do we need it?
+- There are also ways to register and log in without sending passwords to the server (see [Seed's E2E encryption example](https://github.com/seed-rs/seed/tree/master/examples/e2e_encryption) for more info.) Do we need it?
 
 - Is _E2E encryption_ required?
 
 - We need to take into account legal requirements:
-  - Do we need user's email? Is user's nick a real name? It has to be compatible with GDPR and we need to mention it in our _Terms and Policies_ and other other documents. 
+  - Do we need user's email? Is user's nick a real name? It has to be compatible with GDPR and we need to mention it in our _Terms and Policies_ and other documents. 
   - The user has to agree with the usage of their data before the registration and he has to be able to delete the data. 
   - etc. 
+  
+- What about account recovery, log in on multiple devices, testing, ...
 
 _
 
@@ -269,14 +267,18 @@ Also there are some passwordless auth methods:
 
 _
 
-So let's wait a bit until we see clear requirements and how technologies like _WebAuthn_ work in practice before we try to design special auth libraries and finalize MoonZoon API. Your opinions on the [chat](https://discord.gg/eGduTxK2Es) are very welcome!
+So let's wait a bit until we see clear requirements and how technologies like _WebAuthn_ work in practice before we try to design special auth libraries and finalize MoonZoon API. 
+
+MoonZoon will allow you from the beginning to send a token in the request's header so you have at least a basic foundation to integrate, for instance, _JWT_ auth.
+
+Your opinions on the [chat](https://discord.gg/eGduTxK2Es) are very welcome!
 
 ---
 
 ## FAQ
 
 1. _"Why another backend framework? Are you mad??"_
-   - In the context of my goal to remove all accidental complexity, I treat most popular backend frameworks as low-level building blocks. You are able to write everything with them, but you still have to think about REST API endpoints, choose and connect a database, manage actors manually, setup servers, somehow test serverless functions, etc. Moon will be probably based on one of those frameworks - this way you don't have to care about low-level things, however you can when you need more control. 
+   - In the context of my goal to remove all accidental complexity, I treat most popular backend frameworks as low-level building blocks. You are able to write everything with them, but you still have to think about REST API endpoints, choose and connect a database, manage actors manually, setup servers, somehow test serverless functions, etc. Moon will be based on one of those frameworks - this way you don't have to care about low-level things, however you can when you need more control. 
 
 1. _"Those are pretty weird actors!"_
    - Yeah, actually, they are called _Virtual Actors_. I recommend to read [Orleans – Virtual Actors](https://www.microsoft.com/en-us/research/project/orleans-virtual-actors/).
@@ -284,10 +286,10 @@ So let's wait a bit until we see clear requirements and how technologies like _W
 1. _"Why virtual actors and not microservices / event sourcing / standard actors / CRDTs / blockchain / orthogonal persistence / ..?"_
    - Virtual actors allow you to start with a small simple project and they won't stop you while you grow. 
    - You can combine virtual actors with other concepts - why don't leverage event sourcing to manage the actor state? 
-   - There is a chance the architecture and security will be improved by implementing actors as single-threaded isolated Wasm modules.
+   - There is a chance the architecture and security will be improved by implementing actors as isolated single-threaded _Wasm_ modules.
    - There are open-source virtual actor frameworks battle-tested in production. And there are also related research papers - especially for Orleans.
 
 1. _"What about transactions, backups, autoscaling, deploying, storage configuration, ..?"_
    - I try to respect Gall’s Law - "A complex system that works is invariably found to have evolved from a simple system that worked."
    - So let's start with a single server, simple implementation and minimum features. "Deploy to Heroku" button would be nice.
-   - There are research papers about virtual actors and things like transactions. It will take time but the architecture will allow to add many new features if needed.
+   - There are research papers about virtual actors and things like transactions. It will take time but the architecture will allow to add many new features when needed.
