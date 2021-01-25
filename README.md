@@ -58,7 +58,7 @@
 # FAQ
 
 1. _"Is it production-ready?"_
-   - No, but you can subscribe to `#news` channel on our [Discord server](https://discord.gg/eGduTxK2Es) to don't miss an announcement. 
+   - No, it's in the design phase now, but you can subscribe to `#news` channel on our [Discord server](https://discord.gg/eGduTxK2Es) to don't miss the announcement. 
    - MoonZoon will be battle-tested during the [OpenHope](http://openhope.net) development.
 
 1. _"Why another framework? Are you mad??"_
