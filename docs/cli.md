@@ -40,10 +40,10 @@ cargo install mzoon
    - Other commands will be added later.
 
 1. _"How can I change the port number?"_
-   - The first idea: The function `init` in your Moon's app would return a struct `Config` with the optional property `port`. The default port is `8080`.
+   - The first idea: The function `init` in your Moon app would return a struct `Config` with the optional property `port`. The default port is `8080`.
 
 1. _"What is a new project file structure?"_
-   - See the example `time_tracker` to have an idea.
+   - See the content of `/examples/time_tracker` to have an idea.
     
 
 
