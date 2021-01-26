@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="branding/MoonZoon_logo_readme.png" height="300" title="MoonZoon logo">
+  <img src="branding/MoonZoon_logo_readme.png" width="360" title="MoonZoon logo">
 </p>
 
 ### [Discord](https://discord.gg/eGduTxK2Es) | [moonzoon.rs](http://moonzoon.rs)* | [martin@moonzoon.rs](mailto:martin@moonzoon.rs)
