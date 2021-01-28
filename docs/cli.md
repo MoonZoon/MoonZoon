@@ -7,8 +7,9 @@ _
 
 You'll be able to install or update it with _Cargo_: 
 ```sh
-cargo install mzoon
+cargo install --locked mzoon
 ```
+([why _--locked_?](https://github.com/rust-lang/cargo/issues/7169))
 
 ---
 
