@@ -110,3 +110,6 @@
     - If you think MoonZoon will be useful for your project, I want to know that! (Use [chat](https://discord.gg/eGduTxK2Es) or [martin@moonzoon.rs](mailto:martin@moonzoon.rs)).
     - Don't hesitate to tell your friends about MoonZoon and feel free to share the link ([http://moonzoon.rs](http://moonzoon.rs)) on social platforms / forums / blogs / newsletters. 
 
+---
+
+Thank you for reading! We are waiting for you on [Discord](https://discord.gg/eGduTxK2Es).
