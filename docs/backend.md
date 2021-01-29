@@ -273,6 +273,9 @@ MoonZoon will allow you from the beginning to send a token in the request's head
 
 Your opinions on the [chat](https://discord.gg/eGduTxK2Es) are very welcome!
 
+Other related articles:
+ - [Authentication in SPA (ReactJS and VueJS) the right way - Part 1](https://jcbaey.com/authentication-in-spa-reactjs-and-vuejs-the-right-way)
+
 ---
 
 ## FAQ
