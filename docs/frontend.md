@@ -388,6 +388,14 @@ _
         - etc.
         
         </details>
+        
+1. _"How are we taking care of animations?"_ (by None on [chat](https://discord.gg/eGduTxK2Es))
+   - The API for animations haven't been designed yet. We'll probably focus on it once we have a proof-of-concept of the basic MoonZoon features.
+   - Inspiration:
+      - [react-spring](https://www.react-spring.io/)
+      - [Framer Motion](https://www.framer.com/motion/)
+      - [React UseGesture](https://use-gesture.netlify.app/)
+      - [elm-animator](https://korban.net/posts/elm/2020-04-07-using-elm-animator-with-elm-ui/)
 
 1. _"Hey Martin, what about [Seed](https://seed-rs.org/)?"_
    - Zoon and Seed have very different features and goals. I assume we will be able to implement some interesting features inspired by Zoon in Seed, if needed. I'll maintain Seed as usual.
