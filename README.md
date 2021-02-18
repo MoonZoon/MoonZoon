@@ -57,6 +57,8 @@
 
 ### 4. [CLI](docs/cli.md).md
 
+### 5. [Cloud](docs/cloud.md).md
+
 ---
 
 # FAQ
