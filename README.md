@@ -47,6 +47,12 @@
 
 ---
 
+# Blog
+
+- Cure for Web Development [[Medium](https://martinkavik.medium.com/cure-for-web-development-65003afb701f) / [dev.to](https://dev.to/martinkavik/cure-for-web-development-nnn) / [MD](docs/articles/cure_for_web_development.md)]
+
+---
+
 # Documentation
 
 ### 1. [Philosophy & Non-Goals](docs/philosophy_and_non_goals.md).md
