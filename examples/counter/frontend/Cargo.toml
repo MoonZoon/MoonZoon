@@ -17,7 +17,7 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 # zoon = { git = "https://github.com/MartinKavik/MoonZoon" }
-zoon = { path = "../../../zoon" }
+zoon = { path = "../../../crates/zoon" }
 
 [profile.release]
 lto = true

@@ -9,5 +9,5 @@ async fn frontend() -> Frontend {
 async fn up_msg_handler(req: UpMsgRequest) {}
 
 fn main() {
-    start!(init, frontend, up_msg_handler);
+    start!(init, frontend, up_msg_handler).unwrap();
 }
