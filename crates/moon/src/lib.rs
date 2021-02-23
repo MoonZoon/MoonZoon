@@ -55,12 +55,16 @@ where
                 Ok::<_, warp::Rejection>(http::StatusCode::OK)
             });
 
+        let pkg_route = warp::path("pkg").and(warp::fs::dir("./frontend/pkg/"));
+
         let frontend_route = warp::get().and_then(move || async move {
             let frontend = frontend().await;
             Ok::<_, warp::Rejection>(warp::reply::html(html(&frontend.title)))
         });
-
-        let routes = up_msg_handler_route.or(frontend_route);
+        
+        let routes = up_msg_handler_route
+            .or(pkg_route)
+            .or(frontend_route);
 
         warp::serve(routes)
             .run(([0, 0, 0, 0], 8080))
@@ -81,15 +85,14 @@ fn html(title: &str) -> String {
 
     <body>
       <h1>Moon!</h1>
+      <section id="app"></section>
+      <script type="module">
+        import init from '/pkg/frontend.js';
+        init('/pkg/frontend_bg.wasm');
+      </script>
     </body>
     
     </html>"#, title = title)
-
-    //   <section id="app"></section>
-    //   <script type="module">
-    //     import init from '/pkg/package.js';
-    //     init('/pkg/package_bg.wasm');
-    //   </script>
 }
 
 #[cfg(test)]
