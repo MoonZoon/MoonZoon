@@ -12,7 +12,3 @@ edition = "2018"
 [dependencies]
 # moon = { git = "https://github.com/MartinKavik/MoonZoon" }
 moon = { path = "../../../crates/moon" }
-
-[profile.release]
-lto = true
-codegen-units = 1

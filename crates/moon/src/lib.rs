@@ -2,6 +2,7 @@ use std::future::Future;
 use std::error::Error;
 use tokio::runtime::Runtime;
 use warp::Filter;
+use warp::http;
 
 pub struct Frontend {
     title: String,
@@ -34,23 +35,34 @@ macro_rules! start {
 pub fn start<IN, FR, UP>(
     init: impl FnOnce() -> IN, 
     frontend: impl Fn() -> FR + Copy + Send + Sync + 'static, 
-    up_msg_handler: impl FnOnce(UpMsgRequest) -> UP,
+    up_msg_handler: impl Fn(UpMsgRequest) -> UP + Copy + Send + Sync + 'static,
 ) -> Result<(), Box<dyn Error>>
 where
     IN: Future<Output = ()>,
     FR: Future<Output = Frontend> + Send,
-    UP: Future<Output = ()>,
+    UP: Future<Output = ()> + Send,
 {
     let rt  = Runtime::new()?;
     rt.block_on(async move {
         init().await;
 
-        let frontend = warp::get().and_then(move || async move {
+        let api = warp::post().and(warp::path("api"));
+
+        let up_msg_handler_route = api
+            .and(warp::path("up_msg_handler"))
+            .and_then(move || async move {
+                up_msg_handler(UpMsgRequest {}).await;
+                Ok::<_, warp::Rejection>(http::StatusCode::OK)
+            });
+
+        let frontend_route = warp::get().and_then(move || async move {
             let frontend = frontend().await;
             Ok::<_, warp::Rejection>(warp::reply::html(html(&frontend.title)))
         });
 
-        warp::serve(frontend)
+        let routes = up_msg_handler_route.or(frontend_route);
+
+        warp::serve(routes)
             .run(([0, 0, 0, 0], 8080))
             .await;
     });
