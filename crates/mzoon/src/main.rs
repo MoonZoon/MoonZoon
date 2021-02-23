@@ -1,5 +1,5 @@
 use structopt::StructOpt;
-use std::process::{Command, Stdio, Child};
+use std::process::{Command, Stdio, Child, exit};
 use std::fs;
 use serde::Deserialize;
 use notify::{Watcher, RecursiveMode, watcher, DebouncedEvent };
@@ -16,12 +16,12 @@ enum Opt  {
     },
 }
 
-// Run from example with build:  cargo run --manifest-path "../../crates/mzoon/Cargo.toml" start
-// Run from example:  ../../crates/mzoon/target/debug/mzoon start
+// Run from example:  cargo run --manifest-path "../../crates/mzoon/Cargo.toml" start
 
 fn main() {
-    let opt = Opt::from_args();
+    ctrlc::set_handler(|| exit(0)).unwrap();
 
+    let opt = Opt::from_args();
     println!("{:?}", opt);
 
     match opt {
