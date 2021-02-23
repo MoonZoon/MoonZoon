@@ -27,8 +27,8 @@ cargo install --locked mzoon
 - Both Moon and Zoon apps are automatically recompiled on a file change.
 - The Moon app automatically reloads the Zoon app on a change.
 - Optional parameters:
-   1. **`--prod` / `-p`**
-      - Example: `mzoon start --prod`
+   1. **`--release` / `-r`**
+      - Example: `mzoon start --release`
       - Compiles in the release mode; Zoon auto-reload is disabled.
    1. **`--open` / `-o`**
       - Example: `mzoon start --open`
