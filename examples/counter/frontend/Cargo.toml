@@ -19,10 +19,5 @@ wasm-bindgen-test = "0.3.19"
 # zoon = { git = "https://github.com/MartinKavik/MoonZoon" }
 zoon = { path = "../../../crates/zoon" }
 
-[profile.release]
-lto = true
-opt-level = 'z'
-codegen-units = 1
-
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ['-Os']
