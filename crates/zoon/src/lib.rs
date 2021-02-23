@@ -1,11 +1,5 @@
 pub use wasm_bindgen::{self, prelude::*, JsCast};
-
-#[macro_export]
-macro_rules! blocks {
-    ($x:tt) => {
-        
-    };
-}
+pub use blocks::blocks;
 
 #[macro_export]
 macro_rules! start {

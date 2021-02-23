@@ -1,9 +1,10 @@
 [package]
-name = "zoon"
+name = "blocks"
 version = "0.1.0"
 authors = ["Martin Kavík <martin@kavik.cz>"]
 edition = "2018"
 
+[lib]
+proc-macro = true
+
 [dependencies]
-wasm-bindgen = "0.2.70"
-blocks = { path = "../blocks"}
