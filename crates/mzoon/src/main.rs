@@ -21,31 +21,47 @@ fn main() {
     match opt {
         Opt::New { .. } => {},
         Opt::Start { release } => {
-            let mut wasm_pack_args = vec![
-                "--log-level", "warn", "build", "frontend", "--target", "web", "--no-typescript",
-            ];
-            if !release {
-                wasm_pack_args.push("--dev");
-            }
-            Command::new("wasm-pack")
-                .stdout(Stdio::inherit())
-                .stderr(Stdio::inherit())
-                .args(&wasm_pack_args)
-                .output()
-                .unwrap();
-
-            let mut cargo_args = vec![
-                "run", "--package", "backend",
-            ];
-            if release {
-                cargo_args.push("--release");
-            }
-            Command::new("cargo")
-                .stdout(Stdio::inherit())
-                .stderr(Stdio::inherit())
-                .args(&cargo_args)
-                .output()
-                .unwrap();
+            check_wasm_pack();
+            wasm_pack_build(release);
+            cargo_run(release)
         },
     }
+}
+
+fn check_wasm_pack() {
+    let status = Command::new("wasm-pack")
+        .args(&["-V"])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status();
+    match status {
+        Ok(status) if status.success() => (),
+        _ => panic!("Cannot find `wasm-pack`! Please install it by `cargo install wasm-pack`"),
+    }
+}
+
+fn wasm_pack_build(release: bool) {
+    let mut args = vec![
+        "--log-level", "warn", "build", "frontend", "--target", "web", "--no-typescript",
+    ];
+    if !release {
+        args.push("--dev");
+    }
+    Command::new("wasm-pack")
+        .args(&args)
+        .spawn()
+        .unwrap();
+}
+
+fn cargo_run(release: bool) {
+    let mut args = vec![
+        "run", "--package", "backend",
+    ];
+    if release {
+        args.push("--release");
+    }
+    Command::new("cargo")
+        .args(&args)
+        .spawn()
+        .unwrap();
 }
