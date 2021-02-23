@@ -1,6 +1,9 @@
 use std::future::Future;
 use std::error::Error;
 use tokio::runtime::Runtime;
+use tokio::task;
+use tokio::sync::oneshot;
+use tokio::signal;
 use warp::Filter;
 use warp::http;
 
@@ -66,9 +69,14 @@ where
             .or(pkg_route)
             .or(frontend_route);
 
-        warp::serve(routes)
-            .run(([0, 0, 0, 0], 8080))
-            .await;
+        let (shutdown_sender, shutdown_receiver) = oneshot::channel();
+        let (_, server) = warp::serve(routes)
+            .bind_with_graceful_shutdown(([0, 0, 0, 0], 8080), async {
+                shutdown_receiver.await.ok();
+            });
+        task::spawn(server);
+        signal::ctrl_c().await.unwrap();
+        let _ = shutdown_sender.send(());
     });
     Ok(())
 }
