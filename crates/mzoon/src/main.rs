@@ -1,7 +1,11 @@
 use structopt::StructOpt;
-use std::process::{Command, Stdio};
+use std::process::{Command, Stdio, Child};
 use std::fs;
 use serde::Deserialize;
+use notify::{Watcher, RecursiveMode, watcher, DebouncedEvent };
+use std::sync::mpsc::channel;
+use std::time::Duration;
+use std::thread::{self, JoinHandle};
 
 #[derive(Debug, StructOpt)]
 enum Opt  {
@@ -20,15 +24,17 @@ fn main() {
 
     println!("{:?}", opt);
 
-    let config;
-
     match opt {
         Opt::New { .. } => {},
         Opt::Start { release } => {
-            config = load_config();
+            let config = load_config();
             check_wasm_pack();
-            build_frontend(release);
-            build_and_run_backend(release)
+            
+            let frontend_watcher_handle = start_frontend_watcher(config.watch.frontend.clone(), release);
+            let backend_watcher_handle = start_backend_watcher(config.watch.backend.clone(), release);
+            
+            frontend_watcher_handle.join().unwrap();
+            backend_watcher_handle.join().unwrap();
         },
     }
 }
@@ -42,6 +48,61 @@ struct Config {
 struct Watch {
     frontend: Vec<String>, 
     backend: Vec<String>,
+}
+
+fn start_frontend_watcher(paths: Vec<String>, release: bool) -> JoinHandle<()> {
+    thread::spawn(move || {
+        let (watcher_sender, watcher_receiver) = channel();
+        let mut watcher = watcher(watcher_sender, Duration::from_millis(100)).unwrap();
+        for path in paths {
+            watcher.watch(&path, RecursiveMode::Recursive).unwrap();
+        }
+        build_frontend(release);
+        loop {
+            match watcher_receiver.recv() {
+                Ok(event) => match event {
+                    DebouncedEvent::NoticeWrite(_) | DebouncedEvent:: NoticeRemove(_) => (),
+                    _ => {
+                        println!("Build frontend");
+                        build_frontend(release);
+                    }
+                },
+                Err(error) => panic!("watch frontend error: {:?}", error),
+            }
+        }
+    })
+}
+
+fn start_backend_watcher(paths: Vec<String>, release: bool) -> JoinHandle<()> {
+    thread::spawn(move || {
+        let (watcher_sender, watcher_receiver) = channel();
+        let mut watcher = watcher(watcher_sender, Duration::from_millis(100)).unwrap();
+        for path in paths {
+            watcher.watch(&path, RecursiveMode::Recursive).unwrap();
+        }
+
+        let (server_rebuild_run_sender, server_rebuild_run_receiver) = channel();
+        thread::spawn(move || {
+            loop {
+                let mut cargo_and_server_process = build_and_run_backend(release);
+                server_rebuild_run_receiver.recv().unwrap();
+                let _ = cargo_and_server_process.kill();
+            }
+        });
+
+        loop {
+            match watcher_receiver.recv() {
+                Ok(event) => match event {
+                    DebouncedEvent::NoticeWrite(_) | DebouncedEvent:: NoticeRemove(_) => (),
+                    _ => {
+                        println!("Build backend");
+                        server_rebuild_run_sender.send(()).unwrap();
+                    }
+                },
+                Err(error) => println!("watch backend error: {:?}", error),
+            }
+        }
+    })
 }
 
 fn load_config() -> Config {
@@ -74,7 +135,7 @@ fn build_frontend(release: bool) {
         .unwrap();
 }
 
-fn build_and_run_backend(release: bool) {
+fn build_and_run_backend(release: bool) -> Child {
     let mut args = vec![
         "run", "--package", "backend",
     ];
@@ -84,5 +145,5 @@ fn build_and_run_backend(release: bool) {
     Command::new("cargo")
         .args(&args)
         .spawn()
-        .unwrap();
+        .unwrap()
 }
