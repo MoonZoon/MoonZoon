@@ -58,6 +58,13 @@ where
                 Ok::<_, warp::Rejection>(http::StatusCode::OK)
             });
 
+        let reload = api
+            .and(warp::path("reload"))
+            .map(|| {
+                println!("Reload frontend server");
+                http::StatusCode::OK
+            });
+
         let pkg_route = warp::path("pkg").and(warp::fs::dir("./frontend/pkg/"));
 
         let frontend_route = warp::get().and_then(move || async move {
@@ -66,6 +73,7 @@ where
         });
         
         let routes = up_msg_handler_route
+            .or(reload)
             .or(pkg_route)
             .or(frontend_route);
 

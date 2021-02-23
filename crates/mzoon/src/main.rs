@@ -65,6 +65,11 @@ fn start_frontend_watcher(paths: Vec<String>, release: bool) -> JoinHandle<()> {
                     _ => {
                         println!("Build frontend");
                         build_frontend(release);
+                        println!("Reload frontend");
+                        reqwest::blocking::Client::new()
+                            .post("http://127.0.0.1:8080/api/reload")
+                            .send()
+                            .unwrap();
                     }
                 },
                 Err(error) => panic!("watch frontend error: {:?}", error),
@@ -132,6 +137,8 @@ fn build_frontend(release: bool) {
     Command::new("wasm-pack")
         .args(&args)
         .spawn()
+        .unwrap()
+        .wait()
         .unwrap();
 }
 
