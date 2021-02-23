@@ -28,7 +28,7 @@ pub struct UpMsgRequest {
 #[macro_export]
 macro_rules! start {
     ($init:expr, $frontend:expr, $up_msg_handler:expr) => {
-        start($init, $frontend, $up_msg_handler);
+        $crate::start($init, $frontend, $up_msg_handler);
     };
 }
 

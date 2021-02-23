@@ -18,6 +18,13 @@ fn main() {
     match opt {
         Opt::New { .. } => {},
         Opt::Start => {
+            Command::new("wasm-pack")
+                .stdout(Stdio::inherit())
+                .stderr(Stdio::inherit())
+                .args(&["--log-level", "warn", "build", "frontend", "--target", "web", "--no-typescript", "--dev"])
+                .output()
+                .unwrap();
+
             Command::new("cargo")
                 .stdout(Stdio::inherit())
                 .stderr(Stdio::inherit())
