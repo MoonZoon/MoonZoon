@@ -4,7 +4,10 @@ use std::process::{Command, Stdio};
 #[derive(Debug, StructOpt)]
 enum Opt  {
     New { project_name: String },
-    Start,
+    Start { 
+        #[structopt(short, long)]
+        release: bool
+    },
 }
 
 // Run from example with build:  cargo run --manifest-path "../../crates/mzoon/Cargo.toml" start
@@ -17,18 +20,30 @@ fn main() {
 
     match opt {
         Opt::New { .. } => {},
-        Opt::Start => {
+        Opt::Start { release } => {
+            let mut wasm_pack_args = vec![
+                "--log-level", "warn", "build", "frontend", "--target", "web", "--no-typescript",
+            ];
+            if !release {
+                wasm_pack_args.push("--dev");
+            }
             Command::new("wasm-pack")
                 .stdout(Stdio::inherit())
                 .stderr(Stdio::inherit())
-                .args(&["--log-level", "warn", "build", "frontend", "--target", "web", "--no-typescript", "--dev"])
+                .args(&wasm_pack_args)
                 .output()
                 .unwrap();
 
+            let mut cargo_args = vec![
+                "run", "--package", "backend",
+            ];
+            if release {
+                cargo_args.push("--release");
+            }
             Command::new("cargo")
                 .stdout(Stdio::inherit())
                 .stderr(Stdio::inherit())
-                .args(&["run", "--package", "backend"])
+                .args(&cargo_args)
                 .output()
                 .unwrap();
         },
