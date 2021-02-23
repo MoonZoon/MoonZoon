@@ -1,5 +1,7 @@
 use structopt::StructOpt;
 use std::process::{Command, Stdio};
+use std::fs;
+use serde::Deserialize;
 
 #[derive(Debug, StructOpt)]
 enum Opt  {
@@ -18,14 +20,33 @@ fn main() {
 
     println!("{:?}", opt);
 
+    let config;
+
     match opt {
         Opt::New { .. } => {},
         Opt::Start { release } => {
+            config = load_config();
             check_wasm_pack();
-            wasm_pack_build(release);
-            cargo_run(release)
+            build_frontend(release);
+            build_and_run_backend(release)
         },
     }
+}
+
+#[derive(Debug, Deserialize)]
+struct Config {
+    watch: Watch
+}
+
+#[derive(Debug, Deserialize)]
+struct Watch {
+    frontend: Vec<String>, 
+    backend: Vec<String>,
+}
+
+fn load_config() -> Config {
+    let toml = fs::read_to_string("MoonZoon.toml").unwrap();
+    toml::from_str(&toml).unwrap()
 }
 
 fn check_wasm_pack() {
@@ -40,7 +61,7 @@ fn check_wasm_pack() {
     }
 }
 
-fn wasm_pack_build(release: bool) {
+fn build_frontend(release: bool) {
     let mut args = vec![
         "--log-level", "warn", "build", "frontend", "--target", "web", "--no-typescript",
     ];
@@ -53,7 +74,7 @@ fn wasm_pack_build(release: bool) {
         .unwrap();
 }
 
-fn cargo_run(release: bool) {
+fn build_and_run_backend(release: bool) {
     let mut args = vec![
         "run", "--package", "backend",
     ];
