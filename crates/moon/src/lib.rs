@@ -11,6 +11,7 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 use warp::Filter;
 use warp::http;
 use warp::sse::Event;
+use uuid::Uuid;
 
 pub struct Frontend {
     title: String,
@@ -56,6 +57,8 @@ where
         let sse_senders = Arc::new(Mutex::new(sse_senders));
         let sse_senders = warp::any().map(move || sse_senders.clone());
 
+        let backend_id = Uuid::new_v4();
+
         init().await;
 
         let api = warp::post().and(warp::path("api"));
@@ -79,10 +82,14 @@ where
 
         let sse = warp::path!("sse")
             .and(sse_senders)
-            .map(|sse_senders: Arc<Mutex<Vec<mpsc::UnboundedSender<Result<Event, Infallible>>>>>| {
+            .map(move |sse_senders: Arc<Mutex<Vec<mpsc::UnboundedSender<Result<Event, Infallible>>>>>| {
                 let (sse_sender, sse_receiver) = mpsc::unbounded_channel();
-                sse_senders.lock().unwrap().push(sse_sender);
                 let sse_stream = UnboundedReceiverStream::<Result<Event, Infallible>>::new(sse_receiver);
+
+                let backend_id = backend_id.to_simple_ref().to_string();
+                sse_sender.send(Ok(Event::default().event("backend_id").data(backend_id))).unwrap();
+
+                sse_senders.lock().unwrap().push(sse_sender);
                 warp::sse::reply(warp::sse::keep_alive().stream(sse_stream))
             });
 
@@ -106,8 +113,7 @@ where
                 shutdown_receiver.await.ok();
             });
         task::spawn(server);
-        println!("Server is running on: 0.0.0.0:{}", port);
-        println!("Quick link: http://127.0.0.1:{}", port);
+        println!("Server is running on 0.0.0.0:{port} [http://127.0.0.1:{port}]", port = port);
         signal::ctrl_c().await.unwrap();
         let _ = shutdown_sender.send(());
     });
@@ -132,6 +138,16 @@ fn html(title: &str) -> String {
         {reconnecting_event_source}
         var uri = 'http://' + location.host + '/sse';
         var sse = new ReconnectingEventSource(uri);
+        var backendId = null;
+        sse.addEventListener("backend_id", function(msg) {{
+            var newBackendId = msg.data;
+            if(backendId === null) {{
+                backendId = newBackendId;
+            }} else if(backendId !== newBackendId) {{
+                sse.close();
+                location.reload();
+            }}
+          }});
         sse.addEventListener("reload", function(msg) {{
           sse.close();
           location.reload();
