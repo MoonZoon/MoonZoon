@@ -52,8 +52,9 @@ where
 {
     let rt  = Runtime::new()?;
     rt.block_on(async move {
-        let sse_sender = Arc::new(Mutex::new(None::<mpsc::UnboundedSender<Result<Event, Infallible>>>));
-        let sse_sender = warp::any().map(move || sse_sender.clone());
+        let sse_senders = Vec::<mpsc::UnboundedSender<Result<Event, Infallible>>>::new();
+        let sse_senders = Arc::new(Mutex::new(sse_senders));
+        let sse_senders = warp::any().map(move || sse_senders.clone());
 
         init().await;
 
@@ -68,22 +69,21 @@ where
 
         let reload = api
             .and(warp::path("reload"))
-            .and(sse_sender.clone())
-            .map(|sse_sender: Arc<Mutex<Option<mpsc::UnboundedSender<Result<Event, Infallible>>>>>| {
-                let mut sse_sender = sse_sender.lock().unwrap();
-                if let Some(sse_sender) = sse_sender.as_mut() {
-                    sse_sender.send(Ok(Event::default().event("reload").data(""))).unwrap();
-                }
+            .and(sse_senders.clone())
+            .map(|sse_senders: Arc<Mutex<Vec<mpsc::UnboundedSender<Result<Event, Infallible>>>>>| {
+                sse_senders.lock().unwrap().retain(|sse_sender| {
+                    sse_sender.send(Ok(Event::default().event("reload").data(""))).is_ok()
+                });
                 http::StatusCode::OK
             });
 
         let sse = warp::path!("sse")
-            .and(sse_sender)
-            .map(|shared_sse_sender: Arc<Mutex<Option<mpsc::UnboundedSender<Result<Event, Infallible>>>>>| {
-                let (sse_sender, reload_event_receiver) = mpsc::unbounded_channel();
-                *shared_sse_sender.lock().unwrap() = Some(sse_sender);
-                let reload_event_stream = UnboundedReceiverStream::<Result<Event, Infallible>>::new(reload_event_receiver);
-                warp::sse::reply(warp::sse::keep_alive().stream(reload_event_stream))
+            .and(sse_senders)
+            .map(|sse_senders: Arc<Mutex<Vec<mpsc::UnboundedSender<Result<Event, Infallible>>>>>| {
+                let (sse_sender, sse_receiver) = mpsc::unbounded_channel();
+                sse_senders.lock().unwrap().push(sse_sender);
+                let sse_stream = UnboundedReceiverStream::<Result<Event, Infallible>>::new(sse_receiver);
+                warp::sse::reply(warp::sse::keep_alive().stream(sse_stream))
             });
 
         let pkg_route = warp::path("pkg").and(warp::fs::dir("./frontend/pkg/"));
@@ -100,11 +100,14 @@ where
             .or(frontend_route);
 
         let (shutdown_sender, shutdown_receiver) = oneshot::channel();
+        let port = 8080;
         let (_, server) = warp::serve(routes)
-            .bind_with_graceful_shutdown(([0, 0, 0, 0], 8080), async {
+            .bind_with_graceful_shutdown(([0, 0, 0, 0], port), async {
                 shutdown_receiver.await.ok();
             });
         task::spawn(server);
+        println!("Server is running on: 0.0.0.0:{}", port);
+        println!("Quick link: http://127.0.0.1:{}", port);
         signal::ctrl_c().await.unwrap();
         let _ = shutdown_sender.send(());
     });
@@ -126,11 +129,12 @@ fn html(title: &str) -> String {
       <section id="app"></section>
 
       <script type="text/javascript">
+        {reconnecting_event_source}
         var uri = 'http://' + location.host + '/sse';
-        var sse = new EventSource(uri);
+        var sse = new ReconnectingEventSource(uri);
         sse.addEventListener("reload", function(msg) {{
-            sse.close();
-            location.reload();
+          sse.close();
+          location.reload();
         }});
       </script>
 
@@ -140,7 +144,7 @@ fn html(title: &str) -> String {
       </script>
     </body>
     
-    </html>"#, std::time::SystemTime::now(), title = title)
+    </html>"#, std::time::SystemTime::now(), title = title, reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"))
 }
 
 #[cfg(test)]

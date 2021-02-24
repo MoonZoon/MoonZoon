@@ -64,12 +64,13 @@ fn start_frontend_watcher(paths: Vec<String>, release: bool) -> JoinHandle<()> {
                     DebouncedEvent::NoticeWrite(_) | DebouncedEvent:: NoticeRemove(_) => (),
                     _ => {
                         println!("Build frontend");
-                        build_frontend(release);
-                        println!("Reload frontend");
-                        reqwest::blocking::Client::new()
-                            .post("http://127.0.0.1:8080/api/reload")
-                            .send()
-                            .unwrap();
+                        if build_frontend(release) {
+                            println!("Reload frontend");
+                            reqwest::blocking::Client::new()
+                                .post("http://127.0.0.1:8080/api/reload")
+                                .send()
+                                .unwrap();
+                        }
                     }
                 },
                 Err(error) => panic!("watch frontend error: {:?}", error),
@@ -127,7 +128,7 @@ fn check_wasm_pack() {
     }
 }
 
-fn build_frontend(release: bool) {
+fn build_frontend(release: bool) -> bool {
     let mut args = vec![
         "--log-level", "warn", "build", "frontend", "--target", "web", "--no-typescript",
     ];
@@ -136,10 +137,9 @@ fn build_frontend(release: bool) {
     }
     Command::new("wasm-pack")
         .args(&args)
-        .spawn()
+        .status()
         .unwrap()
-        .wait()
-        .unwrap();
+        .success()
 }
 
 fn build_and_run_backend(release: bool) -> Child {
