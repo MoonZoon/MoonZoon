@@ -6,4 +6,6 @@ edition = "2018"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1.3"
 warp = "0.3"
+futures = "0.3.13"
