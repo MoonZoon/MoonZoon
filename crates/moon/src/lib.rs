@@ -1,11 +1,16 @@
 use std::future::Future;
 use std::error::Error;
+use std::convert::Infallible;
+use std::sync::{Arc, Mutex};
 use tokio::runtime::Runtime;
 use tokio::task;
 use tokio::sync::oneshot;
 use tokio::signal;
+use tokio::sync::mpsc;
+use tokio_stream::wrappers::UnboundedReceiverStream;
 use warp::Filter;
 use warp::http;
+use warp::sse::Event;
 
 pub struct Frontend {
     title: String,
@@ -47,6 +52,9 @@ where
 {
     let rt  = Runtime::new()?;
     rt.block_on(async move {
+        let sse_sender = Arc::new(Mutex::new(None::<mpsc::UnboundedSender<Result<Event, Infallible>>>));
+        let sse_sender = warp::any().map(move || sse_sender.clone());
+
         init().await;
 
         let api = warp::post().and(warp::path("api"));
@@ -60,9 +68,22 @@ where
 
         let reload = api
             .and(warp::path("reload"))
-            .map(|| {
-                println!("Reload frontend server");
+            .and(sse_sender.clone())
+            .map(|sse_sender: Arc<Mutex<Option<mpsc::UnboundedSender<Result<Event, Infallible>>>>>| {
+                let mut sse_sender = sse_sender.lock().unwrap();
+                if let Some(sse_sender) = sse_sender.as_mut() {
+                    sse_sender.send(Ok(Event::default().event("reload").data(""))).unwrap();
+                }
                 http::StatusCode::OK
+            });
+
+        let sse = warp::path!("sse")
+            .and(sse_sender)
+            .map(|shared_sse_sender: Arc<Mutex<Option<mpsc::UnboundedSender<Result<Event, Infallible>>>>>| {
+                let (sse_sender, reload_event_receiver) = mpsc::unbounded_channel();
+                *shared_sse_sender.lock().unwrap() = Some(sse_sender);
+                let reload_event_stream = UnboundedReceiverStream::<Result<Event, Infallible>>::new(reload_event_receiver);
+                warp::sse::reply(warp::sse::keep_alive().stream(reload_event_stream))
             });
 
         let pkg_route = warp::path("pkg").and(warp::fs::dir("./frontend/pkg/"));
@@ -74,6 +95,7 @@ where
         
         let routes = up_msg_handler_route
             .or(reload)
+            .or(sse)
             .or(pkg_route)
             .or(frontend_route);
 
@@ -100,15 +122,25 @@ fn html(title: &str) -> String {
     </head>
 
     <body>
-      <h1>Moon!</h1>
+      <h1>Moon! {:#?}</h1>
       <section id="app"></section>
+
+      <script type="text/javascript">
+        var uri = 'http://' + location.host + '/sse';
+        var sse = new EventSource(uri);
+        sse.addEventListener("reload", function(msg) {{
+            sse.close();
+            location.reload();
+        }});
+      </script>
+
       <script type="module">
         import init from '/pkg/frontend.js';
         init('/pkg/frontend_bg.wasm');
       </script>
     </body>
     
-    </html>"#, title = title)
+    </html>"#, std::time::SystemTime::now(), title = title)
 }
 
 #[cfg(test)]
