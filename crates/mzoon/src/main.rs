@@ -1,5 +1,5 @@
 use structopt::StructOpt;
-use std::process::{Command, Stdio, Child, exit};
+use std::process::{Command, Stdio, Child};
 use std::fs;
 use serde::Deserialize;
 use notify::{Watcher, RecursiveMode, watcher, DebouncedEvent };
