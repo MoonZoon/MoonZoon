@@ -6,6 +6,7 @@ use notify::{Watcher, RecursiveMode, watcher, DebouncedEvent };
 use std::sync::mpsc::channel;
 use std::time::Duration;
 use std::thread::{self, JoinHandle};
+use std::path::Path;
 
 #[derive(Debug, StructOpt)]
 enum Opt  {
@@ -29,6 +30,7 @@ fn main() {
         Opt::Start { release } => {
             let config = load_config();
             check_wasm_pack();
+            generate_certificate();    
             
             let frontend_watcher_handle = start_frontend_watcher(config.watch.frontend.clone(), release);
             let backend_watcher_handle = start_backend_watcher(config.watch.backend.clone(), release);
@@ -37,6 +39,11 @@ fn main() {
             backend_watcher_handle.join().unwrap();
         },
     }
+}
+
+fn load_config() -> Config {
+    let toml = fs::read_to_string("MoonZoon.toml").unwrap();
+    toml::from_str(&toml).unwrap()
 }
 
 #[derive(Debug, Deserialize)]
@@ -48,6 +55,33 @@ struct Config {
 struct Watch {
     frontend: Vec<String>, 
     backend: Vec<String>,
+}
+
+fn check_wasm_pack() {
+    let status = Command::new("wasm-pack")
+        .args(&["-V"])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status();
+    match status {
+        Ok(status) if status.success() => (),
+        _ => panic!("Cannot find `wasm-pack`! Please install it by `cargo install wasm-pack`"),
+    }
+}
+
+fn generate_certificate() {
+    let public_pem_path = Path::new("backend/private/public.pem");
+    let private_pem_path = Path::new("backend/private/private.pem");
+    if public_pem_path.is_file() && private_pem_path.is_file() { 
+        return;
+    }
+    println!("Generate TLS certificate");
+    let domains = vec!["localhost".to_owned()];
+    let certificate = rcgen::generate_simple_self_signed(domains).unwrap();
+    let public_pem = certificate.serialize_pem().unwrap();
+    let private_pem = certificate.serialize_private_key_pem();
+    fs::write(public_pem_path, public_pem).unwrap();
+    fs::write(private_pem_path, private_pem).unwrap();
 }
 
 fn start_frontend_watcher(paths: Vec<String>, release: bool) -> JoinHandle<()> {
@@ -109,23 +143,6 @@ fn start_backend_watcher(paths: Vec<String>, release: bool) -> JoinHandle<()> {
             }
         }
     })
-}
-
-fn load_config() -> Config {
-    let toml = fs::read_to_string("MoonZoon.toml").unwrap();
-    toml::from_str(&toml).unwrap()
-}
-
-fn check_wasm_pack() {
-    let status = Command::new("wasm-pack")
-        .args(&["-V"])
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status();
-    match status {
-        Ok(status) if status.success() => (),
-        _ => panic!("Cannot find `wasm-pack`! Please install it by `cargo install wasm-pack`"),
-    }
 }
 
 fn build_frontend(release: bool) -> bool {
