@@ -8,10 +8,16 @@ use tokio::sync::oneshot;
 use tokio::signal;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
+use tokio::time;
 use warp::Filter;
 use warp::http;
 use warp::sse::Event;
+use warp::host::Authority;
+use warp::path::FullPath;
 use uuid::Uuid;
+use std::process::exit;
+use std::time::Duration;
+use std::thread;
 
 pub struct Frontend {
     title: String,
@@ -51,6 +57,11 @@ where
     FR: Future<Output = Frontend> + Send,
     UP: Future<Output = ()> + Send,
 {
+    // ctrlc::set_handler(|| {
+    //     println!("moon A ctrcl handler triggered");
+    //     exit(0);
+    // }).unwrap();
+
     let rt  = Runtime::new()?;
     rt.block_on(async move {
         let sse_senders = Vec::<mpsc::UnboundedSender<Result<Event, Infallible>>>::new();
@@ -100,25 +111,52 @@ where
             Ok::<_, warp::Rejection>(warp::reply::html(html(&frontend.title)))
         });
         
-        let routes = up_msg_handler_route
+        let https_routes = up_msg_handler_route
             .or(reload)
             .or(sse)
             .or(pkg_route)
             .or(frontend_route);
+            
+        let http_routes = warp::host::optional()
+            .map(|authority: Option<Authority>| {
+                // println!("Host + port: {:#?}", authority);
+                // println!("Path: {:#?}", warp::path::full().to_string());
+                // path = warp::path::full();
+                // warp::redirect(Uri::from_static("https://127.0.0.1:2443"))
+                "http"
+            });
 
-        let (shutdown_sender, shutdown_receiver) = oneshot::channel();
-        let port = 8080;
-        let (_, server) = warp::serve(routes)
+        let http_port = 8080;
+        let https_port = 8443;
+            
+        let (shutdown_sender_http, shutdown_receiver_http) = oneshot::channel();
+        let (_, http_server) = warp::serve(http_routes)
+            .bind_with_graceful_shutdown(([0, 0, 0, 0], http_port), async {
+                shutdown_receiver_http.await.ok();
+            });
+        let http_server_handle = task::spawn(http_server);
+
+        let (shutdown_sender_https, shutdown_receiver_https) = oneshot::channel();
+        let (_, https_server) = warp::serve(https_routes)
             .tls()
             .cert_path("backend/private/public.pem")
             .key_path("backend/private/private.pem")
-            .bind_with_graceful_shutdown(([0, 0, 0, 0], port), async {
-                shutdown_receiver.await.ok();
+            .bind_with_graceful_shutdown(([0, 0, 0, 0], https_port), async {
+                shutdown_receiver_https.await.ok();
             });
-        task::spawn(server);
-        println!("Server is running on 0.0.0.0:{port} [https://127.0.0.1:{port}]", port = port);
+        let https_server_handle = task::spawn(https_server);
+
+        println!("HTTP server is running on 0.0.0.0:{port} and redirects to HTTPS", port = http_port);
+        println!("HTTPS server is running on 0.0.0.0:{port} [https://127.0.0.1:{port}]", port = https_port);
+
         signal::ctrl_c().await.unwrap();
-        let _ = shutdown_sender.send(());
+        shutdown_sender_http.send(()).unwrap();
+        shutdown_sender_https.send(()).unwrap();
+        // time::sleep(time::Duration::from_secs(1)).await;
+        http_server_handle.abort();
+        https_server_handle.abort();
+        futures::future::join_all(vec![http_server_handle, https_server_handle]).await;
+        println!("Moon shut down");
     });
     Ok(())
 }

@@ -3,7 +3,7 @@ use std::process::{Command, Stdio, Child, exit};
 use std::fs;
 use serde::Deserialize;
 use notify::{Watcher, RecursiveMode, watcher, DebouncedEvent };
-use std::sync::mpsc::channel;
+use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::Duration;
 use std::thread::{self, JoinHandle};
 use std::path::Path;
@@ -20,7 +20,18 @@ enum Opt  {
 // Run from example:  cargo run --manifest-path "../../crates/mzoon/Cargo.toml" start
 
 fn main() {
-    ctrlc::set_handler(|| exit(0)).unwrap();
+    let (frontend_sender, frontend_receiver) = channel();
+    let (backend_sender, backend_receiver) = channel();
+    ctrlc::set_handler({
+        let frontend_sender = frontend_sender.clone();
+        let backend_sender = backend_sender.clone();
+        move || {
+            println!("Shut down MoonZoon CLI");
+            let event = || DebouncedEvent::Error(notify::Error::Generic("ctrl-c".to_owned()), None);
+            frontend_sender.send(event()).unwrap();
+            backend_sender.send(event()).unwrap();
+        }
+    }).unwrap();
 
     let opt = Opt::from_args();
     println!("{:?}", opt);
@@ -32,9 +43,18 @@ fn main() {
             check_wasm_pack();
             generate_certificate();    
             
-            let frontend_watcher_handle = start_frontend_watcher(config.watch.frontend.clone(), release);
-            let backend_watcher_handle = start_backend_watcher(config.watch.backend.clone(), release);
-            
+            let frontend_watcher_handle = start_frontend_watcher(
+                config.watch.frontend.clone(), 
+                release,
+                frontend_sender,
+                frontend_receiver,
+            );
+            let backend_watcher_handle = start_backend_watcher(
+                config.watch.backend.clone(), 
+                release,
+                backend_sender,
+                backend_receiver,
+            );
             frontend_watcher_handle.join().unwrap();
             backend_watcher_handle.join().unwrap();
         },
@@ -84,18 +104,23 @@ fn generate_certificate() {
     fs::write(private_pem_path, private_pem).unwrap();
 }
 
-fn start_frontend_watcher(paths: Vec<String>, release: bool) -> JoinHandle<()> {
+fn start_frontend_watcher(
+    paths: Vec<String>, 
+    release: bool, 
+    sender: Sender<DebouncedEvent>, 
+    receiver: Receiver<DebouncedEvent>
+) -> JoinHandle<()> {
     thread::spawn(move || {
-        let (watcher_sender, watcher_receiver) = channel();
-        let mut watcher = watcher(watcher_sender, Duration::from_millis(100)).unwrap();
+        let mut watcher = watcher(sender, Duration::from_millis(100)).unwrap();
         for path in paths {
             watcher.watch(&path, RecursiveMode::Recursive).unwrap();
         }
         build_frontend(release);
         loop {
-            match watcher_receiver.recv() {
+            match receiver.recv() {
                 Ok(event) => match event {
                     DebouncedEvent::NoticeWrite(_) | DebouncedEvent:: NoticeRemove(_) => (),
+                    DebouncedEvent::Error(notify::Error::Generic(error), _) if error == "ctrl-c" => break,
                     _ => {
                         println!("Build frontend");
                         if build_frontend(release) {
@@ -104,7 +129,7 @@ fn start_frontend_watcher(paths: Vec<String>, release: bool) -> JoinHandle<()> {
                                 .danger_accept_invalid_certs(true)
                                 .build()
                                 .unwrap()
-                                .post("https://127.0.0.1:8080/api/reload")
+                                .post("https://127.0.0.1:8443/api/reload")
                                 .send()
                                 .unwrap();
                         }
@@ -116,30 +141,52 @@ fn start_frontend_watcher(paths: Vec<String>, release: bool) -> JoinHandle<()> {
     })
 }
 
-fn start_backend_watcher(paths: Vec<String>, release: bool) -> JoinHandle<()> {
+enum BackendCommand {
+    Rebuild,
+    Stop,
+}
+
+fn start_backend_watcher(
+    paths: Vec<String>, 
+    release: bool, 
+    sender: Sender<DebouncedEvent>, 
+    receiver: Receiver<DebouncedEvent>
+) -> JoinHandle<()> {
     thread::spawn(move || {
-        let (watcher_sender, watcher_receiver) = channel();
-        let mut watcher = watcher(watcher_sender, Duration::from_millis(100)).unwrap();
+        let mut watcher = watcher(sender, Duration::from_millis(100)).unwrap();
         for path in paths {
             watcher.watch(&path, RecursiveMode::Recursive).unwrap();
         }
 
         let (server_rebuild_run_sender, server_rebuild_run_receiver) = channel();
-        thread::spawn(move || {
+        let backend_handle = thread::spawn(move || {
             loop {
                 let mut cargo_and_server_process = build_and_run_backend(release);
-                server_rebuild_run_receiver.recv().unwrap();
-                let _ = cargo_and_server_process.kill();
+                let command = server_rebuild_run_receiver.recv().unwrap();
+                match command {
+                    BackendCommand::Rebuild => {
+                        let _ = cargo_and_server_process.kill();
+                    },
+                    BackendCommand::Stop => { 
+                        cargo_and_server_process.wait().unwrap();
+                        break 
+                    },
+                }
             }
         });
 
         loop {
-            match watcher_receiver.recv() {
+            match receiver.recv() {
                 Ok(event) => match event {
                     DebouncedEvent::NoticeWrite(_) | DebouncedEvent:: NoticeRemove(_) => (),
+                    DebouncedEvent::Error(notify::Error::Generic(error), _) if error == "ctrl-c" => {
+                        server_rebuild_run_sender.send(BackendCommand::Stop).unwrap();
+                        backend_handle.join().unwrap();
+                        break
+                    },
                     _ => {
                         println!("Build backend");
-                        server_rebuild_run_sender.send(()).unwrap();
+                        server_rebuild_run_sender.send(BackendCommand::Rebuild).unwrap();
                     }
                 },
                 Err(error) => println!("watch backend error: {:?}", error),
