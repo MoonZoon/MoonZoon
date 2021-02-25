@@ -396,6 +396,7 @@ _
       - [Framer Motion](https://www.framer.com/motion/)
       - [React UseGesture](https://use-gesture.netlify.app/)
       - [elm-animator](https://korban.net/posts/elm/2020-04-07-using-elm-animator-with-elm-ui/)
+      - "svelte has really good set of animation examples in their tutorial site. Incase it can help somehow [section 9 -11]" (by Ruman on [chat](https://discord.gg/eGduTxK2Es))
 
 1. _"Hey Martin, what about [Seed](https://seed-rs.org/)?"_
    - Zoon and Seed have very different features and goals. I assume we will be able to implement some interesting features inspired by Zoon in Seed, if needed. I'll maintain Seed as usual.
