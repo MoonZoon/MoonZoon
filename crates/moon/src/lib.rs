@@ -161,7 +161,10 @@ fn html(title: &str) -> String {
       </script>
     </body>
     
-    </html>"#, uuid = Uuid::new_v4().to_simple_ref(), title = title, reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"))
+    </html>"#, 
+    title = title, 
+    uuid = Uuid::new_v4().to_simple_ref(), 
+    reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js")),
 }
 
 #[cfg(test)]
