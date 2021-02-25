@@ -21,4 +21,3 @@ zoon = { path = "../../../crates/zoon" }
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ['-Os']
-
