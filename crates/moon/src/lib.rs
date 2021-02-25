@@ -8,16 +8,12 @@ use tokio::sync::oneshot;
 use tokio::signal;
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use tokio::time;
 use warp::Filter;
-use warp::http;
+use warp::http::{self, Uri};
 use warp::sse::Event;
 use warp::host::Authority;
 use warp::path::FullPath;
 use uuid::Uuid;
-use std::process::exit;
-use std::time::Duration;
-use std::thread;
 
 pub struct Frontend {
     title: String,
@@ -57,10 +53,6 @@ where
     FR: Future<Output = Frontend> + Send,
     UP: Future<Output = ()> + Send,
 {
-    // ctrlc::set_handler(|| {
-    //     println!("moon A ctrcl handler triggered");
-    //     exit(0);
-    // }).unwrap();
 
     let rt  = Runtime::new()?;
     rt.block_on(async move {
@@ -117,13 +109,20 @@ where
             .or(pkg_route)
             .or(frontend_route);
             
-        let http_routes = warp::host::optional()
-            .map(|authority: Option<Authority>| {
-                // println!("Host + port: {:#?}", authority);
-                // println!("Path: {:#?}", warp::path::full().to_string());
-                // path = warp::path::full();
-                // warp::redirect(Uri::from_static("https://127.0.0.1:2443"))
-                "http"
+        let http_routes = warp::path::full()
+            .and(warp::host::optional())
+            .map(|path: FullPath, authority: Option<Authority>| {
+                let authority = authority.unwrap();
+                let authority = format!("{}:{}", authority.host(), 8443);
+                let authority = authority.parse::<Authority>().unwrap();
+
+                let uri = Uri::builder()
+                    .scheme("https")
+                    .authority(authority)
+                    .path_and_query(path.as_str())
+                    .build()
+                    .unwrap();
+                warp::redirect(uri)
             });
 
         let http_port = 8080;
