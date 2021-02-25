@@ -131,7 +131,8 @@ fn html(title: &str) -> String {
     </head>
 
     <body>
-      <h1>Moon! {:#?}</h1>
+      <h1>MoonZoon is running!</h1>
+      <h2>A random uuid: {uuid}</h2>
       <section id="app"></section>
 
       <script type="text/javascript">
@@ -160,7 +161,7 @@ fn html(title: &str) -> String {
       </script>
     </body>
     
-    </html>"#, std::time::SystemTime::now(), title = title, reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"))
+    </html>"#, uuid = Uuid::new_v4().to_simple_ref(), title = title, reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"))
 }
 
 #[cfg(test)]
