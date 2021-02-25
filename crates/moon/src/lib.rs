@@ -93,7 +93,7 @@ where
                 warp::sse::reply(warp::sse::keep_alive().stream(sse_stream))
             });
 
-        let pkg_route = warp::path("pkg").and(warp::fs::dir("./frontend/pkg/"));
+        let pkg_route = warp::path("pkg").and(warp::fs::dir("frontend/pkg/"));
 
         let frontend_route = warp::get().and_then(move || async move {
             let frontend = frontend().await;
@@ -109,11 +109,14 @@ where
         let (shutdown_sender, shutdown_receiver) = oneshot::channel();
         let port = 8080;
         let (_, server) = warp::serve(routes)
+            .tls()
+            .cert_path("backend/private/public.pem")
+            .key_path("backend/private/private.pem")
             .bind_with_graceful_shutdown(([0, 0, 0, 0], port), async {
                 shutdown_receiver.await.ok();
             });
         task::spawn(server);
-        println!("Server is running on 0.0.0.0:{port} [http://127.0.0.1:{port}]", port = port);
+        println!("Server is running on 0.0.0.0:{port} [https://127.0.0.1:{port}]", port = port);
         signal::ctrl_c().await.unwrap();
         let _ = shutdown_sender.send(());
     });
@@ -137,7 +140,7 @@ fn html(title: &str) -> String {
 
       <script type="text/javascript">
         {reconnecting_event_source}
-        var uri = 'http://' + location.host + '/sse';
+        var uri = location.protocol + '//' + location.host + '/sse';
         var sse = new ReconnectingEventSource(uri);
         var backendId = null;
         sse.addEventListener("backend_id", function(msg) {{
@@ -164,7 +167,7 @@ fn html(title: &str) -> String {
     </html>"#, 
     title = title, 
     uuid = Uuid::new_v4().to_simple_ref(), 
-    reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js")),
+    reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"))
 }
 
 #[cfg(test)]

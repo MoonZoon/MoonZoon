@@ -100,8 +100,11 @@ fn start_frontend_watcher(paths: Vec<String>, release: bool) -> JoinHandle<()> {
                         println!("Build frontend");
                         if build_frontend(release) {
                             println!("Reload frontend");
-                            reqwest::blocking::Client::new()
-                                .post("http://127.0.0.1:8080/api/reload")
+                            reqwest::blocking::ClientBuilder::new()
+                                .danger_accept_invalid_certs(true)
+                                .build()
+                                .unwrap()
+                                .post("https://127.0.0.1:8080/api/reload")
                                 .send()
                                 .unwrap();
                         }
