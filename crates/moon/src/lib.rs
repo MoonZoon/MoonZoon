@@ -2,6 +2,7 @@ use std::future::Future;
 use std::error::Error;
 use std::convert::Infallible;
 use std::sync::{Arc, Mutex};
+use std::fs;
 use tokio::runtime::Runtime;
 use tokio::task;
 use tokio::sync::oneshot;
@@ -60,7 +61,10 @@ where
         let sse_senders = Arc::new(Mutex::new(sse_senders));
         let sse_senders = warp::any().map(move || sse_senders.clone());
 
-        let backend_id = Uuid::new_v4();
+        let build_id: Uuid = fs::read_to_string("backend/private/build_id")
+            .ok()
+            .and_then(|uuid| uuid.parse().ok())
+            .unwrap_or_default();
 
         init().await;
 
@@ -89,8 +93,8 @@ where
                 let (sse_sender, sse_receiver) = mpsc::unbounded_channel();
                 let sse_stream = UnboundedReceiverStream::<Result<Event, Infallible>>::new(sse_receiver);
 
-                let backend_id = backend_id.to_simple_ref().to_string();
-                sse_sender.send(Ok(Event::default().event("backend_id").data(backend_id))).unwrap();
+                let build_id = build_id.to_simple_ref().to_string();
+                sse_sender.send(Ok(Event::default().event("build_id").data(build_id))).unwrap();
 
                 sse_senders.lock().unwrap().push(sse_sender);
                 warp::sse::reply(warp::sse::keep_alive().stream(sse_stream))
@@ -100,7 +104,7 @@ where
 
         let frontend_route = warp::get().and_then(move || async move {
             let frontend = frontend().await;
-            Ok::<_, warp::Rejection>(warp::reply::html(html(&frontend.title)))
+            Ok::<_, warp::Rejection>(warp::reply::html(html(&frontend.title, build_id)))
         });
         
         let https_routes = up_msg_handler_route
@@ -160,7 +164,7 @@ where
     Ok(())
 }
 
-fn html(title: &str) -> String {
+fn html(title: &str, build_id: Uuid) -> String {
     format!(r#"<!DOCTYPE html>
     <html lang="en">
     
@@ -172,19 +176,20 @@ fn html(title: &str) -> String {
 
     <body>
       <h1>MoonZoon is running!</h1>
-      <h2>A random uuid: {uuid}</h2>
+      <h2>Backend build id: {build_id}</h2>
+      <h2>Random id: {random_id}</h2>
       <section id="app"></section>
 
       <script type="text/javascript">
         {reconnecting_event_source}
         var uri = location.protocol + '//' + location.host + '/sse';
         var sse = new ReconnectingEventSource(uri);
-        var backendId = null;
-        sse.addEventListener("backend_id", function(msg) {{
-            var newBackendId = msg.data;
-            if(backendId === null) {{
-                backendId = newBackendId;
-            }} else if(backendId !== newBackendId) {{
+        var buildId = null;
+        sse.addEventListener("build_id", function(msg) {{
+            var newBuildId = msg.data;
+            if(buildId === null) {{
+                buildId = newBuildId;
+            }} else if(buildId !== newBuildId) {{
                 sse.close();
                 location.reload();
             }}
@@ -203,7 +208,8 @@ fn html(title: &str) -> String {
     
     </html>"#, 
     title = title, 
-    uuid = Uuid::new_v4().to_simple_ref(), 
+    build_id = build_id.to_string(), 
+    random_id = Uuid::new_v4().to_string(), 
     reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"))
 }
 
