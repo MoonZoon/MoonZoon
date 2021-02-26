@@ -12,3 +12,4 @@ notify = "4.0.12"
 ctrlc = "3.1.8"
 reqwest = { version = "0.11.1", features = ["blocking"] }
 rcgen = "0.8.9"
+open = "1"

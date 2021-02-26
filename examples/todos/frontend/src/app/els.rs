@@ -136,7 +136,7 @@ blocks!{
 
     #[el]
     fn todo(todo: Var<super::Todo>) -> Row {
-        let selected = Some(todo) == super::selected_todo();
+        let selected = Some(todo) == super::selected_todo().inner();
         let checkbox_id = el_var(ElementId::new);
         let row_hovered = el_var(|| false);
         row![

@@ -13,7 +13,9 @@ enum Opt  {
     New { project_name: String },
     Start { 
         #[structopt(short, long)]
-        release: bool
+        release: bool,
+        // #[structopt(short, long)]
+        // open: bool
     },
 }
 
@@ -52,6 +54,7 @@ fn main() {
             let backend_watcher_handle = start_backend_watcher(
                 config.watch.backend.clone(), 
                 release,
+                // open,
                 backend_sender,
                 backend_receiver,
             );
@@ -78,14 +81,14 @@ struct Watch {
 }
 
 fn check_wasm_pack() {
-    let status = Command::new("wasm-pack")
+    let status = Command::new("wasm-pac")
         .args(&["-V"])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status();
     match status {
         Ok(status) if status.success() => (),
-        _ => panic!("Cannot find `wasm-pack`! Please install it by `cargo install wasm-pack`"),
+        _ => panic!("Cannot find `wasm-pack`! Please install it by `cargo install wasm-pack` or download/install pre-built binaries into a globally available directory."),
     }
 }
 
@@ -149,6 +152,7 @@ enum BackendCommand {
 fn start_backend_watcher(
     paths: Vec<String>, 
     release: bool, 
+    // open: bool,
     sender: Sender<DebouncedEvent>, 
     receiver: Receiver<DebouncedEvent>
 ) -> JoinHandle<()> {
@@ -160,8 +164,16 @@ fn start_backend_watcher(
 
         let (server_rebuild_run_sender, server_rebuild_run_receiver) = channel();
         let backend_handle = thread::spawn(move || {
+            // let mut open = open;
             loop {
                 let mut cargo_and_server_process = build_and_run_backend(release);
+                // @TODO wait for (successful) build
+                // if open {
+                //     open = false;
+                //     let address = "https://127.0.0.1:8443";
+                //     println!("Open {} in your default web browser", "https://127.0.0.1:8443");
+                //     open::that(address).unwrap();
+                // }
                 let command = server_rebuild_run_receiver.recv().unwrap();
                 match command {
                     BackendCommand::Rebuild => {
