@@ -1,8 +1,11 @@
 <p align="center">
   <img src="branding/MoonZoon_logo_readme.png" width="360" title="MoonZoon logo">
+  <a href="https://discord.gg/eGduTxK2Es">
+  <img src="https://invidget.switchblade.xyz/eGduTxK2Es" width="430" title="MoonZoon Discord">
+  </a>
 </p>
 
-### [Discord](https://discord.gg/eGduTxK2Es) | [moonzoon.rs](http://moonzoon.rs)* | [martin@moonzoon.rs](mailto:martin@moonzoon.rs)
+### [moonzoon.rs](http://moonzoon.rs)* | [martin@moonzoon.rs](mailto:martin@moonzoon.rs)
 
 \* redirects to this repo until ready
 
@@ -51,6 +54,10 @@
 
 - Cure for Web Development [[Medium](https://martinkavik.medium.com/cure-for-web-development-65003afb701f) / [dev.to](https://dev.to/martinkavik/cure-for-web-development-nnn) / [MD](docs/articles/cure_for_web_development.md)]
 
+### Dev News
+
+1. CLI, Build pipeline, Live-reload, HTTPS [WIP] 
+
 ---
 
 # Documentation
@@ -65,12 +72,14 @@
 
 ### 5. [Cloud](docs/cloud.md).md
 
+### 6. [Development](docs/development.md).md
+
 ---
 
 # FAQ
 
 1. _"Is it production-ready?"_
-   - No, it's in the design phase now, but you can subscribe to `#news` channel on our [Discord server](https://discord.gg/eGduTxK2Es) to don't miss the announcement. 
+   - No, it's in the design & early development phase now, but you can subscribe to `#news` channel on our [Discord server](https://discord.gg/eGduTxK2Es) to don't miss the announcement. 
    - MoonZoon will be battle-tested during the [OpenHope](http://openhope.net) development.
 
 1. _"Why another framework? Are you mad??"_
