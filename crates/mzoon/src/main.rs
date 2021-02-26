@@ -7,6 +7,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::Duration;
 use std::thread::{self, JoinHandle};
 use std::path::Path;
+use uuid::Uuid;
 
 #[derive(Debug, StructOpt)]
 enum Opt  {
@@ -81,7 +82,7 @@ struct Watch {
 }
 
 fn check_wasm_pack() {
-    let status = Command::new("wasm-pac")
+    let status = Command::new("wasm-pack")
         .args(&["-V"])
         .stdout(Stdio::null())
         .stderr(Stdio::null())
@@ -166,6 +167,8 @@ fn start_backend_watcher(
         let backend_handle = thread::spawn(move || {
             // let mut open = open;
             loop {
+                // @TODO only on successful build
+                generate_build_id();
                 let mut cargo_and_server_process = build_and_run_backend(release);
                 // @TODO wait for (successful) build
                 // if open {
@@ -205,6 +208,10 @@ fn start_backend_watcher(
             }
         }
     })
+}
+
+fn generate_build_id() {
+    fs::write("backend/private/build_id", Uuid::new_v4().to_string()).unwrap();
 }
 
 fn build_frontend(release: bool) -> bool {
