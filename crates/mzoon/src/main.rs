@@ -5,9 +5,11 @@ use serde::Deserialize;
 use notify::{Watcher, RecursiveMode, watcher, DebouncedEvent };
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::Duration;
+use std::time::{SystemTime, UNIX_EPOCH};
 use std::thread::{self, JoinHandle};
 use std::path::Path;
 use uuid::Uuid;
+use rcgen::{Certificate, CertificateParams};
 
 #[derive(Debug, StructOpt)]
 enum Opt  {
@@ -105,8 +107,19 @@ fn generate_certificate() {
         return;
     }
     println!("Generate TLS certificate");
+
     let domains = vec!["localhost".to_owned()];
-    let certificate = rcgen::generate_simple_self_signed(domains).unwrap();
+    let mut params = CertificateParams::new(domains);
+
+    // https://support.mozilla.org/en-US/kb/Certificate-contains-the-same-serial-number-as-another-certificate
+    let since_the_epoch = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    params.serial_number = Some(since_the_epoch);
+
+    let certificate = Certificate::from_params(params).unwrap();
+
     let public_pem = certificate.serialize_pem().unwrap();
     let private_pem = certificate.serialize_private_key_pem();
     fs::write(public_pem_path, public_pem).unwrap();
