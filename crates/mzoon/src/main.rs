@@ -46,12 +46,17 @@ fn main() {
             check_wasm_pack();
             generate_certificate();    
             
+            let (frontend_build_finished_sender, frontend_build_finished_receiver) = channel();
             let frontend_watcher_handle = start_frontend_watcher(
                 config.watch.frontend.clone(), 
                 release,
                 frontend_sender,
                 frontend_receiver,
+                frontend_build_finished_sender,
             );
+            // @TODO parallel build instead of waiting (server has to be started after FE build!)
+            frontend_build_finished_receiver.recv().unwrap();
+
             let backend_watcher_handle = start_backend_watcher(
                 config.watch.backend.clone(), 
                 release,
@@ -112,7 +117,8 @@ fn start_frontend_watcher(
     paths: Vec<String>, 
     release: bool, 
     sender: Sender<DebouncedEvent>, 
-    receiver: Receiver<DebouncedEvent>
+    receiver: Receiver<DebouncedEvent>,
+    frontend_build_finished_sender: Sender<()>,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
         let mut watcher = watcher(sender, Duration::from_millis(100)).unwrap();
@@ -120,6 +126,7 @@ fn start_frontend_watcher(
             watcher.watch(&path, RecursiveMode::Recursive).unwrap();
         }
         build_frontend(release);
+        frontend_build_finished_sender.send(()).unwrap();
         loop {
             match receiver.recv() {
                 Ok(event) => match event {
@@ -168,7 +175,7 @@ fn start_backend_watcher(
             // let mut open = open;
             loop {
                 // @TODO only on successful build
-                generate_build_id();
+                generate_backend_build_id();
                 let mut cargo_and_server_process = build_and_run_backend(release);
                 // @TODO wait for (successful) build
                 // if open {
@@ -210,22 +217,39 @@ fn start_backend_watcher(
     })
 }
 
-fn generate_build_id() {
+fn generate_backend_build_id() {
     fs::write("backend/private/build_id", Uuid::new_v4().to_string()).unwrap();
 }
 
 fn build_frontend(release: bool) -> bool {
+    let old_build_id = fs::read_to_string("frontend/pkg/build_id")
+        .ok()
+        .and_then(|uuid| uuid.parse::<Uuid>().ok());
+    if let Some(old_build_id) = old_build_id {
+        let old_wasm = format!("frontend/pkg/frontend_bg_{}.wasm", old_build_id);
+        let old_js = format!("frontend/pkg/frontend_{}.js", old_build_id);
+        let _ = fs::remove_file(old_wasm);
+        let _ = fs::remove_file(old_js);
+    }
+
     let mut args = vec![
         "--log-level", "warn", "build", "frontend", "--target", "web", "--no-typescript",
     ];
     if !release {
         args.push("--dev");
     }
-    Command::new("wasm-pack")
+    let success = Command::new("wasm-pack")
         .args(&args)
         .status()
         .unwrap()
-        .success()
+        .success();
+    if success {
+        let build_id = Uuid::new_v4();
+        fs::rename("frontend/pkg/frontend_bg.wasm", format!("frontend/pkg/frontend_bg_{}.wasm", build_id)).unwrap(); 
+        fs::rename("frontend/pkg/frontend.js", format!("frontend/pkg/frontend_{}.js", build_id)).unwrap(); 
+        fs::write("frontend/pkg/build_id", build_id.to_string()).unwrap();
+    }    
+    success
 }
 
 fn build_and_run_backend(release: bool) -> Child {
