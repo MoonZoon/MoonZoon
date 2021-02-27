@@ -93,7 +93,7 @@ where
                 let (sse_sender, sse_receiver) = mpsc::unbounded_channel();
                 let sse_stream = UnboundedReceiverStream::<Result<Event, Infallible>>::new(sse_receiver);
 
-                let backend_build_id = backend_build_id.to_simple_ref().to_string();
+                let backend_build_id = backend_build_id.to_string();
                 sse_sender.send(Ok(Event::default().event("backend_build_id").data(backend_build_id))).unwrap();
 
                 sse_senders.lock().unwrap().push(sse_sender);
