@@ -1,5 +1,8 @@
 <p align="center">
   <img src="branding/MoonZoon_logo_readme.png" width="360" title="MoonZoon logo">
+</p>
+
+<p align="center">
   <a href="https://discord.gg/eGduTxK2Es">
   <img src="https://invidget.switchblade.xyz/eGduTxK2Es" width="430" title="MoonZoon Discord">
   </a>
