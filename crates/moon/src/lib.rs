@@ -61,7 +61,7 @@ where
         let sse_senders = Arc::new(Mutex::new(sse_senders));
         let sse_senders = warp::any().map(move || sse_senders.clone());
 
-        let build_id: Uuid = fs::read_to_string("backend/private/build_id")
+        let backend_build_id: Uuid = fs::read_to_string("backend/private/build_id")
             .ok()
             .and_then(|uuid| uuid.parse().ok())
             .unwrap_or_default();
@@ -93,8 +93,8 @@ where
                 let (sse_sender, sse_receiver) = mpsc::unbounded_channel();
                 let sse_stream = UnboundedReceiverStream::<Result<Event, Infallible>>::new(sse_receiver);
 
-                let build_id = build_id.to_simple_ref().to_string();
-                sse_sender.send(Ok(Event::default().event("build_id").data(build_id))).unwrap();
+                let backend_build_id = backend_build_id.to_simple_ref().to_string();
+                sse_sender.send(Ok(Event::default().event("backend_build_id").data(backend_build_id))).unwrap();
 
                 sse_senders.lock().unwrap().push(sse_sender);
                 warp::sse::reply(warp::sse::keep_alive().stream(sse_stream))
@@ -104,7 +104,13 @@ where
 
         let frontend_route = warp::get().and_then(move || async move {
             let frontend = frontend().await;
-            Ok::<_, warp::Rejection>(warp::reply::html(html(&frontend.title, build_id)))
+
+            let frontend_build_id: Uuid = fs::read_to_string("frontend/pkg/build_id")
+                .ok()
+                .and_then(|uuid| uuid.parse().ok())
+                .unwrap_or_default();
+
+            Ok::<_, warp::Rejection>(warp::reply::html(html(&frontend.title, backend_build_id, frontend_build_id)))
         });
         
         let https_routes = up_msg_handler_route
@@ -164,7 +170,7 @@ where
     Ok(())
 }
 
-fn html(title: &str, build_id: Uuid) -> String {
+fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid) -> String {
     format!(r#"<!DOCTYPE html>
     <html lang="en">
     
@@ -176,7 +182,7 @@ fn html(title: &str, build_id: Uuid) -> String {
 
     <body>
       <h1>MoonZoon is running!</h1>
-      <h2>Backend build id: {build_id}</h2>
+      <h2>Backend build id: {backend_build_id}</h2>
       <h2>Random id: {random_id}</h2>
       <section id="app"></section>
 
@@ -184,12 +190,12 @@ fn html(title: &str, build_id: Uuid) -> String {
         {reconnecting_event_source}
         var uri = location.protocol + '//' + location.host + '/sse';
         var sse = new ReconnectingEventSource(uri);
-        var buildId = null;
-        sse.addEventListener("build_id", function(msg) {{
-            var newBuildId = msg.data;
-            if(buildId === null) {{
-                buildId = newBuildId;
-            }} else if(buildId !== newBuildId) {{
+        var backendBuildId = null;
+        sse.addEventListener("backend_build_id", function(msg) {{
+            var newBackendBuildId = msg.data;
+            if(backendBuildId === null) {{
+                backendBuildId = newBackendBuildId;
+            }} else if(backendBuildId !== newBackendBuildId) {{
                 sse.close();
                 location.reload();
             }}
@@ -201,16 +207,17 @@ fn html(title: &str, build_id: Uuid) -> String {
       </script>
 
       <script type="module">
-        import init from '/pkg/frontend.js';
-        init('/pkg/frontend_bg.wasm');
+        import init from '/pkg/frontend_{frontend_build_id}.js';
+        init('/pkg/frontend_bg_{frontend_build_id}.wasm');
       </script>
     </body>
     
     </html>"#, 
     title = title, 
-    build_id = build_id.to_string(), 
+    backend_build_id = backend_build_id.to_string(), 
     random_id = Uuid::new_v4().to_string(), 
-    reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"))
+    reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"),
+    frontend_build_id = frontend_build_id.to_string())
 }
 
 #[cfg(test)]
