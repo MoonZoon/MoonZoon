@@ -1,0 +1,9 @@
+[watch]
+frontend = [
+    "frontend/Cargo.toml",
+    "frontend/src",
+]
+backend = [
+    "backend/Cargo.toml",
+    "backend/src",
+]
