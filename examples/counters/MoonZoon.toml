@@ -2,8 +2,12 @@
 frontend = [
     "frontend/Cargo.toml",
     "frontend/src",
+    "../../crates/zoon/Cargo.toml",
+    "../../crates/zoon/src",
 ]
 backend = [
     "backend/Cargo.toml",
     "backend/src",
+    "../../crates/moon/Cargo.toml",
+    "../../crates/moon/src",
 ]

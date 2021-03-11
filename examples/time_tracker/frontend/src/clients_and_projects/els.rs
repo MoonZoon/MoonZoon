@@ -14,7 +14,7 @@ blocks!{
                 button::on_press(super::add_client),
                 "Add Client",
             ];
-            client_panels();
+            client_panels(),
         ]
     }
 
