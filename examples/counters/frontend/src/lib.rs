@@ -1,33 +1,44 @@
-#![no_std]
+// #![no_std]
 
 use zoon::*;
+
+mod counter;
+use counter::{Counter};
 
 blocks!{
 
     #[s_var]
-    fn counter() -> i32 {
-        0
+    fn counter_count() -> usize {
+        3
     }
 
     #[update]
-    fn increment() {
-        counter().update(|counter| counter + 1);
-    }
-
-    #[update]
-    fn decrement() {
-        counter().update(|counter| counter - 1);
+    fn set_counter_count(count: usize) {
+        counter_count().set(count);
     }
 
     #[el]
     fn root() -> Column {
         column![
-            button![button::on_press(decrement), "-"],
-            counter().inner(),
-            button![button::on_press(increment), "+"],
+            main_counter(),
+            counters(),
         ]
     }
 
+    #[el]
+    fn main_counter() -> Counter {
+        counter![
+            counter_count().inner(),
+            counter::on_change(set_counter_count),
+        ]
+    }
+
+    #[el]
+    fn counters() -> Row {
+        row![
+            (0..counter_count().inner()).iter().map(|_| counter![]),
+        ]
+    }
 }
 
 #[wasm_bindgen(start)]
