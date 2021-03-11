@@ -178,6 +178,8 @@ fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid) -> String 
       <meta charset="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
       <title>{title}</title>
+      <link rel="preload" href="/pkg/frontend_bg_{frontend_build_id}.wasm" as="fetch" type="application/wasm" crossorigin>
+      <link rel="preload" href="/pkg/frontend_{frontend_build_id}.js" as="script" type="text/javascript" crossorigin>
     </head>
 
     <body>
