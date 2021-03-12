@@ -28,9 +28,9 @@ impl Component for Counter {
     fn render(&mut self, rcx: RenderContext) {
         let value = el_var(|| 0_usize);
         col![
-            button![button::on_press(move || value.update(|value| value - 1)), text!("-")],
+            button![button::on_press(move || value.update(|value| value - 1)), "-"],
             text!(value.inner().to_string()),
-            button![button::on_press(move || value.update(|value| value + 1)), text!("+")],
+            button![button::on_press(move || value.update(|value| value + 1)), "+"],
         ].render(rcx);
     }
 }
