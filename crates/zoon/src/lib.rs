@@ -16,6 +16,7 @@ pub use console::log;
 pub use hook::{el_var, do_once};
 pub use topo;
 pub use topo::nested as render;
+pub use topo::nested as cmp;
 
 const ELEMENT_ID: &str = "app";
 

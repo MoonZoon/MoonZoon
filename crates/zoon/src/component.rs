@@ -71,14 +71,20 @@ impl<T: Component, ATTR: ApplyToComponent<T>> ApplyToComponent<T> for Option<ATT
     }
 }
 
+// impl<T: Component, ATTR: ApplyToComponent<T>, II: IntoIterator<Item = ATTR>> ApplyToComponent<T> for II {
+//     fn apply_to_component(self, component: &mut T) {
+//         for attribute in self {
+//             attribute.apply_to_component(component);
+//         }
+//     }
+// }
+
 // ------ IntoComponent ------
 
 pub trait IntoComponent<'a> {
     type CMP: Component;
     fn into_component(self) -> Self::CMP; 
 }
-
-// -- IntoComponent implementations --
 
 impl<'a, T: Component> IntoComponent<'a> for T {
     type CMP = T;
