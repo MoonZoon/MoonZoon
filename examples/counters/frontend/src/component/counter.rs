@@ -14,7 +14,7 @@ macro_rules! counter {
         {
             #[allow(unused_mut)]
             let mut counter = $crate::component::counter::Counter::default();
-            $( counter = counter.with($attribute); )*
+            $( $attribute.apply_to_component(&mut counter); )*
             counter
         }
     }

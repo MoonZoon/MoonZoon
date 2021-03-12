@@ -71,8 +71,8 @@ fn main_counter() -> Counter {
 #[cmp]
 fn counters<'a>() -> Row<'a> {
     row![
-        // (0..counter_count().inner()).iter().map(|_| counter![]),
-        (0..counter_count()).map(|_| counter![]).collect::<Vec<_>>(),
+        // (0..counter_count().inner()).map(|_| counter![]),
+        (0..counter_count()).map(|_| counter![]),
     ]
 }
 

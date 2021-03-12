@@ -16,7 +16,7 @@ macro_rules! button {
         {
             #[allow(unused_mut)]
             let mut button = $crate::component::button::Button::default();
-            $( button = button.with($attribute); )*
+            $( $attribute.apply_to_component(&mut button); )*
             button
         }
     }

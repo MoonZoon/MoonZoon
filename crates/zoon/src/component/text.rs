@@ -13,7 +13,7 @@ macro_rules! text {
         {
             #[allow(unused_mut)]
             let mut text = $crate::component::text::Text::default();
-            $( text = text.with($attribute); )*
+            $( $attribute.apply_to_component(&mut text); )*
             text
         }
     }

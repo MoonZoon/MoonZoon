@@ -13,7 +13,7 @@ macro_rules! col {
         {
             #[allow(unused_mut)]
             let mut column = $crate::component::column::Column::default();
-            $( column = column.with($attribute); )*
+            $( $attribute.apply_to_component(&mut column); )*
             column
         }
     }

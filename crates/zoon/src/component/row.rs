@@ -13,7 +13,7 @@ macro_rules! row {
         {
             #[allow(unused_mut)]
             let mut row = $crate::component::row::Row::default();
-            $( row = row.with($attribute); )*
+            $( $attribute.apply_to_component(&mut row); )*
             row
         }
     }
