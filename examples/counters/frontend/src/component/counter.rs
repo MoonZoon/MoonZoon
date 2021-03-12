@@ -1,24 +1,21 @@
 use zoon::*;
 
-// TODO uncomment no_std and resolve Boxes
-// TODO macro which generates macro below (`component_macro!(counter, Counter);`)
+// ------ ------
+//   Component 
+// ------ ------
+
+// component_macro!(counter, Counter);
 
 #[macro_export]
 macro_rules! counter {
     ( $($attribute:expr),* $(,)?) => {
         {
-            let mut counter = $crate::counter::Counter::default();
-            $( counter = counter.set($attribute); )*
+            let mut counter = $crate::component::counter::Counter::default();
+            $( counter = counter.with($attribute); )*
             counter
         }
     }
 }
-
-// ------ ------
-//   Component 
-// ------ ------
-
-component_macro!(counter, Counter);
 
 #[derive(Default)]
 pub struct Counter {
@@ -27,14 +24,14 @@ pub struct Counter {
 }
 
 impl Component for Counter {
-    // #[render]
-    fn render(&mut self, render_context: RenderContext) {
-        // let value = el_var(|| 0_usize);
-        // column![
-        //     button![button::on_press(|| value.update(|value| value - 1)), "-"],
-        //     value.inner(),
-        //     button![button::on_press(|| value.update(|value| value + 1)), "+"],
-        // ].render(render_context);
+    #[render]
+    fn render(&mut self, rcx: RenderContext) {
+        let value = el_var(|| 0_usize);
+        col![
+            button![button::on_press(move || value.update(|value| value - 1)), text!("-")],
+            text!(value.inner().to_string()),
+            button![button::on_press(move || value.update(|value| value + 1)), text!("+")],
+        ].render(rcx);
     }
 }
 
