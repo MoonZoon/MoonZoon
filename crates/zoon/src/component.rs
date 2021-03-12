@@ -63,6 +63,14 @@ pub trait ApplyToComponent<T: Component> {
     fn apply_to_component(self, component: &mut T);
 }
 
+impl<T: Component, ATTR: ApplyToComponent<T>> ApplyToComponent<T> for Option<ATTR> {
+    fn apply_to_component(self, component: &mut T) {
+        if let Some(attribute) = self {
+            attribute.apply_to_component(component);
+        }
+    }
+}
+
 // ------ IntoComponent ------
 
 pub trait IntoComponent<'a> {
@@ -70,7 +78,7 @@ pub trait IntoComponent<'a> {
     fn into_component(self) -> Self::CMP; 
 }
 
-// -- impl IntoComponent --
+// -- IntoComponent implementations --
 
 impl<'a, T: Component> IntoComponent<'a> for T {
     type CMP = T;

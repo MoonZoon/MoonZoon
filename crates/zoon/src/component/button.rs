@@ -1,5 +1,5 @@
 use wasm_bindgen::{closure::Closure, JsCast};
-use crate::{RenderContext, raw_el, log, Node, Component, IntoComponent, ApplyToComponent, render};
+use crate::{RenderContext, dom::dom_element, log, Node, Component, IntoComponent, ApplyToComponent, render};
 use crate::hook::el_var;
 use crate::state::State;
 use std::{cell::RefCell, rc::Rc};
@@ -32,7 +32,7 @@ impl<'a> Component for Button<'a> {
     fn render(&mut self, rcx: RenderContext ) {
         log!("button, index: {}", rcx.index);
 
-        let state_node = raw_el(rcx, |rcx: RenderContext| {
+        let state_node = dom_element(rcx, |rcx: RenderContext| {
             if let Some(label) = self.label.as_mut() {
                 label.render(rcx);
             }

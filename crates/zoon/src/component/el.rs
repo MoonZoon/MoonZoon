@@ -1,5 +1,5 @@
 use wasm_bindgen::JsCast;
-use crate::{RenderContext, raw_el, log, Component, IntoComponent, ApplyToComponent, render};
+use crate::{RenderContext, dom::dom_element, log, Component, IntoComponent, ApplyToComponent, render};
 
 // ------ ------
 //   Component 
@@ -28,7 +28,7 @@ impl<'a> Component for El<'a> {
     fn render(&mut self, rcx: RenderContext) {
         log!("el, index: {}", rcx.index);
 
-        let state_node = raw_el(rcx, |rcx| {
+        let state_node = dom_element(rcx, |rcx| {
             if let Some(child) = self.child.as_mut() {
                 child.render(rcx)
             }

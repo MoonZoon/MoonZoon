@@ -1,4 +1,4 @@
-use crate::{RenderContext, raw_text, log, Component, ApplyToComponent, render};
+use crate::{RenderContext, dom::dom_text, log, Component, ApplyToComponent, render};
 use std::borrow::Cow;
 
 // ------ ------
@@ -28,7 +28,7 @@ impl<'a> Component for Text<'a> {
     fn render(&mut self, rcx: RenderContext) {
         log!("text, index: {}", rcx.index);
 
-        raw_text(rcx, &self.text);
+        dom_text(rcx, &self.text);
     }
 }
 

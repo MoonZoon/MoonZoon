@@ -86,66 +86,29 @@ fn root() {
         ],
 
 
+        do_once(|| {
+            log!("FIRST RUN!");
+
+            col![
+                row![
+                    el![
+                        "B1",
+                    ],
+                    button![
+                        "X",
+                        button::on_press(|| log!("delete B1")),
+                    ],
+                ],
+                row![
+                    el![
+                        "B2",
+                    ],
+                    button![
+                        "X",
+                        button::on_press(|| log!("delete B2")),
+                    ],
+                ],
+            ]
+        }),
     ].render(rcx);
-
-    //     do_once(|| {
-    //         log!("FIRST RUN!");
-
-    //         column![
-    //             row![
-    //                 el![
-    //                     text!["B1"],
-    //                 ],
-    //                 button![
-    //                     text!["X"],
-    //                     button::on_press(|| log!("delete B1")),
-    //                 ],
-    //             ],
-    //             row![
-    //                 el![
-    //                     text!["B2"],
-    //                 ],
-    //                 button![
-    //                     text!["X"],
-    //                     button::on_press(|| log!("delete B2")),
-    //                 ],
-    //             ],
-    //         ]
-    //     }),
-    // ].render(rcx);
-}
-
-#[topo::nested]
-fn raw_el(mut rcx: RenderContext, children: impl FnOnce(RenderContext)) -> State<Node> {
-    // log!("el, index: {}", rcx.index);
-
-    let state_node = el_var(|| {
-        let el_ws = document().create_element("div").expect("element");
-        el_ws.set_attribute("class", "el").expect("set class attribute");
-        let node_ws = web_sys::Node::from(el_ws);
-        rcx.state_node.update_mut(|node| {
-            let parent_node_ws = &node.node_ws;
-            parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(rcx.index + 1).as_ref()).expect("insert node");
-        });
-        Node { node_ws }
-    });
-    rcx.state_node = state_node;
-    rcx.reset_index();
-    children(rcx);
-    state_node
-}
-
-#[topo::nested]
-fn raw_text(mut rcx: RenderContext, text: &str) {  
-    // log!("text, index: {}", rcx.index);
-
-    let state_node = el_var(|| {
-        let node_ws = document().create_text_node(&text).unchecked_into::<web_sys::Node>();
-        rcx.state_node.update_mut(|node| {
-            let parent_node_ws = &node.node_ws;
-            parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(rcx.index + 1).as_ref()).expect("insert node");
-        });
-        Node { node_ws }
-    });
-    rcx.state_node = state_node;
 }
