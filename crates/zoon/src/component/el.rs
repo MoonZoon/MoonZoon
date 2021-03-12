@@ -11,6 +11,7 @@ use crate::{RenderContext, dom::dom_element, log, Component, IntoComponent, Appl
 macro_rules! el {
     ( $($attribute:expr),* $(,)?) => {
         {
+            #[allow(unused_mut)]
             let mut el = $crate::component::el::El::default();
             $( el = el.with($attribute); )*
             el

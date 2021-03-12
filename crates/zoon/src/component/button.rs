@@ -14,6 +14,7 @@ use std::{cell::RefCell, rc::Rc};
 macro_rules! button {
     ( $($attribute:expr),* $(,)?) => {
         {
+            #[allow(unused_mut)]
             let mut button = $crate::component::button::Button::default();
             $( button = button.with($attribute); )*
             button

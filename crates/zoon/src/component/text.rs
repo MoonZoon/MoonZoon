@@ -11,6 +11,7 @@ use std::borrow::Cow;
 macro_rules! text {
     ( $($attribute:expr),* $(,)?) => {
         {
+            #[allow(unused_mut)]
             let mut text = $crate::component::text::Text::default();
             $( text = text.with($attribute); )*
             text
