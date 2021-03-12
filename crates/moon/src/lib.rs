@@ -180,6 +180,20 @@ fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid) -> String 
       <title>{title}</title>
       <link rel="preload" href="/pkg/frontend_bg_{frontend_build_id}.wasm" as="fetch" type="application/wasm" crossorigin>
       <link rel="preload" href="/pkg/frontend_{frontend_build_id}.js" as="script" type="text/javascript" crossorigin>
+      <style>
+        .button {{
+            cursor: pointer;
+        }}
+        
+        .column {{
+            display: flex;
+            flex-direction: column;
+        }}
+        
+        .row {{
+            display: flex;
+        }}
+      </style>
     </head>
 
     <body>
