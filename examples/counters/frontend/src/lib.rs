@@ -42,12 +42,12 @@ use component::counter::{self, Counter};
 // }
 
 
-fn counter_count() -> usize {
+fn counter_count() -> i32 {
     3
 }
 
-fn set_counter_count(count: usize) {
-    log!("set_counter_count");
+fn set_counter_count(count: i32) {
+    log!("set_counter_count: {}", count);
 }
 
 
@@ -72,11 +72,11 @@ fn main_counter() -> Counter {
 fn counters<'a>() -> Row<'a> {
     row![
         // (0..counter_count().inner()).iter().map(|_| counter![]),
-        (0..counter_count()).map(|_| counter![]),
+        (0..counter_count()).map(|_| counter![]).collect::<Vec<_>>(),
     ]
 }
 
 #[wasm_bindgen(start)]
 pub fn start() {
-    start!()
+    start!(root)
 }

@@ -20,18 +20,18 @@ pub use topo::nested as cmp;
 
 const ELEMENT_ID: &str = "app";
 
-fn runtime_run_once() {
-    runtime::run_once(|| root());
+fn runtime_run_once<C: Component>(root_cmp: impl Fn() -> C) {
+    runtime::run_once(|| root(root_cmp));
 }
 
 #[macro_export]
 macro_rules! start {
-    () => {
-        $crate::start();
+    ($root_cmp:expr) => {
+        $crate::start($root_cmp);
     };
 }
 
-pub fn start() {
+pub fn start<C: Component>(root_cmp: impl Fn() -> C + Copy) {
     log!("start");
     console_error_panic_hook::set_once();
 
@@ -41,17 +41,17 @@ pub fn start() {
     // }
 
     log!("-------- revision: 0 --------");
-    runtime_run_once();
+    runtime_run_once(root_cmp);
 
-    log!("-------- revision: 1 --------");
-    runtime_run_once();
+    // log!("-------- revision: 1 --------");
+    // runtime_run_once(root_cmp);
 
-    log!("-------- revision: 3 --------");
-    runtime_run_once();
+    // log!("-------- revision: 3 --------");
+    // runtime_run_once(root_cmp);
 }
 
 #[topo::nested]
-fn root() {
+fn root<C: Component>(root_cmp: impl Fn() -> C) {
     log!("root");
 
     let state_node = el_var(|| Node {
@@ -63,53 +63,54 @@ fn root() {
         state_node 
     };
 
+    root_cmp().render(rcx);
 
-    row![
-        col![
-            row![
-                el![
-                    "A1",
-                ],
-                button![
-                    "X",
-                    button::on_press(|| log!("delete A1")),
-                ],
-            ],
-            row![
-                el![
-                    "A2",
-                ],
-                button![
-                    "X",
-                    button::on_press(|| log!("delete A2")),
-                ],
-            ],
-        ],
+    // row![
+    //     col![
+    //         row![
+    //             el![
+    //                 "A1",
+    //             ],
+    //             button![
+    //                 "X",
+    //                 button::on_press(|| log!("delete A1")),
+    //             ],
+    //         ],
+    //         row![
+    //             el![
+    //                 "A2",
+    //             ],
+    //             button![
+    //                 "X",
+    //                 button::on_press(|| log!("delete A2")),
+    //             ],
+    //         ],
+    //     ],
 
 
-        do_once(|| {
-            log!("FIRST RUN!");
+    //     do_once(|| {
+    //         log!("FIRST RUN!");
 
-            col![
-                row![
-                    el![
-                        "B1",
-                    ],
-                    button![
-                        "X",
-                        button::on_press(|| log!("delete B1")),
-                    ],
-                ],
-                row![
-                    el![
-                        "B2",
-                    ],
-                    button![
-                        "X",
-                        button::on_press(|| log!("delete B2")),
-                    ],
-                ],
-            ]
-        }),
-    ].render(rcx);
+    //         col![
+    //             row![
+    //                 el![
+    //                     "B1",
+    //                 ],
+    //                 button![
+    //                     "X",
+    //                     button::on_press(|| log!("delete B1")),
+    //                 ],
+    //             ],
+    //             row![
+    //                 el![
+    //                     "B2",
+    //                 ],
+    //                 button![
+    //                     "X",
+    //                     button::on_press(|| log!("delete B2")),
+    //                 ],
+    //             ],
+    //         ]
+    //     }),
+    // ].render(rcx);
 }

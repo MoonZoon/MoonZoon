@@ -1,4 +1,4 @@
-use crate::state::{State, CloneState};
+use crate::state::State;
 use crate::Node;
 
 // -- modules --
@@ -71,13 +71,13 @@ impl<T: Component, ATTR: ApplyToComponent<T>> ApplyToComponent<T> for Option<ATT
     }
 }
 
-// impl<T: Component, ATTR: ApplyToComponent<T>, II: IntoIterator<Item = ATTR>> ApplyToComponent<T> for II {
-//     fn apply_to_component(self, component: &mut T) {
-//         for attribute in self {
-//             attribute.apply_to_component(component);
-//         }
-//     }
-// }
+impl<T: Component, ATTR: ApplyToComponent<T>> ApplyToComponent<T> for Vec<ATTR> {
+    fn apply_to_component(self, component: &mut T) {
+        for attribute in self {
+            attribute.apply_to_component(component);
+        }
+    }
+}
 
 // ------ IntoComponent ------
 
