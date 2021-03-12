@@ -11,6 +11,7 @@ use crate::{RenderContext, dom::dom_element, log, Component, IntoComponent, Appl
 macro_rules! col {
     ( $($attribute:expr),* $(,)?) => {
         {
+            #[allow(unused_mut)]
             let mut column = $crate::component::column::Column::default();
             $( column = column.with($attribute); )*
             column

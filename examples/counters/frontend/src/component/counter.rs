@@ -12,6 +12,7 @@ use enclose::enc;
 macro_rules! counter {
     ( $($attribute:expr),* $(,)?) => {
         {
+            #[allow(unused_mut)]
             let mut counter = $crate::component::counter::Counter::default();
             $( counter = counter.with($attribute); )*
             counter

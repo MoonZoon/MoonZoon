@@ -11,6 +11,7 @@ use crate::{RenderContext, dom::dom_element, log, Component, IntoComponent, Appl
 macro_rules! row {
     ( $($attribute:expr),* $(,)?) => {
         {
+            #[allow(unused_mut)]
             let mut row = $crate::component::row::Row::default();
             $( row = row.with($attribute); )*
             row
