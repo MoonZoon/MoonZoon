@@ -1,23 +1,11 @@
-use crate::{RenderContext, dom::dom_text, log, Component, ApplyToComponent, render};
+use crate::{RenderContext, dom::dom_text, log, Component, ApplyToComponent, render, component_macro};
 use std::borrow::Cow;
 
 // ------ ------
 //   Component 
 // ------ ------
 
-// component_macro!(text, Text);
-
-#[macro_export]
-macro_rules! text {
-    ( $($attribute:expr),* $(,)?) => {
-        {
-            #[allow(unused_mut)]
-            let mut text = $crate::component::text::Text::default();
-            $( $attribute.apply_to_component(&mut text); )*
-            text
-        }
-    }
-}
+component_macro!(text, Text::default());
 
 #[derive(Default)]
 pub struct Text<'a> {
