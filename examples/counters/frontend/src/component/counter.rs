@@ -6,19 +6,7 @@ use enclose::enc;
 //   Component 
 // ------ ------
 
-// component_macro!(counter, Counter);
-
-#[macro_export]
-macro_rules! counter {
-    ( $($attribute:expr),* $(,)?) => {
-        {
-            #[allow(unused_mut)]
-            let mut counter = $crate::component::counter::Counter::default();
-            $( $attribute.apply_to_component(&mut counter); )*
-            counter
-        }
-    }
-}
+component_macro!(counter, Counter::default());
 
 #[derive(Default)]
 pub struct Counter {

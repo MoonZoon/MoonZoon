@@ -1,23 +1,11 @@
 use wasm_bindgen::JsCast;
-use crate::{RenderContext, dom::dom_element, log, Component, IntoComponent, ApplyToComponent, render};
+use crate::{RenderContext, dom::dom_element, log, Component, IntoComponent, ApplyToComponent, render, component_macro};
 
 // ------ ------
 //   Component 
 // ------ ------
 
-// component_macro!(col, Column);
-
-#[macro_export]
-macro_rules! col {
-    ( $($attribute:expr),* $(,)?) => {
-        {
-            #[allow(unused_mut)]
-            let mut column = $crate::component::column::Column::default();
-            $( $attribute.apply_to_component(&mut column); )*
-            column
-        }
-    }
-}
+component_macro!(col, Column::default());
 
 #[derive(Default)]
 pub struct Column<'a> {

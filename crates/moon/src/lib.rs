@@ -181,8 +181,22 @@ fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid) -> String 
       <link rel="preload" href="/pkg/frontend_bg_{frontend_build_id}.wasm" as="fetch" type="application/wasm" crossorigin>
       <link rel="preload" href="/pkg/frontend_{frontend_build_id}.js" as="script" type="text/javascript" crossorigin>
       <style>
+        html {{
+            background-color: black;
+            color: lightgray;
+        }}
+
+        #app * {{
+            padding: 5px;
+        }}
+            
         .button {{
             cursor: pointer;
+            background-color: darkgreen;
+        }}
+
+        .button:hover {{
+            background-color: green;
         }}
         
         .column {{

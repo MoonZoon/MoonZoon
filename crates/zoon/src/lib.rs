@@ -18,6 +18,14 @@ pub use topo;
 pub use topo::nested as render;
 pub use topo::nested as cmp;
 
+#[macro_export]
+macro_rules! with_dollar_sign {
+    ($($body:tt)*) => {
+        macro_rules! __with_dollar_sign { $($body)* }
+        __with_dollar_sign!($);
+    }
+}
+
 const ELEMENT_ID: &str = "app";
 
 fn runtime_run_once<C: Component>(root_cmp: impl Fn() -> C) {

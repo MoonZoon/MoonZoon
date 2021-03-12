@@ -1,5 +1,5 @@
 use wasm_bindgen::{closure::Closure, JsCast};
-use crate::{RenderContext, dom::dom_element, log, Node, Component, IntoComponent, ApplyToComponent, render};
+use crate::{RenderContext, dom::dom_element, log, Node, Component, IntoComponent, ApplyToComponent, render, component_macro};
 use crate::hook::el_var;
 use crate::state::State;
 use std::{cell::RefCell, rc::Rc};
@@ -8,19 +8,7 @@ use std::{cell::RefCell, rc::Rc};
 //   Component 
 // ------ ------
 
-// component_macro!(button, Button);
-
-#[macro_export]
-macro_rules! button {
-    ( $($attribute:expr),* $(,)?) => {
-        {
-            #[allow(unused_mut)]
-            let mut button = $crate::component::button::Button::default();
-            $( $attribute.apply_to_component(&mut button); )*
-            button
-        }
-    }
-}
+component_macro!(button, Button::default());
 
 #[derive(Default)]
 pub struct Button<'a> {

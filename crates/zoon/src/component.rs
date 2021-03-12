@@ -18,6 +18,30 @@ pub use row::Row;
 pub mod text;
 pub use text::Text;
 
+// ------ component_macro ------
+
+#[macro_export]
+macro_rules! component_macro {
+    ( $name:tt, $component:expr ) => {
+        // Replace $d with $ in the inner macro.
+        $crate::with_dollar_sign! {
+            ($d:tt) => {
+                #[macro_export]
+                macro_rules! $name {
+                    ( $d ($d attribute:expr),* $d (,)?) => {
+                        {
+                            #[allow(unused_mut)]
+                            let mut component = $component;
+                            $d ( $d attribute.apply_to_component(&mut component); )*
+                            component
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 // ------ Component ------
 
 pub trait Component {
@@ -122,14 +146,14 @@ impl<'a, T: Component> IntoComponent<'a> for T {
 impl<'a> IntoComponent<'a> for String {
     type CMP = Text<'a>;
     fn into_component(self) -> Self::CMP {
-        crate::text![self]
+        Text::default().with(self)
     }
 }
 
 impl<'a> IntoComponent<'a> for &'a str {
     type CMP = Text<'a>;
     fn into_component(self) -> Self::CMP {
-        crate::text![self]
+        Text::default().with(self)
     }
 }
 
