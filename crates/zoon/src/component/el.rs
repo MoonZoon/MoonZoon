@@ -1,5 +1,5 @@
 use wasm_bindgen::JsCast;
-use crate::{RenderContext, raw_el, log, Component, ApplyToComponent, render};
+use crate::{RenderContext, raw_el, log, Component, IntoComponent, ApplyToComponent, render};
 
 // ------ ------
 //   Component 
@@ -44,10 +44,10 @@ impl<'a> Component for El<'a> {
 //  Attributes 
 // ------ ------
 
-// ------ Component ------
+// ------ IntoComponent ------
 
-impl<'a, T: Component + 'a> ApplyToComponent<El<'a>> for T {
-    fn apply_to_component(self, component: &mut El<'a>) {
-        component.child = Some(Box::new(self));
+impl<'a, T: IntoComponent<'a> + 'a> ApplyToComponent<El<'a>> for T {
+    fn apply_to_component(self, element: &mut El<'a>) {
+        element.child = Some(Box::new(self.into_component()));
     }
 }

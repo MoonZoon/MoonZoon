@@ -1,3 +1,8 @@
+use crate::state::{State, CloneState};
+use crate::Node;
+
+// -- modules --
+
 pub mod button;
 pub use button::Button;
 
@@ -12,3 +17,82 @@ pub use row::Row;
 
 pub mod text;
 pub use text::Text;
+
+// ------ Component ------
+
+pub trait Component {
+    fn new() -> Self 
+        where Self: Default
+    {
+        Self::default()
+    }
+
+    fn with(mut self, attribute: impl ApplyToComponent<Self>) -> Self
+        where Self: Sized
+    {
+        attribute.apply_to_component(&mut self);
+        self
+    }
+
+    fn render(&mut self, rcx: RenderContext);
+}
+
+// ------ RenderContext ------
+
+#[derive(Copy, Clone)]
+pub struct RenderContext {
+    pub index: u32,
+    pub state_node: State<Node>,
+}
+
+impl RenderContext {
+    pub fn inc_index(&mut self) -> &mut Self {
+        self.index += 1;
+        self
+    } 
+
+    pub fn reset_index(&mut self) -> &mut Self {
+        self.index = 0;
+        self
+    } 
+}
+
+// ------ ApplyToComponent ------
+
+pub trait ApplyToComponent<T: Component> {
+    fn apply_to_component(self, component: &mut T);
+}
+
+// ------ IntoComponent ------
+
+pub trait IntoComponent<'a> {
+    type CMP: Component;
+    fn into_component(self) -> Self::CMP; 
+}
+
+// -- impl IntoComponent --
+
+impl<'a, T: Component> IntoComponent<'a> for T {
+    type CMP = T;
+    fn into_component(self) -> Self::CMP {
+        self
+    }
+}
+
+impl<'a> IntoComponent<'a> for String {
+    type CMP = Text<'a>;
+    fn into_component(self) -> Self::CMP {
+        crate::text![self]
+    }
+}
+
+impl<'a> IntoComponent<'a> for &'a str {
+    type CMP = Text<'a>;
+    fn into_component(self) -> Self::CMP {
+        crate::text![self]
+    }
+}
+
+
+
+

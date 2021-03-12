@@ -2,18 +2,20 @@ pub use wasm_bindgen::{self, prelude::*, JsCast};
 pub use blocks::blocks;
 
 pub mod component;
+mod dom;
 mod console;
 mod hook;
 mod state;
 mod runtime;
 mod state_map;
 
+pub use component::*;
+pub use dom::{Node, window, document}; 
 pub use state::{State, CloneState};
 pub use console::log;
 pub use hook::{el_var, do_once};
 pub use topo;
 pub use topo::nested as render;
-pub use component::*;
 
 const ELEMENT_ID: &str = "app";
 
@@ -26,73 +28,6 @@ macro_rules! start {
     () => {
         $crate::start();
     };
-}
-
-#[derive(Copy, Clone)]
-pub struct RenderContext {
-    index: u32,
-    state_node: State<Node>,
-}
-
-impl RenderContext {
-    fn inc_index(&mut self) -> &mut Self {
-        self.index += 1;
-        self
-    } 
-
-    fn reset_index(&mut self) -> &mut Self {
-        self.index = 0;
-        self
-    } 
-}
-
-struct Node {
-    node_ws: web_sys::Node,
-}
-
-impl Drop for Node {
-    fn drop(&mut self) {
-        if let Some(parent) = self.node_ws.parent_node() {
-            parent.remove_child(&self.node_ws).unwrap();
-        }
-        log!("Node dropped");
-    }
-}
-
-fn window() -> web_sys::Window {
-    web_sys::window().expect("window")
-}
-
-fn document() -> web_sys::Document {
-    window()
-        .document()
-        .expect("document")
-}
-
-pub trait Component {
-    fn render(&mut self, rcx: RenderContext);
-
-    fn new() -> Self 
-        where Self: Default
-    {
-        Self::default()
-    }
-
-    fn with(mut self, attribute: impl ApplyToComponent<Self>) -> Self
-        where Self: Sized
-    {
-        attribute.apply_to_component(&mut self);
-        self
-    }
-}
-
-// pub trait IntoComponent {
-//     type CMP;
-//     fn into_component(self) -> Self::CMP; 
-// }
-
-pub trait ApplyToComponent<T: Component> {
-    fn apply_to_component(self, component: &mut T);
 }
 
 pub fn start() {
@@ -127,24 +62,24 @@ fn root() {
         state_node 
     };
 
-    
+
     row![
         col![
             row![
                 el![
-                    text!["A1"],
+                    "A1",
                 ],
                 button![
-                    text!["X"],
+                    "X",
                     button::on_press(|| log!("delete A1")),
                 ],
             ],
             row![
                 el![
-                    text!["A2"],
+                    "A2",
                 ],
                 button![
-                    text!["X"],
+                    "X",
                     button::on_press(|| log!("delete A2")),
                 ],
             ],

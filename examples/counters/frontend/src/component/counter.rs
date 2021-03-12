@@ -42,8 +42,8 @@ impl Component for Counter {
 // ------ usize ------
 
 impl ApplyToComponent<Counter> for usize {
-    fn apply_to_component(self, component: &mut Counter) {
-        component.value = self;
+    fn apply_to_component(self, counter: &mut Counter) {
+        counter.value = self;
     }
 }
 
