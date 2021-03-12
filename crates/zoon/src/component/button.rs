@@ -1,5 +1,5 @@
 use wasm_bindgen::{closure::Closure, JsCast};
-use crate::{RenderContext, raw_el, log, Node, Component, ApplyToComponent, render};
+use crate::{RenderContext, raw_el, log, Node, Component, IntoComponent, ApplyToComponent, render};
 use crate::hook::el_var;
 use crate::state::State;
 use std::{cell::RefCell, rc::Rc};
@@ -111,11 +111,11 @@ impl Drop for Listener{
 //  Attributes 
 // ------ ------
 
-// ------ Component ------
+// ------ IntoComponent ------
 
-impl<'a, T: Component + 'a> ApplyToComponent<Button<'a>> for T {
-    fn apply_to_component(self, component: &mut Button<'a>) {
-        component.label = Some(Box::new(self));
+impl<'a, T: IntoComponent<'a> + 'a> ApplyToComponent<Button<'a>> for T {
+    fn apply_to_component(self, button: &mut Button<'a>) {
+        button.label = Some(Box::new(self.into_component()));
     }
 } 
 
@@ -126,7 +126,7 @@ pub fn on_press(on_press: impl FnOnce() + Clone + 'static) -> OnPress {
     OnPress(Box::new(move || on_press.clone()()))
 }
 impl<'a> ApplyToComponent<Button<'a>> for OnPress {
-    fn apply_to_component(self, component: &mut Button<'a>) {
-        component.on_press = Some(self);
+    fn apply_to_component(self, button: &mut Button<'a>) {
+        button.on_press = Some(self);
     }
 }

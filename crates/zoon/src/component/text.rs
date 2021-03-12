@@ -39,15 +39,15 @@ impl<'a> Component for Text<'a> {
 // ------ String ------
 
 impl<'a> ApplyToComponent<Text<'a>> for String {
-    fn apply_to_component(self, component: &mut Text) {
-        component.text = Cow::from(self);
+    fn apply_to_component(self, text: &mut Text) {
+        text.text = Cow::from(self);
     }
 }
 
 // ------ &str ------
 
 impl<'a> ApplyToComponent<Text<'a>> for &'a str {
-    fn apply_to_component(self, component: &mut Text<'a>) {
-        component.text = Cow::from(self);
+    fn apply_to_component(self, text: &mut Text<'a>) {
+        text.text = Cow::from(self);
     }
 }
