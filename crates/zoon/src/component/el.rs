@@ -13,7 +13,7 @@ macro_rules! el {
         {
             #[allow(unused_mut)]
             let mut el = $crate::component::el::El::default();
-            $( el = el.with($attribute); )*
+            $( $attribute.apply_to_component(&mut el); )*
             el
         }
     }

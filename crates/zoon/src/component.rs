@@ -34,6 +34,13 @@ pub trait Component {
         self
     }
 
+    fn with_iter(mut self, attribute: impl ApplyToComponentForIterator<Self>) -> Self
+        where Self: Sized
+    {
+        attribute.apply_to_component(&mut self);
+        self
+    }
+
     fn render(&mut self, rcx: RenderContext);
 }
 
@@ -72,6 +79,25 @@ impl<T: Component, ATTR: ApplyToComponent<T>> ApplyToComponent<T> for Option<ATT
 }
 
 impl<T: Component, ATTR: ApplyToComponent<T>> ApplyToComponent<T> for Vec<ATTR> {
+    fn apply_to_component(self, component: &mut T) {
+        for attribute in self {
+            attribute.apply_to_component(component);
+        }
+    }
+}
+
+// -- ApplyToComponentForIterator --
+
+pub trait ApplyToComponentForIterator<T: Component> {
+    fn apply_to_component(self, component: &mut T);
+}
+
+impl<T, ATTR, I> ApplyToComponentForIterator<T> for I 
+    where 
+        T: Component, 
+        ATTR: ApplyToComponent<T>, 
+        I: Iterator<Item = ATTR>
+{
     fn apply_to_component(self, component: &mut T) {
         for attribute in self {
             attribute.apply_to_component(component);
