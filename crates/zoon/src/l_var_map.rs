@@ -1,27 +1,27 @@
 use std::collections::HashMap;
 use std::any::Any;
 
-pub(crate) struct StateMap {
-    states: HashMap<topo::CallId, StateMapValue>,
+pub(crate) struct LVarMap {
+    l_vars: HashMap<topo::CallId, LVarMapValue>,
     revision: bool,
 }
 
-struct StateMapValue {
+struct LVarMapValue {
     data: Box<dyn Any>,
     revision: bool,
 }
 
-impl StateMap {
+impl LVarMap {
     pub(crate) fn new() -> Self {
         Self {
-            states: HashMap::new(),
+            l_vars: HashMap::new(),
             revision: false,
         }
     }
 
     pub(crate) fn data<T: 'static>(&self, id: &topo::CallId) -> Option<&T> {
         self
-            .states
+            .l_vars
             .get(id)?
             .data
             .downcast_ref::<Option<T>>()?
@@ -30,8 +30,8 @@ impl StateMap {
 
     pub(crate) fn insert(&mut self, id: topo::CallId, data: impl Any) {
         self
-            .states
-            .insert(id, StateMapValue { 
+            .l_vars
+            .insert(id, LVarMapValue { 
                 data: Box::new(Some(data)), 
                 revision: self.revision 
             });
@@ -39,7 +39,7 @@ impl StateMap {
 
     pub(crate) fn remove<T: 'static>(&mut self, id: &topo::CallId) -> Option<T> {
         self
-            .states
+            .l_vars
             .remove(&id)?
             .data
             .downcast_mut::<Option<T>>()?
@@ -48,17 +48,17 @@ impl StateMap {
 
     pub(crate) fn contains_id(&self, id: &topo::CallId) -> bool {
         self
-            .states
+            .l_vars
             .contains_key(&id)
     }
 
     pub(crate) fn update_revision(&mut self, id: &topo::CallId) {
         let revision = self.revision;
         self
-            .states
+            .l_vars
             .get_mut(&id)
-            .map(|state_map_value| {
-                state_map_value.revision = revision
+            .map(|l_var_map_value| {
+                l_var_map_value.revision = revision
             }); 
     }
 
@@ -66,17 +66,17 @@ impl StateMap {
         let current_revision = self.revision;
         
         let mut unused_data = Vec::new();
-        let mut used_states = HashMap::new();
+        let mut used_l_vars = HashMap::new();
         
         // @TODO: refactor once `HashMap::drain_filter` is stable (https://github.com/rust-lang/rust/issues/59618)
-        for (id, value) in self.states.drain() {
+        for (id, value) in self.l_vars.drain() {
             if value.revision == current_revision {
-                used_states.insert(id, value);
+                used_l_vars.insert(id, value);
             } else {
                 unused_data.push(value.data);
             }
         }
-        self.states = used_states;
+        self.l_vars = used_l_vars;
 
         self.revision = !current_revision;
         unused_data

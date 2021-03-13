@@ -1,7 +1,7 @@
 use crate::log;
 use crate::RenderContext;
-use crate::el_var;
-use crate::State;
+use crate::l_var;
+use crate::LVar;
 use wasm_bindgen::JsCast;
 
 // ------- Helpers ------
@@ -32,36 +32,36 @@ impl Drop for Node {
 }
 
 #[topo::nested]
-pub fn dom_element(mut rcx: RenderContext, children: impl FnOnce(RenderContext)) -> State<Node> {
+pub fn dom_element(mut rcx: RenderContext, children: impl FnOnce(RenderContext)) -> LVar<Node> {
     // log!("el, index: {}", rcx.index);
 
-    let state_node = el_var(|| {
+    let node = l_var(|| {
         let el_ws = document().create_element("div").expect("element");
         el_ws.set_attribute("class", "el").expect("set class attribute");
         let node_ws = web_sys::Node::from(el_ws);
-        rcx.state_node.update_mut(|node| {
+        rcx.node.update_mut(|node| {
             let parent_node_ws = &node.node_ws;
             parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(rcx.index + 1).as_ref()).expect("insert node");
         });
         Node { node_ws }
     });
-    rcx.state_node = state_node;
+    rcx.node = node;
     rcx.reset_index();
     children(rcx);
-    state_node
+    node
 }
 
 #[topo::nested]
 pub fn dom_text(mut rcx: RenderContext, text: &str) {  
     // log!("text, index: {}", rcx.index);
 
-    let state_node = el_var(|| {
+    let node = l_var(|| {
         let node_ws = document().create_text_node(&text).unchecked_into::<web_sys::Node>();
-        rcx.state_node.update_mut(|node| {
+        rcx.node.update_mut(|node| {
             let parent_node_ws = &node.node_ws;
             parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(rcx.index + 1).as_ref()).expect("insert node");
         });
         Node { node_ws }
     });
-    rcx.state_node = state_node;
+    rcx.node = node;
 }
