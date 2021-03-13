@@ -149,11 +149,8 @@ fn start_frontend_watcher(
                         println!("Build frontend");
                         if build_frontend(release) {
                             println!("Reload frontend");
-                            reqwest::blocking::ClientBuilder::new()
+                            attohttpc::post("https://127.0.0.1:8443/api/reload")
                                 .danger_accept_invalid_certs(true)
-                                .build()
-                                .unwrap()
-                                .post("https://127.0.0.1:8443/api/reload")
                                 .send()
                                 .unwrap();
                         }
