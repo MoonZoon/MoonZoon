@@ -1,7 +1,7 @@
 use wasm_bindgen::{closure::Closure, JsCast};
 use crate::{RenderContext, dom::dom_element, log, Node, Element, IntoElement, ApplyToElement, render, element_macro};
-use crate::hook::el_var;
-use crate::state::State;
+use crate::hook::l_var;
+use crate::l_var::LVar;
 use std::{cell::RefCell, rc::Rc};
 
 // ------ ------
@@ -21,34 +21,34 @@ impl<'a> Element for Button<'a> {
     fn render(&mut self, rcx: RenderContext ) {
         log!("button, index: {}", rcx.index);
 
-        let state_node = dom_element(rcx, |rcx: RenderContext| {
+        let node = dom_element(rcx, |rcx: RenderContext| {
             if let Some(label) = self.label.as_mut() {
                 label.render(rcx);
             }
         });
-        state_node.update_mut(|node| {
+        node.update_mut(|node| {
             let element = node.node_ws.unchecked_ref::<web_sys::Element>();
             element.set_attribute("class", "button").unwrap();
             element.set_attribute("role", "button").unwrap();
             element.set_attribute("tabindex", "0").unwrap();
         });
 
-        if let Some(on_press) = self.on_press.take() {
-            let state_listener = el_var(|| Listener::new("click", state_node));
-            state_listener.update_mut(|listener| listener.set_handler(on_press.0));
+        if let Some(OnPress(on_press)) = self.on_press.take() {
+            let listener = l_var(|| Listener::new("click", node));
+            listener.update_mut(|listener| listener.set_handler(on_press));
         }
     }
 }
 
 struct Listener {
     event: &'static str,
-    state_node: State<Node>,
+    node: LVar<Node>,
     handler: Rc<RefCell<Box<dyn Fn()>>>,
     callback: Closure<dyn Fn()>,
 }
 
 impl Listener {
-    fn new(event: &'static str, state_node: State<Node>) -> Self {
+    fn new(event: &'static str, node: LVar<Node>) -> Self {
         let dummy_handler = Box::new(||()) as Box<dyn Fn()>;
         let handler = Rc::new(RefCell::new(dummy_handler));
 
@@ -57,7 +57,7 @@ impl Listener {
             handler_clone.borrow()();
         }) as Box<dyn Fn()>);
 
-        state_node.update_mut(|node| {
+        node.update_mut(|node| {
             node
                 .node_ws
                 .unchecked_ref::<web_sys::EventTarget>()
@@ -67,7 +67,7 @@ impl Listener {
 
         Self {
             event,
-            state_node,
+            node,
             handler,
             callback,
         }
@@ -80,10 +80,10 @@ impl Listener {
 
 impl Drop for Listener{
     fn drop(&mut self) {
-        if !self.state_node.exists() {
+        if !self.node.exists() {
             return;
         }
-        self.state_node.update_mut(|node| {
+        self.node.update_mut(|node| {
             node
                 .node_ws
                 .unchecked_ref::<web_sys::EventTarget>()

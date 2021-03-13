@@ -18,7 +18,7 @@ impl Element for Counter {
     #[render]
     fn render(&mut self, rcx: RenderContext) {
         let on_change = self.on_change.take().map(|on_change| on_change.0);
-        let value = el_var(|| 0);
+        let value = l_var(|| 0);
         
         let update_value = move |delta: i32| {
             value.update(|value| value + delta);
