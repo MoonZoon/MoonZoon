@@ -17,12 +17,12 @@ impl<'a> Element for El<'a> {
     fn render(&mut self, rcx: RenderContext) {
         log!("el, index: {}", rcx.index);
 
-        let state_node = dom_element(rcx, |rcx| {
+        let node = dom_element(rcx, |rcx| {
             if let Some(child) = self.child.as_mut() {
                 child.render(rcx)
             }
         });
-        state_node.update_mut(|node| {
+        node.update_mut(|node| {
             let element = node.node_ws.unchecked_ref::<web_sys::Element>();
             element.set_attribute("class", "el").unwrap();
         });

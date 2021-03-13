@@ -17,12 +17,12 @@ impl<'a> Element for Column<'a> {
     fn render(&mut self, rcx: RenderContext) {
         log!("column, index: {}", rcx.index);
 
-        let state_node = dom_element(rcx, |mut rcx| {
+        let node = dom_element(rcx, |mut rcx| {
             for child in &mut self.children {
                 child.render(rcx.inc_index().clone());
             }
         });
-        state_node.update_mut(|node| {
+        node.update_mut(|node| {
             let element = node.node_ws.unchecked_ref::<web_sys::Element>();
             element.set_attribute("class", "column").unwrap();
         });

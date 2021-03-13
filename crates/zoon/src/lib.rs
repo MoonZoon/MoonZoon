@@ -5,15 +5,15 @@ pub mod element;
 mod dom;
 mod console;
 mod hook;
-mod state;
+mod l_var;
 mod runtime;
-mod state_map;
+mod l_var_map;
 
 pub use element::*;
 pub use dom::{Node, window, document}; 
-pub use state::{State, CloneState};
+pub use l_var::{LVar, CloneLVar};
 pub use console::log;
-pub use hook::{el_var, do_once};
+pub use hook::{l_var, do_once};
 pub use topo;
 pub use topo::nested as render;
 pub use topo::nested as cmp;
@@ -62,13 +62,13 @@ pub fn start<E: Element>(root_cmp: impl Fn() -> E + Copy) {
 fn root<E: Element>(root_cmp: impl Fn() -> E) {
     log!("root");
 
-    let state_node = el_var(|| Node {
+    let node = l_var(|| Node {
         node_ws: web_sys::Node::from(document().get_element_by_id(ELEMENT_ID).expect("root element"))
     });
 
     let rcx = RenderContext { 
         index: 0,
-        state_node 
+        node 
     };
 
     root_cmp().render(rcx);

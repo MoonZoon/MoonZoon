@@ -1,4 +1,4 @@
-use crate::state::State;
+use crate::l_var::LVar;
 use crate::Node;
 
 // -- modules --
@@ -73,7 +73,7 @@ pub trait Element {
 #[derive(Copy, Clone)]
 pub struct RenderContext {
     pub index: u32,
-    pub state_node: State<Node>,
+    pub node: LVar<Node>,
 }
 
 impl RenderContext {
