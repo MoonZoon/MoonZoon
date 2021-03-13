@@ -1,18 +1,18 @@
-use crate::{RenderContext, dom::dom_text, log, Component, ApplyToComponent, render, component_macro};
+use crate::{RenderContext, dom::dom_text, log, Element, ApplyToElement, render, element_macro};
 use std::borrow::Cow;
 
 // ------ ------
-//   Component 
+//    Element 
 // ------ ------
 
-component_macro!(text, Text::default());
+element_macro!(text, Text::default());
 
 #[derive(Default)]
 pub struct Text<'a> {
     text: Cow<'a, str>,
 }
 
-impl<'a> Component for Text<'a> {
+impl<'a> Element for Text<'a> {
     #[render]
     fn render(&mut self, rcx: RenderContext) {
         log!("text, index: {}", rcx.index);
@@ -27,16 +27,16 @@ impl<'a> Component for Text<'a> {
 
 // ------ String ------
 
-impl<'a> ApplyToComponent<Text<'a>> for String {
-    fn apply_to_component(self, text: &mut Text) {
+impl<'a> ApplyToElement<Text<'a>> for String {
+    fn apply_to_element(self, text: &mut Text) {
         text.text = Cow::from(self);
     }
 }
 
 // ------ &str ------
 
-impl<'a> ApplyToComponent<Text<'a>> for &'a str {
-    fn apply_to_component(self, text: &mut Text<'a>) {
+impl<'a> ApplyToElement<Text<'a>> for &'a str {
+    fn apply_to_element(self, text: &mut Text<'a>) {
         text.text = Cow::from(self);
     }
 }

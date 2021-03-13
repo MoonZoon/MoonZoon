@@ -2,8 +2,8 @@
 
 use zoon::*;
 
-mod component;
-use component::counter::{self, Counter};
+mod element;
+use element::counter::{self, Counter};
 
 // blocks!{
 
