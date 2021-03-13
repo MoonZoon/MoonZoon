@@ -1,18 +1,18 @@
 use wasm_bindgen::JsCast;
-use crate::{RenderContext, dom::dom_element, log, Component, IntoComponent, ApplyToComponent, render, component_macro};
+use crate::{RenderContext, dom::dom_element, log, Element, IntoElement, ApplyToElement, render, element_macro};
 
 // ------ ------
-//   Component 
+//   Element 
 // ------ ------
 
-component_macro!(el, El::default());
+element_macro!(el, El::default());
 
 #[derive(Default)]
 pub struct El<'a> {
-    child: Option<Box<dyn Component + 'a>>,
+    child: Option<Box<dyn Element + 'a>>,
 }
 
-impl<'a> Component for El<'a> {
+impl<'a> Element for El<'a> {
     #[render]
     fn render(&mut self, rcx: RenderContext) {
         log!("el, index: {}", rcx.index);
@@ -33,10 +33,10 @@ impl<'a> Component for El<'a> {
 //  Attributes 
 // ------ ------
 
-// ------ IntoComponent ------
+// ------ IntoElement ------
 
-impl<'a, T: IntoComponent<'a> + 'a> ApplyToComponent<El<'a>> for T {
-    fn apply_to_component(self, element: &mut El<'a>) {
-        element.child = Some(Box::new(self.into_component()));
+impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<El<'a>> for T {
+    fn apply_to_element(self, element: &mut El<'a>) {
+        element.child = Some(Box::new(self.into_element()));
     }
 }

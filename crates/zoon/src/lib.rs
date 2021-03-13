@@ -1,7 +1,7 @@
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 pub use blocks::blocks;
 
-pub mod component;
+pub mod element;
 mod dom;
 mod console;
 mod hook;
@@ -9,7 +9,7 @@ mod state;
 mod runtime;
 mod state_map;
 
-pub use component::*;
+pub use element::*;
 pub use dom::{Node, window, document}; 
 pub use state::{State, CloneState};
 pub use console::log;
@@ -28,7 +28,7 @@ macro_rules! with_dollar_sign {
 
 const ELEMENT_ID: &str = "app";
 
-fn runtime_run_once<C: Component>(root_cmp: impl Fn() -> C) {
+fn runtime_run_once<E: Element>(root_cmp: impl Fn() -> E) {
     runtime::run_once(|| root(root_cmp));
 }
 
@@ -39,7 +39,7 @@ macro_rules! start {
     };
 }
 
-pub fn start<C: Component>(root_cmp: impl Fn() -> C + Copy) {
+pub fn start<E: Element>(root_cmp: impl Fn() -> E + Copy) {
     log!("start");
     console_error_panic_hook::set_once();
 
@@ -59,7 +59,7 @@ pub fn start<C: Component>(root_cmp: impl Fn() -> C + Copy) {
 }
 
 #[topo::nested]
-fn root<C: Component>(root_cmp: impl Fn() -> C) {
+fn root<E: Element>(root_cmp: impl Fn() -> E) {
     log!("root");
 
     let state_node = el_var(|| Node {
@@ -72,53 +72,4 @@ fn root<C: Component>(root_cmp: impl Fn() -> C) {
     };
 
     root_cmp().render(rcx);
-
-    // row![
-    //     col![
-    //         row![
-    //             el![
-    //                 "A1",
-    //             ],
-    //             button![
-    //                 "X",
-    //                 button::on_press(|| log!("delete A1")),
-    //             ],
-    //         ],
-    //         row![
-    //             el![
-    //                 "A2",
-    //             ],
-    //             button![
-    //                 "X",
-    //                 button::on_press(|| log!("delete A2")),
-    //             ],
-    //         ],
-    //     ],
-
-
-    //     do_once(|| {
-    //         log!("FIRST RUN!");
-
-    //         col![
-    //             row![
-    //                 el![
-    //                     "B1",
-    //                 ],
-    //                 button![
-    //                     "X",
-    //                     button::on_press(|| log!("delete B1")),
-    //                 ],
-    //             ],
-    //             row![
-    //                 el![
-    //                     "B2",
-    //                 ],
-    //                 button![
-    //                     "X",
-    //                     button::on_press(|| log!("delete B2")),
-    //                 ],
-    //             ],
-    //         ]
-    //     }),
-    // ].render(rcx);
 }

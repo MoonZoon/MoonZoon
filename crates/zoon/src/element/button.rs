@@ -1,22 +1,22 @@
 use wasm_bindgen::{closure::Closure, JsCast};
-use crate::{RenderContext, dom::dom_element, log, Node, Component, IntoComponent, ApplyToComponent, render, component_macro};
+use crate::{RenderContext, dom::dom_element, log, Node, Element, IntoElement, ApplyToElement, render, element_macro};
 use crate::hook::el_var;
 use crate::state::State;
 use std::{cell::RefCell, rc::Rc};
 
 // ------ ------
-//   Component 
+//    Element 
 // ------ ------
 
-component_macro!(button, Button::default());
+element_macro!(button, Button::default());
 
 #[derive(Default)]
 pub struct Button<'a> {
-    label: Option<Box<dyn Component + 'a>>,
+    label: Option<Box<dyn Element + 'a>>,
     on_press: Option<OnPress>,
 }
 
-impl<'a> Component for Button<'a> {
+impl<'a> Element for Button<'a> {
     #[render]
     fn render(&mut self, rcx: RenderContext ) {
         log!("button, index: {}", rcx.index);
@@ -100,11 +100,11 @@ impl Drop for Listener{
 //  Attributes 
 // ------ ------
 
-// ------ IntoComponent ------
+// ------ IntoElement ------
 
-impl<'a, T: IntoComponent<'a> + 'a> ApplyToComponent<Button<'a>> for T {
-    fn apply_to_component(self, button: &mut Button<'a>) {
-        button.label = Some(Box::new(self.into_component()));
+impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<Button<'a>> for T {
+    fn apply_to_element(self, button: &mut Button<'a>) {
+        button.label = Some(Box::new(self.into_element()));
     }
 } 
 
@@ -114,8 +114,8 @@ pub struct OnPress(Box<dyn Fn()>);
 pub fn on_press(on_press: impl FnOnce() + Clone + 'static) -> OnPress {
     OnPress(Box::new(move || on_press.clone()()))
 }
-impl<'a> ApplyToComponent<Button<'a>> for OnPress {
-    fn apply_to_component(self, button: &mut Button<'a>) {
+impl<'a> ApplyToElement<Button<'a>> for OnPress {
+    fn apply_to_element(self, button: &mut Button<'a>) {
         button.on_press = Some(self);
     }
 }

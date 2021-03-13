@@ -1,18 +1,18 @@
 use wasm_bindgen::JsCast;
-use crate::{RenderContext, dom::dom_element, log, Component, IntoComponent, ApplyToComponent, render, component_macro};
+use crate::{RenderContext, dom::dom_element, log, Element, IntoElement, ApplyToElement, render, element_macro};
 
 // ------ ------
-//   Component 
+//   Element 
 // ------ ------
 
-component_macro!(col, Column::default());
+element_macro!(col, Column::default());
 
 #[derive(Default)]
 pub struct Column<'a> {
-    children: Vec<Box<dyn Component + 'a>>,
+    children: Vec<Box<dyn Element + 'a>>,
 }
 
-impl<'a> Component for Column<'a> {
+impl<'a> Element for Column<'a> {
     #[render]
     fn render(&mut self, rcx: RenderContext) {
         log!("column, index: {}", rcx.index);
@@ -33,10 +33,10 @@ impl<'a> Component for Column<'a> {
 //  Attributes 
 // ------ ------
 
-// ------ IntoComponent ------
+// ------ IntoElement ------
 
-impl<'a, T: IntoComponent<'a> + 'a> ApplyToComponent<Column<'a>> for T {
-    fn apply_to_component(self, column: &mut Column<'a>) {
-        column.children.push(Box::new(self.into_component()));
+impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<Column<'a>> for T {
+    fn apply_to_element(self, column: &mut Column<'a>) {
+        column.children.push(Box::new(self.into_element()));
     }
 }
