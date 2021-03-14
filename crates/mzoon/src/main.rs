@@ -149,7 +149,7 @@ fn start_frontend_watcher(
                         println!("Build frontend");
                         if build_frontend(release) {
                             println!("Reload frontend");
-                            attohttpc::post("https://127.0.0.1:8443/api/reload")
+                            attohttpc::post("https://localhost:8443/api/reload")
                                 .danger_accept_invalid_certs(true)
                                 .send()
                                 .unwrap();
