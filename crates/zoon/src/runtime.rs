@@ -1,4 +1,6 @@
 use crate::l_var_map::LVarMap;
+use crate::root;
+use crate::element::Element;
 use std::cell::RefCell;
 use std::any::Any;
 
@@ -6,7 +8,11 @@ thread_local! {
     pub(crate) static LVARS: RefCell<LVarMap> = RefCell::new(LVarMap::new());
 }
 
-pub fn run_once(root: impl FnOnce()) {
+thread_local! {
+    pub(crate) static ROOT_CMP: RefCell<Option<Box<dyn Fn() -> Box<dyn Element>>>> = RefCell::new(None);
+}
+
+pub fn rerender() {
     root();
     let _unused_data: Vec<Box<dyn Any>> = LVARS.with(|l_vars| {
         l_vars

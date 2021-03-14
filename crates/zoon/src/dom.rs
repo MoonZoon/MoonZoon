@@ -52,9 +52,10 @@ pub fn dom_element(mut rcx: RenderContext, children: impl FnOnce(RenderContext))
 }
 
 #[topo::nested]
-pub fn dom_text(mut rcx: RenderContext, text: &str) {  
+pub fn dom_text(rcx: RenderContext, text: &str) {  
     // log!("text, index: {}", rcx.index);
 
+    let old_text = l_var(|| None::<String>);
     let node = l_var(|| {
         let node_ws = document().create_text_node(&text).unchecked_into::<web_sys::Node>();
         rcx.node.update_mut(|node| {
@@ -63,5 +64,14 @@ pub fn dom_text(mut rcx: RenderContext, text: &str) {
         });
         Node { node_ws }
     });
-    rcx.node = node;
+
+    if old_text.map(|old_text| {
+        Some(text) == old_text.as_ref().map(String::as_str)
+    }) {
+        return;
+    }
+    old_text.set(Some(text.to_owned()));
+    node.update_mut(|node| {
+        node.node_ws.set_node_value(Some(text));
+    });
 }
