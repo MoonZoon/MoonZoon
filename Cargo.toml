@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "crates/blocks",
+    "crates/moon",
+    "crates/mzoon",
+    "crates/zoon",
+]
