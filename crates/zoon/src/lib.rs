@@ -17,6 +17,8 @@ pub use hook::{l_var, do_once};
 pub use topo;
 pub use topo::nested as render;
 pub use topo::nested as cmp;
+use runtime::ROOT_CMP;
+pub use runtime::rerender;
 
 #[macro_export]
 macro_rules! with_dollar_sign {
@@ -28,10 +30,6 @@ macro_rules! with_dollar_sign {
 
 const ELEMENT_ID: &str = "app";
 
-fn runtime_run_once<E: Element>(root_cmp: impl Fn() -> E) {
-    runtime::run_once(|| root(root_cmp));
-}
-
 #[macro_export]
 macro_rules! start {
     ($root_cmp:expr) => {
@@ -39,7 +37,12 @@ macro_rules! start {
     };
 }
 
-pub fn start<E: Element>(root_cmp: impl Fn() -> E + Copy) {
+pub fn start<E: Element + 'static>(root: fn() -> E) {
+    let root = Box::new(move || Box::new(root()) as Box<dyn Element>);
+    ROOT_CMP.with(move |app_root| {
+        *app_root.borrow_mut() =  Some(root);
+    });
+
     log!("start");
     console_error_panic_hook::set_once();
 
@@ -48,18 +51,17 @@ pub fn start<E: Element>(root_cmp: impl Fn() -> E + Copy) {
     //     root();
     // }
 
-    log!("-------- revision: 0 --------");
-    runtime_run_once(root_cmp);
+    rerender();
 
     // log!("-------- revision: 1 --------");
-    // runtime_run_once(root_cmp);
+    // rerender();
 
     // log!("-------- revision: 3 --------");
-    // runtime_run_once(root_cmp);
+    // rerender();
 }
 
 #[topo::nested]
-fn root<E: Element>(root_cmp: impl Fn() -> E) {
+fn root() {
     log!("root");
 
     let node = l_var(|| Node {
@@ -71,5 +73,9 @@ fn root<E: Element>(root_cmp: impl Fn() -> E) {
         node 
     };
 
-    root_cmp().render(rcx);
+    ROOT_CMP.with(|app_root| {
+        if let Some(app_root) = app_root.borrow_mut().as_ref() {
+            app_root().render(rcx);
+        }
+    });
 }

@@ -2,6 +2,7 @@ use wasm_bindgen::{closure::Closure, JsCast};
 use crate::{RenderContext, dom::dom_element, log, Node, Element, IntoElement, ApplyToElement, render, element_macro};
 use crate::hook::l_var;
 use crate::l_var::LVar;
+use crate::runtime::rerender;
 use std::{cell::RefCell, rc::Rc};
 
 // ------ ------
@@ -55,6 +56,7 @@ impl Listener {
         let handler_clone = Rc::clone(&handler);
         let callback = Closure::wrap(Box::new(move || {
             handler_clone.borrow()();
+            rerender();
         }) as Box<dyn Fn()>);
 
         node.update_mut(|node| {

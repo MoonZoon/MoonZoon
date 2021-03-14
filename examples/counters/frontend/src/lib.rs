@@ -1,6 +1,7 @@
 // #![no_std]
 
 use zoon::*;
+use std::cell::RefCell;
 
 mod element;
 use element::counter::{self, Counter};
@@ -42,12 +43,22 @@ use element::counter::{self, Counter};
 // }
 
 
+thread_local! {
+    static COUNTER_COUNT: RefCell<i32> = RefCell::new(3);
+}
+
+
 fn counter_count() -> i32 {
-    3
+    COUNTER_COUNT.with(|counter_count| {
+        *counter_count.borrow()
+    })
 }
 
 fn set_counter_count(count: i32) {
     log!("set_counter_count: {}", count);
+    COUNTER_COUNT.with(|counter_count| {
+        *counter_count.borrow_mut() = count;
+    })
 }
 
 
