@@ -1,5 +1,5 @@
 [package]
-name = "blocks"
+name = "s_var_macro"
 version = "0.1.0"
 authors = ["Martin Kavík <martin@kavik.cz>"]
 edition = "2018"
