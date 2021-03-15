@@ -62,7 +62,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "blocks"
+name = "blocks_macro"
 version = "0.1.0"
 
 [[package]]
@@ -964,6 +964,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "71d301d4193d031abdd79ff7e3dd721168a9572ef3fe51a1517aba235bd8f86e"
 
 [[package]]
+name = "s_var_macro"
+version = "0.1.0"
+
+[[package]]
 name = "safemem"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1359,6 +1363,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
 
 [[package]]
+name = "update_macro"
+version = "0.1.0"
+
+[[package]]
 name = "url"
 version = "2.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1580,9 +1588,11 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 name = "zoon"
 version = "0.1.0"
 dependencies = [
- "blocks",
+ "blocks_macro",
  "console_error_panic_hook",
+ "s_var_macro",
  "topo",
+ "update_macro",
  "wasm-bindgen",
  "web-sys",
 ]

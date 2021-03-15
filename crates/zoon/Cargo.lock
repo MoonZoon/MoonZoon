@@ -13,7 +13,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf1de2fe8c75bc145a2f577add951f8134889b4795d47466a54a5c846d691693"
 
 [[package]]
-name = "blocks"
+name = "blocks_macro"
 version = "0.1.0"
 
 [[package]]
@@ -250,6 +250,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "s_var_macro"
+version = "0.1.0"
+
+[[package]]
 name = "scopeguard"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -306,6 +310,10 @@ name = "unicode-xid"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7fe0bb3479651439c9112f72b6c505038574c9fbb575ed1bf3b797fa39dd564"
+
+[[package]]
+name = "update_macro"
+version = "0.1.0"
 
 [[package]]
 name = "version_check"
@@ -403,9 +411,11 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 name = "zoon"
 version = "0.1.0"
 dependencies = [
- "blocks",
+ "blocks_macro",
  "console_error_panic_hook",
+ "s_var_macro",
  "topo",
+ "update_macro",
  "wasm-bindgen",
  "web-sys",
 ]

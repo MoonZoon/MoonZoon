@@ -1,5 +1,7 @@
 pub use wasm_bindgen::{self, prelude::*, JsCast};
-pub use blocks::blocks;
+pub use blocks_macro::blocks;
+pub use s_var_macro::s_var;
+pub use update_macro::update;
 
 pub mod element;
 mod dom;
