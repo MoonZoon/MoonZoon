@@ -36,8 +36,13 @@ blocks!{
     #[cmp]
     fn counters<'a>() -> Row<'a> {
         row![
-            (0..counter_count().inner()).map(|_| counter![]),
+            (0..counter_count().inner()).map(|_| counter()),
         ]
+    }
+
+    #[cmp]
+    fn counter() -> Counter {
+        counter![]
     }
 
 }
