@@ -2,8 +2,7 @@ use proc_macro::TokenStream;
 
 #[proc_macro]
 pub fn blocks(input: TokenStream) -> TokenStream {
-    let _ = input;
-    TokenStream::new()
+    input
 }
 
 #[cfg(test)]
