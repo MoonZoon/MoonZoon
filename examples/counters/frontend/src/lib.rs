@@ -7,48 +7,39 @@ use element::counter::{self, Counter};
 
 blocks!{
 
-    // #[s_var]
-    // fn counter_count() -> i32 {
-    //     3
-    // }
+    #[s_var]
+    fn counter_count() -> i32 {
+        3
+    }
 
-    // #[update]
-    // fn set_counter_count(count: i32) {
-    //     counter_count().set(count);
-    // }
-}
+    #[update]
+    fn set_counter_count(count: i32) {
+        counter_count().set(count);
+    }
 
-#[s_var]
-fn counter_count() -> SVar<i32> {
-    s_var("counter_count", || 3)
-}
+    #[cmp]
+    fn root<'a>() -> Column<'a> {
+        col![
+            main_counter(),
+            counters(),
+        ]
+    }
 
-#[update]
-fn set_counter_count(count: i32) {
-    counter_count().set(count);
-}
+    #[cmp]
+    fn main_counter() -> Counter {
+        counter![
+            counter_count().inner(),
+            counter::on_change(set_counter_count),
+        ]
+    }
 
-#[cmp]
-fn root<'a>() -> Column<'a> {
-    col![
-        main_counter(),
-        counters(),
-    ]
-}
+    #[cmp]
+    fn counters<'a>() -> Row<'a> {
+        row![
+            (0..counter_count().inner()).map(|_| counter![]),
+        ]
+    }
 
-#[cmp]
-fn main_counter() -> Counter {
-    counter![
-        counter_count().inner(),
-        counter::on_change(set_counter_count),
-    ]
-}
-
-#[cmp]
-fn counters<'a>() -> Row<'a> {
-    row![
-        (0..counter_count().inner()).map(|_| counter![]),
-    ]
 }
 
 #[wasm_bindgen(start)]
