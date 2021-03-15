@@ -1,5 +1,5 @@
 use wasm_bindgen::{closure::Closure, JsCast};
-use crate::{RenderContext, dom::dom_element, log, Node, Element, IntoElement, ApplyToElement, render, element_macro};
+use crate::{RenderContext, dom::dom_element, Node, Element, IntoElement, ApplyToElement, render, element_macro};
 use crate::hook::l_var;
 use crate::l_var::LVar;
 use crate::runtime::rerender;
@@ -20,7 +20,7 @@ pub struct Button<'a> {
 impl<'a> Element for Button<'a> {
     #[render]
     fn render(&mut self, rcx: RenderContext ) {
-        log!("button, index: {}", rcx.index);
+        // log!("button, index: {}", rcx.index);
 
         let node = dom_element(rcx, |rcx: RenderContext| {
             if let Some(label) = self.label.as_mut() {
