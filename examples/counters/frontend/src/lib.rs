@@ -8,7 +8,7 @@ use element::counter::{self, Counter};
 blocks!{
 
     #[s_var]
-    fn counter_count() -> i32 {
+    fn counter_count() -> SVar<i32> {
         3
     }
 
