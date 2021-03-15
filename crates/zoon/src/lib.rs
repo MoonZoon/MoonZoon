@@ -42,10 +42,9 @@ macro_rules! start {
     };
 }
 
-pub fn start<E: Element + 'static>(root: fn() -> E) {
-    let root = Box::new(move || Box::new(root()) as Box<dyn Element>);
+pub fn start(root: fn() -> Option<Box<dyn Fn() -> Box<dyn Element>>>) {
     ROOT_CMP.with(move |app_root| {
-        *app_root.borrow_mut() =  Some(root);
+        *app_root.borrow_mut() =  root();
     });
 
     // log!("start");
