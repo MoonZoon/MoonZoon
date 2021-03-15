@@ -6,12 +6,15 @@ mod dom;
 mod console;
 mod hook;
 mod l_var;
-mod runtime;
 mod l_var_map;
+mod s_var;
+mod s_var_map;
+mod runtime;
 
 pub use element::*;
 pub use dom::{Node, window, document}; 
 pub use l_var::{LVar, CloneLVar};
+pub use s_var::{SVar, CloneSVar, s_var};
 pub use console::log;
 pub use hook::{l_var, do_once};
 pub use topo;
@@ -43,26 +46,15 @@ pub fn start<E: Element + 'static>(root: fn() -> E) {
         *app_root.borrow_mut() =  Some(root);
     });
 
-    log!("start");
+    // log!("start");
     console_error_panic_hook::set_once();
 
-    // for revision in 0..2 {
-    //     log!("revision: {}", revision);
-    //     root();
-    // }
-
     rerender();
-
-    // log!("-------- revision: 1 --------");
-    // rerender();
-
-    // log!("-------- revision: 3 --------");
-    // rerender();
 }
 
 #[topo::nested]
 fn root() {
-    log!("root");
+    // log!("root");
 
     let node = l_var(|| Node {
         node_ws: web_sys::Node::from(document().get_element_by_id(ELEMENT_ID).expect("root element"))

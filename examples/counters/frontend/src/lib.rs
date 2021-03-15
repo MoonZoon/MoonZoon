@@ -1,7 +1,6 @@
 // #![no_std]
 
 use zoon::*;
-use std::cell::RefCell;
 
 mod element;
 use element::counter::{self, Counter};
@@ -9,12 +8,12 @@ use element::counter::{self, Counter};
 // blocks!{
 
 //     #[s_var]
-//     fn counter_count() -> usize {
+//     fn counter_count() -> i32 {
 //         3
 //     }
 
 //     #[update]
-//     fn set_counter_count(count: usize) {
+//     fn set_counter_count(count: i32) {
 //         counter_count().set(count);
 //     }
 
@@ -42,25 +41,13 @@ use element::counter::{self, Counter};
 //     }
 // }
 
-
-thread_local! {
-    static COUNTER_COUNT: RefCell<i32> = RefCell::new(3);
-}
-
-
-fn counter_count() -> i32 {
-    COUNTER_COUNT.with(|counter_count| {
-        *counter_count.borrow()
-    })
+fn counter_count() -> SVar<i32> {
+    s_var("counter_count", || 3)
 }
 
 fn set_counter_count(count: i32) {
-    log!("set_counter_count: {}", count);
-    COUNTER_COUNT.with(|counter_count| {
-        *counter_count.borrow_mut() = count;
-    })
+    counter_count().set(count);
 }
-
 
 #[cmp]
 fn root<'a>() -> Column<'a> {
@@ -73,8 +60,7 @@ fn root<'a>() -> Column<'a> {
 #[cmp]
 fn main_counter() -> Counter {
     counter![
-        // counter_count().inner(),
-        counter_count(),
+        counter_count().inner(),
         counter::on_change(set_counter_count),
     ]
 }
@@ -82,8 +68,7 @@ fn main_counter() -> Counter {
 #[cmp]
 fn counters<'a>() -> Row<'a> {
     row![
-        // (0..counter_count().inner()).map(|_| counter![]),
-        (0..counter_count()).map(|_| counter![]),
+        (0..counter_count().inner()).map(|_| counter![]),
     ]
 }
 

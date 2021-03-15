@@ -30,10 +30,10 @@ fn l_var_current<T: 'static, F: FnOnce() -> T>(creator: F) -> LVar<T> {
         l_vars.borrow().contains_id(&id)
     });
 
-    let data = if !id_exists {
-        Some(creator())
-    } else {
+    let data = if id_exists {
         None
+    } else {
+        Some(creator())
     };
 
     LVARS.with(|l_vars| {

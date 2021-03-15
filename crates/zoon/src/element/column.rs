@@ -1,5 +1,5 @@
 use wasm_bindgen::JsCast;
-use crate::{RenderContext, dom::dom_element, log, Element, IntoElement, ApplyToElement, render, element_macro};
+use crate::{RenderContext, dom::dom_element, Element, IntoElement, ApplyToElement, render, element_macro};
 
 // ------ ------
 //   Element 
@@ -15,7 +15,7 @@ pub struct Column<'a> {
 impl<'a> Element for Column<'a> {
     #[render]
     fn render(&mut self, rcx: RenderContext) {
-        log!("column, index: {}", rcx.index);
+        // log!("column, index: {}", rcx.index);
 
         let node = dom_element(rcx, |mut rcx| {
             for child in &mut self.children {
