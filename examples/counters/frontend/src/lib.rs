@@ -49,5 +49,5 @@ blocks!{
 
 #[wasm_bindgen(start)]
 pub fn start() {
-    start!(root)
+    start!(blocks)
 }
