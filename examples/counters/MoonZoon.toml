@@ -4,6 +4,12 @@ frontend = [
     "frontend/src",
     "../../crates/zoon/Cargo.toml",
     "../../crates/zoon/src",
+    "../../crates/blocks_macro/Cargo.toml",
+    "../../crates/blocks_macro/src",
+    "../../crates/update_macro/Cargo.toml",
+    "../../crates/update_macro/src",
+    "../../crates/s_var_macro/Cargo.toml",
+    "../../crates/s_var_macro/src",
 ]
 backend = [
     "backend/Cargo.toml",
