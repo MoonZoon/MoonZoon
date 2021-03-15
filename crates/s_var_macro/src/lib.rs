@@ -1,10 +1,17 @@
 use proc_macro::TokenStream;
 use quote::ToTokens;
-use syn::{parse_quote, ItemFn, LitStr, ReturnType};
+use syn::{parse_quote, ItemFn, LitStr, ReturnType, Type};
 
 /* 
 #[s_var]
 fn counter_count() -> i32 {
+    3
+}
+
+// or 
+
+#[s_var]
+fn counter_count() -> SVar<i32> {
     3
 }
 
@@ -34,12 +41,28 @@ pub fn s_var(_attr: TokenStream, input: TokenStream) -> TokenStream {
         ReturnType::Default => {
             parse_quote!(-> SVar<()>)
         },
+        ReturnType::Type(_, type_) if is_first_segment_s_var(&type_)  => {
+            parse_quote!(-> #type_)
+        },
         ReturnType::Type(_, type_) => {
             parse_quote!(-> SVar<#type_>)
         },
     };
 
     input_fn.into_token_stream().into()
+}
+
+fn is_first_segment_s_var(type_: &Box<Type>) -> bool {
+    if let Type::Path(type_path) = type_.as_ref() {
+        type_path
+            .path
+            .segments
+            .first()
+            .map(|path_segment| path_segment.ident == "SVar")
+            .unwrap_or_default()
+    } else {
+        false
+    }
 }
 
 #[cfg(test)]
