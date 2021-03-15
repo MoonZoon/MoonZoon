@@ -17,7 +17,7 @@ use element::counter::{self, Counter};
 //         counter_count().set(count);
 //     }
 
-//     #[el]
+//     #[cmp]
 //     fn root() -> Column {
 //         column![
 //             main_counter(),
@@ -25,7 +25,7 @@ use element::counter::{self, Counter};
 //         ]
 //     }
 
-//     #[el]
+//     #[cmp]
 //     fn main_counter() -> Counter {
 //         counter![
 //             counter_count().inner(),
@@ -33,7 +33,7 @@ use element::counter::{self, Counter};
 //         ]
 //     }
 
-//     #[el]
+//     #[cmp]
 //     fn counters() -> Row {
 //         row![
 //             (0..counter_count().inner()).iter().map(|_| counter![]),

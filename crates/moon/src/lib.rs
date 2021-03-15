@@ -193,6 +193,7 @@ fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid) -> String 
         .button {{
             cursor: pointer;
             background-color: darkgreen;
+            user-select: none;
         }}
 
         .button:hover {{
@@ -211,9 +212,7 @@ fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid) -> String 
     </head>
 
     <body>
-      <h1>MoonZoon is running!</h1>
-      <h2>Backend build id: {backend_build_id}</h2>
-      <h2>Random id: {random_id}</h2>
+      {html_debug_info}
       <section id="app"></section>
 
       <script type="text/javascript">
@@ -244,10 +243,19 @@ fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid) -> String 
     
     </html>"#, 
     title = title, 
-    backend_build_id = backend_build_id.to_string(), 
-    random_id = Uuid::new_v4().to_string(), 
+    html_debug_info = html_debug_info(backend_build_id),
     reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"),
     frontend_build_id = frontend_build_id.to_string())
+}
+
+fn html_debug_info(_backend_build_id: Uuid) -> String {
+    String::new()
+    // format!("<h1>MoonZoon is running!</h1>
+    //     <h2>Backend build id: {backend_build_id}</h2>
+    //     <h2>Random id: {random_id}</h2>", 
+    //     backend_build_id = backend_build_id.to_string(), 
+    //     random_id = Uuid::new_v4().to_string()
+    // )
 }
 
 #[cfg(test)]
