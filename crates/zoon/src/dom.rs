@@ -1,7 +1,4 @@
-use crate::log;
-use crate::RenderContext;
-use crate::l_var;
-use crate::LVar;
+use crate::{RenderContext, l_var, LVar};
 use wasm_bindgen::JsCast;
 
 // ------- Helpers ------
@@ -27,7 +24,7 @@ impl Drop for Node {
         if let Some(parent) = self.node_ws.parent_node() {
             parent.remove_child(&self.node_ws).unwrap();
         }
-        log!("Node dropped");
+        // log!("Node dropped");
     }
 }
 

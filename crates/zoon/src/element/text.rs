@@ -1,4 +1,4 @@
-use crate::{RenderContext, dom::dom_text, log, Element, ApplyToElement, render, element_macro};
+use crate::{RenderContext, dom::dom_text, Element, ApplyToElement, render, element_macro};
 use std::borrow::Cow;
 
 // ------ ------
@@ -15,7 +15,7 @@ pub struct Text<'a> {
 impl<'a> Element for Text<'a> {
     #[render]
     fn render(&mut self, rcx: RenderContext) {
-        log!("text, index: {}", rcx.index);
+        // log!("text, index: {}", rcx.index);
 
         dom_text(rcx, &self.text);
     }
