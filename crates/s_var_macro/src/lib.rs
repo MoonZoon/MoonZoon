@@ -1,6 +1,7 @@
 use proc_macro::TokenStream;
 use quote::ToTokens;
-use syn::{parse_quote, ItemFn, LitStr, ReturnType, Type};
+use syn::{parse_quote, ItemFn, ReturnType, Type};
+use uuid::Uuid;
 
 /* 
 #[s_var]
@@ -18,7 +19,7 @@ fn counter_count() -> SVar<i32> {
 // to 
 
 fn counter_count() -> SVar<i32> {
-    s_var("counter_count", || {
+    s_var(0x936DA01F9ABD4D9D80C702AF85C822A8, || {
         3
     })
 }
@@ -27,8 +28,7 @@ fn counter_count() -> SVar<i32> {
 pub fn s_var(_attr: TokenStream, input: TokenStream) -> TokenStream {
     let mut input_fn: ItemFn = syn::parse(input).unwrap();
 
-    let input_fn_name = &input_fn.sig.ident;
-    let id = LitStr::new(&input_fn_name.to_string(), input_fn_name.span());
+    let id = Uuid::new_v4().as_u128();
 
     let inner_block = input_fn.block;
     input_fn.block = parse_quote!({ 
