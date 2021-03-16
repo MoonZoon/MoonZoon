@@ -17,6 +17,11 @@ blocks!{
         2
     }
 
+    #[s_var]
+    fn counter_count() -> SVar<i32> {
+        6
+    }
+
     #[update]
     fn set_column_count(count: i32) {
         column_count().set(count);
@@ -40,6 +45,14 @@ blocks!{
         row![
             column_counter(),
             row_counter(),
+            counter_count_text()
+        ]
+    }
+
+    #[cmp]
+    fn counter_count_text<'a>() -> El<'a> {
+        el![
+            format!("Counters: {}", counter_count().inner().to_string())
         ]
     }
 
