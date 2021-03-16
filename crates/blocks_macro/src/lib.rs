@@ -33,10 +33,16 @@ blocks!{
 
 // generates
 
-fn blocks() -> Option<Box<dyn Fn() -> Box<dyn Element>>> {
+{ original blocks! content }
+
+pub fn __blocks(mut block: __Blocks) -> __Blocks {
     counter_count();
-    Some(Box::new(move || Box::new(root()) as Box<dyn Element>))  
+    blocks.root = Some(Box::new(move || Box::new(root()) as Box<dyn Element>));
+    __append_blocks(blocks)
 }
+
+append_blocks![]
+
 */
 
 #[proc_macro]
@@ -47,22 +53,35 @@ pub fn blocks(input: TokenStream) -> TokenStream {
     let mut fn_visitor = FnVisitor::default();
     fn_visitor.visit_file(&file);
 
-    let option_root = if fn_visitor.has_root {
-        quote!(Some(Box::new(move || Box::new(root()) as Box<dyn Element>)))
+    let set_blocks_root = if fn_visitor.has_root {
+        quote!(blocks.root = Some(Box::new(move || Box::new(root()) as Box<dyn Element>));)
     } else {
-        quote!(None)
+        quote!()
     };
 
     let s_var_idents = fn_visitor.s_var_idents;
     let fn_blocks = quote!(
-        fn blocks() -> Option<Box<dyn Fn() -> Box<dyn Element>>> {
+        pub fn __blocks(mut blocks: __Blocks) -> __Blocks {
             #( #s_var_idents(); )*
-            #option_root  
+            #set_blocks_root
+            __append_blocks(blocks)
         }
     );
+
+    let append_blocks = if fn_visitor.has_append_blocks {
+        quote!()
+    } else {
+        quote!(
+            pub fn __append_blocks(blocks: __Blocks) -> __Blocks {
+                blocks
+            }
+        )
+    };
+
     quote!(
         #file
         #fn_blocks
+        #append_blocks
     ).into()
 }
 
@@ -70,19 +89,25 @@ pub fn blocks(input: TokenStream) -> TokenStream {
 struct FnVisitor<'ast> {
     s_var_idents: Vec<&'ast Ident>,
     has_root: bool,
+    has_append_blocks: bool,
 }
 
 impl<'ast> Visit<'ast> for FnVisitor<'ast> {
     fn visit_item_fn(&mut self, function: &'ast ItemFn) {
         let function_ident = &function.sig.ident;
+
+        if function_ident == "__append_blocks" {
+            self.has_append_blocks = true;
+            return;
+        }
         
         if let Some(first_attribute_ident) = first_attribute_ident(function) {
-            if first_attribute_ident == "cmp" && function_ident == "root" {
-                self.has_root = true;
-                return;
-            }
             if first_attribute_ident == "s_var" {
                 self.s_var_idents.push(function_ident);
+                return;
+            }
+            if first_attribute_ident == "cmp" && function_ident == "root" {
+                self.has_root = true;
                 return;
             }
         }

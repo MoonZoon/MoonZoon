@@ -37,14 +37,21 @@ const ELEMENT_ID: &str = "app";
 
 #[macro_export]
 macro_rules! start {
-    ($root_cmp:expr) => {
-        $crate::start($root_cmp);
+    () => {
+        $crate::start(__blocks);
+    };
+    ($module_with_blocks:tt) => {
+        $crate::start($module_with_blocks::__blocks);
     };
 }
 
-pub fn start(root: fn() -> Option<Box<dyn Fn() -> Box<dyn Element>>>) {
-    ROOT_CMP.with(move |app_root| {
-        *app_root.borrow_mut() =  root();
+pub struct __Blocks {
+    pub root: Option<Box<dyn Fn() -> Box<dyn Element>>>,
+}
+
+pub fn start(blocks: fn(__Blocks) -> __Blocks) {
+    ROOT_CMP.with(move |root| {
+        *root.borrow_mut() = blocks(__Blocks { root: None }).root;
     });
 
     // log!("start");
