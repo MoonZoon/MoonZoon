@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::any::Any;
 
-pub type Id = &'static str;
+pub type Id = u128;
 
 pub(crate) struct SVarMap {
     s_vars: HashMap<Id, SVarMapValue>,
@@ -21,7 +21,7 @@ impl SVarMap {
     pub(crate) fn data<T: 'static>(&self, id: Id) -> Option<&T> {
         self
             .s_vars
-            .get(id)?
+            .get(&id)?
             .data
             .downcast_ref::<Option<T>>()?
             .as_ref()
