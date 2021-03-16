@@ -19,12 +19,12 @@ blocks!{
         row![
             column_counter(),
             row_counter(),
-            counter_count_text()
+            counter_count()
         ]
     }
 
     #[cmp]
-    fn counter_count_text<'a>() -> El<'a> {
+    fn counter_count<'a>() -> El<'a> {
         el![
             format!("Counters: {}", super::counter_count().inner().to_string())
         ]

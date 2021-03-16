@@ -10,6 +10,8 @@ frontend = [
     "../../crates/update_macro/src",
     "../../crates/s_var_macro/Cargo.toml",
     "../../crates/s_var_macro/src",
+    "../../crates/cache_macro/Cargo.toml",
+    "../../crates/cache_macro/src",
 ]
 backend = [
     "backend/Cargo.toml",

@@ -2,6 +2,7 @@ pub use wasm_bindgen::{self, prelude::*, JsCast};
 pub use blocks_macro::blocks;
 pub use s_var_macro::s_var;
 pub use update_macro::update;
+pub use cache_macro::cache;
 
 pub mod element;
 mod dom;
@@ -11,12 +12,15 @@ mod l_var;
 mod l_var_map;
 mod s_var;
 mod s_var_map;
+mod cache;
+mod cache_map;
 mod runtime;
 
 pub use element::*;
 pub use dom::{Node, window, document}; 
 pub use l_var::{LVar, CloneLVar};
 pub use s_var::{SVar, CloneSVar, s_var};
+pub use cache::{Cache, CloneCache, cache};
 pub use console::log;
 pub use hook::{l_var, do_once};
 pub use topo;

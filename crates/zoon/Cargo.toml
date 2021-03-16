@@ -9,6 +9,7 @@ wasm-bindgen = "0.2.70"
 blocks_macro = { path = "../blocks_macro"}
 s_var_macro = { path = "../s_var_macro"}
 update_macro = { path = "../update_macro"}
+cache_macro = { path = "../cache_macro"}
 
 topo = { version = "0.13.2", features = [ "wasm-bindgen"] }
 console_error_panic_hook = "0.1.6"
