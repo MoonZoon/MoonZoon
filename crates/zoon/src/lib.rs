@@ -15,6 +15,7 @@ mod s_var_map;
 mod cache;
 mod cache_map;
 mod runtime;
+mod block_call_stack;
 
 pub use element::*;
 pub use dom::{Node, window, document}; 
@@ -28,6 +29,7 @@ pub use topo::nested as render;
 pub use topo::nested as cmp;
 use runtime::ROOT_CMP;
 pub use runtime::rerender;
+pub use block_call_stack::{__BlockCallStack, __Block};
 
 #[macro_export]
 macro_rules! with_dollar_sign {
