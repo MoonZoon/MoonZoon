@@ -19,8 +19,14 @@ fn counter_count() -> SVar<i32> {
 // to 
 
 fn counter_count() -> SVar<i32> {
-    s_var(0x936DA01F9ABD4D9D80C702AF85C822A8, || {
-        3
+    const __id = 0x936DA01F9ABD4D9D80C702AF85C822A8;
+    cache(__id, || {
+        __BlockCallStack::push(__Block::SVar(__id));
+        let output = (|| {
+            3
+        })();
+        __BlockCallStack::pop();
+        output
     })
 }
 */
@@ -32,8 +38,12 @@ pub fn s_var(_attr: TokenStream, input: TokenStream) -> TokenStream {
 
     let inner_block = input_fn.block;
     input_fn.block = parse_quote!({ 
-        s_var(#id, || {
-            #inner_block
+        const __id: u128 = #id;
+        s_var(__id, || {
+            __BlockCallStack::push(__Block::SVar(__id));
+            let output = (|| #inner_block)();
+            __BlockCallStack::pop();
+            output
         })
     });
 
