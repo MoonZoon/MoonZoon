@@ -1,9 +1,14 @@
 use crate::l_var_map::LVarMap;
 use crate::s_var_map::SVarMap;
+use crate::cache_map::CacheMap;
 use crate::root;
 use crate::element::Element;
 use std::cell::RefCell;
 use std::any::Any;
+
+thread_local! {
+    pub(crate) static CACHES: RefCell<CacheMap> = RefCell::new(CacheMap::new());
+}
 
 thread_local! {
     pub(crate) static SVARS: RefCell<SVarMap> = RefCell::new(SVarMap::new());

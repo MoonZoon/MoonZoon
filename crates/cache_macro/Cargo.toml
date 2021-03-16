@@ -1,0 +1,13 @@
+[package]
+name = "cache_macro"
+version = "0.1.0"
+authors = ["Martin Kavík <martin@kavik.cz>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "1.0", features = [ "full" ] }
+quote = "1.0"
+uuid = { version = "0.8", features = [ "v4" ], default-features = false }

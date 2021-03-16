@@ -105,6 +105,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b700ce4376041dcd0a327fd0097c41095743c4c8af8887265942faf1100bd040"
 
 [[package]]
+name = "cache_macro"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn",
+ "uuid",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.67"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1599,6 +1608,7 @@ name = "zoon"
 version = "0.1.0"
 dependencies = [
  "blocks_macro",
+ "cache_macro",
  "console_error_panic_hook",
  "s_var_macro",
  "topo",

@@ -17,9 +17,9 @@ blocks!{
         2
     }
 
-    #[s_var]
-    fn counter_count() -> SVar<i32> {
-        6
+    #[cache]
+    fn counter_count() -> Cache<i32> {
+        column_count().inner() * row_count().inner()
     }
 
     #[update]
