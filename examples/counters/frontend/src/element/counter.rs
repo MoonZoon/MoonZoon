@@ -30,12 +30,12 @@ impl Element for Counter {
                 on_change(value.inner());
             }
         };
-        col![
+        row![
             button![
                 button::on_press(enc!((update_value) move || update_value(-1))),
                 "-"
             ],
-            text!(value.inner().to_string()),
+            el![value.inner().to_string()],
             button![
                 button::on_press(move || update_value(1)), 
                  "+"
