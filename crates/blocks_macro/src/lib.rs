@@ -41,7 +41,7 @@ pub fn __blocks(mut block: __Blocks) -> __Blocks {
     __append_blocks(blocks)
 }
 
-append_blocks![]
+append_blocks!{}
 
 */
 
@@ -59,10 +59,10 @@ pub fn blocks(input: TokenStream) -> TokenStream {
         quote!()
     };
 
-    let s_var_idents = fn_visitor.s_var_idents;
+    let blocks_to_init = fn_visitor.blocks_to_init;
     let fn_blocks = quote!(
         pub fn __blocks(mut blocks: __Blocks) -> __Blocks {
-            #( #s_var_idents(); )*
+            #( #blocks_to_init(); )*
             #set_blocks_root
             __append_blocks(blocks)
         }
@@ -85,7 +85,7 @@ pub fn blocks(input: TokenStream) -> TokenStream {
 
 #[derive(Default)]
 struct FnVisitor<'ast> {
-    s_var_idents: Vec<&'ast Ident>,
+    blocks_to_init: Vec<&'ast Ident>,
     has_root: bool,
     has_append_blocks: bool,
 }
@@ -94,8 +94,8 @@ impl<'ast> Visit<'ast> for FnVisitor<'ast> {
     fn visit_item_fn(&mut self, function: &'ast ItemFn) {
         let function_ident = &function.sig.ident;
         if let Some(first_attribute_ident) = first_attribute_ident(function) {
-            if first_attribute_ident == "s_var" {
-                self.s_var_idents.push(function_ident);
+            if first_attribute_ident == "s_var" || first_attribute_ident == "cache" {
+                self.blocks_to_init.push(function_ident);
                 return;
             }
             if first_attribute_ident == "cmp" && function_ident == "root" {
