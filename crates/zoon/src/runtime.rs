@@ -8,17 +8,8 @@ use std::any::Any;
 
 thread_local! {
     pub(crate) static CACHES: RefCell<CacheMap> = RefCell::new(CacheMap::new());
-}
-
-thread_local! {
     pub(crate) static SVARS: RefCell<SVarMap> = RefCell::new(SVarMap::new());
-}
-
-thread_local! {
     pub(crate) static LVARS: RefCell<LVarMap> = RefCell::new(LVarMap::new());
-}
-
-thread_local! {
     pub(crate) static ROOT_CMP: RefCell<Option<Box<dyn Fn() -> Box<dyn Element>>>> = RefCell::new(None);
 }
 
