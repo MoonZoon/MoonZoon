@@ -4,7 +4,7 @@ use std::marker::PhantomData;
 
 pub fn s_var<T: 'static, F: FnOnce() -> T>(id: Id, creator: F) -> SVar<T> {
     let id_exists = SVARS.with(|s_vars| {
-        s_vars.borrow().contains_id(&id)
+        s_vars.borrow().contains_id(id)
     });
     if !id_exists {
         let data = creator();
@@ -59,7 +59,7 @@ where
         SVARS.with(|s_vars| {
             s_vars
                 .borrow_mut()
-                .remove::<T>(&self.id)
+                .remove::<T>(self.id)
         })
     }
 
@@ -77,7 +77,7 @@ where
     pub fn map<U>(self, mapper: impl FnOnce(&T) -> U) -> U {
         SVARS.with(|s_vars| {
             let s_var_map = s_vars.borrow();
-            let data = s_var_map.data(&self.id)
+            let data = s_var_map.data(self.id)
                 .expect("an s_var data with the given id");
             mapper(data)
         })
@@ -93,7 +93,7 @@ where
     pub fn use_ref<U>(self, user: impl FnOnce(&T)) {
         SVARS.with(|s_vars| {
             let s_var_map = s_vars.borrow();
-            let data = s_var_map.data(&self.id)
+            let data = s_var_map.data(self.id)
                 .expect("an s_var data with the given id");
             user(data)
         })
