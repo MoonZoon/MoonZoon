@@ -45,6 +45,16 @@ macro_rules! start {
     };
 }
 
+#[macro_export]
+macro_rules! append_blocks {
+    ( $($module_with_blocks:tt),* $(,)? ) => {
+        pub fn __append_blocks(blocks: __Blocks) -> __Blocks {
+            $( let blocks = $module_with_blocks::__blocks(blocks); )*
+            blocks
+        }
+    }
+} 
+
 pub struct __Blocks {
     pub root: Option<Box<dyn Fn() -> Box<dyn Element>>>,
 }
