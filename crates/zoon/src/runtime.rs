@@ -1,6 +1,7 @@
 use crate::l_var_map::LVarMap;
 use crate::s_var_map::SVarMap;
 use crate::cache_map::CacheMap;
+use crate::block_call_stack::__BlockCallStack;
 use crate::root;
 use crate::element::Element;
 use std::cell::RefCell;
@@ -11,6 +12,7 @@ thread_local! {
     pub(crate) static SVARS: RefCell<SVarMap> = RefCell::new(SVarMap::new());
     pub(crate) static LVARS: RefCell<LVarMap> = RefCell::new(LVarMap::new());
     pub(crate) static ROOT_CMP: RefCell<Option<Box<dyn Fn() -> Box<dyn Element>>>> = RefCell::new(None);
+    pub(crate) static BLOCK_CALL_STACK: RefCell<__BlockCallStack> = RefCell::new(__BlockCallStack::default());
 }
 
 pub fn rerender() {
