@@ -19,14 +19,24 @@ blocks!{
         row![
             column_counter(),
             row_counter(),
-            counter_count()
+            counter_count(),
+            counter_count_hundreds(),
         ]
     }
 
     #[cmp]
     fn counter_count<'a>() -> El<'a> {
         el![
-            format!("Counters: {}", super::counter_count().inner().to_string())
+            format!("Counters: {}", super::counter_count().inner())
+        ]
+    }
+
+    #[cmp]
+    fn counter_count_hundreds<'a>() -> El<'a> {
+        el![
+            super::counter_count_hundreds().map(|count| {
+                format!("Hundreds: {}", count)
+            })
         ]
     }
 
