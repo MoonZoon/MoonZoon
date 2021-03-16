@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{Ident, ItemFn, File, visit::Visit};
+use syn::{Ident, ItemFn, File, Macro, visit::Visit};
 
 /*
 blocks!{
@@ -72,9 +72,7 @@ pub fn blocks(input: TokenStream) -> TokenStream {
         quote!()
     } else {
         quote!(
-            pub fn __append_blocks(blocks: __Blocks) -> __Blocks {
-                blocks
-            }
+            append_blocks!{}
         )
     };
 
@@ -95,12 +93,6 @@ struct FnVisitor<'ast> {
 impl<'ast> Visit<'ast> for FnVisitor<'ast> {
     fn visit_item_fn(&mut self, function: &'ast ItemFn) {
         let function_ident = &function.sig.ident;
-
-        if function_ident == "__append_blocks" {
-            self.has_append_blocks = true;
-            return;
-        }
-        
         if let Some(first_attribute_ident) = first_attribute_ident(function) {
             if first_attribute_ident == "s_var" {
                 self.s_var_idents.push(function_ident);
@@ -111,7 +103,19 @@ impl<'ast> Visit<'ast> for FnVisitor<'ast> {
                 return;
             }
         }
+    }
+    fn visit_macro(&mut self, macro_call: &'ast Macro) {
+        let macro_ident = &macro_call
+            .path
+            .segments
+            .first()
+            .unwrap()
+            .ident;
 
+        if macro_ident == "append_blocks" {
+            self.has_append_blocks = true;
+            return;
+        }
     }
 }
 

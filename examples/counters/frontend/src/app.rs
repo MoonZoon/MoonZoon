@@ -3,12 +3,8 @@ use zoon::*;
 mod cmp;
 
 blocks!{
-    // append_blocks![
-    //     cmp,
-    // ]
-
-    pub fn __append_blocks(blocks: __Blocks) -> __Blocks {
-        cmp::__blocks(blocks)
+    append_blocks!{
+        cmp,
     }
 
     #[s_var]
