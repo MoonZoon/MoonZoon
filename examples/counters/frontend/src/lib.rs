@@ -8,35 +8,74 @@ use element::counter::{self, Counter};
 blocks!{
 
     #[s_var]
-    fn counter_count() -> SVar<i32> {
+    fn column_count() -> SVar<i32> {
         3
     }
 
+    #[s_var]
+    fn row_count() -> SVar<i32> {
+        2
+    }
+
     #[update]
-    fn set_counter_count(count: i32) {
-        counter_count().set(count);
+    fn set_column_count(count: i32) {
+        column_count().set(count);
+    }
+
+    #[update]
+    fn set_row_count(count: i32) {
+        row_count().set(count);
     }
 
     #[cmp]
     fn root<'a>() -> Column<'a> {
         col![
-            main_counter(),
+            control_counters(),
             counters(),
         ]
     }
 
     #[cmp]
-    fn main_counter() -> Counter {
-        counter![
-            counter_count().inner(),
-            counter::on_change(set_counter_count),
+    fn control_counters<'a>() -> Row<'a> {
+        row![
+            column_counter(),
+            row_counter(),
         ]
     }
 
     #[cmp]
-    fn counters<'a>() -> Row<'a> {
+    fn column_counter<'a>() -> Row<'a> {
         row![
-            (0..counter_count().inner()).map(|_| counter()),
+            "Columns:",
+            counter![
+                column_count().inner(),
+                counter::on_change(set_column_count),
+            ]
+        ]
+    }
+
+    #[cmp]
+    fn row_counter<'a>() -> Row<'a> {
+        row![
+            "Rows:",
+            counter![
+                row_count().inner(),
+                counter::on_change(set_row_count),
+            ]
+        ]
+    }
+
+    #[cmp]
+    fn counters<'a>() -> Column<'a> {
+        col![
+            (0..row_count().inner()).map(|_| counter_row())
+        ]
+    }
+
+    #[cmp]
+    fn counter_row<'a>() -> Row<'a> {
+        row![
+            (0..column_count().inner()).map(|_| counter())
         ]
     }
 
