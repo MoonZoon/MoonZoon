@@ -19,9 +19,12 @@ fn counter_count() -> Cache<i32> {
 // to 
 
 fn counter_count() -> Cache<i32> {
-    const __id = 0x936DA01F9ABD4D9D80C702AF85C822A8;
-    cache(__id, || {
-        __BlockCallStack::push(__Block::Cache(__id));
+    const __ID: u128 = 0x936DA01F9ABD4D9D80C702AF85C822A8;
+    const __BLOCK: __Block = __Block::Cache(__ID);
+    __Relations::add_dependency(__BLOCK);
+    cache(__ID, || {
+        __BlockCallStack::push(__BLOCK);
+        __Relations::remove_dependencies(__BLOCK);
         let output = (|| {
             3
         })();
@@ -38,9 +41,12 @@ pub fn cache(_attr: TokenStream, input: TokenStream) -> TokenStream {
 
     let inner_block = input_fn.block;
     input_fn.block = parse_quote!({ 
-        const __id: u128 = #id;
-        cache(__id, || {
-            __BlockCallStack::push(__Block::Cache(__id));
+        const __ID: u128 = #id;
+        const __BLOCK: __Block = __Block::Cache(__ID);
+        __Relations::add_dependency(__BLOCK);
+        cache(__ID, || {
+            __BlockCallStack::push(__BLOCK);
+            __Relations::remove_dependencies(&__BLOCK);
             let output = (|| #inner_block)();
             __BlockCallStack::pop();
             output
