@@ -68,12 +68,12 @@ pub struct __Blocks {
 }
 
 pub fn start(blocks: fn(__Blocks) -> __Blocks) {
+    // log!("start");
+    console_error_panic_hook::set_once();
+    
     ROOT_CMP.with(move |root| {
         *root.borrow_mut() = blocks(__Blocks { root: None }).root;
     });
-
-    // log!("start");
-    console_error_panic_hook::set_once();
 
     rerender();
 }
