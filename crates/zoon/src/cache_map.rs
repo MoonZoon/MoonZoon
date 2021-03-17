@@ -9,6 +9,7 @@ pub(crate) struct CacheMap {
 
 struct CacheMapValue {
     data: Box<dyn Any>,
+    // function: Box<dyn Fn() -> Box<dyn Any>>,
 }
 
 impl CacheMap {
@@ -27,11 +28,13 @@ impl CacheMap {
             .as_ref()
     }
 
+    // pub(crate) fn insert<T: Any>(&mut self, id: Id, data: T, function: impl Fn() -> T) {
     pub(crate) fn insert(&mut self, id: Id, data: impl Any) {
         self
             .caches
             .insert(id, CacheMapValue { 
                 data: Box::new(Some(data)), 
+                // function: Box::new(function),
             });
     }
 

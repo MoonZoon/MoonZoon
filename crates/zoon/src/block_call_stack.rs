@@ -1,5 +1,4 @@
 use crate::runtime::BLOCK_CALL_STACK;
-use crate::log;
 
 pub type Id = u128;
 
@@ -8,7 +7,6 @@ pub struct __BlockCallStack(Vec<__Block>);
 
 impl __BlockCallStack {
     pub fn push(block: __Block) {
-        log!("Push: {:#?}", block);
         BLOCK_CALL_STACK.with(|call_stack| {
             call_stack
                 .borrow_mut()
@@ -18,7 +16,6 @@ impl __BlockCallStack {
     }
     
     pub fn pop() -> Option<__Block> {
-        log!("Pop");
         BLOCK_CALL_STACK.with(|call_stack| {
             call_stack
                 .borrow_mut()
@@ -26,9 +23,19 @@ impl __BlockCallStack {
                 .pop()
         })
     }
+
+    pub fn last() -> Option<__Block> {
+        BLOCK_CALL_STACK.with(|call_stack| {
+            call_stack
+                .borrow()
+                .0
+                .last()
+                .cloned()
+        })
+    }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub enum __Block {
     SVar(Id),
     Cache(Id),

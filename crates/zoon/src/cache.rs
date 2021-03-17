@@ -47,10 +47,12 @@ where
         }
     }
 
+    // pub fn set(self, data: T, function: impl Fn() -> T) {
     pub fn set(self, data: T) {
         CACHES.with(|caches| {
             caches
                 .borrow_mut()
+                // .insert(self.id, data, function)
                 .insert(self.id, data)
         });
     }
