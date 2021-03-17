@@ -1,15 +1,19 @@
 use crate::runtime::CACHES;
 use crate::cache_map::Id;
 use std::marker::PhantomData;
+use std::any::Any;
 
-pub fn cache<T: 'static, F: FnOnce() -> T>(id: Id, creator: F) -> Cache<T> {
+pub fn cache<T: 'static>(id: Id, creator: impl FnOnce() -> T + Clone + 'static) -> Cache<T> {
     let id_exists = CACHES.with(|caches| {
         caches.borrow().contains_id(id)
     });
+
+    let creator = Box::new(move || Box::new(Some(creator.clone()())) as Box<dyn Any>);
+    let data = creator();
+
     if !id_exists {
-        let data = creator();
-        CACHES.with(|caches| {
-            caches.borrow_mut().insert(id, data);
+        CACHES.with(move |caches| {
+            caches.borrow_mut().insert(id, data, creator);
         });
     }
     Cache::new(id)
@@ -47,35 +51,6 @@ where
         }
     }
 
-    // pub fn set(self, data: T, function: impl Fn() -> T) {
-    pub fn set(self, data: T) {
-        CACHES.with(|caches| {
-            caches
-                .borrow_mut()
-                // .insert(self.id, data, function)
-                .insert(self.id, data)
-        });
-    }
-
-    pub(crate) fn remove(self) -> Option<T> {
-        CACHES.with(|caches| {
-            caches
-                .borrow_mut()
-                .remove::<T>(self.id)
-        })
-    }
-
-    pub fn update(self, updater: impl FnOnce(T) -> T) {
-        let data = self.remove().expect("an cache data with the given id");
-        self.set(updater(data));
-    }
-
-    pub fn update_mut(self, updater: impl FnOnce(&mut T)) {
-        let mut data = self.remove().expect("an cache data with the given id");
-        updater(&mut data);
-        self.set(data);
-    }
-
     pub fn map<U>(self, mapper: impl FnOnce(&T) -> U) -> U {
         CACHES.with(|caches| {
             let cache_map = caches.borrow();
@@ -83,13 +58,6 @@ where
                 .expect("an cache data with the given id");
             mapper(data)
         })
-    }
-
-    pub fn map_mut<U>(self, mapper: impl FnOnce(&mut T) -> U) -> U {
-        let mut data = self.remove().expect("an cache data with the given id");
-        let output = mapper(&mut data);
-        self.set(data);
-        output
     }
 
     pub fn use_ref<U>(self, user: impl FnOnce(&T)) {
