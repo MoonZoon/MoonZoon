@@ -1,0 +1,10 @@
+[package]
+name = "call_tree_macro"
+version = "0.1.0"
+authors = ["Martin Kavík <martin@kavik.cz>"]
+edition = "2018"
+
+[lib]
+proc-macro = true
+
+[dependencies]

@@ -37,6 +37,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "call_tree_macro"
+version = "0.1.0"
+
+[[package]]
 name = "cfg-if"
 version = "0.1.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -458,6 +462,7 @@ version = "0.1.0"
 dependencies = [
  "blocks_macro",
  "cache_macro",
+ "call_tree_macro",
  "console_error_panic_hook",
  "s_var_macro",
  "topo",
