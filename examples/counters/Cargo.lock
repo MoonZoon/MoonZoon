@@ -83,6 +83,10 @@ dependencies = [
 [[package]]
 name = "call_tree_macro"
 version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "cc"

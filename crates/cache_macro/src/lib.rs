@@ -34,7 +34,7 @@ fn counter_count() -> Cache<i32> {
 }
 */
 #[proc_macro_attribute]
-pub fn cache(_attr: TokenStream, input: TokenStream) -> TokenStream {
+pub fn cache(_args: TokenStream, input: TokenStream) -> TokenStream {
     let mut input_fn: ItemFn = syn::parse(input).unwrap();
 
     let id = Uuid::new_v4().as_u128();
