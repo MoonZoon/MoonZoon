@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use std::any::Any;
+use crate::call_tree::CallId;
 
 pub(crate) struct LVarMap {
-    l_vars: HashMap<topo::CallId, LVarMapValue>,
+    l_vars: HashMap<CallId, LVarMapValue>,
     revision: bool,
 }
 
@@ -19,7 +20,7 @@ impl LVarMap {
         }
     }
 
-    pub(crate) fn data<T: 'static>(&self, id: &topo::CallId) -> Option<&T> {
+    pub(crate) fn data<T: 'static>(&self, id: &CallId) -> Option<&T> {
         self
             .l_vars
             .get(id)?
@@ -28,7 +29,7 @@ impl LVarMap {
             .as_ref()
     }
 
-    pub(crate) fn insert(&mut self, id: topo::CallId, data: impl Any) {
+    pub(crate) fn insert(&mut self, id: CallId, data: impl Any) {
         self
             .l_vars
             .insert(id, LVarMapValue { 
@@ -37,7 +38,7 @@ impl LVarMap {
             });
     }
 
-    pub(crate) fn remove<T: 'static>(&mut self, id: &topo::CallId) -> Option<T> {
+    pub(crate) fn remove<T: 'static>(&mut self, id: &CallId) -> Option<T> {
         self
             .l_vars
             .remove(&id)?
@@ -46,13 +47,13 @@ impl LVarMap {
             .take()
     }
 
-    pub(crate) fn contains_id(&self, id: &topo::CallId) -> bool {
+    pub(crate) fn contains_id(&self, id: &CallId) -> bool {
         self
             .l_vars
             .contains_key(&id)
     }
 
-    pub(crate) fn update_revision(&mut self, id: &topo::CallId) {
+    pub(crate) fn update_revision(&mut self, id: &CallId) {
         let revision = self.revision;
         self
             .l_vars
