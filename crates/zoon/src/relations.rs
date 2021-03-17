@@ -1,6 +1,6 @@
-use crate::block_call_stack::{__Block, __BlockCallStack};
+use crate::{block_call_stack::{__Block, __BlockCallStack}};
 use std::collections::HashSet;
-use crate::runtime::RELATIONS;
+use crate::runtime::{RELATIONS, CACHES};
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 struct Relation {
@@ -18,17 +18,9 @@ impl __Relations {
                 __Block::Cache(_) => {
                     Self::insert(last_block, dependency)
                 }
-                _ => ()
+                __Block::SVar(_) => ()
             }
         }
-    }
-
-    pub fn get_dependents(block: &__Block) -> Vec<__Block> {
-        RELATIONS.with(|relations| {
-            relations
-                .borrow()
-                .do_get_dependents(block)
-        })
     }
 
     pub fn remove_dependencies(block: &__Block) {
@@ -37,6 +29,35 @@ impl __Relations {
                 .borrow_mut()
                 .do_remove_dependencies(block)
         })
+    }
+
+    pub fn refresh_dependents(block: &__Block) {
+        let dependents = RELATIONS.with(|relations| {
+            relations
+                .borrow_mut()
+                .do_get_dependents(block)
+        });
+        for block in dependents {
+            match block {
+                __Block::Cache(id) => {
+                    let creator = CACHES.with(|caches| {
+                        caches
+                            .borrow_mut()
+                            .remove_return_creator(id)
+                    });
+                    if let Some(creator) = creator {
+                        let data = creator();
+                        CACHES.with(|caches| {
+                            caches
+                                .borrow_mut()
+                                .insert(id, data, creator)
+                        });
+                        __Relations::refresh_dependents(&__Block::Cache(id));
+                    }
+                }
+                __Block::SVar(_) => ()
+            }
+        }
     }
 
     fn insert(block: __Block, dependency: __Block) {
