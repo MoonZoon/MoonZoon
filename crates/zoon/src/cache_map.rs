@@ -9,7 +9,7 @@ pub(crate) struct CacheMap {
 
 struct CacheMapValue {
     data: Box<dyn Any>,
-    // function: Box<dyn Fn() -> Box<dyn Any>>,
+    creator: Box<dyn Fn() -> Box<dyn Any>>,
 }
 
 impl CacheMap {
@@ -28,23 +28,13 @@ impl CacheMap {
             .as_ref()
     }
 
-    // pub(crate) fn insert<T: Any>(&mut self, id: Id, data: T, function: impl Fn() -> T) {
-    pub(crate) fn insert(&mut self, id: Id, data: impl Any) {
+    pub(crate) fn insert(&mut self, id: Id, data: Box<dyn Any>, creator: Box<dyn Fn() -> Box<dyn Any>>) {
         self
             .caches
             .insert(id, CacheMapValue { 
-                data: Box::new(Some(data)), 
-                // function: Box::new(function),
+                data, 
+                creator,
             });
-    }
-
-    pub(crate) fn remove<T: 'static>(&mut self, id: Id) -> Option<T> {
-        self
-            .caches
-            .remove(&id)?
-            .data
-            .downcast_mut::<Option<T>>()?
-            .take()
     }
 
     pub(crate) fn contains_id(&self, id: Id) -> bool {
