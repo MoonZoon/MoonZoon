@@ -1,5 +1,7 @@
 use crate::runtime::SVARS;
 use crate::s_var_map::Id;
+use crate::relations::__Relations;
+use crate::block_call_stack::__Block;
 use std::marker::PhantomData;
 
 pub fn s_var<T: 'static, F: FnOnce() -> T>(id: Id, creator: F) -> SVar<T> {
@@ -53,6 +55,7 @@ where
                 .borrow_mut()
                 .insert(self.id, data)
         });
+        __Relations::refresh_dependents(&__Block::SVar(self.id));
     }
 
     pub(crate) fn remove(self) -> Option<T> {
