@@ -3,6 +3,7 @@ pub use blocks_macro::blocks;
 pub use s_var_macro::s_var;
 pub use update_macro::update;
 pub use cache_macro::cache;
+pub use call_tree_macro::call_tree;
 
 pub mod element;
 mod dom;
@@ -17,6 +18,7 @@ mod cache_map;
 mod runtime;
 mod block_call_stack;
 mod relations;
+mod call_tree;
 
 pub use element::*;
 pub use dom::{Node, window, document}; 
@@ -25,9 +27,8 @@ pub use s_var::{SVar, CloneSVar, s_var};
 pub use cache::{Cache, CloneCache, cache};
 pub use console::log;
 pub use hook::{l_var, do_once};
-pub use topo;
-pub use topo::nested as render;
-pub use topo::nested as cmp;
+pub use call_tree_macro::call_tree as render;
+pub use call_tree_macro::call_tree as cmp;
 use runtime::ROOT_CMP;
 pub use runtime::rerender;
 pub use block_call_stack::{__BlockCallStack, __Block};
@@ -78,7 +79,7 @@ pub fn start(blocks: fn(__Blocks) -> __Blocks) {
     rerender();
 }
 
-#[topo::nested]
+#[call_tree]
 fn root() {
     // log!("root");
 

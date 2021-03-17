@@ -1,5 +1,6 @@
 use crate::{RenderContext, l_var, LVar};
 use wasm_bindgen::JsCast;
+use call_tree_macro::call_tree;
 
 // ------- Helpers ------
 
@@ -28,7 +29,7 @@ impl Drop for Node {
     }
 }
 
-#[topo::nested]
+#[call_tree]
 pub fn dom_element(mut rcx: RenderContext, children: impl FnOnce(RenderContext)) -> LVar<Node> {
     // log!("el, index: {}", rcx.index);
 
@@ -48,7 +49,7 @@ pub fn dom_element(mut rcx: RenderContext, children: impl FnOnce(RenderContext))
     node
 }
 
-#[topo::nested]
+#[call_tree]
 pub fn dom_text(rcx: RenderContext, text: &str) {  
     // log!("text, index: {}", rcx.index);
 

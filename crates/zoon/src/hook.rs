@@ -1,7 +1,9 @@
 use crate::runtime::LVARS;
 use crate::l_var::{LVar, CloneLVar};
+use call_tree_macro::call_tree;
+use crate::call_tree::{CallId, call_in_slot};
 
-#[topo::nested]
+#[call_tree]
 pub fn do_once<T>(f: impl FnOnce() -> T) -> Option<T> {
     let has_done = l_var(|| false);
     if has_done.inner(){
@@ -11,20 +13,20 @@ pub fn do_once<T>(f: impl FnOnce() -> T) -> Option<T> {
     Some(f())
 }
 
-#[topo::nested]
+#[call_tree]
 pub fn l_var<T: 'static, F: FnOnce() -> T>(creator: F) -> LVar<T> {
     l_var_current(creator)
 }
 
-#[topo::nested]
+#[call_tree]
 pub fn new_l_var<T: 'static, F: FnOnce() -> T>(creator: F) -> LVar<T> {
     let count = l_var(|| 0);
     count.update(|count| count + 1);
-    topo::call_in_slot(&count.inner(), || l_var_current(creator))
+    call_in_slot(&count.inner(), || l_var_current(creator))
 }
 
 fn l_var_current<T: 'static, F: FnOnce() -> T>(creator: F) -> LVar<T> {
-    let id = topo::CallId::current();
+    let id = CallId::current();
 
     let id_exists = LVARS.with(|l_vars| {
         l_vars.borrow().contains_id(&id)
