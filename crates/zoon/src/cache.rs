@@ -1,5 +1,7 @@
 use crate::runtime::CACHES;
-use crate::cache_map::Id;
+use crate::cache_map::{Id, Creator};
+use crate::relations::__Relations;
+use crate::block_call_stack::__Block;
 use std::marker::PhantomData;
 use std::any::Any;
 
@@ -51,6 +53,35 @@ where
         }
     }
 
+    pub(crate) fn set(self, data: T, creator: Creator) {
+        let data = Box::new(Some(data));
+        CACHES.with(|caches| {
+            caches
+                .borrow_mut()
+                .insert(self.id, data, creator)
+        });
+        __Relations::refresh_dependents(&__Block::Cache(self.id));
+    }
+
+    pub(crate) fn remove(self) -> Option<(T, Creator)> {
+        CACHES.with(|caches| {
+            caches
+                .borrow_mut()
+                .remove::<T>(self.id)
+        })
+    }
+
+    pub fn update(self, updater: impl FnOnce(T) -> T) {
+        let (data, creator) = self.remove().expect("an cache data with the given id");
+        self.set(updater(data), creator);
+    }
+
+    pub fn update_mut(self, updater: impl FnOnce(&mut T)) {
+        let (mut data, creator) = self.remove().expect("an cache data with the given id");
+        updater(&mut data);
+        self.set(data, creator);
+    }
+
     pub fn map<U>(self, mapper: impl FnOnce(&T) -> U) -> U {
         CACHES.with(|caches| {
             let cache_map = caches.borrow();
@@ -58,6 +89,13 @@ where
                 .expect("an cache data with the given id");
             mapper(data)
         })
+    }
+
+    pub fn map_mut<U>(self, mapper: impl FnOnce(&mut T) -> U) -> U {
+        let (mut data, creator) = self.remove().expect("an cache data with the given id");
+        let output = mapper(&mut data);
+        self.set(data, creator);
+        output
     }
 
     pub fn use_ref<U>(self, user: impl FnOnce(&T)) {
