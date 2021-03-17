@@ -1,7 +1,7 @@
 use crate::runtime::LVARS;
 use crate::l_var::{LVar, CloneLVar};
 use call_tree_macro::call_tree;
-use crate::call_tree::{CallId, call_in_slot};
+use crate::call_tree::{CallTree, CallId};
 
 #[call_tree]
 pub fn do_once<T>(f: impl FnOnce() -> T) -> Option<T> {
@@ -22,7 +22,7 @@ pub fn l_var<T: 'static, F: FnOnce() -> T>(creator: F) -> LVar<T> {
 pub fn new_l_var<T: 'static, F: FnOnce() -> T>(creator: F) -> LVar<T> {
     let count = l_var(|| 0);
     count.update(|count| count + 1);
-    call_in_slot(&count.inner(), || l_var_current(creator))
+    CallTree::call_in_slot(&count.inner(), || l_var_current(creator))
 }
 
 fn l_var_current<T: 'static, F: FnOnce() -> T>(creator: F) -> LVar<T> {

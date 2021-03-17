@@ -1,6 +1,7 @@
 use crate::{RenderContext, l_var, LVar};
 use wasm_bindgen::JsCast;
 use call_tree_macro::call_tree;
+use crate::call_tree::CallTree;
 
 // ------- Helpers ------
 

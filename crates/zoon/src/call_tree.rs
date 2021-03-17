@@ -1,16 +1,36 @@
-use crate::call_tree;
+use call_tree_macro::call_tree;
 use std::hash::Hash;
 use std::borrow::Borrow;
 
-#[call_tree]
-pub fn call_in_slot<F, Q, R, S>(slot: &Q, op: F) -> R
-where
-    F: FnOnce() -> R,
-    Q: Eq + Hash + ToOwned<Owned = S> + ?Sized,
-    S: Borrow<Q> + Eq + Hash + Send + 'static,
-{
-    // Scope::with_current(|p| p.make_child(Callsite::here(), slot)).enter(op)
-    op()
+pub struct CallTree;
+
+impl CallTree {
+
+    #[track_caller]
+    pub fn call<F, R>(op: F) -> R
+    where
+        F: FnOnce() -> R,
+    {
+        // #[derive(Clone, Debug, Eq, Hash, PartialEq)]
+        // struct CallCount(u32);
+
+        // let callsite = Callsite::here();
+        // let count = CallCount(callsite.current_count());
+        // Scope::with_current(|p| p.make_child(callsite, &count)).enter(op)
+        op()
+    }
+
+    #[call_tree]
+    pub fn call_in_slot<F, Q, R, S>(slot: &Q, op: F) -> R
+    where
+        F: FnOnce() -> R,
+        Q: Eq + Hash + ToOwned<Owned = S> + ?Sized,
+        S: Borrow<Q> + Eq + Hash + Send + 'static,
+    {
+        // Scope::with_current(|p| p.make_child(Callsite::here(), slot)).enter(op)
+        op()
+    }
+
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]

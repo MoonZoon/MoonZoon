@@ -33,7 +33,7 @@ fn counter_count() -> SVar<i32> {
 }
 */
 #[proc_macro_attribute]
-pub fn s_var(_attr: TokenStream, input: TokenStream) -> TokenStream {
+pub fn s_var(_args: TokenStream, input: TokenStream) -> TokenStream {
     let mut input_fn: ItemFn = syn::parse(input).unwrap();
 
     let id = Uuid::new_v4().as_u128();

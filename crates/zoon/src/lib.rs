@@ -33,6 +33,7 @@ use runtime::ROOT_CMP;
 pub use runtime::rerender;
 pub use block_call_stack::{__BlockCallStack, __Block};
 pub use relations::{__Relations};
+pub use call_tree::CallTree;
 
 #[macro_export]
 macro_rules! with_dollar_sign {
