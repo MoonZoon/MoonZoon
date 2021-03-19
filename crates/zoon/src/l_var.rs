@@ -1,9 +1,9 @@
 use crate::runtime::LVARS;
 use std::marker::PhantomData;
-use crate::call_tree::CallId;
+use crate::tracked_call::__TrackedCallId;
 
 pub struct LVar<T> {
-    pub id: CallId,
+    pub id: __TrackedCallId,
     phantom_data: PhantomData<T>,
 }
 
@@ -27,7 +27,7 @@ impl<T> LVar<T>
 where
     T: 'static,
 {
-    pub(crate) fn new(id: CallId) -> LVar<T> {
+    pub(crate) fn new(id: __TrackedCallId) -> LVar<T> {
         LVar {
             id,
             phantom_data: PhantomData,

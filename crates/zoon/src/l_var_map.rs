@@ -1,9 +1,9 @@
 use std::collections::HashMap;
 use std::any::Any;
-use crate::call_tree::CallId;
+use crate::tracked_call::__TrackedCallId;
 
 pub(crate) struct LVarMap {
-    l_vars: HashMap<CallId, LVarMapValue>,
+    l_vars: HashMap<__TrackedCallId, LVarMapValue>,
     revision: bool,
 }
 
@@ -20,7 +20,7 @@ impl LVarMap {
         }
     }
 
-    pub(crate) fn data<T: 'static>(&self, id: &CallId) -> Option<&T> {
+    pub(crate) fn data<T: 'static>(&self, id: &__TrackedCallId) -> Option<&T> {
         self
             .l_vars
             .get(id)?
@@ -29,7 +29,7 @@ impl LVarMap {
             .as_ref()
     }
 
-    pub(crate) fn insert(&mut self, id: CallId, data: impl Any) {
+    pub(crate) fn insert(&mut self, id: __TrackedCallId, data: impl Any) {
         self
             .l_vars
             .insert(id, LVarMapValue { 
@@ -38,7 +38,7 @@ impl LVarMap {
             });
     }
 
-    pub(crate) fn remove<T: 'static>(&mut self, id: &CallId) -> Option<T> {
+    pub(crate) fn remove<T: 'static>(&mut self, id: &__TrackedCallId) -> Option<T> {
         self
             .l_vars
             .remove(&id)?
@@ -47,13 +47,13 @@ impl LVarMap {
             .take()
     }
 
-    pub(crate) fn contains_id(&self, id: &CallId) -> bool {
+    pub(crate) fn contains_id(&self, id: &__TrackedCallId) -> bool {
         self
             .l_vars
             .contains_key(&id)
     }
 
-    pub(crate) fn update_revision(&mut self, id: &CallId) {
+    pub(crate) fn update_revision(&mut self, id: &__TrackedCallId) {
         let revision = self.revision;
         self
             .l_vars

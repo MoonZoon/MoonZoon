@@ -3,7 +3,7 @@ pub use blocks_macro::blocks;
 pub use s_var_macro::s_var;
 pub use update_macro::update;
 pub use cache_macro::cache;
-pub use call_tree_macro::call_tree;
+pub use tracked_call_macro::tracked_call;
 
 pub mod element;
 mod dom;
@@ -17,8 +17,10 @@ mod cache;
 mod cache_map;
 mod runtime;
 mod block_call_stack;
+mod tracked_call_stack;
 mod relations;
-mod call_tree;
+mod tracked_call;
+mod tracked_call_map;
 
 pub use element::*;
 pub use dom::{Node, window, document}; 
@@ -27,13 +29,14 @@ pub use s_var::{SVar, CloneSVar, s_var};
 pub use cache::{Cache, CloneCache, cache};
 pub use console::log;
 pub use hook::{l_var, do_once};
-pub use call_tree_macro::call_tree as render;
-pub use call_tree_macro::call_tree as cmp;
+pub use tracked_call_macro::tracked_call as render;
+pub use tracked_call_macro::tracked_call as cmp;
 use runtime::ROOT_CMP;
 pub use runtime::rerender;
 pub use block_call_stack::{__BlockCallStack, __Block};
 pub use relations::{__Relations};
-pub use call_tree::CallTree;
+pub use tracked_call::__TrackedCallId;
+pub use tracked_call_stack::__TrackedCallStack;
 
 #[macro_export]
 macro_rules! with_dollar_sign {
@@ -80,8 +83,10 @@ pub fn start(blocks: fn(__Blocks) -> __Blocks) {
     rerender();
 }
 
-#[call_tree]
+#[tracked_call]
 fn root() {
+    log!("Root ID: {:#?}", __TrackedCallId::current());
+
     // log!("root");
 
     let node = l_var(|| Node {
