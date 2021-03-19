@@ -17,6 +17,8 @@ pub struct Counter {
 impl Element for Counter {
     #[render]
     fn render(&mut self, rcx: RenderContext) {
+        // log!("Counter ID: {:#?}", __TrackedCallId::current());
+
         let on_change = self.on_change.take().map(|on_change| on_change.0);
         
         let value = l_var(|| 0);

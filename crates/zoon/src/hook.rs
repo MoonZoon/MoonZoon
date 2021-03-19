@@ -1,9 +1,10 @@
 use crate::runtime::LVARS;
 use crate::l_var::{LVar, CloneLVar};
-use call_tree_macro::call_tree;
-use crate::call_tree::{CallTree, CallId};
+use tracked_call_macro::tracked_call;
+use crate::tracked_call::__TrackedCallId;
+use crate::tracked_call_stack::__TrackedCallStack;
 
-#[call_tree]
+#[tracked_call]
 pub fn do_once<T>(f: impl FnOnce() -> T) -> Option<T> {
     let has_done = l_var(|| false);
     if has_done.inner(){
@@ -13,20 +14,20 @@ pub fn do_once<T>(f: impl FnOnce() -> T) -> Option<T> {
     Some(f())
 }
 
-#[call_tree]
+#[tracked_call]
 pub fn l_var<T: 'static, F: FnOnce() -> T>(creator: F) -> LVar<T> {
     l_var_current(creator)
 }
 
-#[call_tree]
-pub fn new_l_var<T: 'static, F: FnOnce() -> T>(creator: F) -> LVar<T> {
-    let count = l_var(|| 0);
-    count.update(|count| count + 1);
-    CallTree::call_in_slot(&count.inner(), || l_var_current(creator))
-}
+// #[tracked_call]
+// pub fn new_l_var<T: 'static>(creator: impl FnOnce() -> T) -> LVar<T> {
+//     let count = l_var(|| 0);
+//     count.update(|count| count + 1);
+//     CallTree::call_in_slot(&count.inner(), || l_var_current(creator))
+// }
 
-fn l_var_current<T: 'static, F: FnOnce() -> T>(creator: F) -> LVar<T> {
-    let id = CallId::current();
+fn l_var_current<T: 'static>(creator: impl FnOnce() -> T) -> LVar<T> {
+    let id = __TrackedCallId::current();
 
     let id_exists = LVARS.with(|l_vars| {
         l_vars.borrow().contains_id(&id)

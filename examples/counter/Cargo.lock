@@ -108,14 +108,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "call_tree_macro"
-version = "0.1.0"
-dependencies = [
- "quote",
- "syn",
-]
-
-[[package]]
 name = "cc"
 version = "1.0.67"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1183,6 +1175,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "tracked_call_macro"
+version = "0.1.0"
+dependencies = [
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "try-lock"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1489,9 +1489,9 @@ version = "0.1.0"
 dependencies = [
  "blocks_macro",
  "cache_macro",
- "call_tree_macro",
  "console_error_panic_hook",
  "s_var_macro",
+ "tracked_call_macro",
  "update_macro",
  "wasm-bindgen",
  "web-sys",

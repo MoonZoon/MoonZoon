@@ -8,9 +8,10 @@ blocks!{
 
     #[cmp]
     fn root<'a>() -> Column<'a> {
+        log!("CMP root ID: {:#?}", __TrackedCallId::current());
         col![
             control_counters(),
-            counters(),
+            // counters(),
         ]
     }
 
@@ -18,9 +19,9 @@ blocks!{
     fn control_counters<'a>() -> Row<'a> {
         row![
             column_counter(),
-            row_counter(),
-            counter_count(),
-            counter_count_hundreds(),
+            // row_counter(),
+            // counter_count(),
+            // counter_count_hundreds(),
         ]
     }
 

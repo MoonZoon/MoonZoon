@@ -1,7 +1,8 @@
 use crate::{RenderContext, l_var, LVar};
 use wasm_bindgen::JsCast;
-use call_tree_macro::call_tree;
-use crate::call_tree::CallTree;
+use tracked_call_macro::tracked_call;
+use crate::tracked_call::__TrackedCallId;
+use crate::tracked_call_stack::__TrackedCallStack;
 
 // ------- Helpers ------
 
@@ -30,7 +31,7 @@ impl Drop for Node {
     }
 }
 
-#[call_tree]
+#[tracked_call]
 pub fn dom_element(mut rcx: RenderContext, children: impl FnOnce(RenderContext)) -> LVar<Node> {
     // log!("el, index: {}", rcx.index);
 
@@ -50,7 +51,7 @@ pub fn dom_element(mut rcx: RenderContext, children: impl FnOnce(RenderContext))
     node
 }
 
-#[call_tree]
+#[tracked_call]
 pub fn dom_text(rcx: RenderContext, text: &str) {  
     // log!("text, index: {}", rcx.index);
 
