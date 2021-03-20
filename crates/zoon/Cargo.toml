@@ -10,6 +10,7 @@ blocks_macro = { path = "../blocks_macro" }
 s_var_macro = { path = "../s_var_macro" }
 update_macro = { path = "../update_macro" }
 cache_macro = { path = "../cache_macro" }
+cmp_macro = { path = "../cmp_macro" }
 tracked_call_macro = { path = "../tracked_call_macro" }
 
 console_error_panic_hook = "0.1.6"

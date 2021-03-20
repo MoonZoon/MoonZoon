@@ -23,7 +23,6 @@ thread_local! {
 }
 
 pub fn rerender() {
-    // @TODO we probably need much simpler mechanism for providing current CallId
     __TrackedCall::remove_all_calls();
 
     root();
