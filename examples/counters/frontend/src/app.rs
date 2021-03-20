@@ -24,7 +24,7 @@ blocks!{
 
     #[cache]
     fn counter_count_hundreds() -> Cache<String> {
-        format!("{:.2}", f64::from(counter_count().inner()) / 100.)
+        format!("{:.2}", f64::from(counter_count().inner()) / 1_000.)
     }
 
     #[update]
