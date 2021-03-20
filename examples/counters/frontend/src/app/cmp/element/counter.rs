@@ -12,6 +12,7 @@ element_macro!(counter, Counter::default());
 pub struct Counter {
     value: Option<i32>,
     on_change: Option<OnChange>,
+    step: Option<i32>,
 }
 
 impl Element for Counter {
@@ -20,6 +21,7 @@ impl Element for Counter {
         // log!("Counter ID: {:#?}", __TrackedCallId::current());
 
         let on_change = self.on_change.take().map(|on_change| on_change.0);
+        let step = self.step.unwrap_or(1);
         
         let value = l_var(|| 0);
         if let Some(required_value) = self.value {
@@ -34,12 +36,12 @@ impl Element for Counter {
         };
         row![
             button![
-                button::on_press(enc!((update_value) move || update_value(-1))),
+                button::on_press(enc!((update_value) move || update_value(-step))),
                 "-"
             ],
             el![value.inner().to_string()],
             button![
-                button::on_press(move || update_value(1)), 
+                button::on_press(move || update_value(step)), 
                  "+"
             ],
         ].render(rcx);
@@ -69,5 +71,19 @@ pub fn on_change(on_change: impl FnOnce(i32) + Clone + 'static) -> OnChange {
 impl ApplyToElement<Counter> for OnChange {
     fn apply_to_element(self, counter: &mut Counter) {
         counter.on_change = Some(self);
+    }
+}
+
+// ------ counter::step(...) -------
+
+pub struct Step(i32);
+
+pub fn step(step: i32) -> Step {
+    Step(step)
+}
+
+impl ApplyToElement<Counter> for Step {
+    fn apply_to_element(self, counter: &mut Counter) {
+        counter.step = Some(self.0);
     }
 }
