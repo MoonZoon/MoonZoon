@@ -35,7 +35,7 @@ use runtime::ROOT_CMP;
 pub use runtime::rerender;
 pub use block_call_stack::{__BlockCallStack, __Block};
 pub use relations::{__Relations};
-pub use tracked_call::__TrackedCallId;
+pub use tracked_call::{TrackedCallId, __TrackedCall};
 pub use tracked_call_stack::__TrackedCallStack;
 
 #[macro_export]
