@@ -7,7 +7,7 @@ use element::counter::{self, Counter};
 blocks!{
 
     #[cmp]
-    fn root<'a>() -> Column<'a> {
+    fn root<'a>() -> Cmp<'a> {
         // log!("CMP root ID: {:#?}", __TrackedCallId::current());
         col![
             control_counters(),
@@ -16,7 +16,7 @@ blocks!{
     }
 
     #[cmp]
-    fn control_counters<'a>() -> Row<'a> {
+    fn control_counters<'a>() -> Cmp<'a> {
         row![
             column_counter(),
             row_counter(),
@@ -26,14 +26,14 @@ blocks!{
     }
 
     #[cmp]
-    fn counter_count<'a>() -> El<'a> {
+    fn counter_count<'a>() -> Cmp<'a> {
         el![
             format!("Counters: {}", super::counter_count().inner())
         ]
     }
 
     #[cmp]
-    fn counter_count_hundreds<'a>() -> El<'a> {
+    fn counter_count_hundreds<'a>() -> Cmp<'a> {
         el![
             super::counter_count_hundreds().map(|count| {
                 format!("Thousands: {}", count)
@@ -42,7 +42,7 @@ blocks!{
     }
 
     #[cmp]
-    fn column_counter<'a>() -> Row<'a> {
+    fn column_counter<'a>() -> Cmp<'a> {
         row![
             "Columns:",
             counter![
@@ -54,7 +54,7 @@ blocks!{
     }
 
     #[cmp]
-    fn row_counter<'a>() -> Row<'a> {
+    fn row_counter<'a>() -> Cmp<'a> {
         row![
             "Rows:",
             counter![
@@ -66,21 +66,21 @@ blocks!{
     }
 
     #[cmp]
-    fn counters<'a>() -> Column<'a> {
+    fn counters<'a>() -> Cmp<'a> {
         col![
             (0..super::row_count().inner()).map(|_| counter_row())
         ]
     }
 
     #[cmp]
-    fn counter_row<'a>() -> Row<'a> {
+    fn counter_row<'a>() -> Cmp<'a> {
         row![
             (0..super::column_count().inner()).map(|_| counter())
         ]
     }
 
     #[cmp]
-    fn counter() -> Counter {
+    fn counter<'a>() -> Cmp<'a> {
         counter![]
     }
 

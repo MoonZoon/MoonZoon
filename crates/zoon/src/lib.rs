@@ -7,6 +7,7 @@ pub use cmp_macro::cmp;
 pub use tracked_call_macro::tracked_call;
 
 pub mod element;
+mod component;
 mod dom;
 mod console;
 mod hook;
@@ -24,6 +25,7 @@ mod tracked_call;
 mod tracked_call_map;
 
 pub use element::*;
+pub use component::{Cmp, IntoComponent};
 pub use dom::{Node, window, document}; 
 pub use l_var::{LVar, CloneLVar};
 pub use s_var::{SVar, CloneSVar, s_var};
