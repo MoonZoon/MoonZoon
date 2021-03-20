@@ -1,11 +1,13 @@
-use std::collections::{HashMap, hash_map::DefaultHasher};
+use std::{collections::{HashMap, hash_map::DefaultHasher}, hash::Hash};
 use std::hash::Hasher;
 use std::panic::Location;
 use crate::tracked_call_stack::__TrackedCallStack;
 use crate::runtime::TRACKED_CALLS;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub struct __TrackedCallId(pub u64);
+pub struct __TrackedCallId {
+    pub hash: u64,
+}
 
 impl __TrackedCallId {
 
@@ -33,6 +35,15 @@ impl __TrackedCallId {
                     } else {
                         children.insert(call_site, (1, vec![id]));
                     }
+                }
+            })
+        } else {
+            TRACKED_CALLS.with(|tracked_calls| {
+                let mut tracked_calls = tracked_calls.borrow_mut();
+                if let Some(parent) = parent {
+                    let children = &mut tracked_calls.get_mut(&parent).unwrap().children;
+                    let selected_child_index = &mut children.get_mut(&call_site).unwrap().0;
+                    *selected_child_index += 1;
                 }
             })
         }
@@ -80,13 +91,15 @@ impl TrackedCall {
         
         let mut hasher = DefaultHasher::new();
         if let Some(parent) = parent {
-            hasher.write_u64(parent.0);
+            hasher.write_u64(parent.hash);
         }
         if let Some(index) = index {
             hasher.write_usize(index);
         }
         hasher.write_usize(call_site.location);
-        let id = __TrackedCallId(hasher.finish());
+        let id = __TrackedCallId {
+            hash: hasher.finish(),
+        };
 
         Self {
             id,

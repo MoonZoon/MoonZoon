@@ -9,12 +9,12 @@ blocks!{
 
     #[s_var]
     fn column_count() -> SVar<i32> {
-        3
+        5
     }
 
     #[s_var]
     fn row_count() -> SVar<i32> {
-        2
+        5
     }
 
     #[cache]
