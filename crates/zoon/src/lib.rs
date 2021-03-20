@@ -3,6 +3,7 @@ pub use blocks_macro::blocks;
 pub use s_var_macro::s_var;
 pub use update_macro::update;
 pub use cache_macro::cache;
+pub use cmp_macro::cmp;
 pub use tracked_call_macro::tracked_call;
 
 pub mod element;
@@ -30,7 +31,6 @@ pub use cache::{Cache, CloneCache, cache};
 pub use console::log;
 pub use hook::{l_var, do_once};
 pub use tracked_call_macro::tracked_call as render;
-pub use tracked_call_macro::tracked_call as cmp;
 use runtime::ROOT_CMP;
 pub use runtime::rerender;
 pub use block_call_stack::{__BlockCallStack, __Block};
