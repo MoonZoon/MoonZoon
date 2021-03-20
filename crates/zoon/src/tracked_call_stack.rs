@@ -1,11 +1,11 @@
 use crate::runtime::{TRACKED_CALL_STACK, TRACKED_CALLS};
-use crate::tracked_call::__TrackedCallId;
+use crate::tracked_call::TrackedCallId;
 
 #[derive(Default)]
-pub struct __TrackedCallStack(Vec<__TrackedCallId>);
+pub struct __TrackedCallStack(Vec<TrackedCallId>);
 
 impl __TrackedCallStack {
-    pub fn push(tracked_call: __TrackedCallId) {
+    pub fn push(tracked_call: TrackedCallId) {
         TRACKED_CALL_STACK.with(|call_stack| {
             call_stack
                 .borrow_mut()
@@ -14,7 +14,7 @@ impl __TrackedCallStack {
         });
     }
     
-    pub fn pop() -> Option<__TrackedCallId> {
+    pub fn pop() -> Option<TrackedCallId> {
         let id = TRACKED_CALL_STACK.with(|call_stack| {
             call_stack
                 .borrow_mut()
@@ -31,7 +31,7 @@ impl __TrackedCallStack {
         id
     }
 
-    pub fn last() -> Option<__TrackedCallId> {
+    pub fn last() -> Option<TrackedCallId> {
         TRACKED_CALL_STACK.with(|call_stack| {
             call_stack
                 .borrow()

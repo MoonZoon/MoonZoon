@@ -1,7 +1,7 @@
 use crate::{RenderContext, l_var, LVar};
 use wasm_bindgen::JsCast;
 use tracked_call_macro::tracked_call;
-use crate::tracked_call::__TrackedCallId;
+use crate::tracked_call::__TrackedCall;
 use crate::tracked_call_stack::__TrackedCallStack;
 
 // ------- Helpers ------

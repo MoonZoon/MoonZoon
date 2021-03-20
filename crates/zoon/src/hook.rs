@@ -1,7 +1,7 @@
 use crate::runtime::LVARS;
 use crate::l_var::{LVar, CloneLVar};
 use tracked_call_macro::tracked_call;
-use crate::tracked_call::__TrackedCallId;
+use crate::tracked_call::{TrackedCallId, __TrackedCall};
 use crate::tracked_call_stack::__TrackedCallStack;
 
 #[tracked_call]
@@ -27,7 +27,7 @@ pub fn l_var<T: 'static, F: FnOnce() -> T>(creator: F) -> LVar<T> {
 // }
 
 fn l_var_current<T: 'static>(creator: impl FnOnce() -> T) -> LVar<T> {
-    let id = __TrackedCallId::current();
+    let id = TrackedCallId::current();
 
     let id_exists = LVARS.with(|l_vars| {
         l_vars.borrow().contains_id(&id)

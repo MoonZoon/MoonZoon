@@ -5,14 +5,37 @@ use crate::tracked_call_stack::__TrackedCallStack;
 use crate::runtime::TRACKED_CALLS;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub struct __TrackedCallId {
+pub struct TrackedCallId {
     pub hash: u64,
 }
 
-impl __TrackedCallId {
+impl TrackedCallId {
+    pub fn current() -> Self {
+        __TrackedCallStack::last().expect("no current TrackedCallId")
+    }
+}
 
-    pub fn get_or_create() -> Self {
-        let tracked_call = TrackedCall::new();
+pub type SelectedChildIndex = usize;
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct __TrackedCall {
+    id: TrackedCallId,
+    call_site: CallSite,
+    index: Option<usize>,
+    parent: Option<TrackedCallId>,
+    pub children: HashMap<CallSite, (SelectedChildIndex, Vec<TrackedCallId>)>,
+}
+
+impl __TrackedCall {
+    pub fn remove_all_calls() {
+        TRACKED_CALLS.with(|tracked_calls| {
+            let mut tracked_calls = tracked_calls.borrow_mut();
+            tracked_calls.clear();
+        });
+    }
+
+    pub fn get_id_or_create() -> TrackedCallId {
+        let tracked_call = __TrackedCall::new();
 
         let parent = tracked_call.parent;
         let call_site = tracked_call.call_site;
@@ -51,23 +74,6 @@ impl __TrackedCallId {
         id
     }
 
-    pub fn current() -> Self {
-        __TrackedCallStack::last().expect("no current TrackedCallId")
-    }
-}
-
-pub type SelectedChildIndex = usize;
-
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct TrackedCall {
-    id: __TrackedCallId,
-    call_site: CallSite,
-    index: Option<usize>,
-    parent: Option<__TrackedCallId>,
-    pub children: HashMap<CallSite, (SelectedChildIndex, Vec<__TrackedCallId>)>,
-}
-
-impl TrackedCall {
     #[track_caller]
     pub fn new() -> Self {
         let call_site = CallSite::here();
@@ -97,7 +103,7 @@ impl TrackedCall {
             hasher.write_usize(index);
         }
         hasher.write_usize(call_site.location);
-        let id = __TrackedCallId {
+        let id = TrackedCallId {
             hash: hasher.finish(),
         };
 

@@ -1,6 +1,7 @@
-use crate::l_var_map::LVarMap;
+use crate::{l_var_map::LVarMap};
 use crate::s_var_map::SVarMap;
 use crate::cache_map::CacheMap;
+use crate::tracked_call::__TrackedCall;
 use crate::tracked_call_map::TrackedCallMap;
 use crate::block_call_stack::__BlockCallStack;
 use crate::tracked_call_stack::__TrackedCallStack;
@@ -22,6 +23,9 @@ thread_local! {
 }
 
 pub fn rerender() {
+    // @TODO we probably need much simpler mechanism for providing current CallId
+    __TrackedCall::remove_all_calls();
+
     root();
     let _unused_data: Vec<Box<dyn Any>> = LVARS.with(|l_vars| {
         l_vars
