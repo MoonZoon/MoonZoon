@@ -85,7 +85,7 @@ pub fn start(blocks: fn(__Blocks) -> __Blocks) {
 
 #[tracked_call]
 fn root() {
-    // log!("Root ID: {:#?}", __TrackedCallId::current());
+    // log!("Root ID: {:#?}", TrackedCallId::current());
 
     // log!("root");
 
