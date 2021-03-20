@@ -36,7 +36,7 @@ blocks!{
     fn counter_count_hundreds<'a>() -> El<'a> {
         el![
             super::counter_count_hundreds().map(|count| {
-                format!("Hundreds: {}", count)
+                format!("Thousands: {}", count)
             })
         ]
     }
