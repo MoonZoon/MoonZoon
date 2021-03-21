@@ -70,7 +70,7 @@ pub trait Element {
 
 // ------ RenderContext ------
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct RenderContext {
     pub index: u32,
     pub node: LVar<Node>,

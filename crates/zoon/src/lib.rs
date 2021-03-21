@@ -25,7 +25,7 @@ mod tracked_call;
 mod tracked_call_map;
 
 pub use element::*;
-pub use component::{Cmp, IntoComponent};
+pub use component::{Cmp, IntoComponent, __ComponentData};
 pub use dom::{Node, window, document}; 
 pub use l_var::{LVar, CloneLVar};
 pub use s_var::{SVar, CloneSVar, s_var};

@@ -43,9 +43,10 @@ fn l_var_current<T: 'static>(creator: impl FnOnce() -> T) -> LVar<T> {
         let mut l_var_map = l_vars.borrow_mut();
         if let Some(data) = data {
             l_var_map.insert(id, data);
-        } else {
-            l_var_map.update_revision(&id);
-        }
+        } 
+        // else {
+        //     l_var_map.update_revision(&id);
+        // }
     });
 
     LVar::new(id)
