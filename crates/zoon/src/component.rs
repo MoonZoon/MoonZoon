@@ -1,26 +1,53 @@
 use crate::element::{Element, RenderContext, IntoElement};
 use crate::tracked_call_stack::__TrackedCallStack;
-use crate::tracked_call::__TrackedCall;
+use crate::tracked_call::{__TrackedCall, TrackedCallId};
 use crate::render;
+use crate::runtime::LVARS;
+use std::rc::Rc;
+use crate::log;
 
 // ------ Cmp ------
 
-pub enum Cmp<'a> {
-    Element(Box<dyn Element + 'a>),
-    NoChange,
+pub struct Cmp<'a> {
+    element: Box<dyn Element + 'a>,
+    pub component_data_id: Option<TrackedCallId>,
+    // NoChange,
 } 
 
 impl<'a> Element for Cmp<'a> {
     #[render]
     fn render(&mut self, rcx: RenderContext) {
-        match self {
-            Cmp::Element(element) => {
-                element.render(rcx)
-            }
-            Cmp::NoChange => {
-                ()
-            }
+        let context = ComponentContext {
+            rcx,
+            tracked_call_stack_last:  __TrackedCallStack::last(),
+            current_tracked_call_id: TrackedCallId::current(),
+        };
+
+        log!("cmp render context: {:#?}", context);
+
+        if let Some(component_data_id) = self.component_data_id {
+            LVARS.with(move |l_vars| {
+                let mut l_vars = l_vars.borrow_mut();
+
+                let mut component_data = l_vars
+                    .remove::<__ComponentData>(&component_data_id)
+                    .unwrap();
+
+                component_data.context = Some(context);
+
+                l_vars.insert(component_data_id, component_data);
+
+            });
         }
+        self.element.render(rcx)
+        // match self {
+        //     Cmp::Element(element) => {
+        //         element.render(rcx)
+        //     }
+        //     Cmp::NoChange => {
+        //         ()
+        //     }
+        // }
     }
 }
 
@@ -32,6 +59,24 @@ pub trait IntoComponent<'a> {
 
 impl<'a, T: 'a + IntoElement<'a>> IntoComponent<'a> for T {
     fn into_component(self) -> Cmp<'a> {
-        Cmp::Element(Box::new(self.into_element()))
+        Cmp {
+            element: Box::new(self.into_element()),
+            component_data_id: None,
+        }
+        // Cmp::Element(Box::new(self.into_element()))
     }
+}
+
+// ------ __ComponentBody ------
+#[derive(Clone)]
+pub struct __ComponentData<'a> {
+    pub creator: Rc<dyn Fn() -> Cmp<'a>>,
+    pub context: Option<ComponentContext>,
+}
+
+#[derive(Clone, Debug)]
+pub struct ComponentContext {
+    pub rcx: RenderContext,
+    pub tracked_call_stack_last: Option<TrackedCallId>,
+    pub current_tracked_call_id: TrackedCallId,
 }

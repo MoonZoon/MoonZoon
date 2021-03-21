@@ -2,7 +2,7 @@ use std::{collections::{HashMap, hash_map::DefaultHasher}, hash::Hash};
 use std::hash::Hasher;
 use std::panic::Location;
 use crate::tracked_call_stack::__TrackedCallStack;
-use crate::runtime::TRACKED_CALLS;
+use crate::runtime::{TRACKED_CALLS, SUBSTITUTED_TRACKED_CALL_ID};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct TrackedCallId {
@@ -35,6 +35,10 @@ impl __TrackedCall {
     }
 
     pub fn get_id_or_create() -> TrackedCallId {
+        if let Some(id) = SUBSTITUTED_TRACKED_CALL_ID.with(|id| id.take()) {
+            return id;
+        }
+
         let tracked_call = __TrackedCall::new();
 
         let parent = tracked_call.parent;

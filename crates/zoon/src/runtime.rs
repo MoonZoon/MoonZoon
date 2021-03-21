@@ -1,15 +1,15 @@
-use crate::{l_var_map::LVarMap};
+use crate::l_var_map::LVarMap;
 use crate::s_var_map::SVarMap;
 use crate::cache_map::CacheMap;
-use crate::tracked_call::__TrackedCall;
+use crate::tracked_call::{__TrackedCall, TrackedCallId};
 use crate::tracked_call_map::TrackedCallMap;
 use crate::block_call_stack::__BlockCallStack;
 use crate::tracked_call_stack::__TrackedCallStack;
 use crate::relations::__Relations;
 use crate::root;
 use crate::element::Element;
-use std::cell::RefCell;
-use std::any::Any;
+use std::cell::{Cell, RefCell};
+// use std::any::Any;
 
 thread_local! {
     pub(crate) static CACHES: RefCell<CacheMap> = RefCell::new(CacheMap::new());
@@ -20,15 +20,16 @@ thread_local! {
     pub(crate) static BLOCK_CALL_STACK: RefCell<__BlockCallStack> = RefCell::new(__BlockCallStack::default());
     pub(crate) static TRACKED_CALL_STACK: RefCell<__TrackedCallStack> = RefCell::new(__TrackedCallStack::default());
     pub(crate) static RELATIONS: RefCell<__Relations> = RefCell::new(__Relations::default());
+    pub(crate) static SUBSTITUTED_TRACKED_CALL_ID: Cell<Option<TrackedCallId>> = Cell::new(None);
 }
 
 pub fn rerender() {
     __TrackedCall::remove_all_calls();
 
     root();
-    let _unused_data: Vec<Box<dyn Any>> = LVARS.with(|l_vars| {
-        l_vars
-            .borrow_mut()
-            .remove_unused_and_toggle_revision()
-    });
+    // let _unused_data: Vec<Box<dyn Any>> = LVARS.with(|l_vars| {
+    //     l_vars
+    //         .borrow_mut()
+    //         .remove_unused_and_toggle_revision()
+    // });
 }

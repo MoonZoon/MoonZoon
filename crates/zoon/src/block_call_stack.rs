@@ -1,4 +1,5 @@
 use crate::runtime::BLOCK_CALL_STACK;
+use crate::tracked_call::TrackedCallId;
 
 pub type Id = u128;
 
@@ -39,4 +40,5 @@ impl __BlockCallStack {
 pub enum __Block {
     SVar(Id),
     Cache(Id),
+    Cmp(TrackedCallId)
 }

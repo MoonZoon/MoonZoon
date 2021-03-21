@@ -13,13 +13,26 @@ fn root<'a>() -> Cmp<'a> {
 // to 
 
 fn root<'a>() -> Cmp<'a> {
-    let creator = l_var(move || (move || {
-        col![
-            control_counters(),
-            counters(),
-        ]
-    }));
-    creator.inner()().into_component()
+    let component_body = l_var(move || {
+        let __id = TrackedCallId::current();
+        let __block = __Block::Cmp(__id);
+        __ComponentData {
+            creator: std::rc::Rc::new(move || {
+                __BlockCallStack::push(__block);
+                __Relations::remove_dependencies(&__block);
+                let output = (|| {
+                    col![
+                        control_counters(),
+                        counters(),
+                    ]
+                })();
+                __BlockCallStack::pop();
+                output.into_component()
+            }),
+        }
+    });   
+    let creator = &component_body.inner().creator;
+    creator()
 }
 */
 #[proc_macro_attribute]
@@ -28,8 +41,24 @@ pub fn cmp(_args: TokenStream, input: TokenStream) -> TokenStream {
 
     let inner_block = input_fn.block;
     input_fn.block = parse_quote!({ 
-        let creator = l_var(move || (move || #inner_block));
-        creator.inner()().into_component()
+        let component_body = l_var(move || {
+            let __id = TrackedCallId::current();
+            let __block = __Block::Cmp(__id);
+            __ComponentData {
+                creator: std::rc::Rc::new(move || {
+                    __BlockCallStack::push(__block);
+                    __Relations::remove_dependencies(&__block);
+                    let output = (|| #inner_block)();
+                    __BlockCallStack::pop();
+                    let mut cmp = output.into_component();
+                    cmp.component_data_id = Some(__id);
+                    cmp
+                }),
+                context: None,
+            }
+        });   
+        let creator = &component_body.inner().creator;
+        creator()
     });
 
     quote::quote_spanned!(input_fn.span()=>

@@ -1,6 +1,9 @@
-use crate::{block_call_stack::{__Block, __BlockCallStack}};
+use crate::{Element, block_call_stack::{__Block, __BlockCallStack}};
 use std::collections::HashSet;
-use crate::runtime::{RELATIONS, CACHES};
+use crate::runtime::{RELATIONS, CACHES, LVARS, SUBSTITUTED_TRACKED_CALL_ID};
+use crate::tracked_call_stack::__TrackedCallStack;
+use crate::component::__ComponentData;
+use crate::log;
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 struct Relation {
@@ -15,7 +18,7 @@ impl __Relations {
     pub fn add_dependency(dependency: __Block) {
         if let Some(last_block) = __BlockCallStack::last() {
             match last_block {
-                __Block::Cache(_) => {
+                __Block::Cache(_) | __Block::Cmp(_)=> {
                     Self::insert(last_block, dependency)
                 }
                 __Block::SVar(_) => ()
@@ -53,6 +56,28 @@ impl __Relations {
                                 .insert(id, data, creator)
                         });
                         __Relations::refresh_dependents(&__Block::Cache(id));
+                    }
+                }
+                __Block::Cmp(track_call_id) => {
+                    log("refresh CMP!");
+                     
+                    let component_creator = LVARS.with(|l_vars| {
+                        l_vars
+                            .borrow()
+                            .data::<__ComponentData>(&track_call_id)
+                            .unwrap()
+                            .clone()
+                    });
+                    if let Some(context) = component_creator.context {
+                        // log!("refresh_dependents RCX: {:#?}", rcx);
+                        log!("refresh_dependents context: {:#?}", context);
+                        let id = context.current_tracked_call_id;
+                        SUBSTITUTED_TRACKED_CALL_ID.with(|id_cell| id_cell.set(Some(id)));
+                        // __TrackedCallStack::push(context.tracked_call_stack_last.unwrap());
+                         // @TODO don't rerender already rendered other dependency?
+                         // @TODO FAKE TrackedCalledId::current() - similarly to rcx? Is  __TrackedCallStack::last the same here and in the original render?
+                        (component_creator.creator)().render(context.rcx);
+                        // __TrackedCallStack::pop();
                     }
                 }
                 __Block::SVar(_) => ()
