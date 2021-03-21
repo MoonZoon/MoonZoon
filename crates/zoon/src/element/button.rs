@@ -44,21 +44,22 @@ impl<'a> Element for Button<'a> {
 struct Listener {
     event: &'static str,
     node: LVar<Node>,
-    handler: Rc<RefCell<Box<dyn Fn()>>>,
+    handler: Rc<RefCell<Option<Box<dyn Fn()>>>>,
     callback: Closure<dyn Fn()>,
 }
 
 impl Listener {
     fn new(event: &'static str, node: LVar<Node>) -> Self {
         let dummy_handler = Box::new(||()) as Box<dyn Fn()>;
-        let handler = Rc::new(RefCell::new(dummy_handler));
+        let handler = Rc::new(RefCell::new(Some(dummy_handler)));
 
         let handler_clone = Rc::clone(&handler);
         let callback = Closure::wrap(Box::new(move || {
-            log!("before borrow");
-            let handler = handler_clone.borrow();
-            handler();
-            log!("after borrow");
+            let user_handler = handler_clone.borrow_mut().take();
+            if let Some(user_handler) = user_handler {
+                user_handler();
+                *handler_clone.borrow_mut() = Some(user_handler);
+            };
         }) as Box<dyn Fn()>);
 
         node.update_mut(|node| {
@@ -78,8 +79,7 @@ impl Listener {
     }
 
     fn set_handler(&mut self, handler: Box<dyn Fn()>) {
-        log!("set handler borrow");
-        *self.handler.borrow_mut() = handler;
+        *self.handler.borrow_mut() = Some(handler);
     }
 }
 
