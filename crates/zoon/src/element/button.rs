@@ -19,7 +19,7 @@ pub struct Button<'a> {
 
 impl<'a> Element for Button<'a> {
     #[render]
-    fn render(&mut self, rcx: RenderContext ) {
+    fn render(&mut self, rcx: RenderContext) {
         // log!("button, index: {}", rcx.index);
 
         let node = dom_element(rcx, |rcx: RenderContext| {

@@ -1,6 +1,6 @@
 use crate::{Element, block_call_stack::{__Block, __BlockCallStack}};
 use std::collections::HashSet;
-use crate::runtime::{RELATIONS, CACHES, LVARS, SUBSTITUTED_TRACKED_CALL_ID};
+use crate::runtime::{RELATIONS, CACHES, LVARS, SUBSTITUTED_CALL_SITE};
 use crate::tracked_call_stack::__TrackedCallStack;
 use crate::component::__ComponentData;
 use crate::log;
@@ -68,16 +68,17 @@ impl __Relations {
                             .unwrap()
                             .clone()
                     });
-                    if let Some(context) = component_creator.context {
+                    if let (Some(rcx), Some(current_tracked_call_id)) = (component_creator.rcx, component_creator.current_tracked_call_id) {
                         // log!("refresh_dependents RCX: {:#?}", rcx);
-                        log!("refresh_dependents context: {:#?}", context);
-                        let id = context.current_tracked_call_id;
-                        SUBSTITUTED_TRACKED_CALL_ID.with(|id_cell| id_cell.set(Some(id)));
-                        // __TrackedCallStack::push(context.tracked_call_stack_last.unwrap());
+                        // log!("refresh_dependents context: {:#?}", context);
+                        let call_site = current_tracked_call_id.call_site;
+                        SUBSTITUTED_CALL_SITE.with(|id_cell| id_cell.set(Some(call_site)));
+                        // __TrackedCallStack::clear();
+                        __TrackedCallStack::push(component_creator.tracked_call_stack_last.unwrap());
                          // @TODO don't rerender already rendered other dependency?
                          // @TODO FAKE TrackedCalledId::current() - similarly to rcx? Is  __TrackedCallStack::last the same here and in the original render?
-                        (component_creator.creator)().render(context.rcx);
-                        // __TrackedCallStack::pop();
+                        (component_creator.creator)().render(rcx);
+                        __TrackedCallStack::pop();
                     }
                 }
                 __Block::SVar(_) => ()

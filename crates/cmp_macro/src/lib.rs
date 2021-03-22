@@ -54,7 +54,9 @@ pub fn cmp(_args: TokenStream, input: TokenStream) -> TokenStream {
                     cmp.component_data_id = Some(__id);
                     cmp
                 }),
-                context: None,
+                tracked_call_stack_last: __TrackedCallStack::parent(),
+                rcx: None,
+                current_tracked_call_id: None,
             }
         });   
         let creator = &component_body.inner().creator;

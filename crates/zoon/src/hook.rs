@@ -3,6 +3,7 @@ use crate::l_var::{LVar, CloneLVar};
 use tracked_call_macro::tracked_call;
 use crate::tracked_call::{TrackedCallId, __TrackedCall};
 use crate::tracked_call_stack::__TrackedCallStack;
+use crate::log;
 
 #[tracked_call]
 pub fn do_once<T>(f: impl FnOnce() -> T) -> Option<T> {

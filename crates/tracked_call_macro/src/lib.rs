@@ -7,8 +7,9 @@ pub fn tracked_call(_args: TokenStream, input: TokenStream) -> TokenStream {
 
     let inner_block = input_fn.block;
     input_fn.block = parse_quote!({ 
-        let __tracked_call_id = __TrackedCall::get_id_or_create();
-        __TrackedCallStack::push(__tracked_call_id); 
+        let __tracked_call = __TrackedCall::create();
+        // log!("from macro: {:#?}", __tracked_call_id);
+        __TrackedCallStack::push(__tracked_call); 
         let output = (move || #inner_block)();
         __TrackedCallStack::pop();
         output

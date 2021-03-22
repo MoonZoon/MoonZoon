@@ -22,7 +22,6 @@ mod block_call_stack;
 mod tracked_call_stack;
 mod relations;
 mod tracked_call;
-mod tracked_call_map;
 
 pub use element::*;
 pub use component::{Cmp, IntoComponent, __ComponentData};
@@ -34,7 +33,6 @@ pub use console::log;
 pub use hook::{l_var, do_once};
 pub use tracked_call_macro::tracked_call as render;
 use runtime::ROOT_CMP;
-pub use runtime::rerender;
 pub use block_call_stack::{__BlockCallStack, __Block};
 pub use relations::{__Relations};
 pub use tracked_call::{TrackedCallId, __TrackedCall};
@@ -82,12 +80,12 @@ pub fn start(blocks: fn(__Blocks) -> __Blocks) {
         *root.borrow_mut() = blocks(__Blocks { root: None }).root;
     });
 
-    rerender();
+    root();
 }
 
 #[tracked_call]
 fn root() {
-    // log!("Root ID: {:#?}", TrackedCallId::current());
+    log!("LIB Root ID: {:#?}", TrackedCallId::current());
 
     // log!("root");
 
