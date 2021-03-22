@@ -18,7 +18,7 @@ pub struct Cmp<'a> {
 impl<'a> Element for Cmp<'a> {
     #[render]
     fn render(&mut self, rcx: RenderContext) {
-        log!("CMP render: {:#?}", TrackedCallId::current());
+        // log!("CMP render: {:#?}", TrackedCallId::current());
 
         // let xxx = __TrackedCallStack::parent();
         // log!("XXXXX: {:#?}", xxx);

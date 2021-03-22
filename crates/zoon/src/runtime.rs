@@ -1,12 +1,11 @@
 use crate::l_var_map::LVarMap;
 use crate::s_var_map::SVarMap;
 use crate::cache_map::CacheMap;
-use crate::tracked_call::CallSite;
 use crate::block_call_stack::__BlockCallStack;
 use crate::tracked_call_stack::__TrackedCallStack;
 use crate::relations::__Relations;
 use crate::element::Element;
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 // use std::any::Any;
 
 thread_local! {
@@ -17,5 +16,4 @@ thread_local! {
     pub(crate) static BLOCK_CALL_STACK: RefCell<__BlockCallStack> = RefCell::new(__BlockCallStack::default());
     pub(crate) static TRACKED_CALL_STACK: RefCell<__TrackedCallStack> = RefCell::new(__TrackedCallStack::default());
     pub(crate) static RELATIONS: RefCell<__Relations> = RefCell::new(__Relations::default());
-    pub(crate) static SUBSTITUTED_CALL_SITE: Cell<Option<CallSite>> = Cell::new(None);
 }

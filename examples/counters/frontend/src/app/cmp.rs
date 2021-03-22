@@ -18,20 +18,20 @@ blocks!{
 
     #[cmp]
     fn root<'a>() -> Cmp<'a> {
-        log!("from ROOT: {:#?}", TrackedCallId::current());
+        // log!("from ROOT: {:#?}", TrackedCallId::current());
         // log!("from ROOT: {:#?}", TrackedCallId::current());
         // super::counter_count();
         // log!("CMP root ID: {:#?}", __TrackedCallId::current());
         // control_counters()
         col![
             control_counters(),
-            counters(),
+            // counters(),
         ]
     }
 
     #[cmp]
     fn control_counters<'a>() -> Cmp<'a> {
-        log!("from CONTROL_COUNTERS: {:#?}", TrackedCallId::current());
+        // log!("from CONTROL_COUNTERS: {:#?}", TrackedCallId::current());
         // log!("from CONTROL_COUNTERS: {:#?}", TrackedCallId::current());
         row![
             column_counter(),
@@ -61,7 +61,7 @@ blocks!{
 
     #[cmp]
     fn column_counter<'a>() -> Cmp<'a> {
-        log!("from COLUMN COUNTER: {:#?}", TrackedCallId::current());
+        // log!("from COLUMN COUNTER: {:#?}", TrackedCallId::current());
         row![
             "Columns:",
             counter![
@@ -74,7 +74,7 @@ blocks!{
 
     #[cmp]
     fn row_counter<'a>() -> Cmp<'a> {
-        log!("from ROW COUNTER: {:#?}", TrackedCallId::current());
+        // log!("from ROW COUNTER: {:#?}", TrackedCallId::current());
         row![
             "Rows:",
             counter![
