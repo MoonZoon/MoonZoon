@@ -28,7 +28,7 @@ impl TrackedCallId {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct __TrackedCall {
     pub hash: u64,
     pub call_site: CallSite,
@@ -78,10 +78,10 @@ impl CallSite {
 
     #[track_caller]
     pub fn here() -> Self {
-        if let Some(call_site) = SUBSTITUTED_CALL_SITE.with(|call_site| call_site.take()) {
-            log!("xxxxxxxxxxxxxxxxxxxxxxxxxxx");
-            return call_site;
-        }
+        // if let Some(call_site) = SUBSTITUTED_CALL_SITE.with(|call_site| call_site.take()) {
+        //     log!("xxxxxxxxxxxxxxxxxxxxxxxxxxx");
+        //     return call_site;
+        // }
         let raw_location = Location::caller();
         // log!("Location: {:#?}", raw_location);
         Self::from(raw_location)

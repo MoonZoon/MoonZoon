@@ -4,6 +4,7 @@ use crate::tracked_call::{__TrackedCall, TrackedCallId};
 use crate::render;
 use crate::runtime::LVARS;
 use std::rc::Rc;
+use std::cell::RefCell;
 use crate::log;
 
 // ------ Cmp ------
@@ -19,8 +20,8 @@ impl<'a> Element for Cmp<'a> {
     fn render(&mut self, rcx: RenderContext) {
         log!("CMP render: {:#?}", TrackedCallId::current());
 
-        // let tracked_call_stack_last = __TrackedCallStack::parent();
-        // log!("tracked_call_stack_last: {:#?}", tracked_call_stack_last);
+        // let xxx = __TrackedCallStack::parent();
+        // log!("XXXXX: {:#?}", xxx);
 
         // log!("cmp render context: {:#?}", context);
 
@@ -34,6 +35,9 @@ impl<'a> Element for Cmp<'a> {
 
                 component_data.rcx = Some(rcx);
                 component_data.current_tracked_call_id = Some(TrackedCallId::current());
+                component_data.parent_call = __TrackedCallStack::parent();
+
+                // log!("PARENTTTTT CMP RENDER: {:#?}", component_data.parent_call);
 
                 l_vars.insert(component_data_id, component_data);
 
@@ -71,7 +75,8 @@ impl<'a, T: 'a + IntoElement<'a>> IntoComponent<'a> for T {
 #[derive(Clone)]
 pub struct __ComponentData<'a> {
     pub creator: Rc<dyn Fn() -> Cmp<'a>>,
-    pub tracked_call_stack_last: Option<__TrackedCall>,
+    // pub tracked_call_stack_last: Option<__TrackedCall>,
     pub rcx: Option<RenderContext>,
     pub current_tracked_call_id: Option<TrackedCallId>,
+    pub parent_call: Option<Rc<RefCell<__TrackedCall>>>,
 }
