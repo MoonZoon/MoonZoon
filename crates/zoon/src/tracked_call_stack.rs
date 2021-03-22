@@ -1,5 +1,5 @@
 use crate::{TrackedCallId, runtime::{TRACKED_CALL_STACK}};
-use crate::tracked_call::{__TrackedCall, CallSite};
+use crate::tracked_call::__TrackedCall;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -25,30 +25,23 @@ impl __TrackedCallStack {
 
             if let Some(call) = &mut call {
                 let mut call = call.borrow_mut();
-                for (_, index) in &mut call.selected_indices {
-                    *index = 0;
-                }
+                call.selected_index = 0;
             }
             call
         })
     }
 
-    pub fn increment_last_selected_index(call_site: CallSite) -> Option<usize> {
+    pub fn increment_last_selected_index() -> Option<usize> {
         TRACKED_CALL_STACK.with(|call_stack| {
             let mut call_stack = call_stack.borrow_mut();
-            let selected_indices = &mut call_stack
+            let selected_index = &mut call_stack
                 .0
                 .last_mut()?
                 .borrow_mut()
-                .selected_indices;
-
-            if let Some(index) = selected_indices.get_mut(&call_site) {
-                *index += 1;
-                Some(*index)
-            } else {
-                selected_indices.insert(call_site, 1);
-                Some(1)
-            }
+                .selected_index;
+            
+            *selected_index += 1;
+            Some(*selected_index)
         })
     }
 

@@ -16,7 +16,6 @@ pub fn tracked_call(_args: TokenStream, input: TokenStream) -> TokenStream {
     });
 
     quote::quote_spanned!(input_fn.span()=>
-        #[track_caller]
         #input_fn
     ).into()
 }
