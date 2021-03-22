@@ -20,11 +20,11 @@ impl<'a> Element for Cmp<'a> {
     fn render(&mut self, rcx: RenderContext) {
         // log!("CMP render: {:#?}", TrackedCallId::current());
 
-        let aaa = __TrackedCallStack::last();
-        log!("CMP LAST: {:#?}", aaa);
+        // let aaa = __TrackedCallStack::last();
+        // log!("CMP LAST: {:#?}", aaa);
 
-        let xxx = __TrackedCallStack::parent();
-        log!("CMP PARENT: {:#?}", xxx);
+        // let xxx = __TrackedCallStack::parent();
+        // log!("CMP PARENT: {:#?}", xxx);
 
         // log!("cmp render context: {:#?}", context);
 

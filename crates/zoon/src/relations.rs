@@ -60,7 +60,7 @@ impl __Relations {
                     }
                 }
                 __Block::Cmp(track_call_id) => {
-                    log("refresh CMP!");
+                    // log("refresh CMP!");
                      
                     let component_creator = LVARS.with(|l_vars| {
                         l_vars
