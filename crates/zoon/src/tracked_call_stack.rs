@@ -1,25 +1,35 @@
 use crate::{TrackedCallId, runtime::{TRACKED_CALL_STACK}};
 use crate::tracked_call::{__TrackedCall, CallSite};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[derive(Default)]
-pub struct __TrackedCallStack(Vec<__TrackedCall>);
+pub struct __TrackedCallStack(Vec<Rc<RefCell<__TrackedCall>>>);
 
 impl __TrackedCallStack {
-    pub fn push(tracked_call: __TrackedCall) {
+    pub fn push(tracked_call: Rc<RefCell<__TrackedCall>>) {
         TRACKED_CALL_STACK.with(|call_stack| {
             call_stack
                 .borrow_mut()
                 .0
-                .push(tracked_call)
+                .push(tracked_call);
         });
     }
     
-    pub fn pop() -> Option<__TrackedCall> {
+    pub fn pop() -> Option<Rc<RefCell<__TrackedCall>>> {
         TRACKED_CALL_STACK.with(|call_stack| {
-            call_stack
+            let mut call = call_stack
                 .borrow_mut()
                 .0
-                .pop()
+                .pop();
+
+            if let Some(call) = &mut call {
+                let mut call = call.borrow_mut();
+                for (_, index) in &mut call.selected_indices {
+                    *index = 0;
+                }
+            }
+            call
         })
     }
 
@@ -29,6 +39,7 @@ impl __TrackedCallStack {
             let selected_indices = &mut call_stack
                 .0
                 .last_mut()?
+                .borrow_mut()
                 .selected_indices;
 
             if let Some(index) = selected_indices.get_mut(&call_site) {
@@ -47,6 +58,7 @@ impl __TrackedCallStack {
                 .borrow()
                 .0
                 .last()?
+                .borrow()
                 .hash)
         })
     }
@@ -54,10 +66,11 @@ impl __TrackedCallStack {
     pub fn last_to_tracked_call_id() -> Option<TrackedCallId> {
         TRACKED_CALL_STACK.with(|call_stack| {
             Some(TrackedCallId::from_call(
-                call_stack
+                &call_stack
                     .borrow()
                     .0
                     .last()?
+                    .borrow()
             ))
         })
     }
@@ -72,14 +85,14 @@ impl __TrackedCallStack {
     //     })
     // }
 
-    pub fn parent() -> Option<__TrackedCall> {
+    pub fn parent() -> Option<Rc<RefCell<__TrackedCall>>> {
         TRACKED_CALL_STACK.with(|call_stack| {
             let call_stack = &call_stack.borrow().0;
             call_stack.get(call_stack.len() - 2).cloned()
         })
     }
 
-    pub fn grand_parent() -> Option<__TrackedCall> {
+    pub fn grand_parent() -> Option<Rc<RefCell<__TrackedCall>>> {
         TRACKED_CALL_STACK.with(|call_stack| {
             let call_stack = &call_stack.borrow().0;
             call_stack.get(call_stack.len() - 3).cloned()

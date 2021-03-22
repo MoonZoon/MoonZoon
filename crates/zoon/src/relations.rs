@@ -59,27 +59,28 @@ impl __Relations {
                     }
                 }
                 __Block::Cmp(track_call_id) => {
-                    log("refresh CMP!");
+                    // log("refresh CMP!");
                      
-                    let component_creator = LVARS.with(|l_vars| {
-                        l_vars
-                            .borrow()
-                            .data::<__ComponentData>(&track_call_id)
-                            .unwrap()
-                            .clone()
-                    });
-                    if let (Some(rcx), Some(current_tracked_call_id)) = (component_creator.rcx, component_creator.current_tracked_call_id) {
-                        // log!("refresh_dependents RCX: {:#?}", rcx);
-                        // log!("refresh_dependents context: {:#?}", context);
-                        let call_site = current_tracked_call_id.call_site;
-                        SUBSTITUTED_CALL_SITE.with(|id_cell| id_cell.set(Some(call_site)));
-                        // __TrackedCallStack::clear();
-                        __TrackedCallStack::push(component_creator.tracked_call_stack_last.unwrap());
-                         // @TODO don't rerender already rendered other dependency?
-                         // @TODO FAKE TrackedCalledId::current() - similarly to rcx? Is  __TrackedCallStack::last the same here and in the original render?
-                        (component_creator.creator)().render(rcx);
-                        __TrackedCallStack::pop();
-                    }
+                    // let component_creator = LVARS.with(|l_vars| {
+                    //     l_vars
+                    //         .borrow()
+                    //         .data::<__ComponentData>(&track_call_id)
+                    //         .unwrap()
+                    //         .clone()
+                    // });
+                    // if let (Some(rcx), Some(current_tracked_call_id)) = (component_creator.rcx, component_creator.current_tracked_call_id) {
+                    //     // log!("refresh_dependents RCX: {:#?}", rcx);
+                    //     // log!("refresh_dependents context: {:#?}", context);
+                    //     let call_site = current_tracked_call_id.call_site;
+                    //     SUBSTITUTED_CALL_SITE.with(|id_cell| id_cell.set(Some(call_site)));
+                    //     // __TrackedCallStack::clear();
+                    //     // __TrackedCallStack::push(component_creator.tracked_call_stack_last.unwrap());
+                    //     __TrackedCallStack::push(component_creator.parent_call.unwrap());
+                    //      // @TODO don't rerender already rendered other dependency?
+                    //      // @TODO FAKE TrackedCalledId::current() - similarly to rcx? Is  __TrackedCallStack::last the same here and in the original render?
+                    //     (component_creator.creator)().render(rcx);
+                    //     __TrackedCallStack::pop();
+                    // }
                 }
                 __Block::SVar(_) => ()
             }

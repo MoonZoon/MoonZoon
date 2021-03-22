@@ -6,28 +6,28 @@ use element::counter::{self, Counter};
 
 blocks!{
 
-    #[cmp]
-    fn root<'a>() -> Cmp<'a> {
-        log!("from ROOT: {:#?}", TrackedCallId::current());
-        counter![
-            super::column_count().inner(),
-            counter::on_change(super::set_column_count),
-            counter::step(5),
-        ]
-    }
-
     // #[cmp]
     // fn root<'a>() -> Cmp<'a> {
     //     log!("from ROOT: {:#?}", TrackedCallId::current());
-    //     // log!("from ROOT: {:#?}", TrackedCallId::current());
-    //     // super::counter_count();
-    //     // log!("CMP root ID: {:#?}", __TrackedCallId::current());
-    //     // control_counters()
-    //     col![
-    //         control_counters(),
-    //         counters(),
+    //     counter![
+    //         super::column_count().inner(),
+    //         counter::on_change(super::set_column_count),
+    //         counter::step(5),
     //     ]
     // }
+
+    #[cmp]
+    fn root<'a>() -> Cmp<'a> {
+        log!("from ROOT: {:#?}", TrackedCallId::current());
+        // log!("from ROOT: {:#?}", TrackedCallId::current());
+        // super::counter_count();
+        // log!("CMP root ID: {:#?}", __TrackedCallId::current());
+        // control_counters()
+        col![
+            control_counters(),
+            counters(),
+        ]
+    }
 
     #[cmp]
     fn control_counters<'a>() -> Cmp<'a> {
@@ -35,9 +35,9 @@ blocks!{
         // log!("from CONTROL_COUNTERS: {:#?}", TrackedCallId::current());
         row![
             column_counter(),
-            // row_counter(),
-            // counter_count(),
-            // counter_count_hundreds(),
+            row_counter(),
+            counter_count(),
+            counter_count_hundreds(),
         ]
     }
 
@@ -74,6 +74,7 @@ blocks!{
 
     #[cmp]
     fn row_counter<'a>() -> Cmp<'a> {
+        log!("from ROW COUNTER: {:#?}", TrackedCallId::current());
         row![
             "Rows:",
             counter![

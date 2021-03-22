@@ -80,6 +80,10 @@ pub fn start(blocks: fn(__Blocks) -> __Blocks) {
         *root.borrow_mut() = blocks(__Blocks { root: None }).root;
     });
 
+    rerender();
+}
+
+pub fn rerender() {
     root();
 }
 

@@ -4,6 +4,7 @@ use crate::hook::l_var;
 use crate::l_var::LVar;
 use std::{cell::RefCell, rc::Rc};
 use crate::log;
+use crate::rerender;
 
 // ------ ------
 //    Element 
@@ -59,6 +60,7 @@ impl Listener {
             if let Some(user_handler) = user_handler {
                 user_handler();
                 *handler_clone.borrow_mut() = Some(user_handler);
+                rerender();
             };
         }) as Box<dyn Fn()>);
 
