@@ -9,13 +9,13 @@ use crate::log;
 
 // ------ Cmp ------
 
-pub struct Cmp<'a> {
-    element: Box<dyn Element + 'a>,
+pub struct Cmp {
+    element: Box<dyn Element>,
     pub component_data_id: Option<TrackedCallId>,
     // NoChange,
 } 
 
-impl<'a> Element for Cmp<'a> {
+impl<'a> Element for Cmp {
     #[render]
     fn render(&mut self, rcx: RenderContext) {
         // log!("CMP render: {:#?}", TrackedCallId::current());
@@ -63,11 +63,11 @@ impl<'a> Element for Cmp<'a> {
 // ------ IntoComponent ------
 
 pub trait IntoComponent<'a> {
-    fn into_component(self) -> Cmp<'a>;
+    fn into_component(self) -> Cmp;
 }
 
-impl<'a, T: 'a + IntoElement<'a>> IntoComponent<'a> for T {
-    fn into_component(self) -> Cmp<'a> {
+impl<'a, T: 'static + IntoElement<'static>> IntoComponent<'a> for T {
+    fn into_component(self) -> Cmp {
         Cmp {
             element: Box::new(self.into_element()),
             component_data_id: None,
@@ -78,8 +78,8 @@ impl<'a, T: 'a + IntoElement<'a>> IntoComponent<'a> for T {
 
 // ------ __ComponentBody ------
 #[derive(Clone)]
-pub struct __ComponentData<'a> {
-    pub creator: Rc<dyn Fn() -> Cmp<'a>>,
+pub struct __ComponentData {
+    pub creator: Rc<dyn Fn() -> Cmp>,
     pub rcx: Option<RenderContext>,
     pub parent_call_from_macro: Option<Rc<RefCell<__TrackedCall>>>,
     pub parent_selected_index_from_macro: Option<usize>,
