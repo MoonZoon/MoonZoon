@@ -7,7 +7,7 @@ use element::counter::{self, Counter};
 blocks!{
 
     // #[cmp]
-    // fn root<'a>() -> Cmp<'a> {
+    // fn root() -> Cmp {
     //     log!("from ROOT: {:#?}", TrackedCallId::current());
     //     counter![
     //         super::column_count().inner(),
@@ -17,7 +17,7 @@ blocks!{
     // }
 
     #[cmp]
-    fn root<'a>() -> Cmp<'a> {
+    fn root() -> Cmp {
         // log!("from ROOT: {:#?}", TrackedCallId::current());
         // log!("from ROOT: {:#?}", TrackedCallId::current());
         // super::counter_count();
@@ -30,7 +30,7 @@ blocks!{
     }
 
     #[cmp]
-    fn control_counters<'a>() -> Cmp<'a> {
+    fn control_counters() -> Cmp {
         // log!("from CONTROL_COUNTERS: {:#?}", TrackedCallId::current());
         // log!("from CONTROL_COUNTERS: {:#?}", TrackedCallId::current());
         row![
@@ -43,7 +43,7 @@ blocks!{
     }
 
     #[cmp]
-    fn test_counter<'a>() -> Cmp<'a> {
+    fn test_counter() -> Cmp {
         row![
             "Test counter",
             counter![
@@ -54,7 +54,7 @@ blocks!{
     } 
 
     #[cmp]
-    fn counter_count<'a>() -> Cmp<'a> {
+    fn counter_count() -> Cmp {
         // log!("from COUNTER_COUNT: {:#?}", TrackedCallId::current());
         // log!("from COUNTER_COUNT: {:#?}", TrackedCallId::current());
         el![
@@ -63,7 +63,7 @@ blocks!{
     }
 
     #[cmp]
-    fn counter_count_hundreds<'a>() -> Cmp<'a> {
+    fn counter_count_hundreds() -> Cmp {
         el![
             super::counter_count_hundreds().map(|count| {
                 format!("Thousands: {}", count)
@@ -72,7 +72,7 @@ blocks!{
     }
 
     #[cmp]
-    fn column_counter<'a>() -> Cmp<'a> {
+    fn column_counter() -> Cmp {
         // log!("from COLUMN COUNTER: {:#?}", TrackedCallId::current());
         row![
             "Columns:",
@@ -85,7 +85,7 @@ blocks!{
     }
 
     #[cmp]
-    fn row_counter<'a>() -> Cmp<'a> {
+    fn row_counter() -> Cmp {
         // log!("from ROW COUNTER: {:#?}", TrackedCallId::current());
         row![
             "Rows:",
@@ -98,7 +98,7 @@ blocks!{
     }
 
     #[cmp]
-    fn counters<'a>() -> Cmp<'a> {
+    fn counters() -> Cmp {
         // log!("counters!");
         col![
             (0..super::row_count().inner()).map(|_| counter_row())
@@ -116,7 +116,7 @@ blocks!{
     // }
 
     #[cmp]
-    fn counter_row<'a>() -> Cmp<'a> {
+    fn counter_row() -> Cmp {
         // counter![]
         row![
             (0..super::column_count().inner()).map(|_| counter())
@@ -124,7 +124,7 @@ blocks!{
     }
 
     #[cmp]
-    fn counter<'a>() -> Cmp<'a> {
+    fn counter() -> Cmp {
         counter![]
     }
 
