@@ -89,7 +89,7 @@ pub fn rerender() {
 
 #[tracked_call]
 fn root() {
-    log!("LIB Root ID: {:#?}", TrackedCallId::current());
+    // log!("LIB Root ID: {:#?}", TrackedCallId::current());
 
     // log!("root");
 
