@@ -78,6 +78,13 @@ impl __TrackedCallStack {
     //     })
     // }
 
+    pub fn last() -> Option<Rc<RefCell<__TrackedCall>>> {
+        TRACKED_CALL_STACK.with(|call_stack| {
+            let call_stack = &call_stack.borrow().0;
+            call_stack.last().cloned()
+        })
+    }
+
     pub fn parent() -> Option<Rc<RefCell<__TrackedCall>>> {
         TRACKED_CALL_STACK.with(|call_stack| {
             let call_stack = &call_stack.borrow().0;

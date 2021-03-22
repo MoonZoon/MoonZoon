@@ -20,8 +20,11 @@ impl<'a> Element for Cmp<'a> {
     fn render(&mut self, rcx: RenderContext) {
         // log!("CMP render: {:#?}", TrackedCallId::current());
 
-        // let xxx = __TrackedCallStack::parent();
-        // log!("XXXXX: {:#?}", xxx);
+        let aaa = __TrackedCallStack::last();
+        log!("CMP LAST: {:#?}", aaa);
+
+        let xxx = __TrackedCallStack::parent();
+        log!("CMP PARENT: {:#?}", xxx);
 
         // log!("cmp render context: {:#?}", context);
 
@@ -34,8 +37,10 @@ impl<'a> Element for Cmp<'a> {
                     .unwrap();
 
                 component_data.rcx = Some(rcx);
-                component_data.current_tracked_call_id = Some(TrackedCallId::current());
                 component_data.parent_call = __TrackedCallStack::parent();
+                component_data.parent_selected_index = component_data.parent_call.as_ref().map(|parent| {
+                    parent.borrow().selected_index
+                });
 
                 // log!("PARENTTTTT CMP RENDER: {:#?}", component_data.parent_call);
 
@@ -75,8 +80,9 @@ impl<'a, T: 'a + IntoElement<'a>> IntoComponent<'a> for T {
 #[derive(Clone)]
 pub struct __ComponentData<'a> {
     pub creator: Rc<dyn Fn() -> Cmp<'a>>,
-    // pub tracked_call_stack_last: Option<__TrackedCall>,
     pub rcx: Option<RenderContext>,
-    pub current_tracked_call_id: Option<TrackedCallId>,
+    pub parent_call_from_macro: Option<Rc<RefCell<__TrackedCall>>>,
+    pub parent_selected_index_from_macro: Option<usize>,
     pub parent_call: Option<Rc<RefCell<__TrackedCall>>>,
+    pub parent_selected_index: Option<usize>, 
 }

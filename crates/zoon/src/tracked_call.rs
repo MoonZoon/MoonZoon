@@ -8,6 +8,7 @@ pub struct TrackedCallId {
     pub hash: u64,
     pub index: Option<usize>,
     pub parent_hash: Option<u64>,
+    pub selected_index: usize,
 }
 
 impl TrackedCallId {
@@ -20,6 +21,7 @@ impl TrackedCallId {
             hash: call.hash,
             index: call.index,
             parent_hash: call.parent_hash,
+            selected_index: call.selected_index,
         }
     }
 }

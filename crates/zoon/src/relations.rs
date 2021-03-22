@@ -69,14 +69,21 @@ impl __Relations {
                             .unwrap()
                             .clone()
                     });
-                    if let (Some(rcx), Some(current_tracked_call_id)) = (component_creator.rcx, component_creator.current_tracked_call_id) {
-                        // __TrackedCallStack::push(component_creator.tracked_call_stack_last.unwrap());
-                        // __TrackedCallStack::push(component_creator.parent_call.unwrap());
-                        //  // @TODO don't rerender already rendered other dependency?
-                        //  // @TODO FAKE TrackedCalledId::current() - similarly to rcx? Is  __TrackedCallStack::last the same here and in the original render?
-                        // (component_creator.creator)().render(rcx);
-                        // __TrackedCallStack::pop();
-                        rerender();
+                    if let Some(rcx) = component_creator.rcx {
+                        let parent_call_from_macro = component_creator.parent_call_from_macro.unwrap();
+                        parent_call_from_macro.borrow_mut().selected_index = component_creator.parent_selected_index_from_macro.unwrap() - 1;
+
+                        let parent_call = component_creator.parent_call.unwrap();
+                        parent_call.borrow_mut().selected_index = component_creator.parent_selected_index.unwrap() - 1;
+                       
+                        __TrackedCallStack::push(parent_call_from_macro);
+                        let mut cmp = (component_creator.creator)();
+                        __TrackedCallStack::pop();
+                       
+                        __TrackedCallStack::push(parent_call);
+                        cmp.render(rcx);
+                        __TrackedCallStack::pop();
+                        // rerender();
                     }
                 }
                 __Block::SVar(_) => ()
