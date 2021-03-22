@@ -17,6 +17,11 @@ blocks!{
         5
     }
 
+    #[s_var]
+    fn test_counter_value() -> SVar<i32> {
+        0
+    }
+
     #[cache]
     fn counter_count() -> Cache<i32> {
         column_count().inner() * row_count().inner()
@@ -35,6 +40,11 @@ blocks!{
     #[update]
     fn set_row_count(count: i32) {
         row_count().set(count);
+    }
+
+    #[update]
+    fn set_test_counter_value(count: i32) {
+        test_counter_value().set(count);
     }
 
 }

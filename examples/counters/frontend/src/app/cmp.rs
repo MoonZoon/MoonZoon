@@ -25,7 +25,7 @@ blocks!{
         // control_counters()
         col![
             control_counters(),
-            // counters(),
+            counters(),
         ]
     }
 
@@ -38,8 +38,20 @@ blocks!{
             row_counter(),
             counter_count(),
             counter_count_hundreds(),
+            test_counter(),
         ]
     }
+
+    #[cmp]
+    fn test_counter<'a>() -> Cmp<'a> {
+        row![
+            "Test counter",
+            counter![
+                super::test_counter_value().inner(),
+                counter::on_change(super::set_test_counter_value),
+            ]
+        ]
+    } 
 
     #[cmp]
     fn counter_count<'a>() -> Cmp<'a> {

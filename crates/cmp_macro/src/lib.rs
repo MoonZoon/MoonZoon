@@ -44,6 +44,7 @@ pub fn cmp(_args: TokenStream, input: TokenStream) -> TokenStream {
         let component_body = l_var(move || {
             let __id = TrackedCallId::current();
             let __block = __Block::Cmp(__id);
+            let __parent_call_from_macro = __TrackedCallStack::parent();
             __ComponentData {
                 creator: std::rc::Rc::new(move || {
                     __BlockCallStack::push(__block);
@@ -54,10 +55,13 @@ pub fn cmp(_args: TokenStream, input: TokenStream) -> TokenStream {
                     cmp.component_data_id = Some(__id);
                     cmp
                 }),
-                // tracked_call_stack_last: __TrackedCallStack::grand_parent(),
+                parent_selected_index_from_macro: __parent_call_from_macro.as_ref().map(|parent| {
+                    parent.borrow().selected_index
+                }),
+                parent_call_from_macro: __parent_call_from_macro,
                 parent_call: None,
+                parent_selected_index: None,
                 rcx: None,
-                current_tracked_call_id: None,
             }
         });   
         let creator = &component_body.inner().creator;
