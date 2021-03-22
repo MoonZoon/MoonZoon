@@ -17,13 +17,12 @@ pub struct Cmp<'a> {
 impl<'a> Element for Cmp<'a> {
     #[render]
     fn render(&mut self, rcx: RenderContext) {
-        let context = ComponentContext {
-            rcx,
-            tracked_call_stack_last:  __TrackedCallStack::last(),
-            current_tracked_call_id: TrackedCallId::current(),
-        };
+        log!("CMP render: {:#?}", TrackedCallId::current());
 
-        log!("cmp render context: {:#?}", context);
+        // let tracked_call_stack_last = __TrackedCallStack::parent();
+        // log!("tracked_call_stack_last: {:#?}", tracked_call_stack_last);
+
+        // log!("cmp render context: {:#?}", context);
 
         if let Some(component_data_id) = self.component_data_id {
             LVARS.with(move |l_vars| {
@@ -33,7 +32,8 @@ impl<'a> Element for Cmp<'a> {
                     .remove::<__ComponentData>(&component_data_id)
                     .unwrap();
 
-                component_data.context = Some(context);
+                component_data.rcx = Some(rcx);
+                component_data.current_tracked_call_id = Some(TrackedCallId::current());
 
                 l_vars.insert(component_data_id, component_data);
 
@@ -71,12 +71,7 @@ impl<'a, T: 'a + IntoElement<'a>> IntoComponent<'a> for T {
 #[derive(Clone)]
 pub struct __ComponentData<'a> {
     pub creator: Rc<dyn Fn() -> Cmp<'a>>,
-    pub context: Option<ComponentContext>,
-}
-
-#[derive(Clone, Debug)]
-pub struct ComponentContext {
-    pub rcx: RenderContext,
-    pub tracked_call_stack_last: Option<TrackedCallId>,
-    pub current_tracked_call_id: TrackedCallId,
+    pub tracked_call_stack_last: Option<__TrackedCall>,
+    pub rcx: Option<RenderContext>,
+    pub current_tracked_call_id: Option<TrackedCallId>,
 }

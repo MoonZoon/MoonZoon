@@ -1,11 +1,11 @@
-use crate::runtime::{TRACKED_CALL_STACK, TRACKED_CALLS};
-use crate::tracked_call::TrackedCallId;
+use crate::{TrackedCallId, runtime::{TRACKED_CALL_STACK}};
+use crate::tracked_call::{__TrackedCall, CallSite};
 
 #[derive(Default)]
-pub struct __TrackedCallStack(Vec<TrackedCallId>);
+pub struct __TrackedCallStack(Vec<__TrackedCall>);
 
 impl __TrackedCallStack {
-    pub fn push(tracked_call: TrackedCallId) {
+    pub fn push(tracked_call: __TrackedCall) {
         TRACKED_CALL_STACK.with(|call_stack| {
             call_stack
                 .borrow_mut()
@@ -14,30 +14,74 @@ impl __TrackedCallStack {
         });
     }
     
-    pub fn pop() -> Option<TrackedCallId> {
-        let id = TRACKED_CALL_STACK.with(|call_stack| {
+    pub fn pop() -> Option<__TrackedCall> {
+        TRACKED_CALL_STACK.with(|call_stack| {
             call_stack
                 .borrow_mut()
                 .0
                 .pop()
-        });
-
-        if let Some(id) = id.as_ref() {
-            TRACKED_CALLS.with(|tracked_calls| {
-                tracked_calls.borrow_mut().reset_indices(id);
-            });
-        }
-
-        id
+        })
     }
 
-    pub fn last() -> Option<TrackedCallId> {
+    pub fn increment_last_selected_index(call_site: CallSite) -> Option<usize> {
         TRACKED_CALL_STACK.with(|call_stack| {
-            call_stack
+            let mut call_stack = call_stack.borrow_mut();
+            let selected_indices = &mut call_stack
+                .0
+                .last_mut()?
+                .selected_indices;
+
+            if let Some(index) = selected_indices.get_mut(&call_site) {
+                *index += 1;
+                Some(*index)
+            } else {
+                selected_indices.insert(call_site, 1);
+                Some(1)
+            }
+        })
+    }
+
+    pub fn last_hash() -> Option<u64> {
+        TRACKED_CALL_STACK.with(|call_stack| {
+            Some(call_stack
                 .borrow()
                 .0
-                .last()
-                .cloned()
+                .last()?
+                .hash)
+        })
+    }
+
+    pub fn last_to_tracked_call_id() -> Option<TrackedCallId> {
+        TRACKED_CALL_STACK.with(|call_stack| {
+            Some(TrackedCallId::from_call(
+                call_stack
+                    .borrow()
+                    .0
+                    .last()?
+            ))
+        })
+    }
+
+    // pub fn last() -> Option<__TrackedCall> {
+    //     TRACKED_CALL_STACK.with(|call_stack| {
+    //         call_stack
+    //             .borrow()
+    //             .0
+    //             .last()
+    //             .cloned()
+    //     })
+    // }
+
+    pub fn parent() -> Option<__TrackedCall> {
+        TRACKED_CALL_STACK.with(|call_stack| {
+            let call_stack = &call_stack.borrow().0;
+            call_stack.get(call_stack.len() - 2).cloned()
+        })
+    }
+
+    pub fn clear() {
+        TRACKED_CALL_STACK.with(|call_stack| {
+            call_stack.borrow_mut().0.clear()
         })
     }
 }

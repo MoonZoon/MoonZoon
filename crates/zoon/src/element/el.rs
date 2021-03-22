@@ -1,5 +1,7 @@
 use wasm_bindgen::JsCast;
 use crate::{RenderContext, dom::dom_element, Element, __TrackedCall, __TrackedCallStack, IntoElement, ApplyToElement, render, element_macro};
+use crate::log;
+use tracked_call_macro::tracked_call;
 
 // ------ ------
 //   Element 
