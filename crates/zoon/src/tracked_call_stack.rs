@@ -79,6 +79,13 @@ impl __TrackedCallStack {
         })
     }
 
+    pub fn grand_parent() -> Option<__TrackedCall> {
+        TRACKED_CALL_STACK.with(|call_stack| {
+            let call_stack = &call_stack.borrow().0;
+            call_stack.get(call_stack.len() - 3).cloned()
+        })
+    }
+
     pub fn clear() {
         TRACKED_CALL_STACK.with(|call_stack| {
             call_stack.borrow_mut().0.clear()
