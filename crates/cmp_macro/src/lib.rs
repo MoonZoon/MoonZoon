@@ -54,7 +54,7 @@ pub fn cmp(_args: TokenStream, input: TokenStream) -> TokenStream {
                     cmp.component_data_id = Some(__id);
                     cmp
                 }),
-                tracked_call_stack_last: __TrackedCallStack::parent(),
+                tracked_call_stack_last: __TrackedCallStack::grand_parent(),
                 rcx: None,
                 current_tracked_call_id: None,
             }
