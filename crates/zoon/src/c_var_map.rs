@@ -4,19 +4,16 @@ use crate::tracked_call::TrackedCallId;
 
 pub(crate) struct CVarMap {
     c_vars: HashMap<TrackedCallId, CVarMapValue>,
-    revision: bool,
 }
 
 struct CVarMapValue {
     data: Box<dyn Any>,
-    revision: bool,
 }
 
 impl CVarMap {
     pub(crate) fn new() -> Self {
         Self {
             c_vars: HashMap::new(),
-            revision: false,
         }
     }
 
@@ -37,7 +34,6 @@ impl CVarMap {
             .c_vars
             .insert(id, CVarMapValue { 
                 data: Box::new(Some(data)), 
-                revision: self.revision 
             });
     }
 

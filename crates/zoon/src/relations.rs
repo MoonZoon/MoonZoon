@@ -4,7 +4,6 @@ use crate::runtime::{RELATIONS, CACHES, LVARS, CVARS};
 use crate::tracked_call_stack::__TrackedCallStack;
 use crate::component::__ComponentData;
 use crate::log;
-use crate::rerender;
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 struct Relation {
