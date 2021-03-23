@@ -1,5 +1,5 @@
 use wasm_bindgen::{closure::Closure, JsCast};
-use crate::{ApplyToElement, Element, IntoElement, Node, RenderContext, __TrackedCall, __TrackedCallStack, dom::dom_element, element_macro, render};
+use crate::{ApplyToElement, Element, IntoElement, Node, RenderContext, __TrackedCall, __TrackedCallStack, dom::dom_element, element_macro, render, rerender};
 use crate::hook::l_var;
 use crate::l_var::LVar;
 use std::{cell::RefCell, rc::Rc};
@@ -60,6 +60,7 @@ impl Listener {
                 user_handler();
                 *handler_clone.borrow_mut() = Some(user_handler);
             };
+            // rerender();
         }) as Box<dyn Fn()>);
 
         node.update_mut(|node| {

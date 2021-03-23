@@ -1,61 +1,61 @@
-use crate::runtime::LVARS;
+use crate::runtime::CVARS;
 use std::marker::PhantomData;
 use crate::tracked_call::TrackedCallId;
 use crate::relations::__Relations;
 use crate::block_call_stack::__Block;
 use crate::log;
 
-pub struct LVar<T> {
+pub struct CVar<T> {
     pub id: TrackedCallId,
     phantom_data: PhantomData<T>,
 }
 
-impl<T> std::fmt::Debug for LVar<T> {
+impl<T> std::fmt::Debug for CVar<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({:#?})", self.id)
     }
 }
 
-impl<T> Copy for LVar<T> {}
-impl<T> Clone for LVar<T> {
-    fn clone(&self) -> LVar<T> {
-        LVar::<T> {
+impl<T> Copy for CVar<T> {}
+impl<T> Clone for CVar<T> {
+    fn clone(&self) -> CVar<T> {
+        CVar::<T> {
             id: self.id,
             phantom_data: PhantomData::<T>,
         }
     }
 }
 
-impl<T> LVar<T>
+impl<T> CVar<T>
 where
     T: 'static,
 {
-    pub(crate) fn new(id: TrackedCallId) -> LVar<T> {
-        LVar {
+    pub(crate) fn new(id: TrackedCallId) -> CVar<T> {
+        CVar {
             id,
             phantom_data: PhantomData,
         }
     }
 
     pub fn exists(self) -> bool {
-        LVARS.with(|l_vars| {
+        CVARS.with(|l_vars| {
             l_vars.borrow().contains_id(&self.id)
         })
     }
 
     pub fn set(self, data: T) {
-        LVARS.with(|l_vars| {
+        CVARS.with(|l_vars| {
             l_vars
                 .borrow_mut()
                 .insert(self.id, data)
         });
-        // log!("SET LVar");
-        // __Relations::refresh_dependents(&__Block::LVar(self.id));
+        // log!("SET CVar");
+        // __Relations::refresh_dependents(&__Block::CVar(self.id));
     }
 
     fn remove(self) ->T {
         // log!("REMOVE {:#?}", self.id);
-        LVARS.with(|l_vars| {
+        CVARS.with(|l_vars| {
             l_vars
                 .borrow_mut()
                 .remove::<T>(&self.id)
@@ -74,7 +74,7 @@ where
     }
 
     pub fn map<U>(self, mapper: impl FnOnce(&T) -> U) -> U {
-        LVARS.with(|l_vars| {
+        CVARS.with(|l_vars| {
             let l_var_map = l_vars.borrow();
             let data = l_var_map.data(&self.id);
             mapper(data)
@@ -89,7 +89,7 @@ where
     }
 
     pub fn use_ref<U>(self, user: impl FnOnce(&T)) {
-        LVARS.with(|l_vars| {
+        CVARS.with(|l_vars| {
             let l_var_map = l_vars.borrow();
             let data = l_var_map.data(&self.id);
             user(data)
@@ -97,11 +97,11 @@ where
     }
 }
 
-pub trait CloneLVar<T: Clone + 'static> {
+pub trait CloneCVar<T: Clone + 'static> {
     fn inner(&self) -> T;
 }
 
-impl<T: Clone + 'static> CloneLVar<T> for LVar<T> {
+impl<T: Clone + 'static> CloneCVar<T> for CVar<T> {
     fn inner(&self) -> T {
         self.map(Clone::clone)
     }

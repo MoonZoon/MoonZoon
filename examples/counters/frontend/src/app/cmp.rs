@@ -8,6 +8,11 @@ blocks!{
 
     // #[cmp]
     // fn root() -> Cmp {
+    //     test_counter_2()
+    // }
+
+    // #[cmp]
+    // fn root() -> Cmp {
     //     log!("from ROOT: {:#?}", TrackedCallId::current());
     //     counter![
     //         super::column_count().inner(),
@@ -18,6 +23,8 @@ blocks!{
 
     #[cmp]
     fn root() -> Cmp {
+        // super::test_counter_value();
+
         // log!("from ROOT: {:#?}", TrackedCallId::current());
         // log!("from ROOT: {:#?}", TrackedCallId::current());
         // super::counter_count();
@@ -39,8 +46,30 @@ blocks!{
             counter_count(),
             counter_count_hundreds(),
             test_counter(),
+            click_me_button(),
         ]
     }
+
+    #[cmp]
+    fn click_me_button() -> Cmp {
+        super::test_counter_value();
+
+        let title = l_var(|| "Click me!".to_owned());
+        log!("DEFINED! {:#?}", title);
+        let click_count = l_var(|| 0);
+        log!("TITLE LVAR: {:#?}", title);
+        row![
+            button![
+                title.inner(),
+                button::on_press(move || {
+                    log!("CLICKED! {:#?}", title);
+                    click_count.update(|count| count + 1);
+                    title.set(format!("Clicked {}x", click_count.inner()));
+                }),
+            ],
+            counter![]
+        ]
+    } 
 
     #[cmp]
     fn test_counter() -> Cmp {

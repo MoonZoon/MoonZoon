@@ -2,7 +2,7 @@ use crate::element::{Element, RenderContext, IntoElement};
 use crate::tracked_call_stack::__TrackedCallStack;
 use crate::tracked_call::{__TrackedCall, TrackedCallId};
 use crate::render;
-use crate::runtime::LVARS;
+use crate::runtime::CVARS;
 use std::rc::Rc;
 use std::cell::RefCell;
 use crate::log;
@@ -29,12 +29,10 @@ impl<'a> Element for Cmp {
         // log!("cmp render context: {:#?}", context);
 
         if let Some(component_data_id) = self.component_data_id {
-            LVARS.with(move |l_vars| {
-                let mut l_vars = l_vars.borrow_mut();
+            CVARS.with(move |c_vars| {
+                let mut c_vars = c_vars.borrow_mut();
 
-                let mut component_data = l_vars
-                    .remove::<__ComponentData>(&component_data_id)
-                    .unwrap();
+                let mut component_data = c_vars.remove::<__ComponentData>(&component_data_id);
 
                 component_data.rcx = Some(rcx);
                 component_data.parent_call = __TrackedCallStack::parent();
@@ -44,7 +42,8 @@ impl<'a> Element for Cmp {
 
                 // log!("PARENTTTTT CMP RENDER: {:#?}", component_data.parent_call);
 
-                l_vars.insert(component_data_id, component_data);
+                // log!("CCCCCCCCCCCCCC component_data_id: {:#?}", component_data_id);
+                c_vars.insert(component_data_id, component_data);
 
             });
         }

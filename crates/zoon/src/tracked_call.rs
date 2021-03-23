@@ -26,7 +26,7 @@ impl TrackedCallId {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct __TrackedCall {
     pub hash: u64,
     // pub call_site: CallSite,
@@ -53,6 +53,10 @@ impl __TrackedCall {
             }
             hasher.finish()
         };
+
+        if hash == 4937557638822002552 {
+            log!("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX THIS");
+        }
 
         Self {
             hash,
