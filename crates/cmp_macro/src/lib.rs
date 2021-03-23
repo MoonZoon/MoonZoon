@@ -41,14 +41,14 @@ pub fn cmp(_args: TokenStream, input: TokenStream) -> TokenStream {
 
     let inner_block = input_fn.block;
     input_fn.block = parse_quote!({ 
-        let component_body = l_var(move || {
+        let component_body = c_var(move || {
             let __id = TrackedCallId::current();
             let __block = __Block::Cmp(__id);
             let __parent_call_from_macro = __TrackedCallStack::parent();
             __ComponentData {
                 creator: std::rc::Rc::new(move || {
                     __BlockCallStack::push(__block);
-                    __Relations::remove_dependencies(&__block);
+                    // __Relations::remove_dependencies(&__block);
                     let output = (|| #inner_block)();
                     __BlockCallStack::pop();
                     let mut cmp = output.into_component();

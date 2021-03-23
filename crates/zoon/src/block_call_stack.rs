@@ -40,5 +40,6 @@ impl __BlockCallStack {
 pub enum __Block {
     SVar(Id),
     Cache(Id),
-    Cmp(TrackedCallId)
+    Cmp(TrackedCallId),
+    LVar(TrackedCallId),
 }
