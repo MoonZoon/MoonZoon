@@ -1,7 +1,7 @@
 use wasm_bindgen::{closure::Closure, JsCast};
 use crate::{ApplyToElement, Element, IntoElement, Node, RenderContext, __TrackedCall, __TrackedCallStack, dom::dom_element, element_macro, render};
-use crate::hook::l_var;
-use crate::l_var::LVar;
+use crate::hook::el_var;
+use crate::el_var::ElVar;
 use std::{cell::RefCell, rc::Rc};
 use crate::log;
 
@@ -35,7 +35,7 @@ impl<'a> Element for Button<'a> {
         });
 
         if let Some(OnPress(on_press)) = self.on_press.take() {
-            let listener = l_var(|| Listener::new("click", node));
+            let listener = el_var(|| Listener::new("click", node));
             listener.update_mut(|listener| listener.set_handler(on_press));
         }
     }
@@ -43,13 +43,13 @@ impl<'a> Element for Button<'a> {
 
 struct Listener {
     event: &'static str,
-    node: LVar<Node>,
+    node: ElVar<Node>,
     handler: Rc<RefCell<Option<Box<dyn Fn()>>>>,
     callback: Closure<dyn Fn()>,
 }
 
 impl Listener {
-    fn new(event: &'static str, node: LVar<Node>) -> Self {
+    fn new(event: &'static str, node: ElVar<Node>) -> Self {
         let dummy_handler = Box::new(||()) as Box<dyn Fn()>;
         let handler = Rc::new(RefCell::new(Some(dummy_handler)));
 

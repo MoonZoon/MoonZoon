@@ -1,4 +1,5 @@
-use crate::l_var_map::LVarMap;
+use crate::el_var_map::ElVarMap;
+use crate::cmp_var_map::CmpVarMap;
 use crate::s_var_map::SVarMap;
 use crate::c_var_map::CVarMap;
 use crate::cache_map::CacheMap;
@@ -11,9 +12,10 @@ use std::cell::RefCell;
 
 thread_local! {
     pub(crate) static CACHES: RefCell<CacheMap> = RefCell::new(CacheMap::new());
-    pub(crate) static SVARS: RefCell<SVarMap> = RefCell::new(SVarMap::new());
-    pub(crate) static LVARS: RefCell<LVarMap> = RefCell::new(LVarMap::new());
-    pub(crate) static CVARS: RefCell<CVarMap> = RefCell::new(CVarMap::new());
+    pub(crate) static S_VARS: RefCell<SVarMap> = RefCell::new(SVarMap::new());
+    pub(crate) static EL_VARS: RefCell<ElVarMap> = RefCell::new(ElVarMap::new());
+    pub(crate) static CMP_VARS: RefCell<CmpVarMap> = RefCell::new(CmpVarMap::new());
+    pub(crate) static C_VARS: RefCell<CVarMap> = RefCell::new(CVarMap::new());
     pub(crate) static ROOT_CMP: RefCell<Option<Box<dyn Fn() -> Box<dyn Element>>>> = RefCell::new(None);
     pub(crate) static BLOCK_CALL_STACK: RefCell<__BlockCallStack> = RefCell::new(__BlockCallStack::default());
     pub(crate) static TRACKED_CALL_STACK: RefCell<__TrackedCallStack> = RefCell::new(__TrackedCallStack::default());

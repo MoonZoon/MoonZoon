@@ -1,4 +1,4 @@
-use crate::{TrackedCallId, l_var::LVar};
+use crate::{TrackedCallId, el_var::ElVar};
 use crate::Node;
 use crate::component::rerender_component;
 use crate::rerender;
@@ -8,7 +8,7 @@ use crate::rerender;
 #[derive(Copy, Clone, Debug)]
 pub struct RenderContext {
     pub index: u32,
-    pub node: LVar<Node>,
+    pub node: ElVar<Node>,
     pub component_id: Option<TrackedCallId>,
 }
 

@@ -3,15 +3,15 @@ use crate::render_context::RenderContext;
 use crate::tracked_call_stack::__TrackedCallStack;
 use crate::tracked_call::{__TrackedCall, TrackedCallId};
 use crate::render;
-use crate::hook::l_var;
-use crate::l_var::CloneLVar;
-use crate::runtime::CVARS;
+use crate::hook::el_var;
+use crate::el_var::CloneElVar;
+use crate::runtime::C_VARS;
 use std::rc::Rc;
 use std::cell::RefCell;
 use crate::log;
 
 pub fn rerender_component(id: TrackedCallId) {
-    let component_creator = CVARS.with(|c_vars| {
+    let component_creator = C_VARS.with(|c_vars| {
         c_vars
             .borrow()
             .data::<__ComponentData>(&id)
@@ -46,7 +46,7 @@ impl<'a> Element for Cmp {
     fn force_render(&mut self, mut rcx: RenderContext) {
         let component_data_id = self.component_data_id.expect("component_data_id");
 
-        CVARS.with(move |c_vars| {
+        C_VARS.with(move |c_vars| {
             let mut c_vars = c_vars.borrow_mut();
 
             let mut component_data = c_vars.remove::<__ComponentData>(&component_data_id);
@@ -66,7 +66,7 @@ impl<'a> Element for Cmp {
 
     #[render]
     fn render(&mut self, rcx: RenderContext) {
-        let rendered = l_var(|| false);
+        let rendered = el_var(|| false);
         if rendered.inner() {
             return
         }

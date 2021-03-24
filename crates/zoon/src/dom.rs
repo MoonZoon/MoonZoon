@@ -1,4 +1,5 @@
-use crate::{RenderContext, l_var, LVar};
+use crate::{RenderContext, ElVar};
+use crate::hook::el_var;
 use wasm_bindgen::JsCast;
 use tracked_call_macro::tracked_call;
 use crate::tracked_call::__TrackedCall;
@@ -33,10 +34,10 @@ impl Drop for Node {
 }
 
 #[tracked_call]
-pub fn dom_element(mut rcx: RenderContext, children: impl FnOnce(RenderContext)) -> LVar<Node> {
+pub fn dom_element(mut rcx: RenderContext, children: impl FnOnce(RenderContext)) -> ElVar<Node> {
     // log!("el, index: {}", rcx.index);
 
-    let node = l_var(|| {
+    let node = el_var(|| {
         let el_ws = document().create_element("div").expect("element");
         el_ws.set_attribute("class", "el").expect("set class attribute");
         let node_ws = web_sys::Node::from(el_ws);
@@ -56,8 +57,8 @@ pub fn dom_element(mut rcx: RenderContext, children: impl FnOnce(RenderContext))
 pub fn dom_text(rcx: RenderContext, text: &str) {  
     // log!("text, index: {}", rcx.index);
 
-    let old_text = l_var(|| None::<String>);
-    let node = l_var(|| {
+    let old_text = el_var(|| None::<String>);
+    let node = el_var(|| {
         let node_ws = document().create_text_node(&text).unchecked_into::<web_sys::Node>();
         rcx.node.update_mut(|node| {
             let parent_node_ws = &node.node_ws;

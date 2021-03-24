@@ -11,8 +11,10 @@ mod component;
 mod dom;
 mod console;
 mod hook;
-mod l_var;
-mod l_var_map;
+mod el_var;
+mod el_var_map;
+mod cmp_var;
+mod cmp_var_map;
 mod s_var;
 mod s_var_map;
 mod c_var;
@@ -30,12 +32,13 @@ pub use element::*;
 pub use render_context::RenderContext;
 pub use component::{Cmp, IntoComponent, __ComponentData};
 pub use dom::{Node, window, document}; 
-pub use l_var::{LVar, CloneLVar};
+pub use el_var::{ElVar, CloneElVar};
+pub use cmp_var::{CmpVar, CloneCmpVar};
 pub use c_var::{CVar, CloneCVar};
 pub use s_var::{SVar, CloneSVar, s_var};
 pub use cache::{Cache, CloneCache, cache};
 pub use console::log;
-pub use hook::{l_var, do_once, c_var};
+pub use hook::{el_var, cmp_var, do_once, c_var};
 pub use tracked_call_macro::tracked_call as render;
 // pub use tracked_call_macro::tracked_call as cmp;
 use runtime::ROOT_CMP;
@@ -99,7 +102,7 @@ fn root() {
 
     // log!("root");
 
-    let node = l_var(|| Node {
+    let node = el_var(|| Node {
         node_ws: web_sys::Node::from(document().get_element_by_id(ELEMENT_ID).expect("root element"))
     });
 

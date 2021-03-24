@@ -16,10 +16,10 @@ pub struct __Relations(HashSet<Relation>);
 impl __Relations {
     pub fn add_dependency(dependency: __Block) {
         if let Some(last_block) = __BlockCallStack::last() {
-            // if let __Block::LVar(l_var_id) = &dependency {
-            //     log!("A add_dependency LVar");
+            // if let __Block::CmpVar(l_var_id) = &dependency {
+            //     log!("A add_dependency CmpVar");
             //     if let __Block::Cmp(cmp_id) = &last_block {
-            //         log!("B add_dependency LVar({:#?}) to CMP({:#?})", l_var_id, cmp_id);
+            //         log!("B add_dependency CmpVar({:#?}) to CMP({:#?})", l_var_id, cmp_id);
             //     }
             // }
 
@@ -27,7 +27,7 @@ impl __Relations {
                 __Block::Cache(_) | __Block::Cmp(_)=> {
                     Self::insert(last_block, dependency)
                 }
-                __Block::SVar(_) | __Block::LVar(_) => ()
+                __Block::SVar(_) | __Block::CmpVar(_) => ()
             }
         }
     }
@@ -47,9 +47,9 @@ impl __Relations {
                 .do_get_dependents(block)
         });
 
-        // if let __Block::LVar(l_var_id) = &block {
+        // if let __Block::CmpVar(l_var_id) = &block {
         //     if dependents.len() > 0 {
-        //         log!("refresh LVar dependents {}, LVar({:#?})", dependents.len(), l_var_id);
+        //         log!("refresh CmpVar dependents {}, CmpVar({:#?})", dependents.len(), l_var_id);
         //     }
         //     // return;
         // }
@@ -76,7 +76,7 @@ impl __Relations {
                     // log("refresh CMP!");
                     rerender_component(track_call_id)
                 }
-                __Block::SVar(_) | __Block::LVar(_) => ()
+                __Block::SVar(_) | __Block::CmpVar(_) => ()
             }
         }
     }
