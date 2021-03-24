@@ -50,7 +50,7 @@ where
                 .insert(self.id, data)
         });
         // log!("SET LVar");
-        // __Relations::refresh_dependents(&__Block::LVar(self.id));
+        __Relations::refresh_dependents(&__Block::LVar(self.id));
     }
 
     fn remove(self) ->T {

@@ -52,12 +52,8 @@ blocks!{
 
     #[cmp]
     fn click_me_button() -> Cmp {
-        super::test_counter_value();
-
         let title = l_var(|| "Click me!".to_owned());
-        log!("DEFINED! {:#?}", title);
         let click_count = l_var(|| 0);
-        log!("TITLE LVAR: {:#?}", title);
         row![
             button![
                 title.inner(),
@@ -102,7 +98,6 @@ blocks!{
 
     #[cmp]
     fn column_counter() -> Cmp {
-        // log!("from COLUMN COUNTER: {:#?}", TrackedCallId::current());
         row![
             "Columns:",
             counter![
@@ -115,7 +110,6 @@ blocks!{
 
     #[cmp]
     fn row_counter() -> Cmp {
-        // log!("from ROW COUNTER: {:#?}", TrackedCallId::current());
         row![
             "Rows:",
             counter![
@@ -128,25 +122,13 @@ blocks!{
 
     #[cmp]
     fn counters() -> Cmp {
-        // log!("counters!");
         col![
             (0..super::row_count().inner()).map(|_| counter_row())
         ]
     }
 
-    // #[tracked_call]
-    // fn counter_row() -> Counter {
-    //     // log!("____________________");
-    //     // log!("from counter_row: {:#?}", TrackedCallId::current());
-    //     counter![]
-    //     // row![
-    //     //     // (0..super::column_count().inner()).map(|_| counter())
-    //     // ]
-    // }
-
     #[cmp]
     fn counter_row() -> Cmp {
-        // counter![]
         row![
             (0..super::column_count().inner()).map(|_| counter())
         ]
