@@ -58,7 +58,7 @@ blocks!{
             button![
                 title.inner(),
                 button::on_press(move || {
-                    log!("CLICKED! {:#?}", title);
+                    // log!("CLICKED! {:#?}", title);
                     click_count.update(|count| count + 1);
                     title.set(format!("Clicked {}x", click_count.inner()));
                 }),
