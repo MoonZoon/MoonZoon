@@ -52,8 +52,8 @@ blocks!{
 
     #[cmp]
     fn click_me_button() -> Cmp {
-        let title = l_var(|| "Click me!".to_owned());
-        let click_count = l_var(|| 0);
+        let title = cmp_var(|| "Click me!".to_owned());
+        let click_count = cmp_var(|| 0);
         row![
             button![
                 title.inner(),

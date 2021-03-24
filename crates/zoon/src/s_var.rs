@@ -1,16 +1,16 @@
-use crate::runtime::SVARS;
+use crate::runtime::S_VARS;
 use crate::s_var_map::Id;
 use crate::relations::__Relations;
 use crate::block_call_stack::__Block;
 use std::marker::PhantomData;
 
 pub fn s_var<T: 'static, F: FnOnce() -> T>(id: Id, creator: F) -> SVar<T> {
-    let id_exists = SVARS.with(|s_vars| {
+    let id_exists = S_VARS.with(|s_vars| {
         s_vars.borrow().contains_id(id)
     });
     if !id_exists {
         let data = creator();
-        SVARS.with(|s_vars| {
+        S_VARS.with(|s_vars| {
             s_vars.borrow_mut().insert(id, data);
         });
     }
@@ -50,7 +50,7 @@ where
     }
 
     pub fn set(self, data: T) {
-        SVARS.with(|s_vars| {
+        S_VARS.with(|s_vars| {
             s_vars
                 .borrow_mut()
                 .insert(self.id, data)
@@ -59,7 +59,7 @@ where
     }
 
     pub(crate) fn remove(self) -> Option<T> {
-        SVARS.with(|s_vars| {
+        S_VARS.with(|s_vars| {
             s_vars
                 .borrow_mut()
                 .remove::<T>(self.id)
@@ -78,7 +78,7 @@ where
     }
 
     pub fn map<U>(self, mapper: impl FnOnce(&T) -> U) -> U {
-        SVARS.with(|s_vars| {
+        S_VARS.with(|s_vars| {
             let s_var_map = s_vars.borrow();
             let data = s_var_map.data(self.id)
                 .expect("an s_var data with the given id");
@@ -94,7 +94,7 @@ where
     }
 
     pub fn use_ref<U>(self, user: impl FnOnce(&T)) {
-        SVARS.with(|s_vars| {
+        S_VARS.with(|s_vars| {
             let s_var_map = s_vars.borrow();
             let data = s_var_map.data(self.id)
                 .expect("an s_var data with the given id");

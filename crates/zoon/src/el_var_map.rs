@@ -1,0 +1,87 @@
+use std::collections::HashMap;
+use std::any::Any;
+use crate::tracked_call::TrackedCallId;
+
+pub(crate) struct ElVarMap {
+    el_vars: HashMap<TrackedCallId, ElVarMapValue>,
+}
+
+struct ElVarMapValue {
+    data: Box<dyn Any>,
+}
+
+impl ElVarMap {
+    pub(crate) fn new() -> Self {
+        Self {
+            el_vars: HashMap::new(),
+        }
+    }
+
+    pub(crate) fn data<T: 'static>(&self, id: &TrackedCallId) -> &T {
+        self
+            .el_vars
+            .get(id)
+            .expect(&format!("the el_var with the id {:#?}", id))
+            .data
+            .downcast_ref::<Option<T>>()
+            .expect(&format!("cast the el_var data with the id {:#?} to the required type", id))
+            .as_ref()
+            .expect(&format!("the el_var data with the id {:#?}", id))
+    }
+
+    pub(crate) fn insert(&mut self, id: TrackedCallId, data: impl Any) {
+        self
+            .el_vars
+            .insert(id, ElVarMapValue { 
+                data: Box::new(Some(data)), 
+            });
+    }
+
+    pub(crate) fn remove<T: 'static>(&mut self, id: &TrackedCallId) -> T {
+        self
+            .el_vars
+            .remove(&id)
+            .expect(&format!("remove the el_var data with the id {:#?}", id))
+            .data
+            .downcast_mut::<Option<T>>()
+            .expect(&format!("cast the el_var data with the id {:#?} to the required type", id))
+            .take()
+            .expect(&format!("removed el_var data with the id {:#?}", id))
+    }
+
+    pub(crate) fn contains_id(&self, id: &TrackedCallId) -> bool {
+        self
+            .el_vars
+            .contains_key(&id)
+    }
+
+    // pub(crate) fn update_revision(&mut self, id: &TrackedCallId) {
+    //     let revision = self.revision;
+    //     self
+    //         .el_vars
+    //         .get_mut(&id)
+    //         .map(|el_var_map_value| {
+    //             el_var_map_value.revision = revision
+    //         }); 
+    // }
+
+    // pub(crate) fn remove_unused_and_toggle_revision(&mut self) -> Vec<Box<dyn Any>> {
+    //     let current_revision = self.revision;
+        
+    //     let mut unused_data = Vec::new();
+    //     let mut used_el_vars = HashMap::new();
+        
+    //     // @TODO: refactor once `HashMap::drain_filter` is stable (https://github.com/rust-lang/rust/issues/59618)
+    //     for (id, value) in self.el_vars.drain() {
+    //         if value.revision == current_revision {
+    //             used_el_vars.insert(id, value);
+    //         } else {
+    //             unused_data.push(value.data);
+    //         }
+    //     }
+    //     self.el_vars = used_el_vars;
+
+    //     self.revision = !current_revision;
+    //     unused_data
+    // }
+}
