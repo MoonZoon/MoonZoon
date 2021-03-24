@@ -65,6 +65,10 @@ pub trait Element {
     }
 
     fn render(&mut self, rcx: RenderContext);
+    
+    fn force_render(&mut self, rcx: RenderContext) {
+        self.render(rcx)
+    }
 }
 
 // ------ ApplyToElement ------
