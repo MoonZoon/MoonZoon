@@ -9,6 +9,30 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use crate::log;
 
+pub fn rerender_component(id: TrackedCallId) {
+    let component_creator = CVARS.with(|c_vars| {
+        c_vars
+            .borrow()
+            .data::<__ComponentData>(&id)
+            .clone()
+    });
+    if let Some(rcx) = component_creator.rcx {
+        let parent_call_from_macro = component_creator.parent_call_from_macro.unwrap();
+        parent_call_from_macro.borrow_mut().selected_index = component_creator.parent_selected_index_from_macro.unwrap();
+
+        __TrackedCallStack::push(parent_call_from_macro);
+        let mut cmp = (component_creator.creator)();
+        __TrackedCallStack::pop();
+
+        let parent_call = component_creator.parent_call.unwrap();
+        parent_call.borrow_mut().selected_index = component_creator.parent_selected_index.unwrap() - 1;
+       
+        __TrackedCallStack::push(parent_call);
+        cmp.render(rcx);
+        __TrackedCallStack::pop();
+    }
+}
+
 // ------ Cmp ------
 
 pub struct Cmp {

@@ -1,5 +1,6 @@
 use crate::{TrackedCallId, l_var::LVar};
 use crate::Node;
+use crate::component::rerender_component;
 use crate::rerender;
 
 // ------ RenderContext ------
@@ -23,6 +24,9 @@ impl RenderContext {
     } 
 
     pub fn rerender(&self) {
+        if let Some(id) = self.component_id {
+            return rerender_component(id)
+        }
         rerender()
     }
 }
