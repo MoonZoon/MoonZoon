@@ -32,6 +32,7 @@ impl Element for Counter {
             if let Some(on_change) = on_change.clone() {
                 on_change(value.inner());
             }
+            rcx.rerender();
         };
         row![
             button![

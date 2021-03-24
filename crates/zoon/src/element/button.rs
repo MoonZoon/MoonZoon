@@ -35,7 +35,7 @@ impl<'a> Element for Button<'a> {
         });
 
         if let Some(OnPress(on_press)) = self.on_press.take() {
-            let listener = l_var(|| Listener::new("click", node));
+            let listener = l_var(|| Listener::new("click", node, rcx));
             listener.update_mut(|listener| listener.set_handler(on_press));
         }
     }
@@ -49,7 +49,7 @@ struct Listener {
 }
 
 impl Listener {
-    fn new(event: &'static str, node: LVar<Node>) -> Self {
+    fn new(event: &'static str, node: LVar<Node>, rcx: RenderContext) -> Self {
         let dummy_handler = Box::new(||()) as Box<dyn Fn()>;
         let handler = Rc::new(RefCell::new(Some(dummy_handler)));
 
@@ -60,7 +60,6 @@ impl Listener {
                 user_handler();
                 *handler_clone.borrow_mut() = Some(user_handler);
             };
-            // rerender();
         }) as Box<dyn Fn()>);
 
         node.update_mut(|node| {

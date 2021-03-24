@@ -1,5 +1,4 @@
-use crate::l_var::LVar;
-use crate::Node;
+use crate::render_context::RenderContext;
 
 // -- modules --
 
@@ -66,26 +65,6 @@ pub trait Element {
     }
 
     fn render(&mut self, rcx: RenderContext);
-}
-
-// ------ RenderContext ------
-
-#[derive(Copy, Clone, Debug)]
-pub struct RenderContext {
-    pub index: u32,
-    pub node: LVar<Node>,
-}
-
-impl RenderContext {
-    pub fn inc_index(&mut self) -> &mut Self {
-        self.index += 1;
-        self
-    } 
-
-    pub fn reset_index(&mut self) -> &mut Self {
-        self.index = 0;
-        self
-    } 
 }
 
 // ------ ApplyToElement ------

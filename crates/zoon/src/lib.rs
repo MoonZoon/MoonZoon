@@ -24,8 +24,10 @@ mod block_call_stack;
 mod tracked_call_stack;
 mod relations;
 mod tracked_call;
+mod render_context;
 
 pub use element::*;
+pub use render_context::RenderContext;
 pub use component::{Cmp, IntoComponent, __ComponentData};
 pub use dom::{Node, window, document}; 
 pub use l_var::{LVar, CloneLVar};
@@ -103,7 +105,8 @@ fn root() {
 
     let rcx = RenderContext { 
         index: 0,
-        node 
+        node,
+        component_id: None, 
     };
 
     ROOT_CMP.with(|app_root| {
