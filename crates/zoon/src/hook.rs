@@ -48,8 +48,8 @@ fn l_var_current<T: 'static>(creator: impl FnOnce() -> T) -> LVar<T> {
         return l_var;
     }
 
-    // let block = __Block::LVar(id);
-    // __Relations::add_dependency(block);
+    let block = __Block::LVar(id);
+    __Relations::add_dependency(block);
 
     let data = creator();
 
