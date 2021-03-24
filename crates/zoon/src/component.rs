@@ -3,8 +3,9 @@ use crate::render_context::RenderContext;
 use crate::tracked_call_stack::__TrackedCallStack;
 use crate::tracked_call::{__TrackedCall, TrackedCallId};
 use crate::render;
+use crate::hook::l_var;
+use crate::l_var::CloneLVar;
 use crate::runtime::CVARS;
-use crate::block_call_stack::{__Block, __BlockCallStack};
 use std::rc::Rc;
 use std::cell::RefCell;
 use crate::log;
@@ -28,7 +29,7 @@ pub fn rerender_component(id: TrackedCallId) {
         parent_call.borrow_mut().selected_index = component_creator.parent_selected_index.unwrap() - 1;
        
         __TrackedCallStack::push(parent_call);
-        cmp.render(rcx);
+        cmp.force_render(rcx);
         __TrackedCallStack::pop();
     }
 }
@@ -38,22 +39,11 @@ pub fn rerender_component(id: TrackedCallId) {
 pub struct Cmp {
     element: Box<dyn Element>,
     pub component_data_id: Option<TrackedCallId>,
-    // NoChange,
 } 
 
 impl<'a> Element for Cmp {
     #[render]
-    fn render(&mut self, mut rcx: RenderContext) {
-        // log!("CMP render: {:#?}", TrackedCallId::current());
-
-        // let aaa = __TrackedCallStack::last();
-        // log!("CMP LAST: {:#?}", aaa);
-
-        // let xxx = __TrackedCallStack::parent();
-        // log!("CMP PARENT: {:#?}", xxx);
-
-        // log!("cmp render context: {:#?}", context);
-
+    fn force_render(&mut self, mut rcx: RenderContext) {
         let component_data_id = self.component_data_id.expect("component_data_id");
 
         CVARS.with(move |c_vars| {
@@ -67,24 +57,21 @@ impl<'a> Element for Cmp {
                 parent.borrow().selected_index
             });
 
-            // log!("PARENTTTTT CMP RENDER: {:#?}", component_data.parent_call);
-
-            // log!("CCCCCCCCCCCCCC component_data_id: {:#?}", component_data_id);
             c_vars.insert(component_data_id, component_data);
         });
-
         
         rcx.component_id = Some(component_data_id);
         self.element.render(rcx);
+    }
 
-        // match self {
-        //     Cmp::Element(element) => {
-        //         element.render(rcx)
-        //     }
-        //     Cmp::NoChange => {
-        //         ()
-        //     }
-        // }
+    #[render]
+    fn render(&mut self, rcx: RenderContext) {
+        let rendered = l_var(|| false);
+        if rendered.inner() {
+            return
+        }
+        rendered.set(true);
+        self.force_render(rcx)
     }
 }
 
