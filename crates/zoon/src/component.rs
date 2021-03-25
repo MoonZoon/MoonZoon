@@ -1,6 +1,7 @@
-use crate::element::{Element, IntoElement};
+use crate::{__Relations, element::{Element, IntoElement}};
 use crate::render_context::RenderContext;
 use crate::component_call_stack::__ComponentCallStack;
+use crate::block_call_stack::__Block;
 use crate::tracked_call_stack::__TrackedCallStack;
 use crate::tracked_call::{__TrackedCall, TrackedCallId};
 use crate::render;
@@ -82,43 +83,45 @@ impl<'a> Element for Cmp {
 
             __ComponentCallStack::pop();
 
-            if !children_to_remove.is_empty() {
-                remove_children(children_to_remove);
-            }
+            remove_children(children_to_remove);
         }
     }
 }
 
 fn remove_children(children: HashSet<ComponentChild>) {
+    if children.is_empty() {
+        return
+    }
     // log!("{}", children.len());
     for child in children {
         match child {
             ComponentChild::ElVar(tracked_call_id) => {
-                log!("ElVar");
-                EL_VARS.with(|el_vars| {
+                // log!("ElVar");
+                let _ = EL_VARS.with(|el_vars| {
                     el_vars
                         .borrow_mut()
                         .el_vars
-                        .remove(&tracked_call_id);
-                })
+                        .remove(&tracked_call_id)
+                });
             }
             ComponentChild::CmpVar(tracked_call_id) => {
-                log!("CmpVar");
-                CMP_VARS.with(|cmp_vars| {
+                // log!("CmpVar");
+                let _ = CMP_VARS.with(|cmp_vars| {
                     cmp_vars
                         .borrow_mut()
                         .cmp_vars
-                        .remove(&tracked_call_id);
-                })
+                        .remove(&tracked_call_id)
+                });
             }
             ComponentChild::Cmp(tracked_call_id) => {
-                log!("Cmp");
-                C_VARS.with(|c_vars| {
+                // log!("Cmp");
+                let _ = C_VARS.with(|c_vars| {
                     c_vars
                         .borrow_mut()
                         .c_vars
-                        .remove(&tracked_call_id);
-                })
+                        .remove(&tracked_call_id)
+                });
+                __Relations::remove_dependencies(&__Block::Cmp(tracked_call_id));
             }
         }
     }
@@ -166,7 +169,9 @@ impl __ComponentData {
 
 impl Drop for __ComponentData {
     fn drop(&mut self) {
-        log!("DROP!");
+        // log!("DROP!");
+        let children_to_remove = mem::take(&mut self.children);
+        remove_children(children_to_remove);
     }
 }
 
