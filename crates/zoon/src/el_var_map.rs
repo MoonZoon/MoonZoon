@@ -3,10 +3,10 @@ use std::any::Any;
 use crate::tracked_call::TrackedCallId;
 
 pub(crate) struct ElVarMap {
-    el_vars: HashMap<TrackedCallId, ElVarMapValue>,
+    pub(crate) el_vars: HashMap<TrackedCallId, ElVarMapValue>,
 }
 
-struct ElVarMapValue {
+pub(crate) struct ElVarMapValue {
     data: Box<dyn Any>,
 }
 

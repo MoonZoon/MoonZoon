@@ -38,14 +38,14 @@ where
     }
 
     pub fn exists(self) -> bool {
-        EL_VARS.with(|cmp_vars| {
-            cmp_vars.borrow().contains_id(&self.id)
+        EL_VARS.with(|el_vars| {
+            el_vars.borrow().contains_id(&self.id)
         })
     }
 
     pub fn set(self, data: T) {
-        EL_VARS.with(|cmp_vars| {
-            cmp_vars
+        EL_VARS.with(|el_vars| {
+            el_vars
                 .borrow_mut()
                 .insert(self.id, data)
         });
@@ -53,8 +53,8 @@ where
 
     fn remove(self) ->T {
         // log!("REMOVE {:#?}", self.id);
-        EL_VARS.with(|cmp_vars| {
-            cmp_vars
+        EL_VARS.with(|el_vars| {
+            el_vars
                 .borrow_mut()
                 .remove::<T>(&self.id)
         })
@@ -72,8 +72,8 @@ where
     }
 
     pub fn map<U>(self, mapper: impl FnOnce(&T) -> U) -> U {
-        EL_VARS.with(|cmp_vars| {
-            let cmp_var_map = cmp_vars.borrow();
+        EL_VARS.with(|el_vars| {
+            let cmp_var_map = el_vars.borrow();
             let data = cmp_var_map.data(&self.id);
             mapper(data)
         })
@@ -87,8 +87,8 @@ where
     }
 
     pub fn use_ref<U>(self, user: impl FnOnce(&T)) {
-        EL_VARS.with(|cmp_vars| {
-            let cmp_var_map = cmp_vars.borrow();
+        EL_VARS.with(|el_vars| {
+            let cmp_var_map = el_vars.borrow();
             let data = cmp_var_map.data(&self.id);
             user(data)
         })
