@@ -5,8 +5,8 @@ authors = ["Martin Kavík <martin@kavik.cz>"]
 edition = "2018"
 
 [dependencies]
-tokio = { version = "1", features = ["full"] }
-tokio-stream = "0.1.3"
-warp = { version = "0.3", features = ["tls"] }
-futures = "0.3.13"
-uuid = { version = "0.8", features = ["v4"] }
+tokio = { version = "1", features = ["signal", "rt-multi-thread"], default-features = false }
+tokio-stream = { version = "0.1.3", default-features = false }
+warp = { version = "0.3", features = ["tls"], default-features = false }
+futures = { version = "0.3.13", default-features = false }
+uuid = { version = "0.8", features = ["v4"], default-features = false }
