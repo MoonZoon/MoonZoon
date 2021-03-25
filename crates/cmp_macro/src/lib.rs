@@ -46,6 +46,7 @@ pub fn cmp(_args: TokenStream, input: TokenStream) -> TokenStream {
             let __block = __Block::Cmp(__id);
             let __parent_call_from_macro = __TrackedCallStack::parent();
             __ComponentData {
+                id: __id,
                 creator: std::rc::Rc::new(move || {
                     __BlockCallStack::push(__block);
                     // __Relations::remove_dependencies(&__block);

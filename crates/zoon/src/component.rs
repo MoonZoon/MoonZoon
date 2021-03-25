@@ -75,6 +75,7 @@ impl<'a> Element for Cmp {
                 c_vars.insert(component_data_id, component_data);
                 children_to_remove
             });
+            remove_children(children_to_remove.into_iter());
             
             rcx.component_id = Some(component_data_id);
             if let Some(element) = &mut self.element {
@@ -82,16 +83,11 @@ impl<'a> Element for Cmp {
             }
 
             __ComponentCallStack::pop();
-
-            remove_children(children_to_remove);
         }
     }
 }
 
-fn remove_children(children: HashSet<ComponentChild>) {
-    if children.is_empty() {
-        return
-    }
+fn remove_children(children: impl Iterator<Item = ComponentChild>) {
     // log!("{}", children.len());
     for child in children {
         match child {
@@ -121,7 +117,6 @@ fn remove_children(children: HashSet<ComponentChild>) {
                         .c_vars
                         .remove(&tracked_call_id)
                 });
-                __Relations::remove_dependencies(&__Block::Cmp(tracked_call_id));
             }
         }
     }
@@ -146,6 +141,7 @@ impl<'a, T: 'static + IntoElement<'static>> IntoComponent<'a> for T {
 // ------ __ComponentBody ------
 
 pub struct __ComponentData {
+    pub id: TrackedCallId,
     pub creator: Rc<dyn Fn() -> Cmp>,
     pub rcx: Option<RenderContext>,
     pub parent_call_from_macro: Option<Rc<RefCell<__TrackedCall>>>,
@@ -170,14 +166,19 @@ impl __ComponentData {
 impl Drop for __ComponentData {
     fn drop(&mut self) {
         // log!("DROP!");
+        let children_to_remove = mem::take(&mut self.previous_children);
+        remove_children(children_to_remove.into_iter());
+        
         let children_to_remove = mem::take(&mut self.children);
-        remove_children(children_to_remove);
+        remove_children(children_to_remove.into_iter());
+
+        __Relations::remove_dependencies(&__Block::Cmp(self.id));
     }
 }
 
 // ------ __ComponentChild ------
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub enum ComponentChild {
     ElVar(TrackedCallId),
     CmpVar(TrackedCallId),
