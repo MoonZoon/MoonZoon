@@ -6,6 +6,7 @@ use tracked_call_macro::tracked_call;
 use crate::tracked_call::{TrackedCallId, __TrackedCall};
 use crate::tracked_call_stack::__TrackedCallStack;
 use crate::component_call_stack::__ComponentCallStack;
+use crate::block_call_stack::__BlockCallStack;
 use crate::block_call_stack::__Block;
 use crate::component::{ComponentChild, __ComponentData};
 use crate::relations::__Relations;
@@ -100,6 +101,18 @@ fn cmp_var_current<T: 'static>(creator: impl FnOnce() -> T) -> CmpVar<T> {
         let mut cmp_var_map = cmp_vars.borrow_mut();
         cmp_var_map.insert(id, data);
     });
+
+    if let Some(__Block::Cmp(component_data_id)) = __BlockCallStack::last() {
+        C_VARS.with(move |c_vars| {
+            // log!("push ComponentChild::CmpVar");
+            let mut c_vars = c_vars.borrow_mut();
+    
+            let mut component_data = c_vars.remove::<__ComponentData>(&component_data_id);
+            component_data.children.push(ComponentChild::CmpVar(id));
+    
+            c_vars.insert(component_data_id, component_data);
+        });
+    }
 
     cmp_var
 }
