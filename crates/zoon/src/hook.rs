@@ -59,7 +59,7 @@ fn el_var_current<T: 'static>(creator: impl FnOnce() -> T) -> ElVar<T> {
             let mut c_vars = c_vars.borrow_mut();
     
             let mut component_data = c_vars.remove::<__ComponentData>(&component_data_id);
-            component_data.children.push(ComponentChild::ElVar(id));
+            component_data.children.insert(ComponentChild::ElVar(id));
     
             c_vars.insert(component_data_id, component_data);
         });
@@ -94,7 +94,7 @@ fn cmp_var_current<T: 'static>(creator: impl FnOnce() -> T) -> CmpVar<T> {
             let mut c_vars = c_vars.borrow_mut();
     
             let mut component_data = c_vars.remove::<__ComponentData>(&component_data_id);
-            component_data.children.push(ComponentChild::CmpVar(id));
+            component_data.children.insert(ComponentChild::CmpVar(id));
     
             c_vars.insert(component_data_id, component_data);
         });

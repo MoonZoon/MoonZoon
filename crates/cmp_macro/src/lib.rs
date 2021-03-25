@@ -62,26 +62,27 @@ pub fn cmp(_args: TokenStream, input: TokenStream) -> TokenStream {
                 parent_call: None,
                 parent_selected_index: None,
                 rcx: None,
-                children: Vec::new(),
+                previous_children: std::collections::HashSet::new(),
+                children: std::collections::HashSet::new(),
                 should_call_creator: true,
             }
         });   
-        
+
         if let Some(__Block::Cmp(component_data_id)) = __BlockCallStack::last() {
             C_VARS.with(move |c_vars| {
                 // log!("push ComponentChild::Cmp");
                 let mut c_vars = c_vars.borrow_mut();
         
                 let mut component_data = c_vars.remove::<__ComponentData>(&component_data_id);
-                component_data.children.push(ComponentChild::CmpVar(component_body.id));
+                component_data.children.insert(ComponentChild::Cmp(component_body.id));
         
                 c_vars.insert(component_data_id, component_data);
             });
         }
 
         if component_body.map(|body| body.should_call_creator) {
-            let creator = &component_body.inner().creator;
             component_body.update_mut(|body| { body.should_call_creator = false; });
+            let creator = component_body.map(|body| body.creator.clone());
             creator()
         } else {
             Cmp {

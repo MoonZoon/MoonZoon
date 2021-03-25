@@ -3,10 +3,10 @@ use std::any::Any;
 use crate::tracked_call::TrackedCallId;
 
 pub(crate) struct CmpVarMap {
-    cmp_vars: HashMap<TrackedCallId, CmpVarMapValue>,
+    pub(crate) cmp_vars: HashMap<TrackedCallId, CmpVarMapValue>,
 }
 
-struct CmpVarMapValue {
+pub(crate) struct CmpVarMapValue {
     data: Box<dyn Any>,
 }
 
