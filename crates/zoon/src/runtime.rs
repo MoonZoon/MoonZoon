@@ -16,7 +16,7 @@ thread_local! {
     pub(crate) static S_VARS: RefCell<SVarMap> = RefCell::new(SVarMap::new());
     pub(crate) static EL_VARS: RefCell<ElVarMap> = RefCell::new(ElVarMap::new());
     pub(crate) static CMP_VARS: RefCell<CmpVarMap> = RefCell::new(CmpVarMap::new());
-    pub(crate) static C_VARS: RefCell<CVarMap> = RefCell::new(CVarMap::new());
+    pub static C_VARS: RefCell<CVarMap> = RefCell::new(CVarMap::new());
     pub(crate) static ROOT_CMP: RefCell<Option<Box<dyn Fn() -> Box<dyn Element>>>> = RefCell::new(None);
     pub(crate) static BLOCK_CALL_STACK: RefCell<__BlockCallStack> = RefCell::new(__BlockCallStack::default());
     pub(crate) static COMPONENT_CALL_STACK: RefCell<__ComponentCallStack> = RefCell::new(__ComponentCallStack::default());

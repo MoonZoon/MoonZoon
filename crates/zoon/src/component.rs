@@ -102,7 +102,11 @@ pub struct __ComponentData {
     pub should_call_creator: bool,
 }
 
+// ------ __ComponentChild ------
+
 #[derive(Clone, Copy)]
 pub enum ComponentChild {
-    ElVar(TrackedCallId)
+    ElVar(TrackedCallId),
+    CmpVar(TrackedCallId),
+    Cmp(TrackedCallId),
 }

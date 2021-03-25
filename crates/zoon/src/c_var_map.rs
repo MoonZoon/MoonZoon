@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::any::Any;
 use crate::tracked_call::TrackedCallId;
 
-pub(crate) struct CVarMap {
+pub struct CVarMap {
     c_vars: HashMap<TrackedCallId, CVarMapValue>,
 }
 
@@ -29,7 +29,7 @@ impl CVarMap {
             .expect(&format!("the c_var data with the id {:#?}", id))
     }
 
-    pub(crate) fn insert(&mut self, id: TrackedCallId, data: impl Any) {
+    pub fn insert(&mut self, id: TrackedCallId, data: impl Any) {
         self
             .c_vars
             .insert(id, CVarMapValue { 
@@ -37,7 +37,7 @@ impl CVarMap {
             });
     }
 
-    pub(crate) fn remove<T: 'static>(&mut self, id: &TrackedCallId) -> T {
+    pub fn remove<T: 'static>(&mut self, id: &TrackedCallId) -> T {
         self
             .c_vars
             .remove(&id)

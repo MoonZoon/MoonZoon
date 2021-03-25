@@ -69,6 +69,19 @@ pub fn cmp(_args: TokenStream, input: TokenStream) -> TokenStream {
         if component_body.map(|body| body.should_call_creator) {
             let creator = &component_body.inner().creator;
             component_body.update_mut(|body| { body.should_call_creator = false; });
+
+            if let Some(__Block::Cmp(component_data_id)) = __BlockCallStack::last() {
+                C_VARS.with(move |c_vars| {
+                    // log!("push ComponentChild::Cmp");
+                    let mut c_vars = c_vars.borrow_mut();
+            
+                    let mut component_data = c_vars.remove::<__ComponentData>(&component_data_id);
+                    component_data.children.push(ComponentChild::CmpVar(component_body.id));
+            
+                    c_vars.insert(component_data_id, component_data);
+                });
+            }
+
             creator()
         } else {
             Cmp {

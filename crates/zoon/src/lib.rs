@@ -42,11 +42,13 @@ pub use console::log;
 pub use hook::{el_var, cmp_var, do_once, c_var};
 pub use tracked_call_macro::tracked_call as render;
 use runtime::ROOT_CMP;
+pub use runtime::C_VARS;
 pub use block_call_stack::{__BlockCallStack, __Block};
 pub use component_call_stack::__ComponentCallStack;
 pub use relations::{__Relations};
 pub use tracked_call::{TrackedCallId, __TrackedCall};
 pub use tracked_call_stack::__TrackedCallStack;
+pub use component::ComponentChild;
 
 #[macro_export]
 macro_rules! with_dollar_sign {
