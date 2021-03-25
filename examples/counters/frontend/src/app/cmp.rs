@@ -1,8 +1,8 @@
 use zoon::*;
 
-#[macro_use]
 mod element;
 use element::counter::{self, Counter};
+use crate::counter;
 
 blocks!{
 

@@ -1,6 +1,11 @@
 [workspace]
 members = [
-    "crates/blocks",
+    "crates/blocks_macro",
+    "crates/update_macro",
+    "crates/s_var_macro",
+    "crates/cache_macro",
+    "crates/tracked_call_macro",
+    "crates/cmp_macro",
     "crates/moon",
     "crates/mzoon",
     "crates/zoon",
