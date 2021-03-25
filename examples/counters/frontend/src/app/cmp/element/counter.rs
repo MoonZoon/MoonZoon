@@ -22,7 +22,6 @@ impl Element for Counter {
         let step = self.step.unwrap_or(1);
         
         let value = el_var(|| 0);
-        // log!("AAAAAAAAAAAAAAAAAAAAAA value LVar: {:#?}", value);        
         if let Some(required_value) = self.value {
             value.set(required_value);
         }

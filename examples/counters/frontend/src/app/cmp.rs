@@ -6,30 +6,8 @@ use element::counter::{self, Counter};
 
 blocks!{
 
-    // #[cmp]
-    // fn root() -> Cmp {
-    //     test_counter_2()
-    // }
-
-    // #[cmp]
-    // fn root() -> Cmp {
-    //     log!("from ROOT: {:#?}", TrackedCallId::current());
-    //     counter![
-    //         super::column_count().inner(),
-    //         counter::on_change(super::set_column_count),
-    //         counter::step(5),
-    //     ]
-    // }
-
     #[cmp]
     fn root() -> Cmp {
-        // super::test_counter_value();
-
-        // log!("from ROOT: {:#?}", TrackedCallId::current());
-        // log!("from ROOT: {:#?}", TrackedCallId::current());
-        // super::counter_count();
-        // log!("CMP root ID: {:#?}", __TrackedCallId::current());
-        // control_counters()
         col![
             control_counters(),
             counters(),
@@ -38,8 +16,6 @@ blocks!{
 
     #[cmp]
     fn control_counters() -> Cmp {
-        // log!("from CONTROL_COUNTERS: {:#?}", TrackedCallId::current());
-        // log!("from CONTROL_COUNTERS: {:#?}", TrackedCallId::current());
         row![
             column_counter(),
             row_counter(),
@@ -58,7 +34,6 @@ blocks!{
             button![
                 title.inner(),
                 button::on_press(move || {
-                    // log!("CLICKED! {:#?}", title);
                     click_count.update(|count| count + 1);
                     title.set(format!("Clicked {}x", click_count.inner()));
                 }),
@@ -80,8 +55,6 @@ blocks!{
 
     #[cmp]
     fn counter_count() -> Cmp {
-        // log!("from COUNTER_COUNT: {:#?}", TrackedCallId::current());
-        // log!("from COUNTER_COUNT: {:#?}", TrackedCallId::current());
         el![
             format!("Counters: {}", super::counter_count().inner())
         ]
