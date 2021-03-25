@@ -3,7 +3,6 @@ use std::marker::PhantomData;
 use crate::tracked_call::TrackedCallId;
 use crate::relations::__Relations;
 use crate::block_call_stack::__Block;
-use crate::log;
 
 pub struct CmpVar<T> {
     pub id: TrackedCallId,

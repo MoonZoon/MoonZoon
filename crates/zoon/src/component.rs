@@ -9,7 +9,6 @@ use crate::runtime::{C_VARS, EL_VARS, CMP_VARS};
 use std::{mem, rc::Rc};
 use std::cell::RefCell;
 use std::collections::HashSet;
-use crate::log;
 
 pub fn rerender_component(id: TrackedCallId) {
     let component_data = C_VARS.with(|c_vars| {
