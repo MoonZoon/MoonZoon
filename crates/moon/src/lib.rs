@@ -118,6 +118,8 @@ where
             .or(sse)
             .or(pkg_route)
             .or(frontend_route);
+            // @TODO too slow => static compression? how to change brotli params? (need the feature flag `compression`)
+            // .with(warp::compression::brotli());
             
         let http_routes = warp::path::full()
             .and(warp::host::optional())
