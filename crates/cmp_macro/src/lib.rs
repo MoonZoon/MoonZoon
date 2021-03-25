@@ -62,10 +62,20 @@ pub fn cmp(_args: TokenStream, input: TokenStream) -> TokenStream {
                 parent_call: None,
                 parent_selected_index: None,
                 rcx: None,
+                children: Vec::new(),
+                should_call_creator: true,
             }
         });   
-        let creator = &component_body.inner().creator;
-        creator()
+        if component_body.map(|body| body.should_call_creator) {
+            let creator = &component_body.inner().creator;
+            component_body.update_mut(|body| { body.should_call_creator = false; });
+            creator()
+        } else {
+            Cmp {
+                element: None,
+                component_data_id: None,
+            }
+        }
     });
 
     quote::quote_spanned!(input_fn.span()=>

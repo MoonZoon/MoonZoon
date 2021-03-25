@@ -23,6 +23,7 @@ mod cache;
 mod cache_map;
 mod runtime;
 mod block_call_stack;
+mod component_call_stack;
 mod tracked_call_stack;
 mod relations;
 mod tracked_call;
@@ -40,9 +41,9 @@ pub use cache::{Cache, CloneCache, cache};
 pub use console::log;
 pub use hook::{el_var, cmp_var, do_once, c_var};
 pub use tracked_call_macro::tracked_call as render;
-// pub use tracked_call_macro::tracked_call as cmp;
 use runtime::ROOT_CMP;
 pub use block_call_stack::{__BlockCallStack, __Block};
+pub use component_call_stack::__ComponentCallStack;
 pub use relations::{__Relations};
 pub use tracked_call::{TrackedCallId, __TrackedCall};
 pub use tracked_call_stack::__TrackedCallStack;
@@ -89,10 +90,10 @@ pub fn start(blocks: fn(__Blocks) -> __Blocks) {
         *root.borrow_mut() = blocks(__Blocks { root: None }).root;
     });
 
-    rerender();
+    rerender_all();
 }
 
-pub fn rerender() {
+pub fn rerender_all() {
     root();
 }
 

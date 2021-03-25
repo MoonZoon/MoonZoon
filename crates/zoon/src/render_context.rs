@@ -1,7 +1,7 @@
 use crate::{TrackedCallId, el_var::ElVar};
 use crate::Node;
 use crate::component::rerender_component;
-use crate::rerender;
+use crate::rerender_all;
 
 // ------ RenderContext ------
 
@@ -27,6 +27,6 @@ impl RenderContext {
         if let Some(id) = self.component_id {
             return rerender_component(id)
         }
-        rerender()
+        rerender_all()
     }
 }

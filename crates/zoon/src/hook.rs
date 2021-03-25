@@ -5,7 +5,9 @@ use crate::c_var::{CVar, CloneCVar};
 use tracked_call_macro::tracked_call;
 use crate::tracked_call::{TrackedCallId, __TrackedCall};
 use crate::tracked_call_stack::__TrackedCallStack;
+use crate::component_call_stack::__ComponentCallStack;
 use crate::block_call_stack::__Block;
+use crate::component::{ComponentChild, __ComponentData};
 use crate::relations::__Relations;
 use crate::log;
 
@@ -60,6 +62,18 @@ fn el_var_current<T: 'static>(creator: impl FnOnce() -> T) -> ElVar<T> {
         let mut el_var_map = el_vars.borrow_mut();
         el_var_map.insert(id, data);
     });
+
+    if let Some(component_data_id) = __ComponentCallStack::last() {
+        C_VARS.with(move |c_vars| {
+            // log!("push ComponentChild::ElVar");
+            let mut c_vars = c_vars.borrow_mut();
+    
+            let mut component_data = c_vars.remove::<__ComponentData>(&component_data_id);
+            component_data.children.push(ComponentChild::ElVar(id));
+    
+            c_vars.insert(component_data_id, component_data);
+        });
+    }
 
     el_var
 }
