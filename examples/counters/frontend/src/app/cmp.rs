@@ -129,10 +129,8 @@ blocks!{
 
     #[cmp]
     fn counter_row() -> Cmp {
-        el![
-            row![
-                (0..super::column_count().inner()).map(|_| counter())
-            ]
+        row![
+            (0..super::column_count().inner()).map(|_| counter())
         ]
     }
 

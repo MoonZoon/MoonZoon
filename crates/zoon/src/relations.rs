@@ -2,7 +2,6 @@ use crate::{block_call_stack::{__Block, __BlockCallStack}};
 use std::collections::HashSet;
 use crate::runtime::{RELATIONS, CACHES};
 use crate::component::rerender_component;
-use crate::log;
 
 #[derive(Clone, Copy, Hash, PartialEq, Eq)]
 struct Relation {

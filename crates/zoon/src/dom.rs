@@ -4,7 +4,6 @@ use wasm_bindgen::JsCast;
 use tracked_call_macro::tracked_call;
 use crate::tracked_call::__TrackedCall;
 use crate::tracked_call_stack::__TrackedCallStack;
-use crate::log;
 
 // ------- Helpers ------
 

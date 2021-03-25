@@ -1,7 +1,6 @@
 use crate::runtime::C_VARS;
 use std::marker::PhantomData;
 use crate::tracked_call::TrackedCallId;
-use crate::log;
 
 pub struct CVar<T> {
     pub id: TrackedCallId,

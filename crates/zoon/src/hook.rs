@@ -1,7 +1,7 @@
 use crate::runtime::{EL_VARS, C_VARS, CMP_VARS};
 use crate::el_var::{ElVar, CloneElVar};
-use crate::cmp_var::{CmpVar, CloneCmpVar};
-use crate::c_var::{CVar, CloneCVar};
+use crate::cmp_var::CmpVar;
+use crate::c_var::CVar;
 use tracked_call_macro::tracked_call;
 use crate::tracked_call::{TrackedCallId, __TrackedCall};
 use crate::tracked_call_stack::__TrackedCallStack;
@@ -10,7 +10,6 @@ use crate::block_call_stack::__BlockCallStack;
 use crate::block_call_stack::__Block;
 use crate::component::{ComponentChild, __ComponentData};
 use crate::relations::__Relations;
-use crate::log;
 
 #[tracked_call]
 pub fn do_once<T>(f: impl FnOnce() -> T) -> Option<T> {

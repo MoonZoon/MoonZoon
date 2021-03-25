@@ -3,7 +3,6 @@ use crate::{ApplyToElement, Element, IntoElement, Node, RenderContext, __Tracked
 use crate::hook::el_var;
 use crate::el_var::ElVar;
 use std::{cell::RefCell, rc::Rc};
-use crate::log;
 
 // ------ ------
 //    Element 
