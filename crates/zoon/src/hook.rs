@@ -53,17 +53,6 @@ fn el_var_current<T: 'static>(creator: impl FnOnce() -> T) -> ElVar<T> {
         el_vars.borrow().contains_id(&id)
     });
 
-    if id_exists {
-        return el_var;
-    }
-
-    let data = creator();
-
-    EL_VARS.with(move |el_vars| {
-        let mut el_var_map = el_vars.borrow_mut();
-        el_var_map.insert(id, data);
-    });
-
     if let Some(component_data_id) = __ComponentCallStack::last() {
         C_VARS.with(move |c_vars| {
             // log!("push ComponentChild::ElVar");
@@ -76,6 +65,17 @@ fn el_var_current<T: 'static>(creator: impl FnOnce() -> T) -> ElVar<T> {
         });
     }
 
+    if id_exists {
+        return el_var;
+    }
+
+    let data = creator();
+
+    EL_VARS.with(move |el_vars| {
+        let mut el_var_map = el_vars.borrow_mut();
+        el_var_map.insert(id, data);
+    });
+
     el_var
 }
 
@@ -87,6 +87,18 @@ fn cmp_var_current<T: 'static>(creator: impl FnOnce() -> T) -> CmpVar<T> {
     let id_exists = CMP_VARS.with(|cmp_vars| {
         cmp_vars.borrow().contains_id(&id)
     });
+
+    if let Some(__Block::Cmp(component_data_id)) = __BlockCallStack::last() {
+        C_VARS.with(move |c_vars| {
+            // log!("push ComponentChild::CmpVar");
+            let mut c_vars = c_vars.borrow_mut();
+    
+            let mut component_data = c_vars.remove::<__ComponentData>(&component_data_id);
+            component_data.children.push(ComponentChild::CmpVar(id));
+    
+            c_vars.insert(component_data_id, component_data);
+        });
+    }
 
     if id_exists {
         return cmp_var;
@@ -101,18 +113,6 @@ fn cmp_var_current<T: 'static>(creator: impl FnOnce() -> T) -> CmpVar<T> {
         let mut cmp_var_map = cmp_vars.borrow_mut();
         cmp_var_map.insert(id, data);
     });
-
-    if let Some(__Block::Cmp(component_data_id)) = __BlockCallStack::last() {
-        C_VARS.with(move |c_vars| {
-            // log!("push ComponentChild::CmpVar");
-            let mut c_vars = c_vars.borrow_mut();
-    
-            let mut component_data = c_vars.remove::<__ComponentData>(&component_data_id);
-            component_data.children.push(ComponentChild::CmpVar(id));
-    
-            c_vars.insert(component_data_id, component_data);
-        });
-    }
 
     cmp_var
 }
