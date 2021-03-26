@@ -33,6 +33,13 @@ impl<'a> Element for El<'a> {
 //  Attributes 
 // ------ ------
 
+impl<'a> El<'a> {
+    pub fn child(mut self, child: impl IntoElement<'a> + 'a) -> Self {
+        child.into_element().apply_to_element(&mut self);
+        self
+    }
+} 
+
 // ------ IntoElement ------
 
 impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<El<'a>> for T {

@@ -9,7 +9,7 @@ element_macro!(col, Column::default());
 
 #[derive(Default)]
 pub struct Column<'a> {
-    children: Vec<Box<dyn Element + 'a>>,
+    items: Vec<Box<dyn Element + 'a>>,
 }
 
 impl<'a> Element for Column<'a> {
@@ -18,8 +18,8 @@ impl<'a> Element for Column<'a> {
         // log!("column, index: {}", rcx.index);
 
         let node = dom_element(rcx, |mut rcx| {
-            for child in &mut self.children {
-                child.render(rcx.inc_index().clone());
+            for item in &mut self.items {
+                item.render(rcx.inc_index().clone());
             }
         });
         node.update_mut(|node| {
@@ -33,10 +33,24 @@ impl<'a> Element for Column<'a> {
 //  Attributes 
 // ------ ------
 
+impl<'a> Column<'a> {
+    pub fn item(mut self, item: impl IntoElement<'a> + 'a) -> Self {
+        item.into_element().apply_to_element(&mut self);
+        self
+    }
+
+    pub fn items<IE: IntoElement<'a> + 'a>(mut self, items: impl IntoIterator<Item = IE>) -> Self {
+        for item in items.into_iter() {
+            item.into_element().apply_to_element(&mut self);
+        }
+        self
+    }
+} 
+
 // ------ IntoElement ------
 
 impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<Column<'a>> for T {
     fn apply_to_element(self, column: &mut Column<'a>) {
-        column.children.push(Box::new(self.into_element()));
+        column.items.push(Box::new(self.into_element()));
     }
 }

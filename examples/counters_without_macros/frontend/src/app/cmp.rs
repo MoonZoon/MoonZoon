@@ -8,19 +8,19 @@ blocks!{
     #[cmp]
     fn root() -> Cmp {
         Column::new()
-            .with(control_counters())
-            .with(counters())
+            .item(control_counters())
+            .item(counters())
     }
 
     #[cmp]
     fn control_counters() -> Cmp {
         Row::new()
-            .with(column_counter())
-            .with(row_counter())
-            .with(counter_count())
-            .with(counter_count_hundreds())
-            .with(test_counters())
-            .with(click_me_button())
+            .item(column_counter())
+            .item(row_counter())
+            .item(counter_count())
+            .item(counter_count_hundreds())
+            .item(test_counters())
+            .item(click_me_button())
     }
 
     #[cmp]
@@ -28,7 +28,7 @@ blocks!{
         let title = cmp_var(|| "Click me!".to_owned());
         let click_count = cmp_var(|| 0);
         Row::new()
-            .with(Button::new()
+            .item(Button::new()
                 .label(title.inner())
                 .on_press(move || {
                     click_count.update(|count| count + 1);
@@ -40,22 +40,22 @@ blocks!{
     #[cmp]
     fn test_counters() -> Cmp {
         Row::new()
-            .with("Test counters")
-            .with(Counter::new()
+            .item("Test counters")
+            .item(Counter::new()
                 .value(super::test_counter_value().inner())
                 .on_change(super::set_test_counter_value)
             )
-            .with(Counter::new())
+            .item(Counter::new())
     } 
 
     #[cmp]
     fn counter_count() -> Cmp {
-        El::new().with(format!("Counters: {}", super::counter_count().inner()))
+        El::new().child(format!("Counters: {}", super::counter_count().inner()))
     }
 
     #[cmp]
     fn counter_count_hundreds() -> Cmp {
-        El::new().with(super::counter_count_hundreds().map(|count| {
+        El::new().child(super::counter_count_hundreds().map(|count| {
             format!("Thousands: {}", count)
         }))
     }
@@ -63,8 +63,8 @@ blocks!{
     #[cmp]
     fn column_counter() -> Cmp {
         Row::new()
-            .with("Columns:")
-            .with(Counter::new()
+            .item("Columns:")
+            .item(Counter::new()
                 .value(super::column_count().inner())
                 .on_change(super::set_column_count)
                 .step(5)
@@ -74,8 +74,8 @@ blocks!{
     #[cmp]
     fn row_counter() -> Cmp {
         Row::new()
-            .with("Rows:")
-            .with(Counter::new()
+            .item("Rows:")
+            .item(Counter::new()
                 .value(super::row_count().inner())
                 .on_change(super::set_row_count)
                 .step(5)
@@ -85,13 +85,13 @@ blocks!{
     #[cmp]
     fn counters() -> Cmp {
         Column::new()
-            .with_iter((0..super::row_count().inner()).map(|_| counter_row()))
+            .items((0..super::row_count().inner()).map(|_| counter_row()))
     }
 
     #[cmp]
     fn counter_row() -> Cmp {
         Row::new()
-            .with_iter((0..super::column_count().inner()).map(|_| counter()))
+            .items((0..super::column_count().inner()).map(|_| counter()))
     }
 
     #[cmp]

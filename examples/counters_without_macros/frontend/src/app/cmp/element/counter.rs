@@ -6,19 +6,17 @@ use enclose::enc;
 //    Element 
 // ------ ------
 
-element_macro!(counter, Counter::default());
-
 #[derive(Default)]
 pub struct Counter {
     value: Option<i32>,
-    on_change: Option<OnChange>,
+    on_change: Option<Rc<dyn Fn(i32)>>,
     step: Option<i32>,
 }
 
 impl Element for Counter {
     #[render]
     fn render(&mut self, rcx: RenderContext) {
-        let on_change = self.on_change.take().map(|on_change| on_change.0);
+        let on_change = self.on_change.take().map(|on_change| on_change);
         let step = self.step.unwrap_or(1);
         
         let value = el_var(|| 0);
@@ -58,48 +56,12 @@ impl Counter {
     }
 
     pub fn on_change(mut self, on_change: impl FnOnce(i32) + Clone + 'static) -> Self {
-        self::on_change(on_change).apply_to_element(&mut self);
+        self.on_change = Some(Rc::new(move |value| on_change.clone()(value)));
         self
     }
 
     pub fn step(mut self, step: i32) -> Self {
-        self::step(step).apply_to_element(&mut self);
+        self.step = Some(step);
         self
-    }
-}
-
-// ------ i32 ------
-
-impl ApplyToElement<Counter> for i32 {
-    fn apply_to_element(self, counter: &mut Counter) {
-        counter.value = Some(self);
-    }
-}
-
-// ------ counter::on_change(...) -------
-
-pub struct OnChange(Rc<dyn Fn(i32)>);
-
-pub fn on_change(on_change: impl FnOnce(i32) + Clone + 'static) -> OnChange {
-    OnChange(Rc::new(move |value| on_change.clone()(value)))
-}
-
-impl ApplyToElement<Counter> for OnChange {
-    fn apply_to_element(self, counter: &mut Counter) {
-        counter.on_change = Some(self);
-    }
-}
-
-// ------ counter::step(...) -------
-
-pub struct Step(i32);
-
-pub fn step(step: i32) -> Step {
-    Step(step)
-}
-
-impl ApplyToElement<Counter> for Step {
-    fn apply_to_element(self, counter: &mut Counter) {
-        counter.step = Some(self.0);
     }
 }
