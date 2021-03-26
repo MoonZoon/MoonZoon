@@ -21,7 +21,7 @@ blocks!{
             row_counter(),
             counter_count(),
             counter_count_hundreds(),
-            test_counter(),
+            test_counters(),
             click_me_button(),
         ]
     }
@@ -38,18 +38,18 @@ blocks!{
                     title.set(format!("Clicked {}x", click_count.inner()));
                 }),
             ],
-            counter![]
         ]
     } 
 
     #[cmp]
-    fn test_counter() -> Cmp {
+    fn test_counters() -> Cmp {
         row![
-            "Test counter",
+            "Test counters",
             counter![
                 super::test_counter_value().inner(),
                 counter::on_change(super::set_test_counter_value),
-            ]
+            ],
+            counter![],
         ]
     } 
 
