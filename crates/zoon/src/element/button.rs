@@ -104,6 +104,18 @@ impl Drop for Listener{
 //  Attributes 
 // ------ ------
 
+impl<'a> Button<'a> {
+    pub fn label(mut self, label: impl IntoElement<'a> + 'a) -> Self {
+        label.into_element().apply_to_element(&mut self);
+        self
+    }
+
+    pub fn on_press(mut self, on_press: impl FnOnce() + Clone + 'static) -> Self {
+        self::on_press(on_press).apply_to_element(&mut self);
+        self
+    }
+} 
+
 // ------ IntoElement ------
 
 impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<Button<'a>> for T {

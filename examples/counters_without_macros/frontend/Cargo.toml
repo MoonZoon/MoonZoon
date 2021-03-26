@@ -1,0 +1,25 @@
+[package]
+version = "0.1.0"
+name = "frontend"
+repository = "https://github.com/MoonZoon/MoonZoon"
+authors = ["Martin Kavík <martin@kavik.cz>"]
+description = "Counter - MoonZoon example"
+categories = ["MoonZoon", "example"]
+license = "MIT"
+readme = "../README.md"
+edition = "2018"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.19"
+
+[dependencies]
+# zoon = { git = "https://github.com/MoonZoon/MoonZoon" }
+zoon = { path = "../../../crates/zoon" }
+enclose = "1.1.8"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ['-Os']
+
