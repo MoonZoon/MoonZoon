@@ -6,14 +6,13 @@ edition = "2018"
 
 [dependencies]
 wasm-bindgen = "0.2.70"
+console_error_panic_hook = { version = "0.1.6", default-features = false }
 blocks_macro = { path = "../blocks_macro" }
 s_var_macro = { path = "../s_var_macro" }
 update_macro = { path = "../update_macro" }
 cache_macro = { path = "../cache_macro" }
 cmp_macro = { path = "../cmp_macro" }
 tracked_call_macro = { path = "../tracked_call_macro" }
-
-console_error_panic_hook = "0.1.6"
 
 [dependencies.web-sys]
 version = "0.3.48"
@@ -26,3 +25,4 @@ features = [
     "Text",
     "Window",
 ]
+default-features = false
