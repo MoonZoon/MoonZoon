@@ -45,12 +45,14 @@ macro_rules! start {
     };
 }
 
+#[derive(Debug)]
 struct Config {
     port: u16,
     https: bool,
     redirect_server: RedirectServer,
 }
 
+#[derive(Debug)]
 struct RedirectServer {
     port: u16, 
     enabled: bool,
@@ -68,11 +70,11 @@ fn load_config() -> Config {
     // // enabled = true
     // env::set_var("REDIRECT_SERVER__ENABLED", config.redirect_server.enabled.to_string());
     Config {
-        port: env::var("PORT").unwrap().parse().unwrap(),
-        https: env::var("HTTPS").unwrap().parse().unwrap(),
+        port: env::var("PORT").map_or(80, |port| port.parse().unwrap()),
+        https: env::var("HTTPS").map_or(false, |https| https.parse().unwrap()),
         redirect_server: RedirectServer {
-            port: env::var("REDIRECT_SERVER__PORT").unwrap().parse().unwrap(),
-            enabled: env::var("REDIRECT_SERVER__ENABLED").unwrap().parse().unwrap(),
+            port: env::var("REDIRECT_SERVER__PORT").map_or(8080,|port| port.parse().unwrap()),
+            enabled: env::var("REDIRECT_SERVER__ENABLED").map_or(false, |enabled| enabled.parse().unwrap()),
         }
     }
 }
@@ -88,6 +90,7 @@ where
     UP: Future<Output = ()> + Send,
 {
     let config = load_config();
+    println!("Moon config: {:#?}", config);
 
     let rt  = Runtime::new()?;
     rt.block_on(async move {
@@ -147,60 +150,99 @@ where
             Ok::<_, warp::Rejection>(warp::reply::html(html(&frontend.title, backend_build_id, frontend_build_id)))
         });
         
-        let https_routes = up_msg_handler_route
+        let main_server_routes = up_msg_handler_route
             .or(reload)
             .or(sse)
             .or(pkg_route)
             .or(frontend_route);
             // @TODO too slow => static compression? how to change brotli params? (need the feature flag `compression`)
             // .with(warp::compression::brotli());
+         
             
-        let http_routes = warp::path::full()
-            .and(warp::host::optional())
-            .map(|path: FullPath, authority: Option<Authority>| {
-                let authority = authority.unwrap();
-                let authority = format!("{}:{}", authority.host(), 8443);
-                let authority = authority.parse::<Authority>().unwrap();
+        let (shutdown_sender_for_redirect_server, redirect_server_handle) = {
+            let config_port = config.port;
+            let config_https = config.https;
 
-                let uri = Uri::builder()
-                    .scheme("https")
-                    .authority(authority)
-                    .path_and_query(path.as_str())
-                    .build()
-                    .unwrap();
-                warp::redirect(uri)
-            });
+            if config.redirect_server.enabled {
+                let redirect_server_routes = warp::path::full()
+                    .and(warp::host::optional())
+                    .map(move |path: FullPath, authority: Option<Authority>| {
+                        let authority = authority.unwrap();
+                        let authority = format!("{}:{}", authority.host(), config_port);
+                        let authority = authority.parse::<Authority>().unwrap();
 
-        let http_port = 8080;
-        let https_port = 8443;
-            
-        let (shutdown_sender_http, shutdown_receiver_http) = oneshot::channel();
-        let (_, http_server) = warp::serve(http_routes)
-            .bind_with_graceful_shutdown(([0, 0, 0, 0], http_port), async {
-                shutdown_receiver_http.await.ok();
-            });
-        let http_server_handle = task::spawn(http_server);
+                        let uri = Uri::builder()
+                            .scheme(if config_https { "https" } else { "http" })
+                            .authority(authority)
+                            .path_and_query(path.as_str())
+                            .build()
+                            .unwrap();
+                        warp::redirect::temporary(uri)
+                    });
 
-        let (shutdown_sender_https, shutdown_receiver_https) = oneshot::channel();
-        let (_, https_server) = warp::serve(https_routes)
-            .tls()
-            .cert_path("backend/private/public.pem")
-            .key_path("backend/private/private.pem")
-            .bind_with_graceful_shutdown(([0, 0, 0, 0], https_port), async {
-                shutdown_receiver_https.await.ok();
-            });
-        let https_server_handle = task::spawn(https_server);
+                let (shutdown_sender_for_redirect_server, shutdown_receiver_for_redirect_server) = oneshot::channel();
+                let (_, redirect_server) = warp::serve(redirect_server_routes)
+                    .bind_with_graceful_shutdown(([0, 0, 0, 0], config.redirect_server.port), async {
+                        shutdown_receiver_for_redirect_server.await.ok();
+                    });
+                let redirect_server_handle = task::spawn(redirect_server);
 
-        println!("HTTP server is running on 0.0.0.0:{port} and redirects to HTTPS", port = http_port);
-        println!("HTTPS server is running on 0.0.0.0:{port} [https://127.0.0.1:{port}]", port = https_port);
+                (Some(shutdown_sender_for_redirect_server), Some(redirect_server_handle))
+            } else {
+                (None, None)
+            }
+        };
+
+        let (shutdown_sender_for_main_server, shutdown_receiver_for_main_server) = oneshot::channel();
+        let main_server_handle = { 
+            let server = warp::serve(main_server_routes);
+             if config.https {
+                let main_server = server
+                    .tls() 
+                    .cert_path("backend/private/public.pem")
+                    .key_path("backend/private/private.pem")
+                    .bind_with_graceful_shutdown(([0, 0, 0, 0], config.port), async {
+                        shutdown_receiver_for_main_server.await.ok();
+                    })
+                    .1;
+                task::spawn(main_server)
+            } else {
+                let main_server = server
+                    .bind_with_graceful_shutdown(([0, 0, 0, 0], config.port), async {
+                        shutdown_receiver_for_main_server.await.ok();
+                    })
+                    .1;
+                task::spawn(main_server)
+            }
+        };
+
+        if config.redirect_server.enabled {
+            println!(
+                "Redirect server is running on 0.0.0.0:{port} [http://127.0.0.1:{port}]", port = config.redirect_server.port);
+        }
+        println!(
+            "Main server is running on 0.0.0.0:{port} [{protocol}://127.0.0.1:{port}]", 
+            protocol = if config.https { "https" } else { "http" },  
+            port = config.port
+        );
 
         signal::ctrl_c().await.unwrap();
-        shutdown_sender_http.send(()).unwrap();
-        shutdown_sender_https.send(()).unwrap();
+        if let Some(shutdown_sender_for_redirect_server) = shutdown_sender_for_redirect_server {
+            shutdown_sender_for_redirect_server.send(()).unwrap();
+        }
+        shutdown_sender_for_main_server.send(()).unwrap();
         // time::sleep(time::Duration::from_secs(1)).await;
-        http_server_handle.abort();
-        https_server_handle.abort();
-        futures::future::join_all(vec![http_server_handle, https_server_handle]).await;
+        if let Some(redirect_server_handle) = &redirect_server_handle {
+            redirect_server_handle.abort();
+        }
+        main_server_handle.abort();
+
+        let mut handles = vec![main_server_handle];
+        if let Some(redirect_server_handle) = redirect_server_handle {
+            handles.push(redirect_server_handle);
+        }
+        futures::future::join_all(handles).await;
+
         println!("Moon shut down");
     });
     Ok(())
