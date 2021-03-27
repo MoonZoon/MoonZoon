@@ -10,6 +10,7 @@ use std::thread::{self, JoinHandle};
 use std::path::Path;
 use uuid::Uuid;
 use rcgen::{Certificate, CertificateParams};
+use std::env;
 
 #[derive(Debug, StructOpt)]
 enum Opt  {
@@ -45,8 +46,12 @@ fn main() {
         Opt::New { .. } => {},
         Opt::Start { release } => {
             let config = load_config();
+            set_env_vars(&config);            
+
             check_wasm_pack();
-            generate_certificate();    
+            if config.https {
+                generate_certificate();    
+            }
             
             let (frontend_build_finished_sender, frontend_build_finished_receiver) = channel();
             let frontend_watcher_handle = start_frontend_watcher(
@@ -77,9 +82,31 @@ fn load_config() -> Config {
     toml::from_str(&toml).unwrap()
 }
 
+fn set_env_vars(config: &Config) {
+    // port = 8443
+    env::set_var("PORT", config.port.to_string());
+    // https = true
+    env::set_var("HTTPS", config.https.to_string());
+
+    // [redirect_server]
+    // port = 8080
+    env::set_var("REDIRECT_SERVER__PORT", config.redirect_server.port.to_string());
+    // enabled = true
+    env::set_var("REDIRECT_SERVER__ENABLED", config.redirect_server.enabled.to_string());
+}
+
 #[derive(Debug, Deserialize)]
 struct Config {
-    watch: Watch
+    port: u16,
+    https: bool,
+    redirect_server: RedirectServer,
+    watch: Watch,
+}
+
+#[derive(Debug, Deserialize)]
+struct RedirectServer {
+    port: u16, 
+    enabled: bool,
 }
 
 #[derive(Debug, Deserialize)]
