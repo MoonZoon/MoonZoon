@@ -15,6 +15,7 @@ use warp::sse::Event;
 use warp::host::Authority;
 use warp::path::FullPath;
 use uuid::Uuid;
+use std::env;
 
 pub struct Frontend {
     title: String,
@@ -44,6 +45,38 @@ macro_rules! start {
     };
 }
 
+struct Config {
+    port: u16,
+    https: bool,
+    redirect_server: RedirectServer,
+}
+
+struct RedirectServer {
+    port: u16, 
+    enabled: bool,
+}
+
+fn load_config() -> Config {
+    // // port = 8443
+    // env::set_var("PORT", config.port.to_string());
+    // // https = true
+    // env::set_var("HTTPS", config.https.to_string());
+
+    // // [redirect_server]
+    // // port = 8080
+    // env::set_var("REDIRECT_SERVER__PORT", config.redirect_server.port.to_string());
+    // // enabled = true
+    // env::set_var("REDIRECT_SERVER__ENABLED", config.redirect_server.enabled.to_string());
+    Config {
+        port: env::var("PORT").unwrap().parse().unwrap(),
+        https: env::var("HTTPS").unwrap().parse().unwrap(),
+        redirect_server: RedirectServer {
+            port: env::var("REDIRECT_SERVER__PORT").unwrap().parse().unwrap(),
+            enabled: env::var("REDIRECT_SERVER__ENABLED").unwrap().parse().unwrap(),
+        }
+    }
+}
+
 pub fn start<IN, FR, UP>(
     init: impl FnOnce() -> IN, 
     frontend: impl Fn() -> FR + Copy + Send + Sync + 'static, 
@@ -54,6 +87,7 @@ where
     FR: Future<Output = Frontend> + Send,
     UP: Future<Output = ()> + Send,
 {
+    let config = load_config();
 
     let rt  = Runtime::new()?;
     rt.block_on(async move {
