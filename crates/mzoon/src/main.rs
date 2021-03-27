@@ -21,6 +21,10 @@ enum Opt  {
         // #[structopt(short, long)]
         // open: bool
     },
+    Build { 
+        #[structopt(short, long)]
+        release: bool,
+    },
 }
 
 // Run from example:  cargo run --manifest-path "../../crates/mzoon/Cargo.toml" start
@@ -60,6 +64,7 @@ fn main() {
                 frontend_sender,
                 frontend_receiver,
                 frontend_build_finished_sender,
+                &config,
             );
             // @TODO parallel build instead of waiting (server has to be started after FE build!)
             frontend_build_finished_receiver.recv().unwrap();
@@ -73,6 +78,23 @@ fn main() {
             );
             frontend_watcher_handle.join().unwrap();
             backend_watcher_handle.join().unwrap();
+        },
+        Opt::Build { release } => {
+            let config = load_config();
+            set_env_vars(&config);            
+
+            check_wasm_pack();
+            if config.https {
+                generate_certificate();    
+            }
+
+            if !build_frontend(release) {
+                panic!("Build frontend failed!");
+            }
+
+            if !build_backend(release) {
+                panic!("Build backend failed!");
+            }
         },
     }
 }
@@ -159,7 +181,14 @@ fn start_frontend_watcher(
     sender: Sender<DebouncedEvent>, 
     receiver: Receiver<DebouncedEvent>,
     frontend_build_finished_sender: Sender<()>,
+    config: &Config,
 ) -> JoinHandle<()> {
+    let reload_url = format!(
+        "{protocol}://localhost:{port}/api/reload",
+        protocol = if config.https { "https" } else { "http" },
+        port = config.port
+    );
+
     thread::spawn(move || {
         let mut watcher = watcher(sender, Duration::from_millis(100)).unwrap();
         for path in paths {
@@ -176,7 +205,7 @@ fn start_frontend_watcher(
                         println!("Build frontend");
                         if build_frontend(release) {
                             println!("Reload frontend");
-                            attohttpc::post("https://localhost:8443/api/reload")
+                            attohttpc::post(&reload_url)
                                 .danger_accept_invalid_certs(true)
                                 .send()
                                 .unwrap();
@@ -300,4 +329,22 @@ fn build_and_run_backend(release: bool) -> Child {
         .args(&args)
         .spawn()
         .unwrap()
+}
+
+fn build_backend(release: bool) -> bool {
+    let mut args = vec![
+        "build", "--package", "backend",
+    ];
+    if release {
+        args.push("--release");
+    }
+    let success = Command::new("cargo")
+        .args(&args)
+        .status()
+        .unwrap()
+        .success();
+    if success {
+        generate_backend_build_id();
+    }
+    success
 }
