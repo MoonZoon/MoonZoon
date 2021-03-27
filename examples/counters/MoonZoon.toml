@@ -1,9 +1,10 @@
-port = 8443
-https = true
+port = 8080
+# port = 8443
+https = false
 
 [redirect_server]
-port = 8080
-enabled = true
+port = 8081
+enabled = false
 
 [watch]
 frontend = [
