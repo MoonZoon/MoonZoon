@@ -1,14 +1,14 @@
 [package]
 version = "0.1.0"
 name = "backend"
-repository = "https://github.com/MartinKavik/MoonZoon"
+repository = "https://github.com/MoonZoon/MoonZoon"
 authors = ["Martin Kavík <martin@kavik.cz>"]
-description = "Counter - MoonZoon example"
+description = "Counters without macros - MoonZoon example"
 categories = ["MoonZoon", "example"]
 license = "MIT"
 readme = "../README.md"
 edition = "2018"
 
 [dependencies]
-# moon = { git = "https://github.com/MartinKavik/MoonZoon" }
+# moon = { git = "https://github.com/MoonZoon/MoonZoon" }
 moon = { path = "../../../crates/moon" }
