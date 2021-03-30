@@ -14,7 +14,7 @@
 
 ---
 
-### _"We don't want to lose time and money due to millions of unnecessary micro-decisions and bikeshedding."_
+### _"We don't want to lose time and money due to millions of unnecessary technical micro-decisions."_
 
 ---
 
@@ -53,6 +53,14 @@
 
 ---
 
+# Demo
+
+- Live demo: [moonzoon-demo.herokuapp.com](https://moonzoon-demo.herokuapp.com/)
+   - _Note_: Heroku dyno slow cold starts may occur.
+- Repo: [github.com/MoonZoon/demo](https://github.com/MoonZoon/demo)
+
+---
+
 # Blog
 
 - Cure for Web Development [[Medium](https://martinkavik.medium.com/cure-for-web-development-65003afb701f) / [dev.to](https://dev.to/martinkavik/cure-for-web-development-nnn) / [MD](docs/articles/cure_for_web_development.md)]
@@ -60,6 +68,8 @@
 ### Dev News
 
 1. CLI, Build pipeline, Live-reload, HTTPS [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-1-cli-build-pipeline-live-reload-https-1ba6) / [MD](docs/articles/dev_news_1.md)]
+
+1. Zoon, CLI, Deploy [dev.to-WIP / [MD](docs/articles/dev_news_2.md)]
 
 ---
 
