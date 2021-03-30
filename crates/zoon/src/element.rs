@@ -136,6 +136,91 @@ impl<'a> IntoElement<'a> for &'a str {
     }
 }
 
+impl<'a> IntoElement<'a> for u8 {
+    type EL = Text<'a>;
+    fn into_element(self) -> Self::EL {
+        Text::default().with(self.to_string())
+    }
+}
+
+impl<'a> IntoElement<'a> for u16 {
+    type EL = Text<'a>;
+    fn into_element(self) -> Self::EL {
+        Text::default().with(self.to_string())
+    }
+}
+
+impl<'a> IntoElement<'a> for u32 {
+    type EL = Text<'a>;
+    fn into_element(self) -> Self::EL {
+        Text::default().with(self.to_string())
+    }
+}
+
+impl<'a> IntoElement<'a> for u64 {
+    type EL = Text<'a>;
+    fn into_element(self) -> Self::EL {
+        Text::default().with(self.to_string())
+    }
+}
+
+impl<'a> IntoElement<'a> for u128 {
+    type EL = Text<'a>;
+    fn into_element(self) -> Self::EL {
+        Text::default().with(self.to_string())
+    }
+}
+
+impl<'a> IntoElement<'a> for usize {
+    type EL = Text<'a>;
+    fn into_element(self) -> Self::EL {
+        Text::default().with(self.to_string())
+    }
+}
+
+impl<'a> IntoElement<'a> for i8 {
+    type EL = Text<'a>;
+    fn into_element(self) -> Self::EL {
+        Text::default().with(self.to_string())
+    }
+}
+
+impl<'a> IntoElement<'a> for i16 {
+    type EL = Text<'a>;
+    fn into_element(self) -> Self::EL {
+        Text::default().with(self.to_string())
+    }
+}
+
+impl<'a> IntoElement<'a> for i32 {
+    type EL = Text<'a>;
+    fn into_element(self) -> Self::EL {
+        Text::default().with(self.to_string())
+    }
+}
+
+impl<'a> IntoElement<'a> for i64 {
+    type EL = Text<'a>;
+    fn into_element(self) -> Self::EL {
+        Text::default().with(self.to_string())
+    }
+}
+
+impl<'a> IntoElement<'a> for i128 {
+    type EL = Text<'a>;
+    fn into_element(self) -> Self::EL {
+        Text::default().with(self.to_string())
+    }
+}
+
+impl<'a> IntoElement<'a> for isize {
+    type EL = Text<'a>;
+    fn into_element(self) -> Self::EL {
+        Text::default().with(self.to_string())
+    }
+}
+
+
 
 
 

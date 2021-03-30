@@ -36,7 +36,7 @@ impl Element for Counter {
                 button::on_press(enc!((update_value) move || update_value(-step))),
                 "-"
             ],
-            el![value.inner().to_string()],
+            el![value.inner()],
             button![
                 button::on_press(move || update_value(step)), 
                  "+"
