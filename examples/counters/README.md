@@ -1,2 +1,2 @@
-# Counter
+# Counters
 > MoonZoon example
