@@ -1,4 +1,4 @@
-# MoonZoon Dev News (2): Zoon, CLI, Deploy
+# MoonZoon Dev News (2): Zoon, CLI, Deploy, Development
 
 It's alive! It runs!
 
