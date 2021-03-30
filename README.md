@@ -69,7 +69,7 @@
 
 1. CLI, Build pipeline, Live-reload, HTTPS [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-1-cli-build-pipeline-live-reload-https-1ba6) / [MD](docs/articles/dev_news_1.md)]
 
-1. Live demo, Zoon, Examples [dev.to-WIP / [MD](docs/articles/dev_news_2.md)]
+1. Live demo, Zoon, Examples, Architectures [dev.to-WIP / [MD](docs/articles/dev_news_2.md)]
 
 ---
 
