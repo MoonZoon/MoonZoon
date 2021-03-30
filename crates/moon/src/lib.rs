@@ -70,10 +70,10 @@ fn load_config() -> Config {
     // // enabled = true
     // env::set_var("REDIRECT_SERVER__ENABLED", config.redirect_server.enabled.to_string());
     Config {
-        port: env::var("PORT").map_or(80, |port| port.parse().unwrap()),
+        port: env::var("PORT").map_or(8080, |port| port.parse().unwrap()),
         https: env::var("HTTPS").map_or(false, |https| https.parse().unwrap()),
         redirect_server: RedirectServer {
-            port: env::var("REDIRECT_SERVER__PORT").map_or(8080,|port| port.parse().unwrap()),
+            port: env::var("REDIRECT_SERVER__PORT").map_or(8081,|port| port.parse().unwrap()),
             enabled: env::var("REDIRECT_SERVER__ENABLED").map_or(false, |enabled| enabled.parse().unwrap()),
         }
     }

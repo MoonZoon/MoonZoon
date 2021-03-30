@@ -11,6 +11,8 @@ cargo install --locked mzoon
 ```
 ([why _--locked_?](https://github.com/rust-lang/cargo/issues/7169))
 
+_Note:_ Faster installation options will be added later.
+
 ---
 
 ## Commands
@@ -25,7 +27,7 @@ cargo install --locked mzoon
 - Example: `mzoon start`
 - Compiles the app in the debug mode and then starts the Moon's server.
 - Both Moon and Zoon apps are automatically recompiled on a file change.
-- The Moon app automatically reloads the Zoon app on a change.
+- The Moon app auto-reloads the Zoon app on a change.
 - Optional parameters:
    1. **`--release` / `-r`**
       - Example: `mzoon start --release`
@@ -34,17 +36,57 @@ cargo install --locked mzoon
       - Example: `mzoon start --open`
       - Opens the Zoon's URL in a new browser tab (e.g. `localhost:8080`)
 
+### 3. `build`
+
+- Example: `mzoon build`
+- Compiles the app in the debug mode.
+- Optional parameters:
+   1. **`--release` / `-r`**
+      - Example: `mzoon build --release`
+      - Compiles in the release mode.
+---
+
+## MoonZoon.toml
+
+- The configuration file located in the app root directory.
+
+```toml
+port = 8080
+# port = 8443
+https = false
+
+[redirect_server] # useful for HTTP -> HTTPS redirect
+port = 8081
+enabled = false
+
+[watch]
+frontend = [
+    "frontend/Cargo.toml",
+    "frontend/src",
+]
+backend = [
+    "backend/Cargo.toml",
+    "backend/src",
+]
+```
+
 ---
 
 ## FAQ
 1. _"What about other commands like `deploy`, `test`, `generate`, etc.?"_
    - Other commands will be added later.
 
-1. _"How can I change the port number?"_
-   - The first idea: The function `init` in your Moon app would return a struct `Config` with the optional property `port`. The default port is `8080`.
+1. _"How can I change the port number or enable HTTPS?"_
+
+   - _For development_: Update settings in `MoonZoon.toml` (see `MoonZoon.toml` above or `/examples/counters/MoonZoon.toml`)
+
+   - _For production_: Set environment variables (see the function `load_config` in `/crates/moon/src/lib.rs`)
+
+1. _"Some commands or parameters mentioned above don't work!"_
+   - They are probably not implemented yet.
 
 1. _"What is a new project file structure?"_
-   - See the content of `/examples/time_tracker` to have an idea.
+   - See the content of `/examples/time_tracker` or [MoonZoon/demo](https://github.com/MoonZoon/demo) to have an idea.
     
 
 
