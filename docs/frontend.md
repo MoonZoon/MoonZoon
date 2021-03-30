@@ -14,9 +14,16 @@ use zoon::*;
 blocks!{
 
     #[s_var]
+    fn counter() -> SVar<i32> {
+        0
+    }
+
+    /* Alternative without `SVar` (`i32` is automatically wrapped in `SVar`):
+    #[s_var]
     fn counter() -> i32 {
         0
     }
+    */
 
     #[update]
     fn increment() {
@@ -28,15 +35,24 @@ blocks!{
         counter().update(|counter| counter - 1);
     }
 
-    #[el]
-    fn root() -> Column {
-        column![
+    #[cmp]
+    fn root() -> Cmp {
+        col![
             button![button::on_press(decrement), "-"],
             counter().inner(),
             button![button::on_press(increment), "+"],
         ]
     }
 
+    /* Non-macro element alternative:
+    #[cmp]
+    fn root() -> Cmp {
+        Column::new()
+            .item(Button::new().on_press(decrement).label("-"))
+            .item(counter().inner()),
+            .item(Button::new().on_press(increment).label("+"))
+    }
+    */
 }
 
 #[wasm_bindgen(start)]
@@ -56,30 +72,257 @@ pub fn start() {
 ### 2. The First Render
 
 1. Zoon waits until the browser is ready for rendering.
-1. The entire `#[el]` tree (only `root` in this example) is rendered to the predefined location in the browser DOM.
+1. The entire `#[cmp]` (_component_) tree (only `root` in this example) is rendered to the predefined location in the browser DOM.
 
 ### 3. Update
 
 1. The user clicks the decrement button.
 1. The function `decrement` is invoked.
 1. `counter`'s value is decremented. 
-   - _Note_: The function `counter` actually returns `SVar<i32>` (_**S**tatic **Var**iable_). _SVar_ is basically a copyable wrapper for a reference to the Zoon's internal storage.
-1. `root` element listens for `counter` changes - `root` is automatically recomputed and Zoon waits for the browser to allow rendering.
-1. Elements dependent on changed data are effectively rerendered in the DOM. 
-   - _Note_: When a parent element has to be rerendered, it doesn't mean that all its descendants have to be rerendered as well - each `#[el]` block may depend on different variables.
+   - _Note_: The function `counter` returns `SVar<i32>` (_**S**tatic **Var**iable_). _SVar_ is basically a copyable wrapper for a reference to the Zoon's internal storage.
+1. `root` component listens for `counter` changes - `root` is automatically recomputed and Zoon waits for the browser to allow rendering.
+1. Components dependent on changed data are effectively rerendered in the DOM. 
+   - _Note_: When a parent component has to be rerendered, it doesn't mean that all its descendants have to be rerendered as well - each `#[cmp]` block may depend on different variables.
 
 ---
 
-## Elements & Styles
+## Components
+
+The **Counters** example parts:
+
+```rust
+#[cmp]
+fn click_me_button() -> Cmp {
+    let title = cmp_var(|| "Click me!".to_owned());
+    let click_count = cmp_var(|| 0);
+    row![
+        button![
+            title.inner(),
+            button::on_press(move || {
+                click_count.update(|count| count + 1);
+                title.set(format!("Clicked {}x", click_count.inner()));
+            }),
+        ],
+    ]
+} 
+```
+
+- _Components_ (e.g. `click_me_button`) are groups of _Elements_ (e.g. `Row`, `Button`).
+- You can create a `CmpVar` (_**C**o**mp**onent **Var**iable_) inside them, defined by `cmp_var` with the closure that returns the default value. `CmpVar` represents a "local state" and its value is preserved between component calls. _Components_ are automatically recomputed on `CmpVar` change.
+- _Components_ accept only _Variables_ like `SVar`, `Cache` or `CmpVar` as arguments.
+
+```rust
+#[cmp]
+fn counter_count() -> Cmp {
+    el![
+        format!("Counters: {}", super::counter_count().inner())
+    ]
+}
+```
+
+- _Components_ may depend on other _Variables_ like `SVar` or `Cache`.
+- The _component_ above is automatically recomputed on `counter_count` change, because `counter_count()` definition is marked by the `#[cache]` attribute.
+
+```rust
+#[cmp]
+fn counter_row() -> Cmp {
+    row![
+        (0..super::column_count().inner()).map(|_| counter())
+    ]
+}
+
+#[cmp]
+fn counter() -> Cmp {
+    counter![]
+}
+```
+
+- `counter` component instances above are NOT recomputed on `column_count` change. Only new `counter` instances are created or old ones removed according to the new `column_count` value.
+- A `counter` instance is recomputed only when its `Counter` element (created by `counter!` macro) requires rerendering.
+- `CmpVar`s, elements and nested components are removed (aka _dropped_) on their parent component drop. 
+
+## Elements
+
+The **Counters** example parts:
+
+```rust
+// counters/frontend/src/app/cmp.rs 
+
+#[cmp]
+fn row_counter() -> Cmp {
+    row![
+        "Rows:",
+        counter![
+            super::row_count().inner(),
+            counter::on_change(super::set_row_count),
+            counter::step(5),
+        ]
+    ]
+}
+```
+
+
+
+```rust
+// counters/frontend/src/app/cmp/element/counter.rs
+
+use zoon::*;
+use std::rc::Rc;
+use enclose::enc;
+
+// ------ ------
+//    Element 
+// ------ ------
+
+element_macro!(counter, Counter::default());
+
+#[derive(Default)]
+pub struct Counter {
+    value: Option<i32>,
+    on_change: Option<OnChange>,
+    step: Option<i32>,
+}
+
+impl Element for Counter {
+    #[render]
+    fn render(&mut self, rcx: RenderContext) {
+        let on_change = self.on_change.take().map(|on_change| on_change.0);
+        let step = self.step.unwrap_or(1);
+        
+        let value = el_var(|| 0);
+        if let Some(required_value) = self.value {
+            value.set(required_value);
+        }
+        
+        let update_value = move |delta: i32| {
+            value.update(|value| value + delta);
+            if let Some(on_change) = on_change.clone() {
+                on_change(value.inner());
+            }
+            rcx.rerender();
+        };
+        row![
+            button![
+                button::on_press(enc!((update_value) move || update_value(-step))),
+                "-"
+            ],
+            el![value.inner()],
+            button![
+                button::on_press(move || update_value(step)), 
+                 "+"
+            ],
+        ].render(rcx);
+    }
+}
+
+// ------ ------
+//  Attributes 
+// ------ ------
+
+// ------ i32 ------
+
+impl ApplyToElement<Counter> for i32 {
+    fn apply_to_element(self, counter: &mut Counter) {
+        counter.value = Some(self);
+    }
+}
+
+// ------ counter::on_change(...) -------
+
+pub struct OnChange(Rc<dyn Fn(i32)>);
+
+pub fn on_change(on_change: impl FnOnce(i32) + Clone + 'static) -> OnChange {
+    OnChange(Rc::new(move |value| on_change.clone()(value)))
+}
+
+impl ApplyToElement<Counter> for OnChange {
+    fn apply_to_element(self, counter: &mut Counter) {
+        counter.on_change = Some(self);
+    }
+}
+
+// ------ counter::step(...) -------
+
+pub struct Step(i32);
+
+pub fn step(step: i32) -> Step {
+    Step(step)
+}
+
+impl ApplyToElement<Counter> for Step {
+    fn apply_to_element(self, counter: &mut Counter) {
+        counter.step = Some(self.0);
+    }
+}
+```
+
+- `ElVar` (_**El**ement **Var**iable_, defined by `el_var`) is very similar to `CmpVar`, but it does NOT trigger parent component rerendering on change. You have to call `rcx.rerender()` when needed, however keep in mind you can accidentally create an infinite loop if the call is done directly in the `render` method.
+
+- "Native" elements like `Button (button!)`, `El (el!)` or `Column (col!)` are defined in the same way.
+
+- We will write an "_element library_" for Zoon or our apps instead of a "_component library_" (as is common in other frameworks terminology). 
+
+- All elements should be _accessible_ by default.
+
+A non-macro alternative:
+
+```rust
+#[cmp]
+fn row_counter() -> Cmp {
+    Row::new()
+        .item("Rows:")
+        .item(Counter::new()
+            .value(super::row_count().inner())
+            .on_change(super::set_row_count)
+            .step(5)
+        )
+}
+```
+
+```rust
+#[derive(Default)]
+pub struct Counter {
+    value: Option<i32>,
+    on_change: Option<Rc<dyn Fn(i32)>>,
+    step: Option<i32>,
+}
+
+impl Element for Counter {
+    #[render]
+    fn render(&mut self, rcx: RenderContext) {
+        let on_change = self.on_change.take().map(|on_change| on_change);
+        ...
+    }
+}
+
+impl Counter {
+    pub fn value(mut self, value: i32) -> Self {
+        self.value = Some(value);
+        self
+    }
+
+    pub fn on_change(mut self, on_change: impl FnOnce(i32) + Clone + 'static) -> Self {
+        self.on_change = Some(Rc::new(move |value| on_change.clone()(value)));
+        self
+    }
+
+    pub fn step(mut self, step: i32) -> Self {
+        self.step = Some(step);
+        self
+    }
+}
+```
+
+## Styles
 
 The **Todos** example part:
 
 ```rust
-    #[el]
-    fn todo(todo: Var<super::Todo>) -> Row {
+    #[cmp]
+    fn todo(todo: Var<super::Todo>) -> Cmp {
         let selected = Some(todo) == super::selected_todo();
-        let checkbox_id = el_var(ElementId::new);
-        let row_hovered = el_var(|| false);
+        let checkbox_id = cmp_var(ElementId::new);
+        let row_hovered = cmp_var(|| false);
         row![
             font::size(24),
             padding!(15),
@@ -93,17 +336,9 @@ The **Todos** example part:
     }
 ```
 
-- The blocks marked `#[el]` are functions that can contain its own state. The state variables (e.g. `ElVar<bool>`, _**El**ement **Var**iable_) are created by the `el_var` function and are dropped when their container (aka _function instance_ or _component_) is removed from the element tree.
+- CSS concepts / events like _focus_, _hover_ and _breakpoints_ are handled directly by Rust / Zoon _elements_.
 
-- `[#el]` blocks accept only _Zoon Variables_ like `SVar` or `ElVar` as arguments.
-
-- Element macros (e.g. `row`) accepts only compatible attributes and children.
-
-- Concepts / events like _focus_, _hover_ and _breakpoints_ are handled directly by Zoon.
-
-- There isn't something like _margins_ or _selectors_.
-
-- All elements should be _accessible_ by default.
+- There is no such thing as CSS _margins_ or _selectors_. Padding and element / component nesting are more natural alternatives.
 
 ---
 ## Color
@@ -210,12 +445,12 @@ would be rendered as:
 The **Time Tracker** example part:
 
 ```rust
-    #[el]
-    fn root() -> View {
+    #[cmp]
+    fn root() -> Cmp {
         view![
             viewport::on_width_change(super::update_viewport_width),
             on_click(super::view_clicked),
-            column![
+            col![
                 header(),
                 menu_panel(),
                 page(),
@@ -240,7 +475,7 @@ The **Time Tracker** example part:
 
 ```rust
     #[s_var]
-    fn timeout() -> Option<Timer> {
+    fn timeout() -> SVar<Option<Timer>> {
         None
     }
 
@@ -265,7 +500,7 @@ The **Time Tracker** example part:
 
 ```rust
     #[s_var]
-    fn connection() -> Connection<UpMsg, DownMsg> {
+    fn connection() -> SVar<Connection<UpMsg, DownMsg>> {
         Connection::new(|down_msg, _| {
             if let DownMsg::MessageReceived(message) = down_msg {
                 ...
@@ -304,7 +539,7 @@ _
 
 ```rust
 
-#[route]
+    #[route]
     enum Route {
         #[route("login")]
         #[before_route(before_login_route)]
@@ -340,7 +575,7 @@ _
     }
 
     #[cache]
-    fn route() -> Route {
+    fn route() -> Cache<Route> {
         url().map(Route::from)
     }
 

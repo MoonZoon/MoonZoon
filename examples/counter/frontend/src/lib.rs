@@ -1,11 +1,11 @@
-#![no_std]
+// #![no_std]
 
 use zoon::*;
 
 blocks!{
 
     #[s_var]
-    fn counter() -> i32 {
+    fn counter() -> SVar<i32> {
         0
     }
 
@@ -19,9 +19,9 @@ blocks!{
         counter().update(|counter| counter - 1);
     }
 
-    #[el]
-    fn root() -> Column {
-        column![
+    #[cmp]
+    fn root() -> Cmp {
+        col![
             button![button::on_press(decrement), "-"],
             counter().inner(),
             button![button::on_press(increment), "+"],
