@@ -1,20 +1,121 @@
 # MoonZoon Development
+
 ---
 
-_WARNING:_ MoonZoon is in the phase of early development! You'll find hacks, ugly and spaghetti code in the repo!
+_WARNING:_ MoonZoon is in the phase of early development! You may find hacks and ugly / spaghetti code in the repo!
 
-But if you are brave enough:
+## 1. Required tools
+
+- [Rust](https://www.rust-lang.org/)
+  ```bash
+  rustup update
+  rustc -V # rustc 1.51.0 (2fd73fabe 2021-03-23)`
+  ```
+
+- [cargo-make](https://sagiegurari.github.io/cargo-make/)
+  ```bash
+  cargo install cargo-make
+  makers -V # makers 0.32.15
+  ```
+
+## 2. VS Code settings
+
+- Install [Rust Analyzer](https://rust-analyzer.github.io/)
+- My current `.vscode/settings.json`:
+
+```json
+{
+    "rust-analyzer.linkedProjects": [
+        // rust-analyzer ignores `main.rs` when `linkedProjects` are set
+        "crates/mzoon/Cargo.toml",
+        // examples are ignored because they have own workspaces
+        "examples/counter/Cargo.toml",
+        "examples/counters/Cargo.toml",
+        "examples/counters_without_macros/Cargo.toml",
+        // ... add more examples as needed
+    ],
+    "rust-analyzer.diagnostics.disabled": [
+        "missing-unsafe",
+    ],
+    "rust-analyzer.procMacro.enable": true,
+    "rust-analyzer.cargo.allFeatures": true,
+    "rust-analyzer.completion.autoimport.enable": false,
+    "rust-analyzer.updates.channel": "nightly"
+}
+```
+
+## 3. Configure example
+
+- Update example's `Makefile.toml` or `MoonZoon.toml` if necessary.
+
+<details>
+<summary>Current configs files from <code>examples/counters/</code></summary>
+
+```toml
+# Makefile.toml
+
+[config]
+default_to_workspace = false
+min_version = "0.32.15"
+
+[config.modify_core_tasks]
+private = true
+namespace = "default"
+
+[tasks.mzoon]
+description = "Run MZoon"
+command = "cargo"
+args = ["run", "--manifest-path", "../../crates/mzoon/Cargo.toml", "${@}"]
+dependencies = ["default::install-wasm-pack"]
+```
+
+```toml
+# MoonZoon.toml
+
+port = 8080
+# port = 8443
+https = false
+
+[redirect_server]
+port = 8081
+enabled = false
+
+[watch]
+frontend = [
+    "frontend/Cargo.toml",
+    "frontend/src",
+    "../../crates/zoon/Cargo.toml",
+    "../../crates/zoon/src",
+    "../../crates/blocks_macro/Cargo.toml",
+    "../../crates/blocks_macro/src",
+    "../../crates/update_macro/Cargo.toml",
+    "../../crates/update_macro/src",
+    "../../crates/s_var_macro/Cargo.toml",
+    "../../crates/s_var_macro/src",
+    "../../crates/cache_macro/Cargo.toml",
+    "../../crates/cache_macro/src",
+    "../../crates/tracked_call_macro/Cargo.toml",
+    "../../crates/tracked_call_macro/src",
+    "../../crates/cmp_macro/Cargo.toml",
+    "../../crates/cmp_macro/src",
+]
+backend = [
+    "backend/Cargo.toml",
+    "backend/src",
+    "../../crates/moon/Cargo.toml",
+    "../../crates/moon/src",
+]
+
+```
+
+</details>
+
+## 4. Start example
+
 ```sh
 cd examples
-cd counter
-cargo run --manifest-path "../../crates/mzoon/Cargo.toml" start
+cd counter # or `counters` or  ...
+makers mzoon start # or `makers mzoon start -r`
 ```
-_Notes_:
-  - Tested only with the latest stable Rust.
-  - [Wasm-pack](https://rustwasm.github.io/wasm-pack/) auto-install hasn't been implemented yet. If you don't have it, CLI panics with the recommendation to run `cargo install wasm-pack` or to install a pre-built version.
 
-Then, you can find paths which trigger auto-reload in the file: `examples/counter/MoonZoon.toml`.
-
-And you can test it this way:
-
-[![Autoreload demo](images/autoreload.gif)](https://raw.githubusercontent.com/MoonZoon/MoonZoon/main/docs/images/autoreload.gif)
+## 5. Have fun!
