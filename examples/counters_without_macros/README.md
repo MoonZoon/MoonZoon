@@ -1,2 +1,2 @@
-# Counter
+# Counters without macros
 > MoonZoon example

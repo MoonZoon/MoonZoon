@@ -1,10 +1,10 @@
-# MoonZoon Dev News (2): Zoon, CLI, Deploy, Development
+# MoonZoon Dev News (2): Live demo, Zoon, Examples
 
-It's alive! It runs!
+The Zoon dev marathon is over. And it does something! And it does something on Heroku!
 
-[![Auto-reload](images/autoreload.gif)](https://raw.githubusercontent.com/MoonZoon/MoonZoon/main/docs/images/autoreload.gif)
+[![Demo](images/demo.gif)](https://raw.githubusercontent.com/MoonZoon/MoonZoon/main/docs/images/demo.gif)
 
-It... doesn't do anything useful yet. Just like an average kitten. We have to wait until they grow up - but who doesn't like to watch progress?
+You can try it by yourself: [Live demo](https://moonzoon-demo.herokuapp.com/)
 
 ---
 
@@ -21,15 +21,27 @@ It... doesn't do anything useful yet. Just like an average kitten. We have to wa
 
 ---
 
-There are two big news. I've written my first [tweet](https://twitter.com/MartinKavik/status/1362863940175241216) ever! And also a couple MoonZoon lines of code - a build pipeline, live-reload, certificate generator and servers ([GitHub PR](https://github.com/MoonZoon/MoonZoon/pull/1)).
+There are again two big news. I've written the Zoon core ([GitHub PR](https://github.com/MoonZoon/MoonZoon/pull/5)) and created a new GitHub [repo with the demo](https://github.com/MoonZoon/demo).
 
-Awesome [Discord](https://discord.gg/eGduTxK2Es) friends tested it on _Fedora_, _Ubuntu_, _Windows_ and _macOS_ with _Chrome_, _Firefox_ and _Safari_. Live-reload works also on my older iPhone SE. Thanks `@adsick`, `@UberIntuiter` and `@EvenWei`!
+However the main goal for this iteration was to write working examples:
+- [Counter](https://github.com/MoonZoon/MoonZoon/tree/main/examples/counter)
+- [Counters](https://github.com/MoonZoon/MoonZoon/tree/main/examples/counters)
+- [Counters without macros](https://github.com/MoonZoon/MoonZoon/tree/main/examples/counters_without_macros)
 
-**Follow [these steps](https://github.com/MoonZoon/MoonZoon/blob/main/docs/development.md) to try it by yourself.**
+You can follow the updated [Development.md](https://github.com/MoonZoon/MoonZoon/blob/main/docs/development.md) to run those examples on your local machine.
+
+Other significant changes:
+- The dev server runs on HTTP by default and the Moon server(s) are configurable through environment variables. See updated [Cli.md](https://github.com/MoonZoon/MoonZoon/blob/main/docs/cli.md).
+- The Zoon API has been changed a bit - see updated [Frontend.md](https://github.com/MoonZoon/MoonZoon/blob/main/docs/frontend.md). 
+- I've written a super simple Heroku [buildpack](https://github.com/MoonZoon/heroku-buildpack-moonzoon). Feel free to improve it (e.g. to use cache).
+
+And I would like to thank:
+- [gilescope](https://github.com/gilescope) for MoonZoon improvements in PRs [3](https://github.com/MoonZoon/MoonZoon/pull/3) and [4](https://github.com/MoonZoon/MoonZoon/pull/4). 
+- [sagiegurari](https://github.com/sagiegurari) for very quick integration of my PRs into his awesome [cargo-make](https://github.com/sagiegurari/cargo-make). This task runner is very useful for both MoonZoon and Seed.
 
 ---
 
-# How the build process works?
+# How Zoon works?
 
 When you run in *`examples/counter`* the command
 ```sh
