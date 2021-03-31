@@ -83,7 +83,7 @@ In the case of TEA, you'll soon find out your code consists of 5 big isolated tr
 
 A typical example is a page. A page with a contact form and a page with a login form use different data and business logic and render different elements. However both pages probably want to know what user is logged in.
 
-@TODO picture 5 trees |, two pages ---- + context / user ; PageInit, PageMsg, PageModel, PageUpdate, PageView
+![TEA Trees](images/tea_trees.png)
 
 As the result, developers cut the trees into pieces and group those pieces together with pieces belonging to other trees. 
 
@@ -93,7 +93,7 @@ However the pieces are grouped mostly logically, not by a language construct, so
 
 ![Layers of Fear](images/layers_of_fear.jpg)
 
-_Credits: Game Layers of Fear. Downloaded from wallpapercave.com._
+_Credits: Game [Layers of Fear](https://www.gog.com/game/layers_of_fear), downloaded from [WallpaperCave](https://wallpapercave.com/w/wp4769598)_
 
 With those groups (aka components) comes another problem - inter-component communication. There are some [patterns](https://rchavesferna.medium.com/child-parent-communication-in-elm-outmsg-vs-translator-vs-nomap-patterns-f51b2a25ecb1) for parent-child communication but for other relations there are basically none. Elm has [subscriptions](https://elmprogramming.com/subscriptions.html) to alleviate the problem but you can't create custom subscriptions. Seed has a similar concept `subscribe/notify` that helps a lot with the app architecture from my experience. 
 
@@ -126,7 +126,7 @@ Tada! New Javascript framework is ready. Just sprinkle a template engine, CSS-in
 
 ![Garden of Eden](images/garden_of_eden.jpg)
 
-_Credits: Downloaded from wallpapercave.com._
+_Credits: Downloaded from [WallpaperCave](https://wallpapercave.com/w/wp6621556)_
 
 I don't think components are evil. I think many frontend frameworks have 3 problems:
 1) They are too modular. No, I don't feel like I play with Lego when I write frontend apps. I sew a Frankenstein's monster.
@@ -142,7 +142,7 @@ Components architecture (CA) vs TEA:
 
 ## Zoon architecture
 
--- schema picture
+![Zoon Tree](images/zoon_tree.png)
 
 Let's pick the best parts from both previous architectures and add HTML and CSS abstraction.
 
