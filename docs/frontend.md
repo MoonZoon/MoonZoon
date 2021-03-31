@@ -438,6 +438,10 @@ would be rendered as:
 
 <img src="images/font_size_example.svg" height="110px">
 
+--
+
+Related blog post: [_Font size is useless; let’s fix it_](https://tonsky.me/blog/font-size/) by Nikita Prokopov
+
 ---
 
 ## View & Viewport
