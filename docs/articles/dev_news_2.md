@@ -61,7 +61,9 @@ The official [Elm guide](https://guide.elm-lang.org/architecture/) explains TEA 
 
 --
 
-![TEA](images/tea.svg)
+![TEA](images/tea.png)
+
+_Credits: elm-lang.org_
 
 The Elm program produces HTML to show on screen, and then the computer sends back messages of what is going on. "They clicked a button!"
 
@@ -83,11 +85,19 @@ A typical example is a page. A page with a contact form and a page with a login 
 
 @TODO picture 5 trees |, two pages ---- + context / user ; PageInit, PageMsg, PageModel, PageUpdate, PageView
 
-As the result, developers cut the trees into pieces and group those pieces together with pieces belonging to other trees. And that's how components are born in TEA. However they are grouped mostly logically than by a language construct so developers tend to start searching for a stronger grouping mechanism and remove flexibility by some cumbersome abstractions. And then they add an extra abstraction layer for shared data (e.g. the logged user in our example)...
+As the result, developers cut the trees into pieces and group those pieces together with pieces belonging to other trees. 
+
+And that's how components are born in TEA. 
+
+However the pieces are grouped mostly logically, not by a language construct, so developers tend to start looking for a stronger grouping mechanism due to the fear of broken components. At the end, they replace flexibility with some cumbersome abstractions. And then they add an extra abstraction layer for shared data (e.g. the logged user in our example)...
+
+![Layers of Fear](images/layers_of_fear.jpg)
+
+_Credits: Game Layers of Fear. Downloaded from wallpapercave.com._
 
 With those groups (aka components) comes another problem - inter-component communication. There are some [patterns](https://rchavesferna.medium.com/child-parent-communication-in-elm-outmsg-vs-translator-vs-nomap-patterns-f51b2a25ecb1) for parent-child communication but for other relations there are basically none. Elm has [subscriptions](https://elmprogramming.com/subscriptions.html) to alleviate the problem but you can't create custom subscriptions. Seed has a similar concept `subscribe/notify` that helps a lot with the app architecture from my experience. 
 
---- image spiral of hell / layers / -> dante inferno <-
+
 
 There are also two data features that are difficult to take into account in TEA:
 - A) You can't use most "raw" data directly for rendering.
@@ -100,6 +110,10 @@ There are also two data features that are difficult to take into account in TEA:
 
 In TEA we have only one `Model`. It means our business data will be mixed with precomputed and temporary data. And relations between "raw" and "derived" data won't be obvious on the first look.
 
+![Tea and Book](images/tea_and_book.jpg)
+
+_Credits: Photo by [Joanna Kosinska](https://unsplash.com/@joannakosinska?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText) on [Unsplash](https://unsplash.com/s/photos/tea-book?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText)_
+
 I was mostly talking TEA negatives in this article, but I think TEA is the paragon of "the beauty of simplicity" and it allows to write very reliable apps with readable code. However there are some trade-offs: It makes writing reusable app parts difficult and it lacks some mechanisms for data management and communication within larger apps. Another problem is difficult optimization of apps based on TEA in many programming languages.
 
 ---
@@ -110,11 +124,13 @@ Imagine an apple tree. Where tree is a DOM tree. And where apples have life-cycl
 
 Tada! New Javascript framework is ready. Just sprinkle a template engine, CSS-in-JS and a state management on it and we have the version 1.0. 
 
--- eden apple tree --
+![Garden of Eden](images/garden_of_eden.jpg)
 
-I don't think components are evil. I think many frontend frameworks has 3 problems:
+_Credits: Downloaded from wallpapercave.com._
+
+I don't think components are evil. I think many frontend frameworks have 3 problems:
 1) They are too modular. No, I don't feel like I play with Lego when I write frontend apps. I sew a Frankenstein's monster.
-2) Abstraction on wrong places. Why we have things like [Higher-Order Components](https://reactjs.org/docs/higher-order-components.html) but I still have to keep in mind that multi-line `input` (aka `textarea`) doesn't have the attribute `value` and `z-index` doesn't work with the default `position`?
+2) Abstraction at wrong places. Why we have things like [Higher-Order Components](https://reactjs.org/docs/higher-order-components.html) but I still have to keep in mind that multi-line `input` (aka `textarea`) doesn't have the attribute `value` and `z-index` doesn't work with the default `position`?
 3) Javascript. It's trendy to write JS-like languages or at least framework-specific compilers and template engines to fight with Javascript (and HTML / CSS).
 
 Components architecture (CA) vs TEA:
