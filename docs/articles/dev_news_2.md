@@ -125,17 +125,18 @@ I was focusing mostly on TEA drawbacks in this article, but I think TEA is one o
 
 Imagine an apple tree. Where tree is a DOM tree. And where apples have their own properties and life-cycles like _grow, change color, drop_. 
 
-Tada! New Javascript framework is ready. Just sprinkle a template engine, CSS-in-JS and a state management on it and we have the version 1.0. Router will be included in the next major version.
+Tada! New Javascript framework is ready. Just sprinkle a template engine, CSS-in-JS and a state management on it and we have the version 1.0. A router will be included in the next major version.
 
 ![Garden of Eden](images/garden_of_eden.jpg)
 
 _Credits: Downloaded from [WallpaperCave](https://wallpapercave.com/w/wp6621556)_
 
 However I don't think components are evil. I think many frontend frameworks have 4 problems:
-1) They are too modular. _"No, I don't feel like I play with Lego when I write frontend apps. I sew a Frankenstein's monster."_
-2) Abstraction at wrong places. _"Why we have things like [Higher-Order Components](https://reactjs.org/docs/higher-order-components.html) but I still have to keep in mind that multi-line `input` (aka `textarea`) doesn't have the attribute `value` and `z-index` doesn't work with the default `position`?"_
-3) Javascript. It's trendy to write compile-to-JS languages or at least framework-specific compilers and template engines to fight with Javascript (and HTML / CSS).
-4) Everybody wants components but almost nobody really knows how to work with them effectively. There are no strict rules defined like in TEA. 
+
+1. They are too modular. _"No, I don't feel like I play with Lego when I write frontend apps. I sew a Frankenstein's monster."_
+1. Abstraction at wrong places. _"Why we have things like [Higher-Order Components](https://reactjs.org/docs/higher-order-components.html) but I still have to keep in mind that multi-line `input` (aka `textarea`) doesn't have the attribute `value` and `z-index` doesn't work with the default `position`?"_
+1. Javascript. It's trendy to write compile-to-JS languages or at least framework-specific compilers and template engines to fight with Javascript (and HTML / CSS).
+1. Everybody wants components but almost nobody really knows how to work with them effectively. There are no strict rules defined like in TEA. 
 
 As the result, there are million of frontend frameworks and libraries because they try to heal only some symptoms and be compatible with all other layers.
 
