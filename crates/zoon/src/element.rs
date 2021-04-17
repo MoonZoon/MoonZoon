@@ -17,6 +17,9 @@ pub use row::Row;
 pub mod text;
 pub use text::Text;
 
+pub mod raw_el;
+pub use raw_el::RawEl;
+
 // ------ element_macro ------
 
 #[macro_export]

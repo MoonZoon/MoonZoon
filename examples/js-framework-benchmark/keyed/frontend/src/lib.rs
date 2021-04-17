@@ -1,6 +1,6 @@
 // #![no_std]
 
-use zoon::{*, html::{attr, tag, event_handler}};
+use zoon::{*, raw_el::{attr, tag, event_handler}};
 use rand::prelude::*;
 use std::iter;
 
@@ -193,16 +193,16 @@ blocks!{
         ]
     }
 
-    fn action_button(
+    fn action_button<'a>(
         id: &'static str, 
         title: &'static str, 
         on_click: fn(),
-    ) -> RawEl {
+    ) -> RawEl<'a> {
         raw_el![
             attr("class", "col-sm-6 smallpad"),
             attr("id", id),
             attr("type", "button"),
-            event_handler("click", |_| on_click())
+            event_handler("click", |_| on_click()),
             title,
         ]
     }
