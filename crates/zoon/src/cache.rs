@@ -26,6 +26,13 @@ pub struct Cache<T> {
     phantom_data: PhantomData<T>,
 }
 
+impl<T> Eq for Cache<T> {}
+impl<T> PartialEq for Cache<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
 impl<T> std::fmt::Debug for Cache<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({:#?})", self.id)
@@ -98,7 +105,7 @@ where
         output
     }
 
-    pub fn use_ref<U>(self, user: impl FnOnce(&T)) {
+    pub fn use_ref(self, user: impl FnOnce(&T)) {
         CACHES.with(|caches| {
             let cache_map = caches.borrow();
             let data = cache_map.data(self.id)

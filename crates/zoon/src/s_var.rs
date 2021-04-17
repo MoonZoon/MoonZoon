@@ -22,6 +22,13 @@ pub struct SVar<T> {
     phantom_data: PhantomData<T>,
 }
 
+impl<T> Eq for SVar<T> {}
+impl<T> PartialEq for SVar<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
 impl<T> std::fmt::Debug for SVar<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({:#?})", self.id)
@@ -93,7 +100,7 @@ where
         output
     }
 
-    pub fn use_ref<U>(self, user: impl FnOnce(&T)) {
+    pub fn use_ref(self, user: impl FnOnce(&T)) {
         S_VARS.with(|s_vars| {
             let s_var_map = s_vars.borrow();
             let data = s_var_map.data(self.id)

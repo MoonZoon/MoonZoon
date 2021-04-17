@@ -79,7 +79,7 @@ blocks!{
     fn create_row() -> Rc<Var<Row>> {
         let id = previous_id().map_mut(|id| {
             *id += 1;
-            id
+            *id
         });
         let label = generator().map_mut(|generator| {
             format!(
@@ -138,16 +138,16 @@ blocks!{
         let old_selected = selected_row().map_mut(|selected_row| {
             selected_row.replace(row)
         });
-        row.mark_updated();
+        // row.mark_updated();
         if let Some(old_selected) = old_selected {
-            old_selected.try_mark_updated();
+            // old_selected.try_mark_updated();
         }
     }
 
     #[update]
-    fn remove(row: VarRef<Row>) {
+    fn remove_row(row: VarRef<Row>) {
         rows().update_mut(|rows| {
-            let position = rows.iter_vars().position(|r| r == row).unwrap();
+            let position = rows.iter().position(|r| r.to_var_ref() == row).unwrap();
             rows.remove(position);
         });
     }
@@ -204,14 +204,19 @@ blocks!{
             attr("class", "col-sm-6 smallpad"),
             attr("id", id),
             attr("type", "button"),
-            event_handler("click", |_| on_click()),
+            event_handler("click", move |_| on_click()),
             title,
         ]
     }
 
     #[cmp]
     fn table() -> Cmp {
-        let rows = rows().map(|rows| rows.iter().map(|row_var| row(row_var.to_var_ref())));
+        let rows = rows().map(|rows| {
+            rows
+                .iter()
+                .map(|row_var| row(row_var.to_var_ref()))
+                .collect::<Vec<_>>()
+        });
         raw_el![
             tag("table"),
             attr("class", "table table-hover table-striped test-data"),
@@ -225,7 +230,7 @@ blocks!{
 
     #[cmp(row)]
     fn row(row: VarRef<Row>) -> Cmp {
-        let selected_row = selected_row().unwatch().inner();
+        let selected_row = selected_row()/*.unwatch()*/.inner();
         let is_selected = selected_row == Some(row);
         raw_el![
             tag("tr"),
@@ -256,7 +261,7 @@ blocks!{
         raw_el![
             tag("td"),
             attr("class", "col-md-4"),
-            event_handler("click", |_| select_row(row)),
+            event_handler("click", move |_| select_row(row)),
             raw_el![
                 tag("a"),
                 attr("class", "lbl"),
@@ -267,14 +272,14 @@ blocks!{
 
     #[cmp]
     fn row_remove_button(row: VarRef<Row>) -> Cmp {
-        row.unwatch();
+        // row.unwatch();
         raw_el![
             tag("td"),
             attr("class", "col-md-1"),
             raw_el![
                 tag("a"),
                 attr("class", "remove"),
-                event_handler("click", |_| remove_row(row)),
+                event_handler("click", move |_| remove_row(row)),
                 raw_el![
                     tag("span"),
                     attr("class", "glyphicon glyphicon-remove remove"),

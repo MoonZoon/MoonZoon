@@ -9,6 +9,13 @@ pub struct CmpVar<T> {
     phantom_data: PhantomData<T>,
 }
 
+impl<T> Eq for CmpVar<T> {}
+impl<T> PartialEq for CmpVar<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
 impl<T> std::fmt::Debug for CmpVar<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({:#?})", self.id)
@@ -87,7 +94,7 @@ where
         output
     }
 
-    pub fn use_ref<U>(self, user: impl FnOnce(&T)) {
+    pub fn use_ref(self, user: impl FnOnce(&T)) {
         CMP_VARS.with(|cmp_vars| {
             let cmp_var_map = cmp_vars.borrow();
             let data = cmp_var_map.data(&self.id);
