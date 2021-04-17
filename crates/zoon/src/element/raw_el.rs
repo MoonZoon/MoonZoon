@@ -1,5 +1,11 @@
-use wasm_bindgen::JsCast;
-use crate::{RenderContext, dom::dom_element, Element, __TrackedCall, __TrackedCallStack, IntoElement, ApplyToElement, render, element_macro};
+use wasm_bindgen::{closure::Closure, JsCast};
+use crate::{RenderContext, ElVar, Element, __TrackedCall, __TrackedCallStack, IntoElement, ApplyToElement, render, element_macro};
+use tracked_call_macro::tracked_call;
+use crate::hook::el_var;
+use crate::dom::{document, Node};
+use std::collections::HashMap;
+use std::{cell::RefCell, rc::Rc};
+use std::mem;
 
 // ------ ------
 //   Element 
@@ -11,23 +17,118 @@ element_macro!(raw_el, RawEl::default());
 pub struct RawEl<'a> {
     tag: Option<&'a str>,
     attrs: Vec<Attr<'a>>,
-    event_handlers: Vec<EventHandler<'a>>,
+    event_handlers: HashMap<&'static str, Vec<Box<dyn Fn(web_sys::Event)>>>,
     children: Vec<Box<dyn Element + 'a>>,
 }
 
 impl<'a> Element for RawEl<'a> {
     #[render]
     fn render(&mut self, rcx: RenderContext) {
+        // @TODO optimize
+
         // log!("raw_el, index: {}", rcx.index);
 
-        let node = dom_element(rcx, |mut rcx| {
+        let node = dom_element(rcx, self.tag, |mut rcx| {
             for child in &mut self.children {
                 child.render(rcx.inc_index().clone());
             }
         });
         node.update_mut(|node| {
             let element = node.node_ws.unchecked_ref::<web_sys::Element>();
-            element.set_attribute("class", "el").unwrap();
+            for attr in &self.attrs {
+                element.set_attribute(&attr.name, &attr.value).unwrap();
+            }
+        });
+
+        let listeners = el_var(|| HashMap::new());
+        listeners.update_mut(|listeners| {
+            for (event, handlers) in mem::take(&mut self.event_handlers) {
+                listeners
+                    .entry(event)
+                    .or_insert(Listener::new(event, node))
+                    .set_handlers(handlers);
+            }
+        });
+
+        // @TODO remove listeners without handlers?
+    }
+}
+
+#[tracked_call]
+pub fn dom_element(mut rcx: RenderContext, tag: Option<&str>, children: impl FnOnce(RenderContext)) -> ElVar<Node> {
+    // log!("el, index: {}", rcx.index);
+
+    let node = el_var(|| {
+        let el_ws = document().create_element(tag.unwrap_or("div")).expect("element");
+        // el_ws.set_attribute("class", "el").expect("set class attribute");
+        let node_ws = web_sys::Node::from(el_ws);
+        rcx.node.update_mut(|node| {
+            let parent_node_ws = &node.node_ws;
+            parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(rcx.index + 1).as_ref()).expect("insert node");
+        });
+        Node { node_ws }
+    });
+    rcx.node = node;
+    rcx.reset_index();
+    children(rcx);
+    node
+}
+
+struct Listener {
+    event: &'static str,
+    node: ElVar<Node>,
+    handlers: Rc<RefCell<Vec<Box<dyn Fn(web_sys::Event)>>>>,
+    callback: Closure<dyn Fn(web_sys::Event)>,
+}
+
+impl Listener {
+    fn new(event: &'static str, node: ElVar<Node>) -> Self {
+        let handlers = Rc::new(RefCell::new(Vec::new()));
+
+        let handlers_clone = Rc::clone(&handlers);
+        let callback = Closure::wrap(Box::new(move |event: web_sys::Event| {
+            let user_handlers = mem::take::<Vec<Box<dyn Fn(web_sys::Event)>>>(&mut handlers_clone.borrow_mut());
+            for user_handler in &user_handlers {
+                user_handler(event.clone());
+            }
+            *handlers_clone.borrow_mut() = user_handlers;
+        }) as Box<dyn Fn(web_sys::Event)>);
+
+        node.update_mut(|node| {
+            node
+                .node_ws
+                .unchecked_ref::<web_sys::EventTarget>()
+                .add_event_listener_with_callback(event, callback.as_ref().unchecked_ref())
+                .expect("add event listener");
+        });
+
+        Self {
+            event,
+            node,
+            handlers,
+            callback,
+        }
+    }
+
+    fn set_handlers(&mut self, handlers: Vec<Box<dyn Fn(web_sys::Event)>>) {
+        *self.handlers.borrow_mut() = handlers;
+    }
+}
+
+impl Drop for Listener{
+    fn drop(&mut self) {
+        if !self.node.exists() {
+            return;
+        }
+        self.node.update_mut(|node| {
+            node
+                .node_ws
+                .unchecked_ref::<web_sys::EventTarget>()
+                .remove_event_listener_with_callback(
+                    self.event,
+                    self.callback.as_ref().unchecked_ref(),
+                )
+                .expect("remove event listener");
         });
     }
 }
@@ -80,18 +181,22 @@ impl<'a> ApplyToElement<RawEl<'a>> for Attr<'a> {
 
 // ------ raw_el::event_handler(...)
 
-pub struct EventHandler<'a> {
-    event: &'a str,
+pub struct EventHandler {
+    event: &'static str,
     handler: Box<dyn Fn(web_sys::Event)>
 }
-pub fn event_handler(event: &str, handler: impl FnOnce(web_sys::Event) + Clone + 'static) -> EventHandler {
+pub fn event_handler(event: &'static str, handler: impl FnOnce(web_sys::Event) + Clone + 'static) -> EventHandler {
     EventHandler {
         event,
         handler: Box::new(move |event| handler.clone()(event))
     }
 }
-impl<'a> ApplyToElement<RawEl<'a>> for EventHandler<'a> {
+impl<'a> ApplyToElement<RawEl<'a>> for EventHandler {
     fn apply_to_element(self, raw_el: &mut RawEl<'a>) {
-        raw_el.event_handlers.push(self);
+        raw_el
+            .event_handlers
+            .entry(self.event)
+            .or_insert(vec![])
+            .push(self.handler);
     }
 }

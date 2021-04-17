@@ -26,7 +26,7 @@ impl __Relations {
                 __Block::Cache(_) | __Block::Cmp(_)=> {
                     Self::insert(last_block, dependency)
                 }
-                __Block::SVar(_) | __Block::CmpVar(_) => ()
+                __Block::SVar(_) | __Block::CmpVar(_) | __Block::Var(_) => ()
             }
         }
     }
@@ -75,7 +75,7 @@ impl __Relations {
                     // log("refresh CMP!");
                     rerender_component(track_call_id)
                 }
-                __Block::SVar(_) | __Block::CmpVar(_) => ()
+                __Block::SVar(_) | __Block::CmpVar(_) | __Block::Var(_) => ()
             }
         }
     }

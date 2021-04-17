@@ -2,6 +2,8 @@ use crate::runtime::VARS;
 use crate::var_map::Id;
 use std::marker::PhantomData;
 use uuid::Uuid;
+use crate::relations::__Relations;
+use crate::block_call_stack::__Block;
 
 pub struct Var<T: 'static> {
     pub id: Id,
@@ -62,15 +64,11 @@ where
                 .borrow_mut()
                 .insert(self.id, data)
         });
-        // __Relations::refresh_dependents(&__Block::SVar(self.id));
+        __Relations::refresh_dependents(&__Block::Var(self.id));
     }
 
     pub fn remove(self) -> Option<T> {
-        VARS.with(|vars| {
-            vars
-                .borrow_mut()
-                .remove::<T>(self.id)
-        })
+        self.remove_mut()
     }
 
     pub(crate) fn remove_mut(&self) -> Option<T> {
