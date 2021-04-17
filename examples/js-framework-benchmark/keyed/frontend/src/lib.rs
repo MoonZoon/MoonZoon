@@ -1,4 +1,4 @@
-#![no_std]
+// #![no_std]
 
 use zoon::{*, html::{attr, tag, event_handler}};
 use rand::prelude::*;
@@ -47,12 +47,12 @@ type ID = usize;
 blocks!{
 
     #[s_var]
-    fn generator() -> SmallRng {
+    fn generator() -> SVar<SmallRng> {
         SmallRng::from_entropy()
     }
 
     #[s_var]
-    fn previous_id() -> ID {
+    fn previous_id() -> SVar<ID> {
         0
     }
 
@@ -62,17 +62,17 @@ blocks!{
     }
 
     #[s_var]
-    fn selected_row() -> Option<Var<Row>> {
+    fn selected_row() -> SVar<Option<Var<Row>>> {
         None
     }
 
     #[s_var]
-    fn rows() -> Vec<VarC<Row>> {
+    fn rows() -> SVar<Vec<VarC<Row>>> {
         Vec::new()
     }
 
     #[cache]
-    fn rows_len() -> usize {
+    fn rows_len() -> Cache<usize> {
         rows().map(Vec::len)
     }
 
@@ -150,8 +150,8 @@ blocks!{
         });
     }
 
-    #[el]
-    fn root() -> RawEl {
+    #[cmp]
+    fn root() -> Cmp {
         raw_el![
             attr("class", "container"),
             jumbotron(),
@@ -164,8 +164,8 @@ blocks!{
         ]
     }
 
-    #[el]
-    fn jumbotron() -> RawEl {
+    #[cmp]
+    fn jumbotron() -> Cmp {
         raw_el![
             attr("class", "jumbotron"),
             raw_el![
@@ -207,8 +207,8 @@ blocks!{
         ]
     }
 
-    #[el]
-    fn table() -> RawEl {
+    #[cmp]
+    fn table() -> Cmp {
         let rows = rows().map(|rows| rows.iter_vars().map(row));
         raw_el![
             tag("table"),
@@ -221,8 +221,8 @@ blocks!{
         ]
     }
 
-    #[el(row)]
-    fn row(row: Var<Row>) -> RawEl {
+    #[cmp(row)]
+    fn row(row: Var<Row>) -> Cmp {
         let selected_row = selected_row().unwatch().inner();
         let is_selected = selected_row == Some(row);
         raw_el![
@@ -238,8 +238,8 @@ blocks!{
         ]
     }
 
-    #[el]
-    fn row_id(row: Var<Row>) -> RawEl {
+    #[cmp]
+    fn row_id(row: Var<Row>) -> Cmp {
         let id = row.map(|row| row.id);
         raw_el![
             tag("td"),
@@ -248,8 +248,8 @@ blocks!{
         ]
     }
 
-    #[el]
-    fn row_label(row: Var<Row>) -> RawEl {
+    #[cmp]
+    fn row_label(row: Var<Row>) -> Cmp {
         let label = row.map(|row| row.label.clone());
         raw_el![
             tag("td"),
@@ -263,8 +263,8 @@ blocks!{
         ]
     }
 
-    #[el]
-    fn row_remove_button(row: Var<Row>) -> RawEl {
+    #[cmp]
+    fn row_remove_button(row: Var<Row>) -> Cmp {
         row.unwatch();
         raw_el![
             tag("td"),
