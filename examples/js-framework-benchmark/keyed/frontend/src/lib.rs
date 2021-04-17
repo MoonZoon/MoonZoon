@@ -211,7 +211,7 @@ blocks!{
 
     #[cmp]
     fn table() -> Cmp {
-        let rows = rows().map(|rows| rows.iter().map(|row_var| row(row_var.to_ref())));
+        let rows = rows().map(|rows| rows.iter().map(|row_var| row(row_var.to_var_ref())));
         raw_el![
             tag("table"),
             attr("class", "table table-hover table-striped test-data"),
