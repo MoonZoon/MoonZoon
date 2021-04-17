@@ -12,7 +12,7 @@ pub struct RawEl<'a> {
     tag: Option<&'a str>,
     attrs: Vec<Attr<'a>>,
     event_handlers: Vec<EventHandler<'a>>,
-    child: Option<Box<dyn Element + 'a>>,
+    children: Vec<Box<dyn Element + 'a>>,
 }
 
 impl<'a> Element for RawEl<'a> {
@@ -20,9 +20,9 @@ impl<'a> Element for RawEl<'a> {
     fn render(&mut self, rcx: RenderContext) {
         // log!("raw_el, index: {}", rcx.index);
 
-        let node = dom_element(rcx, |rcx| {
-            if let Some(child) = self.child.as_mut() {
-                child.render(rcx)
+        let node = dom_element(rcx, |mut rcx| {
+            for child in &mut self.children {
+                child.render(rcx.inc_index().clone());
             }
         });
         node.update_mut(|node| {
@@ -46,8 +46,8 @@ impl<'a> RawEl<'a> {
 // ------ IntoElement ------
 
 impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<RawEl<'a>> for T {
-    fn apply_to_element(self, element: &mut RawEl<'a>) {
-        element.child = Some(Box::new(self.into_element()));
+    fn apply_to_element(self, raw_el: &mut RawEl<'a>) {
+        raw_el.children.push(Box::new(self.into_element()));
     }
 }
 
