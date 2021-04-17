@@ -42,4 +42,5 @@ pub enum __Block {
     Cache(Id),
     Cmp(TrackedCallId),
     CmpVar(TrackedCallId),
+    Var(Id),
 }
