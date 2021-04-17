@@ -19,17 +19,24 @@ use std::env;
 
 pub struct Frontend {
     title: String,
+    style: Option<String>,
 }
 
 impl Frontend {
     pub fn new() -> Self {
         Self {
-            title: String::new()
+            title: String::new(),
+            style: None,
         }
     }
 
     pub fn title(mut self, title: impl Into<String>) -> Self {
         self.title = title.into();
+        self
+    }
+
+    pub fn style(mut self, style: impl Into<String>) -> Self {
+        self.style = Some(style.into());
         self
     }
 }
@@ -139,6 +146,8 @@ where
 
         let pkg_route = warp::path("pkg").and(warp::fs::dir("frontend/pkg/"));
 
+        let public_route = warp::path("public").and(warp::fs::dir("public/"));
+
         let frontend_route = warp::get().and_then(move || async move {
             let frontend = frontend().await;
 
@@ -147,13 +156,16 @@ where
                 .and_then(|uuid| uuid.parse().ok())
                 .unwrap_or_default();
 
-            Ok::<_, warp::Rejection>(warp::reply::html(html(&frontend.title, backend_build_id, frontend_build_id)))
+            Ok::<_, warp::Rejection>(warp::reply::html(html(
+                &frontend.title, backend_build_id, frontend_build_id, frontend.style.as_ref().map(String::as_str)
+            )))
         });
         
         let main_server_routes = up_msg_handler_route
             .or(reload)
             .or(sse)
             .or(pkg_route)
+            .or(public_route)
             .or(frontend_route);
             // @TODO too slow => static compression? how to change brotli params? (need the feature flag `compression`)
             // .with(warp::compression::brotli());
@@ -248,7 +260,7 @@ where
     Ok(())
 }
 
-fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid) -> String {
+fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid, style: Option<&str>) -> String {
     format!(r#"<!DOCTYPE html>
     <html lang="en">
     
@@ -258,35 +270,7 @@ fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid) -> String 
       <title>{title}</title>
       <link rel="preload" href="/pkg/frontend_bg_{frontend_build_id}.wasm" as="fetch" type="application/wasm" crossorigin>
       <link rel="preload" href="/pkg/frontend_{frontend_build_id}.js" as="script" type="text/javascript" crossorigin>
-      <style>
-        html {{
-            background-color: black;
-            color: lightgray;
-        }}
-
-        #app * {{
-            padding: 5px;
-        }}
-            
-        .button {{
-            cursor: pointer;
-            background-color: darkgreen;
-            user-select: none;
-        }}
-
-        .button:hover {{
-            background-color: green;
-        }}
-        
-        .column {{
-            display: flex;
-            flex-direction: column;
-        }}
-        
-        .row {{
-            display: flex;
-        }}
-      </style>
+      {style}
     </head>
 
     <body>
@@ -323,7 +307,8 @@ fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid) -> String 
     title = title, 
     html_debug_info = html_debug_info(backend_build_id),
     reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"),
-    frontend_build_id = frontend_build_id.to_string())
+    frontend_build_id = frontend_build_id.to_string(),
+    style = style.map(|style| format!("<style>{}</style>", style)).unwrap_or_default())
 }
 
 fn html_debug_info(_backend_build_id: Uuid) -> String {
