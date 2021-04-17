@@ -81,25 +81,27 @@ blocks!{
             *id += 1;
             id
         });
-        let label = format!(
-            "{} {} {}",
-            ADJECTIVES.choose(generator).unwrap(),
-            COLOURS.choose(generator).unwrap(),
-            NOUNS.choose(generator).unwrap(),
-        );
+        let label = generator().map_mut(|generator| {
+            format!(
+                "{} {} {}",
+                ADJECTIVES.choose(generator).unwrap(),
+                COLOURS.choose(generator).unwrap(),
+                NOUNS.choose(generator).unwrap(),
+            )
+        });
         new_var_c(Row { id, label })
     }
 
     #[update]
     fn create_rows(count: usize) {
-        rows.update_mut(|rows| {
+        rows().update_mut(|rows| {
             *rows = (0..count).map(|_| create_row()).collect();
         });
     }
 
     #[update]
     fn append_rows(count: usize) {
-        rows.update_mut(|rows| {
+        rows().update_mut(|rows| {
             rows.append(&mut (0..count).map(|_| create_row()).collect());
         });
     }
@@ -108,11 +110,11 @@ blocks!{
     fn update_rows(step: usize) {
         let len = rows_len().inner();
         rows().use_ref(|rows| {
-            stop![
+            // stop![
                 for position in (0..len).step_by(step) {
                     rows[position].update_mut(|row| row.label += " !!!");
                 }
-            ]
+            // ]
         })
     }
 
