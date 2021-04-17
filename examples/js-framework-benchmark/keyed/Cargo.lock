@@ -1067,6 +1067,7 @@ dependencies = [
  "s_var_macro",
  "tracked_call_macro",
  "update_macro",
+ "uuid",
  "wasm-bindgen",
  "web-sys",
 ]

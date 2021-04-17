@@ -227,8 +227,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c9495705279e7140bf035dde1f6e750c162df8b625267cd52cc44e0b156732c8"
 dependencies = [
  "cfg-if 1.0.0",
+ "js-sys",
  "libc",
  "wasi",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -1036,6 +1038,7 @@ dependencies = [
  "s_var_macro",
  "tracked_call_macro",
  "update_macro",
+ "uuid",
  "wasm-bindgen",
  "web-sys",
 ]

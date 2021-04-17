@@ -13,6 +13,8 @@ update_macro = { path = "../update_macro" }
 cache_macro = { path = "../cache_macro" }
 cmp_macro = { path = "../cmp_macro" }
 tracked_call_macro = { path = "../tracked_call_macro" }
+# @TODO remove rand and getrandom?
+uuid = { version = "0.8.2", features = ["v4", "wasm-bindgen"], default_features = false }
 
 [dependencies.web-sys]
 version = "0.3.48"
