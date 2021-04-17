@@ -2,7 +2,7 @@
 
 use zoon::{*, raw_el::{attr, tag, event_handler}};
 use rand::prelude::*;
-use std::iter;
+use std::rc::Rc;
 
 static ADJECTIVES: &[&'static str] = &[
     "pretty",
@@ -62,12 +62,12 @@ blocks!{
     }
 
     #[s_var]
-    fn selected_row() -> SVar<Option<Var<Row>>> {
+    fn selected_row() -> SVar<Option<VarRef<Row>>> {
         None
     }
 
     #[s_var]
-    fn rows() -> SVar<Vec<VarC<Row>>> {
+    fn rows() -> SVar<Vec<Rc<Var<Row>>>> {
         Vec::new()
     }
 
@@ -76,7 +76,7 @@ blocks!{
         rows().map(Vec::len)
     }
 
-    fn create_row() -> VarC<Row> {
+    fn create_row() -> Rc<Var<Row>> {
         let id = previous_id().map_mut(|id| {
             *id += 1;
             id
@@ -89,7 +89,7 @@ blocks!{
                 NOUNS.choose(generator).unwrap(),
             )
         });
-        new_var_c(Row { id, label })
+        Rc::new(Var::new(Row { id, label }))
     }
 
     #[update]
@@ -134,7 +134,7 @@ blocks!{
     }
 
     #[update]
-    fn select_row(row: Var<Row>) {
+    fn select_row(row: VarRef<Row>) {
         let old_selected = selected_row().map_mut(|selected_row| {
             selected_row.replace(row)
         });
@@ -145,7 +145,7 @@ blocks!{
     }
 
     #[update]
-    fn remove(row: Var<Row>) {
+    fn remove(row: VarRef<Row>) {
         rows().update_mut(|rows| {
             let position = rows.iter_vars().position(|r| r == row).unwrap();
             rows.remove(position);
@@ -211,7 +211,7 @@ blocks!{
 
     #[cmp]
     fn table() -> Cmp {
-        let rows = rows().map(|rows| rows.iter_vars().map(row));
+        let rows = rows().map(|rows| rows.iter().map(|row_var| row(row_var.to_ref())));
         raw_el![
             tag("table"),
             attr("class", "table table-hover table-striped test-data"),
@@ -224,7 +224,7 @@ blocks!{
     }
 
     #[cmp(row)]
-    fn row(row: Var<Row>) -> Cmp {
+    fn row(row: VarRef<Row>) -> Cmp {
         let selected_row = selected_row().unwatch().inner();
         let is_selected = selected_row == Some(row);
         raw_el![
@@ -241,7 +241,7 @@ blocks!{
     }
 
     #[cmp]
-    fn row_id(row: Var<Row>) -> Cmp {
+    fn row_id(row: VarRef<Row>) -> Cmp {
         let id = row.map(|row| row.id);
         raw_el![
             tag("td"),
@@ -251,7 +251,7 @@ blocks!{
     }
 
     #[cmp]
-    fn row_label(row: Var<Row>) -> Cmp {
+    fn row_label(row: VarRef<Row>) -> Cmp {
         let label = row.map(|row| row.label.clone());
         raw_el![
             tag("td"),
@@ -266,7 +266,7 @@ blocks!{
     }
 
     #[cmp]
-    fn row_remove_button(row: Var<Row>) -> Cmp {
+    fn row_remove_button(row: VarRef<Row>) -> Cmp {
         row.unwatch();
         raw_el![
             tag("td"),
