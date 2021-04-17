@@ -5,7 +5,7 @@ async fn init() {}
 async fn frontend() -> Frontend {
     Frontend::new()
         .title("Counter example")
-        .style("html {
+        .append_to_head("<style>html {
             background-color: black;
             color: lightgray;
         }
@@ -32,7 +32,7 @@ async fn frontend() -> Frontend {
         .row {
             display: flex;
         }
-        ")
+        </style>")
 }
 
 async fn up_msg_handler(_: UpMsgRequest) {}
