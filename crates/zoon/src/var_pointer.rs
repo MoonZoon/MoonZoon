@@ -8,6 +8,13 @@ pub struct VarPointer<T: 'static> {
     phantom_data: PhantomData<T>,
 }
 
+impl<T> Eq for VarPointer<T> {}
+impl<T> PartialEq for VarPointer<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
 impl<T> std::fmt::Debug for VarPointer<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({:#?})", self.id)
@@ -41,7 +48,7 @@ where
         })
     }
 
-    pub fn set(&mut self, data: T) {
+    pub fn set(&self, data: T) {
         VARS.with(|vars| {
             vars
                 .borrow_mut()
@@ -58,7 +65,7 @@ where
         })
     }
 
-    pub(crate) fn remove_mut(&mut self) -> Option<T> {
+    pub(crate) fn remove_mut(&self) -> Option<T> {
         VARS.with(|vars| {
             vars
                 .borrow_mut()
@@ -66,12 +73,12 @@ where
         })
     }
 
-    pub fn update(&mut self, updater: impl FnOnce(T) -> T) {
+    pub fn update(&self, updater: impl FnOnce(T) -> T) {
         let data = self.remove_mut().expect("an var data with the given id");
         self.set(updater(data));
     }
 
-    pub fn update_mut(&mut self, updater: impl FnOnce(&mut T)) {
+    pub fn update_mut(&self, updater: impl FnOnce(&mut T)) {
         let mut data = self.remove_mut().expect("an var data with the given id");
         updater(&mut data);
         self.set(data);
@@ -86,14 +93,14 @@ where
         })
     }
 
-    pub fn map_mut<U>(&mut self, mapper: impl FnOnce(&mut T) -> U) -> U {
+    pub fn map_mut<U>(&self, mapper: impl FnOnce(&mut T) -> U) -> U {
         let mut data = self.remove_mut().expect("an var data with the given id");
         let output = mapper(&mut data);
         self.set(data);
         output
     }
 
-    pub fn use_ref<U>(&self, user: impl FnOnce(&T)) {
+    pub fn use_ref(&self, user: impl FnOnce(&T)) {
         VARS.with(|vars| {
             let var_map = vars.borrow();
             let data = var_map.data(self.id)

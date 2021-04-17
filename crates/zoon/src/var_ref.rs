@@ -1,18 +1,87 @@
 use std::marker::PhantomData;
-use crate::{SVar, Cache, ElVar, CmpVar, var_pointer::VarPointer};
+use crate::{Var, SVar, Cache, ElVar, CmpVar, var_pointer::VarPointer};
+
+pub trait ToVarRef<T> {
+    fn to_var_ref(&self) -> VarRef<T>;
+}
+
+impl<T> ToVarRef<T> for SVar<T> {
+    fn to_var_ref(&self) -> VarRef<T> {
+        VarRef {
+            variable: Variable::SVar(*self),
+            phantom_data: PhantomData,
+        }
+    }
+}
+
+impl<T> ToVarRef<T> for Cache<T> {
+    fn to_var_ref(&self) -> VarRef<T> {
+        VarRef {
+            variable: Variable::Cache(*self),
+            phantom_data: PhantomData,
+        }
+    }
+}
+
+impl<T> ToVarRef<T> for ElVar<T> {
+    fn to_var_ref(&self) -> VarRef<T> {
+        VarRef {
+            variable: Variable::ElVar(*self),
+            phantom_data: PhantomData,
+        }
+    }
+}
+
+impl<T> ToVarRef<T> for CmpVar<T> {
+    fn to_var_ref(&self) -> VarRef<T> {
+        VarRef {
+            variable: Variable::CmpVar(*self),
+            phantom_data: PhantomData,
+        }
+    }
+}
+
+impl<T> ToVarRef<T> for Var<T> {
+    fn to_var_ref(&self) -> VarRef<T> {
+        VarRef {
+            variable: Variable::Var(VarPointer::new(self)),
+            phantom_data: PhantomData,
+        }
+    }
+}
 
 pub struct VarRef<T: 'static> {
     variable: Variable<T>,
     phantom_data: PhantomData<T>,
 }
 
-// #[derive(Debug)]
+impl<T> Eq for VarRef<T> {}
+impl<T> PartialEq for VarRef<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.variable == other.variable
+    }
+}
+
 enum Variable<T: 'static> {
     SVar(SVar<T>),
     Cache(Cache<T>),
     ElVar(ElVar<T>),
     CmpVar(CmpVar<T>),
     Var(VarPointer<T>),
+}
+
+impl<T> Eq for Variable<T> {}
+impl<T> PartialEq for Variable<T> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Variable::SVar(this), Variable::SVar(other)) => this == other,
+            (Variable::Cache(this), Variable::Cache(other)) => this == other,
+            (Variable::ElVar(this), Variable::ElVar(other)) => this == other,
+            (Variable::CmpVar(this), Variable::CmpVar(other)) => this == other,
+            (Variable::Var(this), Variable::Var(other)) => this == other,
+            _ => false
+        }
+    }
 }
 
 impl<T> Copy for Variable<T> {}
@@ -44,81 +113,91 @@ impl<T> Clone for VarRef<T> {
     }
 }
 
-// impl<T> VarRef<T>
-// where
-//     T: 'static,
-// {
-//     pub(crate) fn new(id: TrackedCallId) -> VarRef<T> {
-//         VarRef {
-//             id,
-//             phantom_data: PhantomData,
-//         }
-//     }
+impl<T> VarRef<T>
+where
+    T: 'static,
+{
+    pub fn exists(&self) -> bool {
+        match &self.variable {
+            Variable::SVar(_) => true,
+            Variable::Cache(_) =>  true,
+            Variable::ElVar(el_var) =>  el_var.exists(),
+            Variable::CmpVar(cmp_var) =>  cmp_var.exists(),
+            Variable::Var(var_pointer) =>  var_pointer.exists(),
+        }
+    }
 
-//     pub fn exists(self) -> bool {
-//         EL_VARS.with(|el_vars| {
-//             el_vars.borrow().contains_id(&self.id)
-//         })
-//     }
+    pub fn set(&self, data: T) {
+        match &self.variable {
+            Variable::SVar(s_var) => s_var.set(data),
+            // @TODO make it work
+            Variable::Cache(_) => todo!(),
+            Variable::ElVar(el_var) =>  el_var.set(data),
+            Variable::CmpVar(cmp_var) =>  cmp_var.set(data),
+            Variable::Var(var_pointer) =>  var_pointer.set(data),
+        }
+    }
 
-//     pub fn set(self, data: T) {
-//         EL_VARS.with(|el_vars| {
-//             el_vars
-//                 .borrow_mut()
-//                 .insert(self.id, data)
-//         });
-//     }
+    // fn remove(self) ->T {
+    // }
 
-//     fn remove(self) ->T {
-//         // log!("REMOVE {:#?}", self.id);
-//         EL_VARS.with(|el_vars| {
-//             el_vars
-//                 .borrow_mut()
-//                 .remove::<T>(&self.id)
-//         })
-//     }
+    pub fn update(&self, updater: impl FnOnce(T) -> T) {
+        match &self.variable {
+            Variable::SVar(s_var) => s_var.update(updater),
+            Variable::Cache(cache) => cache.update(updater),
+            Variable::ElVar(el_var) =>  el_var.update(updater),
+            Variable::CmpVar(cmp_var) =>  cmp_var.update(updater),
+            Variable::Var(var_pointer) =>  var_pointer.update(updater),
+        }
+    }
 
-//     pub fn update(self, updater: impl FnOnce(T) -> T) {
-//         let data = self.remove();
-//         self.set(updater(data));
-//     }
+    pub fn update_mut(&self, updater: impl FnOnce(&mut T)) {
+        match &self.variable {
+            Variable::SVar(s_var) => s_var.update_mut(updater),
+            Variable::Cache(cache) => cache.update_mut(updater),
+            Variable::ElVar(el_var) =>  el_var.update_mut(updater),
+            Variable::CmpVar(cmp_var) =>  cmp_var.update_mut(updater),
+            Variable::Var(var_pointer) =>  var_pointer.update_mut(updater),
+        }
+    }
 
-//     pub fn update_mut(self, updater: impl FnOnce(&mut T)) {
-//         let mut data = self.remove();
-//         updater(&mut data);
-//         self.set(data);
-//     }
+    pub fn map<U>(&self, mapper: impl FnOnce(&T) -> U) -> U {
+        match &self.variable {
+            Variable::SVar(s_var) => s_var.map(mapper),
+            Variable::Cache(cache) => cache.map(mapper),
+            Variable::ElVar(el_var) =>  el_var.map(mapper),
+            Variable::CmpVar(cmp_var) =>  cmp_var.map(mapper),
+            Variable::Var(var_pointer) =>  var_pointer.map(mapper),
+        }
+    }
 
-//     pub fn map<U>(self, mapper: impl FnOnce(&T) -> U) -> U {
-//         EL_VARS.with(|el_vars| {
-//             let cmp_var_map = el_vars.borrow();
-//             let data = cmp_var_map.data(&self.id);
-//             mapper(data)
-//         })
-//     }
+    pub fn map_mut<U>(&self, mapper: impl FnOnce(&mut T) -> U) -> U {
+        match &self.variable {
+            Variable::SVar(s_var) => s_var.map_mut(mapper),
+            Variable::Cache(cache) => cache.map_mut(mapper),
+            Variable::ElVar(el_var) =>  el_var.map_mut(mapper),
+            Variable::CmpVar(cmp_var) =>  cmp_var.map_mut(mapper),
+            Variable::Var(var_pointer) =>  var_pointer.map_mut(mapper),
+        }
+    }
 
-//     pub fn map_mut<U>(self, mapper: impl FnOnce(&mut T) -> U) -> U {
-//         let mut data = self.remove();
-//         let output = mapper(&mut data);
-//         self.set(data);
-//         output
-//     }
+    pub fn use_ref(&self, user: impl FnOnce(&T)) {
+        match &self.variable {
+            Variable::SVar(s_var) => s_var.use_ref(user),
+            Variable::Cache(cache) => cache.use_ref(user),
+            Variable::ElVar(el_var) =>  el_var.use_ref(user),
+            Variable::CmpVar(cmp_var) =>  cmp_var.use_ref(user),
+            Variable::Var(var_pointer) =>  var_pointer.use_ref(user),
+        }
+    }
+}
 
-//     pub fn use_ref<U>(self, user: impl FnOnce(&T)) {
-//         EL_VARS.with(|el_vars| {
-//             let cmp_var_map = el_vars.borrow();
-//             let data = cmp_var_map.data(&self.id);
-//             user(data)
-//         })
-//     }
-// }
+pub trait CloneVarRef<T: Clone + 'static> {
+    fn inner(&self) -> T;
+}
 
-// pub trait CloneVarRef<T: Clone + 'static> {
-//     fn inner(&self) -> T;
-// }
-
-// impl<T: Clone + 'static> CloneVarRef<T> for VarRef<T> {
-//     fn inner(&self) -> T {
-//         self.map(Clone::clone)
-//     }
-// }
+impl<T: Clone + 'static> CloneVarRef<T> for VarRef<T> {
+    fn inner(&self) -> T {
+        self.map(Clone::clone)
+    }
+}

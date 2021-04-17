@@ -7,6 +7,13 @@ pub struct ElVar<T> {
     phantom_data: PhantomData<T>,
 }
 
+impl<T> Eq for ElVar<T> {}
+impl<T> PartialEq for ElVar<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
 impl<T> std::fmt::Debug for ElVar<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "({:#?})", self.id)
@@ -83,7 +90,7 @@ where
         output
     }
 
-    pub fn use_ref<U>(self, user: impl FnOnce(&T)) {
+    pub fn use_ref(self, user: impl FnOnce(&T)) {
         EL_VARS.with(|el_vars| {
             let cmp_var_map = el_vars.borrow();
             let data = cmp_var_map.data(&self.id);
