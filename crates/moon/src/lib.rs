@@ -19,14 +19,14 @@ use std::env;
 
 pub struct Frontend {
     title: String,
-    style: Option<String>,
+    append_to_head: String,
 }
 
 impl Frontend {
     pub fn new() -> Self {
         Self {
             title: String::new(),
-            style: None,
+            append_to_head: String::new(),
         }
     }
 
@@ -35,8 +35,8 @@ impl Frontend {
         self
     }
 
-    pub fn style(mut self, style: impl Into<String>) -> Self {
-        self.style = Some(style.into());
+    pub fn append_to_head(mut self, html: &str) -> Self {
+        self.append_to_head.push_str(html);
         self
     }
 }
@@ -157,7 +157,7 @@ where
                 .unwrap_or_default();
 
             Ok::<_, warp::Rejection>(warp::reply::html(html(
-                &frontend.title, backend_build_id, frontend_build_id, frontend.style.as_ref().map(String::as_str)
+                &frontend.title, backend_build_id, frontend_build_id, &frontend.append_to_head
             )))
         });
         
@@ -260,7 +260,7 @@ where
     Ok(())
 }
 
-fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid, style: Option<&str>) -> String {
+fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid, append_to_head: &str) -> String {
     format!(r#"<!DOCTYPE html>
     <html lang="en">
     
@@ -270,7 +270,7 @@ fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid, style: Opt
       <title>{title}</title>
       <link rel="preload" href="/pkg/frontend_bg_{frontend_build_id}.wasm" as="fetch" type="application/wasm" crossorigin>
       <link rel="preload" href="/pkg/frontend_{frontend_build_id}.js" as="script" type="text/javascript" crossorigin>
-      {style}
+      {append_to_head}
     </head>
 
     <body>
@@ -308,7 +308,7 @@ fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid, style: Opt
     html_debug_info = html_debug_info(backend_build_id),
     reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"),
     frontend_build_id = frontend_build_id.to_string(),
-    style = style.map(|style| format!("<style>{}</style>", style)).unwrap_or_default())
+    append_to_head = append_to_head)
 }
 
 fn html_debug_info(_backend_build_id: Uuid) -> String {
