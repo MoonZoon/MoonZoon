@@ -56,7 +56,6 @@ pub fn dom_element(mut rcx: RenderContext, children: impl FnOnce(RenderContext))
 pub fn dom_text(rcx: RenderContext, text: &str) {  
     // log!("text, index: {}", rcx.index);
 
-    let old_text = el_var(|| None::<String>);
     let node = el_var(|| {
         let node_ws = document().create_text_node(&text).unchecked_into::<web_sys::Node>();
         rcx.node.update_mut(|node| {
@@ -66,13 +65,20 @@ pub fn dom_text(rcx: RenderContext, text: &str) {
         Node { node_ws }
     });
 
-    if old_text.map(|old_text| {
-        Some(text) == old_text.as_ref().map(String::as_str)
-    }) {
-        return;
-    }
-    old_text.set(Some(text.to_owned()));
-    node.update_mut(|node| {
-        node.node_ws.set_node_value(Some(text));
+    let old_text = el_var(|| None::<String>);
+    old_text.update_mut(|old_text| {
+        if let Some(old_text) = old_text {
+            if old_text != text {
+                *old_text = text.to_owned();
+                node.update_mut(|node| {
+                    node.node_ws.set_node_value(Some(text));
+                });
+            }
+            return
+        }
+        *old_text = Some(text.to_owned());
+        node.update_mut(|node| {
+            node.node_ws.set_node_value(Some(text));
+        });
     });
 }
