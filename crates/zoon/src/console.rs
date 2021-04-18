@@ -1,7 +1,7 @@
 use wasm_bindgen::{prelude::*};
 
 #[macro_export]
-macro_rules! log {
+macro_rules! println {
     ($($t:tt)*) => ($crate::log(&format_args!($($t)*).to_string()))
 }
 

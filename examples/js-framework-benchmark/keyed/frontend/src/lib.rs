@@ -1,6 +1,6 @@
 // #![no_std]
 
-use zoon::{*, raw_el::{attr, tag, event_handler}};
+use zoon::{*, println, raw_el::{attr, tag, event_handler}};
 use rand::prelude::*;
 use std::rc::Rc;
 
@@ -109,10 +109,15 @@ blocks!{
     #[update]
     fn update_rows(step: usize) {
         let len = rows_len().inner();
+        // rows().use_ref(|rows| {
         rows().use_ref(|rows| {
             // stop![
                 for position in (0..len).step_by(step) {
-                    rows[position].update_mut(|row| row.label += " !!!");
+                    println!("position: {}", position);
+                    rows[position].update_mut(|row| {
+                        println!("label: {}", row.label);
+                        row.label += " !!!"
+                    });
                 }
             // ]
         })
@@ -184,7 +189,7 @@ blocks!{
                     raw_el![
                         attr("class", "row"),
                         // action_button("run", "Create 1,000 rows", || create_rows(1_000)),
-                        action_button("run", "Create 1,000 rows", || create_rows(50)),
+                        action_button("run", "Create 1,000 rows", || create_rows(11)),
                         action_button("runlots", "Create 10,000 rows", || create_rows(10_000)),
                         action_button("add", "Append 1,000 rows", || append_rows(1_000)),
                         action_button("update", "Update every 10th row", || update_rows(10)),
