@@ -16,7 +16,7 @@ element_macro!(raw_el, RawEl::default());
 #[derive(Default)]
 pub struct RawEl<'a> {
     tag: Option<&'a str>,
-    attrs: Vec<Attr<'a>>,
+    attrs: HashMap<&'a str, &'a str>,
     event_handlers: HashMap<&'static str, Vec<Box<dyn Fn(web_sys::Event)>>>,
     children: Vec<Box<dyn Element + 'a>>,
 }
@@ -24,7 +24,7 @@ pub struct RawEl<'a> {
 impl<'a> Element for RawEl<'a> {
     #[render]
     fn render(&mut self, rcx: RenderContext) {
-        // @TODO optimize
+        // @TODO resolve changed tag
 
         // log!("raw_el, index: {}", rcx.index);
 
@@ -33,24 +33,44 @@ impl<'a> Element for RawEl<'a> {
                 child.render(rcx.inc_index().clone());
             }
         });
-        node.update_mut(|node| {
-            let element = node.node_ws.unchecked_ref::<web_sys::Element>();
-            for attr in &self.attrs {
-                element.set_attribute(&attr.name, &attr.value).unwrap();
-            }
+
+        let attrs = el_var(|| HashMap::<String, String>::new());
+        attrs.update_mut(|attrs| {
+            node.update_mut(|node| {
+                let element = node.node_ws.unchecked_ref::<web_sys::Element>();
+
+                attrs.retain(|name, value| {
+                    if let Some(new_value) = self.attrs.remove(name.as_str()) {
+                        if new_value != value {
+                            element.set_attribute(name, value).unwrap();
+                            *value = new_value.to_owned();
+                        }
+                        return true
+                    } 
+                    element.remove_attribute(name).unwrap();
+                    false
+                });
+
+                for (new_name, new_value) in mem::take(&mut self.attrs) {
+                    attrs.insert(new_name.to_owned(), new_value.to_owned());
+                    element.set_attribute(new_name, new_value).unwrap();
+                }
+            });
         });
 
         let listeners = el_var(|| HashMap::new());
         listeners.update_mut(|listeners| {
             for (event, handlers) in mem::take(&mut self.event_handlers) {
+                if handlers.is_empty() {
+                    listeners.remove(event);
+                    continue;
+                }
                 listeners
                     .entry(event)
                     .or_insert(Listener::new(event, node))
                     .set_handlers(handlers);
             }
         });
-
-        // @TODO remove listeners without handlers?
     }
 }
 
@@ -175,7 +195,7 @@ pub fn attr<'a>(name: &'a str, value: &'a str) -> Attr<'a> {
 }
 impl<'a> ApplyToElement<RawEl<'a>> for Attr<'a> {
     fn apply_to_element(self, raw_el: &mut RawEl<'a>) {
-        raw_el.attrs.push(self);
+        raw_el.attrs.insert(self.name, self.value);
     }
 }
 
