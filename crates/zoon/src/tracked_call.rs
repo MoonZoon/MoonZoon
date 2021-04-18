@@ -1,7 +1,6 @@
 use std::{collections::{hash_map::DefaultHasher}, hash::Hash};
 use std::hash::Hasher;
 use crate::tracked_call_stack::__TrackedCallStack;
-use crate::log;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct TrackedCallId {
@@ -54,9 +53,9 @@ impl __TrackedCall {
             hasher.finish()
         };
 
-        if hash == 4937557638822002552 {
-            log!("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX THIS");
-        }
+        // if hash == 4937557638822002552 {
+        //     log!("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX THIS");
+        // }
 
         Self {
             hash,
