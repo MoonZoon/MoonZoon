@@ -42,7 +42,7 @@ pub use cmp_var::{CmpVar, CloneCmpVar};
 pub use c_var::{CVar, CloneCVar};
 pub use s_var::{SVar, CloneSVar, s_var};
 pub use var::{Var, CloneVar};
-pub use var_ref::{VarRef, CloneVarRef, ToVarRef};
+pub use var_ref::{VarRef, CloneVarRef, ToVarRef, Variable};
 pub use cache::{Cache, CloneCache, cache};
 pub use console::log;
 pub use hook::{el_var, cmp_var, do_once, c_var};

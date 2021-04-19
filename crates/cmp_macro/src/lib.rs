@@ -1,5 +1,5 @@
 use proc_macro::TokenStream;
-use syn::{parse_quote, ItemFn, spanned::Spanned};
+use syn::{parse_quote, ItemFn, FnArg, Pat, spanned::Spanned};
 
 /* 
 #[cmp]
@@ -39,6 +39,16 @@ fn root<'a>() -> Cmp<'a> {
 pub fn cmp(_args: TokenStream, input: TokenStream) -> TokenStream {
     let mut input_fn: ItemFn = syn::parse(input).unwrap();
 
+    let fn_arg_idents = input_fn.sig.inputs.iter().filter_map(|fn_arg| {
+        if let FnArg::Typed(pat_type) = fn_arg {
+            match pat_type.pat.as_ref() {
+                Pat::Ident(pat_ident) => return Some(pat_ident.ident.clone()),
+                _ => return None
+            }
+        } 
+        None
+    });
+
     let inner_block = input_fn.block;
     input_fn.block = parse_quote!({ 
         let component_body = c_var(move || {
@@ -50,6 +60,9 @@ pub fn cmp(_args: TokenStream, input: TokenStream) -> TokenStream {
                 creator: std::rc::Rc::new(move || {
                     __BlockCallStack::push(__block);
                     // __Relations::remove_dependencies(&__block);
+
+                    #( #fn_arg_idents.add_dependency(); )*
+
                     let output = (|| #inner_block)();
                     __BlockCallStack::pop();
                     let mut cmp = output.into_component();
