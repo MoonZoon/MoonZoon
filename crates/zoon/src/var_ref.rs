@@ -1,5 +1,5 @@
 use std::marker::PhantomData;
-use crate::{Var, SVar, Cache, ElVar, CmpVar, var_pointer::VarPointer};
+use crate::{Var, SVar, Cache, ElVar, CmpVar, var_pointer::VarPointer, __Block, __Relations};
 
 pub trait ToVarRef<T> {
     fn to_var_ref(&self) -> VarRef<T>;
@@ -51,8 +51,21 @@ impl<T> ToVarRef<T> for Var<T> {
 }
 
 pub struct VarRef<T: 'static> {
-    variable: Variable<T>,
+    pub variable: Variable<T>,
     phantom_data: PhantomData<T>,
+}
+
+impl<T> VarRef<T> {
+    pub fn add_dependency(&self) {
+        let block = match &self.variable {
+            Variable::SVar(s_var) => __Block::SVar(s_var.id),
+            Variable::Cache(cache) => __Block::Cache(cache.id),
+            Variable::ElVar(_) => return,
+            Variable::CmpVar(cmp_var) => __Block::CmpVar(cmp_var.id),
+            Variable::Var(var_pointer) => __Block::Var(var_pointer.id),
+        };
+        __Relations::add_dependency(block)
+    }
 }
 
 impl<T> Eq for VarRef<T> {}
@@ -62,7 +75,7 @@ impl<T> PartialEq for VarRef<T> {
     }
 }
 
-enum Variable<T: 'static> {
+pub enum Variable<T: 'static> {
     SVar(SVar<T>),
     Cache(Cache<T>),
     ElVar(ElVar<T>),
