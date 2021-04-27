@@ -8,6 +8,7 @@ pub struct TrackedCallId {
     pub index: Option<usize>,
     pub parent_hash: Option<u64>,
     pub selected_index: usize,
+    pub key: Option<u64>
 }
 
 impl TrackedCallId {
@@ -21,6 +22,7 @@ impl TrackedCallId {
             index: call.index,
             parent_hash: call.parent_hash,
             selected_index: call.selected_index,
+            key: call.key,
         }
     }
 }
@@ -32,11 +34,12 @@ pub struct __TrackedCall {
     pub index: Option<usize>,
     pub parent_hash: Option<u64>,
     pub selected_index: usize,
+    pub key: Option<u64>,
 }
 
 
 impl __TrackedCall {
-    pub fn create() -> __TrackedCall {
+    pub fn create(key: Option<u64>) -> __TrackedCall {
         // let call_site = CallSite::here();
 
         let index = __TrackedCallStack::increment_last_selected_index();
@@ -50,6 +53,9 @@ impl __TrackedCall {
             if let Some(index) = index {
                 hasher.write_usize(index);
             }
+            if let Some(key) = key {
+                hasher.write_u64(key);
+            }
             hasher.finish()
         };
 
@@ -62,6 +68,7 @@ impl __TrackedCall {
             index,
             parent_hash,
             selected_index: 0,
+            key,
         }
     }
 }

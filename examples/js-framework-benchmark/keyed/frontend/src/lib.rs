@@ -234,7 +234,7 @@ blocks!{
         ]
     }
 
-    #[cmp(row)]
+    #[cmp(key = "row.map(|row| row.id)")]
     fn row(row: VarRef<Row>) -> Cmp {
         let selected_row = selected_row()/*.unwatch()*/.inner();
         let is_selected = selected_row == Some(row);
