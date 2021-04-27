@@ -1,5 +1,5 @@
-use proc_macro::TokenStream;
-use syn::{parse_quote, ItemFn, FnArg, Pat, spanned::Spanned};
+use proc_macro::{TokenStream, TokenTree, Group, Delimiter};
+use syn::{parse_quote, ItemFn, FnArg, Pat, spanned::Spanned, Attribute};
 
 /* 
 #[cmp]
@@ -36,7 +36,7 @@ fn root<'a>() -> Cmp<'a> {
 }
 */
 #[proc_macro_attribute]
-pub fn cmp(_args: TokenStream, input: TokenStream) -> TokenStream {
+pub fn cmp(args: TokenStream, input: TokenStream) -> TokenStream {
     let mut input_fn: ItemFn = syn::parse(input).unwrap();
 
     let fn_arg_idents = input_fn.sig.inputs.iter().filter_map(|fn_arg| {
@@ -106,8 +106,13 @@ pub fn cmp(_args: TokenStream, input: TokenStream) -> TokenStream {
         }
     });
 
+    let mut tracked_call_attribute: Attribute = parse_quote!(#[tracked_call]);
+    tracked_call_attribute.tokens = TokenStream::from(
+        TokenTree::Group(Group::new(Delimiter::Parenthesis, args))
+    ).into();
+
     quote::quote_spanned!(input_fn.span()=>
-        #[tracked_call]
+        #tracked_call_attribute
         #input_fn
     ).into()
 }
