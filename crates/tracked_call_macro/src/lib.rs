@@ -8,7 +8,7 @@ pub fn tracked_call(args: TokenStream, input: TokenStream) -> TokenStream {
     let key: Expr = if let Some(key) = key_from_args(&attr_args) {
         parse_quote!({
             use std::hash::{Hasher, Hash};
-            let mut hasher = std::collections::hash_map::DefaultHasher::new();
+            let mut hasher = ahash::AHasher::default();
             (#key).hash(&mut hasher);
             Some(hasher.finish())
         })

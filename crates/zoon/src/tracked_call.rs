@@ -1,6 +1,6 @@
-use std::{collections::{hash_map::DefaultHasher}, hash::Hash};
-use std::hash::Hasher;
 use crate::tracked_call_stack::__TrackedCallStack;
+use std::hash::{Hasher, Hash};
+use ahash::AHasher;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct TrackedCallId {
@@ -46,7 +46,7 @@ impl __TrackedCall {
         let parent_hash = __TrackedCallStack::last_hash();
 
         let hash = {
-            let mut hasher = DefaultHasher::new();
+            let mut hasher = AHasher::default();
             if let Some(parent_hash) = parent_hash {
                 hasher.write_u64(parent_hash);
             }

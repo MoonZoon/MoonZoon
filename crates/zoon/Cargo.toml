@@ -17,6 +17,7 @@ tracked_call_macro = { path = "../tracked_call_macro" }
 uuid = { version = "0.8.2", features = ["v4", "wasm-bindgen"], default_features = false }
 # slotmap = { version = "1.0.3", default_features = false }
 griddle = { version = "0.4.1", features = ["ahash", "inline-more", "ahash-compile-time-rng" ] }
+ahash = { version = "0.7.2" }
 
 [dependencies.web-sys]
 version = "0.3.48"

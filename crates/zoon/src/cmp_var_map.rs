@@ -13,7 +13,7 @@ pub(crate) struct CmpVarMapValue {
 impl CmpVarMap {
     pub(crate) fn new() -> Self {
         Self {
-            cmp_vars: HashMap::default(),
+            cmp_vars: HashMap::with_capacity(10_000),
         }
     }
 
