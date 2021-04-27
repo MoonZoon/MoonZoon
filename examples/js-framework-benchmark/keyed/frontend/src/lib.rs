@@ -188,8 +188,8 @@ blocks!{
                     attr("class", "col-md-6"),
                     raw_el![
                         attr("class", "row"),
-                        // action_button("run", "Create 1,000 rows", || create_rows(1_000)),
-                        action_button("run", "Create 1,000 rows", || create_rows(11)),
+                        action_button("run", "Create 1,000 rows", || create_rows(1_000)),
+                        // action_button("run", "Create 1,000 rows", || create_rows(11)),
                         action_button("runlots", "Create 10,000 rows", || create_rows(10_000)),
                         action_button("add", "Append 1,000 rows", || append_rows(1_000)),
                         action_button("update", "Update every 10th row", || update_rows(10)),

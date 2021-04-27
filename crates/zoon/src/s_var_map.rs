@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use griddle::HashMap;
 use std::any::Any;
 
 pub type Id = u128;
@@ -14,7 +14,7 @@ struct SVarMapValue {
 impl SVarMap {
     pub(crate) fn new() -> Self {
         Self {
-            s_vars: HashMap::new(),
+            s_vars: HashMap::default(),
         }
     }
 
