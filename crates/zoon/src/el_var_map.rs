@@ -13,7 +13,7 @@ pub(crate) struct ElVarMapValue {
 impl ElVarMap {
     pub(crate) fn new() -> Self {
         Self {
-            el_vars: HashMap::default(),
+            el_vars: HashMap::with_capacity(10_000),
         }
     }
 

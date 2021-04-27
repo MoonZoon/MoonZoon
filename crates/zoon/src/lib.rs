@@ -57,6 +57,7 @@ pub use tracked_call_stack::__TrackedCallStack;
 pub use component::ComponentChild;
 
 pub use griddle;
+pub use ahash;
 
 #[macro_export]
 macro_rules! with_dollar_sign {

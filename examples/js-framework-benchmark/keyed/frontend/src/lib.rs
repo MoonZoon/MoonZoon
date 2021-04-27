@@ -3,6 +3,7 @@
 use zoon::{*, println, raw_el::{attr, tag, event_handler}};
 use rand::prelude::*;
 use std::rc::Rc;
+use std::mem;
 
 static ADJECTIVES: &[&'static str] = &[
     "pretty",
@@ -113,9 +114,7 @@ blocks!{
         rows().use_ref(|rows| {
             // stop![
                 for position in (0..len).step_by(step) {
-                    println!("position: {}", position);
                     rows[position].update_mut(|row| {
-                        println!("label: {}", row.label);
                         row.label += " !!!"
                     });
                 }
@@ -131,10 +130,40 @@ blocks!{
     }
 
     #[update]
-    fn swap_rows() {
+    fn swap_rows_old() {
         if rows_len().inner() < 999 { return; }
         rows().update_mut(|rows| {
             rows.swap(1, 998)
+        });
+    }
+
+    #[update]
+    fn swap_rows() {
+        if rows_len().inner() < 999 { return; }
+        rows().use_ref(|rows| {
+            rows[1].update_mut(|row_a| {
+                rows[998].update_mut(|row_b| {
+                    mem::swap(row_a, row_b)
+                })
+            })
+        });
+    }
+
+    #[update]
+    fn swap_rows_special_old() {
+        rows().update_mut(|rows| {
+            rows.swap(1, 3)
+        });
+    }
+
+    #[update]
+    fn swap_rows_special() {
+        rows().use_ref(|rows| {
+            rows[1].update_mut(|row_a| {
+                rows[3].update_mut(|row_b| {
+                    mem::swap(row_a, row_b)
+                })
+            })
         });
     }
 
@@ -188,13 +217,16 @@ blocks!{
                     attr("class", "col-md-6"),
                     raw_el![
                         attr("class", "row"),
+                        action_button("run", "Create 11 rows", || create_rows(11)),
                         action_button("run", "Create 1,000 rows", || create_rows(1_000)),
-                        // action_button("run", "Create 1,000 rows", || create_rows(11)),
                         action_button("runlots", "Create 10,000 rows", || create_rows(10_000)),
                         action_button("add", "Append 1,000 rows", || append_rows(1_000)),
                         action_button("update", "Update every 10th row", || update_rows(10)),
                         action_button("clear", "Clear", clear_rows),
+                        action_button("swaprows", "Swap Rows Old", swap_rows_old),
                         action_button("swaprows", "Swap Rows", swap_rows),
+                        action_button("swaprows", "Swap Rows 2 and 4 Old", swap_rows_special_old),
+                        action_button("swaprows", "Swap Rows 2 and 4", swap_rows_special),
                     ]
                 ],
             ]

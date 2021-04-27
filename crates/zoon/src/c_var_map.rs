@@ -13,7 +13,7 @@ pub(crate) struct CVarMapValue {
 impl CVarMap {
     pub(crate) fn new() -> Self {
         Self {
-            c_vars: HashMap::default(),
+            c_vars: HashMap::with_capacity(10_000),
         }
     }
 
