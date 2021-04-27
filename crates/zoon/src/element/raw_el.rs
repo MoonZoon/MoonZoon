@@ -3,7 +3,7 @@ use crate::{RenderContext, ElVar, Element, __TrackedCall, __TrackedCallStack, In
 use tracked_call_macro::tracked_call;
 use crate::hook::el_var;
 use crate::dom::{document, Node};
-use std::collections::HashMap;
+use griddle::HashMap;
 use std::{cell::RefCell, rc::Rc};
 use std::mem;
 
@@ -34,7 +34,7 @@ impl<'a> Element for RawEl<'a> {
             }
         });
 
-        let attrs = el_var(|| HashMap::<String, String>::new());
+        let attrs = el_var(|| HashMap::<String, String>::default());
         attrs.update_mut(|attrs| {
             node.update_mut(|node| {
                 let element = node.node_ws.unchecked_ref::<web_sys::Element>();

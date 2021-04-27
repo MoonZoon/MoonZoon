@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use griddle::HashMap;
 use std::any::Any;
 use crate::tracked_call::TrackedCallId;
 
@@ -13,7 +13,7 @@ pub(crate) struct CmpVarMapValue {
 impl CmpVarMap {
     pub(crate) fn new() -> Self {
         Self {
-            cmp_vars: HashMap::new(),
+            cmp_vars: HashMap::default(),
         }
     }
 
@@ -21,12 +21,12 @@ impl CmpVarMap {
         self
             .cmp_vars
             .get(id)
-            .expect(&format!("the cmp_var with the id {:#?}", id))
+            .unwrap_or_else(|| panic!("the cmp_var with the id {:#?}", id))
             .data
             .downcast_ref::<Option<T>>()
-            .expect(&format!("cast the cmp_var data with the id {:#?} to the required type", id))
+            .unwrap_or_else(|| panic!("cast the cmp_var data with the id {:#?} to the required type", id))
             .as_ref()
-            .expect(&format!("the cmp_var data with the id {:#?}", id))
+            .unwrap_or_else(|| panic!("the cmp_var data with the id {:#?}", id))
     }
 
     pub(crate) fn insert(&mut self, id: TrackedCallId, data: impl Any) {
@@ -41,12 +41,12 @@ impl CmpVarMap {
         self
             .cmp_vars
             .remove(&id)
-            .expect(&format!("remove the cmp_var data with the id {:#?}", id))
+            .unwrap_or_else(|| panic!("remove the cmp_var data with the id {:#?}", id))
             .data
             .downcast_mut::<Option<T>>()
-            .expect(&format!("cast the cmp_var data with the id {:#?} to the required type", id))
+            .unwrap_or_else(|| panic!("cast the cmp_var data with the id {:#?} to the required type", id))
             .take()
-            .expect(&format!("removed cmp_var data with the id {:#?}", id))
+            .unwrap_or_else(|| panic!("removed cmp_var data with the id {:#?}", id))
     }
 
     pub(crate) fn contains_id(&self, id: &TrackedCallId) -> bool {

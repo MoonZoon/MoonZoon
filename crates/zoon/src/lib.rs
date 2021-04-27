@@ -56,6 +56,8 @@ pub use tracked_call::{TrackedCallId, __TrackedCall};
 pub use tracked_call_stack::__TrackedCallStack;
 pub use component::ComponentChild;
 
+pub use griddle;
+
 #[macro_export]
 macro_rules! with_dollar_sign {
     ($($body:tt)*) => {

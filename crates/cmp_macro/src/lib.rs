@@ -76,8 +76,8 @@ pub fn cmp(args: TokenStream, input: TokenStream) -> TokenStream {
                 parent_call: None,
                 parent_selected_index: None,
                 rcx: None,
-                previous_children: std::collections::HashSet::new(),
-                children: std::collections::HashSet::new(),
+                previous_children: griddle::HashSet::new(),
+                children: griddle::HashSet::new(),
                 should_call_creator: true,
             }
         });   

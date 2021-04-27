@@ -2,7 +2,7 @@ use std::{collections::{hash_map::DefaultHasher}, hash::Hash};
 use std::hash::Hasher;
 use crate::tracked_call_stack::__TrackedCallStack;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct TrackedCallId {
     pub hash: u64,
     pub index: Option<usize>,
