@@ -62,7 +62,7 @@ pub use ahash;
 pub use once_cell;
 pub use futures_signals;
 pub use dominator;
-pub use topo;
+pub use topo::{self, CallId};
 
 #[macro_export]
 macro_rules! with_dollar_sign {

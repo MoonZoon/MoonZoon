@@ -1,9 +1,11 @@
 use zoon::{*, println};
 use std::rc::Rc;
+use std::sync::RwLock;
 use enclose::enc;
 use zoon::dominator::{Dom, html};
 use futures_signals::signal::{Signal, SignalExt, Mutable};
 use once_cell::sync::OnceCell;
+use std::collections::HashMap;
 
 // ------ ------
 //    Element 
@@ -20,10 +22,9 @@ pub struct Counter {
 impl Element for Counter {
     #[topo::nested]
     fn render(self) -> Dom {
-        println!("Counter render call_id: {:#?}", topo::CallId::current());
-
-        static __VALUE: OnceCell<Mutable<i32>> = OnceCell::new();
-        let value = __VALUE.get_or_init(|| Mutable::new(0));
+        static __VALUES: OnceCell<RwLock<HashMap<CallId, Mutable<i32>>>> = OnceCell::new();
+        let __values = __VALUES.get_or_init(|| RwLock::new(HashMap::new()));
+        let value = __values.write().unwrap_throw().entry(CallId::current()).or_default().clone();
 
         let on_change = self.on_change.map(|on_change| on_change);
         let step = self.step.unwrap_or(1);
@@ -32,12 +33,12 @@ impl Element for Counter {
             value.set(required_value);
         }
 
-        let update_value = move |delta: i32| {
+        let update_value = enc!((value) move |delta: i32| {
             value.replace_with(|value| *value + delta);
             if let Some(on_change) = on_change.clone() {
                 on_change(value.get());
             }
-        };
+        });
 
         Row::new()
             .item(Button::new()
