@@ -6,6 +6,7 @@ use crate::dom::{document, Node};
 use griddle::HashMap;
 use std::{cell::RefCell, rc::Rc};
 use std::mem;
+use dominator::{Dom, html};
 
 // ------ ------
 //   Element 
@@ -22,55 +23,54 @@ pub struct RawEl<'a> {
 }
 
 impl<'a> Element for RawEl<'a> {
-    #[render]
-    fn render(&mut self, rcx: RenderContext) {
-        // @TODO resolve changed tag
+    fn render(self) -> Dom {
+        html!("div", {
 
-        // log!("raw_el, index: {}", rcx.index);
+        })
 
-        let node = dom_element(rcx, self.tag, |mut rcx| {
-            for child in &mut self.children {
-                child.render(rcx.inc_index().clone());
-            }
-        });
+        // let node = dom_element(rcx, self.tag, |mut rcx| {
+        //     for child in &mut self.children {
+        //         child.render(rcx.inc_index().clone());
+        //     }
+        // });
 
-        let attrs = el_var(|| HashMap::<String, String>::default());
-        attrs.update_mut(|attrs| {
-            node.update_mut(|node| {
-                let element = node.node_ws.unchecked_ref::<web_sys::Element>();
+        // let attrs = el_var(|| HashMap::<String, String>::default());
+        // attrs.update_mut(|attrs| {
+        //     node.update_mut(|node| {
+        //         let element = node.node_ws.unchecked_ref::<web_sys::Element>();
 
-                attrs.retain(|name, value| {
-                    if let Some(new_value) = self.attrs.remove(name.as_str()) {
-                        if new_value != value {
-                            element.set_attribute(name, value).unwrap();
-                            *value = new_value.to_owned();
-                        }
-                        return true
-                    } 
-                    element.remove_attribute(name).unwrap();
-                    false
-                });
+        //         attrs.retain(|name, value| {
+        //             if let Some(new_value) = self.attrs.remove(name.as_str()) {
+        //                 if new_value != value {
+        //                     element.set_attribute(name, value).unwrap();
+        //                     *value = new_value.to_owned();
+        //                 }
+        //                 return true
+        //             } 
+        //             element.remove_attribute(name).unwrap();
+        //             false
+        //         });
 
-                for (new_name, new_value) in mem::take(&mut self.attrs) {
-                    attrs.insert(new_name.to_owned(), new_value.to_owned());
-                    element.set_attribute(new_name, new_value).unwrap();
-                }
-            });
-        });
+        //         for (new_name, new_value) in mem::take(&mut self.attrs) {
+        //             attrs.insert(new_name.to_owned(), new_value.to_owned());
+        //             element.set_attribute(new_name, new_value).unwrap();
+        //         }
+        //     });
+        // });
 
-        let listeners = el_var(|| HashMap::new());
-        listeners.update_mut(|listeners| {
-            for (event, handlers) in mem::take(&mut self.event_handlers) {
-                if handlers.is_empty() {
-                    listeners.remove(event);
-                    continue;
-                }
-                listeners
-                    .entry(event)
-                    .or_insert(Listener::new(event, node))
-                    .set_handlers(handlers);
-            }
-        });
+        // let listeners = el_var(|| HashMap::new());
+        // listeners.update_mut(|listeners| {
+        //     for (event, handlers) in mem::take(&mut self.event_handlers) {
+        //         if handlers.is_empty() {
+        //             listeners.remove(event);
+        //             continue;
+        //         }
+        //         listeners
+        //             .entry(event)
+        //             .or_insert(Listener::new(event, node))
+        //             .set_handlers(handlers);
+        //     }
+        // });
     }
 }
 
@@ -82,13 +82,13 @@ pub fn dom_element(mut rcx: RenderContext, tag: Option<&str>, children: impl FnO
         let el_ws = document().create_element(tag.unwrap_or("div")).expect("element");
         // el_ws.set_attribute("class", "el").expect("set class attribute");
         let node_ws = web_sys::Node::from(el_ws);
-        rcx.node.update_mut(|node| {
+        rcx.node.as_mut().unwrap().update_mut(|node| {
             let parent_node_ws = &node.node_ws;
             parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(rcx.index + 1).as_ref()).expect("insert node");
         });
         Node { node_ws }
     });
-    rcx.node = node;
+    rcx.node = Some(node);
     rcx.reset_index();
     children(rcx);
     node

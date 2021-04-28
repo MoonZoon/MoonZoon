@@ -1,4 +1,5 @@
 use crate::render_context::RenderContext;
+use dominator::Dom;
 
 // -- modules --
 
@@ -67,7 +68,7 @@ pub trait Element {
         self
     }
 
-    fn render(&mut self, rcx: RenderContext);
+    fn render(self) -> Dom;
 }
 
 // ------ ApplyToElement ------

@@ -61,6 +61,7 @@ pub use ahash;
 
 pub use once_cell;
 pub use futures_signals;
+pub use dominator;
 
 #[macro_export]
 macro_rules! with_dollar_sign {
@@ -117,19 +118,9 @@ fn root() {
 
     // log!("root");
 
-    let node = el_var(|| Node {
-        node_ws: web_sys::Node::from(document().get_element_by_id(ELEMENT_ID).expect("root element"))
-    });
-
-    let rcx = RenderContext { 
-        index: 0,
-        node,
-        component_id: None, 
-    };
-
-    ROOT_CMP.with(|app_root| {
-        if let Some(app_root) = app_root.borrow_mut().as_ref() {
-            app_root().render(rcx);
-        }
-    });
+    // ROOT_CMP.with(|app_root| {
+    //     if let Some(app_root) = app_root.borrow_mut().as_ref() {
+    //         app_root().render();
+    //     }
+    // });
 }

@@ -1,5 +1,6 @@
 use crate::{RenderContext, dom::dom_text, Element, __TrackedCall, __TrackedCallStack, ApplyToElement, render, element_macro};
 use std::borrow::Cow;
+use dominator::{Dom, text};
 
 // ------ ------
 //    Element 
@@ -13,11 +14,9 @@ pub struct Text<'a> {
 }
 
 impl<'a> Element for Text<'a> {
-    #[render]
-    fn render(&mut self, rcx: RenderContext) {
-        // log!("text, index: {}", rcx.index);
-
-        dom_text(rcx, &self.text);
+    fn render(self) -> Dom {
+        text(&self.text)
+        // dom_text(rcx, &self.text);
     }
 }
 

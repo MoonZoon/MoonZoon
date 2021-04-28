@@ -1,5 +1,7 @@
 use wasm_bindgen::JsCast;
 use crate::{RenderContext, dom::dom_element, Element, __TrackedCall, __TrackedCallStack, IntoElement, ApplyToElement, render, element_macro};
+use dominator::{Dom, html, DomBuilder};
+use futures_signals::signal::{Signal, SignalExt};
 
 // ------ ------
 //   Element 
@@ -8,24 +10,27 @@ use crate::{RenderContext, dom::dom_element, Element, __TrackedCall, __TrackedCa
 element_macro!(el, El::default());
 
 #[derive(Default)]
-pub struct El<'a> {
-    child: Option<Box<dyn Element + 'a>>,
+pub struct El {
+    child: Option<Dom>,
+    child_signal: Option<Box<dyn Signal<Item = Option<Dom>> + Unpin>>,
 }
 
-impl<'a> Element for El<'a> {
-    #[render]
-    fn render(&mut self, rcx: RenderContext) {
-        // log!("el, index: {}", rcx.index);
+impl Element for El {
+    fn render(self) -> Dom {
+        let mut builder = DomBuilder::<web_sys::HtmlElement>::new_html("div")
+            .class("el");
 
-        let node = dom_element(rcx, |rcx| {
-            if let Some(child) = self.child.as_mut() {
-                child.render(rcx)
-            }
-        });
-        node.update_mut(|node| {
-            let element = node.node_ws.unchecked_ref::<web_sys::Element>();
-            element.set_attribute("class", "el").unwrap();
-        });
+        if let Some(child) = self.child {
+            builder = builder
+                .child(child);
+        }
+
+        if let Some(child_signal) = self.child_signal {
+            builder = builder
+                .child_signal(child_signal);
+        }
+
+        builder.into_dom()
     }
 }
 
@@ -33,17 +38,26 @@ impl<'a> Element for El<'a> {
 //  Attributes 
 // ------ ------
 
-impl<'a> El<'a> {
+impl<'a> El {
     pub fn child(mut self, child: impl IntoElement<'a> + 'a) -> Self {
         child.into_element().apply_to_element(&mut self);
+        self
+    }
+
+    pub fn child_signal(mut self, child: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static) -> Self {
+        self.child_signal = Some(
+            Box::new(
+                child.map(|child| Some(child.into_element().render()))
+            )
+        );
         self
     }
 } 
 
 // ------ IntoElement ------
 
-impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<El<'a>> for T {
-    fn apply_to_element(self, element: &mut El<'a>) {
-        element.child = Some(Box::new(self.into_element()));
+impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<El> for T {
+    fn apply_to_element(self, element: &mut El) {
+        element.child = Some(self.into_element().render());
     }
 }

@@ -3,6 +3,9 @@ use crate::{ApplyToElement, Element, IntoElement, Node, RenderContext, __Tracked
 use crate::hook::el_var;
 use crate::el_var::ElVar;
 use std::{cell::RefCell, rc::Rc};
+use dominator::{Dom, DomBuilder, events};
+use crate::println;
+use futures_signals::signal::{Signal, SignalExt};
 
 // ------ ------
 //    Element 
@@ -11,92 +14,36 @@ use std::{cell::RefCell, rc::Rc};
 element_macro!(button, Button::default());
 
 #[derive(Default)]
-pub struct Button<'a> {
-    label: Option<Box<dyn Element + 'a>>,
+pub struct Button {
+    label: Option<Dom>,
+    label_signal: Option<Box<dyn Signal<Item = Option<Dom>> + Unpin>>,
     on_press: Option<OnPress>,
 }
 
-impl<'a> Element for Button<'a> {
-    #[render]
-    fn render(&mut self, rcx: RenderContext) {
-        // log!("button, index: {}", rcx.index);
+impl Element for Button {
+    fn render(self) -> Dom {
+        let mut builder = DomBuilder::<web_sys::HtmlElement>::new_html("div")
+            .class("button")
+            .attribute("role", "button")
+            .attribute("tabindex", "0");
 
-        let node = dom_element(rcx, |rcx: RenderContext| {
-            if let Some(label) = self.label.as_mut() {
-                label.render(rcx);
-            }
-        });
-        node.update_mut(|node| {
-            let element = node.node_ws.unchecked_ref::<web_sys::Element>();
-            element.set_attribute("class", "button").unwrap();
-            element.set_attribute("role", "button").unwrap();
-            element.set_attribute("tabindex", "0").unwrap();
-        });
-
-        if let Some(OnPress(on_press)) = self.on_press.take() {
-            let listener = el_var(|| Listener::new("click", node));
-            listener.update_mut(|listener| listener.set_handler(on_press));
+        if let Some(label) = self.label {
+            builder = builder
+                .child(label);
         }
-    }
-}
 
-struct Listener {
-    event: &'static str,
-    node: ElVar<Node>,
-    handler: Rc<RefCell<Option<Box<dyn Fn()>>>>,
-    callback: Closure<dyn Fn()>,
-}
-
-impl Listener {
-    fn new(event: &'static str, node: ElVar<Node>) -> Self {
-        let dummy_handler = Box::new(||()) as Box<dyn Fn()>;
-        let handler = Rc::new(RefCell::new(Some(dummy_handler)));
-
-        let handler_clone = Rc::clone(&handler);
-        let callback = Closure::wrap(Box::new(move || {
-            let user_handler = handler_clone.borrow_mut().take();
-            if let Some(user_handler) = user_handler {
-                user_handler();
-                *handler_clone.borrow_mut() = Some(user_handler);
-            };
-        }) as Box<dyn Fn()>);
-
-        node.update_mut(|node| {
-            node
-                .node_ws
-                .unchecked_ref::<web_sys::EventTarget>()
-                .add_event_listener_with_callback(event, callback.as_ref().unchecked_ref())
-                .expect("add event listener");
-        });
-
-        Self {
-            event,
-            node,
-            handler,
-            callback,
+        if let Some(label_signal) = self.label_signal {
+            builder = builder
+                .child_signal(label_signal);
         }
-    }
 
-    fn set_handler(&mut self, handler: Box<dyn Fn()>) {
-        *self.handler.borrow_mut() = Some(handler);
-    }
-}
-
-impl Drop for Listener{
-    fn drop(&mut self) {
-        if !self.node.exists() {
-            return;
+        if let Some(on_press) = self.on_press {
+            let handler = on_press.0;
+            builder = builder
+                .event(move |_: events::Click| handler());
         }
-        self.node.update_mut(|node| {
-            node
-                .node_ws
-                .unchecked_ref::<web_sys::EventTarget>()
-                .remove_event_listener_with_callback(
-                    self.event,
-                    self.callback.as_ref().unchecked_ref(),
-                )
-                .expect("remove event listener");
-        });
+
+        builder.into_dom()
     }
 }
 
@@ -104,9 +51,18 @@ impl Drop for Listener{
 //  Attributes 
 // ------ ------
 
-impl<'a> Button<'a> {
+impl<'a> Button {
     pub fn label(mut self, label: impl IntoElement<'a> + 'a) -> Self {
         label.into_element().apply_to_element(&mut self);
+        self
+    }
+
+    pub fn label_signal(mut self, label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static) -> Self {
+        self.label_signal = Some(
+            Box::new(
+                label.map(|label| Some(label.into_element().render()))
+            )
+        );
         self
     }
 
@@ -118,9 +74,9 @@ impl<'a> Button<'a> {
 
 // ------ IntoElement ------
 
-impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<Button<'a>> for T {
-    fn apply_to_element(self, button: &mut Button<'a>) {
-        button.label = Some(Box::new(self.into_element()));
+impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<Button> for T {
+    fn apply_to_element(self, button: &mut Button) {
+        button.label = Some(self.into_element().render());
     }
 } 
 
@@ -130,8 +86,8 @@ pub struct OnPress(Box<dyn Fn()>);
 pub fn on_press(on_press: impl FnOnce() + Clone + 'static) -> OnPress {
     OnPress(Box::new(move || on_press.clone()()))
 }
-impl<'a> ApplyToElement<Button<'a>> for OnPress {
-    fn apply_to_element(self, button: &mut Button<'a>) {
+impl ApplyToElement<Button> for OnPress {
+    fn apply_to_element(self, button: &mut Button) {
         button.on_press = Some(self);
     }
 }

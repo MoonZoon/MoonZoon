@@ -1,5 +1,6 @@
 use wasm_bindgen::JsCast;
 use crate::{RenderContext, dom::dom_element, __TrackedCall, __TrackedCallStack, Element, IntoElement, ApplyToElement, render, element_macro};
+use dominator::{Dom, html};
 
 // ------ ------
 //    Element 
@@ -8,24 +9,16 @@ use crate::{RenderContext, dom::dom_element, __TrackedCall, __TrackedCallStack, 
 element_macro!(row, Row::default());
 
 #[derive(Default)]
-pub struct Row<'a> {
-    items: Vec<Box<dyn Element + 'a>>,
+pub struct Row {
+    items: Vec<Dom>,
 }
 
-impl<'a> Element for Row<'a> {
-    #[render]
-    fn render(&mut self, rcx: RenderContext) {
-        // log!("row, index: {}", rcx.index);
-
-        let node = dom_element(rcx, |mut rcx| {
-            for item in &mut self.items {
-                item.render(rcx.inc_index().clone());
-            }
-        });
-        node.update_mut(|node| {
-            let element = node.node_ws.unchecked_ref::<web_sys::Element>();
-            element.set_attribute("class", "row").unwrap();
-        });
+impl<'a> Element for Row {
+    fn render(self) -> Dom {
+        html!("div", {
+            .class("row")
+            .children(self.items)
+        })
     }
 }
 
@@ -33,7 +26,7 @@ impl<'a> Element for Row<'a> {
 //  Attributes 
 // ------ ------
 
-impl<'a> Row<'a> {
+impl<'a> Row {
     pub fn item(mut self, item: impl IntoElement<'a> + 'a) -> Self {
         item.into_element().apply_to_element(&mut self);
         self
@@ -49,8 +42,8 @@ impl<'a> Row<'a> {
 
 // ------ IntoElement ------
 
-impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<Row<'a>> for T {
-    fn apply_to_element(self, row: &mut Row<'a>) {
-        row.items.push(Box::new(self.into_element()));
+impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<Row> for T {
+    fn apply_to_element(self, row: &mut Row) {
+        row.items.push(self.into_element().render());
     }
 }

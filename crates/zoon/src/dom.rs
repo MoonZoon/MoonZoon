@@ -40,13 +40,13 @@ pub fn dom_element(mut rcx: RenderContext, children: impl FnOnce(RenderContext))
         let el_ws = document().create_element("div").expect("element");
         el_ws.set_attribute("class", "el").expect("set class attribute");
         let node_ws = web_sys::Node::from(el_ws);
-        rcx.node.update_mut(|node| {
+        rcx.node.as_mut().unwrap().update_mut(|node| {
             let parent_node_ws = &node.node_ws;
             parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(rcx.index + 1).as_ref()).expect("insert node");
         });
         Node { node_ws }
     });
-    rcx.node = node;
+    rcx.node = Some(node);
     rcx.reset_index();
     children(rcx);
     node
@@ -58,7 +58,7 @@ pub fn dom_text(rcx: RenderContext, text: &str) {
 
     let node = el_var(|| {
         let node_ws = document().create_text_node(&text).unchecked_into::<web_sys::Node>();
-        rcx.node.update_mut(|node| {
+        rcx.node.as_ref().unwrap().update_mut(|node| {
             let parent_node_ws = &node.node_ws;
             parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(rcx.index + 1).as_ref()).expect("insert node");
         });
