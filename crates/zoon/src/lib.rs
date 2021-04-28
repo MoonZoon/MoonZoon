@@ -59,6 +59,9 @@ pub use component::ComponentChild;
 pub use griddle;
 pub use ahash;
 
+pub use once_cell;
+pub use futures_signals;
+
 #[macro_export]
 macro_rules! with_dollar_sign {
     ($($body:tt)*) => {
