@@ -14,6 +14,7 @@ pub struct Text<'a> {
 }
 
 impl<'a> Element for Text<'a> {
+    #[topo::nested]
     fn render(self) -> Dom {
         text(&self.text)
         // dom_text(rcx, &self.text);

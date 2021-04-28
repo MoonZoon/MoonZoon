@@ -16,6 +16,7 @@ pub struct El {
 }
 
 impl Element for El {
+    #[topo::nested]
     fn render(self) -> Dom {
         let mut builder = DomBuilder::<web_sys::HtmlElement>::new_html("div")
             .class("el");

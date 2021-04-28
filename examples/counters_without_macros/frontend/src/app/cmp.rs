@@ -5,12 +5,14 @@ use zoon::futures_signals::{map_ref, signal::{Mutable, Signal, SignalExt}};
 mod element;
 use element::counter::Counter;
 
+#[topo::nested]
 pub fn root() -> Column {
     Column::new()
         .item(control_counters())
         // .item(counters())
 }
 
+#[topo::nested]
 fn control_counters() -> Row {
     Row::new()
         .item(column_counter())
@@ -21,6 +23,7 @@ fn control_counters() -> Row {
         .item(click_me_button())
 }
 
+#[topo::nested]
 fn click_me_button() -> Row {
     static __TITLE: OnceCell<Mutable<String>> = OnceCell::new();
     let title = __TITLE.get_or_init(|| Mutable::new("Click me!".to_owned()));
@@ -38,6 +41,7 @@ fn click_me_button() -> Row {
         )
 } 
 
+#[topo::nested]
 fn test_counters() -> Row {
     Row::new()
         .item("Test counters")
@@ -48,6 +52,7 @@ fn test_counters() -> Row {
         .item(Counter::new())
 } 
 
+#[topo::nested]
 fn counter_count() -> El {
     El::new()
         .child_signal(
@@ -56,6 +61,7 @@ fn counter_count() -> El {
         )
 }
 
+#[topo::nested]
 fn counter_count_hundreds() -> El {
     El::new()
         .child_signal(
@@ -64,6 +70,7 @@ fn counter_count_hundreds() -> El {
         )
 }
 
+#[topo::nested]
 fn column_counter() -> Row {
     Row::new()
         .item("Columns:")
@@ -74,6 +81,7 @@ fn column_counter() -> Row {
         )
 }
 
+#[topo::nested]
 fn row_counter() -> Row {
     Row::new()
         .item("Rows:")
@@ -84,16 +92,19 @@ fn row_counter() -> Row {
         )
 }
 
+// #[topo::nested]
 // fn counters<'a>() -> Column<'a> {
 //     Column::new()
 //         .items((0..super::row_count().inner()).map(|_| counter_row()))
 // }
 
+// #[topo::nested]
 // fn counter_row<'a>() -> Row<'a> {
 //     Row::new()
 //         .items((0..super::column_count().inner()).map(|_| counter()))
 // }
 
+// #[topo::nested]
 // fn counter() -> Counter {
 //     Counter::new()
 // }
