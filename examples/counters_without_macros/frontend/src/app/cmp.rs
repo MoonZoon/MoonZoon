@@ -5,13 +5,13 @@ use zoon::futures_signals::{map_ref, signal::{Mutable, Signal, SignalExt}};
 mod element;
 use element::counter::Counter;
 
-fn root<'a>() -> Column<'a> {
+pub fn root() -> Column {
     Column::new()
         .item(control_counters())
         // .item(counters())
 }
 
-fn control_counters<'a>() -> Row<'a> {
+fn control_counters() -> Row {
     Row::new()
         .item(column_counter())
         .item(row_counter())
@@ -21,18 +21,16 @@ fn control_counters<'a>() -> Row<'a> {
         .item(click_me_button())
 }
 
-fn click_me_button<'a>() -> Row<'a> {
+fn click_me_button() -> Row {
     static __TITLE: OnceCell<Mutable<String>> = OnceCell::new();
     let title = __TITLE.get_or_init(|| Mutable::new("Click me!".to_owned()));
 
     static __CLICK_COUNT: OnceCell<Mutable<u32>> = OnceCell::new();
     let click_count = __CLICK_COUNT.get_or_init(|| Mutable::new(0));
 
-    // static __CLICK_COUNT: Lazy<Mutable<u32>> = Lazy::new(|| Mutable::new(0));
-    // let click_count = &__CLICK_COUNT;
     Row::new()
         .item(Button::new()
-            // .label_signal(title.signal_ref())
+            .label_signal(title.signal_cloned())
             .on_press(move || {
                 click_count.replace_with(|count| *count + 1);
                 title.set(format!("Clicked {}x", click_count.get()));
@@ -40,43 +38,43 @@ fn click_me_button<'a>() -> Row<'a> {
         )
 } 
 
-fn test_counters<'a>() -> Row<'a> {
+fn test_counters() -> Row {
     Row::new()
         .item("Test counters")
         .item(Counter::new()
-            // .value_signal(super::test_counter_value().signal())
+            .value_signal(super::test_counter_value().signal())
             .on_change(super::set_test_counter_value)
         )
         .item(Counter::new())
 } 
 
-fn counter_count<'a>() -> El<'a> {
+fn counter_count() -> El {
     El::new()
-        // .child_signal(
-        //     super::counter_count()
-        //         .map(|count| format!("Counters: {}", count))
-        // )
+        .child_signal(
+            super::counter_count()
+                .map(|count| format!("Counters: {}", count))
+        )
 }
 
-fn counter_count_hundreds<'a>() -> El<'a> {
+fn counter_count_hundreds() -> El {
     El::new()
-        // .child_signal(
-        //     super::counter_count_hundreds()
-        //         .map(|count| format!("Thousands: {}", count))
-        // )
+        .child_signal(
+            super::counter_count_hundreds()
+                .map(|count| format!("Thousands: {}", count))
+        )
 }
 
-fn column_counter<'a>() -> Row<'a> {
+fn column_counter() -> Row {
     Row::new()
         .item("Columns:")
         .item(Counter::new()
-            // .value_signal(super::column_count().signal())
+            .value_signal(super::column_count().signal())
             .on_change(super::set_column_count)
             .step(5)
         )
 }
 
-fn row_counter<'a>() -> Row<'a> {
+fn row_counter() -> Row {
     Row::new()
         .item("Rows:")
         .item(Counter::new()

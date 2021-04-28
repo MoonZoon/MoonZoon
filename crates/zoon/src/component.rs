@@ -39,7 +39,7 @@ pub fn rerender_component(id: TrackedCallId) {
         __TrackedCallStack::pop();
 
         __TrackedCallStack::push(parent_call);
-        cmp.render(rcx);
+        // cmp.render(rcx);
         __TrackedCallStack::pop();
     }
 
@@ -53,38 +53,38 @@ pub struct Cmp {
     pub component_data_id: Option<TrackedCallId>,
 } 
 
-impl<'a> Element for Cmp {
-    #[render]
-    fn render(&mut self, mut rcx: RenderContext) {
-        if let Some(component_data_id) = self.component_data_id {
+// impl<'a> Element for Cmp {
+//     #[render]
+//     fn render(&mut self, mut rcx: RenderContext) {
+//         if let Some(component_data_id) = self.component_data_id {
 
-            __ComponentCallStack::push(component_data_id);
+//             __ComponentCallStack::push(component_data_id);
 
-            let children_to_remove = C_VARS.with(move |c_vars| {
-                let mut c_vars = c_vars.borrow_mut();
+//             let children_to_remove = C_VARS.with(move |c_vars| {
+//                 let mut c_vars = c_vars.borrow_mut();
     
-                let mut component_data = c_vars.remove::<__ComponentData>(&component_data_id);
-                component_data.rcx = Some(rcx);
-                component_data.parent_call = __TrackedCallStack::parent();
-                component_data.parent_selected_index = component_data.parent_call.as_ref().map(|parent| {
-                    parent.borrow().selected_index
-                });
+//                 let mut component_data = c_vars.remove::<__ComponentData>(&component_data_id);
+//                 component_data.rcx = Some(rcx);
+//                 component_data.parent_call = __TrackedCallStack::parent();
+//                 component_data.parent_selected_index = component_data.parent_call.as_ref().map(|parent| {
+//                     parent.borrow().selected_index
+//                 });
     
-                let children_to_remove = component_data.children_to_remove();
-                c_vars.insert(component_data_id, component_data);
-                children_to_remove
-            });
-            remove_children(children_to_remove.into_iter());
+//                 let children_to_remove = component_data.children_to_remove();
+//                 c_vars.insert(component_data_id, component_data);
+//                 children_to_remove
+//             });
+//             remove_children(children_to_remove.into_iter());
             
-            rcx.component_id = Some(component_data_id);
-            if let Some(element) = &mut self.element {
-                element.render(rcx);
-            }
+//             rcx.component_id = Some(component_data_id);
+//             if let Some(element) = &mut self.element {
+//                 element.render(rcx);
+//             }
 
-            __ComponentCallStack::pop();
-        }
-    }
-}
+//             __ComponentCallStack::pop();
+//         }
+//     }
+// }
 
 fn remove_children(children: impl Iterator<Item = ComponentChild>) {
     // log!("{}", children.len());

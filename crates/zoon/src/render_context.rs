@@ -8,7 +8,7 @@ use crate::rerender_all;
 #[derive(Copy, Clone, Debug)]
 pub struct RenderContext {
     pub index: u32,
-    pub node: ElVar<Node>,
+    pub node: Option<ElVar<Node>>,
     pub component_id: Option<TrackedCallId>,
 }
 

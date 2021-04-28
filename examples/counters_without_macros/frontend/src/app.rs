@@ -2,7 +2,7 @@
 use zoon::once_cell::sync::OnceCell;
 use zoon::futures_signals::{map_ref, signal::{Mutable, Signal, SignalExt}};
 
-mod cmp;
+pub mod cmp;
 
 fn column_count() -> &'static Mutable<i32> {
     static INSTANCE: OnceCell<Mutable<i32>> = OnceCell::new();
