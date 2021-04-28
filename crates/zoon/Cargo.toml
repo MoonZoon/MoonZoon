@@ -19,6 +19,9 @@ uuid = { version = "0.8.2", features = ["v4", "wasm-bindgen"], default_features 
 griddle = { version = "0.4.1", features = ["ahash", "inline-more", "ahash-compile-time-rng" ] }
 ahash = { version = "0.7.2" }
 
+once_cell = { version = "1.7.2" }
+futures-signals = {version = "0.3.19" }
+
 [dependencies.web-sys]
 version = "0.3.48"
 features = [
