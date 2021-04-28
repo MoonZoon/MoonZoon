@@ -9,5 +9,7 @@ mod app;
 
 #[wasm_bindgen(start)]
 pub fn start() {
-    start!(app)
+    // start!(app)
+
+
 }

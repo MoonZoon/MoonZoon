@@ -1,19 +1,22 @@
 // use zoon::*;
-use zoon::once_cell::sync::Lazy;
+use zoon::once_cell::sync::OnceCell;
 use zoon::futures_signals::{map_ref, signal::{Mutable, Signal, SignalExt}};
 
 mod cmp;
 
 fn column_count() -> &'static Mutable<i32> {
-    &Lazy::new(|| Mutable::new(5))
+    static INSTANCE: OnceCell<Mutable<i32>> = OnceCell::new();
+    INSTANCE.get_or_init(|| Mutable::new(5))
 }
 
 fn row_count() -> &'static Mutable<i32> {
-    &Lazy::new(|| Mutable::new(5))
+    static INSTANCE: OnceCell<Mutable<i32>> = OnceCell::new();
+    INSTANCE.get_or_init(|| Mutable::new(5))
 }
 
 fn test_counter_value() -> &'static Mutable<i32> {
-    &Lazy::new(|| Mutable::new(0))
+    static INSTANCE: OnceCell<Mutable<i32>> = OnceCell::new();
+    INSTANCE.get_or_init(|| Mutable::new(0))
 }
 
 pub fn counter_count() -> impl Signal<Item = i32> {
