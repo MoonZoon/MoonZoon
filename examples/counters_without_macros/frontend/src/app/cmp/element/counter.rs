@@ -14,7 +14,7 @@ use std::collections::HashMap;
 #[derive(Default)]
 pub struct Counter {
     value: Option<i32>,
-    value_signal: Option<Box<dyn Signal<Item = i32>>>,
+    value_mutable: Option<&'static Mutable<i32>>,
     on_change: Option<Rc<dyn Fn(i32)>>,
     step: Option<i32>,
 }
@@ -22,37 +22,59 @@ pub struct Counter {
 impl Element for Counter {
     #[topo::nested]
     fn render(self) -> Dom {
-        static __VALUES: OnceCell<RwLock<HashMap<CallId, Mutable<i32>>>> = OnceCell::new();
-        let __values = __VALUES.get_or_init(|| RwLock::new(HashMap::new()));
-        let value = __values.write().unwrap_throw().entry(CallId::current()).or_default().clone();
-
         let on_change = self.on_change.map(|on_change| on_change);
         let step = self.step.unwrap_or(1);
-        
-        if let Some(required_value) = self.value {
-            value.set(required_value);
-        }
 
-        let update_value = enc!((value) move |delta: i32| {
-            value.replace_with(|value| *value + delta);
-            if let Some(on_change) = on_change.clone() {
-                on_change(value.get());
+        if let Some(value_mutable) = self.value_mutable {
+            Row::new()
+                .item({
+                    let mut button = Button::new().label("-");
+                    if let Some(on_change) = on_change.clone() {
+                        button = button.on_press(move || on_change(value_mutable.get() - step));
+                    }
+                    button
+                })
+                .item(El::new()
+                    .child_signal(value_mutable.signal())
+                )
+                .item({
+                    let mut button = Button::new().label("+");
+                    if let Some(on_change) = on_change {
+                        button = button.on_press(move || on_change(value_mutable.get() + step));
+                    }
+                    button
+                })
+                .render()
+        } else {
+            static __STATE_VALUES: OnceCell<RwLock<HashMap<CallId, Mutable<i32>>>> = OnceCell::new();
+            let __state_values = __STATE_VALUES.get_or_init(|| RwLock::new(HashMap::new()));
+            let state_value = __state_values.write().unwrap_throw().entry(CallId::current()).or_default().clone();
+
+            if let Some(default_value) = self.value {
+                state_value.set(default_value);
             }
-        });
 
-        Row::new()
-            .item(Button::new()
-                .label("-")
-                .on_press(enc!((update_value) move || update_value(-step)))
-            )
-            .item(El::new()
-                .child_signal(value.signal())
-            )
-            .item(Button::new()
-                .label("+")
-                .on_press(move || update_value(step))
-            )
-            .render()
+            let update_value = enc!((state_value) move |delta: i32| {
+                state_value.replace_with(|value| *value + delta);
+                if let Some(on_change) = on_change.clone() {
+                    on_change(state_value.get());
+                }
+            });
+
+            Row::new()
+                .item(Button::new()
+                    .label("-")
+                    .on_press(enc!((update_value) move || update_value(-step)))
+                )
+                .item(El::new()
+                    .child_signal(state_value.signal())
+                )
+                .item(Button::new()
+                    .label("+")
+                    .on_press(move || update_value(step))
+                )
+                .render()
+        }
     }
 }
 
@@ -66,8 +88,8 @@ impl Counter {
         self
     }
 
-    pub fn value_signal(mut self, value: impl Signal<Item = i32> + 'static) -> Self {
-        self.value_signal = Some(Box::new(value));
+    pub fn value_mutable(mut self, value: &'static Mutable<i32>) -> Self {
+        self.value_mutable = Some(value);
         self
     }
 

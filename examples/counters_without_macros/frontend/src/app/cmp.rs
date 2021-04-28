@@ -9,7 +9,7 @@ use element::counter::Counter;
 pub fn root() -> Column {
     Column::new()
         .item(control_counters())
-        // .item(counters())
+        .item(counters())
 }
 
 #[topo::nested]
@@ -46,7 +46,7 @@ fn test_counters() -> Row {
     Row::new()
         .item("Test counters")
         .item(Counter::new()
-            .value_signal(super::test_counter_value().signal())
+            .value_mutable(super::test_counter_value())
             .on_change(super::set_test_counter_value)
         )
         .item(Counter::new())
@@ -75,7 +75,7 @@ fn column_counter() -> Row {
     Row::new()
         .item("Columns:")
         .item(Counter::new()
-            .value_signal(super::column_count().signal())
+            .value_mutable(super::column_count())
             .on_change(super::set_column_count)
             .step(5)
         )
@@ -86,28 +86,28 @@ fn row_counter() -> Row {
     Row::new()
         .item("Rows:")
         .item(Counter::new()
-            // .value_signal(super::row_count().signal())
+            .value_mutable(super::row_count())
             .on_change(super::set_row_count)
             .step(5)
         )
 }
 
-// #[topo::nested]
-// fn counters<'a>() -> Column<'a> {
-//     Column::new()
-//         .items((0..super::row_count().inner()).map(|_| counter_row()))
-// }
+#[topo::nested]
+fn counters() -> Column {
+    Column::new()
+        .items((0..super::row_count().get()).map(|_| counter_row()))
+}
 
-// #[topo::nested]
-// fn counter_row<'a>() -> Row<'a> {
-//     Row::new()
-//         .items((0..super::column_count().inner()).map(|_| counter()))
-// }
+#[topo::nested]
+fn counter_row() -> Row {
+    Row::new()
+        .items((0..super::column_count().get()).map(|_| counter()))
+}
 
-// #[topo::nested]
-// fn counter() -> Counter {
-//     Counter::new()
-// }
+#[topo::nested]
+fn counter() -> Counter {
+    Counter::new()
+}
 
 
 // blocks!{
