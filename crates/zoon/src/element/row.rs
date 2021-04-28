@@ -14,6 +14,7 @@ pub struct Row {
 }
 
 impl<'a> Element for Row {
+    #[topo::nested]
     fn render(self) -> Dom {
         html!("div", {
             .class("row")

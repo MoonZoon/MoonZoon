@@ -23,6 +23,7 @@ pub struct RawEl<'a> {
 }
 
 impl<'a> Element for RawEl<'a> {
+    #[topo::nested]
     fn render(self) -> Dom {
         html!("div", {
 

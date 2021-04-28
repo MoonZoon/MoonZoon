@@ -14,6 +14,7 @@ pub struct Column {
 }
 
 impl Element for Column {
+    #[topo::nested]
     fn render(self) -> Dom {
         html!("div", {
             .class("column")

@@ -1,4 +1,4 @@
-use zoon::*;
+use zoon::{*, println};
 use std::rc::Rc;
 use enclose::enc;
 use zoon::dominator::{Dom, html};
@@ -18,7 +18,10 @@ pub struct Counter {
 }
 
 impl Element for Counter {
+    #[topo::nested]
     fn render(self) -> Dom {
+        println!("Counter render call_id: {:#?}", topo::CallId::current());
+
         static __VALUE: OnceCell<Mutable<i32>> = OnceCell::new();
         let value = __VALUE.get_or_init(|| Mutable::new(0));
 

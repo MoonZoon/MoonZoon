@@ -21,6 +21,7 @@ pub struct Button {
 }
 
 impl Element for Button {
+    #[topo::nested]
     fn render(self) -> Dom {
         let mut builder = DomBuilder::<web_sys::HtmlElement>::new_html("div")
             .class("button")

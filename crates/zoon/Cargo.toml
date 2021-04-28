@@ -22,6 +22,7 @@ ahash = { version = "0.7.2" }
 once_cell = { version = "1.7.2" }
 futures-signals = {version = "0.3.19" }
 dominator = { version = "0.5.14" }
+topo = { version = "0.13.2", features = ["wasm-bindgen"] }
 
 [dependencies.web-sys]
 version = "0.3.48"
