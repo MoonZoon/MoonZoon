@@ -86,12 +86,16 @@ fn row_counter() -> Row {
 
 fn counters() -> Row {
     Row::new()
-        .items_signal(super::columns().signal_vec().map(move |_| counter_column()))
+        .items_signal(
+            super::columns().signal_vec().map(move |_| counter_column())
+        )
 }
 
 fn counter_column() -> Column {
     Column::new()
-        .items_signal(super::rows().signal_vec().map(move |_| Counter::new()))
+        .items_signal(
+            super::rows().signal_vec().map(move |_| Counter::new())
+        )
 }
 
 // blocks!{

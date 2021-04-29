@@ -8,6 +8,18 @@ use zoon::futures_signals::{
 
 pub mod cmp;
 
+// #[static_ref]
+// fn columns() -> &'static MutableVec<()> {
+//     MutableVec::new_with_values(vec![(); 5])
+// }
+
+// fn columns() -> &'static MutableVec<()> {
+//     static INSTANCE: OnceCell<MutableVec<()>> = OnceCell::new();
+//     INSTANCE.get_or_init(move || MutableVec::new_with_values(vec![(); 5]))
+// }
+
+
+
 fn columns() -> &'static MutableVec<()> {
     static INSTANCE: OnceCell<MutableVec<()>> = OnceCell::new();
     INSTANCE.get_or_init(|| MutableVec::new_with_values(vec![(); 5]))
