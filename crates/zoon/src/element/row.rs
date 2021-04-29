@@ -11,7 +11,6 @@ element_macro!(row, Row::default());
 
 #[derive(Default)]
 pub struct Row {
-    key: u64,
     after_removes: Vec<Box<dyn FnOnce()>>,
     items: Vec<Dom>,
     items_signal: Option<Box<dyn SignalVec<Item = Dom> + Unpin>>
@@ -31,10 +30,6 @@ impl Element for Row {
             builder = builder
                 .children_signal_vec(items_signal);
         }
-
-        self.after_removes.push(Box::new(|| {
-            crate::println!("Row after_remove");
-        }));
 
         for after_remove in self.after_removes {
             builder = builder.after_removed(move |_| after_remove());

@@ -1,18 +1,16 @@
 use zoon::{*, println};
-use zoon::once_cell::sync::OnceCell;
-use zoon::futures_signals::{map_ref, signal::{Mutable, Signal, SignalExt}, signal_vec::SignalVecExt};
+use zoon::futures_signals::{signal::{Mutable, SignalExt}, signal_vec::SignalVecExt};
+use std::borrow::Cow;
 
 mod element;
 use element::counter::Counter;
 
-#[topo::nested]
 pub fn root() -> Column {
     Column::new()
         .item(control_counters())
         .item(counters())
 }
 
-#[topo::nested]
 fn control_counters() -> Row {
     Row::new()
         .item(column_counter())
@@ -23,25 +21,23 @@ fn control_counters() -> Row {
         .item(click_me_button())
 }
 
-#[topo::nested]
 fn click_me_button() -> Row {
-    static __TITLE: OnceCell<Mutable<String>> = OnceCell::new();
-    let title = __TITLE.get_or_init(|| Mutable::new("Click me!".to_owned()));
-
-    static __CLICK_COUNT: OnceCell<Mutable<u32>> = OnceCell::new();
-    let click_count = __CLICK_COUNT.get_or_init(|| Mutable::new(0));
-
+    let click_count = Mutable::new(0);
+    let title = click_count.signal().map(|count| {
+        if count == 0 { 
+            return Cow::from("Click me!") 
+        }
+        Cow::from(format!("Clicked {}x", count))
+    });
     Row::new()
         .item(Button::new()
-            .label_signal(title.signal_cloned())
+            .label_signal(title)
             .on_press(move || {
                 click_count.replace_with(|count| *count + 1);
-                title.set(format!("Clicked {}x", click_count.get()));
             })
         )
 } 
 
-#[topo::nested]
 fn test_counters() -> Row {
     Row::new()
         .item("Test counters")
@@ -52,7 +48,6 @@ fn test_counters() -> Row {
         .item(Counter::new())
 } 
 
-#[topo::nested]
 fn counter_count() -> El {
     El::new()
         .child_signal(
@@ -61,7 +56,6 @@ fn counter_count() -> El {
         )
 }
 
-#[topo::nested]
 fn counter_count_hundreds() -> El {
     El::new()
         .child_signal(
@@ -70,51 +64,34 @@ fn counter_count_hundreds() -> El {
         )
 }
 
-#[topo::nested]
 fn column_counter() -> Row {
     Row::new()
         .item("Columns:")
         .item(Counter::new()
-            .value_signal(super::column_count().signal().map(|count| count as i32))
+            .value_signal(super::column_count().map(|count| count as i32))
             .on_change(super::on_column_counter_change)
             .step(5)
         )
 }
 
-#[topo::nested]
 fn row_counter() -> Row {
     Row::new()
         .item("Rows:")
         .item(Counter::new()
-            .value_signal(super::row_count().signal().map(|count| count as i32))
+            .value_signal(super::row_count().map(|count| count as i32))
             .on_change(super::on_row_counter_change)
             .step(5)
         )
 }
 
-#[topo::nested]
 fn counters() -> Row {
-    let counters = map_ref! {
-        let columns = super::column_count().signal(),
-        let rows = super::row_count().signal() =>
-        (*columns, *rows)
-    };
     Row::new()
-        .items_signal(counters.map(|(columns, rows)| {
-            (0..columns).map(|column| counter_column(column, rows)).collect()
-        }).to_signal_vec())
-
-    // Row::new()
-    //     .items_signal(super::columns().signal_vec().map(move |column| {
-    //         println!("new column");
-    //         counter_column(column)
-    //     }))
+        .items_signal(super::columns().signal_vec().map(move |_| counter_column()))
 }
 
-#[topo::nested]
-fn counter_column(column: i32, rows: i32) -> Column {
+fn counter_column() -> Column {
     Column::new()
-        .items((0..rows).map(move |row| Counter::new_with_key((column, row))))
+        .items_signal(super::rows().signal_vec().map(move |_| Counter::new()))
 }
 
 // blocks!{
