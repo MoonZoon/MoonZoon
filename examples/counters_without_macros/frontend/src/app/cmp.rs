@@ -75,7 +75,7 @@ fn column_counter() -> Row {
     Row::new()
         .item("Columns:")
         .item(Counter::new()
-            .value_signal(super::column_count().map(|count| count as i32))
+            .value_signal(super::column_count().signal().map(|count| count as i32))
             .on_change(super::on_column_counter_change)
             .step(5)
         )
@@ -86,7 +86,7 @@ fn row_counter() -> Row {
     Row::new()
         .item("Rows:")
         .item(Counter::new()
-            .value_signal(super::row_count().map(|count| count as i32))
+            .value_signal(super::row_count().signal().map(|count| count as i32))
             .on_change(super::on_row_counter_change)
             .step(5)
         )
@@ -94,14 +94,27 @@ fn row_counter() -> Row {
 
 #[topo::nested]
 fn counters() -> Row {
+    let counters = map_ref! {
+        let columns = super::column_count().signal(),
+        let rows = super::row_count().signal() =>
+        (*columns, *rows)
+    };
     Row::new()
-        .items_signal(super::columns().signal_vec().map(move |column| counter_column(column)))
+        .items_signal(counters.map(|(columns, rows)| {
+            (0..columns).map(|column| counter_column(column, rows)).collect()
+        }).to_signal_vec())
+
+    // Row::new()
+    //     .items_signal(super::columns().signal_vec().map(move |column| {
+    //         println!("new column");
+    //         counter_column(column)
+    //     }))
 }
 
 #[topo::nested]
-fn counter_column(column: i32) -> Column {
+fn counter_column(column: i32, rows: i32) -> Column {
     Column::new()
-        .items_signal(super::rows().signal_vec().map(move |row| Counter::new_with_key((column, row))))
+        .items((0..rows).map(move |row| Counter::new_with_key((column, row))))
 }
 
 // blocks!{
