@@ -11,14 +11,12 @@ element_macro!(el, El::default());
 
 #[derive(Default)]
 pub struct El {
-    key: u64,
     after_removes: Vec<Box<dyn FnOnce()>>,
     child: Option<Dom>,
     child_signal: Option<Box<dyn Signal<Item = Option<Dom>> + Unpin>>,
 }
 
 impl Element for El {
-    #[topo::nested]
     fn render(self) -> Dom {
         let mut builder = DomBuilder::<web_sys::HtmlElement>::new_html("div")
             .class("el");

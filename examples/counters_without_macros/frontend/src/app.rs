@@ -1,18 +1,29 @@
 // use zoon::*;
 use zoon::once_cell::sync::OnceCell;
-use zoon::futures_signals::{map_ref, signal::{Mutable, Signal, SignalExt}, signal_vec::{MutableVec, SignalVecExt}, signal_map::{MutableBTreeMap}};
-use std::iter;
+use zoon::futures_signals::{
+    map_ref, 
+    signal::{Mutable, Signal, SignalExt}, 
+    signal_vec::{MutableVec, SignalVecExt}
+};
 
 pub mod cmp;
 
-fn column_count() -> &'static Mutable<i32> {
-    static INSTANCE: OnceCell<Mutable<i32>> = OnceCell::new();
-    INSTANCE.get_or_init(|| Mutable::new(5))
+fn columns() -> &'static MutableVec<()> {
+    static INSTANCE: OnceCell<MutableVec<()>> = OnceCell::new();
+    INSTANCE.get_or_init(|| MutableVec::new_with_values(vec![(); 5]))
 }
 
-fn row_count() -> &'static Mutable<i32> {
-    static INSTANCE: OnceCell<Mutable<i32>> = OnceCell::new();
-    INSTANCE.get_or_init(|| Mutable::new(5))
+fn rows() -> &'static MutableVec<()> {
+    static INSTANCE: OnceCell<MutableVec<()>> = OnceCell::new();
+    INSTANCE.get_or_init(|| MutableVec::new_with_values(vec![(); 5]))
+}
+
+fn column_count() -> impl Signal<Item = usize> {
+    columns().signal_vec().len()
+}
+
+fn row_count() -> impl Signal<Item = usize> {
+    rows().signal_vec().len()
 }
 
 fn test_counter_value() -> &'static Mutable<i32> {
@@ -20,10 +31,10 @@ fn test_counter_value() -> &'static Mutable<i32> {
     INSTANCE.get_or_init(|| Mutable::new(0))
 }
 
-pub fn counter_count() -> impl Signal<Item = i32> {
+pub fn counter_count() -> impl Signal<Item = usize> {
     map_ref!{
-        let column_count = column_count().signal(),
-        let row_count = row_count().signal() =>
+        let column_count = column_count(),
+        let row_count = row_count() =>
         column_count * row_count
     }
 }
@@ -34,35 +45,21 @@ pub fn counter_count_hundreds() -> impl Signal<Item = String> {
 }
 
 pub fn on_column_counter_change(step: i32) {
-    column_count().replace_with(|count| *count + step);
-    // let mut columns = columns().lock_mut();
-    // if step > 0 {
-    //     columns.reserve(step as usize);
-    //     let last_column = columns.last().map(|column| column + 1).unwrap_or_default();
-    //     for new_column in last_column..last_column + step {
-    //         columns.push(new_column);
-    //     }
-    // } else if step < 0 {
-    //     for _ in step..0 {
-    //         columns.pop();
-    //     }
-    // }
+    let mut columns = columns().lock_mut();
+    if step > 0 {
+        (0..step).for_each(|_| columns.push(()))
+    } else if step < 0 {
+        (step..0).for_each(|_| { columns.pop(); })
+    }
 }
 
 pub fn on_row_counter_change(step: i32) {
-    row_count().replace_with(|count| *count + step);
-    // let mut rows = rows().lock_mut();
-    // if step > 0 {
-    //     rows.reserve(step as usize);
-    //     let last_row = rows.last().map(|row| row + 1).unwrap_or_default();
-    //     for new_row in last_row..last_row + step {
-    //         rows.push(new_row);
-    //     }
-    // } else if step < 0 {
-    //     for _ in step..0 {
-    //         rows.pop();
-    //     }
-    // }
+    let mut rows = rows().lock_mut();
+    if step > 0 {
+        (0..step).for_each(|_| rows.push(()))
+    } else if step < 0 {
+        (step..0).for_each(|_| { rows.pop(); })
+    }
 }
 
 pub fn on_test_counter_change(step: i32) {

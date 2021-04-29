@@ -15,7 +15,6 @@ element_macro!(button, Button::default());
 
 #[derive(Default)]
 pub struct Button {
-    key: u64,
     after_removes: Vec<Box<dyn FnOnce()>>,
     label: Option<Dom>,
     label_signal: Option<Box<dyn Signal<Item = Option<Dom>> + Unpin>>,
@@ -23,7 +22,6 @@ pub struct Button {
 }
 
 impl Element for Button {
-    #[topo::nested]
     fn render(self) -> Dom {
         let mut builder = DomBuilder::<web_sys::HtmlElement>::new_html("div")
             .class("button")

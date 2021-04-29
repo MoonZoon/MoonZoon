@@ -14,8 +14,8 @@ use std::hash::{Hash, Hasher};
 //    Element 
 // ------ ------
 
+#[derive(Default)]
 pub struct Counter {
-    key: u64,
     after_removes: Vec<Box<dyn FnOnce()>>,
     value: Option<i32>,
     value_signal: Option<Box<dyn Signal<Item = i32> + Unpin>>,
@@ -23,36 +23,8 @@ pub struct Counter {
     step: Option<i32>,
 }
 
-impl Counter {
-    #[topo::nested]
-    pub fn new() -> Self {
-        Self::new_with_key(CallId::current())
-    }
-
-    #[topo::nested]
-    pub fn new_with_key(key: impl Hash) -> Self {
-        // @TODO
-
-        // let parent_call_id = CallId::parent();
-        let parent_call_id = ();
-
-        let mut hasher = ahash::AHasher::default();
-        (parent_call_id, key).hash(&mut hasher);
-        let key = hasher.finish();
-
-        Self {
-            key,
-            after_removes: Vec::new(),
-            value: None,
-            value_signal: None,
-            on_change: None,
-            step: None,
-        }
-    } 
-}
-
 impl Element for Counter {
-    fn render(mut self) -> Dom {
+    fn render(self) -> Dom {
         let on_change = self.on_change.map(|on_change| on_change);
         let step = self.step.unwrap_or(1);
 
@@ -76,28 +48,7 @@ impl Element for Counter {
                     button
                 })
         } else {
-            let key = self.key;
-            static __STATE_VALUES: OnceCell<RwLock<IntMap<u64, Arc<Mutable<i32>>>>> = OnceCell::new();
-            let __state_values = __STATE_VALUES.get_or_init(|| RwLock::new(IntMap::default()));
-            let state_value = __state_values
-                .write()
-                .unwrap_throw()
-                .entry(key)
-                .or_default()
-                .clone();
-
-            self.after_removes.push(Box::new(move || {
-                __state_values
-                    .write()
-                    .unwrap_throw()
-                    .remove(&key);
-                println!("Counter removed!");
-            }));
-
-            if let Some(default_value) = self.value {
-                state_value.set(default_value);
-            }
-
+            let state_value = Rc::new(Mutable::new(self.value.unwrap_or_default()));
             Row::new()
                 .item(Button::new()
                     .label("-")
@@ -121,7 +72,6 @@ impl Element for Counter {
                     }))
                 )
         };
-
         row = row.after_removes(self.after_removes);
         row.render()
     }

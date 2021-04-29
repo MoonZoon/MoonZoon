@@ -1,5 +1,5 @@
-use crate::render_context::RenderContext;
 use dominator::Dom;
+use std::borrow::Cow;
 
 // -- modules --
 
@@ -134,6 +134,13 @@ impl<'a> IntoElement<'a> for String {
 }
 
 impl<'a> IntoElement<'a> for &'a str {
+    type EL = Text<'a>;
+    fn into_element(self) -> Self::EL {
+        Text::default().with(self)
+    }
+}
+
+impl<'a> IntoElement<'a> for Cow<'a, str> {
     type EL = Text<'a>;
     fn into_element(self) -> Self::EL {
         Text::default().with(self)
