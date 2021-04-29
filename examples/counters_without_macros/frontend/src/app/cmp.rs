@@ -1,6 +1,6 @@
 use zoon::*;
 use zoon::once_cell::sync::OnceCell;
-use zoon::futures_signals::{map_ref, signal::{Mutable, Signal, SignalExt}};
+use zoon::futures_signals::{map_ref, signal::{Mutable, Signal, SignalExt}, signal_vec::SignalVecExt};
 
 mod element;
 use element::counter::Counter;
@@ -46,8 +46,8 @@ fn test_counters() -> Row {
     Row::new()
         .item("Test counters")
         .item(Counter::new()
-            .value_mutable(super::test_counter_value())
-            .on_change(super::set_test_counter_value)
+            .value_signal(super::test_counter_value().signal())
+            .on_change(super::on_test_counter_change)
         )
         .item(Counter::new())
 } 
@@ -75,8 +75,8 @@ fn column_counter() -> Row {
     Row::new()
         .item("Columns:")
         .item(Counter::new()
-            .value_mutable(super::column_count())
-            .on_change(super::set_column_count)
+            .value_signal(super::column_count().map(|count| count as i32))
+            .on_change(super::on_column_counter_change)
             .step(5)
         )
 }
@@ -86,8 +86,8 @@ fn row_counter() -> Row {
     Row::new()
         .item("Rows:")
         .item(Counter::new()
-            .value_mutable(super::row_count())
-            .on_change(super::set_row_count)
+            .value_signal(super::row_count().map(|count| count as i32))
+            .on_change(super::on_row_counter_change)
             .step(5)
         )
 }
@@ -95,13 +95,13 @@ fn row_counter() -> Row {
 #[topo::nested]
 fn counters() -> Column {
     Column::new()
-        .items((0..super::row_count().get()).map(|_| counter_row()))
+        .items_signal(super::columns().signal_vec().map(|_| counter_row()))
 }
 
 #[topo::nested]
 fn counter_row() -> Row {
     Row::new()
-        .items((0..super::column_count().get()).map(|_| counter()))
+        .items_signal(super::rows().signal_vec().map(|_| counter()))
 }
 
 #[topo::nested]
