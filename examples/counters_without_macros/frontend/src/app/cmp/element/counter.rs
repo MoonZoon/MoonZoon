@@ -1,5 +1,6 @@
 use zoon::{*, println};
 use std::rc::Rc;
+use std::sync::Arc;
 use std::sync::RwLock;
 use enclose::enc;
 use zoon::dominator::{Dom, html};
@@ -14,7 +15,7 @@ use std::collections::HashMap;
 #[derive(Default)]
 pub struct Counter {
     value: Option<i32>,
-    value_mutable: Option<&'static Mutable<i32>>,
+    value_signal: Option<Box<dyn Signal<Item = i32> + Unpin>>,
     on_change: Option<Rc<dyn Fn(i32)>>,
     step: Option<i32>,
 }
@@ -25,53 +26,61 @@ impl Element for Counter {
         let on_change = self.on_change.map(|on_change| on_change);
         let step = self.step.unwrap_or(1);
 
-        if let Some(value_mutable) = self.value_mutable {
+        if let Some(value_signal) = self.value_signal {
             Row::new()
                 .item({
                     let mut button = Button::new().label("-");
                     if let Some(on_change) = on_change.clone() {
-                        button = button.on_press(move || on_change(value_mutable.get() - step));
+                        button = button.on_press(move || on_change(-step));
                     }
                     button
                 })
                 .item(El::new()
-                    .child_signal(value_mutable.signal())
+                    .child_signal(value_signal)
                 )
                 .item({
                     let mut button = Button::new().label("+");
                     if let Some(on_change) = on_change {
-                        button = button.on_press(move || on_change(value_mutable.get() + step));
+                        button = button.on_press(move || on_change(step));
                     }
                     button
                 })
                 .render()
         } else {
-            static __STATE_VALUES: OnceCell<RwLock<HashMap<CallId, Mutable<i32>>>> = OnceCell::new();
+            static __STATE_VALUES: OnceCell<RwLock<HashMap<CallId, Arc<Mutable<i32>>>>> = OnceCell::new();
             let __state_values = __STATE_VALUES.get_or_init(|| RwLock::new(HashMap::new()));
-            let state_value = __state_values.write().unwrap_throw().entry(CallId::current()).or_default().clone();
+            let state_value = __state_values
+                .write()
+                .unwrap_throw()
+                .entry(CallId::current())
+                .or_default()
+                .clone();
 
             if let Some(default_value) = self.value {
                 state_value.set(default_value);
             }
 
-            let update_value = enc!((state_value) move |delta: i32| {
-                state_value.replace_with(|value| *value + delta);
-                if let Some(on_change) = on_change.clone() {
-                    on_change(state_value.get());
-                }
-            });
-
             Row::new()
                 .item(Button::new()
                     .label("-")
-                    .on_press(enc!((update_value) move || update_value(-step)))
+                    .on_press(enc!((state_value, on_change) move || {
+                        state_value.replace_with(|value| *value - step);
+                        if let Some(on_change) = on_change {
+                            on_change(-step)
+                        }
+                    }))
                 )
                 .item(El::new()
                     .child_signal(state_value.signal())
                 )
                 .item(Button::new()
                     .label("+")
-                    .on_press(move || update_value(step))
+                    .on_press(enc!((state_value) move || {
+                        state_value.replace_with(|value| *value + step);
+                        if let Some(on_change) = on_change {
+                            on_change(step)
+                        }
+                    }))
                 )
                 .render()
         }
@@ -88,8 +97,8 @@ impl Counter {
         self
     }
 
-    pub fn value_mutable(mut self, value: &'static Mutable<i32>) -> Self {
-        self.value_mutable = Some(value);
+    pub fn value_signal(mut self, value: impl Signal<Item  = i32> + Unpin + 'static) -> Self {
+        self.value_signal = Some(Box::new(value));
         self
     }
 
