@@ -1,21 +1,18 @@
 // use zoon::*;
 use zoon::once_cell::sync::OnceCell;
 use zoon::futures_signals::{map_ref, signal::{Mutable, Signal, SignalExt}, signal_vec::{MutableVec, SignalVecExt}};
+use std::iter;
 
 pub mod cmp;
 
-fn columns() -> &'static MutableVec<()> {
-    static INSTANCE: OnceCell<MutableVec<()>> = OnceCell::new();
-    INSTANCE.get_or_init(|| {
-        MutableVec::new_with_values(vec![(); 5])
-    })
+fn columns() -> &'static MutableVec<i32> {
+    static INSTANCE: OnceCell<MutableVec<i32>> = OnceCell::new();
+    INSTANCE.get_or_init(|| MutableVec::new_with_values((0..5).collect()))
 }
 
-fn rows() -> &'static MutableVec<()> {
-    static INSTANCE: OnceCell<MutableVec<()>> = OnceCell::new();
-    INSTANCE.get_or_init(|| {
-        MutableVec::new_with_values(vec![(); 5])
-    })
+fn rows() -> &'static MutableVec<i32> {
+    static INSTANCE: OnceCell<MutableVec<i32>> = OnceCell::new();
+    INSTANCE.get_or_init(|| MutableVec::new_with_values((0..5).collect()))
 }
 
 fn column_count() -> impl Signal<Item = usize> {
@@ -48,8 +45,9 @@ pub fn on_column_counter_change(step: i32) {
     let mut columns = columns().lock_mut();
     if step > 0 {
         columns.reserve(step as usize);
-        for _ in 0..step {
-            columns.push(());
+        let last_column = columns.last().map(|column| column + 1).unwrap_or_default();
+        for new_column in last_column..last_column + step {
+            columns.push(new_column);
         }
     } else if step < 0 {
         for _ in step..0 {
@@ -62,8 +60,9 @@ pub fn on_row_counter_change(step: i32) {
     let mut rows = rows().lock_mut();
     if step > 0 {
         rows.reserve(step as usize);
-        for _ in 0..step {
-            rows.push(());
+        let last_row = rows.last().map(|row| row + 1).unwrap_or_default();
+        for new_row in last_row..last_row + step {
+            rows.push(new_row);
         }
     } else if step < 0 {
         for _ in step..0 {

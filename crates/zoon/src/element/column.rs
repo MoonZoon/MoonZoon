@@ -11,13 +11,14 @@ element_macro!(col, Column::default());
 
 #[derive(Default)]
 pub struct Column {
+    key: u64,
+    after_removes: Vec<Box<dyn FnOnce()>>,
     items: Vec<Dom>,
     items_signal: Option<Box<dyn SignalVec<Item = Dom> + Unpin>>
 }
 
 impl Element for Column {
-    #[topo::nested]
-    fn render(self) -> Dom {
+    fn render(mut self) -> Dom {
         let mut builder = DomBuilder::<web_sys::HtmlElement>::new_html("div")
             .class("column");
 
@@ -31,6 +32,14 @@ impl Element for Column {
                 .children_signal_vec(items_signal);
         }
 
+        self.after_removes.push(Box::new(|| {
+            crate::println!("Column after_remove");
+        }));
+
+        for after_remove in self.after_removes {
+            builder = builder.after_removed(move |_| after_remove());
+        }
+
         builder.into_dom()
     }
 }
@@ -40,6 +49,16 @@ impl Element for Column {
 // ------ ------
 
 impl<'a> Column {
+    pub fn after_remove(mut self, after_remove: impl FnOnce() + 'static) -> Self {
+        self.after_removes.push(Box::new(after_remove));
+        self
+    }
+
+    pub fn after_removes(mut self, after_removes: Vec<Box<dyn FnOnce()>>) -> Self {
+        self.after_removes.extend(after_removes);
+        self
+    }
+
     pub fn item(mut self, item: impl IntoElement<'a> + 'a) -> Self {
         item.into_element().apply_to_element(&mut self);
         self

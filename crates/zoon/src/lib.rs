@@ -63,6 +63,7 @@ pub use once_cell;
 pub use futures_signals;
 pub use dominator;
 pub use topo::{self, CallId};
+pub use nohash_hasher::IntMap;
 
 #[macro_export]
 macro_rules! with_dollar_sign {
