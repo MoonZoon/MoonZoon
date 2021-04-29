@@ -1,4 +1,4 @@
-use zoon::*;
+use zoon::{*, println};
 use zoon::once_cell::sync::OnceCell;
 use zoon::futures_signals::{map_ref, signal::{Mutable, Signal, SignalExt}, signal_vec::SignalVecExt};
 
@@ -93,22 +93,16 @@ fn row_counter() -> Row {
 }
 
 #[topo::nested]
-fn counters() -> Column {
-    Column::new()
-        .items_signal(super::columns().signal_vec().map(|_| counter_row()))
-}
-
-#[topo::nested]
-fn counter_row() -> Row {
+fn counters() -> Row {
     Row::new()
-        .items_signal(super::rows().signal_vec().map(|_| counter()))
+        .items_signal(super::columns().signal_vec().map(move |column| counter_column(column)))
 }
 
 #[topo::nested]
-fn counter() -> Counter {
-    Counter::new()
+fn counter_column(column: i32) -> Column {
+    Column::new()
+        .items_signal(super::rows().signal_vec().map(move |row| Counter::new_with_key((column, row))))
 }
-
 
 // blocks!{
 

@@ -10,6 +10,8 @@ element_macro!(text, Text::default());
 
 #[derive(Default)]
 pub struct Text<'a> {
+    key: u64,
+    after_removes: Vec<Box<dyn FnOnce()>>,
     text: Cow<'a, str>,
 }
 
@@ -18,12 +20,28 @@ impl<'a> Element for Text<'a> {
     fn render(self) -> Dom {
         text(&self.text)
         // dom_text(rcx, &self.text);
+
+        // for after_remove in self.after_removes {
+        //     builder = builder.after_removed(move |_| after_remove());
+        // }
     }
 }
 
 // ------ ------
 //  Attributes 
 // ------ ------
+
+impl<'a> Text<'a> {
+    pub fn after_remove(mut self, after_remove: impl FnOnce() + 'static) -> Self {
+        self.after_removes.push(Box::new(after_remove));
+        self
+    }
+
+    pub fn after_removes(mut self, after_removes: Vec<Box<dyn FnOnce()>>) -> Self {
+        self.after_removes.extend(after_removes);
+        self
+    }
+}
 
 // ------ String ------
 

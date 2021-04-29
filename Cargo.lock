@@ -882,6 +882,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "nohash-hasher"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2bf50223579dc7cdcfb3bfcacf7069ff68243f8c363f62ffa99cf000a6b9c451"
+
+[[package]]
 name = "notify"
 version = "4.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1839,6 +1845,7 @@ dependencies = [
  "dominator",
  "futures-signals",
  "griddle",
+ "nohash-hasher",
  "once_cell",
  "s_var_macro",
  "topo",
