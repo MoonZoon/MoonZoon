@@ -25,6 +25,8 @@ frontend = [
     "../../crates/tracked_call_macro/src",
     "../../crates/cmp_macro/Cargo.toml",
     "../../crates/cmp_macro/src",
+    "../../crates/static_ref_macro/Cargo.toml",
+    "../../crates/static_ref_macro/src",
 ]
 backend = [
     "backend/Cargo.toml",

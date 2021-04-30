@@ -24,7 +24,7 @@ pub struct Counter {
 }
 
 impl Element for Counter {
-    fn render(self) -> Dom {
+    fn render(mut self) -> Dom {
         let on_change = self.on_change.map(|on_change| on_change);
         let step = self.step.unwrap_or(1);
 
@@ -72,6 +72,7 @@ impl Element for Counter {
                     }))
                 )
         };
+
         row = row.after_removes(self.after_removes);
         row.render()
     }
