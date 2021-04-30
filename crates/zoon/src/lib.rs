@@ -62,7 +62,7 @@ pub use ahash;
 
 pub use once_cell;
 pub use futures_signals;
-pub use dominator;
+pub use dominator::{self, Dom};
 pub use topo::{self, CallId};
 pub use nohash_hasher::IntMap;
 
@@ -72,6 +72,11 @@ macro_rules! with_dollar_sign {
         macro_rules! __with_dollar_sign { $($body)* }
         __with_dollar_sign!($);
     }
+}
+
+pub fn start_app<E: Element>(browser_element_id: &str, view_root: impl FnOnce() -> E) {
+    console_error_panic_hook::set_once();
+    dominator::append_dom(&dominator::get_id(browser_element_id), view_root().render());
 }
 
 const ELEMENT_ID: &str = "app";

@@ -1,14 +1,7 @@
-use zoon::{*, println};
+use zoon::*;
+use zoon::futures_signals::signal::{Signal, Mutable};
 use std::rc::Rc;
-use std::sync::Arc;
-use std::sync::RwLock;
 use enclose::enc;
-use zoon::dominator::{Dom, html};
-use futures_signals::signal::{Signal, SignalExt, Mutable};
-use once_cell::sync::OnceCell;
-use std::collections::HashMap;
-use zoon::ahash;
-use std::hash::{Hash, Hasher};
 
 // ------ ------
 //    Element 
@@ -16,7 +9,6 @@ use std::hash::{Hash, Hasher};
 
 #[derive(Default)]
 pub struct Counter {
-    after_removes: Vec<Box<dyn FnOnce()>>,
     value: Option<i32>,
     value_signal: Option<Box<dyn Signal<Item = i32> + Unpin>>,
     on_change: Option<Rc<dyn Fn(i32)>>,
@@ -24,11 +16,11 @@ pub struct Counter {
 }
 
 impl Element for Counter {
-    fn render(mut self) -> Dom {
+    fn render(self) -> Dom {
         let on_change = self.on_change.map(|on_change| on_change);
         let step = self.step.unwrap_or(1);
 
-        let mut row = if let Some(value_signal) = self.value_signal {
+        let row = if let Some(value_signal) = self.value_signal {
             Row::new()
                 .item({
                     let mut button = Button::new().label("-");
@@ -72,8 +64,6 @@ impl Element for Counter {
                     }))
                 )
         };
-
-        row = row.after_removes(self.after_removes);
         row.render()
     }
 }
@@ -83,16 +73,6 @@ impl Element for Counter {
 // ------ ------
 
 impl Counter {
-    pub fn after_remove(mut self, after_remove: impl FnOnce() + 'static) -> Self {
-        self.after_removes.push(Box::new(after_remove));
-        self
-    }
-
-    pub fn after_removes(mut self, after_removes: Vec<Box<dyn FnOnce()>>) -> Self {
-        self.after_removes.extend(after_removes);
-        self
-    }
-
     pub fn value(mut self, value: i32) -> Self {
         self.value = Some(value);
         self

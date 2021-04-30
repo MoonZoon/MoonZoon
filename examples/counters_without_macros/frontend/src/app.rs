@@ -5,9 +5,11 @@ use zoon::futures_signals::{
     signal_vec::{MutableVec, SignalVecExt}
 };
 
-pub mod cmp;
+pub mod view;
 
-// ------ Statics ------
+// ------ ------
+//    Statics 
+// ------ ------
 
 #[static_ref]
 fn columns() -> &'static MutableVec<()> {
@@ -24,7 +26,9 @@ fn test_counter_value() -> &'static Mutable<i32> {
     Mutable::new(0)
 }
 
-// ------ Signals ------
+// ------ ------
+//    Signals 
+// ------ ------
 
 fn column_count() -> impl Signal<Item = usize> {
     columns().signal_vec().len()
@@ -47,7 +51,9 @@ pub fn counter_count_hundreds() -> impl Signal<Item = String> {
         .map(|count| format!("{:.2}", count as f64 / 1_000.))
 }
 
-// ------ Handlers ------
+// ------ ------
+//   Handlers 
+// ------ ------
 
 pub fn on_column_counter_change(step: i32) {
     let mut columns = columns().lock_mut();
