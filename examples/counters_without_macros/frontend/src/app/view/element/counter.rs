@@ -20,53 +20,35 @@ impl Element for Counter {
         let on_change = self.on_change.map(|on_change| on_change);
         let step = self.step.unwrap_or(1);
 
-        
+        let value = self.value.unwrap_or_default();
+        let state_value = self.value_signal.is_none().then(|| {
+            Rc::new(Mutable::new(value))
+        });
 
-        let row = if let Some(value_signal) = self.value_signal {
-            Row::new()
-                .item({
-                    let mut button = Button::new().label("-");
-                    if let Some(on_change) = on_change.clone() {
-                        button = button.on_press(move || on_change(-step));
-                    }
-                    button
-                })
-                .item(El::new()
-                    .child_signal(value_signal)
-                )
-                .item({
-                    let mut button = Button::new().label("+");
-                    if let Some(on_change) = on_change {
-                        button = button.on_press(move || on_change(step));
-                    }
-                    button
-                })
-        } else {
-            let state_value = Rc::new(Mutable::new(self.value.unwrap_or_default()));
-            Row::new()
-                .item(Button::new()
-                    .label("-")
-                    .on_press(enc!((state_value, on_change) move || {
-                        state_value.replace_with(|value| *value - step);
-                        if let Some(on_change) = on_change {
-                            on_change(-step)
-                        }
-                    }))
-                )
-                .item(El::new()
-                    .child_signal(state_value.signal())
-                )
-                .item(Button::new()
-                    .label("+")
-                    .on_press(enc!((state_value) move || {
-                        state_value.replace_with(|value| *value + step);
-                        if let Some(on_change) = on_change {
-                            on_change(step)
-                        }
-                    }))
-                )
+        let value_signal = self
+            .value_signal
+            .unwrap_or_else(|| Box::new(state_value.as_ref().unwrap_throw().signal()));
+
+        let on_press_handler = move |delta: i32| {
+            if let Some(state_value) = state_value {
+                state_value.replace_with(|value| *value + delta);
+            }
+            if let Some(on_change) = on_change {
+                on_change(delta);
+            }
         };
-        row.render()
+
+        Row::new()
+            .item(Button::new()
+                .label("-")
+                .on_press(enc!((on_press_handler) move || on_press_handler(-step)))
+            )
+            .item(El::new().child_signal(value_signal))
+            .item(Button::new()
+                .label("+")
+                .on_press(move || on_press_handler(step))
+            )
+            .render()
     }
 }
 
