@@ -20,6 +20,8 @@ impl Element for Counter {
         let on_change = self.on_change.map(|on_change| on_change);
         let step = self.step.unwrap_or(1);
 
+        
+
         let row = if let Some(value_signal) = self.value_signal {
             Row::new()
                 .item({

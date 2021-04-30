@@ -74,9 +74,15 @@ macro_rules! with_dollar_sign {
     }
 }
 
-pub fn start_app<E: Element>(browser_element_id: &str, view_root: impl FnOnce() -> E) {
+pub fn start_app<'a, E: Element>(browser_element_id: impl Into<Option<&'a str>>, view_root: impl FnOnce() -> E) {
     console_error_panic_hook::set_once();
-    dominator::append_dom(&dominator::get_id(browser_element_id), view_root().render());
+
+    let parent = browser_element_id
+        .into()
+        .map(dominator::get_id)
+        .unwrap_or_else(|| dominator::body().unchecked_into());
+
+    dominator::append_dom(&parent, view_root().render());
 }
 
 const ELEMENT_ID: &str = "app";
