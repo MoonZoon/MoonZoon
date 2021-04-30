@@ -95,7 +95,7 @@ impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<Button> for T {
     }
 } 
 
-// ------ button::on_press(...)
+// ------ button::on_press(...) ------
 
 pub struct OnPress(Box<dyn Fn()>);
 pub fn on_press(on_press: impl FnOnce() + Clone + 'static) -> OnPress {
