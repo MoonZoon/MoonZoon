@@ -6,6 +6,7 @@ members = [
     "crates/cache_macro",
     "crates/tracked_call_macro",
     "crates/cmp_macro",
+    "crates/static_ref_macro",
     "crates/moon",
     "crates/mzoon",
     "crates/zoon",

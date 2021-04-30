@@ -5,6 +5,7 @@ pub use update_macro::update;
 pub use cache_macro::cache;
 pub use cmp_macro::cmp;
 pub use tracked_call_macro::tracked_call;
+pub use static_ref_macro::static_ref;
 
 pub mod element;
 mod component;

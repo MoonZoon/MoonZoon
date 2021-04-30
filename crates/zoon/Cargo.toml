@@ -13,6 +13,7 @@ update_macro = { path = "../update_macro" }
 cache_macro = { path = "../cache_macro" }
 cmp_macro = { path = "../cmp_macro" }
 tracked_call_macro = { path = "../tracked_call_macro" }
+static_ref_macro = { path = "../static_ref_macro" }
 # @TODO remove rand and getrandom?
 uuid = { version = "0.8.2", features = ["v4", "wasm-bindgen"], default_features = false }
 # slotmap = { version = "1.0.3", default_features = false }
@@ -21,7 +22,7 @@ ahash = { version = "0.7.2" }
 
 once_cell = { version = "1.7.2" }
 futures-signals = {version = "0.3.19" }
-dominator = { version = "0.5.14" }
+dominator = { version = "0.5.15" }
 topo = { version = "0.13.2", features = ["wasm-bindgen"] }
 nohash-hasher = { version = "0.2.0" }
 

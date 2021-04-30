@@ -183,9 +183,9 @@ checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 
 [[package]]
 name = "dominator"
-version = "0.5.14"
+version = "0.5.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d82632420524aca4a213977a48a1cbff8687faebb7808bb9e05b780e74f7a1d"
+checksum = "e7702d887993d7d5fd5a6d9acb9efbe159b43a9d2a5a198af8a7d0138511238d"
 dependencies = [
  "discard",
  "futures-channel",
@@ -990,6 +990,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
+name = "static_ref_macro"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "syn"
 version = "1.0.64"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1374,6 +1383,7 @@ dependencies = [
  "nohash-hasher",
  "once_cell",
  "s_var_macro",
+ "static_ref_macro",
  "topo",
  "tracked_call_macro",
  "update_macro",
