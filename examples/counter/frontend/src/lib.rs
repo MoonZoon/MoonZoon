@@ -1,5 +1,6 @@
 use zoon::*;
 use zoon::futures_signals::signal::Mutable;
+use std::ops::{AddAssign, SubAssign};
 
 #[static_ref]
 fn counter() -> &'static Mutable<i32> {
@@ -7,11 +8,11 @@ fn counter() -> &'static Mutable<i32> {
 }
 
 fn increment() {
-    counter().replace_with(|counter| *counter + 1);
+    counter().lock_mut().add_assign(1)
 }
 
 fn decrement() {
-    counter().replace_with(|counter| *counter - 1);
+    counter().lock_mut().sub_assign(1)
 }
 
 fn root() -> Column {
