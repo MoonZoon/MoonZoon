@@ -15,7 +15,6 @@ element_macro!(button, Button::default());
 
 #[derive(Default)]
 pub struct Button {
-    after_removes: Vec<Box<dyn FnOnce()>>,
     label: Option<Dom>,
     label_signal: Option<Box<dyn Signal<Item = Option<Dom>> + Unpin>>,
     on_press: Option<OnPress>,
@@ -44,10 +43,6 @@ impl Element for Button {
                 .event(move |_: events::Click| handler());
         }
 
-        for after_remove in self.after_removes {
-            builder = builder.after_removed(move |_| after_remove());
-        }
-
         builder.into_dom()
     }
 }
@@ -57,16 +52,6 @@ impl Element for Button {
 // ------ ------
 
 impl<'a> Button {
-    pub fn after_remove(mut self, after_remove: impl FnOnce() + 'static) -> Self {
-        self.after_removes.push(Box::new(after_remove));
-        self
-    }
-
-    pub fn after_removes(mut self, after_removes: Vec<Box<dyn FnOnce()>>) -> Self {
-        self.after_removes.extend(after_removes);
-        self
-    }
-
     pub fn label(mut self, label: impl IntoElement<'a> + 'a) -> Self {
         label.into_element().apply_to_element(&mut self);
         self
