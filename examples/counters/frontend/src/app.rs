@@ -1,50 +1,82 @@
 use zoon::*;
+use zoon::futures_signals::{
+    map_ref, 
+    signal::{Mutable, Signal, SignalExt}, 
+    signal_vec::{MutableVec, SignalVecExt}
+};
+use std::iter::repeat;
 
-mod cmp;
+pub mod view;
 
-blocks!{
-    append_blocks!{
-        cmp,
+// ------ ------
+//    Statics 
+// ------ ------
+
+#[static_ref]
+fn columns() -> &'static MutableVec<()> {
+    MutableVec::new_with_values(vec![(); 5])
+}
+
+#[static_ref]
+fn rows() -> &'static MutableVec<()> {
+    MutableVec::new_with_values(vec![(); 5])
+}
+
+#[static_ref]
+fn test_counter_value() -> &'static Mutable<i32> {
+    Mutable::new(0)
+}
+
+// ------ ------
+//    Signals 
+// ------ ------
+
+fn column_count() -> impl Signal<Item = usize> {
+    columns().signal_vec().len()
+}
+
+fn row_count() -> impl Signal<Item = usize> {
+    rows().signal_vec().len()
+}
+
+pub fn counter_count() -> impl Signal<Item = usize> {
+    map_ref!{
+        let column_count = column_count(),
+        let row_count = row_count() =>
+        column_count * row_count
     }
+}
 
-    #[s_var]
-    fn column_count() -> SVar<i32> {
-        5
+pub fn counter_count_hundreds() -> impl Signal<Item = String> {
+    counter_count()
+        .map(|count| format!("{:.2}", count as f64 / 1_000.))
+}
+
+// ------ ------
+//   Handlers 
+// ------ ------
+
+pub fn on_column_counter_change(step: i32) {
+    change_vec_size(columns(), step)
+}
+
+pub fn on_row_counter_change(step: i32) {
+    change_vec_size(rows(), step)
+}
+
+pub fn on_test_counter_change(step: i32) {
+    test_counter_value().replace_with(|value| *value + step);
+}
+
+// ------ ------
+//    Helpers 
+// ------ ------
+
+fn change_vec_size(vec: &MutableVec<()>, step: i32) {
+    let mut vec = vec.lock_mut();
+    if step.is_positive() {
+        vec.extend(repeat(()).take(step as usize))
+    } else if step.is_negative() {
+        vec.truncate(vec.len().saturating_sub(step.abs() as usize))
     }
-
-    #[s_var]
-    fn row_count() -> SVar<i32> {
-        5
-    }
-
-    #[s_var]
-    fn test_counter_value() -> SVar<i32> {
-        0
-    }
-
-    #[cache]
-    fn counter_count() -> Cache<i32> {
-        column_count().inner() * row_count().inner()
-    }
-
-    #[cache]
-    fn counter_count_hundreds() -> Cache<String> {
-        format!("{:.2}", f64::from(counter_count().inner()) / 1_000.)
-    }
-
-    #[update]
-    fn set_column_count(count: i32) {
-        column_count().set(count);
-    }
-
-    #[update]
-    fn set_row_count(count: i32) {
-        row_count().set(count);
-    }
-
-    #[update]
-    fn set_test_counter_value(count: i32) {
-        test_counter_value().set(count);
-    }
-
 }

@@ -1,6 +1,6 @@
 use zoon::*;
 use zoon::futures_signals::{signal::{Mutable, SignalExt}, signal_vec::SignalVecExt};
-use std::borrow::Cow;
+use std::{borrow::Cow, ops::AddAssign};
 
 mod element;
 use element::counter::Counter;
@@ -24,17 +24,13 @@ fn control_counters() -> Row {
 fn click_me_button() -> Row {
     let click_count = Mutable::new(0);
     let title = click_count.signal().map(|count| {
-        if count == 0 { 
-            return Cow::from("Click me!") 
-        }
+        if count == 0 { return Cow::from("Click me!") }
         Cow::from(format!("Clicked {}x", count))
     });
     Row::new()
         .item(Button::new()
             .label_signal(title)
-            .on_press(move || {
-                click_count.replace_with(|count| *count + 1);
-            })
+            .on_press(move || click_count.lock_mut().add_assign(1))
         )
 } 
 
@@ -82,12 +78,12 @@ fn row_counter() -> Row {
 
 fn counters() -> Row {
     Row::new().items_signal_vec(
-        super::columns().signal_vec().map(move |_| counter_column())
+        super::columns().signal_vec().map(|_| counter_column())
     )
 }
 
 fn counter_column() -> Column {
     Column::new().items_signal_vec(
-        super::rows().signal_vec().map(move |_| Counter::new())
+        super::rows().signal_vec().map(|_| Counter::new())
     )
 }
