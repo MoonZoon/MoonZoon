@@ -81,13 +81,13 @@ fn row_counter() -> Row {
 }
 
 fn counters() -> Row {
-    Row::new().items_signal(
+    Row::new().items_signal_vec(
         super::columns().signal_vec().map(move |_| counter_column())
     )
 }
 
 fn counter_column() -> Column {
-    Column::new().items_signal(
+    Column::new().items_signal_vec(
         super::rows().signal_vec().map(move |_| Counter::new())
     )
 }

@@ -4,6 +4,7 @@ use zoon::futures_signals::{
     signal::{Mutable, Signal, SignalExt}, 
     signal_vec::{MutableVec, SignalVecExt}
 };
+use std::iter::repeat;
 
 pub mod view;
 
@@ -56,23 +57,26 @@ pub fn counter_count_hundreds() -> impl Signal<Item = String> {
 // ------ ------
 
 pub fn on_column_counter_change(step: i32) {
-    let mut columns = columns().lock_mut();
-    if step > 0 {
-        (0..step).for_each(|_| columns.push(()))
-    } else if step < 0 {
-        (step..0).for_each(|_| { columns.pop(); })
-    }
+    change_vec_size(columns(), step)
 }
 
 pub fn on_row_counter_change(step: i32) {
-    let mut rows = rows().lock_mut();
-    if step > 0 {
-        (0..step).for_each(|_| rows.push(()))
-    } else if step < 0 {
-        (step..0).for_each(|_| { rows.pop(); })
-    }
+    change_vec_size(rows(), step)
 }
 
 pub fn on_test_counter_change(step: i32) {
     test_counter_value().replace_with(|value| *value + step);
+}
+
+// ------ ------
+//    Helpers 
+// ------ ------
+
+fn change_vec_size(vec: &MutableVec<()>, step: i32) {
+    let mut vec = vec.lock_mut();
+    if step.is_positive() {
+        vec.extend(repeat(()).take(step as usize))
+    } else if step.is_negative() {
+        vec.truncate(vec.len().saturating_sub(step.abs() as usize))
+    }
 }

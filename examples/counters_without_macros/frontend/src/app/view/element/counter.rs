@@ -11,9 +11,11 @@ use enclose::enc;
 pub struct Counter {
     value: Option<i32>,
     value_signal: Option<Box<dyn Signal<Item = i32> + Unpin>>,
-    on_change: Option<Rc<dyn Fn(i32)>>,
-    step: Option<i32>,
+    on_change: Option<Rc<dyn Fn(CounterStep)>>,
+    step: Option<CounterStep>,
 }
+
+pub type CounterStep = i32; 
 
 impl Element for Counter {
     fn render(self) -> Dom {
