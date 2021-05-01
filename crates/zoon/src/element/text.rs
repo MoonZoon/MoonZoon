@@ -17,17 +17,46 @@ impl<'a> Element for Text<'a> {
     fn render(self) -> Dom {
         text(&self.text)
 
-//         let text = window()
-//     .unwrap()
-//     .document()
-//     .unwrap()
-//     .create_text_node("foo");
+        // How to attach callbacks:
+        //
+        // impl Element for Column {
+        //     fn render(mut self) -> Dom {
+        //         html!("div", {
+        //             .class("column")
+        
+        //             .apply(|dom| {
+        //                 if let Some(items_signal) = self.items_signal {
+        //                     dom.children_signal_vec(items_signal);
+        //                 } else {
+        //                     dom
+        //                 }
+        //             })
+        
+        //             .apply(|mut dom| {
+        //                 for after_remove in self.after_removes {
+        //                     dom = dom.after_removed(move |_| after_remove());
+        //                 }
+        
+        //                 dom
+        //             })
+        //         })
+        //     }
+        // }
+        // ---
+        //
+        // let text = window()
+        //     .unwrap()
+        //     .document()
+        //     .unwrap()
+        //     .create_text_node("foo");
 
-// apply_methods!(DomBuilder::new(text), {
-//     // ...
-//     .into_dom()
-// })
-//   OR
+        // apply_methods!(DomBuilder::new(text), {
+        //     // ...
+        //     .into_dom()
+        // })
+        //
+        //   OR
+        //
         // dom_builder!(dom_node_goes_here, {
         //     ...
         // })

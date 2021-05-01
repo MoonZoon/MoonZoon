@@ -19,9 +19,6 @@ pub type CounterStep = i32;
 
 impl Element for Counter {
     fn render(self) -> Dom {
-        let on_change = self.on_change.map(|on_change| on_change);
-        let step = self.step.unwrap_or(1);
-
         let value = self.value.unwrap_or_default();
         let state_value = self.value_signal.is_none().then(|| {
             Rc::new(Mutable::new(value))
@@ -31,6 +28,7 @@ impl Element for Counter {
             .value_signal
             .unwrap_or_else(|| Box::new(state_value.as_ref().unwrap_throw().signal()));
 
+        let on_change = self.on_change;
         let on_press_handler = move |delta: i32| {
             if let Some(state_value) = state_value {
                 state_value.replace_with(|value| *value + delta);
@@ -40,6 +38,7 @@ impl Element for Counter {
             }
         };
 
+        let step = self.step.unwrap_or(1);
         Row::new()
             .item(Button::new()
                 .label("-")

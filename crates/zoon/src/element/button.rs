@@ -16,7 +16,7 @@ element_macro!(button, Button::default());
 #[derive(Default)]
 pub struct Button {
     label: Option<Dom>,
-    label_signal: Option<Box<dyn Signal<Item = Option<Dom>> + Unpin>>,
+    label_signal: Option<LabelSignal>,
     on_press: Option<OnPress>,
 }
 
@@ -32,15 +32,14 @@ impl Element for Button {
                 .child(label);
         }
 
-        if let Some(label_signal) = self.label_signal {
+        if let Some(LabelSignal(label_signal)) = self.label_signal {
             builder = builder
                 .child_signal(label_signal);
         }
 
-        if let Some(on_press) = self.on_press {
-            let handler = on_press.0;
+        if let Some(OnPress(on_press)) = self.on_press {
             builder = builder
-                .event(move |_: events::Click| handler());
+                .event(move |_: events::Click| on_press());
         }
 
         builder.into_dom()
@@ -58,11 +57,7 @@ impl<'a> Button {
     }
 
     pub fn label_signal(mut self, label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static) -> Self {
-        self.label_signal = Some(
-            Box::new(
-                label.map(|label| Some(label.into_element().render()))
-            )
-        );
+        self::label_signal(label).apply_to_element(&mut self);
         self
     }
 
@@ -79,6 +74,20 @@ impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<Button> for T {
         button.label = Some(self.into_element().render());
     }
 } 
+
+// ------ button::label_signal(...) -------
+
+pub struct LabelSignal(Box<dyn Signal<Item = Option<Dom>> + Unpin>);
+pub fn label_signal<'a>(label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static) -> LabelSignal {
+    LabelSignal(Box::new(
+        label.map(|label| Some(label.into_element().render()))
+    ))
+}
+impl ApplyToElement<Button> for LabelSignal {
+    fn apply_to_element(self, button: &mut Button) {
+        button.label_signal = Some(self);
+    }
+}
 
 // ------ button::on_press(...) ------
 
