@@ -65,7 +65,7 @@ pub fn on_row_counter_change(step: i32) {
 }
 
 pub fn on_test_counter_change(step: i32) {
-    test_counter_value().replace_with(|value| *value + step);
+    test_counter_value().update(|value| value + step)
 }
 
 // ------ ------

@@ -1,9 +1,11 @@
-// #![no_std]
-
 use zoon::{*, println, raw_el::{attr, tag, event_handler}};
+use zoon::futures_signals::{signal::{Mutable, Signal, SignalExt}, signal_vec::{MutableVec, SignalVecExt}};
 use rand::prelude::*;
-use std::rc::Rc;
-use std::mem;
+use std::{mem, rc::Rc, iter::repeat_with};
+
+// ------ ------
+//    Statics 
+// ------ ------
 
 static ADJECTIVES: &[&'static str] = &[
     "pretty",
@@ -43,293 +45,243 @@ static NOUNS: &[&'static str] = &[
     "pizza", "mouse", "keyboard",
 ];
 
+#[static_ref]
+fn generator() -> &'static Mutable<SmallRng> {
+    Mutable::new(SmallRng::from_entropy())
+}
+
+#[static_ref]
+fn previous_id() -> &'static Mutable<ID> {
+    Mutable::new(0)
+}
+
+#[static_ref]
+fn selected_row() -> &'static Mutable<Option<Rc<Mutable<Row>>>> {
+    Mutable::new(None)
+}
+
+#[static_ref]
+fn rows() -> &'static MutableVec<Rc<Mutable<Row>>> {
+    MutableVec::new()
+}
+
+struct Row {
+    id: ID,
+    label: String,
+}
+
 type ID = usize;
 
-blocks!{
+// ------ ------
+//    Signals 
+// ------ ------
 
-    #[s_var]
-    fn generator() -> SVar<SmallRng> {
-        SmallRng::from_entropy()
-    }
+fn rows_len() -> impl Signal<Item = usize> {
+    rows().signal_vec_cloned().len()
+}
 
-    #[s_var]
-    fn previous_id() -> SVar<ID> {
-        0
-    }
+// ------ ------
+//   Commands 
+// ------ ------
 
-    struct Row {
-        id: ID,
-        label: String,
-    }
+fn create_row() -> Rc<Mutable<Row>> {
+    let id = previous_id().map_mut(|id| {
+        *id += 1;
+        *id
+    });
+    let label = generator().map_mut(|generator| {
+        format!(
+            "{} {} {}",
+            ADJECTIVES.choose(generator).unwrap(),
+            COLOURS.choose(generator).unwrap(),
+            NOUNS.choose(generator).unwrap(),
+        )
+    });
+    Rc::new(Mutable::new(Row { id, label }))
+}
 
-    #[s_var]
-    fn selected_row() -> SVar<Option<VarRef<Row>>> {
-        None
-    }
+fn create_rows(count: usize) {
+    rows()
+        .lock_mut()
+        .replace_cloned(repeat_with(create_row).take(count).collect())
+}
 
-    #[s_var]
-    fn rows() -> SVar<Vec<Rc<Var<Row>>>> {
-        Vec::new()
-    }
+fn append_rows(count: usize) {
+    rows()
+        .lock_mut()
+        .extend(repeat_with(create_row).take(count));
+}
 
-    #[cache]
-    fn rows_len() -> Cache<usize> {
-        rows().map(Vec::len)
-    }
-
-    fn create_row() -> Rc<Var<Row>> {
-        let id = previous_id().map_mut(|id| {
-            *id += 1;
-            *id
-        });
-        let label = generator().map_mut(|generator| {
-            format!(
-                "{} {} {}",
-                ADJECTIVES.choose(generator).unwrap(),
-                COLOURS.choose(generator).unwrap(),
-                NOUNS.choose(generator).unwrap(),
-            )
-        });
-        Rc::new(Var::new(Row { id, label }))
-    }
-
-    #[update]
-    fn create_rows(count: usize) {
-        rows().update_mut(|rows| {
-            *rows = (0..count).map(|_| create_row()).collect();
+fn update_rows(step: usize) {
+    let rows = rows().lock_ref();
+    for position in (0..rows.len()).step_by(step) {
+        rows[position].update_mut(|row| {
+            row.label += " !!!"
         });
     }
+}
 
-    #[update]
-    fn append_rows(count: usize) {
-        rows().update_mut(|rows| {
-            rows.append(&mut (0..count).map(|_| create_row()).collect());
-        });
-    }
+fn clear_rows() {
+    rows().lock_mut().clear()
+}
 
-    #[update]
-    fn update_rows(step: usize) {
-        let len = rows_len().inner();
-        // rows().use_ref(|rows| {
-        rows().use_ref(|rows| {
-            // stop![
-                for position in (0..len).step_by(step) {
-                    rows[position].update_mut(|row| {
-                        row.label += " !!!"
-                    });
-                }
-            // ]
-        })
-    }
+fn swap_rows() {
+    if rows().lock_ref().len() < 999 { return }
+    rows().lock_mut().swap(1, 998)
+}
 
-    #[update]
-    fn clear_rows() {
-        rows().update_mut(|rows| {
-            rows.clear();
-        })
-    }
+fn swap_rows_special() {
+    rows().lock_mut().swap(1, 3)
+}
 
-    #[update]
-    fn swap_rows_old() {
-        if rows_len().inner() < 999 { return; }
-        rows().update_mut(|rows| {
-            rows.swap(1, 998)
-        });
-    }
+fn select_row(row: Rc<Mutable<Row>>) {
+    selected_row().set(Some(row))
+    // selected_row().set_neq(Some(row))
+}
 
-    #[update]
-    fn swap_rows() {
-        if rows_len().inner() < 999 { return; }
-        rows().use_ref(|rows| {
-            rows[1].update_mut(|row_a| {
-                rows[998].update_mut(|row_b| {
-                    mem::swap(row_a, row_b)
-                })
-            })
-        });
-    }
+fn remove_row(row: Rc<Mutable<Row>>) {
+    let rows = rows().lock_mut();
+    let row_id = row.map(|row| row.id);
+    let position = rows
+        .iter()
+        .position(|row| row.map(|row| row.id) == row_id)
+        .unwrap_throw();
+    rows.remove(position);
+}
 
-    #[update]
-    fn swap_rows_special_old() {
-        rows().update_mut(|rows| {
-            rows.swap(1, 3)
-        });
-    }
+// ------ ------
+//     View 
+// ------ ------
 
-    #[update]
-    fn swap_rows_special() {
-        rows().use_ref(|rows| {
-            rows[1].update_mut(|row_a| {
-                rows[3].update_mut(|row_b| {
-                    mem::swap(row_a, row_b)
-                })
-            })
-        });
-    }
-
-    #[update]
-    fn select_row(row: VarRef<Row>) {
-        let old_selected = selected_row().map_mut(|selected_row| {
-            selected_row.replace(row)
-        });
-        // row.mark_updated();
-        if let Some(old_selected) = old_selected {
-            // old_selected.try_mark_updated();
-        }
-    }
-
-    #[update]
-    fn remove_row(row: VarRef<Row>) {
-        rows().update_mut(|rows| {
-            let position = rows.iter().position(|r| r.to_var_ref() == row).unwrap();
-            rows.remove(position);
-        });
-    }
-
-    #[cmp]
-    fn root() -> Cmp {
+fn root<'a>() -> RawEl<'a> {
+    raw_el![
+        attr("class", "container"),
+        jumbotron(),
+        table(),
         raw_el![
-            attr("class", "container"),
-            jumbotron(),
-            table(),
+            tag("span"),
+            attr("class", "preloadicon glyphicon glyphicon-remove"),
+            attr("aria-hidden", ""),
+        ]
+    ]
+}
+
+fn jumbotron<'a>() -> RawEl<'a> {
+    raw_el![
+        attr("class", "jumbotron"),
+        raw_el![
+            attr("class", "row"),
+            raw_el![
+                attr("class", "col-md-6"),
+                raw_el![
+                    tag("h1"),
+                    "Zoon",
+                ]
+            ],
+            raw_el![
+                attr("class", "col-md-6"),
+                raw_el![
+                    attr("class", "row"),
+                    action_button("run", "Create 11 rows", || create_rows(11)),
+                    action_button("run", "Create 1,000 rows", || create_rows(1_000)),
+                    action_button("runlots", "Create 10,000 rows", || create_rows(10_000)),
+                    action_button("add", "Append 1,000 rows", || append_rows(1_000)),
+                    action_button("update", "Update every 10th row", || update_rows(10)),
+                    action_button("clear", "Clear", clear_rows),
+                    action_button("swaprows", "Swap Rows", swap_rows),
+                    action_button("swaprows", "Swap Rows 2 and 4", swap_rows_special),
+                ]
+            ],
+        ]
+    ]
+}
+
+fn action_button<'a>(
+    id: &'static str, 
+    title: &'static str, 
+    on_click: fn(),
+) -> RawEl<'a> {
+    raw_el![
+        attr("class", "col-sm-6 smallpad"),
+        attr("id", id),
+        attr("type", "button"),
+        event_handler("click", move |_| on_click()),
+        title,
+    ]
+}
+
+fn table<'a>() -> RawEl<'a> {
+    raw_el![
+        tag("table"),
+        attr("class", "table table-hover table-striped test-data"),
+        raw_el![
+            tag("tbody"),
+            attr("id", "tbody"),
+            raw_el::children_signal_vec(
+                rows().signal_vec_cloned().map(row)
+            )
+        ]
+    ]
+}
+
+fn row<'a>(row: Rc<Mutable<Row>>) -> RawEl<'a> {
+    raw_el![
+        tag("tr"),
+        raw_el::attr_signal(
+            // signal_ref ?
+            selected_row().signal_cloned().map(|selected_row| {
+                (selected_row.map(|selected_row| selected_row.map(|selected_row| selected_row.id)) == Some(row.map(|row| row.id))).then(|| attr("class", "danger"))
+            })
+        ),
+        row_id(row),
+        row_label(row),
+        row_remove_button(row),
+        raw_el![
+            tag("td"),
+            attr("class", "col-md-6"),
+        ]
+    ]
+}
+
+fn row_id<'a>(row: Rc<Mutable<Row>>) -> RawEl<'a> {
+    raw_el![
+        tag("td"),
+        attr("class", "col-md-1"),
+        row.lock_ref().id
+    ]
+}
+
+fn row_label<'a>(row: Rc<Mutable<Row>>) -> RawEl<'a> {
+    raw_el![
+        tag("td"),
+        attr("class", "col-md-4"),
+        event_handler("click", move |_| select_row(row)),
+        raw_el![
+            tag("a"),
+            attr("class", "lbl"),
+            &row.lock_ref().label,
+        ]
+    ]
+}
+
+fn row_remove_button<'a>(row: Rc<Mutable<Row>>) -> RawEl<'a> {
+    raw_el![
+        tag("td"),
+        attr("class", "col-md-1"),
+        raw_el![
+            tag("a"),
+            attr("class", "remove"),
+            event_handler("click", move |_| remove_row(row)),
             raw_el![
                 tag("span"),
-                attr("class", "preloadicon glyphicon glyphicon-remove"),
-                attr("aria-hidden", ""),
+                attr("class", "glyphicon glyphicon-remove remove"),
+                attr("aria-hidden", "true"),
             ]
         ]
-    }
-
-    #[cmp]
-    fn jumbotron() -> Cmp {
-        raw_el![
-            attr("class", "jumbotron"),
-            raw_el![
-                attr("class", "row"),
-                raw_el![
-                    attr("class", "col-md-6"),
-                    raw_el![
-                        tag("h1"),
-                        "Zoon",
-                    ]
-                ],
-                raw_el![
-                    attr("class", "col-md-6"),
-                    raw_el![
-                        attr("class", "row"),
-                        action_button("run", "Create 11 rows", || create_rows(11)),
-                        action_button("run", "Create 1,000 rows", || create_rows(1_000)),
-                        action_button("runlots", "Create 10,000 rows", || create_rows(10_000)),
-                        action_button("add", "Append 1,000 rows", || append_rows(1_000)),
-                        action_button("update", "Update every 10th row", || update_rows(10)),
-                        action_button("clear", "Clear", clear_rows),
-                        action_button("swaprows", "Swap Rows Old", swap_rows_old),
-                        action_button("swaprows", "Swap Rows", swap_rows),
-                        action_button("swaprows", "Swap Rows 2 and 4 Old", swap_rows_special_old),
-                        action_button("swaprows", "Swap Rows 2 and 4", swap_rows_special),
-                    ]
-                ],
-            ]
-        ]
-    }
-
-    fn action_button<'a>(
-        id: &'static str, 
-        title: &'static str, 
-        on_click: fn(),
-    ) -> RawEl<'a> {
-        raw_el![
-            attr("class", "col-sm-6 smallpad"),
-            attr("id", id),
-            attr("type", "button"),
-            event_handler("click", move |_| on_click()),
-            title,
-        ]
-    }
-
-    #[cmp]
-    fn table() -> Cmp {
-        let rows = rows().map(|rows| {
-            rows
-                .iter()
-                .map(|row_var| row(row_var.to_var_ref()))
-                .collect::<Vec<_>>()
-        });
-        raw_el![
-            tag("table"),
-            attr("class", "table table-hover table-striped test-data"),
-            raw_el![
-                tag("tbody"),
-                attr("id", "tbody"),
-                rows,
-            ]
-        ]
-    }
-
-    #[cmp(key = "row.map(|row| row.id)")]
-    fn row(row: VarRef<Row>) -> Cmp {
-        let selected_row = selected_row()/*.unwatch()*/.inner();
-        let is_selected = selected_row == Some(row);
-        raw_el![
-            tag("tr"),
-            is_selected.then(|| attr("class", "danger")),
-            row_id(row),
-            row_label(row),
-            row_remove_button(row),
-            raw_el![
-                tag("td"),
-                attr("class", "col-md-6"),
-            ]
-        ]
-    }
-
-    #[cmp]
-    fn row_id(row: VarRef<Row>) -> Cmp {
-        let id = row.map(|row| row.id);
-        raw_el![
-            tag("td"),
-            attr("class", "col-md-1"),
-            id
-        ]
-    }
-
-    #[cmp]
-    fn row_label(row: VarRef<Row>) -> Cmp {
-        let label = row.map(|row| row.label.clone());
-        raw_el![
-            tag("td"),
-            attr("class", "col-md-4"),
-            event_handler("click", move |_| select_row(row)),
-            raw_el![
-                tag("a"),
-                attr("class", "lbl"),
-                label,
-            ]
-        ]
-    }
-
-    #[cmp]
-    fn row_remove_button(row: VarRef<Row>) -> Cmp {
-        // row.unwatch();
-        raw_el![
-            tag("td"),
-            attr("class", "col-md-1"),
-            raw_el![
-                tag("a"),
-                attr("class", "remove"),
-                event_handler("click", move |_| remove_row(row)),
-                raw_el![
-                    tag("span"),
-                    attr("class", "glyphicon glyphicon-remove remove"),
-                    attr("aria-hidden", "true"),
-                ]
-            ]
-        ]
-    }
-
+    ]
 }
 
 #[wasm_bindgen(start)]
 pub fn start() {
-    start!()
+    start_app("app", root);
 }

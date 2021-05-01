@@ -30,7 +30,7 @@ fn click_me_button() -> Row {
     Row::new()
         .item(Button::new()
             .label_signal(title)
-            .on_press(move || click_count.lock_mut().add_assign(1))
+            .on_press(move || click_count.update(|count| count + 1))
         )
 } 
 
