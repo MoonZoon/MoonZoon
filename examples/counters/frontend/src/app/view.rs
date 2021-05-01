@@ -1,6 +1,6 @@
 use zoon::*;
 use zoon::futures_signals::{signal::{Mutable, SignalExt}, signal_vec::SignalVecExt};
-use std::{borrow::Cow, ops::AddAssign};
+use std::borrow::Cow;
 
 mod element;
 use element::counter::{self, Counter};
@@ -33,7 +33,7 @@ fn click_me_button() -> Row {
     row![
         button![
             button::label_signal(title),
-            button::on_press(move || click_count.lock_mut().add_assign(1)),
+            button::on_press(move || click_count.update(|count| count + 1)),
         ],
     ]
 } 

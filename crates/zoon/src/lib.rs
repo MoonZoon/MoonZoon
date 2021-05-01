@@ -33,6 +33,9 @@ mod tracked_call_stack;
 mod relations;
 mod tracked_call;
 mod render_context;
+mod futures_signals_ext;
+
+pub use futures_signals_ext::{MutableExt, MutableVecExt};
 
 pub use element::*;
 pub use render_context::RenderContext;
