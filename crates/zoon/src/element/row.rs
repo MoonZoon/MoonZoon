@@ -1,7 +1,7 @@
 use wasm_bindgen::JsCast;
 use crate::{RenderContext, dom::dom_element, __TrackedCall, __TrackedCallStack, Element, IntoElement, ApplyToElement, render, element_macro};
 use dominator::{Dom, html, DomBuilder};
-use futures_signals::signal_vec::{SignalVec, SignalVecExt};
+use futures_signals::{signal::{Signal, SignalExt}, signal_vec::{SignalVec, SignalVecExt}};
 
 // ------ ------
 //    Element 
@@ -11,28 +11,30 @@ element_macro!(row, Row::default());
 
 #[derive(Default)]
 pub struct Row {
-    after_removes: Vec<Box<dyn FnOnce()>>,
-    items: Vec<Dom>,
-    items_signal: Option<Box<dyn SignalVec<Item = Dom> + Unpin>>
+    items: Vec<Item>,
+    items_signal_vec: Option<Box<dyn SignalVec<Item = Dom> + Unpin>>
+}
+
+enum Item {
+    Static(Dom),
+    Dynamic(Box<dyn Signal<Item = Option<Dom>> + Unpin>),
 }
 
 impl Element for Row {
-    fn render(mut self) -> Dom {
+    fn render(self) -> Dom {
         let mut builder = DomBuilder::<web_sys::HtmlElement>::new_html("div")
             .class("row");
 
-        if !self.items.is_empty() {
-            builder = builder
-                .children(self.items);
+        for item in self.items {
+            builder = match item {
+                Item::Static(child) => builder.child(child),
+                Item::Dynamic(child) => builder.child_signal(child),
+            }
         }
 
-        if let Some(items_signal) = self.items_signal {
+        if let Some(items_signal_vec) = self.items_signal_vec {
             builder = builder
-                .children_signal_vec(items_signal);
-        }
-
-        for after_remove in self.after_removes {
-            builder = builder.after_removed(move |_| after_remove());
+                .children_signal_vec(items_signal_vec);
         }
 
         builder.into_dom()
@@ -44,16 +46,6 @@ impl Element for Row {
 // ------ ------
 
 impl<'a> Row {
-    pub fn after_remove(mut self, after_remove: impl FnOnce() + 'static) -> Self {
-        self.after_removes.push(Box::new(after_remove));
-        self
-    }
-
-    pub fn after_removes(mut self, after_removes: Vec<Box<dyn FnOnce()>>) -> Self {
-        self.after_removes.extend(after_removes);
-        self
-    }
-
     pub fn item(mut self, item: impl IntoElement<'a> + 'a) -> Self {
         item.into_element().apply_to_element(&mut self);
         self
@@ -66,8 +58,13 @@ impl<'a> Row {
         self
     }
 
-    pub fn items_signal<IE: IntoElement<'a> + 'a>(mut self, items: impl SignalVec<Item = IE> + Unpin + 'static) -> Self {
-        self.items_signal = Some(Box::new(items.map(|item| item.into_element().render())));
+    pub fn item_signal<IE: IntoElement<'a> + 'a>(mut self, item: impl Signal<Item = IE> + Unpin + 'static) -> Self {
+        self::item_signal(item).apply_to_element(&mut self);
+        self
+    }
+
+    pub fn items_signal_vec<IE: IntoElement<'a> + 'a>(mut self, items: impl SignalVec<Item = IE> + Unpin + 'static) -> Self {
+        self::items_signal_vec(items).apply_to_element(&mut self);
         self
     }
 } 
@@ -76,6 +73,29 @@ impl<'a> Row {
 
 impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<Row> for T {
     fn apply_to_element(self, row: &mut Row) {
-        row.items.push(self.into_element().render());
+        row.items.push(Item::Static(self.into_element().render()));
+    }
+}
+
+// ------ row::signal(...) ------
+
+pub struct ItemSignal(Box<dyn Signal<Item = Option<Dom>> + Unpin>);
+pub fn item_signal<'a, IE: IntoElement<'a> + 'a>(item: impl Signal<Item = IE> + Unpin + 'static) -> ItemSignal {
+    ItemSignal(Box::new(item.map(|item| Some(item.into_element().render()))))
+}
+impl ApplyToElement<Row> for ItemSignal {
+    fn apply_to_element(self, row: &mut Row) {
+        row.items.push(Item::Dynamic(self.0));
+    }
+}
+
+// ------ row::items_signal_vec(...) ------
+pub struct ItemsSignalVec(Box<dyn SignalVec<Item = Dom> + Unpin>);
+pub fn items_signal_vec<'a, IE: IntoElement<'a> + 'a>(items: impl SignalVec<Item = IE> + Unpin + 'static) -> ItemsSignalVec {
+    ItemsSignalVec(Box::new(items.map(|item| item.into_element().render())))
+}
+impl ApplyToElement<Row> for ItemsSignalVec {
+    fn apply_to_element(self, row: &mut Row) {
+        row.items_signal_vec = Some(self.0);
     }
 }

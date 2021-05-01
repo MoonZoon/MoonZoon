@@ -16,6 +16,21 @@ pub struct Text<'a> {
 impl<'a> Element for Text<'a> {
     fn render(self) -> Dom {
         text(&self.text)
+
+//         let text = window()
+//     .unwrap()
+//     .document()
+//     .unwrap()
+//     .create_text_node("foo");
+
+// apply_methods!(DomBuilder::new(text), {
+//     // ...
+//     .into_dom()
+// })
+//   OR
+        // dom_builder!(dom_node_goes_here, {
+        //     ...
+        // })
     }
 }
 
