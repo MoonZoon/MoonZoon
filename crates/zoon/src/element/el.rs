@@ -12,7 +12,7 @@ element_macro!(el, El::default());
 #[derive(Default)]
 pub struct El {
     child: Option<Dom>,
-    child_signal: Option<Box<dyn Signal<Item = Option<Dom>> + Unpin>>,
+    child_signal: Option<ChildSignal>,
 }
 
 impl Element for El {
@@ -25,7 +25,7 @@ impl Element for El {
                 .child(child);
         }
 
-        if let Some(child_signal) = self.child_signal {
+        if let Some(ChildSignal(child_signal)) = self.child_signal {
             builder = builder
                 .child_signal(child_signal);
         }
@@ -45,11 +45,7 @@ impl<'a> El {
     }
 
     pub fn child_signal(mut self, child: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static) -> Self {
-        self.child_signal = Some(
-            Box::new(
-                child.map(|child| Some(child.into_element().render()))
-            )
-        );
+        self::child_signal(child).apply_to_element(&mut self);
         self
     }
 } 
@@ -59,5 +55,19 @@ impl<'a> El {
 impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<El> for T {
     fn apply_to_element(self, element: &mut El) {
         element.child = Some(self.into_element().render());
+    }
+}
+
+// ------ el::child_signal(...) -------
+
+pub struct ChildSignal(Box<dyn Signal<Item = Option<Dom>> + Unpin>);
+pub fn child_signal<'a>(child: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static) -> ChildSignal {
+    ChildSignal(Box::new(
+        child.map(|child| Some(child.into_element().render()))
+    ))
+}
+impl ApplyToElement<El> for ChildSignal {
+    fn apply_to_element(self, el: &mut El) {
+        el.child_signal = Some(self);
     }
 }

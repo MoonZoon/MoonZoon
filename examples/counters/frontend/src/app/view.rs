@@ -6,7 +6,7 @@ mod element;
 use element::counter::{self, Counter};
 use crate::counter;
 
-fn root() -> Column {
+pub fn root() -> Column {
     col![
         control_counters(),
         counters(),
