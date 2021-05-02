@@ -1,36 +1,31 @@
-use wasm_bindgen::JsCast;
-use crate::{RenderContext, dom::dom_element, Element, __TrackedCall, __TrackedCallStack, IntoElement, ApplyToElement, render, element_macro};
-use dominator::{Dom, html, DomBuilder};
+use crate::{make_flags,  Element, IntoElement};
+use dominator::{Dom, DomBuilder};
 use futures_signals::signal::{Signal, SignalExt};
+use std::marker::PhantomData;
 
 // ------ ------
 //   Element 
 // ------ ------
 
-element_macro!(el, El::default());
+make_flags!(Child);
 
-#[derive(Default)]
-pub struct El {
-    child: Option<Dom>,
-    child_signal: Option<ChildSignal>,
+pub struct El<ChildFlag> {
+    dom_builder:DomBuilder<web_sys::HtmlElement>,
+    flags: PhantomData<ChildFlag>
 }
 
-impl Element for El {
+impl El<ChildFlagNotSet> {
+    pub fn new() -> Self {
+        Self {
+            dom_builder: DomBuilder::new_html("div").class("el"),
+            flags: PhantomData,
+        }
+    }
+}
+
+impl Element for El<ChildFlagSet> {
     fn render(self) -> Dom {
-        let mut builder = DomBuilder::<web_sys::HtmlElement>::new_html("div")
-            .class("el");
-
-        if let Some(child) = self.child {
-            builder = builder
-                .child(child);
-        }
-
-        if let Some(ChildSignal(child_signal)) = self.child_signal {
-            builder = builder
-                .child_signal(child_signal);
-        }
-
-        builder.into_dom()
+        self.dom_builder.into_dom()
     }
 }
 
@@ -38,36 +33,29 @@ impl Element for El {
 //  Attributes 
 // ------ ------
 
-impl<'a> El {
-    pub fn child(mut self, child: impl IntoElement<'a> + 'a) -> Self {
-        child.into_element().apply_to_element(&mut self);
-        self
+impl<'a, ChildFlag> El<ChildFlag> {
+    pub fn child(self, 
+        child: impl IntoElement<'a> + 'a
+    ) -> El<ChildFlagSet>
+        where ChildFlag: FlagNotSet
+    {
+        El {
+            dom_builder: self.dom_builder.child(child.into_element().render()),
+            flags: PhantomData
+        }
     }
 
-    pub fn child_signal(mut self, child: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static) -> Self {
-        self::child_signal(child).apply_to_element(&mut self);
-        self
+    pub fn child_signal(
+        self, 
+        child: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static
+    ) -> El<ChildFlagSet> 
+        where ChildFlag: FlagNotSet
+    {
+        El {
+            dom_builder: self.dom_builder.child_signal(
+                child.map(|child| Some(child.into_element().render()))
+            ),
+            flags: PhantomData
+        }
     }
 } 
-
-// ------ IntoElement ------
-
-impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<El> for T {
-    fn apply_to_element(self, element: &mut El) {
-        element.child = Some(self.into_element().render());
-    }
-}
-
-// ------ el::child_signal(...) -------
-
-pub struct ChildSignal(Box<dyn Signal<Item = Option<Dom>> + Unpin>);
-pub fn child_signal<'a>(child: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static) -> ChildSignal {
-    ChildSignal(Box::new(
-        child.map(|child| Some(child.into_element().render()))
-    ))
-}
-impl ApplyToElement<El> for ChildSignal {
-    fn apply_to_element(self, el: &mut El) {
-        el.child_signal = Some(self);
-    }
-}

@@ -1856,6 +1856,7 @@ dependencies = [
  "griddle",
  "nohash-hasher",
  "once_cell",
+ "paste",
  "s_var_macro",
  "static_ref_macro",
  "topo",
