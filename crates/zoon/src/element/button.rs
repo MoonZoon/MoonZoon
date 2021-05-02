@@ -1,4 +1,4 @@
-use crate::{Element, IntoElement, make_flags};
+use crate::{Element, IntoElement, make_flags, FlagNotSet};
 use dominator::{Dom, DomBuilder, events};
 use futures_signals::signal::{Signal, SignalExt};
 use std::marker::PhantomData;
