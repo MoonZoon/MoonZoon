@@ -80,6 +80,9 @@ pub use enclose::enc as clone;
 
 pub use paste;
 
+pub trait FlagSet {}
+pub trait FlagNotSet {}
+
 #[macro_export]
 macro_rules! with_dollar_sign {
     ($($body:tt)*) => {
@@ -91,13 +94,13 @@ macro_rules! with_dollar_sign {
 #[macro_export]
 macro_rules! make_flags {
     ($($flag:ident),*) => {
-        pub trait FlagSet {}
-        pub trait FlagNotSet {}
         $(paste::paste!{
+            #[derive(Default)]
             pub struct [<$flag FlagSet>];
+            #[derive(Default)]
             pub struct [<$flag FlagNotSet>];
-            impl FlagSet for [<$flag FlagSet>] {}
-            impl FlagNotSet for [<$flag FlagNotSet>] {}
+            impl $crate::FlagSet for [<$flag FlagSet>] {}
+            impl $crate::FlagNotSet for [<$flag FlagNotSet>] {}
         })*
     }
 }

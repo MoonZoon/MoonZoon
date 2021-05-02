@@ -1,57 +1,85 @@
 use zoon::*;
 use std::rc::Rc;
+use std::marker::PhantomData;
 
 // ------ ------
 //    Element 
 // ------ ------
 
-#[derive(Default)]
-pub struct Counter {
-    value: Option<i32>,
-    value_signal: Option<Box<dyn Signal<Item = i32> + Unpin>>,
-    on_change: Option<Rc<dyn Fn(CounterStep)>>,
-    step: Option<CounterStep>,
-}
-
-impl Counter {
-    pub fn new() -> Self {
-        Self::default()
-    }
-}
+make_flags!(Value, ValueSignal, OnChange, Step);
 
 pub type CounterStep = i32; 
 
-impl Element for Counter {
+pub struct Counter<ValueFlag, ValueSignal, OnChangeFlag, StepFlag> {
+    value: i32,
+    value_signal: Option<Box<dyn Signal<Item = i32> + Unpin>>,
+    on_change: Option<Rc<dyn Fn(CounterStep)>>,
+    step: CounterStep,
+    flags: PhantomData<(ValueFlag, ValueSignal, OnChangeFlag, StepFlag)>,
+}
+
+impl Counter<ValueFlagNotSet, ValueSignalFlagNotSet, OnChangeFlagNotSet, StepFlagNotSet> {
+    pub fn new() -> Self {
+        Self {
+            value: 0,
+            value_signal: None,
+            on_change: None,
+            step: 1,
+            flags: PhantomData,
+        }
+    }
+}
+
+impl<StepFlag> Element for Counter<ValueFlagNotSet, ValueSignalFlagSet, OnChangeFlagSet, StepFlag> {
     fn render(self) -> Dom {
-        let value = self.value.unwrap_or_default();
-        let state_value = self.value_signal.is_none().then(|| {
-            Rc::new(Mutable::new(value))
-        });
+        let on_change = self.on_change.unwrap_throw();
+        let step = self.step;
+        Row::new()
+            .item(Button::new().label("-").on_press(clone!((on_change) move || on_change(-step))))
+            .item(El::new().child_signal(self.value_signal.unwrap_throw()))
+            .item(Button::new().label("+").on_press(move || on_change(step)))
+            .render()
+    }
+}
 
-        let value_signal = self
-            .value_signal
-            .unwrap_or_else(|| Box::new(state_value.as_ref().unwrap_throw().signal()));
-
-        let on_change = self.on_change;
-        let on_press_handler = move |delta: i32| {
-            if let Some(state_value) = state_value {
-                state_value.replace_with(|value| *value + delta);
-            }
-            if let Some(on_change) = on_change {
-                on_change(delta);
-            }
-        };
-
-        let step = self.step.unwrap_or(1);
+impl<ValueFlag, StepFlag> Element for Counter<ValueFlag, ValueSignalFlagNotSet, OnChangeFlagNotSet, StepFlag> {
+    fn render(self) -> Dom {
+        let state_value = Rc::new(Mutable::new(self.value));
+        let step = self.step;
         Row::new()
             .item(Button::new()
                 .label("-")
-                .on_press(clone!((on_press_handler) move || on_press_handler(-step)))
+                .on_press(clone!((state_value) move || state_value.update(|value| value - step)))
             )
-            .item(El::new().child_signal(value_signal))
+            .item(El::new().child_signal(state_value.signal()))
             .item(Button::new()
                 .label("+")
-                .on_press(move || on_press_handler(step))
+                .on_press(move || state_value.update(|value| value - step))
+            )
+            .render()
+    }
+}
+
+impl<ValueFlag, StepFlag> Element for Counter<ValueFlag, ValueSignalFlagNotSet, OnChangeFlagSet, StepFlag> {
+    fn render(self) -> Dom {
+        let state_value = Rc::new(Mutable::new(self.value));
+        let on_change = self.on_change.unwrap_throw();
+        let step = self.step;
+        Row::new()
+            .item(Button::new()
+                .label("-")
+                .on_press(clone!((state_value, on_change) move || {
+                    state_value.update(|value| value - step);
+                    on_change(-step);
+                }))
+            )
+            .item(El::new().child_signal(state_value.signal()))
+            .item(Button::new()
+                .label("+")
+                .on_press(move || {
+                    state_value.update(|value| value - step);
+                    on_change(step);
+                })
             )
             .render()
     }
@@ -61,24 +89,68 @@ impl Element for Counter {
 //  Attributes 
 // ------ ------
 
-impl Counter {
-    pub fn value(mut self, value: i32) -> Self {
-        self.value = Some(value);
-        self
+impl<ValueFlag, ValueSignal, OnChangeFlag, StepFlag> Counter<ValueFlag, ValueSignal, OnChangeFlag, StepFlag> {
+    pub fn value(
+        self, 
+        value: i32
+    ) -> Counter<ValueFlagSet, ValueSignalFlagNotSet, OnChangeFlag, StepFlag>
+        where 
+            ValueFlag: FlagNotSet,
+            ValueSignal: FlagNotSet,
+    {
+        Counter {
+            value,
+            value_signal: None,
+            on_change: self.on_change,
+            step: self.step,
+            flags: PhantomData,
+        }
     }
 
-    pub fn value_signal(mut self, value: impl Signal<Item  = i32> + Unpin + 'static) -> Self {
-        self.value_signal = Some(Box::new(value));
-        self
+    pub fn value_signal(
+        self, 
+        value: impl Signal<Item  = i32> + Unpin + 'static
+    ) -> Counter<ValueFlagNotSet, ValueSignalFlagSet, OnChangeFlag, StepFlag>
+        where 
+            ValueFlag: FlagNotSet,
+            ValueSignal: FlagNotSet,
+    {
+        Counter {
+            value: 0,
+            value_signal: Some(Box::new(value)),
+            on_change: self.on_change,
+            step: self.step,
+            flags: PhantomData,
+        }
     }
 
-    pub fn on_change(mut self, on_change: impl FnOnce(i32) + Clone + 'static) -> Self {
-        self.on_change = Some(Rc::new(move |value| on_change.clone()(value)));
-        self
+    pub fn on_change(
+        self, 
+        on_change: impl FnOnce(i32) + Clone + 'static
+    ) -> Counter<ValueFlag, ValueSignal, OnChangeFlagSet, StepFlag>
+        where OnChangeFlag: FlagNotSet
+    {
+        Counter {
+            value: self.value,
+            value_signal: self.value_signal,
+            on_change: Some(Rc::new(move |value| on_change.clone()(value))),
+            step: self.step,
+            flags: PhantomData,
+        }
     }
 
-    pub fn step(mut self, step: i32) -> Self {
-        self.step = Some(step);
-        self
+    pub fn step(
+        self, 
+        step: i32
+    ) -> Counter<ValueFlag, ValueSignal, OnChangeFlag, StepFlagSet>
+        where StepFlag: FlagNotSet
+    {
+        Counter {
+            value: self.value,
+            value_signal: self.value_signal,
+            on_change: self.on_change,
+            step,
+            flags: PhantomData,
+        }
     }
 }
