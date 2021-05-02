@@ -12,29 +12,41 @@ use std::marker::PhantomData;
 //    Element 
 // ------ ------
 
-element_macro!(button, Button::new());
+element_macro!(button, button::new());
 
-pub struct Button {
-    dom_builder:DomBuilder<web_sys::HtmlElement>
+pub struct Yes;
+pub struct No;
+
+pub trait IsNo {}
+pub trait IsYes {}
+
+impl IsNo for No {}
+impl IsYes for Yes {}
+
+pub struct Button<LabelSet, OnPressSet> {
+    dom_builder:DomBuilder<web_sys::HtmlElement>,
+    flags: PhantomData<(LabelSet, OnPressSet)>
 }
 
-impl Button {
+impl<LabelSet, OnPressSet> Button<LabelSet, OnPressSet> {
     pub fn new() -> Self {
         Self {
             dom_builder: DomBuilder::new_html("div")
                 .class("button")
                 .attribute("role", "button")
-                .attribute("tabindex", "0")
+                .attribute("tabindex", "0"),
+            flags: PhantomData,
         }
-    }
-
-    fn use_dom_builder(mut self, f: impl FnOnce(DomBuilder<web_sys::HtmlElement>) -> DomBuilder<web_sys::HtmlElement>) -> Self {
-        self.dom_builder = f(self.dom_builder);
-        self
     }
 }
 
-impl Element for Button {
+pub fn new() -> Button<No, No> {
+    Button::new()
+}
+
+impl<LabelSet, OnPressSet> Element for Button<LabelSet, OnPressSet> 
+    where LabelSet: IsYes
+{
     fn render(self) -> Dom {
         self.dom_builder.into_dom()
     }
@@ -44,24 +56,33 @@ impl Element for Button {
 //  Attributes 
 // ------ ------
 
-impl<'a> Button {
-    pub fn label(self, label: impl IntoElement<'a> + 'a) -> Self {
-        self.use_dom_builder(|builder| {
-            builder.child(label.into_element().render())
-        })
+impl<'a, LabelSet, OnPressSet> Button<LabelSet, OnPressSet> {
+    pub fn label(self, label: impl IntoElement<'a> + 'a) -> Button<Yes, OnPressSet>
+        where LabelSet: IsNo
+    {
+        Button {
+            dom_builder: self.dom_builder.child(label.into_element().render()),
+            flags: PhantomData
+        }
     }
 
-    pub fn label_signal(self, label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static) -> Self {
-        self.use_dom_builder(|builder| {
-            builder.child_signal(
+    pub fn label_signal(self, label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static) -> Button<Yes, OnPressSet> 
+        where LabelSet: IsNo
+    {
+        Button {
+            dom_builder: self.dom_builder.child_signal(
                 label.map(|label| Some(label.into_element().render()))
-            )
-        })
+            ),
+            flags: PhantomData
+        }
     }
 
-    pub fn on_press(self, on_press: impl FnOnce() + Clone + 'static) -> Self {
-        self.use_dom_builder(|builder| {
-            builder.event(move |_: events::Click| (on_press.clone())())
-        })
+    pub fn on_press(self, on_press: impl FnOnce() + Clone + 'static) -> Button<LabelSet, Yes> 
+        where OnPressSet: IsNo
+    {
+        Button {
+            dom_builder: self.dom_builder.event(move |_: events::Click| (on_press.clone())()),
+            flags: PhantomData
+        }
     }
 } 

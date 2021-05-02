@@ -22,11 +22,18 @@ fn decrement() {
 //     ]
 // }
 
+// fn root() -> Column {
+//     Column::new()
+//         .item(Button::new().on_press(decrement).label("-"))
+//         .item_signal(counter().signal())
+//         .item(Button::new().on_press(increment).label("+"))
+// }
+
 fn root() -> Column {
     Column::new()
-        .item(Button::new().on_press(decrement).label("-"))
+        .item(button::new().on_press(decrement).label("-"))
         .item_signal(counter().signal())
-        .item(Button::new().on_press(increment).label("+"))
+        .item(button::new().on_press(increment).label("+"))
 }
 
 #[wasm_bindgen(start)]
