@@ -69,11 +69,27 @@ pub use dominator::{self, Dom};
 pub use topo::{self, CallId};
 pub use nohash_hasher::IntMap;
 
+pub use paste;
+
 #[macro_export]
 macro_rules! with_dollar_sign {
     ($($body:tt)*) => {
         macro_rules! __with_dollar_sign { $($body)* }
         __with_dollar_sign!($);
+    }
+}
+
+#[macro_export]
+macro_rules! make_flags {
+    ($($flag:ident),*) => {
+        pub trait FlagSet {}
+        pub trait FlagNotSet {}
+        $(paste::paste!{
+            pub struct [<$flag FlagSet>];
+            pub struct [<$flag FlagNotSet>];
+            impl FlagSet for [<$flag FlagSet>] {}
+            impl FlagNotSet for [<$flag FlagNotSet>] {}
+        })*
     }
 }
 
