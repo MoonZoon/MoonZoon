@@ -1,4 +1,4 @@
-use crate::{make_flags,  Element, IntoElement};
+use crate::{make_flags,  Element, IntoElement, IntoOptionElement};
 use dominator::{Dom, DomBuilder};
 use futures_signals::{signal::{Signal, SignalExt}, signal_vec::{SignalVec, SignalVecExt}};
 use std::marker::PhantomData;
@@ -35,21 +35,26 @@ impl Element for Column<EmptyFlagNotSet> {
 
 impl<'a, EmptyFlag> Column<EmptyFlag> {
     pub fn item(self, 
-        item: impl IntoElement<'a> + 'a
+        item: impl IntoOptionElement<'a> + 'a
     ) -> Column<EmptyFlagNotSet> {
+        let dom_builder = if let Some(item) = item.into_option_element() {
+            self.dom_builder.child(item.render())
+        } else {
+            self.dom_builder
+        };
         Column {
-            dom_builder: self.dom_builder.child(item.into_element().render()),
+            dom_builder,
             flags: PhantomData
         }
     }
 
     pub fn item_signal(
         self, 
-        item: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static
+        item: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static
     ) -> Column<EmptyFlagNotSet> {
         Column {
             dom_builder: self.dom_builder.child_signal(
-                item.map(|item| Some(item.into_element().render()))
+                item.map(|item| item.into_option_element().map(|element| element.render()))
             ),
             flags: PhantomData
         }

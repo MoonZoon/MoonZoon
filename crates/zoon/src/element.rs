@@ -112,6 +112,27 @@ impl<T, ATTR, I> ApplyToElementForIterator<T> for I
     }
 }
 
+// ------ IntoOptionElement ------
+
+pub trait IntoOptionElement<'a> {
+    type EL: Element;
+    fn into_option_element(self) -> Option<Self::EL>; 
+}
+
+impl<'a, E: Element, T: IntoElement<'a, EL = E>> IntoOptionElement<'a> for Option<T> {
+    type EL = E;
+    fn into_option_element(self) -> Option<Self::EL> {
+        self.map(|into_element| into_element.into_element())
+    }
+}
+
+impl<'a, E: Element, T: IntoElement<'a, EL = E>> IntoOptionElement<'a> for T {
+    type EL = E;
+    fn into_option_element(self) -> Option<Self::EL> {
+        Some(self.into_element())
+    }
+}
+
 // ------ IntoElement ------
 
 pub trait IntoElement<'a> {
