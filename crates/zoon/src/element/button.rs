@@ -1,10 +1,5 @@
-use wasm_bindgen::{closure::Closure, JsCast, prelude::*};
-use crate::{ApplyToElement, Element, IntoElement, Node, RenderContext, __TrackedCall, __TrackedCallStack, dom::dom_element, element_macro, render};
-use crate::hook::el_var;
-use crate::el_var::ElVar;
-use std::{cell::RefCell, rc::Rc};
+use crate::{Element, IntoElement};
 use dominator::{Dom, DomBuilder, events};
-use crate::println;
 use futures_signals::signal::{Signal, SignalExt};
 use std::marker::PhantomData;
 
@@ -12,23 +7,25 @@ use std::marker::PhantomData;
 //    Element 
 // ------ ------
 
-element_macro!(button, button::new());
+pub trait NotSetFlag {}
+pub trait SetFlag {}
 
-pub struct Yes;
-pub struct No;
+pub struct LabelFlagNotSet;
+pub struct LabelFlagSet;
+pub struct OnPressFlagNotSet;
+pub struct OnPressFlagSet;
 
-pub trait IsNo {}
-pub trait IsYes {}
+impl NotSetFlag for LabelFlagNotSet {}
+impl NotSetFlag for OnPressFlagNotSet {}
+impl SetFlag for LabelFlagSet {}
+impl SetFlag for OnPressFlagSet {}
 
-impl IsNo for No {}
-impl IsYes for Yes {}
-
-pub struct Button<LabelSet, OnPressSet> {
+pub struct Button<LabelFlag, OnPressFlag> {
     dom_builder:DomBuilder<web_sys::HtmlElement>,
-    flags: PhantomData<(LabelSet, OnPressSet)>
+    flags: PhantomData<(LabelFlag, OnPressFlag)>
 }
 
-impl<LabelSet, OnPressSet> Button<LabelSet, OnPressSet> {
+impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
     pub fn new() -> Self {
         Self {
             dom_builder: DomBuilder::new_html("div")
@@ -40,12 +37,8 @@ impl<LabelSet, OnPressSet> Button<LabelSet, OnPressSet> {
     }
 }
 
-pub fn new() -> Button<No, No> {
-    Button::new()
-}
-
-impl<LabelSet, OnPressSet> Element for Button<LabelSet, OnPressSet> 
-    where LabelSet: IsYes
+impl<LabelFlag, OnPressFlag> Element for Button<LabelFlag, OnPressFlag> 
+    where LabelFlag: SetFlag
 {
     fn render(self) -> Dom {
         self.dom_builder.into_dom()
@@ -56,9 +49,9 @@ impl<LabelSet, OnPressSet> Element for Button<LabelSet, OnPressSet>
 //  Attributes 
 // ------ ------
 
-impl<'a, LabelSet, OnPressSet> Button<LabelSet, OnPressSet> {
-    pub fn label(self, label: impl IntoElement<'a> + 'a) -> Button<Yes, OnPressSet>
-        where LabelSet: IsNo
+impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
+    pub fn label(self, label: impl IntoElement<'a> + 'a) -> Button<LabelFlagSet, OnPressFlag>
+        where LabelFlag: NotSetFlag
     {
         Button {
             dom_builder: self.dom_builder.child(label.into_element().render()),
@@ -66,8 +59,8 @@ impl<'a, LabelSet, OnPressSet> Button<LabelSet, OnPressSet> {
         }
     }
 
-    pub fn label_signal(self, label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static) -> Button<Yes, OnPressSet> 
-        where LabelSet: IsNo
+    pub fn label_signal(self, label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static) -> Button<LabelFlagSet, OnPressFlag> 
+        where LabelFlag: NotSetFlag
     {
         Button {
             dom_builder: self.dom_builder.child_signal(
@@ -77,8 +70,8 @@ impl<'a, LabelSet, OnPressSet> Button<LabelSet, OnPressSet> {
         }
     }
 
-    pub fn on_press(self, on_press: impl FnOnce() + Clone + 'static) -> Button<LabelSet, Yes> 
-        where OnPressSet: IsNo
+    pub fn on_press(self, on_press: impl FnOnce() + Clone + 'static) -> Button<LabelFlag, OnPressFlagSet> 
+        where OnPressFlag: NotSetFlag
     {
         Button {
             dom_builder: self.dom_builder.event(move |_: events::Click| (on_press.clone())()),
