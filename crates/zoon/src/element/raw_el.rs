@@ -6,7 +6,9 @@ use crate::dom::{document, Node};
 use griddle::HashMap;
 use std::{cell::RefCell, rc::Rc};
 use std::mem;
-use dominator::{Dom, html};
+use futures_signals::{signal::{Signal, SignalExt}, signal_vec::{SignalVec, SignalVecExt}};
+use dominator::{Dom, html, DomBuilder, traits::{StaticEvent, OptionStr, MultiStr}};
+use std::borrow::Cow;
 
 // ------ ------
 //   Element 
@@ -16,18 +18,76 @@ element_macro!(raw_el, RawEl::default());
 
 #[derive(Default)]
 pub struct RawEl<'a> {
-    tag: Option<&'a str>,
-    attrs: HashMap<&'a str, &'a str>,
-    event_handlers: HashMap<&'static str, Vec<Box<dyn Fn(web_sys::Event)>>>,
-    children: Vec<Box<dyn Element + 'a>>,
+    tag: Option<Tag<'a>>,
+    attributes: Vec<Attribute<'a>>,
+    event_handlers: Vec<EventHandler>,
+    children: Vec<Child>,
+    children_signal_vec: Option<Box<dyn SignalVec<Item = Dom> + Unpin>>
+}
+
+enum Child {
+    Static(Dom),
+    Dynamic(Box<dyn Signal<Item = Option<Dom>> + Unpin>),
+}
+
+enum Attribute<'a> {
+    Static(&'a str, &'a str),
+    Dynamic(Cow<'static, str>, Box<dyn Signal<Item = Option<String>> + Unpin>),
+}
+
+#[derive(Debug)]
+pub struct CustomEvent {
+    event: web_sys::Event,
+}
+
+impl StaticEvent for CustomEvent {
+    // @TODO how?
+    const EVENT_TYPE: &'static str = "[custom]";
+
+    #[inline]
+    fn unchecked_from_event(event: web_sys::Event) -> Self {
+        Self { event }
+    }
 }
 
 impl<'a> Element for RawEl<'a> {
-    #[topo::nested]
     fn render(self) -> Dom {
-        html!("div", {
+        let tag = self.tag.map_or("div", |Tag(tag)| tag);
+        let mut builder = DomBuilder::<web_sys::HtmlElement>::new_html(tag);
 
-        })
+        for attribute in self.attributes {
+            builder = match attribute {
+                Attribute::Static(name, value) => builder.attribute(name, value),
+                // @TODO without Cow / refactor?
+                Attribute::Dynamic(name, value) => builder.attribute_signal(name.to_string(), value),
+            }
+        }
+
+        for item in self.children {
+            builder = match item {
+                Child::Static(child) => builder.child(child),
+                Child::Dynamic(child) => builder.child_signal(child),
+            }
+        }
+
+        if let Some(items_signal_vec) = self.children_signal_vec {
+            builder = builder
+                .children_signal_vec(items_signal_vec);
+        }
+
+        for EventHandler(event_handler) in self.event_handlers {
+            crate::println!("eh");
+            builder = builder.event(event_handler);
+        }
+
+        builder.into_dom()
+
+
+
+
+        // html!(self.tag.unwrap_or("div"), {
+
+        // })
 
         // let node = dom_element(rcx, self.tag, |mut rcx| {
         //     for child in &mut self.children {
@@ -75,85 +135,6 @@ impl<'a> Element for RawEl<'a> {
     }
 }
 
-#[tracked_call]
-pub fn dom_element(mut rcx: RenderContext, tag: Option<&str>, children: impl FnOnce(RenderContext)) -> ElVar<Node> {
-    // log!("el, index: {}", rcx.index);
-
-    let node = el_var(|| {
-        let el_ws = document().create_element(tag.unwrap_or("div")).expect("element");
-        // el_ws.set_attribute("class", "el").expect("set class attribute");
-        let node_ws = web_sys::Node::from(el_ws);
-        rcx.node.as_mut().unwrap().update_mut(|node| {
-            let parent_node_ws = &node.node_ws;
-            parent_node_ws.insert_before(&node_ws, parent_node_ws.child_nodes().get(rcx.index + 1).as_ref()).expect("insert node");
-        });
-        Node { node_ws }
-    });
-    rcx.node = Some(node);
-    rcx.reset_index();
-    children(rcx);
-    node
-}
-
-struct Listener {
-    event: &'static str,
-    node: ElVar<Node>,
-    handlers: Rc<RefCell<Vec<Box<dyn Fn(web_sys::Event)>>>>,
-    callback: Closure<dyn Fn(web_sys::Event)>,
-}
-
-impl Listener {
-    fn new(event: &'static str, node: ElVar<Node>) -> Self {
-        let handlers = Rc::new(RefCell::new(Vec::new()));
-
-        let handlers_clone = Rc::clone(&handlers);
-        let callback = Closure::wrap(Box::new(move |event: web_sys::Event| {
-            let user_handlers = mem::take::<Vec<Box<dyn Fn(web_sys::Event)>>>(&mut handlers_clone.borrow_mut());
-            for user_handler in &user_handlers {
-                user_handler(event.clone());
-            }
-            *handlers_clone.borrow_mut() = user_handlers;
-        }) as Box<dyn Fn(web_sys::Event)>);
-
-        node.update_mut(|node| {
-            node
-                .node_ws
-                .unchecked_ref::<web_sys::EventTarget>()
-                .add_event_listener_with_callback(event, callback.as_ref().unchecked_ref())
-                .expect("add event listener");
-        });
-
-        Self {
-            event,
-            node,
-            handlers,
-            callback,
-        }
-    }
-
-    fn set_handlers(&mut self, handlers: Vec<Box<dyn Fn(web_sys::Event)>>) {
-        *self.handlers.borrow_mut() = handlers;
-    }
-}
-
-impl Drop for Listener{
-    fn drop(&mut self) {
-        if !self.node.exists() {
-            return;
-        }
-        self.node.update_mut(|node| {
-            node
-                .node_ws
-                .unchecked_ref::<web_sys::EventTarget>()
-                .remove_event_listener_with_callback(
-                    self.event,
-                    self.callback.as_ref().unchecked_ref(),
-                )
-                .expect("remove event listener");
-        });
-    }
-}
-
 // ------ ------
 //  Attributes 
 // ------ ------
@@ -169,7 +150,7 @@ impl<'a> RawEl<'a> {
 
 impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<RawEl<'a>> for T {
     fn apply_to_element(self, raw_el: &mut RawEl<'a>) {
-        raw_el.children.push(Box::new(self.into_element()));
+        raw_el.children.push(Child::Static(self.into_element().render()))
     }
 }
 
@@ -181,43 +162,70 @@ pub fn tag<'a>(tag: &'a str) -> Tag<'a> {
 }
 impl<'a> ApplyToElement<RawEl<'a>> for Tag<'a> {
     fn apply_to_element(self, raw_el: &mut RawEl<'a>) {
-        raw_el.tag = Some(self.0);
+        raw_el.tag = Some(self);
     }
 }
 
 // ------ raw_el::attr(...)
 
-pub struct Attr<'a> {
-    name: &'a str,
-    value: &'a str
-}
+pub struct Attr<'a>(&'a str, &'a str);
 pub fn attr<'a>(name: &'a str, value: &'a str) -> Attr<'a> {
-    Attr { name, value }
+    Attr(name, value)
 }
 impl<'a> ApplyToElement<RawEl<'a>> for Attr<'a> {
     fn apply_to_element(self, raw_el: &mut RawEl<'a>) {
-        raw_el.attrs.insert(self.name, self.value);
+        let Attr(name, value) = self;
+        raw_el.attributes.push(Attribute::Static(name, value));
+    }
+}
+
+// ------ raw_el::attr_signal(...) ------
+
+pub struct AttrSignal(Cow<'static, str>, Box<dyn Signal<Item = Option<String>> + Unpin>);
+pub fn attr_signal(name: impl Into<Cow<'static, str>>, attr: impl Signal<Item = Option<String>> + Unpin + 'static) -> AttrSignal {
+    AttrSignal(name.into(), Box::new(attr))
+}
+impl<'a> ApplyToElement<RawEl<'a>> for AttrSignal {
+    fn apply_to_element(self, row: &mut RawEl<'a>) {
+        let AttrSignal(name, value) = self;
+        row.attributes.push(Attribute::Dynamic(name, value));
     }
 }
 
 // ------ raw_el::event_handler(...)
 
-pub struct EventHandler {
-    event: &'static str,
-    handler: Box<dyn Fn(web_sys::Event)>
-}
-pub fn event_handler(event: &'static str, handler: impl FnOnce(web_sys::Event) + Clone + 'static) -> EventHandler {
-    EventHandler {
-        event,
-        handler: Box::new(move |event| handler.clone()(event))
-    }
+pub struct EventHandler(Box<dyn FnMut(CustomEvent)>);
+pub fn event_handler(event: &str, handler: impl FnOnce(web_sys::Event) + Clone + 'static) -> EventHandler {
+    EventHandler(Box::new(move |event: CustomEvent| {
+        handler.clone()(event.event)
+    }))
 }
 impl<'a> ApplyToElement<RawEl<'a>> for EventHandler {
     fn apply_to_element(self, raw_el: &mut RawEl<'a>) {
-        raw_el
-            .event_handlers
-            .entry(self.event)
-            .or_insert(vec![])
-            .push(self.handler);
+        raw_el.event_handlers.push(self)
+    }
+}
+
+// ------ raw_el::child_signal(...) ------
+
+pub struct ChildSignal(Box<dyn Signal<Item = Option<Dom>> + Unpin>);
+pub fn child_signal<'a, IE: IntoElement<'a> + 'a>(child: impl Signal<Item = IE> + Unpin + 'static) -> ChildSignal {
+    ChildSignal(Box::new(child.map(|child| Some(child.into_element().render()))))
+}
+impl<'a> ApplyToElement<RawEl<'a>> for ChildSignal {
+    fn apply_to_element(self, row: &mut RawEl<'a>) {
+        row.children.push(Child::Dynamic(self.0));
+    }
+}
+
+// ------ raw_el::children_signal_vec(...) ------
+
+pub struct ChildrenSignalVec(Box<dyn SignalVec<Item = Dom> + Unpin>);
+pub fn children_signal_vec<'a, IE: IntoElement<'a> + 'a>(children: impl SignalVec<Item = IE> + Unpin + 'static) -> ChildrenSignalVec {
+    ChildrenSignalVec(Box::new(children.map(|child| child.into_element().render())))
+}
+impl<'a> ApplyToElement<RawEl<'a>> for ChildrenSignalVec {
+    fn apply_to_element(self, raw_el: &mut RawEl<'a>) {
+        raw_el.children_signal_vec = Some(self.0);
     }
 }

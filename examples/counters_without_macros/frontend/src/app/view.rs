@@ -1,6 +1,6 @@
 use zoon::*;
 use zoon::futures_signals::{signal::{Mutable, SignalExt}, signal_vec::SignalVecExt};
-use std::{borrow::Cow, ops::AddAssign};
+use std::borrow::Cow;
 
 mod element;
 use element::counter::Counter;
@@ -46,13 +46,15 @@ fn test_counters() -> Row {
 
 fn counter_count() -> El {
     El::new().child_signal(
-        super::counter_count().map(|count| format!("Counters: {}", count))
+        super::counter_count()
+            .map(|count| format!("Counters: {}", count))
     )
 }
 
 fn counter_count_hundreds() -> El {
     El::new().child_signal(
-        super::counter_count_hundreds().map(|count| format!("Thousands: {}", count))
+        super::counter_count_hundreds()
+            .map(|count| format!("Thousands: {}", count))
     )
 }
 
