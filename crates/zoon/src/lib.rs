@@ -64,8 +64,15 @@ pub use griddle;
 pub use ahash;
 
 pub use once_cell;
-pub use futures_signals;
-pub use dominator::{self, Dom};
+pub use futures_signals::{
+    self,
+    map_mut,
+    map_ref,
+    signal::{Mutable, Signal, SignalExt},
+    signal_vec::{MutableVec, SignalVec, SignalVecExt},
+    signal_map::{MutableBTreeMap, SignalMap, SignalMapExt},
+};
+pub use dominator::{self, Dom, DomBuilder};
 pub use topo::{self, CallId};
 pub use nohash_hasher::IntMap;
 
