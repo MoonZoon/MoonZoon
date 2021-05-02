@@ -46,7 +46,7 @@ impl Element for Counter {
         Row::new()
             .item(Button::new()
                 .label("-")
-                .on_press(enc!((on_press_handler) move || on_press_handler(-step)))
+                .on_press(clone!((on_press_handler) move || on_press_handler(-step)))
             )
             .item(El::new().child_signal(value_signal))
             .item(Button::new()
