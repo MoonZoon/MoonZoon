@@ -22,6 +22,13 @@ fn root() -> Column {
     ]
 }
 
+// fn root() -> Column {
+//     Column::new()
+//         .item(Button::new().on_press(decrement).label("-"))
+//         .item_signal(counter().signal())
+//         .item(Button::new().on_press(increment).label("+"))
+// }
+
 #[wasm_bindgen(start)]
 pub fn start() {
     start_app("app", root);

@@ -77,7 +77,7 @@ impl<'a, T: IntoElement<'a> + 'a> ApplyToElement<Row> for T {
     }
 }
 
-// ------ row::signal(...) ------
+// ------ row::item_signal(...) ------
 
 pub struct ItemSignal(Box<dyn Signal<Item = Option<Dom>> + Unpin>);
 pub fn item_signal<'a, IE: IntoElement<'a> + 'a>(item: impl Signal<Item = IE> + Unpin + 'static) -> ItemSignal {
@@ -90,6 +90,7 @@ impl ApplyToElement<Row> for ItemSignal {
 }
 
 // ------ row::items_signal_vec(...) ------
+
 pub struct ItemsSignalVec(Box<dyn SignalVec<Item = Dom> + Unpin>);
 pub fn items_signal_vec<'a, IE: IntoElement<'a> + 'a>(items: impl SignalVec<Item = IE> + Unpin + 'static) -> ItemsSignalVec {
     ItemsSignalVec(Box::new(items.map(|item| item.into_element().render())))

@@ -1,7 +1,8 @@
 use zoon::{*, println, raw_el::{attr, tag, event_handler}};
 use zoon::futures_signals::{signal::{Mutable, Signal, SignalExt}, signal_vec::{MutableVec, SignalVecExt}};
 use rand::prelude::*;
-use std::{mem, rc::Rc, iter::repeat_with};
+use std::{mem, sync::Arc, iter::repeat_with};
+use enclose::enc;
 
 // ------ ------
 //    Statics 
@@ -56,12 +57,12 @@ fn previous_id() -> &'static Mutable<ID> {
 }
 
 #[static_ref]
-fn selected_row() -> &'static Mutable<Option<Rc<Mutable<Row>>>> {
+fn selected_row() -> &'static Mutable<Option<Arc<Mutable<Row>>>> {
     Mutable::new(None)
 }
 
 #[static_ref]
-fn rows() -> &'static MutableVec<Rc<Mutable<Row>>> {
+fn rows() -> &'static MutableVec<Arc<Mutable<Row>>> {
     MutableVec::new()
 }
 
@@ -84,7 +85,7 @@ fn rows_len() -> impl Signal<Item = usize> {
 //   Commands 
 // ------ ------
 
-fn create_row() -> Rc<Mutable<Row>> {
+fn create_row() -> Arc<Mutable<Row>> {
     let id = previous_id().map_mut(|id| {
         *id += 1;
         *id
@@ -97,7 +98,7 @@ fn create_row() -> Rc<Mutable<Row>> {
             NOUNS.choose(generator).unwrap(),
         )
     });
-    Rc::new(Mutable::new(Row { id, label }))
+    Arc::new(Mutable::new(Row { id, label }))
 }
 
 fn create_rows(count: usize) {
@@ -134,13 +135,13 @@ fn swap_rows_special() {
     rows().lock_mut().swap(1, 3)
 }
 
-fn select_row(row: Rc<Mutable<Row>>) {
+fn select_row(row: Arc<Mutable<Row>>) {
     selected_row().set(Some(row))
     // selected_row().set_neq(Some(row))
 }
 
-fn remove_row(row: Rc<Mutable<Row>>) {
-    let rows = rows().lock_mut();
+fn remove_row(row: Arc<Mutable<Row>>) {
+    let mut rows = rows().lock_mut();
     let row_id = row.map(|row| row.id);
     let position = rows
         .iter()
@@ -205,7 +206,10 @@ fn action_button<'a>(
         attr("class", "col-sm-6 smallpad"),
         attr("id", id),
         attr("type", "button"),
-        event_handler("click", move |_| on_click()),
+        event_handler("click", move |_| {
+            println!("Clicked!");
+            on_click()
+        }),
         title,
     ]
 }
@@ -224,18 +228,22 @@ fn table<'a>() -> RawEl<'a> {
     ]
 }
 
-fn row<'a>(row: Rc<Mutable<Row>>) -> RawEl<'a> {
+fn row<'a>(row: Arc<Mutable<Row>>) -> RawEl<'a> {
     raw_el![
         tag("tr"),
         raw_el::attr_signal(
-            // signal_ref ?
-            selected_row().signal_cloned().map(|selected_row| {
-                (selected_row.map(|selected_row| selected_row.map(|selected_row| selected_row.id)) == Some(row.map(|row| row.id))).then(|| attr("class", "danger"))
-            })
+            // @TODO "danger" should be accepted without `to_string()`
+            // @TODO signal_ref ?
+            "class",
+            selected_row().signal_cloned().map(enc!((row) move |selected_row| {
+                let selected_id = selected_row.map(|selected_row| selected_row.map(|selected_row| selected_row.id));
+                let row_id = row.map(|row| row.id);
+                (selected_id == Some(row_id)).then(|| "danger".to_owned())
+            }))
         ),
-        row_id(row),
-        row_label(row),
-        row_remove_button(row),
+        row_id(&row),
+        row_label(row.clone()),
+        row_remove_button(row.clone()),
         raw_el![
             tag("td"),
             attr("class", "col-md-6"),
@@ -243,7 +251,7 @@ fn row<'a>(row: Rc<Mutable<Row>>) -> RawEl<'a> {
     ]
 }
 
-fn row_id<'a>(row: Rc<Mutable<Row>>) -> RawEl<'a> {
+fn row_id<'a>(row: &Arc<Mutable<Row>>) -> RawEl<'a> {
     raw_el![
         tag("td"),
         attr("class", "col-md-1"),
@@ -251,20 +259,21 @@ fn row_id<'a>(row: Rc<Mutable<Row>>) -> RawEl<'a> {
     ]
 }
 
-fn row_label<'a>(row: Rc<Mutable<Row>>) -> RawEl<'a> {
+fn row_label<'a>(row: Arc<Mutable<Row>>) -> RawEl<'a> {
     raw_el![
         tag("td"),
         attr("class", "col-md-4"),
-        event_handler("click", move |_| select_row(row)),
+        event_handler("click", enc!((row) move |_| select_row(row))),
         raw_el![
             tag("a"),
             attr("class", "lbl"),
-            &row.lock_ref().label,
+            // @TODO make label Arc + Mutable?
+            row.lock_ref().label.clone(),
         ]
     ]
 }
 
-fn row_remove_button<'a>(row: Rc<Mutable<Row>>) -> RawEl<'a> {
+fn row_remove_button<'a>(row: Arc<Mutable<Row>>) -> RawEl<'a> {
     raw_el![
         tag("td"),
         attr("class", "col-md-1"),
