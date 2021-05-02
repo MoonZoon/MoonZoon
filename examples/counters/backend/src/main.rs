@@ -4,7 +4,7 @@ async fn init() {}
 
 async fn frontend() -> Frontend {
     Frontend::new()
-        .title("Counters without macros example")
+        .title("Counters example")
         .append_to_head("<style>html {
             background-color: black;
             color: lightgray;

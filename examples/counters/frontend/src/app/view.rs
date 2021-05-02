@@ -1,17 +1,16 @@
 use zoon::*;
-use zoon::futures_signals::{signal::{Mutable, SignalExt}, signal_vec::SignalVecExt};
 use std::borrow::Cow;
 
 mod element;
 use element::counter::Counter;
 
-pub fn root() -> Column {
+pub fn root() -> impl Element {
     Column::new()
         .item(control_counters())
         .item(counters())
 }
 
-fn control_counters() -> Row {
+fn control_counters() -> impl Element {
     Row::new()
         .item(column_counter())
         .item(row_counter())
@@ -21,7 +20,7 @@ fn control_counters() -> Row {
         .item(click_me_button())
 }
 
-fn click_me_button() -> Row {
+fn click_me_button() -> impl Element {
     let click_count = Mutable::new(0);
     let title = click_count.signal().map(|count| {
         if count == 0 { return Cow::from("Click me!") }
@@ -34,7 +33,7 @@ fn click_me_button() -> Row {
         )
 } 
 
-fn test_counters() -> Row {
+fn test_counters() -> impl Element {
     Row::new()
         .item("Test counters")
         .item(Counter::new()
@@ -44,21 +43,21 @@ fn test_counters() -> Row {
         .item(Counter::new())
 } 
 
-fn counter_count() -> El {
+fn counter_count() -> impl Element {
     El::new().child_signal(
         super::counter_count()
             .map(|count| format!("Counters: {}", count))
     )
 }
 
-fn counter_count_hundreds() -> El {
+fn counter_count_hundreds() -> impl Element {
     El::new().child_signal(
         super::counter_count_hundreds()
             .map(|count| format!("Thousands: {}", count))
     )
 }
 
-fn column_counter() -> Row {
+fn column_counter() -> impl Element {
     Row::new()
         .item("Columns:")
         .item(Counter::new()
@@ -68,7 +67,7 @@ fn column_counter() -> Row {
         )
 }
 
-fn row_counter() -> Row {
+fn row_counter() -> impl Element {
     Row::new()
         .item("Rows:")
         .item(Counter::new()
@@ -78,13 +77,13 @@ fn row_counter() -> Row {
         )
 }
 
-fn counters() -> Row {
+fn counters() -> impl Element {
     Row::new().items_signal_vec(
         super::columns().signal_vec().map(|_| counter_column())
     )
 }
 
-fn counter_column() -> Column {
+fn counter_column() -> impl Element {
     Column::new().items_signal_vec(
         super::rows().signal_vec().map(|_| Counter::new())
     )

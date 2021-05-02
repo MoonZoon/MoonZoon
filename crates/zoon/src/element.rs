@@ -1,6 +1,4 @@
 use dominator::Dom;
-use futures_signals::signal::Signal;
-use std::borrow::Cow;
 
 // -- modules --
 

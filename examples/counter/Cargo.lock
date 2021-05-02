@@ -220,6 +220,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "enclose"
+version = "1.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1056f553da426e9c025a662efa48b52e62e0a3a7648aa2d15aeaaf7f0d329357"
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1370,6 +1376,7 @@ dependencies = [
  "cmp_macro",
  "console_error_panic_hook",
  "dominator",
+ "enclose",
  "futures-signals",
  "griddle",
  "nohash-hasher",

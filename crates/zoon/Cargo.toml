@@ -27,6 +27,7 @@ once_cell = { version = "1.7.2", default_features = false }
 futures-signals = {version = "0.3.20", default_features = false }
 dominator = { version = "0.5.16", default_features = false }
 paste = { version = "1.0.5", default_features = false }
+enclose = { version = "1.1.8", default-features = false }
 
 [dependencies.web-sys]
 version = "0.3.48"

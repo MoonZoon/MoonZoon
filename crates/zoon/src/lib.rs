@@ -76,6 +76,8 @@ pub use dominator::{self, Dom, DomBuilder};
 pub use topo::{self, CallId};
 pub use nohash_hasher::IntMap;
 
+pub use enclose::enc;
+
 pub use paste;
 
 #[macro_export]

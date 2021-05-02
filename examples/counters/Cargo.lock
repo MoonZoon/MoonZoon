@@ -245,7 +245,6 @@ dependencies = [
 name = "frontend"
 version = "0.1.0"
 dependencies = [
- "enclose",
  "wasm-bindgen-test",
  "zoon",
 ]
@@ -1378,6 +1377,7 @@ dependencies = [
  "cmp_macro",
  "console_error_panic_hook",
  "dominator",
+ "enclose",
  "futures-signals",
  "griddle",
  "nohash-hasher",

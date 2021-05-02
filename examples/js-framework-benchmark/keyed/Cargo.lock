@@ -1397,6 +1397,7 @@ dependencies = [
  "cmp_macro",
  "console_error_panic_hook",
  "dominator",
+ "enclose",
  "futures-signals",
  "griddle",
  "nohash-hasher",
