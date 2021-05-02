@@ -1,5 +1,4 @@
 use zoon::*;
-use zoon::futures_signals::signal::Mutable;
 
 #[static_ref]
 fn counter() -> &'static Mutable<i32> {
@@ -17,8 +16,7 @@ fn decrement() {
 fn root() -> impl Element {
     Column::new()
         .item(Button::new().on_press(decrement).label("-"))
-        // .item(Text::with_signal(counter().signal()))
-        .item_signal(counter().signal())
+        .item(Text::with_signal(counter().signal()))
         .item(Button::new().on_press(increment).label("+"))
 }
 
