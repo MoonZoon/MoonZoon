@@ -28,7 +28,7 @@ There are again two big news. I've written the Zoon core ([GitHub PR](https://gi
 However the main goal for this iteration was to write working examples:
 - [Counter](https://github.com/MoonZoon/MoonZoon/tree/main/examples/counter)
 - [Counters](https://github.com/MoonZoon/MoonZoon/tree/main/examples/counters)
-- [Counters without macros](https://github.com/MoonZoon/MoonZoon/tree/main/examples/counters_without_macros)
+- [Counters](https://github.com/MoonZoon/MoonZoon/tree/main/examples/counters_without_macros)
 
 You can follow the updated [Development.md](https://github.com/MoonZoon/MoonZoon/blob/main/docs/development.md) to run those examples on your local machine.
 

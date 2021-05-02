@@ -1,9 +1,4 @@
 use zoon::*;
-use zoon::futures_signals::{
-    map_ref, 
-    signal::{Mutable, Signal, SignalExt}, 
-    signal_vec::{MutableVec, SignalVecExt}
-};
 use std::iter::repeat;
 
 pub mod view;

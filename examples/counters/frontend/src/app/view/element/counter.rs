@@ -1,7 +1,5 @@
 use zoon::*;
-use zoon::futures_signals::signal::{Signal, Mutable};
 use std::rc::Rc;
-use enclose::enc;
 
 // ------ ------
 //    Element 
@@ -13,6 +11,12 @@ pub struct Counter {
     value_signal: Option<Box<dyn Signal<Item = i32> + Unpin>>,
     on_change: Option<Rc<dyn Fn(CounterStep)>>,
     step: Option<CounterStep>,
+}
+
+impl Counter {
+    pub fn new() -> Self {
+        Self::default()
+    }
 }
 
 pub type CounterStep = i32; 
