@@ -26,13 +26,43 @@ pub use raw_text::RawText;
 // ------ Element ------
 
 pub trait Element {
-    fn into_raw<RE: RawElement>(self) -> RE;
+    fn into_raw_element(self) -> RawElement;
 }
 
 // ------ RawElement ------
 
-pub trait RawElement {
+pub enum RawElement {
+    El(RawEl),
+    Text(RawText),
+}
+
+impl IntoDom for RawElement {
+    fn into_dom(self) -> Dom {
+        match self {
+            RawElement::El(raw_el) => raw_el.into_dom(),
+            RawElement::Text(raw_text) => raw_text.into_dom(),
+        }
+    }
+}
+
+// ------ IntoDom ------
+
+pub trait IntoDom {
     fn into_dom(self) -> Dom;
+}
+
+// ------ IntoElement ------
+
+pub trait IntoElement<'a> {
+    type EL: Element;
+    fn into_element(self) -> Self::EL; 
+}
+
+impl<'a, T: Element> IntoElement<'a> for T {
+    type EL = T;
+    fn into_element(self) -> Self::EL {
+        self
+    }
 }
 
 // ------ IntoOptionElement ------
@@ -56,19 +86,6 @@ impl<'a, E: Element, T: IntoElement<'a, EL = E>> IntoOptionElement<'a> for T {
     }
 }
 
-// ------ IntoElement ------
-
-pub trait IntoElement<'a> {
-    type EL: Element;
-    fn into_element(self) -> Self::EL; 
-}
-
-impl<'a, T: Element> IntoElement<'a> for T {
-    type EL = T;
-    fn into_element(self) -> Self::EL {
-        self
-    }
-}
 
 
 

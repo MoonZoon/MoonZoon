@@ -16,15 +16,21 @@ impl RawEl {
     }
 }
 
-impl Element for RawEl {
-    fn into_raw<RE: RawElement>(self) -> RE {
-        self
+impl From<RawEl> for RawElement {
+    fn from(raw_el: RawEl) -> Self {
+        RawElement::El(raw_el)
     }
 }
 
-impl RawElement for RawEl {
+impl IntoDom for RawEl {
     fn into_dom(self) -> Dom {
         self.dom_builder.into_dom()
+    }
+}
+
+impl Element for RawEl {
+    fn into_raw_element(self) -> RawElement {
+        self.into()
     }
 }
     
@@ -57,7 +63,7 @@ impl<'a> RawEl {
 
     pub fn child(self, child: impl IntoOptionElement<'a> + 'a) -> Self {
         let dom_builder = if let Some(child) = child.into_option_element() {
-            self.dom_builder.child(child.render())
+            self.dom_builder.child(child.into_raw_element().into_dom())
         } else {
             self.dom_builder
         };
@@ -72,7 +78,9 @@ impl<'a> RawEl {
     ) -> Self {
         Self {
             dom_builder: self.dom_builder.child_signal(
-                child.map(|child| child.into_option_element().map(|element| element.render()))
+                child.map(|child| child.into_option_element().map(|element| {
+                    element.into_raw_element().into_dom()
+                }))
             ),
         }
     }
@@ -82,7 +90,7 @@ impl<'a> RawEl {
     ) -> Self {
         Self {
             dom_builder: self.dom_builder.children(
-                children.into_iter().map(|child| child.into_element().render())
+                children.into_iter().map(|child| child.into_element().into_raw_element().into_dom())
             ),
         }
     }
@@ -93,7 +101,7 @@ impl<'a> RawEl {
     ) -> Self {
         Self {
             dom_builder: self.dom_builder.children_signal_vec(
-                children.map(|child| child.into_element().render())
+                children.map(|child| child.into_element().into_raw_element().into_dom())
             ),
         }
     }

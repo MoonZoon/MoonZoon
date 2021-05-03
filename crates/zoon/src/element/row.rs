@@ -22,8 +22,8 @@ impl Row<EmptyFlagSet> {
 }
 
 impl Element for Row<EmptyFlagNotSet> {
-    fn into_raw<RE: RawElement>(self) -> RE {
-        self.raw_el
+    fn into_raw_element(self) -> RawElement {
+        self.raw_el.into()
     }
 }
 
