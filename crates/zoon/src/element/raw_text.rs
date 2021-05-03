@@ -22,14 +22,20 @@ impl RawText {
     }
 }
 
-impl Element for RawText {
-    fn into_raw<RE: RawElement>(self) -> RE {
-        self
+impl From<RawText> for RawElement {
+    fn from(raw_text: RawText) -> Self {
+        RawElement::Text(raw_text)
     }
 }
 
-impl RawElement for RawText {
+impl IntoDom for RawText {
     fn into_dom(self) -> Dom {
         self.dom
+    }
+}
+
+impl Element for RawText {
+    fn into_raw_element(self) -> RawElement {
+        self.into()
     }
 }

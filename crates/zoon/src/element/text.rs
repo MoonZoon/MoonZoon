@@ -24,8 +24,8 @@ impl Text {
 }
 
 impl Element for Text {
-    fn into_raw<RE: RawElement>(self) -> RE {
-        self.raw_el
+    fn into_raw_element(self) -> RawElement {
+        self.raw_text.into()
     }
 }
 
