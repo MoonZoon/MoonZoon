@@ -1,6 +1,6 @@
-use crate::{Element, IntoElement, make_flags, FlagNotSet};
-use dominator::{Dom, DomBuilder, events};
-use futures_signals::signal::{Signal, SignalExt};
+use crate::{Element, IntoElement, make_flags, FlagNotSet, RawEl};
+use dominator::{Dom, events};
+use futures_signals::signal::Signal;
 use std::marker::PhantomData;
 
 // ------ ------
@@ -10,17 +10,17 @@ use std::marker::PhantomData;
 make_flags!(Label, OnPress);
 
 pub struct Button<LabelFlag, OnPressFlag> {
-    dom_builder:DomBuilder<web_sys::HtmlElement>,
+    raw_el: RawEl,
     flags: PhantomData<(LabelFlag, OnPressFlag)>
 }
 
 impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
     pub fn new() -> Self {
         Self {
-            dom_builder: DomBuilder::new_html("div")
-                .class("button")
-                .attribute("role", "button")
-                .attribute("tabindex", "0"),
+            raw_el: RawEl::with_tag("div")
+                .attr("class", "button")
+                .attr("role", "button")
+                .attr("tabindex", "0"),
             flags: PhantomData,
         }
     }
@@ -28,7 +28,7 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
 
 impl<OnPressFlag> Element for Button<LabelFlagSet, OnPressFlag> {
     fn render(self) -> Dom {
-        self.dom_builder.into_dom()
+        self.raw_el.render()
     }
 }
 
@@ -44,7 +44,7 @@ impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
         where LabelFlag: FlagNotSet
     {
         Button {
-            dom_builder: self.dom_builder.child(label.into_element().render()),
+            raw_el: self.raw_el.child(label),
             flags: PhantomData
         }
     }
@@ -56,9 +56,7 @@ impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
         where LabelFlag: FlagNotSet
     {
         Button {
-            dom_builder: self.dom_builder.child_signal(
-                label.map(|label| Some(label.into_element().render()))
-            ),
+            raw_el: self.raw_el.child_signal(label),
             flags: PhantomData
         }
     }
@@ -70,7 +68,7 @@ impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
         where OnPressFlag: FlagNotSet
     {
         Button {
-            dom_builder: self.dom_builder.event(move |_: events::Click| (on_press.clone())()),
+            raw_el: self.raw_el.event_handler(move |_: events::Click| (on_press.clone())()),
             flags: PhantomData
         }
     }
