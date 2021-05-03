@@ -1,6 +1,4 @@
-use crate::{Element, IntoElement, make_flags, FlagNotSet, RawEl};
-use dominator::{Dom, events};
-use futures_signals::signal::Signal;
+use crate::*;
 use std::marker::PhantomData;
 
 // ------ ------
@@ -27,8 +25,8 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
 }
 
 impl<OnPressFlag> Element for Button<LabelFlagSet, OnPressFlag> {
-    fn render(self) -> Dom {
-        self.raw_el.render()
+    fn into_raw<RE: RawElement>(self) -> RE {
+        self.raw_el
     }
 }
 

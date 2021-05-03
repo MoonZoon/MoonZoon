@@ -1,6 +1,4 @@
-use crate::{Element, RawElement, IntoElement, IntoOptionElement};
-use dominator::{Dom, DomBuilder, traits::StaticEvent};
-use futures_signals::{signal::{Signal, SignalExt}, signal_vec::{SignalVec, SignalVecExt}};
+use crate::*;
 
 // ------ ------
 //   Element 
@@ -19,13 +17,13 @@ impl RawEl {
 }
 
 impl Element for RawEl {
-    fn render(self) -> Dom {
-        self.dom_builder.into_dom()
+    fn into_raw<RE: RawElement>(self) -> RE {
+        self
     }
 }
 
 impl RawElement for RawEl {
-    fn render(self) -> Dom {
+    fn into_dom(self) -> Dom {
         self.dom_builder.into_dom()
     }
 }

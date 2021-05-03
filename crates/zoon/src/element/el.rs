@@ -1,6 +1,4 @@
-use crate::{make_flags,  Element, IntoElement, FlagNotSet, RawEl};
-use dominator::Dom;
-use futures_signals::signal::Signal;
+use crate::*;
 use std::marker::PhantomData;
 
 // ------ ------
@@ -24,8 +22,8 @@ impl El<ChildFlagNotSet> {
 }
 
 impl Element for El<ChildFlagSet> {
-    fn render(self) -> Dom {
-        self.raw_el.render()
+    fn into_raw<RE: RawElement>(self) -> RE {
+        self.raw_el
     }
 }
 
