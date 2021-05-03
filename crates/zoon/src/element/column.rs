@@ -1,6 +1,4 @@
-use crate::{make_flags,  Element, IntoElement, IntoOptionElement, RawEl};
-use dominator::Dom;
-use futures_signals::{signal::Signal, signal_vec::SignalVec};
+use crate::*;
 use std::marker::PhantomData;
 
 // ------ ------
@@ -24,8 +22,8 @@ impl Column<EmptyFlagSet> {
 }
 
 impl Element for Column<EmptyFlagNotSet> {
-    fn render(self) -> Dom {
-        self.raw_el.render()
+    fn into_raw<RE: RawElement>(self) -> RE {
+        self.raw_el
     }
 }
 

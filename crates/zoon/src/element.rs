@@ -26,13 +26,13 @@ pub use raw_text::RawText;
 // ------ Element ------
 
 pub trait Element {
-    fn render(self) -> Dom;
+    fn into_raw<RE: RawElement>(self) -> RE;
 }
 
 // ------ RawElement ------
 
 pub trait RawElement {
-    fn render(self) -> Dom;
+    fn into_dom(self) -> Dom;
 }
 
 // ------ IntoOptionElement ------

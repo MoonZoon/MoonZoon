@@ -1,6 +1,4 @@
-use crate::{Element, IntoElement, RawText};
-use dominator::Dom;
-use futures_signals::signal::Signal;
+use crate::*;
 use std::borrow::Cow;
 
 // ------ ------
@@ -26,8 +24,8 @@ impl Text {
 }
 
 impl Element for Text {
-    fn render(self) -> Dom {
-        self.raw_text.render()
+    fn into_raw<RE: RawElement>(self) -> RE {
+        self.raw_el
     }
 }
 
