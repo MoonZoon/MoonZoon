@@ -1,6 +1,6 @@
-use crate::{make_flags,  Element, IntoElement, IntoOptionElement};
-use dominator::{Dom, DomBuilder};
-use futures_signals::{signal::{Signal, SignalExt}, signal_vec::{SignalVec, SignalVecExt}};
+use crate::{make_flags,  Element, IntoElement, IntoOptionElement, RawEl};
+use dominator::Dom;
+use futures_signals::{signal::Signal, signal_vec::SignalVec};
 use std::marker::PhantomData;
 
 // ------ ------
@@ -10,14 +10,14 @@ use std::marker::PhantomData;
 make_flags!(Empty);
 
 pub struct Row<EmptyFlag> {
-    dom_builder:DomBuilder<web_sys::HtmlElement>,
+    raw_el: RawEl,
     flags: PhantomData<EmptyFlag>
 }
 
 impl Row<EmptyFlagSet> {
     pub fn new() -> Self {
         Self {
-            dom_builder: DomBuilder::new_html("div").class("row"),
+            raw_el: RawEl::with_tag("div").attr("class", "row"),
             flags: PhantomData,
         }
     }
@@ -25,7 +25,7 @@ impl Row<EmptyFlagSet> {
 
 impl Element for Row<EmptyFlagNotSet> {
     fn render(self) -> Dom {
-        self.dom_builder.into_dom()
+        self.raw_el.render()
     }
 }
 
@@ -37,13 +37,8 @@ impl<'a, EmptyFlag> Row<EmptyFlag> {
     pub fn item(self, 
         item: impl IntoOptionElement<'a> + 'a
     ) -> Row<EmptyFlagNotSet> {
-        let dom_builder = if let Some(item) = item.into_option_element() {
-            self.dom_builder.child(item.render())
-        } else {
-            self.dom_builder
-        };
         Row {
-            dom_builder,
+            raw_el: self.raw_el.child(item),
             flags: PhantomData
         }
     }
@@ -53,9 +48,7 @@ impl<'a, EmptyFlag> Row<EmptyFlag> {
         item: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static
     ) -> Row<EmptyFlagNotSet> {
         Row {
-            dom_builder: self.dom_builder.child_signal(
-                item.map(|item| item.into_option_element().map(|element| element.render()))
-            ),
+            raw_el: self.raw_el.child_signal(item),
             flags: PhantomData
         }
     }
@@ -64,9 +57,7 @@ impl<'a, EmptyFlag> Row<EmptyFlag> {
         items: impl IntoIterator<Item = impl IntoElement<'a> + 'a>
     ) -> Row<EmptyFlagNotSet> {
         Row {
-            dom_builder: self.dom_builder.children(
-                items.into_iter().map(|item| item.into_element().render())
-            ),
+            raw_el: self.raw_el.children(items),
             flags: PhantomData
         }
     }
@@ -76,9 +67,7 @@ impl<'a, EmptyFlag> Row<EmptyFlag> {
         items: impl SignalVec<Item = impl IntoElement<'a>> + Unpin + 'static
     ) -> Row<EmptyFlagNotSet> {
         Row {
-            dom_builder: self.dom_builder.children_signal_vec(
-                items.map(|item| item.into_element().render())
-            ),
+            raw_el: self.raw_el.children_signal_vec(items),
             flags: PhantomData
         }
     }

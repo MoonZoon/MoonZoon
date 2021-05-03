@@ -1,6 +1,6 @@
-use crate::{make_flags,  Element, IntoElement, FlagNotSet};
-use dominator::{Dom, DomBuilder};
-use futures_signals::signal::{Signal, SignalExt};
+use crate::{make_flags,  Element, IntoElement, FlagNotSet, RawEl};
+use dominator::Dom;
+use futures_signals::signal::Signal;
 use std::marker::PhantomData;
 
 // ------ ------
@@ -10,14 +10,14 @@ use std::marker::PhantomData;
 make_flags!(Child);
 
 pub struct El<ChildFlag> {
-    dom_builder:DomBuilder<web_sys::HtmlElement>,
+    raw_el: RawEl,
     flags: PhantomData<ChildFlag>
 }
 
 impl El<ChildFlagNotSet> {
     pub fn new() -> Self {
         Self {
-            dom_builder: DomBuilder::new_html("div").class("el"),
+            raw_el: RawEl::with_tag("div").attr("class", "el"),
             flags: PhantomData,
         }
     }
@@ -25,7 +25,7 @@ impl El<ChildFlagNotSet> {
 
 impl Element for El<ChildFlagSet> {
     fn render(self) -> Dom {
-        self.dom_builder.into_dom()
+        self.raw_el.render()
     }
 }
 
@@ -40,7 +40,7 @@ impl<'a, ChildFlag> El<ChildFlag> {
         where ChildFlag: FlagNotSet
     {
         El {
-            dom_builder: self.dom_builder.child(child.into_element().render()),
+            raw_el: self.raw_el.child(child),
             flags: PhantomData
         }
     }
@@ -52,9 +52,7 @@ impl<'a, ChildFlag> El<ChildFlag> {
         where ChildFlag: FlagNotSet
     {
         El {
-            dom_builder: self.dom_builder.child_signal(
-                child.map(|child| Some(child.into_element().render()))
-            ),
+            raw_el: self.raw_el.child_signal(child),
             flags: PhantomData
         }
     }
