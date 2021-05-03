@@ -72,7 +72,7 @@ pub use futures_signals::{
     signal_vec::{MutableVec, SignalVec, SignalVecExt},
     signal_map::{MutableBTreeMap, SignalMap, SignalMapExt},
 };
-pub use dominator::{self, Dom, DomBuilder};
+pub use dominator::{self, Dom, DomBuilder, events, traits::StaticEvent};
 pub use topo::{self, CallId};
 pub use nohash_hasher::IntMap;
 
