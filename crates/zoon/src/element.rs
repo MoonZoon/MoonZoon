@@ -20,9 +20,18 @@ pub use text::Text;
 pub mod raw_el;
 pub use raw_el::RawEl;
 
+pub mod raw_text;
+pub use raw_text::RawText;
+
 // ------ Element ------
 
 pub trait Element {
+    fn render(self) -> Dom;
+}
+
+// ------ RawElement ------
+
+pub trait RawElement {
     fn render(self) -> Dom;
 }
 

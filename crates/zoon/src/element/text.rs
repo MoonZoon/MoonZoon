@@ -1,6 +1,6 @@
-use crate::{Element, IntoElement};
+use crate::{Element, IntoElement, RawText};
 use dominator::Dom;
-use futures_signals::signal::{Signal, SignalExt};
+use futures_signals::signal::Signal;
 use std::borrow::Cow;
 
 // ------ ------
@@ -8,26 +8,26 @@ use std::borrow::Cow;
 // ------ ------
 
 pub struct Text {
-    dom: Dom,
+    raw_text: RawText,
 }
 
 impl Text {
     pub fn with_text(text: impl AsRef<str>) -> Self {
         Self {
-            dom: dominator::text(text.as_ref()),
+            raw_text: RawText::with_text(text),
         }
     }
 
     pub fn with_signal(text: impl Signal<Item = impl ToString> + Unpin + 'static) -> Self {
         Self {
-            dom: dominator::text_signal(text.map(|text| text.to_string()))
+            raw_text: RawText::with_signal(text)
         }
     }
 }
 
 impl Element for Text {
     fn render(self) -> Dom {
-        self.dom
+        self.raw_text.render()
     }
 }
 

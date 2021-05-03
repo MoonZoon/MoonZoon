@@ -1,4 +1,4 @@
-use crate::{Element, IntoElement, IntoOptionElement};
+use crate::{Element, RawElement, IntoElement, IntoOptionElement};
 use dominator::{Dom, DomBuilder, traits::StaticEvent};
 use futures_signals::{signal::{Signal, SignalExt}, signal_vec::{SignalVec, SignalVecExt}};
 
@@ -7,7 +7,7 @@ use futures_signals::{signal::{Signal, SignalExt}, signal_vec::{SignalVec, Signa
 // ------ ------
 
 pub struct RawEl {
-    dom_builder:DomBuilder<web_sys::HtmlElement>,
+    dom_builder: DomBuilder<web_sys::HtmlElement>,
 }
 
 impl RawEl {
@@ -19,6 +19,12 @@ impl RawEl {
 }
 
 impl Element for RawEl {
+    fn render(self) -> Dom {
+        self.dom_builder.into_dom()
+    }
+}
+
+impl RawElement for RawEl {
     fn render(self) -> Dom {
         self.dom_builder.into_dom()
     }
