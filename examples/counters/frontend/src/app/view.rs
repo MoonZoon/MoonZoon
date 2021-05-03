@@ -40,7 +40,7 @@ fn test_counters() -> impl Element {
             .value_signal(super::test_counter_value().signal())
             .on_change(super::on_test_counter_change)
         )
-        .item(Counter::new())
+        .item(Counter::new().value(1))
 } 
 
 fn counter_count() -> impl Element {

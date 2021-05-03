@@ -31,19 +31,19 @@ impl Counter<ValueFlagNotSet, ValueSignalFlagNotSet, OnChangeFlagNotSet, StepFla
 }
 
 impl<StepFlag> Element for Counter<ValueFlagNotSet, ValueSignalFlagSet, OnChangeFlagSet, StepFlag> {
-    fn render(self) -> Dom {
+    fn into_raw_element(self) -> RawElement {
         let on_change = self.on_change.unwrap_throw();
         let step = self.step;
         Row::new()
             .item(Button::new().label("-").on_press(clone!((on_change) move || on_change(-step))))
             .item(El::new().child_signal(self.value_signal.unwrap_throw()))
             .item(Button::new().label("+").on_press(move || on_change(step)))
-            .render()
+            .into_raw_element()
     }
 }
 
 impl<ValueFlag, StepFlag> Element for Counter<ValueFlag, ValueSignalFlagNotSet, OnChangeFlagNotSet, StepFlag> {
-    fn render(self) -> Dom {
+    fn into_raw_element(self) -> RawElement {
         let state_value = Rc::new(Mutable::new(self.value));
         let step = self.step;
         Row::new()
@@ -54,14 +54,14 @@ impl<ValueFlag, StepFlag> Element for Counter<ValueFlag, ValueSignalFlagNotSet, 
             .item(El::new().child_signal(state_value.signal()))
             .item(Button::new()
                 .label("+")
-                .on_press(move || state_value.update(|value| value - step))
+                .on_press(move || state_value.update(|value| value + step))
             )
-            .render()
+            .into_raw_element()
     }
 }
 
 impl<ValueFlag, StepFlag> Element for Counter<ValueFlag, ValueSignalFlagNotSet, OnChangeFlagSet, StepFlag> {
-    fn render(self) -> Dom {
+    fn into_raw_element(self) -> RawElement {
         let state_value = Rc::new(Mutable::new(self.value));
         let on_change = self.on_change.unwrap_throw();
         let step = self.step;
@@ -77,11 +77,11 @@ impl<ValueFlag, StepFlag> Element for Counter<ValueFlag, ValueSignalFlagNotSet, 
             .item(Button::new()
                 .label("+")
                 .on_press(move || {
-                    state_value.update(|value| value - step);
+                    state_value.update(|value| value + step);
                     on_change(step);
                 })
             )
-            .render()
+            .into_raw_element()
     }
 }
 
