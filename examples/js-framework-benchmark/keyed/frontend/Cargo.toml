@@ -13,7 +13,7 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dev-dependencies]
-wasm-bindgen-test = "0.3.19"
+wasm-bindgen-test = "0.3.23"
 
 [dependencies]
 # zoon = { git = "https://github.com/MartinKavik/MoonZoon" }
