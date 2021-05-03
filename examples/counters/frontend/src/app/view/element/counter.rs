@@ -30,15 +30,35 @@ impl Counter<ValueFlagNotSet, ValueSignalFlagNotSet, OnChangeFlagNotSet, StepFla
     }
 }
 
+fn decrement_button() -> Button<button::LabelFlagSet, button::OnPressFlagNotSet> {
+    Button::new().label("-")
+}
+
+fn value_element(value: impl Signal<Item = impl ToString> + Unpin + 'static) -> impl Element {
+    El::new().child(Text::with_signal(value))
+}
+
+fn increment_button() -> Button<button::LabelFlagSet, button::OnPressFlagNotSet> {
+    Button::new().label("+")
+}
+
+fn counter(decrement_button: impl Element, value_element: impl Element, increment_button: impl Element) -> RawElement {
+    Row::new()
+        .item(decrement_button)
+        .item(value_element)
+        .item(increment_button)
+        .into_raw_element()
+}
+
 impl<StepFlag> Element for Counter<ValueFlagNotSet, ValueSignalFlagSet, OnChangeFlagSet, StepFlag> {
     fn into_raw_element(self) -> RawElement {
         let on_change = self.on_change.unwrap_throw();
         let step = self.step;
-        Row::new()
-            .item(Button::new().label("-").on_press(clone!((on_change) move || on_change(-step))))
-            .item(El::new().child_signal(self.value_signal.unwrap_throw()))
-            .item(Button::new().label("+").on_press(move || on_change(step)))
-            .into_raw_element()
+        counter(
+            decrement_button().on_press(clone!((on_change) move || on_change(-step))),
+            value_element(self.value_signal.unwrap_throw()),
+            increment_button().on_press(move || on_change(step))
+        )
     }
 }
 
@@ -46,17 +66,15 @@ impl<ValueFlag, StepFlag> Element for Counter<ValueFlag, ValueSignalFlagNotSet, 
     fn into_raw_element(self) -> RawElement {
         let state_value = Rc::new(Mutable::new(self.value));
         let step = self.step;
-        Row::new()
-            .item(Button::new()
-                .label("-")
-                .on_press(clone!((state_value) move || state_value.update(|value| value - step)))
-            )
-            .item(El::new().child_signal(state_value.signal()))
-            .item(Button::new()
-                .label("+")
-                .on_press(move || state_value.update(|value| value + step))
-            )
-            .into_raw_element()
+        counter(
+            decrement_button().on_press(clone!((state_value) move || {
+                state_value.update(|value| value - step)
+            })),
+            value_element(state_value.signal()),
+            increment_button().on_press(move || {
+                state_value.update(|value| value + step)
+            }),
+        )
     }
 }
 
@@ -65,23 +83,17 @@ impl<ValueFlag, StepFlag> Element for Counter<ValueFlag, ValueSignalFlagNotSet, 
         let state_value = Rc::new(Mutable::new(self.value));
         let on_change = self.on_change.unwrap_throw();
         let step = self.step;
-        Row::new()
-            .item(Button::new()
-                .label("-")
-                .on_press(clone!((state_value, on_change) move || {
-                    state_value.update(|value| value - step);
-                    on_change(-step);
-                }))
-            )
-            .item(El::new().child_signal(state_value.signal()))
-            .item(Button::new()
-                .label("+")
-                .on_press(move || {
-                    state_value.update(|value| value + step);
-                    on_change(step);
-                })
-            )
-            .into_raw_element()
+        counter(
+            decrement_button().on_press(clone!((state_value, on_change) move || {
+                state_value.update(|value| value - step);
+                on_change(-step);
+            })),
+            value_element(state_value.signal()),
+            increment_button().on_press(move || {
+                state_value.update(|value| value + step);
+                on_change(step);
+            })
+        )
     }
 }
 

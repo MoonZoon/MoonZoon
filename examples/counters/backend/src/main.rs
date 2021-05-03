@@ -31,6 +31,7 @@ async fn frontend() -> Frontend {
         
         .row {
             display: flex;
+            align-items: center;
         }
         </style>")
 }
