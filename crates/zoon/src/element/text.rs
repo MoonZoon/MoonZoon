@@ -42,6 +42,13 @@ impl<'a> IntoElement<'a> for String {
     }
 }
 
+impl<'a> IntoElement<'a> for &String {
+    type EL = Text;
+    fn into_element(self) -> Self::EL {
+        Text::with_text(self)
+    }
+}
+
 impl<'a> IntoElement<'a> for &str {
     type EL = Text;
     fn into_element(self) -> Self::EL {
