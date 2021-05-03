@@ -26,8 +26,9 @@ pub fn static_ref(_args: TokenStream, input: TokenStream) -> TokenStream {
 
     let inner_block = input_fn.block;
     input_fn.block = parse_quote!({ 
-        static INSTANCE: once_cell::sync::OnceCell<#data_type> = once_cell::sync::OnceCell::new();
-        INSTANCE.get_or_init(move || #inner_block)
+        use once_cell::race::OnceBox;
+        static INSTANCE: OnceBox<#data_type> = OnceBox::new();
+        INSTANCE.get_or_init(move || Box::new(#inner_block))
     });
 
     quote::quote_spanned!(input_fn.span()=>

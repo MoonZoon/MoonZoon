@@ -7,7 +7,7 @@ edition = "2018"
 [dependencies]
 wasm-bindgen = { version = "0.2.73", default_features = false }
 console_error_panic_hook = { version = "0.1.6", default-features = false }
-once_cell = { version = "1.7.2", features = ["std"], default-features = false }
+once_cell = { version = "1.7.2", features = ["race", "alloc"], default-features = false }
 futures-signals = { version = "0.3.20", default-features = false }
 dominator = { version = "0.5.16", default-features = false }
 paste = { version = "1.0.5", default-features = false }
