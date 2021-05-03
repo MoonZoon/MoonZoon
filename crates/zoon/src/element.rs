@@ -18,7 +18,7 @@ pub mod text;
 pub use text::Text;
 
 pub mod raw_el;
-// pub use raw_el::RawEl;
+pub use raw_el::RawEl;
 
 // ------ Element ------
 
