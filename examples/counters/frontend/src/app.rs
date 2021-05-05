@@ -43,16 +43,9 @@ pub fn counter_count() -> impl Signal<Item = usize> {
 }
 
 pub fn counter_count_hundreds() -> impl Signal<Item = String> {
-    let options = WriteFloatOptions::builder()
-        .trim_floats(true)
-        .build()
-        .unwrap_throw();
-
     counter_count()
-        // .map(|count| std::format!("{:.2}", count as f64 / 1_000.))
-        .map(move |count| lexical::to_string_with_options(count as f64 / 1_000., &options))
+        .map(|count| format!("{:.2}", count as f64 / 1_000.))
 }
-
 
 // ------ ------
 //   Handlers 

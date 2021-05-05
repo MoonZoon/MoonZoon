@@ -17,10 +17,9 @@ wasm-bindgen-test = "0.3.23"
 
 [dependencies]
 # zoon = { git = "https://github.com/MartinKavik/MoonZoon" }
-zoon = { path = "../../../../crates/zoon" }
+zoon = { path = "../../../../crates/zoon", features = ["fmt"] }
 rand = { version = "0.8.3", features = ["small_rng", "getrandom"], default-features = false }
 getrandom = { version = "0.2", features = ["js"], default-features = false }
-enclose = { version = "1.1.8", default-features = false }
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ['-Os']
