@@ -50,7 +50,7 @@ fn main() {
         Opt::New { .. } => {},
         Opt::Start { release } => {
             let config = load_config();
-            set_env_vars(&config);            
+            set_env_vars(&config, release);            
 
             check_wasm_pack();
             if config.https {
@@ -81,7 +81,7 @@ fn main() {
         },
         Opt::Build { release } => {
             let config = load_config();
-            set_env_vars(&config);            
+            set_env_vars(&config, release);            
 
             check_wasm_pack();
             if config.https {
@@ -104,7 +104,7 @@ fn load_config() -> Config {
     toml::from_str(&toml).unwrap()
 }
 
-fn set_env_vars(config: &Config) {
+fn set_env_vars(config: &Config, release: bool) {
     // port = 8443
     env::set_var("PORT", config.port.to_string());
     // https = true
@@ -115,6 +115,8 @@ fn set_env_vars(config: &Config) {
     env::set_var("REDIRECT_SERVER__PORT", config.redirect_server.port.to_string());
     // enabled = true
     env::set_var("REDIRECT_SERVER__ENABLED", config.redirect_server.enabled.to_string());
+
+    env::set_var("COMPRESSED_PKG", release.to_string());
 }
 
 #[derive(Debug, Deserialize)]
