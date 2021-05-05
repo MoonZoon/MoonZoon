@@ -1,6 +1,6 @@
 use structopt::StructOpt;
 use std::process::{Command, Stdio, Child};
-use std::fs;
+use std::fs::{self, File};
 use serde::Deserialize;
 use notify::{Watcher, RecursiveMode, watcher, DebouncedEvent };
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -11,6 +11,7 @@ use std::path::Path;
 use uuid::Uuid;
 use rcgen::{Certificate, CertificateParams};
 use std::env;
+use brotli::{BrotliCompress, enc::backward_references::BrotliEncoderParams};
 
 #[derive(Debug, StructOpt)]
 enum Opt  {
@@ -312,12 +313,43 @@ fn build_frontend(release: bool) -> bool {
         .unwrap()
         .success();
     if success {
+        let wasm_file_path = "frontend/pkg/frontend_bg.wasm";
+        let js_file_path = "frontend/pkg/frontend.js";
+        if release {
+            compress_pkg(wasm_file_path, js_file_path);
+        }
         let build_id = Uuid::new_v4();
-        fs::rename("frontend/pkg/frontend_bg.wasm", format!("frontend/pkg/frontend_bg_{}.wasm", build_id)).unwrap(); 
-        fs::rename("frontend/pkg/frontend.js", format!("frontend/pkg/frontend_{}.js", build_id)).unwrap(); 
+        fs::rename(wasm_file_path, format!("frontend/pkg/frontend_bg_{}.wasm", build_id)).unwrap(); 
+        fs::rename(js_file_path, format!("frontend/pkg/frontend_{}.js", build_id)).unwrap(); 
         fs::write("frontend/pkg/build_id", build_id.to_string()).unwrap();
     }    
     success
+}
+
+fn compress_pkg(wasm_file_path: &str, js_file_path: &str) {
+    // @TODO refactor with https://crates.io/crates/async-compression
+    // @TODO compress also (Dominator) snippet(s)?
+
+    let wasm_file_path_orig = format!("{}_orig", wasm_file_path);
+    let js_file_path_orig = format!("{}_orig", js_file_path);
+
+    fs::rename(wasm_file_path, &wasm_file_path_orig).unwrap();
+    fs::rename(js_file_path, &js_file_path_orig).unwrap();
+
+    let params = BrotliEncoderParams::default();
+    BrotliCompress(
+        &mut File::open(&wasm_file_path_orig).unwrap(),
+        &mut File::create(&wasm_file_path).unwrap(), 
+        &params
+    ).unwrap();
+    BrotliCompress(
+        &mut File::open(&js_file_path_orig).unwrap(),
+        &mut File::create(&js_file_path).unwrap(), 
+        &params
+    ).unwrap();
+
+    fs::remove_file(&wasm_file_path_orig).unwrap();
+    fs::remove_file(&js_file_path_orig).unwrap();
 }
 
 fn build_and_run_backend(release: bool) -> Child {

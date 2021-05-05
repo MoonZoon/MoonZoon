@@ -10,7 +10,8 @@ toml = { version = "0.5", default-features = false }
 serde = { version = "1.0", features = ["derive"], default-features = false }
 notify = { version = "4.0.12", default-features = false }
 ctrlc = { version = "3.1.8", default-features = false }
-attohttpc = { version = "0.16", features = ["tls-rustls"], default-features = false }
+attohttpc = { version = "0.17", features = ["tls-rustls"], default-features = false }
 rcgen = { version = "0.8.9", features = ["pem"], default-features = false }
 # open = { version = "1", default-features = false }
 uuid = { version = "0.8", features = ["v4"], default-features = false }
+brotli = { version = "3.3.0", features = ["std"], default-features = false }
