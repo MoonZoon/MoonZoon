@@ -57,6 +57,7 @@ struct Config {
     port: u16,
     https: bool,
     redirect_server: RedirectServer,
+    compressed_pkg: bool,
 }
 
 #[derive(Debug)]
@@ -70,19 +71,22 @@ fn load_config() -> Config {
     // env::set_var("PORT", config.port.to_string());
     // // https = true
     // env::set_var("HTTPS", config.https.to_string());
-
+    //
     // // [redirect_server]
     // // port = 8080
     // env::set_var("REDIRECT_SERVER__PORT", config.redirect_server.port.to_string());
     // // enabled = true
     // env::set_var("REDIRECT_SERVER__ENABLED", config.redirect_server.enabled.to_string());
+    //
+    // env::set_var("COMPRESSED_PKG", release.to_string());
     Config {
         port: env::var("PORT").map_or(8080, |port| port.parse().unwrap()),
         https: env::var("HTTPS").map_or(false, |https| https.parse().unwrap()),
         redirect_server: RedirectServer {
             port: env::var("REDIRECT_SERVER__PORT").map_or(8081,|port| port.parse().unwrap()),
             enabled: env::var("REDIRECT_SERVER__ENABLED").map_or(false, |enabled| enabled.parse().unwrap()),
-        }
+        },
+        compressed_pkg: env::var("COMPRESSED_PKG").map_or(true, |compressed| compressed.parse().unwrap()),
     }
 }
 
