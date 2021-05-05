@@ -1,6 +1,6 @@
-port = 8080
-# port = 8443
-https = false
+# port = 8080
+port = 8443
+https = true
 
 [redirect_server]
 port = 8081
