@@ -164,7 +164,7 @@ where
 
                 if compressed_pkg {
                     if let Some(accept_encoding) = accept_encoding {
-                        let encodings = accept_encoding.split_whitespace().collect::<BTreeSet<_>>();
+                        let encodings = accept_encoding.split(", ").collect::<BTreeSet<_>>();
                         if encodings.contains("br") {
                             file.push_str("_br");
                             headers.insert(http::header::CONTENT_ENCODING, HeaderValue::from_static("br"));
