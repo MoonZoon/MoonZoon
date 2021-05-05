@@ -8,6 +8,7 @@ use tokio::task;
 use tokio::sync::oneshot;
 use tokio::signal;
 use tokio::sync::mpsc;
+use tokio::io::AsyncReadExt;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use warp::Filter;
 use warp::http::{self, Uri};
@@ -17,6 +18,7 @@ use warp::host::Authority;
 use warp::path::FullPath;
 use uuid::Uuid;
 use std::env;
+use std::collections::BTreeSet;
 
 pub struct Frontend {
     title: String,
@@ -149,13 +151,39 @@ where
                 warp::sse::reply(warp::sse::keep_alive().stream(sse_stream))
             });
 
-        let mut pkg_route_headers = HeaderMap::new();
-        if config.compressed_pkg {
-            pkg_route_headers.insert(http::header::CONTENT_ENCODING, HeaderValue::from_static("br"));
-        }
+        let compressed_pkg = config.compressed_pkg;
         let pkg_route = warp::path("pkg")
-            .and(warp::fs::dir("frontend/pkg/"))
-            .with(warp::reply::with::headers(pkg_route_headers));
+            .and(warp::path::tail())
+            .and(warp::header::optional(http::header::ACCEPT_ENCODING.as_str()))
+            .and_then(move |file: warp::path::Tail, accept_encoding: Option<String>| async move {
+                let mut file = file.as_str().to_owned();
+                let mime = mime_guess::from_path(&file).first_or_octet_stream();
+
+                let mut headers = HeaderMap::new();
+                headers.insert(http::header::CONTENT_TYPE, HeaderValue::from_str(&mime.to_string()).unwrap());
+
+                if compressed_pkg {
+                    if let Some(accept_encoding) = accept_encoding {
+                        let encodings = accept_encoding.split_whitespace().collect::<BTreeSet<_>>();
+                        if encodings.contains("br") {
+                            file.push_str("_br");
+                            headers.insert(http::header::CONTENT_ENCODING, HeaderValue::from_static("br"));
+                        } else if encodings.contains("gzip") {
+                            file.push_str("_gzip");
+                            headers.insert(http::header::CONTENT_ENCODING, HeaderValue::from_static("gzip"));
+                        }
+                    }
+                }
+                let file = format!("frontend/pkg/{}", file);
+                let mut file = tokio::fs::File::open(file).await.unwrap();
+                let mut contents = vec![];
+                file.read_to_end(&mut contents).await.unwrap();
+                headers.insert(http::header::CONTENT_LENGTH, HeaderValue::from_str(&contents.len().to_string()).unwrap());
+
+                let mut response = http::Response::new(contents);
+                *response.headers_mut() = headers;
+                Ok::<_, warp::Rejection>(response)
+            });
 
         let public_route = warp::path("public").and(warp::fs::dir("public/"));
 
@@ -178,9 +206,6 @@ where
             .or(pkg_route)
             .or(public_route)
             .or(frontend_route);
-            // @TODO too slow => static compression? how to change brotli params? (need the feature flag `compression`)
-            // .with(warp::compression::brotli());
-         
             
         let (shutdown_sender_for_redirect_server, redirect_server_handle) = {
             let config_port = config.port;
