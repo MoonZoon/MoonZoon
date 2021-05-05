@@ -1,4 +1,4 @@
-use zoon::*;
+use zoon::{*, format};
 use std::borrow::Cow;
 
 mod element;
