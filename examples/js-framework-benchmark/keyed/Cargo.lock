@@ -139,7 +139,6 @@ dependencies = [
 name = "frontend"
 version = "0.1.0"
 dependencies = [
- "enclose",
  "getrandom",
  "rand",
  "wasm-bindgen-test",
