@@ -1,8 +1,8 @@
-use wasm_bindgen::{prelude::*};
+use crate::*;
 
 #[macro_export]
 macro_rules! println {
-    ($($t:tt)*) => ($crate::log(&format_args!($($t)*).to_string()))
+    ($($arg:tt)*) => ($crate::log(&$crate::format!($($arg)*)))
 }
 
 #[wasm_bindgen]

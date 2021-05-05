@@ -1,4 +1,4 @@
-use zoon::*;
+use zoon::{*, format};
 use rand::prelude::*;
 use std::{sync::Arc, iter::repeat_with, array};
 
@@ -61,9 +61,9 @@ fn create_row() -> Arc<Mutable<Row>> {
     let label = generator().map_mut(|generator| {
         format!(
             "{} {} {}",
-            ADJECTIVES.choose(generator).unwrap(),
-            COLOURS.choose(generator).unwrap(),
-            NOUNS.choose(generator).unwrap(),
+            ADJECTIVES.choose(generator).unwrap_throw(),
+            COLOURS.choose(generator).unwrap_throw(),
+            NOUNS.choose(generator).unwrap_throw(),
         )
     });
     Arc::new(Mutable::new(Row { 

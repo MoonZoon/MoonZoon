@@ -22,6 +22,13 @@ pub use futures_signals::{
 pub use dominator::{self, Dom, DomBuilder, events, traits::StaticEvent};
 pub use enclose::enc as clone;
 pub use paste;
+pub use ufmt::{self, uDebug, uDisplay, uWrite, uwrite, uwriteln};
+pub use lexical::{self, WriteIntegerOptions, WriteFloatOptions, NumberFormat};
+
+use wee_alloc::WeeAlloc;
+
+#[global_allocator]
+static ALLOC: WeeAlloc = WeeAlloc::INIT;
 
 pub trait FlagSet {}
 pub trait FlagNotSet {}
@@ -40,7 +47,17 @@ macro_rules! make_flags {
     }
 }
 
+#[macro_export]
+macro_rules! format {
+    ($($arg:tt)*) => {{
+        let mut text = String::new();
+        $crate::ufmt::uwrite!(&mut text, $($arg)*).unwrap_throw();
+        text
+    }}
+}
+
 pub fn start_app<'a, E: Element>(browser_element_id: impl Into<Option<&'a str>>, view_root: impl FnOnce() -> E) {
+    #[cfg(debug_assertions)]
     console_error_panic_hook::set_once();
 
     let parent = browser_element_id
