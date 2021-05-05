@@ -1,17 +1,20 @@
 use structopt::StructOpt;
-use std::process::{Command, Stdio, Child};
-use std::fs::{self, File};
+use std::{process::{Command, Stdio, Child}};
+use std::fs::{self, File, DirEntry};
+use std::io::{self, BufReader, Read};
+use std::path::{Path, PathBuf};
 use serde::Deserialize;
 use notify::{Watcher, RecursiveMode, watcher, DebouncedEvent };
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::thread::{self, JoinHandle};
-use std::path::Path;
 use uuid::Uuid;
 use rcgen::{Certificate, CertificateParams};
 use std::env;
 use brotli::{BrotliCompress, enc::backward_references::BrotliEncoderParams};
+use flate2::Compression;
+use flate2::bufread::GzEncoder;
 
 #[derive(Debug, StructOpt)]
 enum Opt  {
@@ -297,8 +300,14 @@ fn build_frontend(release: bool) -> bool {
     if let Some(old_build_id) = old_build_id {
         let old_wasm = format!("frontend/pkg/frontend_bg_{}.wasm", old_build_id);
         let old_js = format!("frontend/pkg/frontend_{}.js", old_build_id);
-        let _ = fs::remove_file(old_wasm);
-        let _ = fs::remove_file(old_js);
+        let _ = fs::remove_file(&old_wasm);
+        let _ = fs::remove_file(&old_js);
+        let _ = fs::remove_file(format!("{}_br", &old_wasm));
+        let _ = fs::remove_file(format!("{}_br", &old_js));
+        let _ = fs::remove_file(format!("{}_gzip", &old_wasm));
+        let _ = fs::remove_file(format!("{}_gzip", &old_js));
+        // @TODO replace with the crate with more reliable removing on Windows? 
+        let _ = fs::remove_dir_all("frontend/pkg/snippets");
     }
 
     let mut args = vec![
@@ -313,43 +322,61 @@ fn build_frontend(release: bool) -> bool {
         .unwrap()
         .success();
     if success {
-        let wasm_file_path = "frontend/pkg/frontend_bg.wasm";
-        let js_file_path = "frontend/pkg/frontend.js";
-        if release {
-            compress_pkg(wasm_file_path, js_file_path);
-        }
         let build_id = Uuid::new_v4();
-        fs::rename(wasm_file_path, format!("frontend/pkg/frontend_bg_{}.wasm", build_id)).unwrap(); 
-        fs::rename(js_file_path, format!("frontend/pkg/frontend_{}.js", build_id)).unwrap(); 
+
+        let wasm_file_path = Path::new("frontend/pkg/frontend_bg.wasm");
+        let new_wasm_file_path = PathBuf::from(format!("frontend/pkg/frontend_bg_{}.wasm", build_id));
+        let js_file_path = Path::new("frontend/pkg/frontend.js");
+        let new_js_file_path = PathBuf::from(format!("frontend/pkg/frontend_{}.js", build_id));
+
+        fs::rename(wasm_file_path, &new_wasm_file_path).unwrap(); 
+        fs::rename(js_file_path, &new_js_file_path).unwrap(); 
         fs::write("frontend/pkg/build_id", build_id.to_string()).unwrap();
+
+        if release {
+            compress_pkg(&new_wasm_file_path, &new_js_file_path);
+        }
     }    
     success
 }
 
-fn compress_pkg(wasm_file_path: &str, js_file_path: &str) {
-    // @TODO refactor with https://crates.io/crates/async-compression
-    // @TODO compress also (Dominator) snippet(s)?
+fn compress_pkg(wasm_file_path: &Path, js_file_path: &Path) {
+    compress_file(wasm_file_path);
+    compress_file(js_file_path);
 
-    let wasm_file_path_orig = format!("{}_orig", wasm_file_path);
-    let js_file_path_orig = format!("{}_orig", js_file_path);
+    visit_dirs(Path::new("frontend/pkg/snippets"), &mut |entry: &DirEntry| {
+        compress_file(&entry.path());
+    }).unwrap();
+}
 
-    fs::rename(wasm_file_path, &wasm_file_path_orig).unwrap();
-    fs::rename(js_file_path, &js_file_path_orig).unwrap();
-
-    let params = BrotliEncoderParams::default();
+// @TODO refactor with https://crates.io/crates/async-compression
+fn compress_file(file_path: &Path) {
     BrotliCompress(
-        &mut File::open(&wasm_file_path_orig).unwrap(),
-        &mut File::create(&wasm_file_path).unwrap(), 
-        &params
-    ).unwrap();
-    BrotliCompress(
-        &mut File::open(&js_file_path_orig).unwrap(),
-        &mut File::create(&js_file_path).unwrap(), 
-        &params
+        &mut File::open(&file_path).unwrap(),
+        &mut File::create(&format!("{}_br", file_path.to_str().unwrap())).unwrap(), 
+        &BrotliEncoderParams::default()
     ).unwrap();
 
-    fs::remove_file(&wasm_file_path_orig).unwrap();
-    fs::remove_file(&js_file_path_orig).unwrap();
+    let file_reader = BufReader::new(File::open(&file_path).unwrap());
+    let mut gzip_encoder = GzEncoder::new(file_reader, Compression::best());
+    let mut buffer = Vec::new();
+    gzip_encoder.read_to_end(&mut buffer).unwrap();
+    fs::write(&format!("{}_gzip", file_path.to_str().unwrap()), buffer).unwrap();
+}
+
+fn visit_dirs(dir: &Path, cb: &mut dyn FnMut(&DirEntry)) -> io::Result<()> {
+    if dir.is_dir() {
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                visit_dirs(&path, cb)?;
+            } else {
+                cb(&entry);
+            }
+        }
+    }
+    Ok(())
 }
 
 fn build_and_run_backend(release: bool) -> Child {

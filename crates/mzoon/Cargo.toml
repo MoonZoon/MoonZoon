@@ -15,3 +15,4 @@ rcgen = { version = "0.8.9", features = ["pem"], default-features = false }
 # open = { version = "1", default-features = false }
 uuid = { version = "0.8", features = ["v4"], default-features = false }
 brotli = { version = "3.3.0", features = ["std"], default-features = false }
+flate2 = { version = "1.0.20", features = ["rust_backend"], default-fetures = false }

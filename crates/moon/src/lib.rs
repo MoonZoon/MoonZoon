@@ -11,6 +11,7 @@ use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use warp::Filter;
 use warp::http::{self, Uri};
+use warp::http::header::{HeaderMap, HeaderValue};
 use warp::sse::Event;
 use warp::host::Authority;
 use warp::path::FullPath;
@@ -148,7 +149,13 @@ where
                 warp::sse::reply(warp::sse::keep_alive().stream(sse_stream))
             });
 
-        let pkg_route = warp::path("pkg").and(warp::fs::dir("frontend/pkg/"));
+        let mut pkg_route_headers = HeaderMap::new();
+        if config.compressed_pkg {
+            pkg_route_headers.insert(http::header::CONTENT_ENCODING, HeaderValue::from_static("br"));
+        }
+        let pkg_route = warp::path("pkg")
+            .and(warp::fs::dir("frontend/pkg/"))
+            .with(warp::reply::with::headers(pkg_route_headers));
 
         let public_route = warp::path("public").and(warp::fs::dir("public/"));
 
