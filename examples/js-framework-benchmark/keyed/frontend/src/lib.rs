@@ -246,5 +246,5 @@ fn row_remove_button(id: ID) -> RawEl {
 
 #[wasm_bindgen(start)]
 pub fn start() {
-    start_app("app", root);
+    start_app("main", root);
 }

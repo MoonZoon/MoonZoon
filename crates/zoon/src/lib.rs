@@ -74,6 +74,7 @@ pub fn start_app<'a, E: Element>(browser_element_id: impl Into<Option<&'a str>>,
 
     let parent = browser_element_id
         .into()
+        // @TODO we need a better error message
         .map(dominator::get_id)
         .unwrap_or_else(|| dominator::body().unchecked_into());
 
