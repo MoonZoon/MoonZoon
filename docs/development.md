@@ -2,20 +2,20 @@
 
 ---
 
-_WARNING:_ MoonZoon is in the phase of early development! You may find hacks and ugly / spaghetti code in the repo!
+_WARNING:_ MoonZoon is in the phase of early development! You may find hacks and ugly code in the repo!
 
 ## 1. Required tools
 
 - [Rust](https://www.rust-lang.org/)
   ```bash
   rustup update
-  rustc -V # rustc 1.51.0 (2fd73fabe 2021-03-23)`
+  rustc -V # rustc 1.52.0 (88f19c6da 2021-05-03)
   ```
 
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
   ```bash
   cargo install cargo-make
-  makers -V # makers 0.32.15
+  makers -V # makers 0.32.17
   ```
 
 ## 2. VS Code settings
@@ -31,7 +31,7 @@ _WARNING:_ MoonZoon is in the phase of early development! You may find hacks and
         // examples are ignored because they have own workspaces
         "examples/counter/Cargo.toml",
         "examples/counters/Cargo.toml",
-        "examples/counters_without_macros/Cargo.toml",
+        "examples/js-framework-benchmark/keyed/Cargo.toml",
         // ... add more examples as needed
     ],
     "rust-analyzer.diagnostics.disabled": [
