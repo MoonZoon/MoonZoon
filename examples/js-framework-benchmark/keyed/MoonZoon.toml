@@ -1,6 +1,7 @@
 port = 8080
 # port = 8443
 https = false
+cache_busting = true
 
 [redirect_server]
 port = 8081
