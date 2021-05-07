@@ -16,7 +16,6 @@ use warp::http::header::{HeaderMap, HeaderValue};
 use warp::sse::Event;
 use warp::host::Authority;
 use warp::path::FullPath;
-use uuid::Uuid;
 use std::env;
 use std::collections::BTreeSet;
 
@@ -112,7 +111,7 @@ where
         let sse_senders = Arc::new(Mutex::new(sse_senders));
         let sse_senders = warp::any().map(move || sse_senders.clone());
 
-        let backend_build_id: Uuid = fs::read_to_string("backend/private/build_id")
+        let backend_build_id: u128 = fs::read_to_string("backend/private/build_id")
             .ok()
             .and_then(|uuid| uuid.parse().ok())
             .unwrap_or_default();
@@ -190,7 +189,7 @@ where
         let frontend_route = warp::get().and_then(move || async move {
             let frontend = frontend().await;
 
-            let frontend_build_id: Uuid = fs::read_to_string("frontend/pkg/build_id")
+            let frontend_build_id: u128 = fs::read_to_string("frontend/pkg/build_id")
                 .ok()
                 .and_then(|uuid| uuid.parse().ok())
                 .unwrap_or_default();
@@ -296,7 +295,7 @@ where
     Ok(())
 }
 
-fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid, append_to_head: &str) -> String {
+fn html(title: &str, backend_build_id: u128, frontend_build_id: u128, append_to_head: &str) -> String {
     format!(r#"<!DOCTYPE html>
     <html lang="en">
     
@@ -347,7 +346,7 @@ fn html(title: &str, backend_build_id: Uuid, frontend_build_id: Uuid, append_to_
     append_to_head = append_to_head)
 }
 
-fn html_debug_info(_backend_build_id: Uuid) -> String {
+fn html_debug_info(_backend_build_id: u128) -> String {
     String::new()
     // format!("<h1>MoonZoon is running!</h1>
     //     <h2>Backend build id: {backend_build_id}</h2>

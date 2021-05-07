@@ -92,7 +92,7 @@ fn main() {
                 generate_certificate();    
             }
 
-            if !build_frontend(release) {
+            if !build_frontend(release, config.cache_busting) {
                 panic!("Build frontend failed!");
             }
 
@@ -127,6 +127,7 @@ fn set_env_vars(config: &Config, release: bool) {
 struct Config {
     port: u16,
     https: bool,
+    cache_busting: bool,
     redirect_server: RedirectServer,
     watch: Watch,
 }
@@ -194,13 +195,14 @@ fn start_frontend_watcher(
         protocol = if config.https { "https" } else { "http" },
         port = config.port
     );
+    let cache_busting = config.cache_busting;
 
     thread::spawn(move || {
         let mut watcher = watcher(sender, Duration::from_millis(100)).unwrap();
         for path in paths {
             watcher.watch(&path, RecursiveMode::Recursive).unwrap();
         }
-        build_frontend(release);
+        build_frontend(release, cache_busting);
         frontend_build_finished_sender.send(()).unwrap();
         loop {
             match receiver.recv() {
@@ -209,7 +211,7 @@ fn start_frontend_watcher(
                     DebouncedEvent::Error(notify::Error::Generic(error), _) if error == "ctrl-c" => break,
                     _ => {
                         println!("Build frontend");
-                        if build_frontend(release) {
+                        if build_frontend(release, cache_busting) {
                             println!("Reload frontend");
                             attohttpc::post(&reload_url)
                                 .danger_accept_invalid_certs(true)
@@ -290,13 +292,15 @@ fn start_backend_watcher(
 }
 
 fn generate_backend_build_id() {
-    fs::write("backend/private/build_id", Uuid::new_v4().to_string()).unwrap();
+    fs::write("backend/private/build_id", Uuid::new_v4().as_u128().to_string()).unwrap();
 }
 
-fn build_frontend(release: bool) -> bool {
+fn build_frontend(release: bool, cache_busting: bool) -> bool {
     let old_build_id = fs::read_to_string("frontend/pkg/build_id")
         .ok()
-        .and_then(|uuid| uuid.parse::<Uuid>().ok());
+        .map(|uuid| {
+            uuid.parse::<u128>().map(|uuid| uuid).unwrap_or_default()
+        });
     if let Some(old_build_id) = old_build_id {
         let old_wasm = format!("frontend/pkg/frontend_bg_{}.wasm", old_build_id);
         let old_js = format!("frontend/pkg/frontend_{}.js", old_build_id);
@@ -322,7 +326,9 @@ fn build_frontend(release: bool) -> bool {
         .unwrap()
         .success();
     if success {
-        let build_id = Uuid::new_v4();
+        let build_id = cache_busting
+            .then(|| Uuid::new_v4().as_u128())
+            .unwrap_or_default();
 
         let wasm_file_path = Path::new("frontend/pkg/frontend_bg.wasm");
         let new_wasm_file_path = PathBuf::from(format!("frontend/pkg/frontend_bg_{}.wasm", build_id));
