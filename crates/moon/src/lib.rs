@@ -3,6 +3,9 @@ use std::error::Error;
 use std::convert::Infallible;
 use std::sync::{Arc, Mutex};
 use std::fs;
+use std::env;
+use std::borrow::Cow;
+use std::collections::BTreeSet;
 use tokio::runtime::Runtime;
 use tokio::task;
 use tokio::sync::oneshot;
@@ -16,12 +19,11 @@ use warp::http::header::{HeaderMap, HeaderValue};
 use warp::sse::Event;
 use warp::host::Authority;
 use warp::path::FullPath;
-use std::env;
-use std::collections::BTreeSet;
 
 pub struct Frontend {
     title: String,
     append_to_head: String,
+    body_content: Cow<'static, str>,
 }
 
 impl Frontend {
@@ -29,6 +31,7 @@ impl Frontend {
         Self {
             title: String::new(),
             append_to_head: String::new(),
+            body_content: Cow::from(r#"<section id="app"></section>"#)
         }
     }
 
@@ -39,6 +42,11 @@ impl Frontend {
 
     pub fn append_to_head(mut self, html: &str) -> Self {
         self.append_to_head.push_str(html);
+        self
+    }
+
+    pub fn body_content(mut self, content: impl Into<Cow<'static, str>>) -> Self {
+        self.body_content = content.into();
         self
     }
 }
@@ -195,7 +203,7 @@ where
                 .unwrap_or_default();
 
             Ok::<_, warp::Rejection>(warp::reply::html(html(
-                &frontend.title, backend_build_id, frontend_build_id, &frontend.append_to_head
+                &frontend.title, backend_build_id, frontend_build_id, &frontend.append_to_head, &frontend.body_content
             )))
         });
         
@@ -295,7 +303,13 @@ where
     Ok(())
 }
 
-fn html(title: &str, backend_build_id: u128, frontend_build_id: u128, append_to_head: &str) -> String {
+fn html(
+    title: &str, 
+    backend_build_id: u128, 
+    frontend_build_id: u128, 
+    append_to_head: &str, 
+    body_content: &str
+) -> String {
     format!(r#"<!DOCTYPE html>
     <html lang="en">
     
@@ -310,7 +324,7 @@ fn html(title: &str, backend_build_id: u128, frontend_build_id: u128, append_to_
 
     <body>
       {html_debug_info}
-      <section id="app"></section>
+      {body_content}
 
       <script type="text/javascript">
         {reconnecting_event_source}
@@ -341,6 +355,7 @@ fn html(title: &str, backend_build_id: u128, frontend_build_id: u128, append_to_
     </html>"#, 
     title = title, 
     html_debug_info = html_debug_info(backend_build_id),
+    body_content = body_content,
     reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"),
     frontend_build_id = frontend_build_id.to_string(),
     append_to_head = append_to_head)
