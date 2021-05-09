@@ -1,6 +1,7 @@
 use zoon::{*, format};
 use rand::prelude::*;
-use std::{sync::Arc, iter::repeat_with, array};
+use std::{iter::repeat_with, array, ops::Not};
+use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
 
 // ------ ------
 //    Statics 
@@ -22,15 +23,7 @@ static NOUNS: &[&'static str] = &[
     "pizza", "mouse", "keyboard",
 ];
 
-#[static_ref]
-fn generator() -> &'static Mutable<SmallRng> {
-    Mutable::new(SmallRng::from_entropy())
-}
-
-#[static_ref]
-fn previous_id() -> &'static Mutable<ID> {
-    Mutable::new(0)
-}
+static NEXT_ID: AtomicUsize = AtomicUsize::new(1);
 
 #[static_ref]
 fn selected_row() -> &'static Mutable<Option<ID>> {
@@ -38,7 +31,7 @@ fn selected_row() -> &'static Mutable<Option<ID>> {
 }
 
 #[static_ref]
-fn rows() -> &'static MutableVec<Arc<Mutable<Row>>> {
+fn rows() -> &'static MutableVec<Arc<Row>> {
     MutableVec::new()
 }
 
@@ -46,30 +39,33 @@ type ID = usize;
 
 struct Row {
     id: ID,
-    label: Arc<Mutable<String>>,
+    label: Mutable<String>,
+}
+
+// ------ ------
+//    Signals 
+// ------ ------
+
+fn rows_exist() -> impl Signal<Item = bool> {
+    rows().signal_vec_cloned().is_empty().map(Not::not)
 }
 
 // ------ ------
 //   Commands 
 // ------ ------
 
-fn create_row() -> Arc<Mutable<Row>> {
-    let id = previous_id().map_mut(|id| {
-        *id += 1;
-        *id
-    });
-    let label = generator().map_mut(|generator| {
-        format!(
-            "{} {} {}",
-            ADJECTIVES.choose(generator).unwrap_throw(),
-            COLOURS.choose(generator).unwrap_throw(),
-            NOUNS.choose(generator).unwrap_throw(),
-        )
-    });
-    Arc::new(Mutable::new(Row { 
-        id, 
-        label: Arc::new(Mutable::new(label))
-    }))
+fn create_row() -> Arc<Row> {
+    let mut generator = SmallRng::from_entropy();
+    let label = format!(
+        "{} {} {}",
+        ADJECTIVES.choose(&mut generator).unwrap_throw(),
+        COLOURS.choose(&mut generator).unwrap_throw(),
+        NOUNS.choose(&mut generator).unwrap_throw(),
+    );
+    Arc::new(Row { 
+        id: NEXT_ID.fetch_add(1, Ordering::SeqCst), 
+        label: Mutable::new(label)
+    })
 }
 
 fn create_rows(count: usize) {
@@ -87,7 +83,7 @@ fn append_rows(count: usize) {
 fn update_rows(step: usize) {
     let rows = rows().lock_ref();
     for position in (0..rows.len()).step_by(step) {
-        rows[position].lock_ref().label.lock_mut().push_str(" !!!");
+        rows[position].label.lock_mut().push_str(" !!!");
     }
 }
 
@@ -96,16 +92,17 @@ fn clear_rows() {
 }
 
 fn swap_rows() {
-    if rows().lock_ref().len() < 999 { return }
-    rows().lock_mut().swap(1, 998)
+    let mut rows = rows().lock_mut();
+    if rows.len() < 999 { return }
+    rows.swap(1, 998)
 }
 
 fn select_row(id: ID) {
-    selected_row().set_neq(Some(id))
+    selected_row().set(Some(id))
 }
 
 fn remove_row(id: ID) {
-    rows().lock_mut().retain(|row| row.lock_ref().id != id);
+    rows().lock_mut().retain(|row| row.id != id);
 }
 
 // ------ ------
@@ -134,7 +131,7 @@ fn jumbotron() -> RawEl {
                     RawEl::with_tag("div")
                         .attr("class", "col-md-6")
                         .child(
-                            RawEl::with_tag("h1").child("Zoon")
+                            RawEl::with_tag("h1").child("MoonZoon")
                         ),
                     RawEl::with_tag("div")
                         .attr("class", "col-md-6")
@@ -180,23 +177,24 @@ fn action_button(
 fn table() -> RawEl {
     RawEl::with_tag("table")
         .attr("class", "table table-hover table-striped test-data")
-        .child(
-            RawEl::with_tag("tbody")
-                .attr("id", "tbody")
-                .children_signal_vec(
-                    rows().signal_vec_cloned().map(row)
-                )
+        .child_signal(
+            rows_exist().map(|rows_exist| rows_exist.then(|| {
+                RawEl::with_tag("tbody")
+                    .attr("id", "tbody")
+                    .children_signal_vec(
+                        rows().signal_vec_cloned().map(row)
+                    )
+            }))
         )
 }
 
-fn row(row: Arc<Mutable<Row>>) -> RawEl {
-    let row = row.lock_ref();
+fn row(row: Arc<Row>) -> RawEl {
     let id = row.id;
     RawEl::with_tag("tr")
         .attr_signal(
             "class",
-            selected_row().signal().map(move |selected_id| {
-                (selected_id? == id).then(|| "danger")
+            selected_row().signal_ref(move |selected_id| {
+                ((*selected_id)? == id).then(|| "danger")
             })
         )
         .children(array::IntoIter::new([
@@ -217,10 +215,9 @@ fn row_id(id: ID) -> RawEl {
 fn row_label(id: ID, label: impl Signal<Item = String> + Unpin + 'static) -> RawEl {
     RawEl::with_tag("td")
         .attr("class", "col-md-4")
-        .event_handler( move |_: events::Click| select_row(id))
         .child(
             RawEl::with_tag("a")
-                .attr("class", "lbl")
+                .event_handler(move |_: events::Click| select_row(id))
                 .child(Text::with_signal(label))
         )
 }
@@ -230,7 +227,6 @@ fn row_remove_button(id: ID) -> RawEl {
         .attr("class", "col-md-1")
         .child(
             RawEl::with_tag("a")
-                .attr("class", "remove")
                 .event_handler(move |_: events::Click| remove_row(id))
                 .child(
                     RawEl::with_tag("span")
