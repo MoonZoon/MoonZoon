@@ -65,11 +65,15 @@
 
 - Cure for Web Development [[Medium](https://martinkavik.medium.com/cure-for-web-development-65003afb701f) / [dev.to](https://dev.to/martinkavik/cure-for-web-development-nnn) / [MD](docs/articles/cure_for_web_development.md)]
 
+- Rust on the Frontend and Backend [[Always Bet on Rust](https://blog.abor.dev/p/moonzoon)]
+
 ### Dev News
 
 1. CLI, Build pipeline, Live-reload, HTTPS [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-1-cli-build-pipeline-live-reload-https-1ba6) / [MD](docs/articles/dev_news_1.md)]
 
 1. Live demo, Zoon, Examples, Architectures [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-2-live-demo-zoon-examples-architectures-2oem) / [MD](docs/articles/dev_news_2.md)]
+
+1. New API, Optimizations, Don't love your code [dev.to WIP / [MD](docs/articles/dev_news_3.md)]
 
 ---
 
@@ -89,11 +93,21 @@
 
 ---
 
+# Size & Speed
+
+![Benchmark example size](docs/images/demo_size_small.png)
+
+![Benchmark example size](docs/images/frontend_frameworks_benchmark_1.png)
+
+- [MartinKavik/js-framework-benchmark](https://github.com/MartinKavik/js-framework-benchmark/tree/framework/moonzoon)
+
+---
+
 # FAQ
 
 1. _"Is it production-ready?"_
    - No, it's in the design & early development phase now, but you can subscribe to `#news` channel on our [Discord server](https://discord.gg/eGduTxK2Es) to don't miss the announcement. 
-   - MoonZoon will be battle-tested during the [OpenHope](http://openhope.net) development.
+   - MoonZoon will be battle-tested during the [OpenHope](http://openhope.net) and other projects development.
 
 1. _"Why another framework? Are you mad??"_
    - I want to write products. Reliable products. Quickly. I want to enjoy the development. I don't want to play endlessly with tools, protocols and config files.
@@ -133,6 +147,7 @@
 
 1. _"Who is developing it?"_
    - Martin Kavík (a [Seed](https://seed-rs.org/) maintainer, Rust freelance developer) with the help of the awesome community.
+   - [An interview with Martin Kavík](https://blog.abor.dev/p/moonzoon)
 
 1. _"Could I help somehow? / Where can I find more information?_"
     - Join our [Discord chat](https://discord.gg/eGduTxK2Es) and don't hesitate to ask any questions or present your ideas.
