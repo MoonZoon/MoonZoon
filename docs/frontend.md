@@ -232,7 +232,7 @@ fn todo(todo: Arc<super::Todo>) -> impl Element {
     Row::new()
         .style(Font::new().size(24))
         .style(Padding::new().all(15))
-        .style(Spacing::new().all(10))
+        .style(Spacing::with_value(10))
         .on_hovered_change(move |hovered| row_hovered.set(hovered))
         .item(
             todo_checkbox(checkbox_id, &todo)
@@ -344,12 +344,11 @@ Typography is one of the most complex parts of (web) design. But we have to some
 So I suggest to make the _font size_ an alias for the [_cap height_](https://en.wikipedia.org/wiki/Cap_height). And the _font size_ would be also equal to the line height. It means the code:
 
 ```rust
-paragraph![
-    font::size(40),
-    spacing(30),
-    "Moon",
-    "Zoon",
-]
+Paragraph::new()
+    .style(Font::new().size(40))
+    .style(Spacing::with_value(30))
+    .content("Moon")
+    .content("Zoon")
 ```
 
 would be rendered as:
