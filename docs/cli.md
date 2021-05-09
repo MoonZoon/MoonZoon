@@ -21,6 +21,7 @@ _Note:_ Faster installation options will be added later.
 
 - Example: `mzoon new my_project` 
 - Creates a new directory with a MoonZoon project.
+- _Note:_ Not implemented yet, use [MoonZoon/demo](https://github.com/MoonZoon/demo) as a starting project.
 
 ### 2. `start`
 
@@ -31,10 +32,11 @@ _Note:_ Faster installation options will be added later.
 - Optional parameters:
    1. **`--release` / `-r`**
       - Example: `mzoon start --release`
-      - Compiles in the release mode; Zoon auto-reload is disabled.
+      - Compiles in the release mode and compress frontend files.
    1. **`--open` / `-o`**
       - Example: `mzoon start --open`
       - Opens the Zoon's URL in a new browser tab (e.g. `localhost:8080`)
+      - _Note:_ Not implemented yet.
 
 ### 3. `build`
 
@@ -43,7 +45,6 @@ _Note:_ Faster installation options will be added later.
 - Optional parameters:
    1. **`--release` / `-r`**
       - Example: `mzoon build --release`
-      - Compiles in the release mode.
 ---
 
 ## MoonZoon.toml
@@ -54,6 +55,7 @@ _Note:_ Faster installation options will be added later.
 port = 8080
 # port = 8443
 https = false
+cache_busting = true
 
 [redirect_server] # useful for HTTP -> HTTPS redirect
 port = 8081
@@ -86,7 +88,7 @@ backend = [
    - They are probably not implemented yet.
 
 1. _"What is a new project file structure?"_
-   - See the content of `/examples/time_tracker` or [MoonZoon/demo](https://github.com/MoonZoon/demo) to have an idea.
+   - See the content of [MoonZoon/demo](https://github.com/MoonZoon/demo) to have an idea.
     
 
 
