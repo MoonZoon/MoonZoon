@@ -71,7 +71,8 @@ fn main() {
                 &config,
             );
             // @TODO parallel build instead of waiting (server has to be started after FE build!)
-            frontend_build_finished_receiver.recv().unwrap();
+            // `recv` fails if the sender is dropped because of fail in `start_frontend_watcher`
+            let _ = frontend_build_finished_receiver.recv();
 
             let backend_watcher_handle = start_backend_watcher(
                 config.watch.backend.clone(), 
@@ -258,15 +259,19 @@ fn start_backend_watcher(
                 //     println!("Open {} in your default web browser", "https://127.0.0.1:8443");
                 //     open::that(address).unwrap();
                 // }
-                let command = server_rebuild_run_receiver.recv().unwrap();
+                let command = server_rebuild_run_receiver.recv();
                 match command {
-                    BackendCommand::Rebuild => {
+                    Ok(BackendCommand::Rebuild) => {
                         let _ = cargo_and_server_process.kill();
                     },
-                    BackendCommand::Stop => { 
+                    Ok(BackendCommand::Stop) => { 
                         cargo_and_server_process.wait().unwrap();
                         break 
                     },
+                    Err(error) => {
+                        println!("watch backend error: {:?}", error);
+                        break
+                    }
                 }
             }
         });
@@ -276,16 +281,21 @@ fn start_backend_watcher(
                 Ok(event) => match event {
                     DebouncedEvent::NoticeWrite(_) | DebouncedEvent:: NoticeRemove(_) => (),
                     DebouncedEvent::Error(notify::Error::Generic(error), _) if error == "ctrl-c" => {
-                        server_rebuild_run_sender.send(BackendCommand::Stop).unwrap();
+                        let _ = server_rebuild_run_sender.send(BackendCommand::Stop);
                         backend_handle.join().unwrap();
-                        break
+                        return
                     },
                     _ => {
                         println!("Build backend");
-                        server_rebuild_run_sender.send(BackendCommand::Rebuild).unwrap();
+                        if server_rebuild_run_sender.send(BackendCommand::Rebuild).is_err() {
+                            return
+                        }
                     }
                 },
-                Err(error) => println!("watch backend error: {:?}", error),
+                Err(error) => {
+                    println!("watch backend error: {:?}", error);
+                    return
+                },
             }
         }
     })

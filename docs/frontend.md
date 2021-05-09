@@ -241,7 +241,7 @@ The **Todos** example part:
 
 - CSS concepts / events like _focus_, _hover_ and _breakpoints_ are handled directly by Rust / Zoon _elements_.
 
-- There is no such thing as CSS _margins_ or _selectors_. Padding and element / component nesting are more natural alternatives.
+- There is no such thing as CSS _margins_ or _selectors_. Padding and element nesting are more natural alternatives.
 
 ---
 ## Color
