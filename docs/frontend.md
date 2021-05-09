@@ -219,24 +219,36 @@ error[E0277]: the trait bound `LabelFlagSet: FlagNotSet` is not satisfied
 ## Styles
 
 The **Todos** example part:
+   - _Note:_ The code below may differ from the current Todos implementation.
 
 ```rust
-    #[cmp]
-    fn todo(todo: Var<super::Todo>) -> Cmp {
-        let selected = Some(todo) == super::selected_todo();
-        let checkbox_id = cmp_var(ElementId::new);
-        let row_hovered = cmp_var(|| false);
-        row![
-            font::size(24),
-            padding!(15),
-            spacing(10),
-            on_hovered_change(row_hovered.setter()),
-            todo_checkbox(checkbox_id, todo),
-            selected.not().then(|| todo_label(checkbox_id, todo)),
-            selected.then(selected_todo_title),
-            row_hovered.inner().then(|| remove_todo_button(todo)),
-        ]
-    }
+fn todo(todo: Arc<super::Todo>) -> impl Element {
+    let checkbox_id = ElementId::new();
+    let (row_hovered, row_hovered_signal) = Mutable::new_and_signal(false);
+    let selected = {
+        let todo_id = todo.id;
+        super::selected_todo().signal(|selected_id| selected_id == Some(todo_id));
+    };
+    Row::new()
+        .style(Font::with_size(24))
+        .style(Padding::with_all(15))
+        .style(Spacing::with_all(10))
+        .on_hovered_change(move |hovered| row_hovered.set(hovered))
+        .child(
+            todo_checkbox(checkbox_id, &todo)
+        )
+        .child_signal(
+            selected.map(clone!((todo) move |selected| {
+                if selected { Box::new(selected_todo_title()) } 
+                else { Box::new(todo_label(checkbox_id, &todo)) }
+            }))
+        )
+        .child_signal(
+            row_hovered_signal.map(|hovered| {
+                hovered.then(move || remove_todo_button(&todo))
+            })
+        )
+}
 ```
 
 - CSS concepts / events like _focus_, _hover_ and _breakpoints_ are handled directly by Rust / Zoon _elements_.
