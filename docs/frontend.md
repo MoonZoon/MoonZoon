@@ -7,57 +7,52 @@
 The **Counter** example:
 
 ```rust
-#![no_std]
-
 use zoon::*;
 
-blocks!{
+#[static_ref]
+fn counter() -> &'static Mutable<i32> {
+    Mutable::new(0)
+}
 
-    #[s_var]
-    fn counter() -> SVar<i32> {
-        0
-    }
+fn increment() {
+    counter().update(|counter| counter + 1)
+}
 
-    /* Alternative without `SVar` (`i32` is automatically wrapped in `SVar`):
-    #[s_var]
-    fn counter() -> i32 {
-        0
-    }
-    */
+fn decrement() {
+    counter().update(|counter| counter - 1)
+}
 
-    #[update]
-    fn increment() {
-        counter().update(|counter| counter + 1);
-    }
-
-    #[update]
-    fn decrement() {
-        counter().update(|counter| counter - 1);
-    }
-
-    #[cmp]
-    fn root() -> Cmp {
-        col![
-            button![button::on_press(decrement), "-"],
-            counter().inner(),
-            button![button::on_press(increment), "+"],
-        ]
-    }
-
-    /* Non-macro element alternative:
-    #[cmp]
-    fn root() -> Cmp {
-        Column::new()
-            .item(Button::new().on_press(decrement).label("-"))
-            .item(counter().inner()),
-            .item(Button::new().on_press(increment).label("+"))
-    }
-    */
+fn root() -> impl Element {
+    Column::new()
+        .item(Button::new().label("-").on_press(decrement))
+        .item(Text::with_signal(counter().signal()))
+        .item(Button::new().label("+").on_press(increment))
 }
 
 #[wasm_bindgen(start)]
 pub fn start() {
-    start!()
+    start_app("app", root);
+}
+```
+
+The alternative **Counter** example:
+
+```rust
+use zoon::{*, println};
+
+fn root() -> impl Element {
+    println!("I'm different.");
+    let counter = std::rc::Rc::new(Mutable::new(0));
+    let on_press = clone!((counter) move |step: i32| *counter.lock_mut() += step);
+    Column::new()
+        .item(Button::new().label("-").on_press(clone!((on_press) move || on_press(-1))))
+        .item_signal(counter.signal())
+        .item(Button::new().label("+").on_press(move || on_press(1)))
+}
+
+#[wasm_bindgen(start)]
+pub fn start() {
+    start_app("app", root);
 }
 ```
 
