@@ -39,11 +39,14 @@ The alternative **Counter** example:
 
 ```rust
 use zoon::{*, println};
+use std::rc::Rc;
 
 fn root() -> impl Element {
     println!("I'm different.");
-    let counter = std::rc::Rc::new(Mutable::new(0));
+
+    let counter = Rc::new(Mutable::new(0));
     let on_press = clone!((counter) move |step: i32| *counter.lock_mut() += step);
+
     Column::new()
         .item(Button::new().label("-").on_press(clone!((on_press) move || on_press(-1))))
         .item_signal(counter.signal())
@@ -59,25 +62,34 @@ pub fn start() {
 ### 1. The App Initialization
 
 1. The function `start` is invoked automatically from the Javascript code.
-1. Zoon's macro `start!` is called to start the app.
-1. The function `counter` is invoked and its default value `0` is stored in the Zoon's internal storage.
-1. The function `root` is invoked and its value is stored in the Zoon's internal storage, too.
-1. The `counter` function was called in the `root`'s body - it means `root` has subscribed to `counter` changes and it will be automatically invoked on each `counter` change. 
+1. Zoon's function `start_app` appends the element returned from the `root` function to the element with the id `app`. 
 
-### 2. The First Render
+    - You can pass also the value `None` instead of `"app"` to mount directly to `body` but it's not recommended.
 
-1. Zoon waits until the browser is ready for rendering.
-1. The entire `#[cmp]` (_component_) tree (only `root` in this example) is rendered to the predefined location in the browser DOM.
+    - When the `root` function is invoked (_note:_ it's invoked only once), all elements are immediately created and rendered to the browser DOM. (It means, for instance, methods `Column::new()` or `.item(..)` writes to DOM.)
 
-### 3. Update
+    - Data stored in functions marked by the attribute `#[static_ref]` are lazily initialized on the first call.
+
+### 2. Update
 
 1. The user clicks the decrement button.
+
 1. The function `decrement` is invoked.
-1. `counter`'s value is decremented. 
-   - _Note_: The function `counter` returns `SVar<i32>` (_**S**tatic **Var**iable_). _SVar_ is basically a copyable wrapper for a reference to the Zoon's internal storage.
-1. `root` component listens for `counter` changes - `root` is automatically recomputed and Zoon waits for the browser to allow rendering.
-1. Components dependent on changed data are effectively rerendered in the DOM. 
-   - _Note_: When a parent component has to be rerendered, it doesn't mean that all its descendants have to be rerendered as well - each `#[cmp]` block may depend on different variables.
+
+1. `counter`'s value is decremented.
+
+1. `counter` has type `Mutable` - it sends its updated value to all associated signals.
+
+1. The new `counter` value is received through a signal and the corresponding text is updated.
+    - In the original example, only the content of the `Text` element is changed.
+    - In the alternative examples, the `counter` value is automatically transformed to a new `Text` element.
+
+_Notes:_
+
+- Read the excellent [tutorial](https://docs.rs/futures-signals/0.3.20/futures_signals/tutorial/index.html) for `Mutable` and signals in the `futures_signals` crate.
+- `zoon::*` reimports most needed types and you can access some Zoon's dependencies by `zoon::library` like `zoon::futures_signals`.
+- `clone!` is a type alias for [enclose::enc](https://docs.rs/enclose/1.1.8/enclose/macro.enc.html).
+- `static_ref`, `clone!` and other things can be disabled or set by Zoon's [features](https://doc.rust-lang.org/cargo/reference/features.html).
 
 ---
 
