@@ -230,20 +230,20 @@ fn todo(todo: Arc<super::Todo>) -> impl Element {
         super::selected_todo().signal(|selected_id| selected_id == Some(todo_id));
     };
     Row::new()
-        .style(Font::with_size(24))
-        .style(Padding::with_all(15))
-        .style(Spacing::with_all(10))
+        .style(Font::new().size(24))
+        .style(Padding::new().all(15))
+        .style(Spacing::new().all(10))
         .on_hovered_change(move |hovered| row_hovered.set(hovered))
-        .child(
+        .item(
             todo_checkbox(checkbox_id, &todo)
         )
-        .child_signal(
+        .item_signal(
             selected.map(clone!((todo) move |selected| {
                 if selected { Box::new(selected_todo_title()) } 
                 else { Box::new(todo_label(checkbox_id, &todo)) }
             }))
         )
-        .child_signal(
+        .item_signal(
             row_hovered_signal.map(|hovered| {
                 hovered.then(move || remove_todo_button(&todo))
             })
@@ -259,14 +259,17 @@ fn todo(todo: Arc<super::Todo>) -> impl Element {
 ## Color
 
 ```rust
-background::color(hsl(0, 0, 100)),
-border::shadow!(
-    shadow::offsetXY(0, 2),
-    shadow::size(0),
-    shadow::blur(4),
-    shadow::color(hsla(0, 0, 0, 20)),
-),
-font::color(if hovered().inner() { hsl(12, 35, 60) } else { hsl(10, 30, 50) }),
+.style(Background::new().color(hsl(0, 0, 100)))
+.style(
+    BorderShadow::new()
+        .offset_xy(0, 2)
+        .size(0)
+        .blur(4)
+        .color(hsla(0, 0, 0, 20))
+)
+.style(Font::new().color_signal(hovered.map(|hovered| {
+    if hovered { hsl(12, 35, 60) } else { hsl(10, 30, 50) }
+})))
 ```
 
 The most commonly used color code systems are:
