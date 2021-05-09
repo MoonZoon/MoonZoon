@@ -2,7 +2,7 @@
 
 ---
 
-_WARNING:_ MoonZoon is in the phase of early development! You may find hacks and ugly code in the repo!
+_WARNING:_ MoonZoon is in the phase of early development! You may find ugly code in the repo!
 
 ## 1. Required tools
 
@@ -15,7 +15,7 @@ _WARNING:_ MoonZoon is in the phase of early development! You may find hacks and
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
   ```bash
   cargo install cargo-make
-  makers -V # makers 0.32.17
+  makers -V # makers 0.33.0
   ```
 
 ## 2. VS Code settings
@@ -44,78 +44,25 @@ _WARNING:_ MoonZoon is in the phase of early development! You may find hacks and
 }
 ```
 
-## 3. Configure example
-
-- Update example's `Makefile.toml` or `MoonZoon.toml` if necessary.
-
-<details>
-<summary>Current configs files from <code>examples/counters/</code></summary>
-
-```toml
-# Makefile.toml
-
-[config]
-default_to_workspace = false
-min_version = "0.32.15"
-
-[config.modify_core_tasks]
-private = true
-namespace = "default"
-
-[tasks.mzoon]
-description = "Run MZoon"
-command = "cargo"
-args = ["run", "--manifest-path", "../../crates/mzoon/Cargo.toml", "${@}"]
-dependencies = ["default::install-wasm-pack"]
-```
-
-```toml
-# MoonZoon.toml
-
-port = 8080
-# port = 8443
-https = false
-
-[redirect_server]
-port = 8081
-enabled = false
-
-[watch]
-frontend = [
-    "frontend/Cargo.toml",
-    "frontend/src",
-    "../../crates/zoon/Cargo.toml",
-    "../../crates/zoon/src",
-    "../../crates/blocks_macro/Cargo.toml",
-    "../../crates/blocks_macro/src",
-    "../../crates/update_macro/Cargo.toml",
-    "../../crates/update_macro/src",
-    "../../crates/s_var_macro/Cargo.toml",
-    "../../crates/s_var_macro/src",
-    "../../crates/cache_macro/Cargo.toml",
-    "../../crates/cache_macro/src",
-    "../../crates/tracked_call_macro/Cargo.toml",
-    "../../crates/tracked_call_macro/src",
-    "../../crates/cmp_macro/Cargo.toml",
-    "../../crates/cmp_macro/src",
-]
-backend = [
-    "backend/Cargo.toml",
-    "backend/src",
-    "../../crates/moon/Cargo.toml",
-    "../../crates/moon/src",
-]
-
-```
-
 </details>
 
-## 4. Start example
+## 3. Start example
+
+- _Note:_ Not all examples work at the moment
 
 ```sh
 cd examples
 cd counter # or `counters` or  ...
 makers mzoon start # or `makers mzoon start -r`
+```
+
+## 4. Open example in the browser
+
+- `Ctrl` + click (or equivalent) on the url in brackets in your terminal
+- _Note:_ Tested with `git-bash` in VS Code
+```bash
+Main server is running on 0.0.0.0:8080 [http://127.0.0.1:8080]
+
 ```
 
 ## 5. Have fun!
