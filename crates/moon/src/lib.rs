@@ -318,7 +318,7 @@ fn html(
       <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
       <title>{title}</title>
       <link rel="preload" href="/pkg/frontend_bg_{frontend_build_id}.wasm" as="fetch" type="application/wasm" crossorigin>
-      <link rel="preload" href="/pkg/frontend_{frontend_build_id}.js" as="script" type="text/javascript" crossorigin>
+      <link rel="modulepreload" href="/pkg/frontend_{frontend_build_id}.js" crossorigin>
       {append_to_head}
     </head>
 
