@@ -93,132 +93,50 @@ _Notes:_
 
 ---
 
-## Components
-
-The **Counters** example parts:
-
-```rust
-#[cmp]
-fn click_me_button() -> Cmp {
-    let title = cmp_var(|| "Click me!".to_owned());
-    let click_count = cmp_var(|| 0);
-    row![
-        button![
-            title.inner(),
-            button::on_press(move || {
-                click_count.update(|count| count + 1);
-                title.set(format!("Clicked {}x", click_count.inner()));
-            }),
-        ],
-    ]
-} 
-```
-
-- _Components_ (e.g. `click_me_button`) are groups of _Elements_ (e.g. `Row`, `Button`).
-- You can create a `CmpVar` (_**C**o**mp**onent **Var**iable_) inside them, defined by `cmp_var` with the closure that returns the default value. `CmpVar` represents a "local state" and its value is preserved between component calls. _Components_ are automatically recomputed on `CmpVar` change.
-- _Components_ accept only _Variables_ like `SVar`, `Cache` or `CmpVar` as arguments.
-
-```rust
-#[cmp]
-fn counter_count() -> Cmp {
-    el![
-        format!("Counters: {}", super::counter_count().inner())
-    ]
-}
-```
-
-- _Components_ may depend on other _Variables_ like `SVar` or `Cache`.
-- The _component_ above is automatically recomputed on `counter_count` change, because `counter_count()` definition is marked by the `#[cache]` attribute.
-
-```rust
-#[cmp]
-fn counter_row() -> Cmp {
-    row![
-        (0..super::column_count().inner()).map(|_| counter())
-    ]
-}
-
-#[cmp]
-fn counter() -> Cmp {
-    counter![]
-}
-```
-
-- `counter` component instances above are NOT recomputed on `column_count` change. Only new `counter` instances are created or old ones removed according to the new `column_count` value.
-- A `counter` instance is recomputed only when its `Counter` element (created by `counter!` macro) requires rerendering.
-- `CmpVar`s, elements and nested components are removed (aka _dropped_) on their parent component drop. 
-
 ## Elements
 
-The **Counters** example parts:
+The **Counter** example part:
 
 ```rust
-// counters/frontend/src/app/cmp.rs 
-
-#[cmp]
-fn row_counter() -> Cmp {
-    row![
-        "Rows:",
-        counter![
-            super::row_count().inner(),
-            counter::on_change(super::set_row_count),
-            counter::step(5),
-        ]
-    ]
-}
+Button::new().label("-").on_press(decrement)
 ```
 
-
+The `Button` element:
+   - _Notes:_ 
+       - The only requirement is that the element has to implement the trait `Element`.
+       - `Button` is a Zoon's element, but you'll create custom ones the same way.
+       - The code below may differ from the current `Button` implementation in the Zoon.
 
 ```rust
-// counters/frontend/src/app/cmp/element/counter.rs
-
 use zoon::*;
-use std::rc::Rc;
-use enclose::enc;
+use std::marker::PhantomData;
 
 // ------ ------
 //    Element 
 // ------ ------
 
-element_macro!(counter, Counter::default());
+make_flags!(Label, OnPress);
 
-#[derive(Default)]
-pub struct Counter {
-    value: Option<i32>,
-    on_change: Option<OnChange>,
-    step: Option<i32>,
+pub struct Button<LabelFlag, OnPressFlag> {
+    raw_el: RawEl,
+    flags: PhantomData<(LabelFlag, OnPressFlag)>
 }
 
-impl Element for Counter {
-    #[render]
-    fn render(&mut self, rcx: RenderContext) {
-        let on_change = self.on_change.take().map(|on_change| on_change.0);
-        let step = self.step.unwrap_or(1);
-        
-        let value = el_var(|| 0);
-        if let Some(required_value) = self.value {
-            value.set(required_value);
+impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
+    pub fn new() -> Self {
+        Self {
+            raw_el: RawEl::with_tag("div")
+                .attr("class", "button")
+                .attr("role", "button")
+                .attr("tabindex", "0"),
+            flags: PhantomData,
         }
-        
-        let update_value = move |delta: i32| {
-            value.update(|value| value + delta);
-            if let Some(on_change) = on_change.clone() {
-                on_change(value.inner());
-            }
-            rcx.rerender();
-        };
-        row![
-            button![
-                button::on_press(enc!((update_value) move || update_value(-step))),
-                "-"
-            ],
-            el![value.inner()],
-            button![
-                button::on_press(move || update_value(step)), 
-                 "+"
-            ],
-        ].render(rcx);
+    }
+}
+
+impl<OnPressFlag> Element for Button<LabelFlagSet, OnPressFlag> {
+    fn into_raw_element(self) -> RawElement {
+        self.raw_el.into()
     }
 }
 
@@ -226,99 +144,77 @@ impl Element for Counter {
 //  Attributes 
 // ------ ------
 
-// ------ i32 ------
-
-impl ApplyToElement<Counter> for i32 {
-    fn apply_to_element(self, counter: &mut Counter) {
-        counter.value = Some(self);
+impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
+    pub fn label(
+        self, 
+        label: impl IntoElement<'a> + 'a
+    ) -> Button<LabelFlagSet, OnPressFlag>
+        where LabelFlag: FlagNotSet
+    {
+        Button {
+            raw_el: self.raw_el.child(label),
+            flags: PhantomData
+        }
     }
-}
 
-// ------ counter::on_change(...) -------
-
-pub struct OnChange(Rc<dyn Fn(i32)>);
-
-pub fn on_change(on_change: impl FnOnce(i32) + Clone + 'static) -> OnChange {
-    OnChange(Rc::new(move |value| on_change.clone()(value)))
-}
-
-impl ApplyToElement<Counter> for OnChange {
-    fn apply_to_element(self, counter: &mut Counter) {
-        counter.on_change = Some(self);
+    pub fn label_signal(
+        self, 
+        label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static
+    ) -> Button<LabelFlagSet, OnPressFlag> 
+        where LabelFlag: FlagNotSet
+    {
+        Button {
+            raw_el: self.raw_el.child_signal(label),
+            flags: PhantomData
+        }
     }
-}
 
-// ------ counter::step(...) -------
-
-pub struct Step(i32);
-
-pub fn step(step: i32) -> Step {
-    Step(step)
-}
-
-impl ApplyToElement<Counter> for Step {
-    fn apply_to_element(self, counter: &mut Counter) {
-        counter.step = Some(self.0);
+    pub fn on_press(
+        self, 
+        on_press: impl FnOnce() + Clone + 'static
+    ) -> Button<LabelFlag, OnPressFlagSet> 
+        where OnPressFlag: FlagNotSet
+    {
+        Button {
+            raw_el: self.raw_el.event_handler(move |_: events::Click| (on_press.clone())()),
+            flags: PhantomData
+        }
     }
-}
+} 
 ```
 
-- `ElVar` (_**El**ement **Var**iable_, defined by `el_var`) is very similar to `CmpVar`, but it does NOT trigger parent component rerendering on change. You have to call `rcx.rerender()` when needed, however keep in mind you can accidentally create an infinite loop if the call is done directly in the `render` method.
+`make_flags!(Label, OnPress);` generates code like:
+```rust
+struct LabelFlagSet;
+struct LabelFlagNotSet;
+impl zoon::FlagSet for LabelFlagSet {}
+impl zoon::FlagNotSet for LabelFlagNotSet {}
 
-- "Native" elements like `Button (button!)`, `El (el!)` or `Column (col!)` are defined in the same way.
+struct OnPressFlagSet;
+struct OnPressFlagNotSet;
+impl zoon::FlagSet for OnPressFlagSet {}
+impl zoon::FlagNotSet for OnPressFlagNotSet {}
+```
 
-- We will write an "_element library_" for Zoon or our apps instead of a "_component library_" (as is common in other frameworks terminology). 
+The only purpose of _flags_ is to enforce extra rules by the Rust compiler.
 
-- All elements should be _accessible_ by default.
-
-A non-macro alternative:
+The compiler doesn't allow to call `label` or `label_signal` if the label is already set. The same rule applies for `on_press` handler.
 
 ```rust
-#[cmp]
-fn row_counter() -> Cmp {
-    Row::new()
-        .item("Rows:")
-        .item(Counter::new()
-            .value(super::row_count().inner())
-            .on_change(super::set_row_count)
-            .step(5)
-        )
-}
+Button::new()
+    .label("-")
+    .label("+")
+```
+fails with
+```
+error[E0277]: the trait bound `LabelFlagSet: FlagNotSet` is not satisfied
+  --> frontend\src\lib.rs:20:14
+   |
+20 |.label("+"))
+   | ^^^^^ the trait `FlagNotSet` is not implemented for `LabelFlagSet`
 ```
 
-```rust
-#[derive(Default)]
-pub struct Counter {
-    value: Option<i32>,
-    on_change: Option<Rc<dyn Fn(i32)>>,
-    step: Option<i32>,
-}
-
-impl Element for Counter {
-    #[render]
-    fn render(&mut self, rcx: RenderContext) {
-        let on_change = self.on_change.take().map(|on_change| on_change);
-        ...
-    }
-}
-
-impl Counter {
-    pub fn value(mut self, value: i32) -> Self {
-        self.value = Some(value);
-        self
-    }
-
-    pub fn on_change(mut self, on_change: impl FnOnce(i32) + Clone + 'static) -> Self {
-        self.on_change = Some(Rc::new(move |value| on_change.clone()(value)));
-        self
-    }
-
-    pub fn step(mut self, step: i32) -> Self {
-        self.step = Some(step);
-        self
-    }
-}
-```
+---
 
 ## Styles
 
