@@ -364,24 +364,29 @@ Related blog post: [_Font size is useless; let’s fix it_](https://tonsky.me/bl
 ## View & Viewport
 
 The **Time Tracker** example part:
+   - _Note:_ The code below may differ from the current Time Tracker implementation.
 
 ```rust
-    #[cmp]
-    fn root() -> Cmp {
-        view![
-            viewport::on_width_change(super::update_viewport_width),
-            on_click(super::view_clicked),
-            col![
-                header(),
-                menu_panel(),
-                page(),
-            ]
-        ]
-    }
+fn root() -> impl IntoRoot {
+    View::new()
+        .on_click(super::view_clicked)
+        .viewport(
+            ViewPort::new()
+                .on_width_change(super::update_viewport_width)
+        )
+        .child(
+            Column::new()
+                .items(array::IntoIter::new([
+                    header(),
+                    menu_panel(),
+                    page(),
+                ])
+        )
+}
 ```
 
-- `view` represents the root container for the web page.
-- `viewport` represents a part of the _view_ currently visible by the user. It could be used for scrolling and to help with writing responsive elements.
+- `View` represents the root container for the web page.
+- `Viewport` represents a part of the _View_ currently visible by the user. It could be used for scrolling and to help with writing responsive elements.
 - The _view/viewport_ concept will be probably used for scrollable elements, too.  
 
 ---
@@ -393,22 +398,21 @@ The **Time Tracker** example part:
  
 - Could be used as a timeout or stopwatch (to set an interval between callback calls). 
 - See `examples/timer` for the entire code.
+    - _Note:_ The code below may differ from the current `timer` implementation.
 
 ```rust
-    #[s_var]
-    fn timeout() -> SVar<Option<Timer>> {
-        None
-    }
+#[static_ref]
+fn timeout() -> &'static Mutable<Option<Timer>> {
+    Mutable::new(None)
+} 
 
-    #[update]
-    fn start_timeout() {
-        timeout().set(Some(Timer::new(2_000, stop_timeout)));
-    }
+fn start_timeout() {
+    timeout().set(Some(Timer::new(2_000, stop_timeout)));
+}
 
-    #[update]
-    fn stop_timeout() {
-        timeout().set(None);
-    }
+fn stop_timeout() {
+    timeout().set(None);
+}
 ```
 
 ### Connection
@@ -418,10 +422,11 @@ The **Time Tracker** example part:
 - `UpMsg` are sent in a short-lived _fetch_ request, `DownMsg` are sent in a _server-sent event_  to provide real-time communication.
 - A _correlation id_ is automatically generated and sent to the Moon with each request. Moon sends it back. You can also send a token together with the `UpMsg`. 
 - See `examples/chat` for the entire code.
+    - _Note:_ The code below may differ from the current `chat` implementation.
 
 ```rust
-    #[s_var]
-    fn connection() -> SVar<Connection<UpMsg, DownMsg>> {
+    #[static_ref]
+    fn connection() -> &'static Mutable<Connection<UpMsg, DownMsg>> {
         Connection::new(|down_msg, _| {
             if let DownMsg::MessageReceived(message) = down_msg {
                 ...
@@ -429,11 +434,8 @@ The **Time Tracker** example part:
         })
     }
 
-    #[update]
     fn send_message() {
-        connection().use_ref(|connection| {
-            connection.send_up_msg(UpMsg::SendMessage(...), None);
-        });
+        connection().lock_ref().send_up_msg(UpMsg::SendMessage(...), None);
     }
 ```
 
@@ -441,6 +443,7 @@ The **Time Tracker** example part:
 
 - An example with the nested route `admin::Route`.
 - See `examples/pages` for the entire code.
+    - _Note:_ The code below may differ from the current `pages` implementation.
 
 ```rust
     #[route]
@@ -455,8 +458,9 @@ The **Time Tracker** example part:
 
 _
 
-- A more complete example with _guards_ and Zoon's function `url()`. 
+- A more complete example with _guards_ and Zoon's URL helpers. 
 - See `examples/time_tracker` for the entire code.
+    - _Note:_ The code below may differ from the current `time_tracker` implementation.
 
 ```rust
 
@@ -495,12 +499,10 @@ _
         Route::home()
     }
 
-    #[cache]
-    fn route() -> Cache<Route> {
-        url().map(Route::from)
+    fn route() -> impl Signal<Item = Route> {
+        url().signal().map(Route::from)
     }
 
-    #[update]
     fn set_route(route: Route) {
         url().set(Url::from(route))
     }
@@ -553,6 +555,7 @@ _
       - [React UseGesture](https://use-gesture.netlify.app/)
       - [elm-animator](https://korban.net/posts/elm/2020-04-07-using-elm-animator-with-elm-ui/)
       - "svelte has really good set of animation examples in their tutorial site. Incase it can help somehow [section 9 -11]" (by Ruman on [chat](https://discord.gg/eGduTxK2Es))
+      - [rust-dominator/examples/animation](https://github.com/Pauan/rust-dominator/blob/master/examples/animation/src/lib.rs)
 
 1. _"Hey Martin, what about [Seed](https://seed-rs.org/)?"_
    - Zoon and Seed have very different features and goals. I assume we will be able to implement some interesting features inspired by Zoon in Seed, if needed. I'll maintain Seed as usual.
