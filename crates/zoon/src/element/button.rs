@@ -15,7 +15,7 @@ pub struct Button<LabelFlag, OnPressFlag> {
 impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawEl::with_tag("div")
+            raw_el: RawEl::new("div")
                 .attr("class", "button")
                 .attr("role", "button")
                 .attr("tabindex", "0"),

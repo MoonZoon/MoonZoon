@@ -9,7 +9,7 @@ pub struct RawText {
 }
 
 impl RawText {
-    pub fn with_text(text: impl AsRef<str>) -> Self {
+    pub fn new(text: impl AsRef<str>) -> Self {
         Self {
             dom: dominator::text(text.as_ref()),
         }
