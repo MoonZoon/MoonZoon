@@ -73,7 +73,7 @@
 
 1. Live demo, Zoon, Examples, Architectures [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-2-live-demo-zoon-examples-architectures-2oem) / [MD](docs/articles/dev_news_2.md)]
 
-1. Simpler API, Optimizations, Don't love your code [dev.to WIP / [MD](docs/articles/dev_news_3.md)]
+1. Simpler API, Optimizations [dev.to WIP / [MD](docs/articles/dev_news_3.md)]
 
 ---
 
@@ -97,7 +97,7 @@
 
 ![Benchmark example size](docs/images/demo_size_small.png)
 
-![Benchmark example size](docs/images/frontend_frameworks_benchmark_1.png)
+[![Benchmark example speed](docs/images/frontend_frameworks_benchmark_1.png)](https://raw.githubusercontent.com/MoonZoon/MoonZoon/main/docs/images/frontend_frameworks_benchmark_screen.png)
 
 - [MartinKavik/js-framework-benchmark](https://github.com/MartinKavik/js-framework-benchmark/tree/framework/moonzoon)
 

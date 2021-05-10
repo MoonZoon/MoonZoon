@@ -12,8 +12,9 @@ use syn::{parse_quote, ItemFn, ReturnType, Type, spanned::Spanned};
 //
 // ```
 // fn columns() -> &'static MutableVec<()> {
-//     static INSTANCE: once_cell::sync::OnceCell<MutableVec<()>> = once_cell::sync::OnceCell::new();
-//     INSTANCE.get_or_init(move || MutableVec::new_with_values(vec![(); 5]))
+//     use once_cell::race::OnceBox;
+//     static INSTANCE: OnceBox<MutableVec<()>> = OnceBox::new();
+//     INSTANCE.get_or_init(move || Box::new(MutableVec::new_with_values(vec![(); 5])))
 // }
 // ```
 
