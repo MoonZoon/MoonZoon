@@ -15,7 +15,7 @@ pub struct El<ChildFlag> {
 impl El<ChildFlagNotSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawEl::with_tag("div").attr("class", "el"),
+            raw_el: RawEl::new("div").attr("class", "el"),
             flags: PhantomData,
         }
     }

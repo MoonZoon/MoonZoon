@@ -15,7 +15,7 @@ pub struct Row<EmptyFlag> {
 impl Row<EmptyFlagSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawEl::with_tag("div").attr("class", "row"),
+            raw_el: RawEl::new("div").attr("class", "row"),
             flags: PhantomData,
         }
     }

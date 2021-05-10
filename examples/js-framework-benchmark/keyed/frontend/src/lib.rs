@@ -110,30 +110,30 @@ fn remove_row(id: ID) {
 // ------ ------
 
 fn root() -> RawEl {
-    RawEl::with_tag("div")
+    RawEl::new("div")
         .attr("class", "container")
         .children(array::IntoIter::new([
             jumbotron(),
             table(),
-            RawEl::with_tag("span")
+            RawEl::new("span")
                 .attr("class", "preloadicon glyphicon glyphicon-remove")
                 .attr("aria-hidden", "")
         ]))
 }
 
 fn jumbotron() -> RawEl {
-    RawEl::with_tag("div")
+    RawEl::new("div")
         .attr("class", "jumbotron")
         .child(
-            RawEl::with_tag("div")
+            RawEl::new("div")
                 .attr("class", "row")
                 .children(array::IntoIter::new([
-                    RawEl::with_tag("div")
+                    RawEl::new("div")
                         .attr("class", "col-md-6")
                         .child(
-                            RawEl::with_tag("h1").child("MoonZoon")
+                            RawEl::new("h1").child("MoonZoon")
                         ),
-                    RawEl::with_tag("div")
+                    RawEl::new("div")
                         .attr("class", "col-md-6")
                         .child(
                             action_buttons()
@@ -143,7 +143,7 @@ fn jumbotron() -> RawEl {
 }
 
 fn action_buttons() -> RawEl {
-    RawEl::with_tag("div")
+    RawEl::new("div")
         .attr("class", "row")
         .children(array::IntoIter::new([
             action_button("run", "Create 1,000 rows", || create_rows(1_000)),
@@ -160,10 +160,10 @@ fn action_button(
     title: &'static str, 
     on_click: fn(),
 ) -> RawEl {
-    RawEl::with_tag("div")
+    RawEl::new("div")
         .attr("class", "col-sm-6 smallpad")
         .child(
-            RawEl::with_tag("button")
+            RawEl::new("button")
                 .attr("id", id)
                 .attr("class", "btn btn-primary btn-block")
                 .attr("type", "button")
@@ -175,11 +175,11 @@ fn action_button(
 }
 
 fn table() -> RawEl {
-    RawEl::with_tag("table")
+    RawEl::new("table")
         .attr("class", "table table-hover table-striped test-data")
         .child_signal(
             rows_exist().map(|rows_exist| rows_exist.then(|| {
-                RawEl::with_tag("tbody")
+                RawEl::new("tbody")
                     .attr("id", "tbody")
                     .children_signal_vec(
                         rows().signal_vec_cloned().map(row)
@@ -190,7 +190,7 @@ fn table() -> RawEl {
 
 fn row(row: Arc<Row>) -> RawEl {
     let id = row.id;
-    RawEl::with_tag("tr")
+    RawEl::new("tr")
         .attr_signal(
             "class",
             selected_row().signal_ref(move |selected_id| {
@@ -201,35 +201,35 @@ fn row(row: Arc<Row>) -> RawEl {
             row_id(id),
             row_label(id, row.label.signal_cloned()),
             row_remove_button(id),
-            RawEl::with_tag("td")
+            RawEl::new("td")
                 .attr("class", "col-md-6")
         ]))
 }
 
 fn row_id(id: ID) -> RawEl {
-    RawEl::with_tag("td")
+    RawEl::new("td")
         .attr("class", "col-md-1")
         .child(id)
 }
 
 fn row_label(id: ID, label: impl Signal<Item = String> + Unpin + 'static) -> RawEl {
-    RawEl::with_tag("td")
+    RawEl::new("td")
         .attr("class", "col-md-4")
         .child(
-            RawEl::with_tag("a")
+            RawEl::new("a")
                 .event_handler(move |_: events::Click| select_row(id))
                 .child(Text::with_signal(label))
         )
 }
 
 fn row_remove_button(id: ID) -> RawEl {
-    RawEl::with_tag("td")
+    RawEl::new("td")
         .attr("class", "col-md-1")
         .child(
-            RawEl::with_tag("a")
+            RawEl::new("a")
                 .event_handler(move |_: events::Click| remove_row(id))
                 .child(
-                    RawEl::with_tag("span")
+                    RawEl::new("span")
                         .attr("class", "glyphicon glyphicon-remove remove")
                         .attr("aria-hidden", "true"),
                 )

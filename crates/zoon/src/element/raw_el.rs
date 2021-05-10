@@ -9,7 +9,7 @@ pub struct RawEl {
 }
 
 impl RawEl {
-    pub fn with_tag(tag: &str) -> Self {
+    pub fn new(tag: &str) -> Self {
         Self {
             dom_builder: DomBuilder::new_html(tag)
         }

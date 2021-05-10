@@ -125,7 +125,7 @@ pub struct Button<LabelFlag, OnPressFlag> {
 impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawEl::with_tag("div")
+            raw_el: RawEl::new("div")
                 .attr("class", "button")
                 .attr("role", "button")
                 .attr("tabindex", "0"),
@@ -232,7 +232,7 @@ fn todo(todo: Arc<super::Todo>) -> impl Element {
     Row::new()
         .style(Font::new().size(24))
         .style(Padding::new().all(15))
-        .style(Spacing::with_value(10))
+        .style(Spacing::new(10))
         .on_hovered_change(move |hovered| row_hovered.set(hovered))
         .item(
             todo_checkbox(checkbox_id, &todo)
@@ -346,7 +346,7 @@ So I suggest to make the _font size_ an alias for the [_cap height_](https://en.
 ```rust
 Paragraph::new()
     .style(Font::new().size(40))
-    .style(Spacing::with_value(30))
+    .style(Spacing::new(30))
     .content("Moon")
     .content("Zoon")
 ```
