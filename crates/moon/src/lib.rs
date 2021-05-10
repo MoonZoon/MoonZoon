@@ -182,7 +182,10 @@ where
                     }
                 }
                 let file = format!("frontend/pkg/{}", file);
-                let mut file = tokio::fs::File::open(file).await.unwrap();
+                let mut file = match tokio::fs::File::open(file).await {
+                    Ok(file) => file,
+                    Err(_) => return Err(warp::reject::not_found())
+                };
                 let mut contents = vec![];
                 file.read_to_end(&mut contents).await.unwrap();
                 headers.insert(http::header::CONTENT_LENGTH, HeaderValue::from_str(&contents.len().to_string()).unwrap());
