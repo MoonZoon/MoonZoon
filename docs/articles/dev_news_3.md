@@ -29,6 +29,15 @@ You can try it by yourself: [Live demo](https://moonzoon-demo.herokuapp.com/)
 
 ---
 
+# Chapters
+- [News](#news)
+- [Old Zoon architecture](#old-zoon-architecture) - How React and Rust Hooks work
+- [New Zoon architecture](#new-zoon-architecture) - Signals: You can do it without a Virtual DOM
+- [Builder pattern with rules](#builder-pattern-with-rules) - Yes, builder pattern can support required parameters
+- [Optimizations](#optimization) - Need for speed. The size matters.
+
+---
+
 # News
 
 1. Zoon API almost doesn't use macros, it's safer, more expressive and compiler-friendly.
@@ -57,11 +66,6 @@ I would like to thank:
 ---
 
 This blog post is a bit longer but I hope you'll enjoy it!
-
-Chapters:
-- [Old Zoon architecture](#old-zoon-architecture) - How React and Rust Hooks work
-- [New Zoon architecture](#new-zoon-architecture) - Signals: You can do it without a Virtual DOM
-- [Builder pattern with rules](#builder-pattern-with-rules) - Yes, builder pattern can support required parameters
 
 ---
 
@@ -435,7 +439,13 @@ Let's learn from the past and see what works and what doesn't.
 
 - TEA - Asynchronous "pipelines" may be hard to follow in the source code without an `await/async` mechanism. Imagine a chain of HTTP requests with error handling and some business logic.
 
-- Passing properties down to child elements/components may lead to boilerplate (TEA) and then to cumbersome abstractions (many frameworks). TEA-like frameworks tries to mitigate it with [Pub/Sub](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) mechanisms.
+- Many frameworks / GUI libraries often try to store and manage all objects representing elements/components by themselves and use the target platform only as a "canvas" where they render elements.
+   
+   - Why write a custom DOM when we still need to use the browser DOM? The custom DOM then basically becomes a cache. And what are the [most difficult things](https://martinfowler.com/bliki/TwoHardThings.html) in computer science?
+   
+   - Why to store and manage objects when we only want to render a HTML string for a Google bot?
+
+- Passing properties down to child elements/components may lead to boilerplate (TEA) and then to cumbersome abstractions (many frameworks). TEA-like frameworks try to mitigate it with [Pub/Sub](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) mechanisms.
 
 - There are often problems with _keys_ for element/component lists (explained in the previous chapter).
 
@@ -450,13 +460,68 @@ Let's learn from the past and see what works and what doesn't.
 Now I'll show you examples with a new Zoon API with explanations how they corresponds with the notes above.
 
 ```rust
+use zoon::*;
 
+#[static_ref]
+fn counter() -> &'static Mutable<i32> {
+    Mutable::new(0)
+}
+
+fn increment() {
+    counter().update(|counter| counter + 1)
+}
+
+fn decrement() {
+    counter().update(|counter| counter - 1)
+}
+
+fn root() -> impl Element {
+    Column::new()
+        .item(Button::new().label("-").on_press(decrement))
+        .item(Text::with_signal(counter().signal()))
+        .item(Button::new().label("+").on_press(increment))
+}
 ```
+
+The function `counter()` is marked by the attribute `#[static_ref]`. It means the function is transformed by a procedural macro into this:
+
+```rust
+fn counter() -> &'static Mutable<i32> {
+    use once_cell::race::OnceBox;
+    static INSTANCE: OnceBox<Mutable<i32>> = OnceBox::new();
+    INSTANCE.get_or_init(move || Box::new(Mutable::new(0)))
+}
+```
+- The macro is defined in the crate `static_ref_macro` in the [MoonZoon repo](https://github.com/MoonZoon/MoonZoon/tree/main/crates).
+- The macro currently uses `OnceBox`. It may use `OnceCell` or probably `lazy_static!`.
+- You can deactivate the macro by a Zoon feature flag `static_ref`.
+
+`Mutable` is very similar to [RwLock](https://doc.rust-lang.org/std/sync/struct.RwLock.html). However it has one unique feature - it sends a _signal_ on change.
+
+What's the difference between these lines?
+```rust
+// Creates a new `Text` element with a counter value converted to `String`
+.item(Text::new(counter().lock_ref().to_string()))
+
+// The same like the previous one, but without the explicit locking.
+.item(Text::new(counter().map(ToString::to_string)))
+
+// The method `.item` expects the parameter `IntoElement`.
+// Many Rust basic types (&str, Cow, i32, ..) implements `IntoElement` by creating a new `Text`.
+// And we can call `.get()` because our `i32` counter implements `Copy`.
+.item(counter().get())
+```
+So.. they are basically same. It just creates a `Text` element with a _static_ value. It means the text doesn't change at all. We can only replace the `Text` element with a new if we want to change it.  
 
 ---
 
 # Builder pattern with rules
 > Yes, builder pattern can support required parameters
+
+---
+
+# Optimizations
+> Need for speed. The size matters.
 
 ---
 
