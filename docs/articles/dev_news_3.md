@@ -45,7 +45,7 @@ You can try it by yourself: [Live demo](https://moonzoon-demo.herokuapp.com/)
     - [Docs](https://github.com/MoonZoon/MoonZoon#documentation) updated to reflect changes.
     - The trade-off is slightly increased verbosity for `Element` APIs.
 
-1. A new article [_"Rust on the Frontend and Backend"_](https://blog.abor.dev/p/moonzoon) on the blog _Always Bet On Rust_
+1. A new article [_"Rust on the Frontend and Backend"_](https://blog.abor.dev/p/moonzoon) on the blog _Always Bet On Rust_.
    - _"An interview with Martin Kavík, creator of the MoonZoon full-stack framework"_
 
 1. The [demo project](https://github.com/MoonZoon/demo) and [heroku-buildpack](https://github.com/MoonZoon/heroku-buildpack-moonzoon) updated. You can use them as a starting point for your experimental MoonZoon apps.
@@ -62,6 +62,7 @@ You can try it by yourself: [Live demo](https://moonzoon-demo.herokuapp.com/)
 I would like to thank:
 - [Pauan](https://github.com/Pauan) for lightning fast resolving of my problems with his libs `futures-signals` and `dominator`.
 - [Alexhuszagh](https://github.com/Alexhuszagh) for working on [lexical](https://crates.io/crates/lexical) and answering my [questions](https://github.com/Alexhuszagh/rust-lexical/issues/34#issuecomment-832250773).
+- [flosse](https://github.com/flosse) for [fighting](https://github.com/MoonZoon/MoonZoon/pull/6) with Warp in Moon.
 
 ---
 
@@ -457,7 +458,9 @@ Let's learn from the past and see what works and what doesn't.
 - Many native browser elements behave quite unpredictably and it's very hard to set them correctly. There has to be a layer above them to protect the app developer.
    - _"Did you know #456: [Setting element attributes is order-sensitive](https://github.com/seed-rs/seed/issues/335)?"_
 
-Now I'll show you examples with a new Zoon API with explanations how they corresponds with the notes above.
+Now I'll show you 4 examples with a new Zoon API and explain how they work. Then we'll discuss how the API corresponds with the notes above.
+
+## Example 1
 
 ```rust
 use zoon::*;
@@ -481,6 +484,13 @@ fn root() -> impl Element {
         .item(Text::with_signal(counter().signal()))
         .item(Button::new().label("+").on_press(increment))
 }
+
+#[wasm_bindgen(start)]
+pub fn start() {
+    // We want to attach our app to the browser element with id "app".
+    // Note: `start_app(None, root);` would attach to `body` but it isn't recommended.
+    start_app("app", root);
+}
 ```
 
 The function `counter()` is marked by the attribute `#[static_ref]`. It means the function is transformed by a procedural macro into this:
@@ -496,32 +506,222 @@ fn counter() -> &'static Mutable<i32> {
 - The macro currently uses `OnceBox`. It may use `OnceCell` or probably `lazy_static!`.
 - You can deactivate the macro by a Zoon feature flag `static_ref`.
 
-`Mutable` is very similar to [RwLock](https://doc.rust-lang.org/std/sync/struct.RwLock.html). However it has one unique feature - it sends a _signal_ on change.
+`Mutable` is very similar to [RwLock](https://doc.rust-lang.org/std/sync/struct.RwLock.html). However it has one unique feature - it sends a _signal_ on change. Let's explain it on the `Text` element.
 
-What's the difference between these lines?
+There are multiple ways to create a new `Text` element: 
 ```rust
-// Creates a new `Text` element with a counter value converted to `String`
-.item(Text::new(counter().lock_ref().to_string()))
-
-// The same like the previous one, but without the explicit locking.
-.item(Text::new(counter().map(ToString::to_string)))
-
-// The method `.item` expects the parameter `IntoElement`.
-// Many Rust basic types (&str, Cow, i32, ..) implements `IntoElement` by creating a new `Text`.
-// And we can call `.get()` because our `i32` counter implements `Copy`.
 .item(counter().get())
+.item(Text::new(counter().get())
+.item(Text::with_signal(counter().signal()))
 ```
-So.. they are basically same. It just creates a `Text` element with a _static_ value. It means the text doesn't change at all. We can only replace the `Text` element with a new if we want to change it.  
+- _Note_: The method `.item` expects the `impl IntoElement` parameter. Many Rust basic types (`&str`, `Cow<str>`, `i32`, ..) implement `IntoElement` by creating a new `Text`.
+
+The first two lines are practically the same. They just creates a `Text` element with a _static_ value. It means the text doesn't change at all once set. We can only replace the `Text` element with a new one if we want to change it.  
+
+The third line is more interesting. `Text` created with the method `with_signal` rerenders its text when it receives a new value from the chosen _signal_. `Mutable` transmits its value to all associated signals when the value has been changed. We can say that `Text` created by `with_signal` has a _dynamic_ value.
+
+--
+
+## Example 2
+
+```rust
+use zoon::*;
+use std::rc::Rc;
+
+fn root() -> impl Element {
+    let counter = Rc::new(Mutable::new(0));
+    let on_press = clone!((counter) move |step: i32| *counter.lock_mut() += step);
+    Column::new()
+        .item(Button::new().label("-").on_press(clone!((on_press) move || on_press(-1))))
+        .item_signal(counter.signal())
+        .item(Button::new().label("+").on_press(move || on_press(1)))
+}
+```
+
+This example works exactly like the previous one but there are some differences in the code.
+
+1. `counter` isn't stored in a static reference / global variable, but created as a local variable. 
+   
+   - Soo... where is it stored?? In the browser DOM! `Button::new` creates immediately a new DOM node and our `counter` is passed into its `on_press` handler. It's possible because the `root` function is invoked only once to build the app / create DOM.
+
+1. `counter`'s `Mutable` is wrapped in `Rc`.
+   - We need to pass the same `counter` into two `on_press` handlers. Otherwise it wouldn't be necessary.
+
+1. There is a `clone!` macro.
+   - Yeah, it's just an alias for `enc!` macro in the [enclose](https://crates.io/crates/enclose) crate. I hope Rust will support cloning into closures natively.
+   - The `clone!` macro is active when the Zoon's feature flag `clone` is enabled.
+
+1. `counter().update(|counter| counter - 1)` has been replaced with `*counter.lock_mut() += step`.
+   
+   - You probably wouldn't find the method `update` in `futures-signals` docs - there are traits like `MutableExt` in the Zoon with such helpers.
+
+   - Be careful with `lock_*` methods. There are cases where it's a bit hard to predict in Rust when the lock is unlocked / dropped (you'll find an example in the next chapter). Also `futures-signals` crate currently uses `std::sync::RwLock` under the hood that doesn't output a nice error message to the console (especially in Firefox) so it may be hard to track the problem of trying to lock already locked `Mutable`. (I was talking about it with the `futures-signals` author, it should be less confusing in the future.)
+
+--
+
+## Example 3
+
+```rust
+...
+type ID = usize;
+struct Row {
+    id: ID,
+    label: Mutable<String>,
+}
+
+#[static_ref]
+fn rows() -> &'static MutableVec<Arc<Row>> {
+    MutableVec::new()
+}
+
+fn remove_row(id: ID) {
+    rows().lock_mut().retain(|row| row.id != id);
+}
+...
+
+fn table() -> RawEl {
+    ...
+    RawEl::new("tbody")
+        .attr("id", "tbody")
+        .children_signal_vec(
+            rows().signal_vec_cloned().map(row)
+        )
+    ...
+}
+
+fn row(row: Arc<Row>) -> RawEl {
+    let id = row.id;
+    ...
+    row_remove_button(id),
+    ...
+}
+
+fn row_remove_button(id: ID) -> RawEl {
+    ...
+    RawEl::new("a")
+        .event_handler(move |_: events::Click| remove_row(id))
+    ...
+}
+
+```
+
+The most interesting are these two parts:
+```rust
+// from `table()`
+.children_signal_vec(
+    rows().signal_vec_cloned().map(row)
+)
+// from `remove_row(id: Id)`
+rows().lock_mut().retain(|row| row.id != id)
+```
+
+`RawEl::children_signal_vec` updates its child elements according to the input signal. The signal comes from a `MutableVec` returned from `rows()`. The most important fact is that this signal transmits only differences between the old and the updated vector. It means it's fast because it doesn't have to clone the entire vector on every change and it can transmit only the child's index in the case of removing. 
+
+_Note:_ `RawEl` is a "low-level element". It means `RawEl` is used as a foundation for other Zoon elements like `Row` and `Button`. Only the element `Text` is based on `RawText`. Both `RawEl` and `RawText` implement `Element` and `From for RawElement`. There will be probably also a `RawSvgEl` in the future. The idea is all _raw elements_ can write directly to the browser DOM or to `String` as needed.
+
+--
+
+## Example 4
+
+```rust
+// ----- app.rs -----
+
+// ------ ------
+//    Statics 
+// ------ ------
+
+#[static_ref]
+fn columns() -> &'static MutableVec<()> {
+    MutableVec::new_with_values(vec![(); 5])
+}
+
+#[static_ref]
+fn rows() -> &'static MutableVec<()> {
+    MutableVec::new_with_values(vec![(); 5])
+}
+
+// ------ ------
+//    Signals 
+// ------ ------
+
+fn column_count() -> impl Signal<Item = usize> {
+    columns().signal_vec().len()
+}
+
+fn row_count() -> impl Signal<Item = usize> {
+    rows().signal_vec().len()
+}
+
+pub fn counter_count() -> impl Signal<Item = usize> {
+    map_ref!{
+        let column_count = column_count(),
+        let row_count = row_count() =>
+        column_count * row_count
+    }
+}
+
+// ----- app/view.rs -----
+
+fn counter_count() -> impl Element {
+    El::new()
+        .child_signal(super::counter_count().map(|count| format!("Counters: {}", count)))
+}
+
+```
+
+This example demonstrates how to combine multiple signals into one.
+
+For more info about _signals_, _mutables_, `map_ref` and other entities I recommend to read the excellent [tutorial](https://docs.rs/futures-signals/0.3.20/futures_signals/tutorial/index.html) in the `futures-signals` crate.
+
+_Note:_ If you remember the old Zoon API: `Statics` replace `SVars` ; `Signals` replace `Caches`.    
+
+--
+
+You've seen all examples, let's revisit our notes:
+
+- Hooks - Simple creation of local states helps to write element/component libraries and don't pollute our business data with GUI-specific variables.
+   - `let counter = Rc::new(Mutable::new(0));` or an equivalent without `Rc` seems to be a good way to create a local state.
+
+- TEA - Single-source of truth (aka `Model`) eliminates bugs related to state synchronization.
+   - static refs or Rust atomics and "update functions" (like `increment` in our counter example) should be a good alternative to `Model` + `update`. 
+
+- TEA - Asynchronous "pipelines" may be hard to follow in the source code without an `await/async` mechanism. Imagine a chain of HTTP requests with error handling and some business logic.
+   - `futures-signals` is based, well, on `futures`. You can write (according to the official docs) `my_state.map_future(|value| do_some_async_calculation(value));`. You can create also `Streams` and much more.
+
+- Many frameworks / GUI libraries often try to store and manage all objects representing elements/components by themselves and use the target platform only as a "canvas" where they render elements.
+   - _Raw elements_ writes directly to the browser DOM and stores the state inside it. They'll be able to write also to `String` in the future.
+
+- Passing properties down to child elements/components may lead to boilerplate (TEA) and then to cumbersome abstractions (many frameworks). TEA-like frameworks try to mitigate it with [Pub/Sub](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) mechanisms.
+   - You'll be able to combine _static refs_, _signals_, standard Rust constructs and maybe Zoon's _channels_ to eliminate the boilerplate.  
+
+- There are often problems with _keys_ for element/component lists (explained in the previous chapter).
+   - Do you remember `RawEl::children_signal_vec` from the _Example 3_? No keys - no problems.
+
+- Virtual DOM + Asynchronous rendering (the render waits for the next [animation frame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame)) 
+   - No VDOM, no async rendering - no problems. However I can imagine Zoon will need to support async rendering, but ideally it would be used only when the app developer creates animations.
+
+- Many native browser elements behave quite unpredictably and it's very hard to set them correctly. There has to be a layer above them to protect the app developer.
+   - Two layers should shield the app developer. Standard Zoon elements (`Button`, `Row`..) is the first layer and raw elements (`RawEl`, `RawText`) is the second one.
 
 ---
 
 # Builder pattern with rules
 > Yes, builder pattern can support required parameters
 
+
+
+Macro vs non-macro API  (... GF test passed)
+locks problem without macro
+specialization problem without macros
+
+elements in vector problem -> Box<dyn Element> -> object safe trait becasue into_raw_el returns El instead of (Self) or generic
+
 ---
 
 # Optimizations
 > Need for speed. The size matters.
+
+no_std no because wasm std often fails silently (e.g. printlt) - custom println with compilation error
 
 ---
 
