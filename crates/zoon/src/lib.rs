@@ -1,4 +1,5 @@
 pub use wasm_bindgen::{self, prelude::*, JsCast};
+pub use console_error_panic_hook;
 
 pub mod element;
 mod dom;
