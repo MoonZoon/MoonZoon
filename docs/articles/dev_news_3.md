@@ -61,6 +61,7 @@ This blog post is a bit longer but I hope you'll enjoy it!
 Chapters:
 - [Old Zoon architecture](#old-zoon-architecture) - How React and Rust Hooks work
 - [New Zoon architecture](#new-zoon-architecture) - Signals: You can do it without a Virtual DOM
+- [Builder pattern with rules](#builder-pattern-with-rules) - Yes, builder pattern can support required parameters
 
 ---
 
@@ -165,8 +166,8 @@ fn layla_rose() {
 }
 ```
 
-Let's get back to our non-macro example, but we'll make it complete by adding `STATES` and the _hook_ `use_age`. ([Rust Playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=3bbcdab68607c80fcd340f3ad3e39744))
-   - _Note:_ The code below looks a bit scary but you don't have to understand all implementation details.
+But let's get back to our non-macro example and improve it by adding `STATES` and the _hook_ `use_age`. ([Rust Playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=3bbcdab68607c80fcd340f3ad3e39744))
+   - _Note:_ The code below may look a bit scary but you don't have to understand all implementation details.
 
 ```rust
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -302,9 +303,68 @@ Fortunately, Rust offers more tools to fight with hooks limitations.
 
 We can get the [Location](https://doc.rust-lang.org/std/panic/struct.Location.html) of the caller. It means we know where exactly in the source code has been a function called. So we can distinguish different calls by their caller, even if their index is equal. 
 
-We can leverage newer Rust built-in attribute [#[track_caller]](https://rust-lang.github.io/rfcs/2091-inline-semantic.html) in combination with [Location::caller](https://doc.rust-lang.org/stable/std/panic/struct.Location.html#method.caller). The code is starting to be pretty complex - [Rust Playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=474dfd8daa9078467fc77016142b036a).
+We can leverage newer Rust built-in attribute [#[track_caller]](https://rust-lang.github.io/rfcs/2091-inline-semantic.html) in combination with [Location::caller](https://doc.rust-lang.org/stable/std/panic/struct.Location.html#method.caller). The code is starting to be pretty complex ([Rust Playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=474dfd8daa9078467fc77016142b036a)).
 
-Updated output (notice Amber's age):
+```rust
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::panic::Location;
+static COUNTER: AtomicUsize = AtomicUsize::new(0);
+#[track_caller]
+fn call_id() -> (usize, &'static Location<'static>) { 
+    (COUNTER.load(Ordering::SeqCst), Location::caller()) 
+}
+fn increment_call_id() { COUNTER.fetch_add(1, Ordering::SeqCst); }
+fn reset_call_id() { COUNTER.store(0, Ordering::SeqCst) }
+
+use std::{sync::Mutex, collections::HashMap};
+use once_cell::sync::Lazy;
+static STATES: Lazy<Mutex<HashMap<(usize, &'static Location), u8>>> = Lazy::new(Mutex::default);
+
+#[track_caller]
+fn use_age(default_value: impl FnOnce() -> u8 + Copy) -> u8 {
+    *STATES.lock().unwrap().entry(call_id()).or_insert_with(default_value)
+}
+
+fn main() {
+    for i in 0..3 { 
+        root(if i % 2 == 0 { "good_day" } else { "bad_day" });
+        println!("{:-<28}", "-");
+        reset_call_id()
+    }
+}
+
+fn root(day: &str) {
+    mike(30);
+    if day == "good_day" {
+        layla_rose(26)
+    } else {
+        amber(60)
+    }
+}
+
+#[track_caller]
+fn mike(age: u8) {
+    increment_call_id();
+    let age = use_age(|| { println!("Saving mike's state!"); age });
+    println!("mike id: {:?}, age: {}", call_id(), age);
+}
+
+#[track_caller]
+fn amber(age: u8) {
+    increment_call_id();
+    let age = use_age(|| { println!("Saving amber's state!"); age });
+    println!("amber id: {:?}, age: {}", call_id(), age);
+}
+
+#[track_caller]
+fn layla_rose(age: u8) {
+    increment_call_id();
+    let age = use_age(|| { println!("Saving layla_rose's state!"); age });
+    println!("layla_rose id: {:?}, age: {}", call_id(), age);
+}
+```
+
+Updated output (notice Amber's age and `Saving amber's state!`):
 ```
 Saving mike's state!
 mike id: (1, Location { file: "src/main.rs", line: 29, col: 5 }), age: 30
@@ -336,7 +396,7 @@ So... from the frontend app developer point of view, Hooks (especially Rust ones
 
 --
 
-Let's move to Hooks technical challenges.
+Let's move to the technical challenges of Hooks.
 
 1. Complexity. It's pretty hard to implement Hooks correctly, especially due to many edge-cases and macros. It also mean a lot of code bloat if you are not careful enough.
 
@@ -354,16 +414,49 @@ Let's move to Hooks technical challenges.
 
    - `HashMap` resizing is pretty slow - it has to move all its items to the new location after the reallocation. [griddle](https://crates.io/crates/griddle) helps to eliminate resizing spikes, but it doesn't help too much with the overall speed.
 
-As the result, Zoon's code was a slow spaghetti monster. It was working good enough for cca 2_000 elements, but once there was more complex business logic and more elements then the app becomes too slow for comfortable usage.
+As the result, Zoon's code was a slow spaghetti monster. It was working good enough for cca 2_000 elements, but when  there were more complex business logic and more elements then the app becomes too slow for comfortable usage.
 
 I've also tried more mature libraries instead of my code but the performance didn't change too much. 
 
-Then I remembered the term _Sunk cost fallacy_ from the awesome book [Thinking, Fast and Slow](https://en.wikipedia.org/wiki/Thinking,_Fast_and_Slow) and with the words "Don't love your code, no code no bugs" selected most Zoon files and hit my favorite key: `Delete`.
+Then I remembered the term _Sunk cost fallacy_ from the awesome book [Thinking, Fast and Slow](https://en.wikipedia.org/wiki/Thinking,_Fast_and_Slow) and with the words "Don't love your code, no code no bugs" I selected most Zoon files and hit my favorite key: `Delete`.
 
 ---
 
 # New Zoon architecture
 > Signals: You can do it without a Virtual DOM
+
+So Hooks was a dead end. The Elm architecture has its own problems (explained in the [previous post](https://dev.to/martinkavik/moonzoon-dev-news-2-live-demo-zoon-examples-architectures-2oem#frontend-framework-architectures)). I don't want to invent another complex component system with templates. What now?
+
+Let's learn from the past and see what works and what doesn't.
+
+- Hooks - Simple creation of local states helps to write element/component libraries and don't pollute our business data with GUI-specific variables.
+
+- TEA - Single-source of truth (aka `Model`) eliminates bugs related to state synchronization.
+
+- TEA - Asynchronous "pipelines" may be hard to follow in the source code without an `await/async` mechanism. Imagine a chain of HTTP requests with error handling and some business logic.
+
+- Passing properties down to child elements/components may lead to boilerplate (TEA) and then to cumbersome abstractions (many frameworks). TEA-like frameworks tries to mitigate it with [Pub/Sub](https://en.wikipedia.org/wiki/Publish%E2%80%93subscribe_pattern) mechanisms.
+
+- There are often problems with _keys_ for element/component lists (explained in the previous chapter).
+
+- Virtual DOM + Asynchronous rendering (the render waits for the next [animation frame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame)) 
+   - Adds a lot of complexity and causes bugs. 
+   - The typical bug in most frameworks is a "jumping cursor" in text inputs ([Elm issue with demonstation](https://github.com/elm/virtual-dom/issues/138), [React explanation](https://stackoverflow.com/questions/28922275/in-reactjs-why-does-setstate-behave-differently-when-called-synchronously/28922465#28922465)).
+   - Text selection is [pretty hard to manage](https://github.com/seed-rs/seed/blob/master/src/browser/util.rs#L161-L260) in the browser, especially with async rendering.
+
+- Many native browser elements behave quite unpredictably and it's very hard to set them correctly. There has to be a layer above them to protect the app developer.
+   - _"Did you know #456: [Setting element attributes is order-sensitive](https://github.com/seed-rs/seed/issues/335)?"_
+
+Now I'll show you examples with a new Zoon API with explanations how they corresponds with the notes above.
+
+```rust
+
+```
+
+---
+
+# Builder pattern with rules
+> Yes, builder pattern can support required parameters
 
 ---
 

@@ -8,7 +8,7 @@
   </a>
 </p>
 
-### [moonzoon.rs](http://moonzoon.rs)* | [martin@moonzoon.rs](mailto:martin@moonzoon.rs)
+### [moonzoon.rs](http://moonzoon.rs)* | [martin@moonzoon.rs](mailto:martin@moonzoon.rs) | [Discord](https://discord.gg/eGduTxK2Es)
 
 \* redirects to this repo until ready
 
