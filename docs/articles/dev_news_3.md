@@ -708,18 +708,224 @@ You've seen all examples, let's revisit our notes:
 # Builder pattern with rules
 > Yes, builder pattern can support required parameters
 
+```rust
+Button::new().label("X").label("Y")
+El::new().child("X").child("Y")
+```
+- Will the button be labeled "Y" or "XY"?
+- Will the el's children be rendered in a row or in a column?
 
+```
+error[E0277]: the trait bound `LabelFlagSet: FlagNotSet` is not satisfied
+  --> frontend\src\lib.rs:17:30
+   |
+17 |     Button::new().label("X").label("Y");
+   |                              ^^^^^ the trait `FlagNotSet` is not implemented for `LabelFlagSet`
 
-Macro vs non-macro API  (... GF test passed)
-locks problem without macro
-specialization problem without macros
+error[E0277]: the trait bound `ChildFlagSet: FlagNotSet` is not satisfied
+  --> frontend\src\lib.rs:18:26
+   |
+18 |     El::new().child("X").child("Y");
+   |                          ^^^^^ the trait `FlagNotSet` is not implemented for `ChildFlagSet`
+```
 
-elements in vector problem -> Box<dyn Element> -> object safe trait becasue into_raw_el returns El instead of (Self) or generic
+The Rust compiler doesn't allow us to write the code that would break `Button` or `El` _rules_. Only one label and one child makes sense. 
+
+The compilation also fails when you don't set the label or child at all:
+
+```rust
+fn root() -> impl Element {
+    El::new()
+}
+```
+
+```
+error[E0277]: the trait bound `zoon::El<ChildFlagNotSet>: zoon::Element` is not satisfied
+  --> frontend\src\lib.rs:16:14
+   |
+16 | fn root() -> impl Element {
+   |              ^^^^^^^^^^^^ the trait `zoon::Element` is not implemented for `zoon::El<ChildFlagNotSet>`
+   |
+   = help: the following implementations were found:
+             <zoon::El<ChildFlagSet> as zoon::Element>
+```
+
+Yeah, we may have constructors like `El::new(..)` instead. But then we also need at least `El::with_child_signal(..)`. And other constructors for more complex elements with more required parameters and their combinations. It becomes cumbersome very quickly.
+
+_Note:_ There are exceptions in the Zoon API like `RawEl::new("div")` and `Text::new("text")` because it's not possible to even create a builder for these types without the most important input data. 
+
+Why we can't just take the last value as the valid one? E.g. `Button::new().label("X").label("Y");` will be a button labeled "Y".
+   - All methods (`.label(..)`, `.child(..)`) modifies the DOM immediately. It means we would need to delete the previous label and it would be pretty inefficient.
+   - It will be confusing - `El` can have only one child, but `Row` accepts multiple children. 
+
+Why all methods modifies the DOM immediately?
+  - I've tried to store element builder arguments in the builder and render it at once later. However this approach leads to slow and cumbersome elements and it's almost impossible in some cases. 
+
+--
+
+How those _rules_ work?
+
+Let's look at the current `Button` implementation.
+
+```rust
+use zoon::*;
+use std::marker::PhantomData;
+
+// ------ ------
+//    Element 
+// ------ ------
+
+make_flags!(Label, OnPress);
+
+pub struct Button<LabelFlag, OnPressFlag> {
+    raw_el: RawEl,
+    flags: PhantomData<(LabelFlag, OnPressFlag)>
+}
+
+impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
+    pub fn new() -> Self {
+        Self {
+            raw_el: RawEl::new("div")
+                .attr("class", "button")
+                .attr("role", "button")
+                .attr("tabindex", "0"),
+            flags: PhantomData,
+        }
+    }
+}
+
+impl<OnPressFlag> Element for Button<LabelFlagSet, OnPressFlag> {
+    fn into_raw_element(self) -> RawElement {
+        self.raw_el.into()
+    }
+}
+
+// ------ ------
+//  Attributes 
+// ------ ------
+
+impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
+    pub fn label(
+        self, 
+        label: impl IntoElement<'a> + 'a
+    ) -> Button<LabelFlagSet, OnPressFlag>
+        where LabelFlag: FlagNotSet
+    {
+        Button {
+            raw_el: self.raw_el.child(label),
+            flags: PhantomData
+        }
+    }
+
+    pub fn label_signal(
+        self, 
+        label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static
+    ) -> Button<LabelFlagSet, OnPressFlag> 
+        where LabelFlag: FlagNotSet
+    {
+        Button {
+            raw_el: self.raw_el.child_signal(label),
+            flags: PhantomData
+        }
+    }
+
+    pub fn on_press(
+        self, 
+        on_press: impl FnOnce() + Clone + 'static
+    ) -> Button<LabelFlag, OnPressFlagSet> 
+        where OnPressFlag: FlagNotSet
+    {
+        Button {
+            raw_el: self.raw_el.event_handler(move |_: events::Click| (on_press.clone())()),
+            flags: PhantomData
+        }
+    }
+} 
+```
+
+`make_flags!(Label, OnPress);` generates code like:
+```rust
+struct LabelFlagSet;
+struct LabelFlagNotSet;
+impl zoon::FlagSet for LabelFlagSet {}
+impl zoon::FlagNotSet for LabelFlagNotSet {}
+
+struct OnPressFlagSet;
+struct OnPressFlagNotSet;
+impl zoon::FlagSet for OnPressFlagSet {}
+impl zoon::FlagNotSet for OnPressFlagNotSet {}
+```
+
+The only purpose of _flags_ is to enforce _rules_ by the Rust compiler.
+
+The compiler doesn't allow to call `label` or `label_signal` if the label is already set. The same rule applies for `on_press` handler.
+
+The trade-off for compile-time checked rules are generics. However it isn't a big problem in practice because in _view_ you often return them from a function by `impl Element`. And when you really need to _box_ them because you want to use them in a collection or in `match` / `if` arms, then you can because `Element` trait is [object safe](https://doc.rust-lang.org/reference/items/traits.html#object-safety) for these purposes.
+
+--
+
+What about API with macros?
+
+```rust
+Column::new()
+    .item(Button::new().label("-").on_press(decrement))
+    .item(Text::with_signal(counter().signal()))
+    .item(Button::new().label("+").on_press(increment))
+```
+
+vs
+
+```rust
+col![
+    button![button::on_press(decrement), "-"],
+    text![counter().signal()],
+    button![button::on_press(increment), "+"],
+]
+```
+
+### Macro API advantages:
+- Less verbosity / boilerplate in most cases.
+- Can accept more types than standard functions thanks to "tricks" (e.g. implementing different traits with the same methods for different types) to resolve conflicting `impl`s to achieve a simpler [specialization](https://github.com/rust-lang/rfcs/blob/master/text/1210-impl-specialization.md). _Note:_ You can see this trick in action in Seed's `UpdateEl*` [traits](https://github.com/seed-rs/seed/blob/938d71b6527efcd84c7d9ff37330949791b6d3a4/src/virtual_dom/update_el.rs) that power its element macros.
+- It can protect from locks-related problems. See the example below.
+
+```rust
+fn root() -> impl Element {
+    Column::new()
+        .item(*counter().lock_ref())
+        .item(Text::with_signal(counter().signal()))
+}
+```
+The lock from `lock_ref` isn't dropped soon enough so the hidden locking in `.signal()` fails in runtime.
+
+We can resolve it manually:
+```rust
+// By a  closure
+.item((|| *counter().lock_ref())())
+
+// By an extra `let` bindings
+.item({ let lock = counter().lock_ref(); *lock })
+```
+
+_Note:_ I hope Rust compiler will be clever enough to resolve it in the future by itself and also provide a more descriptive error.
+
+### Macro API disadvantages:
+- Less compiler friendly (cryptic errors) and less auto-complete / IDE friendly.
+- May cause code bloat.
+- `Element` implementation is more complicated.
+- Didn't pass the "girlfriend test" (A non-developer person with a good graphic taste points the finger to the nicer code when two same examples with different APIs are presented for examination.)
+- Hard to learn for beginners.
+- Hard to maintain.
 
 ---
 
 # Optimizations
 > Need for speed. The size matters.
+
+Let's start with speed. 
+
+The most Rust tutorials and best practices are focused on speed. It means you can just follow general recommendations and pick the most used libraries and there is a chance everything will be fast.
+
+
 
 no_std no because wasm std often fails silently (e.g. printlt) - custom println with compilation error
 
