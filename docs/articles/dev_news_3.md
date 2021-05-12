@@ -921,9 +921,76 @@ _Note:_ I hope Rust compiler will be clever enough to resolve it in the future b
 # Optimizations
 > Need for speed. The size matters.
 
-Let's start with speed. 
+## Speed
 
 The most Rust tutorials and best practices are focused on speed. It means you can just follow general recommendations and pick the most used libraries and there is a chance everything will be fast.
+
+The simplest way to increase speed is to set your `Cargo.toml` correctly. Example: 
+
+```toml
+[profile.release]
+# Enable link time optimizations - slow compilation, faster & smaller app
+lto = true  
+
+# Disable parallel compilation (set to 1 thread) - slow compilation, faster & smaller app
+codegen-units = 1  
+
+# Set optimization level - 3 => fast app ; s/z => small app
+opt-level = 3 
+
+#  O4 => fast app ; Oz/Os => small app
+# [See the explanation below]
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ['-O4']
+
+```
+
+MoonZoon CLI (`mzoon`) uses [wasm-pack](https://github.com/rustwasm/wasm-pack) to build your frontend app with Zoon. `wasm-pack` downloads and manages tools like [wasm-bindgen CLI](https://rustwasm.github.io/wasm-bindgen/reference/cli.html) and [wasm-opt](https://github.com/WebAssembly/binaryen#binaryen-optimizations) and browser drivers for testing.
+
+- `wasm-bindgen` CLI and [crate](https://crates.io/crates/wasm-bindgen) do the hard work to connect the Javascript with Rust / Wasm world. `wasm-pack` / `wasm-bindgen CLI` often generates a Javascript file to "boot" your app stored in the Wasm file. `wasm-bindgen` also can generate Typescript types for exported functions from Wasm and JS snippets defined in your Rust code.
+
+- `wasm-opt` is a tool for Wasm file optimizations. It can improve speed, but it's excellent in size reduction. _Note:_ It's written in C++.
+
+`wasm-pack` can be [configured](https://rustwasm.github.io/wasm-pack/book/cargo-toml-configuration.html?highlight=wasm-opt#cargotoml-configuration) in `Cargo.toml`. And it automatically installs also the required [compilation target](https://doc.rust-lang.org/rustc/targets/index.html) `wasm32-unknown-unknown`.
+
+When you run `mzoon start` or `mzoon build`, MZoon checks if the `wasm-pack` is installed on your system (it'll do it automatically in the future) and then runs
+```
+wasm-pack --log-level warn build frontend --target web --no-typescript --dev
+```
+to compile your app. _Note_ It doesn't append `--dev` if you run `mzoon start -r`
+
+--
+
+Ok, we have an idea how the Wasm Rust app compilation work and we set the most important options in `Cargo.toml`.
+
+However let's look again at our `Cargo.toml`. I recommend to disable `default-features` and search for feature flags in docs and source code in your dependencies.
+
+Example from `js-framework-benchmark`:
+
+```toml
+[dependencies]
+zoon = { path = "../../../../crates/zoon", features = ["static_ref", "fmt"], default-features = false }
+rand = { version = "0.8.3", features = ["small_rng", "getrandom"], default-features = false }
+getrandom = { version = "0.2", features = ["js"], default-features = false }
+```
+
+- When you enable only the needed features, you can reduce compilation speed.
+
+- Many creates offer features that optimize the crate and its dependencies for a particular platform (embedded, Wasm), characteristic (speed / size).
+
+- You often need to look into the source code because many feature flags and conditions aren't documented or visible on [docs.rs](https://docs.rs/). Examples:
+
+   - `rand` needs the flag `getrandom` and `getrandom` needs the flag `js` to not fail in runtime in Wasm.
+
+   - `parking_lot` shows `wasm-bindgen` flag in its [docs.rs docs](https://docs.rs/crate/parking_lot/0.11.1/features) but the README says: _"The wasm32-unknown-unknown target is only supported on nightly and requires -C target-feature=+atomics in RUSTFLAGS"_
+
+   - `wasm-bindgen` shows `std` flag in [docs](https://docs.rs/crate/wasm-bindgen/0.2.74/features), but it doesn't work without it. On the other hand, you can enable the feature flag `enable-interning` (will be explained later)
+
+--
+
+interning, expect_throw, no allocations, ...
+
+## Size
 
 
 
