@@ -9,7 +9,7 @@ _WARNING:_ MoonZoon is in the phase of early development! You may find ugly code
 - [Rust](https://www.rust-lang.org/)
   ```bash
   rustup update
-  rustc -V # rustc 1.52.0 (88f19c6da 2021-05-03)
+  rustc -V # rustc 1.52.1 (9bc8c42bb 2021-05-09)
   ```
 
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
@@ -66,3 +66,7 @@ Main server is running on 0.0.0.0:8080 [http://127.0.0.1:8080]
 ```
 
 ## 5. Have fun!
+
+--
+
+_Question:_ Do you think a [code tour](https://github.com/microsoft/codetour) would be useful for you?

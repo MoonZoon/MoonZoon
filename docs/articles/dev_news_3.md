@@ -988,10 +988,21 @@ getrandom = { version = "0.2", features = ["js"], default-features = false }
 
 --
 
+
+
 interning, expect_throw, no allocations, ...
+fmt
+small vec generics  with_capacity Rc/Arc
+slow browser calls / no crossplatform (tests, render to string, ..) crossbeam
 
 ## Size
 
+serde - alternative
+regex
+fmt
+url
+panic hook hidden behind cfg_if
+wee_alloc
 
 
 no_std no because wasm std often fails silently (e.g. printlt) - custom println with compilation error
