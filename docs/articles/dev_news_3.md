@@ -1138,7 +1138,6 @@ wasm-opt = ['-Os']
 
 You need to experiment with values `'s'` / `['-Os']` and `'z'` / `['-Oz']`. Sometimes `s` makes the app smaller than `z` and even faster then `3`. It depends on your app and maybe on the weather. Who knows.
 
-
 ### Generics
 
 There is a nice popular world in the Rust world - _monomorphization_.
@@ -1156,6 +1155,22 @@ So it basically says we shouldn't use generics. However there are two problems:
 1. Generics are often used in your dependencies - out of your control. E.g. Twiggy says that most code bloat because of generics is caused by the crate `futures-signals` in Zoon's `js-framework-benchmark` example.  
 
 1. When I was trying to optimize size by replacing generics with other constructs, the app was becoming slower and paradoxically also bigger. So I wouldn't recommend to focus too much on this optimization if you aren't sure it'll really reduce the Wasm file size.
+
+### Compression
+
+Browsers support multiple kinds of compression, always at least [Gzip](https://en.wikipedia.org/wiki/Gzip) and [Brotli](https://github.com/google/brotli).
+
+MoonZoon CLI (`mzoon`) automatically compresses `wasm` and other files with both algorithms during the `release` build. And then Moon serves them according to the header [Accept-Encoding](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding) extracted from incoming requests.
+
+You've already saw examples above, but let's look again:
+- A small optimized app: 33 KB - GZip: 16 KB - Brotli: 14 KB
+- A large optimized app: 928 KB - GZip: 326 KB - Brotli: 236 KB
+
+This way you can significantly reduce traffic between frontend and backend.
+
+_Note:_ Firefox and probably other browsers support Brotli only on HTTPS. Chrome supports both Gzip and Brotli also on HTTP. It means you can't use only Brotli for all cases.
+
+_Dev Note:_ It's [difficult](https://github.com/MoonZoon/MoonZoon/pull/6#issuecomment-840037580) to serve files according to a header from Warp.
 
 ---
 
