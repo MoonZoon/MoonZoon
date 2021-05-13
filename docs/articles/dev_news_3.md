@@ -1083,7 +1083,7 @@ So if one of your dependency calls `format!` or `.to_string` on a float number, 
 So I recommend to first look at your dependencies and try to find popular, but large libraries like [url](https://crates.io/crates/url), [regex](https://crates.io/crates/regex) and [serde](https://crates.io/crates/serde). Also some parts of `std` contributes to the code bloat, especially `std::fmt`.
 
 Try to find alternatives - e.g. [ufmt](https://crates.io/crates/ufmt) for `std::fmt` or [serde-lite](https://crates.io/crates/serde-lite) for `serde`.
-- Zoon hide `ufmt` and [lexical](https://crates.io/crates/lexical) for float number formatting behind a non-default feature flag. I'll probably add also `serde-lite` and integrate them properly in the future.
+- Zoon hides `ufmt` and [lexical](https://crates.io/crates/lexical) for float number formatting behind a non-default feature flag. I'll probably add also `serde-lite` and integrate them properly in the future.
 
 Or you can try to use the browser API instead of Rust libs - e.g. [js_sys::RegExp](https://docs.rs/js-sys/0.3.51/js_sys/struct.RegExp.html) instead of `regex` or [web_sys::Url](https://docs.rs/web-sys/0.3.51/web_sys/struct.Url.html) instead of `url`.
 
@@ -1141,7 +1141,21 @@ You need to experiment with values `'s'` / `['-Os']` and `'z'` / `['-Oz']`. Some
 
 ### Generics
 
+There is a nice popular world in the Rust world - _monomorphization_.
 
+An excerpt from Rust book, section [Performance of Code Using Generics](https://doc.rust-lang.org/book/ch10-01-syntax.html#performance-of-code-using-generics):
+
+- _"You might be wondering whether there is a runtime cost when you’re using generic type parameters. The good news is that Rust implements generics in such a way that your code doesn’t run any slower using generic types than it would with concrete types."_
+
+Well, it's a bad news for us. [Explained in the docs](https://rustwasm.github.io/twiggy/concepts/generic-functions-and-monomorphization.html) for a very useful code size profile for Wasm [Twiggy](https://github.com/rustwasm/twiggy):
+
+- _"Generic functions with type parameters in Rust and template functions in C++ can lead to code bloat if you aren't careful. Every time you instantiate these generic functions with a concrete set of types, the compiler will monomorphize the function, creating a copy of its body replacing its generic placeholders with the specific operations that apply to the concrete types."_
+
+So it basically says we shouldn't use generics. However there are two problems:
+
+1. Generics are often used in your dependencies - out of your control. E.g. Twiggy says that most code bloat because of generics is caused by the crate `futures-signals` in Zoon's `js-framework-benchmark` example.  
+
+1. When I was trying to optimize size by replacing generics with other constructs, the app was becoming slower and paradoxically also bigger. So I wouldn't recommend to focus too much on this optimization if you aren't sure it'll really reduce the Wasm file size.
 
 ---
 
