@@ -957,7 +957,7 @@ When you run `mzoon start` or `mzoon build`, MZoon checks if the `wasm-pack` is 
 ```
 wasm-pack --log-level warn build frontend --target web --no-typescript --dev
 ```
-to compile your app. _Note_ It doesn't append `--dev` if you run `mzoon start -r`
+to compile your app. _Note_: It doesn't append `--dev` if you run `mzoon start -r`
 
 --
 
@@ -988,20 +988,88 @@ getrandom = { version = "0.2", features = ["js"], default-features = false }
 
 --
 
+Zoon's current features are:
 
+```toml
+[features]
+default = ["static_ref", "panic_hook", "small_alloc", "clone"]
+static_ref = ["static_ref_macro", "once_cell"]
+panic_hook = ["console_error_panic_hook"]
+small_alloc = ["wee_alloc"]
+fast_alloc = []
+# tracing_alloc = ["wasm-tracing-allocator"]
+clone = ["enclose"]
+fmt = ["ufmt", "lexical"]
+```
 
-interning, expect_throw, no allocations, ...
-fmt
-small vec generics  with_capacity Rc/Arc
-slow browser calls / no crossplatform (tests, render to string, ..) crossbeam
+The features related to performance:
+
+### `small_alloc` or `fast_alloc` or `tracing_alloc`
+
+The default allocator for Rust Wasm is currently [dlmalloc](https://github.com/alexcrichton/dlmalloc-rs). You can choose a different allocator (see the [list of allocators](https://lib.rs/search?q=%23allocator)), but only a couple of them are compatible with Wasm.
+
+I haven't found a Wasm-compatible allocator faster then the default `dlmalloc`. So when you enable the flag `fast_alloc`, compilation fails with the message _""Do you know a fast allocator working in Wasm?""_.
+
+The flag `small_alloc` is enabled by default. It means your app will use a bit slower but small [wee_alloc](https://crates.io/crates/wee_alloc).
+
+The flag `tracing_alloc` would switch to the [wasm-tracing-allocator](https://crates.io/crates/wasm-tracing-allocator).
+
+   - _"wasm-tracing-allocator enables you to better debug and analyze memory leaks and invalid frees in an environment where we don't have access to the conventional tools like Valgrind."_
+   
+   - I tried it, it works but I didn't find it very useful for me. I'll integrate it into Zoon if we find some reasons in the future.
+
+### `fmt`
+
+This feature enables dependencies [ufmt](https://crates.io/crates/ufmt) and [lexical](https://crates.io/crates/lexical). It could replace `std::fmt` machinery (`Debug`, `format!`, `println!`) however I'll probably focus on it in other MoonZoon dev iteration. And you'll see some related notes in the next `Size` section.
+
+--
+
+Now we can finally talk about your application code.
+
+There are some recommendation for Wasm + JS:
+- Wrap `&str` in [intern](https://docs.rs/wasm-bindgen/0.2.74/wasm_bindgen/fn.intern.html) where it makes sense. It caches strings in JS to mitigate slow string passing through the Rust-JS "bridge" created by `wasm-bindgen`. Zoon (exactly [dominator](https://crates.io/crates/dominator)) interns automatically many element arguments so you don't need to do it by yourself in most cases.
+
+- Be careful with sending strings and more complex items from and to JS world. It may be slow because of encoding and serialization and it may cause some boilerplate in the app code because it's often needed to tell `wasm-bindgen` how your items should be serialized for export to JS. _Note:_ This problem should be mitigated in the future by richer Wasm API that allows faster Wasm-JS communication.
+
+- Use `unchecked_*` alternatives where it makes sense - see, for instance, [wasm_bindgen::JsCast](https://docs.rs/wasm-bindgen/0.2.74/wasm_bindgen/trait.JsCast.html).
+
+And some general recommendations:
+
+- Reduce memory allocations as much as possible. It means generics instead of `Box`, _arrays_ instead of _vectors_ and other stuff.
+
+- Reduce the number of expensive `.clone`, `.to_owned`, `.to_string`, `.collect`, `.into` .., calls.
+
+- Reduce reallocations. Try to call, for instance, [Vec::with_capacity](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity) instead of `Vec::new` / `vec![]` where possible.
+
+- Try to switch algorithms / structures when it makes sense - e.g. `HashMap` vs `IndexMap` vs `HashMap` with a non-secure hash function vs `BTreeMap` vs `SlotMap`, etc. It makes sense only when you've prepared benchmarks - results could be quite surprising. _Tip_: Watch out for `println!` calls in your benchmarks, console operations could be pretty slow. 
+
+- There are libraries like [smallvec](smallvec
+) or [im](https://crates.io/crates/im) or [fst](https://crates.io/crates/fst) which helps A LOT if you know how and where to use them.
+
+- Don't use `Rc`, `RefCell`, `Mutex` and similar stuff if you don't have to.
+
+- Create errors or default values lazily where it makes sense - e.g. call `Result::unwrap_or_else` instead of `Result::unwrap_or` or `Option::map_or_else` instead of `Option::map_or`.
+
+--
+
+Aaaand how can we measure performance?
+
+1. Learn to use the browser tools. Chrome dev tools are probably the best - tutorial: [Analyze runtime performance](https://developer.chrome.com/docs/devtools/evaluate-performance/).
+
+1. You can use [web_sys::Performance](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Performance.html) to measure your app logic. See related [MDN docs](https://developer.mozilla.org/en-US/docs/Web/API/Performance).
+
+1. I'm sure you'll be able to find some Rust or Javascript benchmark libraries suitable for Wasm. (Don't hesitate to share your experience.)
+
+_Tip_: Keep in mind that `debug` build is often MUCH slower than the `release` and optimized one, but it contains debug info needed to show function names and other data by profilers / benchmarks. 
 
 ## Size
 
-serde - alternative
+serde - alternative  serde  https://crates.io/crates/serde-lite
 regex
 fmt
 url
 panic hook hidden behind cfg_if
+expect_throw, 
 wee_alloc
 
 

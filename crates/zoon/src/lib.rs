@@ -1,5 +1,4 @@
 pub use wasm_bindgen::{self, prelude::*, JsCast};
-pub use console_error_panic_hook;
 
 pub mod element;
 mod dom;
@@ -21,6 +20,9 @@ pub use dominator::{self, Dom, DomBuilder, events, traits::StaticEvent};
 pub use paste;
 pub use console::log;
 
+#[cfg(feature = "panic_hook")]
+pub use console_error_panic_hook;
+
 #[cfg(feature = "static_ref")]
 pub use static_ref_macro::static_ref;
 #[cfg(feature = "static_ref")]
@@ -29,9 +31,16 @@ pub use once_cell;
 #[cfg(feature = "clone")]
 pub use enclose::enc as clone;
 
-#[cfg(feature = "alloc")]
+#[cfg(feature = "small_alloc")]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+
+#[cfg(feature = "fast_alloc")]
+compile_error!("Do you know a fast allocator working in Wasm?");
+
+// #[cfg(feature = "tracing_alloc")]
+// #[global_allocator]
+// static GLOBAL_ALLOCATOR: wasm_tracing_allocator::WasmTracingAllocator<std::alloc::System> = wasm_tracing_allocator::WasmTracingAllocator(std::alloc::System);
 
 #[cfg(feature = "fmt")]
 pub use ufmt::{self, uDebug, uDisplay, uWrite, uwrite, uwriteln};
