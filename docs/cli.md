@@ -21,6 +21,7 @@ _Note:_ Faster installation options will be added later.
 
 - Example: `mzoon new my_project` 
 - Creates a new directory with a MoonZoon project.
+- _Question:_ Do you think a [code tour](https://github.com/microsoft/codetour) would be useful for you?
 - _Note:_ Not implemented yet, use [MoonZoon/demo](https://github.com/MoonZoon/demo) as a starting project.
 
 ### 2. `start`
