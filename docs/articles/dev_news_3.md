@@ -1060,20 +1060,88 @@ Aaaand how can we measure performance?
 
 1. I'm sure you'll be able to find some Rust or Javascript benchmark libraries suitable for Wasm. (Don't hesitate to share your experience.)
 
-_Tip_: Keep in mind that `debug` build is often MUCH slower than the `release` and optimized one, but it contains debug info needed to show function names and other data by profilers / benchmarks. 
+_Tips_: 
+
+- Keep in mind that `debug` build is often MUCH slower than the `release` and optimized one, but it contains debug info needed to show function names and other data by profilers / benchmarks.
+
+- There are cases when optimization for size results in higher speed - always test and measure your changes and avoid premature optimization.
 
 ## Size
 
-serde - alternative  serde  https://crates.io/crates/serde-lite
-regex
-fmt
-url
-panic hook hidden behind cfg_if
-expect_throw, 
-wee_alloc
+There are 2 things that very likely increase the size A LOT - dependencies and macros.
+
+### Dependencies
+
+Optimized `counter` example (`makers mzoon build -r`):
+- Without additional deps - 33 KB (GZip: 16 KB, Brotli: 14 KB, debug: 445 KB)
+- With one formatting call `1.2.to_string()` - 52 KB (GZip: 24 KB, Brotli: 21 KB, debug: 468 KB)
+- With the `url` crate - 338 KB (GZip: 144 KB, Brotli: 113 KB, debug: 1239 KB) 
+- With the `url` and `regex` crate - 928 KB (GZip: 326 KB, Brotli: 236 KB, debug: 3601 KB)
+
+So if one of your dependency calls `format!` or `.to_string` on a float number, expect cca 20 KB larger Wasm file. If you want to use libraries like [reqwest](https://crates.io/crates/reqwest/0.11.3/dependencies), expect more than 300 KB of extra binary size because it uses `url` crate.
+
+So I recommend to first look at your dependencies and try to find popular, but large libraries like [url](https://crates.io/crates/url), [regex](https://crates.io/crates/regex) and [serde](https://crates.io/crates/serde). Also some parts of `std` contributes to the code bloat, especially `std::fmt`.
+
+Try to find alternatives - e.g. [ufmt](https://crates.io/crates/ufmt) for `std::fmt` or [serde-lite](https://crates.io/crates/serde-lite) for `serde`.
+- Zoon hide `ufmt` and [lexical](https://crates.io/crates/lexical) for float number formatting behind a non-default feature flag. I'll probably add also `serde-lite` and integrate them properly in the future.
+
+Or you can try to use the browser API instead of Rust libs - e.g. [js_sys::RegExp](https://docs.rs/js-sys/0.3.51/js_sys/struct.RegExp.html) instead of `regex` or [web_sys::Url](https://docs.rs/web-sys/0.3.51/web_sys/struct.Url.html) instead of `url`.
+
+### Macros
+
+Macros are basically code generators. Be prepared for larger binaries if you use them. Don't forgot that attributes like `#[derive(Debug)]` could generate a lot of code.
+
+If you need to write your custom macros, try to extract as much code as possible to new functions.
+
+### Panics / errors
+
+The most code behind panics are fortunately removed by `wasm-opt`. However we can help it:
+
+Call `expect_throw` and `unwrap_throw` instead of standard `expect` and `unwrap`. See [wasm_bindgen::UnwrapThrowExt](https://docs.rs/wasm-bindgen/0.2.74/wasm_bindgen/trait.UnwrapThrowExt.html).
+
+In the Zoon code, there is registered a panic hook:
+```rust
+pub fn start_app ... {
+    #[cfg(feature = "panic_hook")]
+    #[cfg(debug_assertions)]
+    console_error_panic_hook::set_once();
+```
+This panic hooks is useful for debugging because it shows panic errors in console log. However we don't need it in the `release` build. `wasm-opt` can't remove it by itself - we should remove all debug helpers during the compilation process.
+
+_Note:_ We need `console_error_panic_hook` because panics aren't automatically redirected to the console log. There are many `std` APIs that just do nothing in Wasm. That's why you need to, for instance, add `use zoon::{*, println};` if you want to call `println` in your app.
+
+### Allocators
+
+We were already talking about allocators. When you enable Zoon's feature `small_alloc` (it's enabled by default), then [wee_alloc](https://crates.io/crates/wee_alloc) allocator is used.
+
+Related Zoon's code:
+
+```rust
+#[cfg(feature = "small_alloc")]
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+```
+
+### Cargo.toml config
+
+It's very similar to optimization for speed:
+
+```toml
+[profile.release]
+lto = true  
+codegen-units = 1  
+opt-level = 's'
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ['-Os']
+```
+
+You need to experiment with values `'s'` / `['-Os']` and `'z'` / `['-Oz']`. Sometimes `s` makes the app smaller than `z` and even faster then `3`. It depends on your app and maybe on the weather. Who knows.
 
 
-no_std no because wasm std often fails silently (e.g. printlt) - custom println with compilation error
+### Generics
+
+
 
 ---
 
