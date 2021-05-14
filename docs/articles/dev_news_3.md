@@ -1052,6 +1052,54 @@ And some general recommendations:
 
 --
 
+Recommendations for all web apps:
+
+### Preloading
+
+Moon generates `index.html` very similar to this one:
+
+```html
+    <head>
+      ...
+      <link rel="preload" href="/pkg/frontend_bg_{id}.wasm" as="fetch" type="application/wasm" crossorigin>
+      <link rel="modulepreload" href="/pkg/frontend_{id}.js" crossorigin>
+      {head_extra} 
+    </head>
+
+    <body>
+      ...
+      <script type="module">
+        import init from '/pkg/frontend_{id}.js';
+        init('/pkg/frontend_bg_{id}.wasm');
+      </script>
+    </body>
+```
+
+Notice [preload](https://developer.mozilla.org/en-US/docs/Web/HTML/Preloading_content) and [modulepreload](https://developer.mozilla.org/en-US/docs/Web/HTML/Link_types/modulepreload) (don't ask me why there are two distict names, HTML and browser APIs is one big mystery to me).
+
+The browser will be downloading files marked with `preload / moduleprelod` even if it needs to resolve scripts and styles hidden under the placeholder `{head_extra}` before it can move to process `body`.
+
+When the browser starts to import `frontend_{id}.js` or init `frontend_bg_{id}.wasm`, it doesn't have to download these files because they have been already preloaded (or they are loading).
+
+_Note_: There shouldn't be a large time span between preloading and using the files (it may happen when there is a script in `{head_extra}` hosted on a slow server). Otherwise the browser may show a warning or maybe don't match the files at all.
+
+### HTTP/2
+
+There are many reasons why to use HTTP/2 instead of HTTP/1.1. See the basic list of improvements and benchmarks in the article [HTTP/2 vs HTTP/1 - Performance Comparison](https://imagekit.io/blog/http2-vs-http1-performance/). HTTP/2 is also important for MoonZoon because it allows more [SSE](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events) connections than HTTP/1.
+
+When you start your MoonZoon app or a MoonZoon example (see [Development.md](https://github.com/MoonZoon/MoonZoon/blob/main/docs/development.md)), it runs on `HTTP/1.1` by default. You can check it in the browser developer tools, in the tab `Network` when you add the column `Protocol`.
+
+To enable HTTP/2 you have to enable HTTPS. Modify the file `MoonZoon.toml` in your project or MoonZoon example:
+```toml
+# port = 8080
+port = 8443
+https = true
+...
+```
+then start/restart the server (`makers mzoon start` for examples) and go to [https://localhost:8443](https://localhost:8443). Accept a potential security risk caused be a self-signed certificate and you should see `HTTP/2` (Firefox) or `h2` (Chrome) in the dev tools. 
+
+--
+
 Aaaand how can we measure performance?
 
 1. Learn to use the browser tools. Chrome dev tools are probably the best - tutorial: [Analyze runtime performance](https://developer.chrome.com/docs/devtools/evaluate-performance/).
