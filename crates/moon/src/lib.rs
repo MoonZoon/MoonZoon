@@ -3,6 +3,7 @@ use std::error::Error;
 use std::convert::Infallible;
 use std::sync::{Arc, Mutex};
 use std::fs;
+use std::path::Path;
 use std::env;
 use std::borrow::Cow;
 use std::collections::BTreeSet;
@@ -13,12 +14,22 @@ use tokio::signal;
 use tokio::sync::mpsc;
 use tokio::io::AsyncReadExt;
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use warp::Filter;
-use warp::http::{self, Uri};
-use warp::http::header::{HeaderMap, HeaderValue};
-use warp::sse::Event;
-use warp::host::Authority;
-use warp::path::FullPath;
+
+use warp::{
+    filters::BoxedFilter,
+    host::Authority,
+    http::{
+        self,
+        header::{
+            HeaderMap, HeaderValue, ACCEPT_ENCODING, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE,
+        },
+        Uri,
+    },
+    path,
+    path::FullPath,
+    sse::Event,
+    Filter, Reply,
+};
 
 pub struct Frontend {
     title: String,
@@ -158,43 +169,7 @@ where
                 warp::sse::reply(warp::sse::keep_alive().stream(sse_stream))
             });
 
-        let compressed_pkg = config.compressed_pkg;
-        let pkg_route = warp::path("pkg")
-            .and(warp::path::tail())
-            .and(warp::header::optional(http::header::ACCEPT_ENCODING.as_str()))
-            .and_then(move |file: warp::path::Tail, accept_encoding: Option<String>| async move {
-                let mut file = file.as_str().to_owned();
-                let mime = mime_guess::from_path(&file).first_or_octet_stream();
-
-                let mut headers = HeaderMap::new();
-                headers.insert(http::header::CONTENT_TYPE, HeaderValue::from_str(&mime.to_string()).unwrap());
-
-                if compressed_pkg {
-                    if let Some(accept_encoding) = accept_encoding {
-                        let encodings = accept_encoding.split(", ").collect::<BTreeSet<_>>();
-                        if encodings.contains("br") {
-                            file.push_str("_br");
-                            headers.insert(http::header::CONTENT_ENCODING, HeaderValue::from_static("br"));
-                        } else if encodings.contains("gzip") {
-                            file.push_str("_gzip");
-                            headers.insert(http::header::CONTENT_ENCODING, HeaderValue::from_static("gzip"));
-                        }
-                    }
-                }
-                let file = format!("frontend/pkg/{}", file);
-                let mut file = match tokio::fs::File::open(file).await {
-                    Ok(file) => file,
-                    Err(_) => return Err(warp::reject::not_found())
-                };
-                let mut contents = vec![];
-                file.read_to_end(&mut contents).await.unwrap();
-                headers.insert(http::header::CONTENT_LENGTH, HeaderValue::from_str(&contents.len().to_string()).unwrap());
-
-                let mut response = http::Response::new(contents);
-                *response.headers_mut() = headers;
-                Ok::<_, warp::Rejection>(response)
-            });
-
+        let pkg_route = pkg_route(config.compressed_pkg, "frontend/pkg/");
         let public_route = warp::path("public").and(warp::fs::dir("public/"));
 
         let frontend_route = warp::get().and_then(move || async move {
@@ -306,6 +281,62 @@ where
     Ok(())
 }
 
+const BROTLI_ID: &str = "br";
+const BROTLI_POSTFIX: &str = ".br";
+
+const GZIP_ID: &str = "gzip";
+const GZIP_POSTFIX: &str = ".gz";
+
+fn pkg_route(compressed_pkg: bool, pkg_dir: &'static str) -> BoxedFilter<(impl Reply,)> {
+
+    let pkg_dir = Path::new(pkg_dir);
+
+    path("pkg")
+        .and(path::tail())
+        .and(warp::header::optional(ACCEPT_ENCODING.as_str()))
+        .and_then(
+            move |file: path::Tail, accept_encoding: Option<String>| async move {
+                let mut file = file.as_str().to_owned();
+                let mime = mime_guess::from_path(&file).first_or_octet_stream();
+
+                let mut headers = HeaderMap::new();
+                headers.insert(
+                    CONTENT_TYPE,
+                    HeaderValue::from_str(&mime.to_string()).unwrap(),
+                );
+
+                if compressed_pkg {
+                    if let Some(accept_encoding) = accept_encoding {
+                        let encodings = accept_encoding.split(", ").collect::<BTreeSet<_>>();
+                        if encodings.contains(BROTLI_ID) {
+                            file.push_str(BROTLI_POSTFIX);
+                            headers.insert(CONTENT_ENCODING, HeaderValue::from_static(BROTLI_ID));
+                        } else if encodings.contains(GZIP_ID) {
+                            file.push_str(GZIP_POSTFIX);
+                            headers.insert(CONTENT_ENCODING, HeaderValue::from_static(GZIP_ID));
+                        }
+                    }
+                }
+                let file = pkg_dir.join(file);
+                let mut file = match tokio::fs::File::open(file).await {
+                    Ok(file) => file,
+                    Err(_) => return Err(warp::reject::not_found()),
+                };
+                let mut contents = vec![];
+                file.read_to_end(&mut contents).await.unwrap();
+                headers.insert(
+                    CONTENT_LENGTH,
+                    HeaderValue::from_str(&contents.len().to_string()).unwrap(),
+                );
+
+                let mut response = http::Response::new(contents);
+                *response.headers_mut() = headers;
+                Ok::<_, warp::Rejection>(response)
+            },
+        )
+        .boxed()
+}
+
 fn html(
     title: &str, 
     backend_build_id: u128, 
@@ -376,8 +407,57 @@ fn html_debug_info(_backend_build_id: u128) -> String {
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
+    use super::*;
+
+    mod pkg_route {
+
+        use super::*;
+        use const_format::concatcp;
+
+        const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
+        const FIXTURES_DIR: &str = concatcp!(MANIFEST_DIR, "/tests/fixtures/");
+
+        #[tokio::test]
+        async fn uncompressed() {
+            let css_content = include_str!("../tests/fixtures/index.css");
+            let filter = pkg_route(true, FIXTURES_DIR);
+            let res = warp::test::request()
+                .path("/pkg/index.css")
+                .reply(&filter)
+                .await;
+            assert_eq!(res.status(), 200);
+            assert_eq!(res.headers()[CONTENT_TYPE], "text/css");
+            assert_eq!(res.into_body(), css_content);
+        }
+
+        #[tokio::test]
+        async fn brotli_compressed() {
+            let css_content = include_bytes!("../tests/fixtures/index.css.br");
+            let filter = pkg_route(true, FIXTURES_DIR);
+            let res = warp::test::request()
+                .header(ACCEPT_ENCODING, "br")
+                .path("/pkg/index.css")
+                .reply(&filter)
+                .await;
+            assert_eq!(res.status(), 200);
+            assert_eq!(res.headers()[CONTENT_ENCODING], "br");
+            assert_eq!(res.headers()[CONTENT_TYPE], "text/css");
+            assert_eq!(res.into_body().as_ref(), css_content);
+        }
+
+        #[tokio::test]
+        async fn gzip_compressed() {
+            let css_content = include_bytes!("../tests/fixtures/index.css.gz");
+            let filter = pkg_route(true, FIXTURES_DIR);
+            let res = warp::test::request()
+                .header(ACCEPT_ENCODING, "gzip")
+                .path("/pkg/index.css")
+                .reply(&filter)
+                .await;
+            assert_eq!(res.status(), 200);
+            assert_eq!(res.headers()[CONTENT_ENCODING], "gzip");
+            assert_eq!(res.headers()[CONTENT_TYPE], "text/css");
+            assert_eq!(res.into_body().as_ref(), css_content);
+        }
     }
 }
