@@ -61,8 +61,8 @@ You can try it by yourself: [Live demo](https://moonzoon-demo.herokuapp.com/)
 
 I would like to thank:
 - [Pauan](https://github.com/Pauan) for lightning fast resolving of my problems with his libs `futures-signals` and `dominator`.
+- [flosse](https://github.com/flosse) for [fighting](https://github.com/MoonZoon/MoonZoon/pull/6) with Warp in Moon and for MZoon and Moon improvements.
 - [Alexhuszagh](https://github.com/Alexhuszagh) for working on [lexical](https://crates.io/crates/lexical) and answering my [questions](https://github.com/Alexhuszagh/rust-lexical/issues/34#issuecomment-832250773).
-- [flosse](https://github.com/flosse) for [fighting](https://github.com/MoonZoon/MoonZoon/pull/6) with Warp in Moon.
 
 ---
 
@@ -137,7 +137,7 @@ fn layla_rose() {
 }
 ```
 
-When you run the code ([Rust Playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=542bca0402771da40176bdc373d5bc21)), you should see the loop of the sequence:
+When you run the code ([Rust Playground](https://play.rust-lang.org/?version=stable&mode=debug&edition=2018&gist=542bca0402771da40176bdc373d5bc21)), you should see a loop of the sequence:
 ```
 amber id: 1
 mike id: 2
@@ -145,7 +145,7 @@ layla_rose id: 3
 layla_rose id: 4
 ```
 
-Now you can apply some "magic" to our functions with [proc macros](https://github.com/anp/moxie/blob/33c84788885322895a3f26ce1f5a70a5dbe2d237/topo/macro/src/lib.rs) and/or closures to hide unnecessary counter helpers. The result will look like:
+Now you can apply some "magic" to our functions with [proc macros](https://doc.rust-lang.org/reference/procedural-macros.html) like [this one](https://github.com/anp/moxie/blob/33c84788885322895a3f26ce1f5a70a5dbe2d237/topo/macro/src/lib.rs) to hide unnecessary counter helpers. The result will look like:
 
 ```rust
 fn main() {
@@ -297,7 +297,7 @@ layla_rose id: 2, age: 26
 
 You would be really surprised if a Tinder developer accidentally wrapped a React component in a condition and you plan a date with Amber...
 
-That's why there are official [Rules of Hooks](https://reactjs.org/docs/hooks-rules.html):
+That's why there are official [React Rules of Hooks](https://reactjs.org/docs/hooks-rules.html):
 
 > - Don’t call Hooks inside loops, conditions, or nested functions.
 > - Don’t call Hooks from regular JavaScript functions.
@@ -385,7 +385,7 @@ layla_rose id: (2, Location { file: "src/main.rs", line: 31, col: 9 }), age: 26
 ----------------------------
 ```
 
-To make the code more robust we'll need to track also ancestors. Otherwise we may have calls with equal index and direct callers but they are actually different because they have different callers of callers... So.. we need to create a simple _blockchain_ where each call has a hash of the previous call (yeah, another buzzword for SEO..)
+To make the code more robust we'll need to track also ancestors. Otherwise we may have calls with equal index and direct callers but different callers of callers... So we need to create a simple _blockchain_ where each call has a hash of the previous call (yeah, another buzzword for SEO..)
 
 However Nemesis for all Javascript and Rust Hooks are loops. Different calls in loops may have equal both index and location. It means we need another factor to correctly distinguish calls - `keys`. Unfortunately they need to be provided by developer because they depend on application data.
 
@@ -442,7 +442,7 @@ Let's learn from the past and see what works and what doesn't.
 
 - Many frameworks / GUI libraries often try to store and manage all objects representing elements/components by themselves and use the target platform only as a "canvas" where they render elements.
    
-   - Why write a custom DOM when we still need to use the browser DOM? The custom DOM then basically becomes a cache. And what are the [most difficult things](https://martinfowler.com/bliki/TwoHardThings.html) in computer science?
+   - Why write a custom DOM when we still need to use the browser DOM? The custom DOM then basically becomes a cache. And what are [the most difficult things](https://martinfowler.com/bliki/TwoHardThings.html) in computer science?
    
    - Why to store and manage objects when we only want to render a HTML string for a Google bot?
 
@@ -542,20 +542,20 @@ This example works exactly like the previous one but there are some differences 
 
 1. `counter` isn't stored in a static reference / global variable, but created as a local variable. 
    
-   - Soo... where is it stored?? In the browser DOM! `Button::new` creates immediately a new DOM node and our `counter` is passed into its `on_press` handler. It's possible because the `root` function is invoked only once to build the app / create DOM.
+   - Soo... where is it stored?? In the browser DOM! `Button::new` creates immediately a new DOM node and our `counter` is passed into its `on_press` handler. It's possible because the `root` function is invoked only once to build the app / create the DOM.
 
 1. `counter`'s `Mutable` is wrapped in `Rc`.
-   - We need to pass the same `counter` into two `on_press` handlers. Otherwise it wouldn't be necessary.
+   - We need to pass the same `counter` into two `on_press` handlers. Otherwise `Rc` wouldn't be necessary.
 
 1. There is a `clone!` macro.
-   - Yeah, it's just an alias for `enc!` macro in the [enclose](https://crates.io/crates/enclose) crate. I hope Rust will support cloning into closures natively.
+   - It's just an alias for `enc!` macro in the [enclose](https://crates.io/crates/enclose) crate. I hope Rust will support cloning into closures natively.
    - The `clone!` macro is active when the Zoon's feature flag `clone` is enabled.
 
 1. `counter().update(|counter| counter - 1)` has been replaced with `*counter.lock_mut() += step`.
    
    - You probably wouldn't find the method `update` in `futures-signals` docs - there are traits like `MutableExt` in the Zoon with such helpers.
 
-   - Be careful with `lock_*` methods. There are cases where it's a bit hard to predict in Rust when the lock is unlocked / dropped (you'll find an example in the next chapter). Also `futures-signals` crate currently uses `std::sync::RwLock` under the hood that doesn't output a nice error message to the console (especially in Firefox) so it may be hard to track the problem of trying to lock already locked `Mutable`. (I was talking about it with the `futures-signals` author, it should be less confusing in the future.)
+   - Be careful with `lock_*` methods. There are cases where it's a bit hard to predict in Rust when the lock is unlocked / dropped (you'll find an example in the next chapter). Also `futures-signals` crate currently uses `std::sync::RwLock` under the hood that doesn't output a nice error message to the console (especially in Firefox) so it may be hard to track the problem of trying to lock already locked `Mutable`. (I was talking about it with the `futures-signals`'s author, it should be less confusing in the future.)
 
 --
 
@@ -615,7 +615,7 @@ The most interesting are these two parts:
 rows().lock_mut().retain(|row| row.id != id)
 ```
 
-`RawEl::children_signal_vec` updates its child elements according to the input signal. The signal comes from a `MutableVec` returned from `rows()`. The most important fact is that this signal transmits only differences between the old and the updated vector. It means it's fast because it doesn't have to clone the entire vector on every change and it can transmit only the child's index in the case of removing. 
+`RawEl::children_signal_vec` updates its child elements according to the input signal. The signal comes from a `MutableVec` returned from `rows()`. The most important fact is that this signal transmits only differences between the old and the updated vector. It means it's fast because it doesn't have to clone the entire vector on every change and it can transmit only the child index in the case of removing. 
 
 _Note:_ `RawEl` is a "low-level element". It means `RawEl` is used as a foundation for other Zoon elements like `Row` and `Button`. Only the element `Text` is based on `RawText`. Both `RawEl` and `RawText` implement `Element` and `From for RawElement`. There will be probably also a `RawSvgEl` in the future. The idea is all _raw elements_ can write directly to the browser DOM or to `String` as needed.
 
@@ -729,7 +729,7 @@ error[E0277]: the trait bound `ChildFlagSet: FlagNotSet` is not satisfied
    |                          ^^^^^ the trait `FlagNotSet` is not implemented for `ChildFlagSet`
 ```
 
-The Rust compiler doesn't allow us to write the code that would break `Button` or `El` _rules_. Only one label and one child makes sense. 
+The Rust compiler doesn't allow us to write the code that would break `Button` or `El` _rules_. Only one label and one child makes sense for `Button` and `El`.
 
 The compilation also fails when you don't set the label or child at all:
 
@@ -750,11 +750,11 @@ error[E0277]: the trait bound `zoon::El<ChildFlagNotSet>: zoon::Element` is not 
              <zoon::El<ChildFlagSet> as zoon::Element>
 ```
 
-Yeah, we may have constructors like `El::new(..)` instead. But then we also need at least `El::with_child_signal(..)`. And other constructors for more complex elements with more required parameters and their combinations. It becomes cumbersome very quickly.
+Yeah, we may have constructors like `El::new(..)` with many parameters instead. But then we also need at least `El::with_child_signal(..)`. And other constructors for more complex elements with more required parameters and their combinations. It becomes cumbersome very quickly.
 
 _Note:_ There are exceptions in the Zoon API like `RawEl::new("div")` and `Text::new("text")` because it's not possible to even create a builder for these types without the most important input data. 
 
-Why we can't just take the last value as the valid one? E.g. `Button::new().label("X").label("Y");` will be a button labeled "Y".
+Why we can't just take the last value as the valid one? E.g. `Button::new().label("X").label("Y");` would be a button labeled "Y".
    - All methods (`.label(..)`, `.child(..)`) modifies the DOM immediately. It means we would need to delete the previous label and it would be pretty inefficient.
    - It will be confusing - `El` can have only one child, but `Row` accepts multiple children. 
 
@@ -860,7 +860,9 @@ The only purpose of _flags_ is to enforce _rules_ by the Rust compiler.
 
 The compiler doesn't allow to call `label` or `label_signal` if the label is already set. The same rule applies for `on_press` handler.
 
-The trade-off for compile-time checked rules are generics. However it isn't a big problem in practice because in _view_ you often return them from a function by `impl Element`. And when you really need to _box_ them because you want to use them in a collection or in `match` / `if` arms, then you can because `Element` trait is [object safe](https://doc.rust-lang.org/reference/items/traits.html#object-safety) for these purposes.
+The trade-off for compile-time checked rules are generics. However it isn't a big problem in practice because in _view_ you often return elements from a function by `impl Element`. And when you really need to _box_ them because you want to use them in a collection or in `match` / `if` arms, then you can because `Element` trait is [object safe](https://doc.rust-lang.org/reference/items/traits.html#object-safety) for these purposes.
+
+Another trade-off could be a bit cryptic error messages but I think they aren't too bad and maybe we'll be able to improve them.
 
 --
 
@@ -886,7 +888,7 @@ col![
 ### Macro API advantages:
 - Less verbosity / boilerplate in most cases.
 - Can accept more types than standard functions thanks to "tricks" (e.g. implementing different traits with the same methods for different types) to resolve conflicting `impl`s to achieve a simpler [specialization](https://github.com/rust-lang/rfcs/blob/master/text/1210-impl-specialization.md). _Note:_ You can see this trick in action in Seed's `UpdateEl*` [traits](https://github.com/seed-rs/seed/blob/938d71b6527efcd84c7d9ff37330949791b6d3a4/src/virtual_dom/update_el.rs) that power its element macros.
-- It can protect from locks-related problems. See the example below.
+- It can protect from locks-related problems. An example:
 
 ```rust
 fn root() -> impl Element {
@@ -906,12 +908,14 @@ We can resolve it manually:
 .item({ let lock = counter().lock_ref(); *lock })
 ```
 
-_Note:_ I hope Rust compiler will be clever enough to resolve it in the future by itself and also provide a more descriptive error.
+_Notes:_ 
+- I hope Rust compiler will be clever enough to resolve it in the future by itself and also provide a more descriptive error.
+- Javascript guys come again with many weird names! This time for [a self-invoking closure](https://developer.mozilla.org/en-US/docs/Glossary/IIFE) you've seen in the example above.
 
 ### Macro API disadvantages:
 - Less compiler friendly (cryptic errors) and less auto-complete / IDE friendly.
 - May cause code bloat.
-- `Element` implementation is more complicated.
+- Complicates element implementations.
 - Didn't pass the "girlfriend test" (A non-developer person with a good graphic taste points the finger to the nicer code when two same examples with different APIs are presented for examination.)
 - Hard to learn for beginners.
 - Hard to maintain.
@@ -947,17 +951,19 @@ wasm-opt = ['-O4']
 
 MoonZoon CLI (`mzoon`) uses [wasm-pack](https://github.com/rustwasm/wasm-pack) to build your frontend app with Zoon. `wasm-pack` downloads and manages tools like [wasm-bindgen CLI](https://rustwasm.github.io/wasm-bindgen/reference/cli.html) and [wasm-opt](https://github.com/WebAssembly/binaryen#binaryen-optimizations) and browser drivers for testing.
 
-- `wasm-bindgen` CLI and [crate](https://crates.io/crates/wasm-bindgen) do the hard work to connect the Javascript with Rust / Wasm world. `wasm-pack` / `wasm-bindgen CLI` often generates a Javascript file to "boot" your app stored in the Wasm file. `wasm-bindgen` also can generate Typescript types for exported functions from Wasm and JS snippets defined in your Rust code.
+- `wasm-bindgen` CLI and [the library](https://crates.io/crates/wasm-bindgen) do the hard work to connect Javascript with Rust / Wasm. `wasm-pack` / `wasm-bindgen CLI` generates a Javascript file to "boot" your app stored in the Wasm file. `wasm-bindgen` also can generate Typescript types or JS files from your JS snippets defined in the Rust code.
 
 - `wasm-opt` is a tool for Wasm file optimizations. It can improve speed, but it's excellent in size reduction. _Note:_ It's written in C++.
 
 `wasm-pack` can be [configured](https://rustwasm.github.io/wasm-pack/book/cargo-toml-configuration.html?highlight=wasm-opt#cargotoml-configuration) in `Cargo.toml`. And it automatically installs also the required [compilation target](https://doc.rust-lang.org/rustc/targets/index.html) `wasm32-unknown-unknown`.
 
-When you run `mzoon start` or `mzoon build`, MZoon checks if the `wasm-pack` is installed on your system (it'll do it automatically in the future) and then runs
+When you run `mzoon start` or `mzoon build`, MZoon checks if the `wasm-pack` is installed on your system and then runs
 ```
 wasm-pack --log-level warn build frontend --target web --no-typescript --dev
 ```
-to compile your app. _Note_: It doesn't append `--dev` if you run `mzoon start -r`
+to compile your app.
+
+_Note:_ `mzoon` will be able to install `wasm-pack` automatically in the future.
 
 --
 
@@ -976,7 +982,7 @@ getrandom = { version = "0.2", features = ["js"], default-features = false }
 
 - When you enable only the needed features, you can reduce compilation speed.
 
-- Many creates offer features that optimize the crate and its dependencies for a particular platform (embedded, Wasm), characteristic (speed / size).
+- Many creates offer features that optimize the crate itself and its dependencies for a particular platform (embedded, Wasm) or attribute (speed / size).
 
 - You often need to look into the source code because many feature flags and conditions aren't documented or visible on [docs.rs](https://docs.rs/). Examples:
 
@@ -1020,28 +1026,28 @@ The flag `tracing_alloc` would switch to the [wasm-tracing-allocator](https://cr
 
 ### `fmt`
 
-This feature enables dependencies [ufmt](https://crates.io/crates/ufmt) and [lexical](https://crates.io/crates/lexical). It could replace `std::fmt` machinery (`Debug`, `format!`, `println!`) however I'll probably focus on it in other MoonZoon dev iteration. And you'll see some related notes in the next `Size` section.
+This feature enables dependencies [ufmt](https://crates.io/crates/ufmt) and [lexical](https://crates.io/crates/lexical). It could replace `std::fmt` machinery (`Debug`, `format!`, `println!`) however I'll probably focus on it in another MoonZoon dev iteration. You'll see some other `fmt`-related notes later, in the `Size` section.
 
 --
 
 Now we can finally talk about your application code.
 
 There are some recommendation for Wasm + JS:
-- Wrap `&str` in [intern](https://docs.rs/wasm-bindgen/0.2.74/wasm_bindgen/fn.intern.html) where it makes sense. It caches strings in JS to mitigate slow string passing through the Rust-JS "bridge" created by `wasm-bindgen`. Zoon (exactly [dominator](https://crates.io/crates/dominator)) interns automatically many element arguments so you don't need to do it by yourself in most cases.
+- Wrap `&str` in [intern](https://docs.rs/wasm-bindgen/0.2.74/wasm_bindgen/fn.intern.html) where it makes sense. It caches strings in JS to mitigate slow string passing through the Rust-JS "bridge" created by `wasm-bindgen`. Zoon (more accurately [dominator](https://crates.io/crates/dominator)) interns automatically many element arguments so you don't need to do it by yourself in most cases.
 
-- Be careful with sending strings and more complex items from and to JS world. It may be slow because of encoding and serialization and it may cause some boilerplate in the app code because it's often needed to tell `wasm-bindgen` how your items should be serialized for export to JS. _Note:_ This problem should be mitigated in the future by richer Wasm API that allows faster Wasm-JS communication.
+- Be careful with sending strings and more complex items from and to JS world. It may be slow because of encoding and serialization. And it may cause some boilerplate in the app because it's often needed to tell `wasm-bindgen` how your items should be serialized for export to JS. _Note:_ This problem should be mitigated in the future by richer Wasm API that allows faster Wasm-JS communication.
 
 - Use `unchecked_*` alternatives where it makes sense - see, for instance, [wasm_bindgen::JsCast](https://docs.rs/wasm-bindgen/0.2.74/wasm_bindgen/trait.JsCast.html).
 
 And some general recommendations:
 
-- Reduce memory allocations as much as possible. It means generics instead of `Box`, _arrays_ instead of _vectors_ and other stuff.
+- Reduce memory allocations as much as possible. It means generics instead of `Box`, _arrays_ instead of _vectors_ and similar stuff.
 
 - Reduce the number of expensive `.clone`, `.to_owned`, `.to_string`, `.collect`, `.into` .., calls.
 
 - Reduce reallocations. Try to call, for instance, [Vec::with_capacity](https://doc.rust-lang.org/std/vec/struct.Vec.html#method.with_capacity) instead of `Vec::new` / `vec![]` where possible.
 
-- Try to switch algorithms / structures when it makes sense - e.g. `HashMap` vs `IndexMap` vs `HashMap` with a non-secure hash function vs `BTreeMap` vs `SlotMap`, etc. It makes sense only when you've prepared benchmarks - results could be quite surprising. _Tip_: Watch out for `println!` calls in your benchmarks, console operations could be pretty slow. 
+- Pick the most suitable algorithms / structures - e.g. `HashMap` vs `IndexMap` vs `HashMap` with a non-secure hash function vs `BTreeMap` vs `SlotMap`, etc. It makes sense only when you've prepared benchmarks - results could be quite surprising. _Tip_: Watch out for `println!` calls in your benchmarks, console operations could be pretty slow. 
 
 - There are libraries like [smallvec](smallvec
 ) or [im](https://crates.io/crates/im) or [fst](https://crates.io/crates/fst) which helps A LOT if you know how and where to use them.
@@ -1059,23 +1065,23 @@ Recommendations for all web apps:
 Moon generates `index.html` very similar to this one:
 
 ```html
-    <head>
-      ...
-      <link rel="preload" href="/pkg/frontend_bg_{id}.wasm" as="fetch" type="application/wasm" crossorigin>
-      <link rel="modulepreload" href="/pkg/frontend_{id}.js" crossorigin>
-      {head_extra} 
-    </head>
+<head>
+    ...
+    <link rel="preload" href="/pkg/frontend_bg_{id}.wasm" as="fetch" type="application/wasm" crossorigin>
+    <link rel="modulepreload" href="/pkg/frontend_{id}.js" crossorigin>
+    {head_extra} 
+</head>
 
-    <body>
-      ...
-      <script type="module">
-        import init from '/pkg/frontend_{id}.js';
-        init('/pkg/frontend_bg_{id}.wasm');
-      </script>
-    </body>
+<body>
+    ...
+    <script type="module">
+    import init from '/pkg/frontend_{id}.js';
+    init('/pkg/frontend_bg_{id}.wasm');
+    </script>
+</body>
 ```
 
-Notice [preload](https://developer.mozilla.org/en-US/docs/Web/HTML/Preloading_content) and [modulepreload](https://developer.mozilla.org/en-US/docs/Web/HTML/Link_types/modulepreload) (don't ask me why there are two distict names, HTML and browser APIs is one big mystery to me).
+Notice [preload](https://developer.mozilla.org/en-US/docs/Web/HTML/Preloading_content) and [modulepreload](https://developer.mozilla.org/en-US/docs/Web/HTML/Link_types/modulepreload) (don't ask me why they are two distinct names, HTML and browser APIs is one big mystery to me).
 
 The browser will be downloading files marked with `preload / moduleprelod` even if it needs to resolve scripts and styles hidden under the placeholder `{head_extra}` before it can move to process `body`.
 
@@ -1089,14 +1095,14 @@ There are many reasons why to use HTTP/2 instead of HTTP/1.1. See the basic list
 
 When you start your MoonZoon app or a MoonZoon example (see [Development.md](https://github.com/MoonZoon/MoonZoon/blob/main/docs/development.md)), it runs on `HTTP/1.1` by default. You can check it in the browser developer tools, in the tab `Network` when you add the column `Protocol`.
 
-To enable HTTP/2 you have to enable HTTPS. Modify the file `MoonZoon.toml` in your project or MoonZoon example:
+To enable HTTP/2 you have to enable HTTPS. Modify the file `MoonZoon.toml` in your project or in a MoonZoon example:
 ```toml
 # port = 8080
 port = 8443
 https = true
-...
+# ...
 ```
-then start/restart the server (`makers mzoon start` for examples) and go to [https://localhost:8443](https://localhost:8443). Accept a potential security risk caused be a self-signed certificate and you should see `HTTP/2` (Firefox) or `h2` (Chrome) in the dev tools. 
+then start the server (`makers mzoon start` for examples) and go to [https://localhost:8443](https://localhost:8443). Accept a potential security risk caused be a self-signed certificate and you should see `HTTP/2` (Firefox) or `h2` (Chrome) in the dev tools. 
 
 --
 
@@ -1104,7 +1110,7 @@ Aaaand how can we measure performance?
 
 1. Learn to use the browser tools. Chrome dev tools are probably the best - tutorial: [Analyze runtime performance](https://developer.chrome.com/docs/devtools/evaluate-performance/).
 
-1. You can use [web_sys::Performance](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Performance.html) to measure your app logic. See related [MDN docs](https://developer.mozilla.org/en-US/docs/Web/API/Performance).
+1. You can use [web_sys::Performance](https://rustwasm.github.io/wasm-bindgen/api/web_sys/struct.Performance.html) to measure individual functions and your business logic speed. See related [MDN docs](https://developer.mozilla.org/en-US/docs/Web/API/Performance).
 
 1. I'm sure you'll be able to find some Rust or Javascript benchmark libraries suitable for Wasm. (Don't hesitate to share your experience.)
 
@@ -1137,13 +1143,13 @@ Or you can try to use the browser API instead of Rust libs - e.g. [js_sys::RegEx
 
 ### Macros
 
-Macros are basically code generators. Be prepared for larger binaries if you use them. Don't forgot that attributes like `#[derive(Debug)]` could generate a lot of code.
+Macros are basically code generators. Be prepared for larger binaries if you use them. Don't forget that attributes like `#[derive(Debug)]` could generate a lot of code.
 
 If you need to write your custom macros, try to extract as much code as possible to new functions.
 
 ### Panics / errors
 
-The most code behind panics are fortunately removed by `wasm-opt`. However we can help it:
+The most panic-related code is fortunately removed by `wasm-opt`, but not all of them. However we can help it:
 
 Call `expect_throw` and `unwrap_throw` instead of standard `expect` and `unwrap`. See [wasm_bindgen::UnwrapThrowExt](https://docs.rs/wasm-bindgen/0.2.74/wasm_bindgen/trait.UnwrapThrowExt.html).
 
@@ -1154,7 +1160,7 @@ pub fn start_app ... {
     #[cfg(debug_assertions)]
     console_error_panic_hook::set_once();
 ```
-This panic hooks is useful for debugging because it shows panic errors in console log. However we don't need it in the `release` build. `wasm-opt` can't remove it by itself - we should remove all debug helpers during the compilation process.
+This panic hook is useful for debugging because it shows panic errors in console log. However we don't need it in the `release` build. `wasm-opt` can't remove it by itself so we should mark all debug helpers that should be omitted in the `release` build by `#[cfg(debug_assertions)]` or a similar compile-time condition.
 
 _Note:_ We need `console_error_panic_hook` because panics aren't automatically redirected to the console log. There are many `std` APIs that just do nothing in Wasm. That's why you need to, for instance, add `use zoon::{*, println};` if you want to call `println` in your app.
 
@@ -1190,15 +1196,15 @@ You need to experiment with values `'s'` / `['-Os']` and `'z'` / `['-Oz']`. Some
 
 There is a nice popular world in the Rust world - _monomorphization_.
 
-An excerpt from Rust book, section [Performance of Code Using Generics](https://doc.rust-lang.org/book/ch10-01-syntax.html#performance-of-code-using-generics):
+An excerpt from the Rust book, section [Performance of Code Using Generics](https://doc.rust-lang.org/book/ch10-01-syntax.html#performance-of-code-using-generics):
 
 - _"You might be wondering whether there is a runtime cost when you’re using generic type parameters. The good news is that Rust implements generics in such a way that your code doesn’t run any slower using generic types than it would with concrete types."_
 
-Well, it's a bad news for us. [Explained in the docs](https://rustwasm.github.io/twiggy/concepts/generic-functions-and-monomorphization.html) for a very useful code size profile for Wasm [Twiggy](https://github.com/rustwasm/twiggy):
+Well, it's a bad news for us. [Explained in the docs](https://rustwasm.github.io/twiggy/concepts/generic-functions-and-monomorphization.html) of a very useful code size profiler for Wasm [Twiggy](https://github.com/rustwasm/twiggy):
 
 - _"Generic functions with type parameters in Rust and template functions in C++ can lead to code bloat if you aren't careful. Every time you instantiate these generic functions with a concrete set of types, the compiler will monomorphize the function, creating a copy of its body replacing its generic placeholders with the specific operations that apply to the concrete types."_
 
-So it basically says we shouldn't use generics. However there are two problems:
+So it basically says we shouldn't use generics if we want to optimize for size because of inlining. However there are two problems:
 
 1. Generics are often used in your dependencies - out of your control. E.g. Twiggy says that most code bloat because of generics is caused by the crate `futures-signals` in Zoon's `js-framework-benchmark` example.  
 
@@ -1206,7 +1212,7 @@ So it basically says we shouldn't use generics. However there are two problems:
 
 ### Compression
 
-Browsers support multiple kinds of compression, always at least [Gzip](https://en.wikipedia.org/wiki/Gzip) and [Brotli](https://github.com/google/brotli).
+Browsers support multiple kinds of compression, always at least [Gzip](https://en.wikipedia.org/wiki/Gzip) or [Brotli](https://github.com/google/brotli).
 
 MoonZoon CLI (`mzoon`) automatically compresses `wasm` and other files with both algorithms during the `release` build. And then Moon serves them according to the header [Accept-Encoding](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding) extracted from incoming requests.
 
@@ -1224,11 +1230,11 @@ _Dev Note:_ It's [difficult](https://github.com/MoonZoon/MoonZoon/pull/6#issueco
 
 Why are MoonZoon apps optimized for size by default?
 
-- Better SEO thanks to faster page load.
 - Storing small files is cheaper. For you and for hostings / CDNs - it means there is also a higher probability the files will be cached longer on such services.
 - Sending small files are cheaper. It means you pay less for bandwidth and there will be lower traffic so you'll save money on servers.
 - Users using a pay-per-use internet connection are happier.
 - Users with slow internet are happier.
+- Better SEO thanks to faster page load. (Applies if the bot can run Wasm/JS and prerendering/SSR is disabled.)
 - Rust / Wasm is fast enough for almost all cases even when optimized for size.
 - My WiFi signal is weak in the kitchen.
 
