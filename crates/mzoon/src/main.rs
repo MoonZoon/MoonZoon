@@ -316,10 +316,10 @@ fn build_frontend(release: bool, cache_busting: bool) -> bool {
         let old_js = format!("frontend/pkg/frontend_{}.js", old_build_id);
         let _ = fs::remove_file(&old_wasm);
         let _ = fs::remove_file(&old_js);
-        let _ = fs::remove_file(format!("{}_br", &old_wasm));
-        let _ = fs::remove_file(format!("{}_br", &old_js));
-        let _ = fs::remove_file(format!("{}_gzip", &old_wasm));
-        let _ = fs::remove_file(format!("{}_gzip", &old_js));
+        let _ = fs::remove_file(format!("{}.br", &old_wasm));
+        let _ = fs::remove_file(format!("{}.br", &old_js));
+        let _ = fs::remove_file(format!("{}.gz", &old_wasm));
+        let _ = fs::remove_file(format!("{}.gz", &old_js));
         // @TODO replace with the crate with more reliable removing on Windows? 
         let _ = fs::remove_dir_all("frontend/pkg/snippets");
     }
@@ -369,7 +369,7 @@ fn compress_pkg(wasm_file_path: &Path, js_file_path: &Path) {
 fn compress_file(file_path: &Path) {
     BrotliCompress(
         &mut File::open(&file_path).unwrap(),
-        &mut File::create(&format!("{}_br", file_path.to_str().unwrap())).unwrap(), 
+        &mut File::create(&format!("{}.br", file_path.to_str().unwrap())).unwrap(),
         &BrotliEncoderParams::default()
     ).unwrap();
 
@@ -377,7 +377,7 @@ fn compress_file(file_path: &Path) {
     let mut gzip_encoder = GzEncoder::new(file_reader, Compression::best());
     let mut buffer = Vec::new();
     gzip_encoder.read_to_end(&mut buffer).unwrap();
-    fs::write(&format!("{}_gzip", file_path.to_str().unwrap()), buffer).unwrap();
+    fs::write(&format!("{}.gz", file_path.to_str().unwrap()), buffer).unwrap();
 }
 
 fn visit_dirs(dir: &Path, cb: &mut dyn FnMut(&DirEntry)) -> io::Result<()> {
