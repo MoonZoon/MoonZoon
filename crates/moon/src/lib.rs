@@ -1,18 +1,18 @@
-use std::future::Future;
-use std::error::Error;
-use std::convert::Infallible;
-use std::sync::{Arc, Mutex};
-use std::fs;
-use std::path::Path;
-use std::env;
 use std::borrow::Cow;
 use std::collections::BTreeSet;
+use std::convert::Infallible;
+use std::env;
+use std::error::Error;
+use std::fs;
+use std::future::Future;
+use std::path::Path;
+use std::sync::{Arc, Mutex};
+use tokio::io::AsyncReadExt;
 use tokio::runtime::Runtime;
-use tokio::task;
-use tokio::sync::oneshot;
 use tokio::signal;
 use tokio::sync::mpsc;
-use tokio::io::AsyncReadExt;
+use tokio::sync::oneshot;
+use tokio::task;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
 use warp::{
@@ -42,7 +42,7 @@ impl Frontend {
         Self {
             title: String::new(),
             append_to_head: String::new(),
-            body_content: Cow::from(r#"<section id="app"></section>"#)
+            body_content: Cow::from(r#"<section id="app"></section>"#),
         }
     }
 
@@ -62,9 +62,7 @@ impl Frontend {
     }
 }
 
-pub struct UpMsgRequest {
-
-}
+pub struct UpMsgRequest {}
 
 #[macro_export]
 macro_rules! start {
@@ -83,7 +81,7 @@ struct Config {
 
 #[derive(Debug)]
 struct RedirectServer {
-    port: u16, 
+    port: u16,
     enabled: bool,
 }
 
@@ -104,16 +102,18 @@ fn load_config() -> Config {
         port: env::var("PORT").map_or(8080, |port| port.parse().unwrap()),
         https: env::var("HTTPS").map_or(false, |https| https.parse().unwrap()),
         redirect_server: RedirectServer {
-            port: env::var("REDIRECT_SERVER__PORT").map_or(8081,|port| port.parse().unwrap()),
-            enabled: env::var("REDIRECT_SERVER__ENABLED").map_or(false, |enabled| enabled.parse().unwrap()),
+            port: env::var("REDIRECT_SERVER__PORT").map_or(8081, |port| port.parse().unwrap()),
+            enabled: env::var("REDIRECT_SERVER__ENABLED")
+                .map_or(false, |enabled| enabled.parse().unwrap()),
         },
-        compressed_pkg: env::var("COMPRESSED_PKG").map_or(true, |compressed| compressed.parse().unwrap()),
+        compressed_pkg: env::var("COMPRESSED_PKG")
+            .map_or(true, |compressed| compressed.parse().unwrap()),
     }
 }
 
 pub fn start<IN, FR, UP>(
-    init: impl FnOnce() -> IN, 
-    frontend: impl Fn() -> FR + Copy + Send + Sync + 'static, 
+    init: impl FnOnce() -> IN,
+    frontend: impl Fn() -> FR + Copy + Send + Sync + 'static,
     up_msg_handler: impl Fn(UpMsgRequest) -> UP + Copy + Send + Sync + 'static,
 ) -> Result<(), Box<dyn Error>>
 where
@@ -124,7 +124,7 @@ where
     let config = load_config();
     println!("Moon config: {:#?}", config);
 
-    let rt  = Runtime::new()?;
+    let rt = Runtime::new()?;
     rt.block_on(async move {
         let sse_senders = Vec::<mpsc::UnboundedSender<Result<Event, Infallible>>>::new();
         let sse_senders = Arc::new(Mutex::new(sse_senders));
@@ -139,35 +139,43 @@ where
 
         let api = warp::post().and(warp::path("api"));
 
-        let up_msg_handler_route = api
-            .and(warp::path("up_msg_handler"))
-            .and_then(move || async move {
-                up_msg_handler(UpMsgRequest {}).await;
-                Ok::<_, warp::Rejection>(http::StatusCode::OK)
-            });
+        let up_msg_handler_route =
+            api.and(warp::path("up_msg_handler"))
+                .and_then(move || async move {
+                    up_msg_handler(UpMsgRequest {}).await;
+                    Ok::<_, warp::Rejection>(http::StatusCode::OK)
+                });
 
-        let reload = api
-            .and(warp::path("reload"))
-            .and(sse_senders.clone())
-            .map(|sse_senders: Arc<Mutex<Vec<mpsc::UnboundedSender<Result<Event, Infallible>>>>>| {
+        let reload = api.and(warp::path("reload")).and(sse_senders.clone()).map(
+            |sse_senders: Arc<Mutex<Vec<mpsc::UnboundedSender<Result<Event, Infallible>>>>>| {
                 sse_senders.lock().unwrap().retain(|sse_sender| {
-                    sse_sender.send(Ok(Event::default().event("reload").data(""))).is_ok()
+                    sse_sender
+                        .send(Ok(Event::default().event("reload").data("")))
+                        .is_ok()
                 });
                 http::StatusCode::OK
-            });
+            },
+        );
 
-        let sse = warp::path!("sse")
-            .and(sse_senders)
-            .map(move |sse_senders: Arc<Mutex<Vec<mpsc::UnboundedSender<Result<Event, Infallible>>>>>| {
+        let sse = warp::path!("sse").and(sse_senders).map(
+            move |sse_senders: Arc<
+                Mutex<Vec<mpsc::UnboundedSender<Result<Event, Infallible>>>>,
+            >| {
                 let (sse_sender, sse_receiver) = mpsc::unbounded_channel();
-                let sse_stream = UnboundedReceiverStream::<Result<Event, Infallible>>::new(sse_receiver);
+                let sse_stream =
+                    UnboundedReceiverStream::<Result<Event, Infallible>>::new(sse_receiver);
 
                 let backend_build_id = backend_build_id.to_string();
-                sse_sender.send(Ok(Event::default().event("backend_build_id").data(backend_build_id))).unwrap();
+                sse_sender
+                    .send(Ok(Event::default()
+                        .event("backend_build_id")
+                        .data(backend_build_id)))
+                    .unwrap();
 
                 sse_senders.lock().unwrap().push(sse_sender);
                 warp::sse::reply(warp::sse::keep_alive().stream(sse_stream))
-            });
+            },
+        );
 
         let pkg_route = pkg_route(config.compressed_pkg, "frontend/pkg/");
         let public_route = warp::path("public").and(warp::fs::dir("public/"));
@@ -181,25 +189,28 @@ where
                 .unwrap_or_default();
 
             Ok::<_, warp::Rejection>(warp::reply::html(html(
-                &frontend.title, backend_build_id, frontend_build_id, &frontend.append_to_head, &frontend.body_content
+                &frontend.title,
+                backend_build_id,
+                frontend_build_id,
+                &frontend.append_to_head,
+                &frontend.body_content,
             )))
         });
-        
+
         let main_server_routes = up_msg_handler_route
             .or(reload)
             .or(sse)
             .or(pkg_route)
             .or(public_route)
             .or(frontend_route);
-            
+
         let (shutdown_sender_for_redirect_server, redirect_server_handle) = {
             let config_port = config.port;
             let config_https = config.https;
 
             if config.redirect_server.enabled {
-                let redirect_server_routes = warp::path::full()
-                    .and(warp::host::optional())
-                    .map(move |path: FullPath, authority: Option<Authority>| {
+                let redirect_server_routes = warp::path::full().and(warp::host::optional()).map(
+                    move |path: FullPath, authority: Option<Authority>| {
                         let authority = authority.unwrap();
                         let authority = format!("{}:{}", authority.host(), config_port);
                         let authority = authority.parse::<Authority>().unwrap();
@@ -211,27 +222,36 @@ where
                             .build()
                             .unwrap();
                         warp::redirect::temporary(uri)
-                    });
+                    },
+                );
 
-                let (shutdown_sender_for_redirect_server, shutdown_receiver_for_redirect_server) = oneshot::channel();
+                let (shutdown_sender_for_redirect_server, shutdown_receiver_for_redirect_server) =
+                    oneshot::channel();
                 let (_, redirect_server) = warp::serve(redirect_server_routes)
-                    .bind_with_graceful_shutdown(([0, 0, 0, 0], config.redirect_server.port), async {
-                        shutdown_receiver_for_redirect_server.await.ok();
-                    });
+                    .bind_with_graceful_shutdown(
+                        ([0, 0, 0, 0], config.redirect_server.port),
+                        async {
+                            shutdown_receiver_for_redirect_server.await.ok();
+                        },
+                    );
                 let redirect_server_handle = task::spawn(redirect_server);
 
-                (Some(shutdown_sender_for_redirect_server), Some(redirect_server_handle))
+                (
+                    Some(shutdown_sender_for_redirect_server),
+                    Some(redirect_server_handle),
+                )
             } else {
                 (None, None)
             }
         };
 
-        let (shutdown_sender_for_main_server, shutdown_receiver_for_main_server) = oneshot::channel();
-        let main_server_handle = { 
+        let (shutdown_sender_for_main_server, shutdown_receiver_for_main_server) =
+            oneshot::channel();
+        let main_server_handle = {
             let server = warp::serve(main_server_routes);
-             if config.https {
+            if config.https {
                 let main_server = server
-                    .tls() 
+                    .tls()
                     .cert_path("backend/private/public.pem")
                     .key_path("backend/private/private.pem")
                     .bind_with_graceful_shutdown(([0, 0, 0, 0], config.port), async {
@@ -251,11 +271,13 @@ where
 
         if config.redirect_server.enabled {
             println!(
-                "Redirect server is running on 0.0.0.0:{port} [http://127.0.0.1:{port}]", port = config.redirect_server.port);
+                "Redirect server is running on 0.0.0.0:{port} [http://127.0.0.1:{port}]",
+                port = config.redirect_server.port
+            );
         }
         println!(
-            "Main server is running on 0.0.0.0:{port} [{protocol}://127.0.0.1:{port}]", 
-            protocol = if config.https { "https" } else { "http" },  
+            "Main server is running on 0.0.0.0:{port} [{protocol}://127.0.0.1:{port}]",
+            protocol = if config.https { "https" } else { "http" },
             port = config.port
         );
 
@@ -288,7 +310,6 @@ const GZIP_ID: &str = "gzip";
 const GZIP_POSTFIX: &str = ".gz";
 
 fn pkg_route(compressed_pkg: bool, pkg_dir: &'static str) -> BoxedFilter<(impl Reply,)> {
-
     let pkg_dir = Path::new(pkg_dir);
 
     path("pkg")
@@ -338,13 +359,14 @@ fn pkg_route(compressed_pkg: bool, pkg_dir: &'static str) -> BoxedFilter<(impl R
 }
 
 fn html(
-    title: &str, 
-    backend_build_id: u128, 
-    frontend_build_id: u128, 
-    append_to_head: &str, 
-    body_content: &str
+    title: &str,
+    backend_build_id: u128,
+    frontend_build_id: u128,
+    append_to_head: &str,
+    body_content: &str,
 ) -> String {
-    format!(r#"<!DOCTYPE html>
+    format!(
+        r#"<!DOCTYPE html>
     <html lang="en">
     
     <head>
@@ -386,21 +408,22 @@ fn html(
       </script>
     </body>
     
-    </html>"#, 
-    title = title, 
-    html_debug_info = html_debug_info(backend_build_id),
-    body_content = body_content,
-    reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"),
-    frontend_build_id = frontend_build_id.to_string(),
-    append_to_head = append_to_head)
+    </html>"#,
+        title = title,
+        html_debug_info = html_debug_info(backend_build_id),
+        body_content = body_content,
+        reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"),
+        frontend_build_id = frontend_build_id.to_string(),
+        append_to_head = append_to_head
+    )
 }
 
 fn html_debug_info(_backend_build_id: u128) -> String {
     String::new()
     // format!("<h1>MoonZoon is running!</h1>
     //     <h2>Backend build id: {backend_build_id}</h2>
-    //     <h2>Random id: {random_id}</h2>", 
-    //     backend_build_id = backend_build_id.to_string(), 
+    //     <h2>Random id: {random_id}</h2>",
+    //     backend_build_id = backend_build_id.to_string(),
     //     random_id = Uuid::new_v4().to_string()
     // )
 }
