@@ -34,7 +34,7 @@ You can try it by yourself: [Live demo](https://moonzoon-demo.herokuapp.com/)
 - [Old Zoon architecture](#old-zoon-architecture) - How React and Rust Hooks work
 - [New Zoon architecture](#new-zoon-architecture) - Signals: You can do it without a Virtual DOM
 - [Builder pattern with rules](#builder-pattern-with-rules) - Yes, builder pattern can support required parameters
-- [Optimizations](#optimization) - Need for speed. The size matters.
+- [Optimizations](#optimizations) - Need for speed. The size matters.
 
 ---
 
@@ -1219,6 +1219,18 @@ This way you can significantly reduce traffic between frontend and backend.
 _Note:_ Firefox and probably other browsers support Brotli only on HTTPS. Chrome supports both Gzip and Brotli also on HTTP. It means you can't use only Brotli for all cases.
 
 _Dev Note:_ It's [difficult](https://github.com/MoonZoon/MoonZoon/pull/6#issuecomment-840037580) to serve files according to a header from Warp.
+
+--
+
+Why are MoonZoon apps optimized for size by default?
+
+- Better SEO thanks to faster page load.
+- Storing small files is cheaper. For you and for hostings / CDNs - it means there is also a higher probability the files will be cached longer on such services.
+- Sending small files are cheaper. It means you pay less for bandwidth and there will be lower traffic so you'll save money on servers.
+- Users using a pay-per-use internet connection are happier.
+- Users with slow internet are happier.
+- Rust / Wasm is fast enough for almost all cases even when optimized for size.
+- My WiFi signal is weak in the kitchen.
 
 ---
 
