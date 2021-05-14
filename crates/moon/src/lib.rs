@@ -1,20 +1,16 @@
-use std::borrow::Cow;
-use std::collections::BTreeSet;
-use std::convert::Infallible;
-use std::env;
-use std::error::Error;
-use std::fs;
-use std::future::Future;
-use std::path::Path;
-use std::sync::{Arc, Mutex};
-use tokio::io::AsyncReadExt;
-use tokio::runtime::Runtime;
-use tokio::signal;
-use tokio::sync::mpsc;
-use tokio::sync::oneshot;
-use tokio::task;
+use std::{
+    borrow::Cow,
+    collections::BTreeSet,
+    convert::Infallible,
+    env,
+    error::Error,
+    fs,
+    future::Future,
+    path::Path,
+    sync::{Arc, Mutex},
+};
+use tokio::{io::AsyncReadExt, runtime::Runtime, signal, sync::mpsc, sync::oneshot, task};
 use tokio_stream::wrappers::UnboundedReceiverStream;
-
 use warp::{
     filters::BoxedFilter,
     host::Authority,
@@ -37,25 +33,28 @@ pub struct Frontend {
     body_content: Cow<'static, str>,
 }
 
-impl Frontend {
-    pub fn new() -> Self {
+impl Default for Frontend {
+    fn default() -> Self {
         Self {
             title: String::new(),
             append_to_head: String::new(),
             body_content: Cow::from(r#"<section id="app"></section>"#),
         }
     }
+}
 
+impl Frontend {
+    pub fn new() -> Self {
+        Self::default()
+    }
     pub fn title(mut self, title: impl Into<String>) -> Self {
         self.title = title.into();
         self
     }
-
     pub fn append_to_head(mut self, html: &str) -> Self {
         self.append_to_head.push_str(html);
         self
     }
-
     pub fn body_content(mut self, content: impl Into<Cow<'static, str>>) -> Self {
         self.body_content = content.into();
         self
@@ -111,6 +110,8 @@ fn load_config() -> Config {
     }
 }
 
+type SseSenders = Vec<mpsc::UnboundedSender<Result<Event, Infallible>>>;
+
 pub fn start<IN, FR, UP>(
     init: impl FnOnce() -> IN,
     frontend: impl Fn() -> FR + Copy + Send + Sync + 'static,
@@ -126,7 +127,7 @@ where
 
     let rt = Runtime::new()?;
     rt.block_on(async move {
-        let sse_senders = Vec::<mpsc::UnboundedSender<Result<Event, Infallible>>>::new();
+        let sse_senders = SseSenders::new();
         let sse_senders = Arc::new(Mutex::new(sse_senders));
         let sse_senders = warp::any().map(move || sse_senders.clone());
 
@@ -147,7 +148,7 @@ where
                 });
 
         let reload = api.and(warp::path("reload")).and(sse_senders.clone()).map(
-            |sse_senders: Arc<Mutex<Vec<mpsc::UnboundedSender<Result<Event, Infallible>>>>>| {
+            |sse_senders: Arc<Mutex<SseSenders>>| {
                 sse_senders.lock().unwrap().retain(|sse_sender| {
                     sse_sender
                         .send(Ok(Event::default().event("reload").data("")))
@@ -157,25 +158,24 @@ where
             },
         );
 
-        let sse = warp::path!("sse").and(sse_senders).map(
-            move |sse_senders: Arc<
-                Mutex<Vec<mpsc::UnboundedSender<Result<Event, Infallible>>>>,
-            >| {
-                let (sse_sender, sse_receiver) = mpsc::unbounded_channel();
-                let sse_stream =
-                    UnboundedReceiverStream::<Result<Event, Infallible>>::new(sse_receiver);
+        let sse =
+            warp::path!("sse")
+                .and(sse_senders)
+                .map(move |sse_senders: Arc<Mutex<SseSenders>>| {
+                    let (sse_sender, sse_receiver) = mpsc::unbounded_channel();
+                    let sse_stream =
+                        UnboundedReceiverStream::<Result<Event, Infallible>>::new(sse_receiver);
 
-                let backend_build_id = backend_build_id.to_string();
-                sse_sender
-                    .send(Ok(Event::default()
-                        .event("backend_build_id")
-                        .data(backend_build_id)))
-                    .unwrap();
+                    let backend_build_id = backend_build_id.to_string();
+                    sse_sender
+                        .send(Ok(Event::default()
+                            .event("backend_build_id")
+                            .data(backend_build_id)))
+                        .unwrap();
 
-                sse_senders.lock().unwrap().push(sse_sender);
-                warp::sse::reply(warp::sse::keep_alive().stream(sse_stream))
-            },
-        );
+                    sse_senders.lock().unwrap().push(sse_sender);
+                    warp::sse::reply(warp::sse::keep_alive().stream(sse_stream))
+                });
 
         let pkg_route = pkg_route(config.compressed_pkg, "frontend/pkg/");
         let public_route = warp::path("public").and(warp::fs::dir("public/"));
