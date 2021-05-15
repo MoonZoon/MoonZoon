@@ -18,7 +18,7 @@ pub mod text;
 pub use text::Text;
 
 pub mod raw_el;
-pub use raw_el::RawEl;
+pub use raw_el::{RawEl, RawHtmlEl, RawSvgEl};
 
 pub mod raw_text;
 pub use raw_text::RawText;
@@ -32,7 +32,8 @@ pub trait Element {
 // ------ RawElement ------
 
 pub enum RawElement {
-    El(RawEl),
+    El(RawHtmlEl),
+    SvgEl(RawSvgEl),
     Text(RawText),
 }
 
@@ -40,6 +41,7 @@ impl IntoDom for RawElement {
     fn into_dom(self) -> Dom {
         match self {
             RawElement::El(raw_el) => raw_el.into_dom(),
+            RawElement::SvgEl(raw_svg_el) => raw_svg_el.into_dom(),
             RawElement::Text(raw_text) => raw_text.into_dom(),
         }
     }
