@@ -1,14 +1,18 @@
 use crate::*;
+use web_sys::{EventTarget, Node};
 
 // ------ ------
 //   Element
 // ------ ------
 
-pub struct RawEl {
-    dom_builder: DomBuilder<web_sys::HtmlElement>,
+pub type RawHtmlEl = RawEl<web_sys::HtmlElement>;
+pub type RawSvgEl = RawEl<web_sys::SvgElement>;
+
+pub struct RawEl<T> {
+    dom_builder: DomBuilder<T>,
 }
 
-impl RawEl {
+impl RawHtmlEl {
     pub fn new(tag: &str) -> Self {
         Self {
             dom_builder: DomBuilder::new_html(tag),
@@ -16,21 +20,41 @@ impl RawEl {
     }
 }
 
-impl From<RawEl> for RawElement {
-    fn from(raw_el: RawEl) -> Self {
-        RawElement::El(raw_el)
+impl RawSvgEl {
+    pub fn new(tag: &str) -> Self {
+        Self {
+            dom_builder: DomBuilder::new_svg(tag),
+        }
     }
 }
 
-impl IntoDom for RawEl {
+impl From<RawHtmlEl> for RawElement {
+    fn from(raw_html_el: RawHtmlEl) -> Self {
+        RawElement::El(raw_html_el)
+    }
+}
+
+impl From<RawSvgEl> for RawElement {
+    fn from(raw_svg_el: RawSvgEl) -> Self {
+        RawElement::SvgEl(raw_svg_el)
+    }
+}
+
+impl<T: Into<Node>> IntoDom for RawEl<T> {
     fn into_dom(self) -> Dom {
         self.dom_builder.into_dom()
     }
 }
 
-impl Element for RawEl {
+impl Element for RawHtmlEl {
     fn into_raw_element(self) -> RawElement {
-        self.into()
+        RawElement::El(self)
+    }
+}
+
+impl Element for RawSvgEl {
+    fn into_raw_element(self) -> RawElement {
+        RawElement::SvgEl(self)
     }
 }
 
@@ -38,7 +62,12 @@ impl Element for RawEl {
 //  Attributes
 // ------ ------
 
-impl<'a> RawEl {
+impl<'a, T> RawEl<T>
+where
+    T: AsRef<Node>,
+    T: AsRef<EventTarget>,
+    T: AsRef<web_sys::Element>,
+{
     pub fn attr(mut self, name: &str, value: &str) -> Self {
         self.dom_builder = self.dom_builder.attribute(name, value);
         self

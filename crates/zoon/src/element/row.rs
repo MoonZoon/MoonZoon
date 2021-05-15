@@ -8,14 +8,14 @@ use std::marker::PhantomData;
 make_flags!(Empty);
 
 pub struct Row<EmptyFlag> {
-    raw_el: RawEl,
+    raw_el: RawHtmlEl,
     flags: PhantomData<EmptyFlag>,
 }
 
 impl Row<EmptyFlagSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawEl::new("div").attr("class", "row"),
+            raw_el: RawHtmlEl::new("div").attr("class", "row"),
             flags: PhantomData,
         }
     }

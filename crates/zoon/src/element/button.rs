@@ -8,14 +8,14 @@ use std::marker::PhantomData;
 make_flags!(Label, OnPress);
 
 pub struct Button<LabelFlag, OnPressFlag> {
-    raw_el: RawEl,
+    raw_el: RawHtmlEl,
     flags: PhantomData<(LabelFlag, OnPressFlag)>,
 }
 
 impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawEl::new("div")
+            raw_el: RawHtmlEl::new("div")
                 .attr("class", "button")
                 .attr("role", "button")
                 .attr("tabindex", "0"),
