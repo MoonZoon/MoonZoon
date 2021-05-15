@@ -62,9 +62,9 @@ pub fn start() {
 ### 1. The App Initialization
 
 1. The function `start` is invoked automatically from the Javascript code.
-1. Zoon's function `start_app` appends the element returned from the `root` function to the element with the id `app`. 
+1. Zoon's function `start_app` appends the element returned from the `root` function to the element with the id `app`.
 
-    - You can pass also the value `None` instead of `"app"` to mount directly to `body` but it's not recommended.
+    - You can also pass the value `None` instead of `"app"` to mount directly to `body` but it's not recommended.
 
     - When the `root` function is invoked (_note:_ it's invoked only once), all elements are immediately created and rendered to the browser DOM. (It means, for instance, methods `Column::new()` or `.item(..)` writes to DOM.)
 
@@ -87,7 +87,7 @@ pub fn start() {
 _Notes:_
 
 - Read the excellent [tutorial](https://docs.rs/futures-signals/0.3.20/futures_signals/tutorial/index.html) for `Mutable` and signals in the `futures_signals` crate.
-- `zoon::*` reimports most needed types and you can access some Zoon's dependencies by `zoon::library` like `zoon::futures_signals`.
+- `zoon::*` reimports most needed types and you can access some of Zoon's dependencies by `zoon::library` like `zoon::futures_signals`.
 - `clone!` is a type alias for [enclose::enc](https://docs.rs/enclose/1.1.8/enclose/macro.enc.html).
 - `static_ref`, `clone!` and other things can be disabled or set by Zoon's [features](https://doc.rust-lang.org/cargo/reference/features.html).
 
@@ -104,8 +104,8 @@ Button::new().label("-").on_press(decrement)
 The `Button` element:
    - _Notes:_ 
        - The only requirement is that the element has to implement the trait `Element`.
-       - `Button` is a Zoon's element, but you'll create custom ones the same way.
-       - The code below may differ from the current `Button` implementation in the Zoon.
+       - `Button` is a Zoon element, but you'll create custom ones the same way.
+       - The code below may differ from the current `Button` implementation in Zoon.
 
 ```rust
 use zoon::*;
@@ -311,7 +311,7 @@ That's why Zoon uses only HSLuv, represented in the code as `hsl(h, s, l)` or `h
 - Too extreme contrast weakens reading stamina - you shouldn't use pure black and white too often (unless you are creating a special theme for low vision users).
 - Relatively many people are at least slightly color blind. It means, for example:
    - Red "Stop button" has to have also a text label.
-   - Do you want to show different routes on the map? Use rather different line styles (e.g. dashed, dottted) instead of different colors.
+   - Do you want to show different routes on the map? Use different line styles (e.g. dashed, dottted) instead of different colors.
    - The guy over there maybe doesn't know his T-shirt isn't gray but pink. (It's a typical issue for _deutan color blindness_; ~5% of men.)
    - Pick colors and labels for charts carefully - some charts could become useless for color blind people or when you decide to print them in a gray-scale mode. (HSLuv mode can help here a bit because you can pick colors with different lightness values.) 
 
@@ -331,15 +331,15 @@ Have you ever ever tried to align an element with a text block? An example:
 
 <img src="images/element_text_alignment.svg" height="100px">
 
-How we can measure or even remove the space above the `Zoon` text? It's an incredibly difficult task because the space is different for each font and it's impossible in CSS without error-prone ugly hacks.
+How can we measure or even remove the space above the `Zoon` text? It's an incredibly difficult task because the space is different for each font and it's impossible in CSS without ugly error-prone hacks.
 
-You will be able to resolve it in the future CSS with some new properties, mainly with [leading-trim](https://www.w3.org/TR/css-inline-3/#leading-trim). 
+You will be able to resolve it in the future CSS with some new properties, mainly with [leading-trim](https://www.w3.org/TR/css-inline-3/#leading-trim).
 One of the comments for the article [Leading-Trim: The Future of Digital Typesetting](https://medium.com/microsoft-design/leading-trim-the-future-of-digital-typesetting-d082d84b202):
 > _"This has been a huge annoyance to me for decades! I hope this gets standardized and implemented quickly, thank you for setting this in motion!_" - Tim Etler
 
 _
 
-Typography is one of the most complex parts of (web) design. But we have to somehow simplify it for our purposes. 
+Typography is one of the most complex parts of (web) design. But we have to somehow simplify it for our purposes.
 
 So I suggest to make the _font size_ an alias for the [_cap height_](https://en.wikipedia.org/wiki/Cap_height). And the _font size_ would be also equal to the line height. It means the code:
 
@@ -387,7 +387,7 @@ fn root() -> impl IntoRoot {
 
 - `View` represents the root container for the web page.
 - `Viewport` represents a part of the _View_ currently visible by the user. It could be used for scrolling and to help with writing responsive elements.
-- The _view/viewport_ concept will be probably used for scrollable elements, too.  
+- The _view/viewport_ concept will probably be used for scrollable elements, too.  
 
 ---
 
@@ -396,7 +396,7 @@ fn root() -> impl IntoRoot {
 
 ### Timer
  
-- Could be used as a timeout or stopwatch (to set an interval between callback calls). 
+- Could be used as a timeout or stopwatch (to set an interval between callback calls).
 - See `examples/timer` for the entire code.
     - _Note:_ The code below may differ from the current `timer` implementation.
 
@@ -418,9 +418,9 @@ fn stop_timeout() {
 ### Connection
 
 - `UpMsg` are sent from Zoon to Moon. `DownMsg` in the opposite direction.
-- `UpMsg` could be buffered when the Moon (server) is offline. And `DownMsg` when the Zoon (client) is automatically reconnecting.
-- `UpMsg` are sent in a short-lived _fetch_ request, `DownMsg` are sent in a _server-sent event_  to provide real-time communication.
-- A _correlation id_ is automatically generated and sent to the Moon with each request. Moon sends it back. You can also send a token together with the `UpMsg`. 
+- `UpMsg` could be buffered when the Moon server is offline. And `DownMsg` when the Zoon client is automatically reconnecting.
+- `UpMsg` are sent in a short-lived _fetch_ request, `DownMsg` are sent in a _server-sent event_ to provide real-time communication.
+- A _correlation id_ is automatically generated and sent to the Moon with each request. Moon sends it back. You can also send a token together with the `UpMsg`.
 - See `examples/chat` for the entire code.
     - _Note:_ The code below may differ from the current `chat` implementation.
 
@@ -458,7 +458,7 @@ fn stop_timeout() {
 
 _
 
-- A more complete example with _guards_ and Zoon's URL helpers. 
+- A more complete example with _guards_ and Zoon's URL helpers.
 - See `examples/time_tracker` for the entire code.
     - _Note:_ The code below may differ from the current `time_tracker` implementation.
 

@@ -32,14 +32,14 @@ fn main() {
 ### 1. The App Initialization
 
 1. The function `main` is invoked automatically when the Moon app is started on the server.
-1. The function `init` is invoked when the Moon is ready to work.
+1. The function `init` is invoked when the Moon app is ready to work.
 1. The function `frontend` is invoked when the web browser wants to download and run the client (Zoon) app.
 1. The function `up_msg_handler` handles requests from the Zoon.
 
 ### 2. Calling Actor Functions
 1. We need to find the needed _actors_. They are stored in _indices_. `connected_client::by_id` is a Moon's system index where each value is an actor representing a connected Zoon app.
-1. All public actor functions are asynchronous so we have to `await` them an ideally call them all at once in this example to improve the performance a bit. 
-   - _Note_: The requested actor may live in another server or it doesn't live at all - then the Moon has to start it and load its state into the main memory before it can process your call. And all those operations and the business logic processing take some time, so asynchronicity allows you to spend the time in better ways than just waiting.  
+1. All public actor functions are asynchronous so we have to `await` them and ideally call them all at once in this example to improve the performance a bit.
+   - _Note_: The requested actor may live in another server or it doesn't live at all - then the Moon app has to start it and load its state into the main memory before it can process your call. And all those operations and the business logic processing take some time, so asynchronicity allows you to spend the time in better ways than just waiting.  
 
 ---
 
@@ -106,7 +106,7 @@ We'll use the **Time Tracker** example parts to demonstrate how to define an _ac
     }
     ```
 
-    - `new_actor` is the Moon's async function. In this case, it creates a new `invoice` actor and returns `InvoiceActor`.
+    - `new_actor` is Moon's async function. In this case, it creates a new `invoice` actor and returns `InvoiceActor`.
        
     - `InvoiceActor` represents a copyable reference to the `invoice` actor instance. The instance is either _active_ (loaded in the main memory) or only stored in a persistent storage.
 
@@ -135,19 +135,19 @@ We'll use the **Time Tracker** example parts to demonstrate how to define an _ac
             p_var("time_block", |_| args().map(|args| args.time_block))
         }
     ```
-    - `PVar` is a _**P**ersistent **Var**iable_. It represents a copyable reference to the Moon's internal persistent storage. (The file system and PostgreSQL would be probably the first supported storages.)
+    - `PVar` is a _**P**ersistent **Var**iable_. It represents a copyable reference to the Moon app's internal persistent storage. (The file system and PostgreSQL would probably be the first supported storages.)
 
-    - Most `PVar`'s methods are async because they may need to communicate with the storage. Read operations are fast when the actor is active and the needed `PVar` value has been cached in memory by Moon.  
+    - Most `PVar` methods are async because they may need to communicate with the storage. Read operations are fast when the actor is active and the needed `PVar` value has been cached in memory by Moon.  
 
-    - The Moon's function `p_var` loads the value according to the _identifier_ from the storage and deserializes it to the required Rust type. Or it creates a new record in the storage with the serialized default value provided by its second argument.
+    - The Moon function `p_var` loads the value according to the _identifier_ from the storage and deserializes it to the required Rust type. Or it creates a new record in the storage with the serialized default value provided by its second argument.
 
-    - The first `p_var`'s parameter is the _identifier_ - e.g. `"url"`. The _identifier_ should be unique among other actor's `PVar`s. 
+    - The first `p_var` parameter is the _identifier_ - e.g. `"url"`. The _identifier_ should be unique among other actor's `PVar`s.
 
-    - The second `p_var`'s parameter is a callback that is invoked when:
+    - The second `p_var` parameter is a callback that is invoked when:
        - A new record will be created. Then the callback's only argument is `None`.
        - The deserialization fails. Then the callback's argument contains `PVarError` with the serialized old value. It allows you to convert the data to a new type.
 
-    - The Moon's function `args` returns a wrapper for an `InvoiceArgs` instance.
+    - The Moon function `args` returns a wrapper for an `InvoiceArgs` instance.
 
 1. Now we can define accessors and other helpers for `InvoiceActor`:
 
@@ -184,7 +184,7 @@ We'll use the **Time Tracker** example parts to demonstrate how to define an _ac
 
     ```
 
-    - The `InvoiceActor` struct implements also some predefined methods. E.g. `remove_actor()` allows you to remove the instance and delete the associated data.
+    - The `InvoiceActor` struct also implements some predefined methods. E.g. `remove_actor()` allows you to remove the instance and delete the associated data.
 
 1. And the last part - indices:
 
@@ -208,32 +208,32 @@ We'll use the **Time Tracker** example parts to demonstrate how to define an _ac
         invoice::by_time_block().actors(time_block_id).first();
         ```
 
-    - The Moon's function `index` returns the requested index reference `Index` by the _identifier_. Or it creates a new index in the persistent storage with the serialized key provided by its second argument.
+    - The Moon function `index` returns the requested index reference `Index` by the _identifier_. Or it creates a new index in the persistent storage with the serialized key provided by its second argument.
 
-    - The first `index`'s parameter is _identifier_ - e.g. `"invoice_by_id"`. It should be unique among all indices.
+    - The first `index` parameter is _identifier_ - e.g. `"invoice_by_id"`. It should be unique among all indices.
 
-    - The second `index`'s parameter is a callback that is invoked when:
+    - The second `index` parameter is a callback that is invoked when:
        - A new index will be created. Then the callback's only argument is `None`.
        - Serialized old keys have different type than the required one. Then the callback's argument contains `IndexError`. It allows you to convert the keys to a new type.
 
-    - The callback provided in the second `index`'s argument has to return `PVar`. Index keys will be automatically synchronized with the associated `PVar` value. 
+    - The callback provided in the second `index` argument has to return `PVar`. Index keys will be automatically synchronized with the associated `PVar` value.
 
 ---
 
 ## Auth
 
 Authentication and Authorization are:
-- Probably the most reinvented wheels. 
+- Probably the most reinvented wheels.
 - Very difficult to implement without introducing security holes.
 - Painful to integrate into your product because of regulations like _GDPR_ or _Cookie Law_.
 - Annoying for your users.  
 
 _
 
-Defining the basic auth behavior is really a tough task:
+Defining the basic auth behavior is a really tough task:
 
-- Should we use _LocalStorage_ or _Cookies_ to store tokens? (I'm sure you can find many articles and people which claim that only _LocalStorage_ or only _Cookies_ is the right choice). 
-   - I would generally  prefer _LocalStorage_ because it's much easier to work with and once the _XSS_ attack is successful, not even correctly set _Cookies_ can save you. But with MoonZoon, both client and server will be probably attached to the same domain so we can take full advantage of cookie security features. So it depends.  
+- Should we use _LocalStorage_ or _Cookies_ to store tokens? (I'm sure you can find many articles and people which claim that only _LocalStorage_ or only _Cookies_ is the right choice).
+   - I would generally prefer _LocalStorage_ because it's much easier to work with and once the _XSS_ attack is successful, not even correctly set _Cookies_ can save you. But with MoonZoon, both client and server will be probably attached to the same domain so we can take full advantage of cookie security features. So it depends.  
 
 - Can we assume all apps communicate over HTTPS?
 
@@ -242,9 +242,9 @@ Defining the basic auth behavior is really a tough task:
 - Is _E2E encryption_ required?
 
 - We need to take into account legal requirements:
-  - Do we need user's email? Is user's nick a real name? It has to be compatible with GDPR and we need to mention it in our _Terms and Policies_ and other documents. 
-  - The user has to agree with the usage of their data before the registration and he has to be able to delete the data. 
-  - etc. 
+  - Do we need the user's email? Is the user's nick a real name? It has to be compatible with GDPR and we need to mention it in our _Terms and Policies_ and other documents.
+  - The user has to agree with the usage of their data before the registration and he has to be able to delete the data.
+  - etc.
   
 - What about account recovery, log in on multiple devices, testing, ...
 
@@ -267,7 +267,7 @@ Also there are some passwordless auth methods:
 
 _
 
-So let's wait a bit until we see clear requirements and how technologies like _WebAuthn_ work in practice before we try to design special auth libraries and finalize MoonZoon API. 
+So let's wait a bit until we see clear requirements and how technologies like _WebAuthn_ work in practice before we try to design special auth libraries and finalize MoonZoon API.
 
 MoonZoon will allow you from the beginning to send a token in the request's header so you have at least a basic foundation to integrate, for instance, _JWT_ auth.
 
@@ -281,13 +281,13 @@ Other related articles:
 ## FAQ
 
 1. _"Why another backend framework? Are you mad??"_
-   - In the context of my goal to remove all accidental complexity, I treat most popular backend frameworks as low-level building blocks. You are able to write everything with them, but you still have to think about REST API endpoints, choose and connect a database, manage actors manually, setup servers, somehow test serverless functions, etc. Moon will be based on one of those frameworks - this way you don't have to care about low-level things, however you can when you need more control. 
+   - In the context of my goal to remove all accidental complexity, I treat most popular backend frameworks as low-level building blocks. You are able to write everything with them, but you still have to think about REST API endpoints, choose and connect a database, manage actors manually, setup servers, somehow test serverless functions, etc. Moon will be based on one of those frameworks - this way you don't have to care about low-level things, however you can when you need more control.
 
 1. _"Those are pretty weird actors!"_
    - Yeah, actually, they are called _Virtual Actors_. I recommend to read [Orleans – Virtual Actors](https://www.microsoft.com/en-us/research/project/orleans-virtual-actors/).
 
 1. _"Why virtual actors and not microservices / event sourcing / standard actors / CRDTs / blockchain / orthogonal persistence / ..?"_
-   - Virtual actors allow you to start with a small simple project and they won't stop you while you grow. 
+   - Virtual actors allow you to start with a small simple project and they won't stop you while you grow.
    - You can combine virtual actors with other concepts - why don't leverage event sourcing to manage the actor state? 
    - There is a chance the architecture and security will be improved by implementing actors as isolated single-threaded _Wasm_ modules.
    - There are open-source virtual actor frameworks battle-tested in production. And there are also related research papers - especially for Orleans.

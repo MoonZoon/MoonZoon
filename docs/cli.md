@@ -1,7 +1,7 @@
 # CLI - mzoon
 ---
 
-`mzoon` is a MoonZoon CLI tool. 
+`mzoon` is a MoonZoon CLI tool.
 
 _
 
@@ -42,7 +42,7 @@ _Note:_ Faster installation options will be added later.
 ### 3. `build`
 
 - Example: `mzoon build`
-- Compiles the app in the debug mode.
+- Compiles the app in debug mode.
 - Optional parameters:
    1. **`--release` / `-r`**
       - Example: `mzoon build --release`
@@ -90,7 +90,3 @@ backend = [
 
 1. _"What is a new project file structure?"_
    - See the content of [MoonZoon/demo](https://github.com/MoonZoon/demo) to have an idea.
-    
-
-
-
