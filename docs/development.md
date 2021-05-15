@@ -52,7 +52,7 @@ _WARNING:_ MoonZoon is in the phase of early development! You may find ugly code
 
 ```sh
 cd examples
-cd counter # or `counters` or  ...
+cd counter # or `counters` or ...
 makers mzoon start # or `makers mzoon start -r`
 ```
 

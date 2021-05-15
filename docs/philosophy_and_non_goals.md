@@ -21,7 +21,7 @@
 
 **I)** People make mistakes. Linters, compilers, formatters and other tools should be as pedantic as possible. Ideally no configuration options for anything.
 
-**J)** People make things too complex.  Breaking changes are encouraged to reduce accidental complexity and technical debt.
+**J)** People make things too complex. Breaking changes are encouraged to reduce accidental complexity and technical debt.
 
 ---
 
