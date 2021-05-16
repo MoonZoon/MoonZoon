@@ -23,7 +23,7 @@ fn root() -> impl Element {
 // ------ Alternative ------
 
 fn _root() -> impl Element {
-    let counter = std::rc::Rc::new(Mutable::new(0));
+    let counter = Mutable::new(0);
     let on_press = clone!((counter) move |step: i32| *counter.lock_mut() += step);
     Column::new()
         .item(Button::new().label("-").on_press(clone!((on_press) move || on_press(-1))))
