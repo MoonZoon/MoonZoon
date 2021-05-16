@@ -39,12 +39,11 @@ The alternative **Counter** example:
 
 ```rust
 use zoon::{*, println};
-use std::rc::Rc;
 
 fn root() -> impl Element {
     println!("I'm different.");
 
-    let counter = Rc::new(Mutable::new(0));
+    let counter = Mutable::new(0);
     let on_press = clone!((counter) move |step: i32| *counter.lock_mut() += step);
 
     Column::new()
