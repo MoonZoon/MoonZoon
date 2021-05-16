@@ -32,41 +32,42 @@ impl Element for Row<EmptyFlagNotSet> {
 // ------ ------
 
 impl<'a, EmptyFlag> Row<EmptyFlag> {
-    pub fn item(self, 
+    pub fn item(
+        mut self, 
         item: impl IntoOptionElement<'a> + 'a
     ) -> Row<EmptyFlagNotSet> {
-        Row {
-            raw_el: self.raw_el.child(item),
-            flags: PhantomData
-        }
+        self.raw_el = self.raw_el.child(item);
+        self.into_type()
     }
 
     pub fn item_signal(
-        self, 
+        mut self, 
         item: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static
     ) -> Row<EmptyFlagNotSet> {
-        Row {
-            raw_el: self.raw_el.child_signal(item),
-            flags: PhantomData
-        }
+        self.raw_el = self.raw_el.child_signal(item);
+        self.into_type()
     }
 
-    pub fn items(self, 
+    pub fn items(
+        mut self, 
         items: impl IntoIterator<Item = impl IntoElement<'a> + 'a>
     ) -> Row<EmptyFlagNotSet> {
-        Row {
-            raw_el: self.raw_el.children(items),
-            flags: PhantomData
-        }
+        self.raw_el = self.raw_el.children(items);
+        self.into_type()
     }
 
     pub fn items_signal_vec(
-        self, 
+        mut self, 
         items: impl SignalVec<Item = impl IntoElement<'a>> + Unpin + 'static
     ) -> Row<EmptyFlagNotSet> {
+        self.raw_el = self.raw_el.children_signal_vec(items);
+        self.into_type()
+    }
+
+    fn into_type<NewEmptyFlag>(self) -> Row<NewEmptyFlag> {
         Row {
-            raw_el: self.raw_el.children_signal_vec(items),
-            flags: PhantomData
+            raw_el: self.raw_el,
+            flags: PhantomData,
         }
     }
 } 

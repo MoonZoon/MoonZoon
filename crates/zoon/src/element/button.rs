@@ -36,38 +36,39 @@ impl<OnPressFlag> Element for Button<LabelFlagSet, OnPressFlag> {
 
 impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
     pub fn label(
-        self, 
+        mut self, 
         label: impl IntoElement<'a> + 'a
     ) -> Button<LabelFlagSet, OnPressFlag>
         where LabelFlag: FlagNotSet
     {
-        Button {
-            raw_el: self.raw_el.child(label),
-            flags: PhantomData
-        }
+        self.raw_el = self.raw_el.child(label);
+        self.into_type()
     }
 
     pub fn label_signal(
-        self, 
+        mut self, 
         label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static
     ) -> Button<LabelFlagSet, OnPressFlag> 
         where LabelFlag: FlagNotSet
     {
-        Button {
-            raw_el: self.raw_el.child_signal(label),
-            flags: PhantomData
-        }
+        self.raw_el = self.raw_el.child_signal(label);
+        self.into_type()
     }
 
     pub fn on_press(
-        self, 
+        mut self, 
         on_press: impl FnOnce() + Clone + 'static
     ) -> Button<LabelFlag, OnPressFlagSet> 
         where OnPressFlag: FlagNotSet
     {
+        self.raw_el = self.raw_el.event_handler(move |_: events::Click| (on_press.clone())());
+        self.into_type()
+    }
+
+    fn into_type<NewLabelFlag, NewOnPressFlag>(self) -> Button<NewLabelFlag, NewOnPressFlag> {
         Button {
-            raw_el: self.raw_el.event_handler(move |_: events::Click| (on_press.clone())()),
-            flags: PhantomData
+            raw_el: self.raw_el,
+            flags: PhantomData,
         }
     }
 } 
