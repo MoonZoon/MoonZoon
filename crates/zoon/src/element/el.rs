@@ -32,26 +32,30 @@ impl Element for El<ChildFlagSet> {
 // ------ ------
 
 impl<'a, ChildFlag> El<ChildFlag> {
-    pub fn child(self, 
+    pub fn child(
+        mut self, 
         child: impl IntoElement<'a> + 'a
     ) -> El<ChildFlagSet>
         where ChildFlag: FlagNotSet
     {
-        El {
-            raw_el: self.raw_el.child(child),
-            flags: PhantomData
-        }
+        self.raw_el = self.raw_el.child(child);
+        self.into_type()
     }
 
     pub fn child_signal(
-        self, 
+        mut self, 
         child: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static
     ) -> El<ChildFlagSet> 
         where ChildFlag: FlagNotSet
     {
+        self.raw_el = self.raw_el.child_signal(child);
+        self.into_type()
+    }
+
+    fn into_type<NewChildFlag>(self) -> El<NewChildFlag> {
         El {
-            raw_el: self.raw_el.child_signal(child),
-            flags: PhantomData
+            raw_el: self.raw_el,
+            flags: PhantomData,
         }
     }
 } 
