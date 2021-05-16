@@ -18,12 +18,13 @@ console_error_panic_hook = { version = "0.1.6", default-features = false, option
 wee_alloc = { version = "0.4.5", default-features = false, optional = true }
 # wasm-tracing-allocator = { version = "0.1.1", default-features = false, optional = true }
 enclose = { version = "1.1.8", default-features = false, optional = true }
+apply = { version = "0.3.0", default-features = false, optional = true }
 
 ufmt = { version = "0.1.0", features = ["std"], default-features = false, optional = true }
 lexical = { git = "https://github.com/Alexhuszagh/rust-lexical", rev = "7010efd", features = ["std"], default-features = false, optional = true }
 
 [features]
-default = ["static_ref", "panic_hook", "small_alloc", "clone"]
+default = ["static_ref", "panic_hook", "small_alloc", "clone", "apply"]
 static_ref = ["static_ref_macro", "once_cell"]
 panic_hook = ["console_error_panic_hook"]
 small_alloc = ["wee_alloc"]

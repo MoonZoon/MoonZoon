@@ -31,6 +31,9 @@ pub use once_cell;
 #[cfg(feature = "clone")]
 pub use enclose::enc as clone;
 
+#[cfg(feature = "apply")]
+pub use apply::{Apply, Also};
+
 #[cfg(feature = "small_alloc")]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
