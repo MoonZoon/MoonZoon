@@ -101,67 +101,58 @@ impl<ValueFlag, StepFlag> Element for Counter<ValueFlag, ValueSignalFlagNotSet, 
 //  Attributes 
 // ------ ------
 
-impl<ValueFlag, ValueSignal, OnChangeFlag, StepFlag> Counter<ValueFlag, ValueSignal, OnChangeFlag, StepFlag> {
+impl<ValueFlag, ValueSignalFlag, OnChangeFlag, StepFlag> Counter<ValueFlag, ValueSignalFlag, OnChangeFlag, StepFlag> {
     pub fn value(
-        self, 
+        mut self, 
         value: i32
     ) -> Counter<ValueFlagSet, ValueSignalFlagNotSet, OnChangeFlag, StepFlag>
         where 
             ValueFlag: FlagNotSet,
-            ValueSignal: FlagNotSet,
+            ValueSignalFlag: FlagNotSet,
     {
-        Counter {
-            value,
-            value_signal: None,
-            on_change: self.on_change,
-            step: self.step,
-            flags: PhantomData,
-        }
+        self.value = value;
+        self.into_type()
     }
 
     pub fn value_signal(
-        self, 
+        mut self, 
         value: impl Signal<Item  = i32> + Unpin + 'static
     ) -> Counter<ValueFlagNotSet, ValueSignalFlagSet, OnChangeFlag, StepFlag>
         where 
             ValueFlag: FlagNotSet,
-            ValueSignal: FlagNotSet,
+            ValueSignalFlag: FlagNotSet,
     {
-        Counter {
-            value: 0,
-            value_signal: Some(Box::new(value)),
-            on_change: self.on_change,
-            step: self.step,
-            flags: PhantomData,
-        }
+        self.value_signal = Some(Box::new(value));
+        self.into_type()
     }
 
     pub fn on_change(
-        self, 
+        mut self, 
         on_change: impl FnOnce(i32) + Clone + 'static
-    ) -> Counter<ValueFlag, ValueSignal, OnChangeFlagSet, StepFlag>
+    ) -> Counter<ValueFlag, ValueSignalFlag, OnChangeFlagSet, StepFlag>
         where OnChangeFlag: FlagNotSet
     {
-        Counter {
-            value: self.value,
-            value_signal: self.value_signal,
-            on_change: Some(Rc::new(move |value| on_change.clone()(value))),
-            step: self.step,
-            flags: PhantomData,
-        }
+        self.on_change = Some(Rc::new(move |value| on_change.clone()(value)));
+        self.into_type()
     }
 
     pub fn step(
-        self, 
+        mut self, 
         step: i32
-    ) -> Counter<ValueFlag, ValueSignal, OnChangeFlag, StepFlagSet>
+    ) -> Counter<ValueFlag, ValueSignalFlag, OnChangeFlag, StepFlagSet>
         where StepFlag: FlagNotSet
     {
+        self.step = step;
+        self.into_type()
+    }
+
+    fn into_type<NewValueFlag, NewValueSignalFlag, NewOnChangeFlag, NewStepFlag>(self) 
+    -> Counter<NewValueFlag, NewValueSignalFlag, NewOnChangeFlag, NewStepFlag> {
         Counter {
             value: self.value,
             value_signal: self.value_signal,
             on_change: self.on_change,
-            step,
+            step: self.step,
             flags: PhantomData,
         }
     }
