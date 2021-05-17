@@ -3,7 +3,5 @@ pub fn window() -> web_sys::Window {
 }
 
 pub fn document() -> web_sys::Document {
-    window()
-        .document()
-        .expect("document")
+    window().document().expect("document")
 }

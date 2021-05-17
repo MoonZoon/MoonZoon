@@ -1,7 +1,7 @@
 use crate::*;
 
 // ------ ------
-//   Element 
+//   Element
 // ------ ------
 
 pub struct RawText {
@@ -17,7 +17,7 @@ impl RawText {
 
     pub fn with_signal(text: impl Signal<Item = impl ToString> + Unpin + 'static) -> Self {
         Self {
-            dom: dominator::text_signal(text.map(|text| text.to_string()))
+            dom: dominator::text_signal(text.map(|text| text.to_string())),
         }
     }
 }

@@ -1,7 +1,7 @@
 use crate::*;
 use futures_signals::{
-    signal::Mutable, 
-    signal_vec::{MutableVec, MutableVecLockMut, MutableVecLockRef}
+    signal::Mutable,
+    signal_vec::{MutableVec, MutableVecLockMut, MutableVecLockRef},
 };
 
 pub trait MutableExt<A> {
@@ -9,7 +9,9 @@ pub trait MutableExt<A> {
 
     fn map_mut<B>(&self, f: impl FnOnce(&mut A) -> B) -> B;
 
-    fn update(&self, f: impl FnOnce(A) -> A) where A: Copy;
+    fn update(&self, f: impl FnOnce(A) -> A)
+    where
+        A: Copy;
 
     fn update_mut(&self, f: impl FnOnce(&mut A));
 }
@@ -26,7 +28,10 @@ impl<A> MutableExt<A> for Mutable<A> {
     }
 
     #[inline]
-    fn update(&self, f: impl FnOnce(A) -> A) where A: Copy {
+    fn update(&self, f: impl FnOnce(A) -> A)
+    where
+        A: Copy,
+    {
         self.set(f(self.get()))
     }
 

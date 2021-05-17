@@ -55,7 +55,7 @@ pub trait IntoDom {
 
 pub trait IntoElement<'a> {
     type EL: Element;
-    fn into_element(self) -> Self::EL; 
+    fn into_element(self) -> Self::EL;
 }
 
 impl<'a, T: Element> IntoElement<'a> for T {
@@ -69,7 +69,7 @@ impl<'a, T: Element> IntoElement<'a> for T {
 
 pub trait IntoOptionElement<'a> {
     type EL: Element;
-    fn into_option_element(self) -> Option<Self::EL>; 
+    fn into_option_element(self) -> Option<Self::EL>;
 }
 
 impl<'a, E: Element, T: IntoElement<'a, EL = E>> IntoOptionElement<'a> for Option<T> {
@@ -85,9 +85,3 @@ impl<'a, E: Element, T: IntoElement<'a, EL = E>> IntoOptionElement<'a> for T {
         Some(self.into_element())
     }
 }
-
-
-
-
-
-

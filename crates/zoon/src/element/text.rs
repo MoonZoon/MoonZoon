@@ -2,7 +2,7 @@ use crate::*;
 use std::borrow::Cow;
 
 // ------ ------
-//    Element 
+//    Element
 // ------ ------
 
 pub struct Text {
@@ -18,7 +18,7 @@ impl Text {
 
     pub fn with_signal(text: impl Signal<Item = impl ToString> + Unpin + 'static) -> Self {
         Self {
-            raw_text: RawText::with_signal(text)
+            raw_text: RawText::with_signal(text),
         }
     }
 }
@@ -34,7 +34,7 @@ impl Element for Text {
 // ------ ------
 
 pub trait IntoCowStr<'a> {
-    fn into_cow_str(self) -> Cow<'a, str>; 
+    fn into_cow_str(self) -> Cow<'a, str>;
 }
 
 impl<'a> IntoCowStr<'a> for String {
@@ -75,7 +75,7 @@ macro_rules! make_into_cow_str_impls {
 make_into_cow_str_impls!(u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize);
 
 // ------ ------
-//  IntoElement 
+//  IntoElement
 // ------ ------
 
 impl<'a> IntoElement<'a> for String {
@@ -119,4 +119,3 @@ macro_rules! make_into_element_impls {
     )
 }
 make_into_element_impls!(u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize);
-

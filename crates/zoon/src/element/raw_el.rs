@@ -1,7 +1,7 @@
 use crate::*;
 
 // ------ ------
-//   Element 
+//   Element
 // ------ ------
 
 pub struct RawEl {
@@ -11,7 +11,7 @@ pub struct RawEl {
 impl RawEl {
     pub fn new(tag: &str) -> Self {
         Self {
-            dom_builder: DomBuilder::new_html(tag)
+            dom_builder: DomBuilder::new_html(tag),
         }
     }
 }
@@ -33,9 +33,9 @@ impl Element for RawEl {
         self.into()
     }
 }
-    
+
 // ------ ------
-//  Attributes 
+//  Attributes
 // ------ ------
 
 impl<'a> RawEl {
@@ -44,15 +44,22 @@ impl<'a> RawEl {
         self
     }
 
-    pub fn attr_signal(mut self, name: impl ToString, value: impl Signal<Item = Option<impl ToString>> + Unpin + 'static) -> Self {
+    pub fn attr_signal(
+        mut self,
+        name: impl ToString,
+        value: impl Signal<Item = Option<impl ToString>> + Unpin + 'static,
+    ) -> Self {
         self.dom_builder = self.dom_builder.attribute_signal(
-            name.to_string(), 
-            value.map(|value| value.map(|value| value.to_string()))
+            name.to_string(),
+            value.map(|value| value.map(|value| value.to_string())),
         );
         self
     }
 
-    pub fn event_handler<E: StaticEvent>(mut self, handler: impl FnOnce(E) + Clone + 'static) -> Self {
+    pub fn event_handler<E: StaticEvent>(
+        mut self,
+        handler: impl FnOnce(E) + Clone + 'static,
+    ) -> Self {
         let handler = move |event: E| handler.clone()(event);
         self.dom_builder = self.dom_builder.event(handler);
         self
@@ -66,33 +73,35 @@ impl<'a> RawEl {
     }
 
     pub fn child_signal(
-        mut self, 
-        child: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static
+        mut self,
+        child: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> Self {
-        self.dom_builder = self.dom_builder.child_signal(
-            child.map(|child| child.into_option_element().map(|element| {
-                element.into_raw_element().into_dom()
-            }))
-        );
+        self.dom_builder = self.dom_builder.child_signal(child.map(|child| {
+            child
+                .into_option_element()
+                .map(|element| element.into_raw_element().into_dom())
+        }));
         self
     }
 
     pub fn children(
-        mut self, 
-        children: impl IntoIterator<Item = impl IntoElement<'a> + 'a>
+        mut self,
+        children: impl IntoIterator<Item = impl IntoElement<'a> + 'a>,
     ) -> Self {
         self.dom_builder = self.dom_builder.children(
-            children.into_iter().map(|child| child.into_element().into_raw_element().into_dom())
+            children
+                .into_iter()
+                .map(|child| child.into_element().into_raw_element().into_dom()),
         );
         self
     }
 
     pub fn children_signal_vec(
-        mut self, 
-        children: impl SignalVec<Item = impl IntoElement<'a>> + Unpin + 'static
+        mut self,
+        children: impl SignalVec<Item = impl IntoElement<'a>> + Unpin + 'static,
     ) -> Self {
         self.dom_builder = self.dom_builder.children_signal_vec(
-            children.map(|child| child.into_element().into_raw_element().into_dom())
+            children.map(|child| child.into_element().into_raw_element().into_dom()),
         );
         self
     }
