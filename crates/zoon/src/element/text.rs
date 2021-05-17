@@ -16,7 +16,7 @@ impl Text {
         }
     }
 
-    pub fn with_signal(text: impl Signal<Item = impl ToString> + Unpin + 'static) -> Self {
+    pub fn with_signal<'a>(text: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static) -> Self {
         Self {
             raw_text: RawText::with_signal(text),
         }
@@ -28,51 +28,6 @@ impl Element for Text {
         self.raw_text.into()
     }
 }
-
-// ------ ------
-//     ToStr
-// ------ ------
-
-pub trait IntoCowStr<'a> {
-    fn into_cow_str(self) -> Cow<'a, str>;
-}
-
-impl<'a> IntoCowStr<'a> for String {
-    fn into_cow_str(self) -> Cow<'a, str> {
-        self.into()
-    }
-}
-
-impl<'a> IntoCowStr<'a> for &'a String {
-    fn into_cow_str(self) -> Cow<'a, str> {
-        self.into()
-    }
-}
-
-impl<'a> IntoCowStr<'a> for &'a str {
-    fn into_cow_str(self) -> Cow<'a, str> {
-        self.into()
-    }
-}
-
-impl<'a> IntoCowStr<'a> for Cow<'a, str> {
-    fn into_cow_str(self) -> Cow<'a, str> {
-        self.into()
-    }
-}
-
-macro_rules! make_into_cow_str_impls {
-    ($($type:ty),*) => (
-        $(
-        impl<'a> IntoCowStr<'a> for $type {
-            fn into_cow_str(self) -> Cow<'a, str> {
-                self.to_string().into()
-            }
-        }
-        )*
-    )
-}
-make_into_cow_str_impls!(u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize);
 
 // ------ ------
 //  IntoElement

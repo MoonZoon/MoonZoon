@@ -1,40 +1,25 @@
-use std::fmt;
 use zoon::*;
+use std::{collections::VecDeque, iter::FromIterator};
+use strum::{IntoStaticStr, EnumIter, IntoEnumIterator};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, IntoStaticStr, EnumIter)]
 enum Color {
     Red,
     Blue,
     Green,
 }
 
-impl fmt::Display for Color {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let c = match self {
-            Self::Red => "#f00",
-            Self::Blue => "#0f0",
-            Self::Green => "#00f",
-        };
-        write!(f, "{}", c)
-    }
-}
-
 #[static_ref]
-fn color() -> &'static Mutable<Color> {
-    Mutable::new(Color::Red)
+fn colors() -> &'static Mutable<VecDeque<Color>> {
+    Mutable::new(VecDeque::from_iter(Color::iter()))
 }
 
-fn color_attr_signal() -> impl Signal<Item = Option<impl ToString>> {
-    color().signal().map(Some)
+fn color_attr_signal() -> impl Signal<Item = &'static str> {
+    colors().signal_ref(|colors| colors[0].into())
 }
 
 fn change_color() {
-    use Color as C;
-    color().update(|c| match c {
-        C::Red => C::Blue,
-        C::Blue => C::Green,
-        C::Green => C::Red,
-    })
+    colors().lock_mut().rotate_left(1);
 }
 
 fn root() -> impl Element {

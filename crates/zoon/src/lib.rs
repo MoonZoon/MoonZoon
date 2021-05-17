@@ -4,6 +4,9 @@ mod console;
 mod dom;
 pub mod element;
 mod futures_signals_ext;
+mod cow_str;
+
+pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 
 pub use console::log;
 pub use dom::{document, window};
