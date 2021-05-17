@@ -7,7 +7,10 @@ use std::borrow::Cow;
 pub trait IntoCowStr<'a> {
     fn into_cow_str(self) -> Cow<'a, str>;
 
-    fn into_cow_str_wrapper(self) -> CowStrWrapper<'a> where Self: Sized {
+    fn into_cow_str_wrapper(self) -> CowStrWrapper<'a>
+    where
+        Self: Sized,
+    {
         CowStrWrapper(self.into_cow_str())
     }
 }
@@ -56,8 +59,12 @@ make_into_cow_str_impls!(u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128
 pub trait IntoOptionCowStr<'a> {
     fn into_option_cow_str(self) -> Option<Cow<'a, str>>;
 
-    fn into_option_cow_str_wrapper(self) -> Option<CowStrWrapper<'a>> where Self: Sized {
-        self.into_option_cow_str().map(|this| this.into_cow_str_wrapper())
+    fn into_option_cow_str_wrapper(self) -> Option<CowStrWrapper<'a>>
+    where
+        Self: Sized,
+    {
+        self.into_option_cow_str()
+            .map(|this| this.into_cow_str_wrapper())
     }
 }
 

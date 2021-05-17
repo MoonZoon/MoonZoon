@@ -1,10 +1,10 @@
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 
 mod console;
+mod cow_str;
 mod dom;
 pub mod element;
 mod futures_signals_ext;
-mod cow_str;
 
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 
