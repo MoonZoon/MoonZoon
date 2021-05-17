@@ -1,31 +1,33 @@
-use structopt::StructOpt;
-use std::{process::{Command, Stdio, Child}};
-use std::fs::{self, File, DirEntry};
+use brotli::{enc::backward_references::BrotliEncoderParams, BrotliCompress};
+use flate2::bufread::GzEncoder;
+use flate2::Compression;
+use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
+use rcgen::{Certificate, CertificateParams};
+use serde::Deserialize;
+use std::env;
+use std::fs::{self, DirEntry, File};
 use std::io::{self, BufReader, Read};
 use std::path::{Path, PathBuf};
-use serde::Deserialize;
-use notify::{Watcher, RecursiveMode, watcher, DebouncedEvent };
+use std::process::{Child, Command, Stdio};
 use std::sync::mpsc::{channel, Receiver, Sender};
+use std::thread::{self, JoinHandle};
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::thread::{self, JoinHandle};
+use structopt::StructOpt;
 use uuid::Uuid;
-use rcgen::{Certificate, CertificateParams};
-use std::env;
-use brotli::{BrotliCompress, enc::backward_references::BrotliEncoderParams};
-use flate2::Compression;
-use flate2::bufread::GzEncoder;
 
 #[derive(Debug, StructOpt)]
-enum Opt  {
-    New { project_name: String },
-    Start { 
+enum Opt {
+    New {
+        project_name: String,
+    },
+    Start {
         #[structopt(short, long)]
         release: bool,
         // #[structopt(short, long)]
         // open: bool
     },
-    Build { 
+    Build {
         #[structopt(short, long)]
         release: bool,
     },
@@ -45,25 +47,26 @@ fn main() {
             frontend_sender.send(event()).unwrap();
             backend_sender.send(event()).unwrap();
         }
-    }).unwrap();
+    })
+    .unwrap();
 
     let opt = Opt::from_args();
     println!("{:?}", opt);
 
     match opt {
-        Opt::New { .. } => {},
+        Opt::New { .. } => {}
         Opt::Start { release } => {
             let config = load_config();
-            set_env_vars(&config, release);            
+            set_env_vars(&config, release);
 
             check_wasm_pack();
             if config.https {
-                generate_certificate();    
+                generate_certificate();
             }
-            
+
             let (frontend_build_finished_sender, frontend_build_finished_receiver) = channel();
             let frontend_watcher_handle = start_frontend_watcher(
-                config.watch.frontend.clone(), 
+                config.watch.frontend.clone(),
                 release,
                 frontend_sender,
                 frontend_receiver,
@@ -75,7 +78,7 @@ fn main() {
             let _ = frontend_build_finished_receiver.recv();
 
             let backend_watcher_handle = start_backend_watcher(
-                config.watch.backend.clone(), 
+                config.watch.backend.clone(),
                 release,
                 // open,
                 backend_sender,
@@ -83,14 +86,14 @@ fn main() {
             );
             frontend_watcher_handle.join().unwrap();
             backend_watcher_handle.join().unwrap();
-        },
+        }
         Opt::Build { release } => {
             let config = load_config();
-            set_env_vars(&config, release);            
+            set_env_vars(&config, release);
 
             check_wasm_pack();
             if config.https {
-                generate_certificate();    
+                generate_certificate();
             }
 
             if !build_frontend(release, config.cache_busting) {
@@ -100,7 +103,7 @@ fn main() {
             if !build_backend(release) {
                 panic!("Build backend failed!");
             }
-        },
+        }
     }
 }
 
@@ -117,9 +120,15 @@ fn set_env_vars(config: &Config, release: bool) {
 
     // [redirect_server]
     // port = 8080
-    env::set_var("REDIRECT_SERVER__PORT", config.redirect_server.port.to_string());
+    env::set_var(
+        "REDIRECT_SERVER__PORT",
+        config.redirect_server.port.to_string(),
+    );
     // enabled = true
-    env::set_var("REDIRECT_SERVER__ENABLED", config.redirect_server.enabled.to_string());
+    env::set_var(
+        "REDIRECT_SERVER__ENABLED",
+        config.redirect_server.enabled.to_string(),
+    );
 
     env::set_var("COMPRESSED_PKG", release.to_string());
 }
@@ -135,13 +144,13 @@ struct Config {
 
 #[derive(Debug, Deserialize)]
 struct RedirectServer {
-    port: u16, 
+    port: u16,
     enabled: bool,
 }
 
 #[derive(Debug, Deserialize)]
 struct Watch {
-    frontend: Vec<String>, 
+    frontend: Vec<String>,
     backend: Vec<String>,
 }
 
@@ -160,7 +169,7 @@ fn check_wasm_pack() {
 fn generate_certificate() {
     let public_pem_path = Path::new("backend/private/public.pem");
     let private_pem_path = Path::new("backend/private/private.pem");
-    if public_pem_path.is_file() && private_pem_path.is_file() { 
+    if public_pem_path.is_file() && private_pem_path.is_file() {
         return;
     }
     println!("Generate TLS certificate");
@@ -184,9 +193,9 @@ fn generate_certificate() {
 }
 
 fn start_frontend_watcher(
-    paths: Vec<String>, 
-    release: bool, 
-    sender: Sender<DebouncedEvent>, 
+    paths: Vec<String>,
+    release: bool,
+    sender: Sender<DebouncedEvent>,
     receiver: Receiver<DebouncedEvent>,
     frontend_build_finished_sender: Sender<()>,
     config: &Config,
@@ -208,8 +217,12 @@ fn start_frontend_watcher(
         loop {
             match receiver.recv() {
                 Ok(event) => match event {
-                    DebouncedEvent::NoticeWrite(_) | DebouncedEvent:: NoticeRemove(_) => (),
-                    DebouncedEvent::Error(notify::Error::Generic(error), _) if error == "ctrl-c" => break,
+                    DebouncedEvent::NoticeWrite(_) | DebouncedEvent::NoticeRemove(_) => (),
+                    DebouncedEvent::Error(notify::Error::Generic(error), _)
+                        if error == "ctrl-c" =>
+                    {
+                        break
+                    }
                     _ => {
                         println!("Build frontend");
                         if build_frontend(release, cache_busting) {
@@ -233,11 +246,11 @@ enum BackendCommand {
 }
 
 fn start_backend_watcher(
-    paths: Vec<String>, 
-    release: bool, 
+    paths: Vec<String>,
+    release: bool,
     // open: bool,
-    sender: Sender<DebouncedEvent>, 
-    receiver: Receiver<DebouncedEvent>
+    sender: Sender<DebouncedEvent>,
+    receiver: Receiver<DebouncedEvent>,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
         let mut watcher = watcher(sender, Duration::from_millis(100)).unwrap();
@@ -263,14 +276,14 @@ fn start_backend_watcher(
                 match command {
                     Ok(BackendCommand::Rebuild) => {
                         let _ = cargo_and_server_process.kill();
-                    },
-                    Ok(BackendCommand::Stop) => { 
+                    }
+                    Ok(BackendCommand::Stop) => {
                         cargo_and_server_process.wait().unwrap();
-                        break 
-                    },
+                        break;
+                    }
                     Err(error) => {
                         println!("watch backend error: {:?}", error);
-                        break
+                        break;
                     }
                 }
             }
@@ -279,38 +292,45 @@ fn start_backend_watcher(
         loop {
             match receiver.recv() {
                 Ok(event) => match event {
-                    DebouncedEvent::NoticeWrite(_) | DebouncedEvent:: NoticeRemove(_) => (),
-                    DebouncedEvent::Error(notify::Error::Generic(error), _) if error == "ctrl-c" => {
+                    DebouncedEvent::NoticeWrite(_) | DebouncedEvent::NoticeRemove(_) => (),
+                    DebouncedEvent::Error(notify::Error::Generic(error), _)
+                        if error == "ctrl-c" =>
+                    {
                         let _ = server_rebuild_run_sender.send(BackendCommand::Stop);
                         backend_handle.join().unwrap();
-                        return
-                    },
+                        return;
+                    }
                     _ => {
                         println!("Build backend");
-                        if server_rebuild_run_sender.send(BackendCommand::Rebuild).is_err() {
-                            return
+                        if server_rebuild_run_sender
+                            .send(BackendCommand::Rebuild)
+                            .is_err()
+                        {
+                            return;
                         }
                     }
                 },
                 Err(error) => {
                     println!("watch backend error: {:?}", error);
-                    return
-                },
+                    return;
+                }
             }
         }
     })
 }
 
 fn generate_backend_build_id() {
-    fs::write("backend/private/build_id", Uuid::new_v4().as_u128().to_string()).unwrap();
+    fs::write(
+        "backend/private/build_id",
+        Uuid::new_v4().as_u128().to_string(),
+    )
+    .unwrap();
 }
 
 fn build_frontend(release: bool, cache_busting: bool) -> bool {
     let old_build_id = fs::read_to_string("frontend/pkg/build_id")
         .ok()
-        .map(|uuid| {
-            uuid.parse::<u128>().map(|uuid| uuid).unwrap_or_default()
-        });
+        .map(|uuid| uuid.parse::<u128>().map(|uuid| uuid).unwrap_or_default());
     if let Some(old_build_id) = old_build_id {
         let old_wasm = format!("frontend/pkg/frontend_bg_{}.wasm", old_build_id);
         let old_js = format!("frontend/pkg/frontend_{}.js", old_build_id);
@@ -320,12 +340,18 @@ fn build_frontend(release: bool, cache_busting: bool) -> bool {
         let _ = fs::remove_file(format!("{}.br", &old_js));
         let _ = fs::remove_file(format!("{}.gz", &old_wasm));
         let _ = fs::remove_file(format!("{}.gz", &old_js));
-        // @TODO replace with the crate with more reliable removing on Windows? 
+        // @TODO replace with the crate with more reliable removing on Windows?
         let _ = fs::remove_dir_all("frontend/pkg/snippets");
     }
 
     let mut args = vec![
-        "--log-level", "warn", "build", "frontend", "--target", "web", "--no-typescript",
+        "--log-level",
+        "warn",
+        "build",
+        "frontend",
+        "--target",
+        "web",
+        "--no-typescript",
     ];
     if !release {
         args.push("--dev");
@@ -341,18 +367,19 @@ fn build_frontend(release: bool, cache_busting: bool) -> bool {
             .unwrap_or_default();
 
         let wasm_file_path = Path::new("frontend/pkg/frontend_bg.wasm");
-        let new_wasm_file_path = PathBuf::from(format!("frontend/pkg/frontend_bg_{}.wasm", build_id));
+        let new_wasm_file_path =
+            PathBuf::from(format!("frontend/pkg/frontend_bg_{}.wasm", build_id));
         let js_file_path = Path::new("frontend/pkg/frontend.js");
         let new_js_file_path = PathBuf::from(format!("frontend/pkg/frontend_{}.js", build_id));
 
-        fs::rename(wasm_file_path, &new_wasm_file_path).unwrap(); 
-        fs::rename(js_file_path, &new_js_file_path).unwrap(); 
+        fs::rename(wasm_file_path, &new_wasm_file_path).unwrap();
+        fs::rename(js_file_path, &new_js_file_path).unwrap();
         fs::write("frontend/pkg/build_id", build_id.to_string()).unwrap();
 
         if release {
             compress_pkg(&new_wasm_file_path, &new_js_file_path);
         }
-    }    
+    }
     success
 }
 
@@ -360,9 +387,13 @@ fn compress_pkg(wasm_file_path: &Path, js_file_path: &Path) {
     compress_file(wasm_file_path);
     compress_file(js_file_path);
 
-    visit_dirs(Path::new("frontend/pkg/snippets"), &mut |entry: &DirEntry| {
-        compress_file(&entry.path());
-    }).unwrap();
+    visit_dirs(
+        Path::new("frontend/pkg/snippets"),
+        &mut |entry: &DirEntry| {
+            compress_file(&entry.path());
+        },
+    )
+    .unwrap();
 }
 
 // @TODO refactor with https://crates.io/crates/async-compression
@@ -370,8 +401,9 @@ fn compress_file(file_path: &Path) {
     BrotliCompress(
         &mut File::open(&file_path).unwrap(),
         &mut File::create(&format!("{}.br", file_path.to_str().unwrap())).unwrap(),
-        &BrotliEncoderParams::default()
-    ).unwrap();
+        &BrotliEncoderParams::default(),
+    )
+    .unwrap();
 
     let file_reader = BufReader::new(File::open(&file_path).unwrap());
     let mut gzip_encoder = GzEncoder::new(file_reader, Compression::best());
@@ -396,22 +428,15 @@ fn visit_dirs(dir: &Path, cb: &mut dyn FnMut(&DirEntry)) -> io::Result<()> {
 }
 
 fn build_and_run_backend(release: bool) -> Child {
-    let mut args = vec![
-        "run", "--package", "backend",
-    ];
+    let mut args = vec!["run", "--package", "backend"];
     if release {
         args.push("--release");
     }
-    Command::new("cargo")
-        .args(&args)
-        .spawn()
-        .unwrap()
+    Command::new("cargo").args(&args).spawn().unwrap()
 }
 
 fn build_backend(release: bool) -> bool {
-    let mut args = vec![
-        "build", "--package", "backend",
-    ];
+    let mut args = vec!["build", "--package", "backend"];
     if release {
         args.push("--release");
     }

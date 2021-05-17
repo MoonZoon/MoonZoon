@@ -2,14 +2,14 @@ use crate::*;
 use std::marker::PhantomData;
 
 // ------ ------
-//   Element 
+//   Element
 // ------ ------
 
 make_flags!(Child);
 
 pub struct El<ChildFlag> {
     raw_el: RawEl,
-    flags: PhantomData<ChildFlag>
+    flags: PhantomData<ChildFlag>,
 }
 
 impl El<ChildFlagNotSet> {
@@ -28,25 +28,24 @@ impl Element for El<ChildFlagSet> {
 }
 
 // ------ ------
-//  Attributes 
+//  Attributes
 // ------ ------
 
 impl<'a, ChildFlag> El<ChildFlag> {
-    pub fn child(
-        mut self, 
-        child: impl IntoElement<'a> + 'a
-    ) -> El<ChildFlagSet>
-        where ChildFlag: FlagNotSet
+    pub fn child(mut self, child: impl IntoElement<'a> + 'a) -> El<ChildFlagSet>
+    where
+        ChildFlag: FlagNotSet,
     {
         self.raw_el = self.raw_el.child(child);
         self.into_type()
     }
 
     pub fn child_signal(
-        mut self, 
-        child: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static
-    ) -> El<ChildFlagSet> 
-        where ChildFlag: FlagNotSet
+        mut self,
+        child: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static,
+    ) -> El<ChildFlagSet>
+    where
+        ChildFlag: FlagNotSet,
     {
         self.raw_el = self.raw_el.child_signal(child);
         self.into_type()
@@ -58,4 +57,4 @@ impl<'a, ChildFlag> El<ChildFlag> {
             flags: PhantomData,
         }
     }
-} 
+}
