@@ -76,11 +76,11 @@ where
     pub fn attr_signal(
         mut self,
         name: impl ToString,
-        value: impl Signal<Item = Option<impl ToString>> + Unpin + 'static,
+        value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
     ) -> Self {
         self.dom_builder = self.dom_builder.attribute_signal(
             name.to_string(),
-            value.map(|value| value.map(|value| value.to_string())),
+            value.map(|value| value.into_option_cow_str_wrapper()),
         );
         self
     }

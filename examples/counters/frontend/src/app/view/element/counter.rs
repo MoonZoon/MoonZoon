@@ -34,7 +34,7 @@ fn decrement_button() -> Button<button::LabelFlagSet, button::OnPressFlagNotSet>
     Button::new().label("-")
 }
 
-fn value_element(value: impl Signal<Item = impl ToString> + Unpin + 'static) -> impl Element {
+fn value_element<'a>(value: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static) -> impl Element {
     El::new().child(Text::with_signal(value))
 }
 

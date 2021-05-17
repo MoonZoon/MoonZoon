@@ -15,9 +15,9 @@ impl RawText {
         }
     }
 
-    pub fn with_signal(text: impl Signal<Item = impl ToString> + Unpin + 'static) -> Self {
+    pub fn with_signal<'a>(text: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static) -> Self {
         Self {
-            dom: dominator::text_signal(text.map(|text| text.to_string())),
+            dom: dominator::text_signal(text.map(|text| text.into_cow_str_wrapper())),
         }
     }
 }
