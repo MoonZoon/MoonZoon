@@ -16,7 +16,9 @@ impl Text {
         }
     }
 
-    pub fn with_signal<'a>(text: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static) -> Self {
+    pub fn with_signal<'a>(
+        text: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static,
+    ) -> Self {
         Self {
             raw_text: RawText::with_signal(text),
         }
