@@ -779,6 +779,7 @@ dependencies = [
  "mime_guess",
  "tokio",
  "tokio-stream",
+ "trait-set",
  "uuid",
 ]
 
@@ -1403,6 +1404,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a9ff14f98b1a4b289c6248a023c1c2fa1491062964e9fed67ab29c4e4da4a052"
 dependencies = [
  "lazy_static",
+]
+
+[[package]]
+name = "trait-set"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04df1f221e55099c2aa02ef3d969ba06728e496eb81dda4edf43f44a596ae2ec"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
