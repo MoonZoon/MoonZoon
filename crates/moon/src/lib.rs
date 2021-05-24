@@ -15,7 +15,7 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 
 
 use actix_web::rt::System;
-use actix_web::{web, App, HttpServer, Responder, HttpResponse, HttpRequest, Result};
+use actix_web::{web, App, HttpServer, Responder, HttpResponse, HttpRequest, Result, post};
 use actix_http::http::{header, HeaderMap, HeaderValue, ContentEncoding};
 use actix_files::{Files, NamedFile};
 use tokio::sync::mpsc::{channel, Receiver, Sender};
@@ -114,15 +114,39 @@ fn load_config() -> Config {
     }
 }
 
-pub fn start<IN, FR, UP>(
+// async fn up_msg_handler_responder<UP>(up_msg_handler: impl Fn(UpMsgRequest) -> UP + Copy + Send + Sync + 'static) -> impl Responder
+// where
+//     UP: Future<Output = ()> + Send,
+// {
+//     up_msg_handler(UpMsgRequest {}).await;
+//     HttpResponse::Ok()
+// }
+
+pub trait UpHandlerReturn: Future<Output = ()> + 'static {}
+impl<T> UpHandlerReturn for T where T: Future<Output = ()> + 'static {}
+
+pub trait UpHandler<UPHR: UpHandlerReturn>: Fn(UpMsgRequest) -> UPHR + Clone + Send + 'static {}
+impl<T, UPHR: UpHandlerReturn> UpHandler<UPHR> for T where T: Fn(UpMsgRequest) -> UPHR + Clone + Send + 'static {}
+
+async fn up_msg_handler_responder<UPHR, UPH>(up_msg_handler: web::Data<UPH>) -> HttpResponse
+where
+    UPHR: UpHandlerReturn,
+    UPH: UpHandler<UPHR>
+{
+    up_msg_handler(UpMsgRequest {}).await;
+    HttpResponse::Ok().finish()
+}
+
+pub fn start<IN, FR, UPHR: UpHandlerReturn, UPH: UpHandler<UPHR>>(
     init: impl FnOnce() -> IN + 'static,
     frontend: impl Fn() -> FR + Copy + Send + Sync + 'static,
-    up_msg_handler: impl Fn(UpMsgRequest) -> UP + Copy + Send + Sync + 'static,
+    up_msg_handler: UPH,
 ) -> std::io::Result<()>
 where
     IN: Future<Output = ()>,
     FR: Future<Output = Frontend> + Send,
-    UP: Future<Output = ()> + Send,
+    UPHR: UpHandlerReturn,
+    UPH: UpHandler<UPHR>
 {
     let config = load_config();
     println!("Moon config: {:#?}", config);
@@ -136,100 +160,109 @@ where
 
         init().await;
 
-        let up_msg_handler_resource = web::resource("up_msg_handler").route(
-            web::post().to(move || async move {
-                up_msg_handler(UpMsgRequest {}).await;
-                HttpResponse::Ok()
-            })
-        );
+        HttpServer::new(move || {
+            App::new()
+                .service(
+                    web::scope("api")
+                        .data(up_msg_handler.clone())
+                        .route("up_msg_handler", web::post().to(up_msg_handler_responder::<UPHR, UPH>))
+                        // .service(reload_resource)
+                        // .service(sse_resource);
+                )
+                // .service(public_service)
+                // .service(pkg_resource)
+                // .route(frontend_route)
+        })
+        .bind("127.0.0.1:8080")?
+        .run()
+        .await
 
-        let broadcaster_data = Broadcaster::create();
-        let broadcaster_data_for_reload = broadcaster_data.clone();
-        let broadcaster_data_for_sse = broadcaster_data.clone();
+        // let broadcaster_data = Broadcaster::create();
+        // let broadcaster_data_for_reload = broadcaster_data.clone();
+        // let broadcaster_data_for_sse = broadcaster_data.clone();
         
-        let reload_resource = web::resource("reload").route(
-            web::post().to(move || {
-                let broadcaster_data = broadcaster_data_for_reload.clone();
-                async move {
-                    broadcaster_data.lock().unwrap().send("reload", "");
-                    HttpResponse::Ok()
-                }
-            })
-        );
+        // let reload_resource = web::resource("reload").route(
+        //     web::post().to(move || {
+        //         let broadcaster_data = broadcaster_data_for_reload.clone();
+        //         async move {
+        //             broadcaster_data.lock().unwrap().send("reload", "");
+        //             HttpResponse::Ok()
+        //         }
+        //     })
+        // );
 
-        let sse_resource = web::resource("sse").route(
-            web::post().to(move || {
-                let broadcaster_data = broadcaster_data_for_sse.clone();
-                async move {
-                    let client = broadcaster_data
-                        .lock()
-                        .unwrap()
-                        .new_client("backend_build_id", &backend_build_id.to_string());
+        // let sse_resource = web::resource("sse").route(
+        //     web::post().to(move || {
+        //         let broadcaster_data = broadcaster_data_for_sse.clone();
+        //         async move {
+        //             let client = broadcaster_data
+        //                 .lock()
+        //                 .unwrap()
+        //                 .new_client("backend_build_id", &backend_build_id.to_string());
 
-                    HttpResponse::Ok()
-                        .insert_header(("content-type", "text/event-stream"))
-                        .no_chunking(100)
-                        .streaming(client)
-                }
-            })
-        );
+        //             HttpResponse::Ok()
+        //                 .insert_header(("content-type", "text/event-stream"))
+        //                 .no_chunking(100)
+        //                 .streaming(client)
+        //         }
+        //     })
+        // );
 
-        let api_scope = web::scope("api")
-            .service(up_msg_handler_resource)
-            .service(reload_resource)
-            .service(sse_resource);
+        
 
 
-        let public_service = Files::new("public", "public/");
+        // let public_service = Files::new("public", "public/");
 
 
-        let compressed_pkg = config.compressed_pkg;
+        // let compressed_pkg = config.compressed_pkg;
 
-        let pkg_resource = web::resource("pkg/{file:.*}").route(
-            web::get().to(move |file: web::Path<String>, req: HttpRequest| async move {
-                let mime = mime_guess::from_path(file.as_str()).first_or_octet_stream();
+        // let pkg_resource = web::resource("pkg/{file:.*}").route(
+        //     web::get().to(move |file: web::Path<String>, req: HttpRequest| async move {
+        //         let mime = mime_guess::from_path(file.as_str()).first_or_octet_stream();
 
-                let encodings = req
-                    .headers()
-                    .get_all(header::ACCEPT_ENCODING)
-                    .collect::<BTreeSet<_>>();
+        //         let encodings = req
+        //             .headers()
+        //             .get_all(header::ACCEPT_ENCODING)
+        //             .collect::<BTreeSet<_>>();
 
-                let brotli_header_value = HeaderValue::from_static("br");
-                let gzip_header_value = HeaderValue::from_static("gzip");
+        //         let brotli_header_value = HeaderValue::from_static("br");
+        //         let gzip_header_value = HeaderValue::from_static("gzip");
 
-                let mut file = file.into_inner();
+        //         let mut file = file.into_inner();
 
-                let named_file = if compressed_pkg || encodings.contains(&brotli_header_value) {
-                    file.push_str(".br");
-                    NamedFile::open(file)?.set_content_encoding(ContentEncoding::Br)
-                } else if compressed_pkg || encodings.contains(&gzip_header_value) {
-                    file.push_str(".gz");
-                    NamedFile::open(file)?.set_content_encoding(ContentEncoding::Gzip)
-                } else {
-                    NamedFile::open(file)?
-                };
+        //         let named_file = if compressed_pkg || encodings.contains(&brotli_header_value) {
+        //             file.push_str(".br");
+        //             NamedFile::open(file)?.set_content_encoding(ContentEncoding::Br)
+        //         } else if compressed_pkg || encodings.contains(&gzip_header_value) {
+        //             file.push_str(".gz");
+        //             NamedFile::open(file)?.set_content_encoding(ContentEncoding::Gzip)
+        //         } else {
+        //             NamedFile::open(file)?
+        //         };
 
-                Ok::<_, std::io::Error>(named_file.set_content_type(mime))
-            })
-        );
+        //         Ok::<_, std::io::Error>(named_file.set_content_type(mime))
+        //     })
+        // );
 
-        let frontend_route = web::get().to(move || async move {
-            let frontend = frontend().await;
+        // let frontend_route = web::get().to(move || async move {
+        //     let frontend = frontend().await;
 
-            let frontend_build_id: u128 = fs::read_to_string("frontend/pkg/build_id")
-                .await
-                .ok()
-                .and_then(|uuid| uuid.parse().ok())
-                .unwrap_or_default();
+        //     let frontend_build_id: u128 = fs::read_to_string("frontend/pkg/build_id")
+        //         .await
+        //         .ok()
+        //         .and_then(|uuid| uuid.parse().ok())
+        //         .unwrap_or_default();
 
-            html::html(
-                &frontend.title,
-                backend_build_id,
-                frontend_build_id,
-                &frontend.append_to_head,
-                &frontend.body_content,
-            )
-        });        
+        //     html::html(
+        //         &frontend.title,
+        //         backend_build_id,
+        //         frontend_build_id,
+        //         &frontend.append_to_head,
+        //         &frontend.body_content,
+        //     )
+        // });    
+        
+        
 
         // let main_server_routes = up_msg_handler_route
         //     .or(reload)
@@ -333,6 +366,7 @@ where
         // futures::future::join_all(handles).await;
 
         // println!("Moon shut down");
-    });
-    Ok(())
+    })
+    
+    // Ok(())
 }
