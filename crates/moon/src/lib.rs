@@ -4,30 +4,29 @@ use std::{
     convert::Infallible,
     env,
     error::Error,
-    fs,
+    // fs,
     future::Future,
     path::Path,
     sync::{Arc, Mutex},
 };
 use tokio::{io::AsyncReadExt, runtime::Runtime, signal, sync::mpsc, sync::oneshot, task};
 use tokio_stream::wrappers::UnboundedReceiverStream;
-use warp::{
-    filters::BoxedFilter,
-    host::Authority,
-    http::{
-        self,
-        header::{
-            HeaderMap, HeaderValue, ACCEPT_ENCODING, CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE,
-        },
-        Uri,
-    },
-    path,
-    path::FullPath,
-    sse::Event,
-    Filter, Reply,
-};
+
+
+
+use actix_web::rt::System;
+use actix_web::{web, App, HttpServer, Responder, HttpResponse, HttpRequest, Result};
+use actix_http::http::{header, HeaderMap, HeaderValue, ContentEncoding};
+use actix_files::{Files, NamedFile};
+use tokio::sync::mpsc::{channel, Receiver, Sender};
+use tokio::fs;
+use std::path::PathBuf;
+
 
 mod html;
+mod sse;
+
+use sse::{Broadcaster, broadcast};
 
 pub struct Frontend {
     title: String,
@@ -87,6 +86,9 @@ struct RedirectServer {
 }
 
 fn load_config() -> Config {
+    // @TODO envy?
+    // let config = envy::from_env::<Config>().unwrap();
+
     // // port = 8443
     // env::set_var("PORT", config.port.to_string());
     // // https = true
@@ -112,13 +114,11 @@ fn load_config() -> Config {
     }
 }
 
-type SseSenders = Vec<mpsc::UnboundedSender<Result<Event, Infallible>>>;
-
 pub fn start<IN, FR, UP>(
-    init: impl FnOnce() -> IN,
+    init: impl FnOnce() -> IN + 'static,
     frontend: impl Fn() -> FR + Copy + Send + Sync + 'static,
     up_msg_handler: impl Fn(UpMsgRequest) -> UP + Copy + Send + Sync + 'static,
-) -> Result<(), Box<dyn Error>>
+) -> std::io::Result<()>
 where
     IN: Future<Output = ()>,
     FR: Future<Output = Frontend> + Send,
@@ -127,292 +127,212 @@ where
     let config = load_config();
     println!("Moon config: {:#?}", config);
 
-    let rt = Runtime::new()?;
-    rt.block_on(async move {
-        let sse_senders = SseSenders::new();
-        let sse_senders = Arc::new(Mutex::new(sse_senders));
-        let sse_senders = warp::any().map(move || sse_senders.clone());
-
+    System::new().block_on(async move {
         let backend_build_id: u128 = fs::read_to_string("backend/private/build_id")
+            .await
             .ok()
             .and_then(|uuid| uuid.parse().ok())
             .unwrap_or_default();
 
         init().await;
 
-        let api = warp::post().and(warp::path("api"));
-
-        let up_msg_handler_route =
-            api.and(warp::path("up_msg_handler"))
-                .and_then(move || async move {
-                    up_msg_handler(UpMsgRequest {}).await;
-                    Ok::<_, warp::Rejection>(http::StatusCode::OK)
-                });
-
-        let reload = api.and(warp::path("reload")).and(sse_senders.clone()).map(
-            |sse_senders: Arc<Mutex<SseSenders>>| {
-                sse_senders.lock().unwrap().retain(|sse_sender| {
-                    sse_sender
-                        .send(Ok(Event::default().event("reload").data("")))
-                        .is_ok()
-                });
-                http::StatusCode::OK
-            },
+        let up_msg_handler_resource = web::resource("up_msg_handler").route(
+            web::post().to(move || async move {
+                up_msg_handler(UpMsgRequest {}).await;
+                HttpResponse::Ok()
+            })
         );
 
-        let sse =
-            warp::path!("sse")
-                .and(sse_senders)
-                .map(move |sse_senders: Arc<Mutex<SseSenders>>| {
-                    let (sse_sender, sse_receiver) = mpsc::unbounded_channel();
-                    let sse_stream =
-                        UnboundedReceiverStream::<Result<Event, Infallible>>::new(sse_receiver);
+        let broadcaster_data = Broadcaster::create();
+        let broadcaster_data_for_reload = broadcaster_data.clone();
+        let broadcaster_data_for_sse = broadcaster_data.clone();
+        
+        let reload_resource = web::resource("reload").route(
+            web::post().to(move || {
+                let broadcaster_data = broadcaster_data_for_reload.clone();
+                async move {
+                    broadcaster_data.lock().unwrap().send("reload", "");
+                    HttpResponse::Ok()
+                }
+            })
+        );
 
-                    let backend_build_id = backend_build_id.to_string();
-                    sse_sender
-                        .send(Ok(Event::default()
-                            .event("backend_build_id")
-                            .data(backend_build_id)))
-                        .unwrap();
+        let sse_resource = web::resource("sse").route(
+            web::post().to(move || {
+                let broadcaster_data = broadcaster_data_for_sse.clone();
+                async move {
+                    let client = broadcaster_data
+                        .lock()
+                        .unwrap()
+                        .new_client("backend_build_id", &backend_build_id.to_string());
 
-                    sse_senders.lock().unwrap().push(sse_sender);
-                    warp::sse::reply(warp::sse::keep_alive().stream(sse_stream))
-                });
+                    HttpResponse::Ok()
+                        .insert_header(("content-type", "text/event-stream"))
+                        .no_chunking(100)
+                        .streaming(client)
+                }
+            })
+        );
 
-        let pkg_route = pkg_route(config.compressed_pkg, "frontend/pkg/");
-        let public_route = warp::path("public").and(warp::fs::dir("public/"));
+        let api_scope = web::scope("api")
+            .service(up_msg_handler_resource)
+            .service(reload_resource)
+            .service(sse_resource);
 
-        let frontend_route = warp::get().and_then(move || async move {
+
+        let public_service = Files::new("public", "public/");
+
+
+        let compressed_pkg = config.compressed_pkg;
+
+        let pkg_resource = web::resource("pkg/{file:.*}").route(
+            web::get().to(move |file: web::Path<String>, req: HttpRequest| async move {
+                let mime = mime_guess::from_path(file.as_str()).first_or_octet_stream();
+
+                let encodings = req
+                    .headers()
+                    .get_all(header::ACCEPT_ENCODING)
+                    .collect::<BTreeSet<_>>();
+
+                let brotli_header_value = HeaderValue::from_static("br");
+                let gzip_header_value = HeaderValue::from_static("gzip");
+
+                let mut file = file.into_inner();
+
+                let named_file = if compressed_pkg || encodings.contains(&brotli_header_value) {
+                    file.push_str(".br");
+                    NamedFile::open(file)?.set_content_encoding(ContentEncoding::Br)
+                } else if compressed_pkg || encodings.contains(&gzip_header_value) {
+                    file.push_str(".gz");
+                    NamedFile::open(file)?.set_content_encoding(ContentEncoding::Gzip)
+                } else {
+                    NamedFile::open(file)?
+                };
+
+                Ok::<_, std::io::Error>(named_file.set_content_type(mime))
+            })
+        );
+
+        let frontend_route = web::get().to(move || async move {
             let frontend = frontend().await;
 
             let frontend_build_id: u128 = fs::read_to_string("frontend/pkg/build_id")
+                .await
                 .ok()
                 .and_then(|uuid| uuid.parse().ok())
                 .unwrap_or_default();
 
-            Ok::<_, warp::Rejection>(warp::reply::html(html::html(
+            html::html(
                 &frontend.title,
                 backend_build_id,
                 frontend_build_id,
                 &frontend.append_to_head,
                 &frontend.body_content,
-            )))
-        });
+            )
+        });        
 
-        let main_server_routes = up_msg_handler_route
-            .or(reload)
-            .or(sse)
-            .or(pkg_route)
-            .or(public_route)
-            .or(frontend_route);
+        // let main_server_routes = up_msg_handler_route
+        //     .or(reload)
+        //     .or(sse)
+        //     .or(pkg_route)
+        //     .or(public_route)
+        //     .or(frontend_route);
 
-        let (shutdown_sender_for_redirect_server, redirect_server_handle) = {
-            let config_port = config.port;
-            let config_https = config.https;
+        // let (shutdown_sender_for_redirect_server, redirect_server_handle) = {
+        //     let config_port = config.port;
+        //     let config_https = config.https;
 
-            if config.redirect_server.enabled {
-                let redirect_server_routes = warp::path::full().and(warp::host::optional()).map(
-                    move |path: FullPath, authority: Option<Authority>| {
-                        let authority = authority.unwrap();
-                        let authority = format!("{}:{}", authority.host(), config_port);
-                        let authority = authority.parse::<Authority>().unwrap();
+        //     if config.redirect_server.enabled {
+        //         let redirect_server_routes = warp::path::full().and(warp::host::optional()).map(
+        //             move |path: FullPath, authority: Option<Authority>| {
+        //                 let authority = authority.unwrap();
+        //                 let authority = format!("{}:{}", authority.host(), config_port);
+        //                 let authority = authority.parse::<Authority>().unwrap();
 
-                        let uri = Uri::builder()
-                            .scheme(if config_https { "https" } else { "http" })
-                            .authority(authority)
-                            .path_and_query(path.as_str())
-                            .build()
-                            .unwrap();
-                        warp::redirect::temporary(uri)
-                    },
-                );
+        //                 let uri = Uri::builder()
+        //                     .scheme(if config_https { "https" } else { "http" })
+        //                     .authority(authority)
+        //                     .path_and_query(path.as_str())
+        //                     .build()
+        //                     .unwrap();
+        //                 warp::redirect::temporary(uri)
+        //             },
+        //         );
 
-                let (shutdown_sender_for_redirect_server, shutdown_receiver_for_redirect_server) =
-                    oneshot::channel();
-                let (_, redirect_server) = warp::serve(redirect_server_routes)
-                    .bind_with_graceful_shutdown(
-                        ([0, 0, 0, 0], config.redirect_server.port),
-                        async {
-                            shutdown_receiver_for_redirect_server.await.ok();
-                        },
-                    );
-                let redirect_server_handle = task::spawn(redirect_server);
+        //         let (shutdown_sender_for_redirect_server, shutdown_receiver_for_redirect_server) =
+        //             oneshot::channel();
+        //         let (_, redirect_server) = warp::serve(redirect_server_routes)
+        //             .bind_with_graceful_shutdown(
+        //                 ([0, 0, 0, 0], config.redirect_server.port),
+        //                 async {
+        //                     shutdown_receiver_for_redirect_server.await.ok();
+        //                 },
+        //             );
+        //         let redirect_server_handle = task::spawn(redirect_server);
 
-                (
-                    Some(shutdown_sender_for_redirect_server),
-                    Some(redirect_server_handle),
-                )
-            } else {
-                (None, None)
-            }
-        };
+        //         (
+        //             Some(shutdown_sender_for_redirect_server),
+        //             Some(redirect_server_handle),
+        //         )
+        //     } else {
+        //         (None, None)
+        //     }
+        // };
 
-        let (shutdown_sender_for_main_server, shutdown_receiver_for_main_server) =
-            oneshot::channel();
-        let main_server_handle = {
-            let server = warp::serve(main_server_routes);
-            if config.https {
-                let main_server = server
-                    .tls()
-                    .cert_path("backend/private/public.pem")
-                    .key_path("backend/private/private.pem")
-                    .bind_with_graceful_shutdown(([0, 0, 0, 0], config.port), async {
-                        shutdown_receiver_for_main_server.await.ok();
-                    })
-                    .1;
-                task::spawn(main_server)
-            } else {
-                let main_server = server
-                    .bind_with_graceful_shutdown(([0, 0, 0, 0], config.port), async {
-                        shutdown_receiver_for_main_server.await.ok();
-                    })
-                    .1;
-                task::spawn(main_server)
-            }
-        };
+        // let (shutdown_sender_for_main_server, shutdown_receiver_for_main_server) =
+        //     oneshot::channel();
+        // let main_server_handle = {
+        //     let server = warp::serve(main_server_routes);
+        //     if config.https {
+        //         let main_server = server
+        //             .tls()
+        //             .cert_path("backend/private/public.pem")
+        //             .key_path("backend/private/private.pem")
+        //             .bind_with_graceful_shutdown(([0, 0, 0, 0], config.port), async {
+        //                 shutdown_receiver_for_main_server.await.ok();
+        //             })
+        //             .1;
+        //         task::spawn(main_server)
+        //     } else {
+        //         let main_server = server
+        //             .bind_with_graceful_shutdown(([0, 0, 0, 0], config.port), async {
+        //                 shutdown_receiver_for_main_server.await.ok();
+        //             })
+        //             .1;
+        //         task::spawn(main_server)
+        //     }
+        // };
 
-        if config.redirect_server.enabled {
-            println!(
-                "Redirect server is running on 0.0.0.0:{port} [http://127.0.0.1:{port}]",
-                port = config.redirect_server.port
-            );
-        }
-        println!(
-            "Main server is running on 0.0.0.0:{port} [{protocol}://127.0.0.1:{port}]",
-            protocol = if config.https { "https" } else { "http" },
-            port = config.port
-        );
+        // if config.redirect_server.enabled {
+        //     println!(
+        //         "Redirect server is running on 0.0.0.0:{port} [http://127.0.0.1:{port}]",
+        //         port = config.redirect_server.port
+        //     );
+        // }
+        // println!(
+        //     "Main server is running on 0.0.0.0:{port} [{protocol}://127.0.0.1:{port}]",
+        //     protocol = if config.https { "https" } else { "http" },
+        //     port = config.port
+        // );
 
-        signal::ctrl_c().await.unwrap();
-        if let Some(shutdown_sender_for_redirect_server) = shutdown_sender_for_redirect_server {
-            shutdown_sender_for_redirect_server.send(()).unwrap();
-        }
-        shutdown_sender_for_main_server.send(()).unwrap();
-        // time::sleep(time::Duration::from_secs(1)).await;
-        if let Some(redirect_server_handle) = &redirect_server_handle {
-            redirect_server_handle.abort();
-        }
-        main_server_handle.abort();
+        // signal::ctrl_c().await.unwrap();
+        // if let Some(shutdown_sender_for_redirect_server) = shutdown_sender_for_redirect_server {
+        //     shutdown_sender_for_redirect_server.send(()).unwrap();
+        // }
+        // shutdown_sender_for_main_server.send(()).unwrap();
+        // // time::sleep(time::Duration::from_secs(1)).await;
+        // if let Some(redirect_server_handle) = &redirect_server_handle {
+        //     redirect_server_handle.abort();
+        // }
+        // main_server_handle.abort();
 
-        let mut handles = vec![main_server_handle];
-        if let Some(redirect_server_handle) = redirect_server_handle {
-            handles.push(redirect_server_handle);
-        }
-        futures::future::join_all(handles).await;
+        // let mut handles = vec![main_server_handle];
+        // if let Some(redirect_server_handle) = redirect_server_handle {
+        //     handles.push(redirect_server_handle);
+        // }
+        // futures::future::join_all(handles).await;
 
-        println!("Moon shut down");
+        // println!("Moon shut down");
     });
     Ok(())
-}
-
-const BROTLI_ID: &str = "br";
-const BROTLI_POSTFIX: &str = ".br";
-
-const GZIP_ID: &str = "gzip";
-const GZIP_POSTFIX: &str = ".gz";
-
-fn pkg_route(compressed_pkg: bool, pkg_dir: &'static str) -> BoxedFilter<(impl Reply,)> {
-    let pkg_dir = Path::new(pkg_dir);
-
-    path("pkg")
-        .and(path::tail())
-        .and(warp::header::optional(ACCEPT_ENCODING.as_str()))
-        .and_then(
-            move |file: path::Tail, accept_encoding: Option<String>| async move {
-                let mut file = file.as_str().to_owned();
-                let mime = mime_guess::from_path(&file).first_or_octet_stream();
-
-                let mut headers = HeaderMap::new();
-                headers.insert(
-                    CONTENT_TYPE,
-                    HeaderValue::from_str(&mime.to_string()).unwrap(),
-                );
-
-                if compressed_pkg {
-                    if let Some(accept_encoding) = accept_encoding {
-                        let encodings = accept_encoding.split(", ").collect::<BTreeSet<_>>();
-                        if encodings.contains(BROTLI_ID) {
-                            file.push_str(BROTLI_POSTFIX);
-                            headers.insert(CONTENT_ENCODING, HeaderValue::from_static(BROTLI_ID));
-                        } else if encodings.contains(GZIP_ID) {
-                            file.push_str(GZIP_POSTFIX);
-                            headers.insert(CONTENT_ENCODING, HeaderValue::from_static(GZIP_ID));
-                        }
-                    }
-                }
-                let file = pkg_dir.join(file);
-                let mut file = match tokio::fs::File::open(file).await {
-                    Ok(file) => file,
-                    Err(_) => return Err(warp::reject::not_found()),
-                };
-                let mut contents = vec![];
-                file.read_to_end(&mut contents).await.unwrap();
-                headers.insert(
-                    CONTENT_LENGTH,
-                    HeaderValue::from_str(&contents.len().to_string()).unwrap(),
-                );
-
-                let mut response = http::Response::new(contents);
-                *response.headers_mut() = headers;
-                Ok::<_, warp::Rejection>(response)
-            },
-        )
-        .boxed()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    mod pkg_route {
-
-        use super::*;
-        use const_format::concatcp;
-
-        const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
-        const FIXTURES_DIR: &str = concatcp!(MANIFEST_DIR, "/tests/fixtures/");
-
-        #[tokio::test]
-        async fn uncompressed() {
-            let css_content = include_str!("../tests/fixtures/index.css");
-            let filter = pkg_route(true, FIXTURES_DIR);
-            let res = warp::test::request()
-                .path("/pkg/index.css")
-                .reply(&filter)
-                .await;
-            assert_eq!(res.status(), 200);
-            assert_eq!(res.headers()[CONTENT_TYPE], "text/css");
-            assert_eq!(res.into_body(), css_content);
-        }
-
-        #[tokio::test]
-        async fn brotli_compressed() {
-            let css_content = include_bytes!("../tests/fixtures/index.css.br");
-            let filter = pkg_route(true, FIXTURES_DIR);
-            let res = warp::test::request()
-                .header(ACCEPT_ENCODING, "br")
-                .path("/pkg/index.css")
-                .reply(&filter)
-                .await;
-            assert_eq!(res.status(), 200);
-            assert_eq!(res.headers()[CONTENT_ENCODING], "br");
-            assert_eq!(res.headers()[CONTENT_TYPE], "text/css");
-            assert_eq!(res.into_body().as_ref(), css_content);
-        }
-
-        #[tokio::test]
-        async fn gzip_compressed() {
-            let css_content = include_bytes!("../tests/fixtures/index.css.gz");
-            let filter = pkg_route(true, FIXTURES_DIR);
-            let res = warp::test::request()
-                .header(ACCEPT_ENCODING, "gzip")
-                .path("/pkg/index.css")
-                .reply(&filter)
-                .await;
-            assert_eq!(res.status(), 200);
-            assert_eq!(res.headers()[CONTENT_ENCODING], "gzip");
-            assert_eq!(res.headers()[CONTENT_TYPE], "text/css");
-            assert_eq!(res.into_body().as_ref(), css_content);
-        }
-    }
 }
