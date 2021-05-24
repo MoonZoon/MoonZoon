@@ -21,6 +21,7 @@ use actix_files::{Files, NamedFile};
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 use tokio::fs;
 use std::path::PathBuf;
+use trait_set::trait_set;
 
 
 mod html;
@@ -114,30 +115,22 @@ fn load_config() -> Config {
     }
 }
 
-// async fn up_msg_handler_responder<UP>(up_msg_handler: impl Fn(UpMsgRequest) -> UP + Copy + Send + Sync + 'static) -> impl Responder
-// where
-//     UP: Future<Output = ()> + Send,
-// {
-//     up_msg_handler(UpMsgRequest {}).await;
-//     HttpResponse::Ok()
-// }
-
-pub trait UpHandlerReturn: Future<Output = ()> + 'static {}
-impl<T> UpHandlerReturn for T where T: Future<Output = ()> + 'static {}
-
-pub trait UpHandler<UPHR: UpHandlerReturn>: Fn(UpMsgRequest) -> UPHR + Clone + Send + 'static {}
-impl<T, UPHR: UpHandlerReturn> UpHandler<UPHR> for T where T: Fn(UpMsgRequest) -> UPHR + Clone + Send + 'static {}
-
-async fn up_msg_handler_responder<UPHR, UPH>(up_msg_handler: web::Data<UPH>) -> HttpResponse
-where
-    UPHR: UpHandlerReturn,
-    UPH: UpHandler<UPHR>
-{
-    up_msg_handler(UpMsgRequest {}).await;
-    HttpResponse::Ok().finish()
+// @TODO Type parameter bounds? (https://github.com/popzxc/trait-set/issues/2)
+trait_set!{
+    pub trait UpHandlerOutput = Future<Output = ()> + 'static;
+    pub trait UpHandler<UPHO> = Fn(UpMsgRequest) -> UPHO + Clone + Send + 'static;
 }
 
-pub fn start<IN, FR, UPHR: UpHandlerReturn, UPH: UpHandler<UPHR>>(
+async fn up_msg_handler_responder<UPH, UPHO>(up_msg_handler: web::Data<UPH>) -> impl Responder
+where
+    UPH: UpHandler<UPHO>,
+    UPHO: UpHandlerOutput,
+{
+    up_msg_handler(UpMsgRequest {}).await;
+    HttpResponse::Ok()
+}
+
+pub fn start<IN, FR, UPH, UPHO>(
     init: impl FnOnce() -> IN + 'static,
     frontend: impl Fn() -> FR + Copy + Send + Sync + 'static,
     up_msg_handler: UPH,
@@ -145,8 +138,8 @@ pub fn start<IN, FR, UPHR: UpHandlerReturn, UPH: UpHandler<UPHR>>(
 where
     IN: Future<Output = ()>,
     FR: Future<Output = Frontend> + Send,
-    UPHR: UpHandlerReturn,
-    UPH: UpHandler<UPHR>
+    UPH: UpHandler<UPHO>,
+    UPHO: UpHandlerOutput,
 {
     let config = load_config();
     println!("Moon config: {:#?}", config);
@@ -165,7 +158,7 @@ where
                 .service(
                     web::scope("api")
                         .data(up_msg_handler.clone())
-                        .route("up_msg_handler", web::post().to(up_msg_handler_responder::<UPHR, UPH>))
+                        .route("up_msg_handler", web::post().to(up_msg_handler_responder::<UPH, UPHO>))
                         // .service(reload_resource)
                         // .service(sse_resource);
                 )
