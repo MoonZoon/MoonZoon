@@ -17,6 +17,7 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 use actix_web::rt::System;
 use actix_web::{web, App, HttpServer, Responder, HttpResponse, HttpRequest, Result, post};
 use actix_http::http::{header, HeaderMap, HeaderValue, ContentEncoding};
+use actix_web::http::header::ContentType;
 use actix_files::{Files, NamedFile};
 use tokio::sync::mpsc::{channel, Receiver, Sender};
 use tokio::fs;
@@ -125,6 +126,67 @@ where
     HttpResponse::Ok()
 }
 
+async fn frontend_responder<FRB, FRBO>(frontend: web::Data<FRB>, backend_build_id: web::Data<BackendBuildId>) -> impl Responder
+where
+    FRB: FrontBuilder<FRBO>,
+    FRBO: FrontBuilderOutput,
+{
+    let frontend = frontend().await;
+
+    let frontend_build_id: u128 = fs::read_to_string("frontend/pkg/build_id")
+        .await
+        .ok()
+        .and_then(|uuid| uuid.parse().ok())
+        .unwrap_or_default();
+
+    let html = html::html(
+        &frontend.title,
+        backend_build_id.id,
+        frontend_build_id,
+        &frontend.append_to_head,
+        &frontend.body_content,
+    );
+    HttpResponse::Ok()
+        .content_type(ContentType::html())
+        .body(html)
+}   
+
+struct BackendBuildId {
+    id: u128
+}
+
+async fn pkg_responder(req: HttpRequest, file: web::Path<String>, compressed_pkg: web::Data<CompressedPkg>) -> impl Responder {
+    let compressed_pkg = compressed_pkg.compressed_pkg;
+    
+    let mime = mime_guess::from_path(file.as_str()).first_or_octet_stream();
+
+    let encodings = req
+        .headers()
+        .get_all(header::ACCEPT_ENCODING)
+        .collect::<BTreeSet<_>>();
+
+    let brotli_header_value = HeaderValue::from_static("br");
+    let gzip_header_value = HeaderValue::from_static("gzip");
+
+    let mut file = format!("frontend/pkg/{}", file);
+
+    let named_file = if compressed_pkg || encodings.contains(&brotli_header_value) {
+        file.push_str(".br");
+        NamedFile::open(file)?.set_content_encoding(ContentEncoding::Br)
+    } else if compressed_pkg || encodings.contains(&gzip_header_value) {
+        file.push_str(".gz");
+        NamedFile::open(file)?.set_content_encoding(ContentEncoding::Gzip)
+    } else {
+        NamedFile::open(file)?
+    };
+
+    Result::<_>::Ok(named_file.set_content_type(mime))
+}   
+
+struct CompressedPkg {
+    compressed_pkg: bool
+}
+
 pub fn start<IN, FRB, FRBO, UPH, UPHO>(
     init: impl FnOnce() -> IN + 'static,
     frontend: FRB,
@@ -149,8 +211,13 @@ where
 
         init().await;
 
+        let compressed_pkg = config.compressed_pkg;
+
         HttpServer::new(move || {
             App::new()
+                .data(BackendBuildId { id: backend_build_id })
+                .data(CompressedPkg { compressed_pkg })
+                .data(frontend.clone())
                 .service(
                     web::scope("api")
                         .data(up_msg_handler.clone())
@@ -158,13 +225,14 @@ where
                         // .service(reload_resource)
                         // .service(sse_resource);
                 )
-                // .service(public_service)
-                // .service(pkg_resource)
-                // .route(frontend_route)
+                .service(Files::new("public", "public/"))
+                .route("pkg/{file:.*}", web::get().to(pkg_responder))
+                .route("*", web::get().to(frontend_responder::<FRB, FRBO>))
         })
         .bind("127.0.0.1:8080")?
         .run()
         .await
+
 
         // let broadcaster_data = Broadcaster::create();
         // let broadcaster_data_for_reload = broadcaster_data.clone();
@@ -195,62 +263,7 @@ where
         //                 .streaming(client)
         //         }
         //     })
-        // );
-
-        
-
-
-        // let public_service = Files::new("public", "public/");
-
-
-        // let compressed_pkg = config.compressed_pkg;
-
-        // let pkg_resource = web::resource("pkg/{file:.*}").route(
-        //     web::get().to(move |file: web::Path<String>, req: HttpRequest| async move {
-        //         let mime = mime_guess::from_path(file.as_str()).first_or_octet_stream();
-
-        //         let encodings = req
-        //             .headers()
-        //             .get_all(header::ACCEPT_ENCODING)
-        //             .collect::<BTreeSet<_>>();
-
-        //         let brotli_header_value = HeaderValue::from_static("br");
-        //         let gzip_header_value = HeaderValue::from_static("gzip");
-
-        //         let mut file = file.into_inner();
-
-        //         let named_file = if compressed_pkg || encodings.contains(&brotli_header_value) {
-        //             file.push_str(".br");
-        //             NamedFile::open(file)?.set_content_encoding(ContentEncoding::Br)
-        //         } else if compressed_pkg || encodings.contains(&gzip_header_value) {
-        //             file.push_str(".gz");
-        //             NamedFile::open(file)?.set_content_encoding(ContentEncoding::Gzip)
-        //         } else {
-        //             NamedFile::open(file)?
-        //         };
-
-        //         Ok::<_, std::io::Error>(named_file.set_content_type(mime))
-        //     })
-        // );
-
-        // let frontend_route = web::get().to(move || async move {
-        //     let frontend = frontend().await;
-
-        //     let frontend_build_id: u128 = fs::read_to_string("frontend/pkg/build_id")
-        //         .await
-        //         .ok()
-        //         .and_then(|uuid| uuid.parse().ok())
-        //         .unwrap_or_default();
-
-        //     html::html(
-        //         &frontend.title,
-        //         backend_build_id,
-        //         frontend_build_id,
-        //         &frontend.append_to_head,
-        //         &frontend.body_content,
-        //     )
-        // });    
-        
+        // );    
         
 
         // let main_server_routes = up_msg_handler_route
