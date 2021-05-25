@@ -155,7 +155,7 @@ struct BackendBuildId {
     id: u128
 }
 
-async fn pkg_responder(req: HttpRequest, file: web::Path<String>, compressed_pkg: web::Data<CompressedPkg>) -> impl Responder {
+async fn pkg_responder(req: HttpRequest, file: web::Path<String>, compressed_pkg: web::Data<CompressedPkg>) -> Result<NamedFile> {
     let compressed_pkg = compressed_pkg.compressed_pkg;
     
     let mime = mime_guess::from_path(file.as_str()).first_or_octet_stream();
@@ -170,17 +170,19 @@ async fn pkg_responder(req: HttpRequest, file: web::Path<String>, compressed_pkg
 
     let mut file = format!("frontend/pkg/{}", file);
 
-    let named_file = if compressed_pkg || encodings.contains(&brotli_header_value) {
-        file.push_str(".br");
-        NamedFile::open(file)?.set_content_encoding(ContentEncoding::Br)
-    } else if compressed_pkg || encodings.contains(&gzip_header_value) {
-        file.push_str(".gz");
-        NamedFile::open(file)?.set_content_encoding(ContentEncoding::Gzip)
-    } else {
-        NamedFile::open(file)?
+    let named_file = match compressed_pkg {
+        true if encodings.contains(&brotli_header_value) => {
+            file.push_str(".br");
+            NamedFile::open(file)?.set_content_encoding(ContentEncoding::Br)
+        }
+        true if encodings.contains(&gzip_header_value) => {
+            file.push_str(".gz");
+            NamedFile::open(file)?.set_content_encoding(ContentEncoding::Gzip)
+        }
+        _ => NamedFile::open(file)?
     };
 
-    Result::<_>::Ok(named_file.set_content_type(mime))
+    Ok(named_file.set_content_type(mime))
 }   
 
 struct CompressedPkg {
