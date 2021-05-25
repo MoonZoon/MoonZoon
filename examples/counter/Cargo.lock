@@ -1379,9 +1379,8 @@ dependencies = [
 
 [[package]]
 name = "trait-set"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04df1f221e55099c2aa02ef3d969ba06728e496eb81dda4edf43f44a596ae2ec"
+version = "0.2.0"
+source = "git+https://github.com/popzxc/trait-set?branch=main#4f34975df38cfe431ac4b370e68bc3ba5be131c1"
 dependencies = [
  "proc-macro2",
  "quote",

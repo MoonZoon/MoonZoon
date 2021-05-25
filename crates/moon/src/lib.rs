@@ -115,10 +115,9 @@ fn load_config() -> Config {
     }
 }
 
-// @TODO Type parameter bounds? (https://github.com/popzxc/trait-set/issues/2)
 trait_set!{
     pub trait UpHandlerOutput = Future<Output = ()> + 'static;
-    pub trait UpHandler<UPHO> = Fn(UpMsgRequest) -> UPHO + Clone + Send + 'static;
+    pub trait UpHandler<UPHO: UpHandlerOutput> = Fn(UpMsgRequest) -> UPHO + Clone + Send + 'static;
 }
 
 async fn up_msg_handler_responder<UPH, UPHO>(up_msg_handler: web::Data<UPH>) -> impl Responder
