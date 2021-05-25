@@ -185,7 +185,23 @@ async fn pkg_responder(req: HttpRequest, file: web::Path<String>, compressed_pkg
 
 struct CompressedPkg {
     compressed_pkg: bool
-}
+}  
+
+async fn sse_responder(broadcaster: web::Data<Mutex<Broadcaster>>, backend_build_id: web::Data<BackendBuildId>) -> impl Responder {
+    let client = broadcaster
+        .lock()
+        .unwrap()
+        .new_client("backend_build_id", &backend_build_id.id.to_string());
+
+    HttpResponse::Ok()
+        .insert_header(("content-type", "text/event-stream"))
+        .streaming(client)
+}   
+
+async fn reload_responder(broadcaster: web::Data<Mutex<Broadcaster>>) -> impl Responder {
+    broadcaster.lock().unwrap().send("reload", "");
+    HttpResponse::Ok()
+}   
 
 pub fn start<IN, FRB, FRBO, UPH, UPHO>(
     init: impl FnOnce() -> IN + 'static,
@@ -212,18 +228,20 @@ where
         init().await;
 
         let compressed_pkg = config.compressed_pkg;
+        let broadcaster = Broadcaster::create();
 
         HttpServer::new(move || {
             App::new()
                 .data(BackendBuildId { id: backend_build_id })
                 .data(CompressedPkg { compressed_pkg })
                 .data(frontend.clone())
+                .app_data(broadcaster.clone())
+                .route("sse", web::get().to(sse_responder))
                 .service(
                     web::scope("api")
                         .data(up_msg_handler.clone())
                         .route("up_msg_handler", web::post().to(up_msg_handler_responder::<UPH, UPHO>))
-                        // .service(reload_resource)
-                        // .service(sse_resource);
+                        .route("reload", web::post().to(reload_responder))
                 )
                 .service(Files::new("public", "public/"))
                 .route("pkg/{file:.*}", web::get().to(pkg_responder))
@@ -231,40 +249,7 @@ where
         })
         .bind("127.0.0.1:8080")?
         .run()
-        .await
-
-
-        // let broadcaster_data = Broadcaster::create();
-        // let broadcaster_data_for_reload = broadcaster_data.clone();
-        // let broadcaster_data_for_sse = broadcaster_data.clone();
-        
-        // let reload_resource = web::resource("reload").route(
-        //     web::post().to(move || {
-        //         let broadcaster_data = broadcaster_data_for_reload.clone();
-        //         async move {
-        //             broadcaster_data.lock().unwrap().send("reload", "");
-        //             HttpResponse::Ok()
-        //         }
-        //     })
-        // );
-
-        // let sse_resource = web::resource("sse").route(
-        //     web::post().to(move || {
-        //         let broadcaster_data = broadcaster_data_for_sse.clone();
-        //         async move {
-        //             let client = broadcaster_data
-        //                 .lock()
-        //                 .unwrap()
-        //                 .new_client("backend_build_id", &backend_build_id.to_string());
-
-        //             HttpResponse::Ok()
-        //                 .insert_header(("content-type", "text/event-stream"))
-        //                 .no_chunking(100)
-        //                 .streaming(client)
-        //         }
-        //     })
-        // );    
-        
+        .await        
 
         // let main_server_routes = up_msg_handler_route
         //     .or(reload)
