@@ -65,13 +65,6 @@ impl Frontend {
 
 pub struct UpMsgRequest {}
 
-#[macro_export]
-macro_rules! start {
-    ($init:expr, $frontend:expr, $up_msg_handler:expr) => {
-        $crate::start($init, $frontend, $up_msg_handler);
-    };
-}
-
 #[derive(Debug)]
 struct Config {
     port: u16,
@@ -116,6 +109,9 @@ fn load_config() -> Config {
 }
 
 trait_set!{
+    pub trait FrontBuilderOutput = Future<Output = Frontend> + 'static;
+    pub trait FrontBuilder<FRBO: FrontBuilderOutput> = Fn() -> FRBO + Clone + Send + 'static;
+
     pub trait UpHandlerOutput = Future<Output = ()> + 'static;
     pub trait UpHandler<UPHO: UpHandlerOutput> = Fn(UpMsgRequest) -> UPHO + Clone + Send + 'static;
 }
@@ -129,14 +125,15 @@ where
     HttpResponse::Ok()
 }
 
-pub fn start<IN, FR, UPH, UPHO>(
+pub fn start<IN, FRB, FRBO, UPH, UPHO>(
     init: impl FnOnce() -> IN + 'static,
-    frontend: impl Fn() -> FR + Copy + Send + Sync + 'static,
+    frontend: FRB,
     up_msg_handler: UPH,
 ) -> std::io::Result<()>
 where
     IN: Future<Output = ()>,
-    FR: Future<Output = Frontend> + Send,
+    FRB: FrontBuilder<FRBO>,
+    FRBO: FrontBuilderOutput,
     UPH: UpHandler<UPHO>,
     UPHO: UpHandlerOutput,
 {
