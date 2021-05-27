@@ -3,93 +3,48 @@ use std::sync::Mutex;
 use std::task::{Context, Poll};
 use std::time::Duration;
 use std::collections::HashMap;
-
 use actix_web::web::{Bytes, Data};
 use actix_web::{Error, rt};
-use futures::{Stream, StreamExt};
-use tokio::sync::mpsc::{channel, Receiver, Sender};
+use futures::Stream;
+use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender, error::SendError};
 use tokio::time::{interval_at, Instant};
+use uuid::Uuid;
 
-pub fn broadcast(
-    event: String,
-    msg: String,
-    broadcaster: Data<Mutex<Broadcaster>>,
-) -> () {
-    broadcaster.lock().unwrap().send(&event, &msg);
+type ID = u128;
+
+// ------ Connection ------
+
+#[derive(Clone)]
+pub struct Connection {
+    id: ID,
+    sender: UnboundedSender<Bytes>
 }
 
-
-pub struct Broadcaster {
-    clients: Vec<Sender<Bytes>>,
-}
-
-impl Broadcaster {
-    pub fn create() -> Data<Mutex<Self>> {
-        // Data ≃ Arc
-        let me = Data::new(Mutex::new(Broadcaster::new()));
-
-        // ping clients every 10 seconds to see if they are alive
-        Broadcaster::spawn_ping(me.clone());
-
-        me
+impl Connection {
+    fn new() -> (Connection, EventStream) {
+        let (sender, receiver) = unbounded_channel();
+        let connection = Self { 
+            id: Uuid::new_v4().as_u128(),
+            sender
+        };
+        (connection, EventStream(receiver))
     }
 
-    pub fn new() -> Self {
-        Broadcaster {
-            clients: Vec::new()
-        }
+    fn id(&self) -> ID {
+        self.id
     }
 
-    pub fn spawn_ping(me: Data<Mutex<Self>>) {
-        rt::spawn(async move {
-            let mut interval = interval_at(Instant::now(), Duration::from_secs(10));
-            loop {
-                interval.tick().await;
-                me.lock().unwrap().remove_stale_clients();
-            }
-        });
-    }
-
-    pub fn remove_stale_clients(&mut self) {
-        let mut ok_clients = Vec::new();
-        for client in self.clients.iter() {
-            let result = client.clone().try_send(Bytes::from("event: internal_status\ndata: ping\n\n"));
-
-            if let Ok(()) = result {
-                ok_clients.push(client.clone());
-            }
-        }
-        self.clients = ok_clients;
-    }
-
-    pub fn new_client(&mut self, evt: &str, msg: &str) -> Client {
-        let (tx, rx) = channel(100);
-        let tx_clone = tx.clone();
-
-        let msg = Bytes::from(["event: ", &evt, "\ndata: ", &msg, "\n\n"].concat());
-
-        tx_clone.clone()
-            .try_send(msg)
-            .unwrap();
-
-        self.clients.push(tx_clone.clone());
-
-        Client(rx)
-    }
-
-    pub fn send(&self, evt: &str, msg: &str) {
-        let msg = Bytes::from(["event: ", evt, "\n", "data: ", msg, "\n\n"].concat());
-
-        for client in self.clients.iter() {
-            client.clone().try_send(msg.clone()).unwrap_or(());
-        }
+    pub fn send(&self, event: &str, data: &str) -> Result<(), SendError<Bytes>> {
+        let message = Bytes::from(["event: ", event, "\n", "data: ", data, "\n\n"].concat());
+        self.sender.send(message)
     }
 }
 
-// wrap Receiver in own type, with correct error type
-pub struct Client(Receiver<Bytes>);
+// ------ EventStream ------
 
-impl Stream for Client {
+pub struct EventStream(UnboundedReceiver<Bytes>);
+
+impl Stream for EventStream {
     type Item = Result<Bytes, Error>;
 
     fn poll_next(
@@ -97,38 +52,70 @@ impl Stream for Client {
         cx: &mut Context<'_>,
     ) -> Poll<Option<Self::Item>> {
         match Pin::new(&mut self.0).poll_recv(cx) {
-            Poll::Ready(Some(v)) => Poll::Ready(Some(Ok(v))),
+            Poll::Ready(Some(bytes)) => Poll::Ready(Some(Ok(bytes))),
             Poll::Ready(None) => Poll::Ready(None),
             Poll::Pending => Poll::Pending,
         }
     }
 }
 
+// ------ SSE ------
 
-/*
+pub struct SSE {
+    connections: HashMap<ID, Connection>,
+}
 
-Code above is based on https://github.com/upbasedev/sse-actix-web/blob/796d5153633e22f2e34d2f790ef52e7ddc0a8f7a/src/lib.rs
+impl SSE {
+    pub fn start() -> Data<Mutex<Self>> {
+        let sse = SSE { connections: HashMap::new() };
+        let this = Data::new(Mutex::new(sse));
+        this.spawn_connection_remover();
+        this
+    }
+}
 
-MIT License
+// ------ DataSSE ------
 
-Copyright (c) [2019] [Arve Seljebu]
+pub trait DataSSE {
+    fn spawn_connection_remover(&self);
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+    fn new_connection(&self) -> (Connection, EventStream);
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+    fn broadcast(&self, event: &str, data: &str) -> Result<(), Vec<SendError<Bytes>>>;
+}
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+impl DataSSE for Data<Mutex<SSE>> {
+    fn spawn_connection_remover(&self) {
+        let this = self.clone();
+        rt::spawn(async move {
+            let mut interval = interval_at(Instant::now(), Duration::from_secs(10));
+            loop {
+                interval.tick().await;
+                this.lock().unwrap().connections.retain(|_, connection| {
+                    connection.send("ping", "").is_ok()
+                });
+            }
+        });
+    }
 
-*/
+    fn new_connection(&self) -> (Connection, EventStream) {
+        let (connection, event_stream) = Connection::new();
+        self.lock().unwrap().connections.insert(connection.id(), connection.clone());
+        (connection, event_stream)
+    }
+
+    fn broadcast(&self, event: &str, data: &str) -> Result<(), Vec<SendError<Bytes>>> {
+        let errors = self
+            .lock()
+            .unwrap()
+            .connections
+            .values()
+            .filter_map(|connection| connection.send(event, data).err())
+            .collect::<Vec<_>>();
+        
+        if errors.is_empty() {
+            return Ok(())
+        }
+        Err(errors)
+    }
+}
