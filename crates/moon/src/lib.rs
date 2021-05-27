@@ -1,34 +1,15 @@
-use std::{
-    borrow::Cow,
-    collections::BTreeSet,
-    convert::Infallible,
-    env,
-    error::Error,
-    // fs,
-    future::Future,
-    path::Path,
-    sync::{Arc, Mutex},
-};
-use tokio::{io::AsyncReadExt, runtime::Runtime, signal, sync::mpsc, sync::oneshot, task};
-use tokio_stream::wrappers::UnboundedReceiverStream;
-
-
-
+use std::{collections::BTreeSet, future::Future, sync::Mutex};
 use actix_web::rt::System;
-use actix_web::{web, App, HttpServer, Responder, HttpResponse, HttpRequest, Result, post};
-use actix_http::http::{header, HeaderMap, HeaderValue, ContentEncoding};
+use actix_web::{web, App, HttpServer, Responder, HttpResponse, HttpRequest, Result};
+use actix_http::http::{header, HeaderValue, ContentEncoding};
 use actix_web::http::header::ContentType;
 use actix_files::{Files, NamedFile};
-use tokio::sync::mpsc::{channel, Receiver, Sender};
 use tokio::fs;
-use std::path::PathBuf;
 use trait_set::trait_set;
-use serde::Deserialize;
 
 mod config;
 mod from_env_vars;
 mod frontend;
-mod html;
 mod sse;
 
 use config::Config;
@@ -38,6 +19,12 @@ use sse::{SSE, DataSSE};
 
 pub struct UpMsgRequest {}
 
+#[derive(Copy, Clone)]
+struct SharedData {
+    compressed_pkg: bool,
+    backend_build_id: u128,
+}
+
 // trait aliases
 trait_set!{
     pub trait FrontBuilderOutput = Future<Output = Frontend> + 'static;
@@ -45,20 +32,6 @@ trait_set!{
 
     pub trait UpHandlerOutput = Future<Output = ()> + 'static;
     pub trait UpHandler<UPHO: UpHandlerOutput> = Fn(UpMsgRequest) -> UPHO + Clone + Send + 'static;
-}
-
-#[derive(Copy, Clone)]
-struct SharedData {
-    compressed_pkg: bool,
-    backend_build_id: u128,
-}
-
-async fn backend_build_id() -> u128 {
-    fs::read_to_string("backend/private/build_id")
-        .await
-        .ok()
-        .and_then(|uuid| uuid.parse().ok())
-        .unwrap_or_default()
 }
 
 pub fn start<IN, FRB, FRBO, UPH, UPHO>(
@@ -91,7 +64,6 @@ where
                 .data(frontend.clone())
                 .data(up_msg_handler.clone())
                 .app_data(sse.clone())
-                .route("sse", web::get().to(sse_responder))
                 .service(
                     web::scope("api")
                         .route("up_msg_handler", web::post().to(up_msg_handler_responder::<UPH, UPHO>))
@@ -99,6 +71,7 @@ where
                 )
                 .service(Files::new("public", "public/"))
                 .route("pkg/{file:.*}", web::get().to(pkg_responder))
+                .route("sse", web::get().to(sse_responder))
                 .route("*", web::get().to(frontend_responder::<FRB, FRBO>))
         })
         .bind("127.0.0.1:8080")?
@@ -206,8 +179,16 @@ where
     // Ok(())
 }
 
+async fn backend_build_id() -> u128 {
+    fs::read_to_string("backend/private/build_id")
+        .await
+        .ok()
+        .and_then(|uuid| uuid.parse().ok())
+        .unwrap_or_default()
+}
+
 // ------ ------
-//   Responders
+//  Responders
 // ------ ------
 
 // ------ up_msg_handler_responder ------
@@ -221,31 +202,11 @@ where
     HttpResponse::Ok()
 }
 
-// ------ frontend_responder ------
+// ------ reload_responder ------
 
-async fn frontend_responder<FRB, FRBO>(frontend: web::Data<FRB>, shared_data: web::Data<SharedData>) -> impl Responder
-where
-    FRB: FrontBuilder<FRBO>,
-    FRBO: FrontBuilderOutput,
-{
-    let frontend = frontend().await;
-
-    let frontend_build_id: u128 = fs::read_to_string("frontend/pkg/build_id")
-        .await
-        .ok()
-        .and_then(|uuid| uuid.parse().ok())
-        .unwrap_or_default();
-
-    let html = html::html(
-        &frontend.title,
-        shared_data.backend_build_id,
-        frontend_build_id,
-        &frontend.append_to_head,
-        &frontend.body_content,
-    );
+async fn reload_responder(sse: web::Data<Mutex<SSE>>) -> impl Responder {
+    let _ = sse.broadcast("reload", "");
     HttpResponse::Ok()
-        .content_type(ContentType::html())
-        .body(html)
 }   
 
 // ------ pkg_responder ------
@@ -290,7 +251,14 @@ async fn sse_responder(sse: web::Data<Mutex<SSE>>, shared_data: web::Data<Shared
         .streaming(event_stream)
 }   
 
-async fn reload_responder(sse: web::Data<Mutex<SSE>>) -> impl Responder {
-    let _ = sse.broadcast("reload", "");
+// ------ frontend_responder ------
+
+async fn frontend_responder<FRB, FRBO>(frontend: web::Data<FRB>) -> impl Responder
+where
+    FRB: FrontBuilder<FRBO>,
+    FRBO: FrontBuilderOutput,
+{
     HttpResponse::Ok()
+        .content_type(ContentType::html())
+        .body(frontend().await.render().await)
 }   
