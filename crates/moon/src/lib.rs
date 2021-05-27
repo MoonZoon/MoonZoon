@@ -268,3 +268,63 @@ where
         .content_type(ContentType::html())
         .body(frontend().await.render().await)
 }   
+
+
+// @TODO fix or remove (with dev-deps)
+
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
+
+//     mod pkg_route {
+
+//         use super::*;
+//         use const_format::concatcp;
+
+//         const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
+//         const FIXTURES_DIR: &str = concatcp!(MANIFEST_DIR, "/tests/fixtures/");
+
+//         #[tokio::test]
+//         async fn uncompressed() {
+//             let css_content = include_str!("../tests/fixtures/index.css");
+//             let filter = pkg_route(true, FIXTURES_DIR);
+//             let res = warp::test::request()
+//                 .path("/pkg/index.css")
+//                 .reply(&filter)
+//                 .await;
+//             assert_eq!(res.status(), 200);
+//             assert_eq!(res.headers()[CONTENT_TYPE], "text/css");
+//             assert_eq!(res.into_body(), css_content);
+//         }
+
+//         #[tokio::test]
+//         async fn brotli_compressed() {
+//             let css_content = include_bytes!("../tests/fixtures/index.css.br");
+//             let filter = pkg_route(true, FIXTURES_DIR);
+//             let res = warp::test::request()
+//                 .header(ACCEPT_ENCODING, "br")
+//                 .path("/pkg/index.css")
+//                 .reply(&filter)
+//                 .await;
+//             assert_eq!(res.status(), 200);
+//             assert_eq!(res.headers()[CONTENT_ENCODING], "br");
+//             assert_eq!(res.headers()[CONTENT_TYPE], "text/css");
+//             assert_eq!(res.into_body().as_ref(), css_content);
+//         }
+
+//         #[tokio::test]
+//         async fn gzip_compressed() {
+//             let css_content = include_bytes!("../tests/fixtures/index.css.gz");
+//             let filter = pkg_route(true, FIXTURES_DIR);
+//             let res = warp::test::request()
+//                 .header(ACCEPT_ENCODING, "gzip")
+//                 .path("/pkg/index.css")
+//                 .reply(&filter)
+//                 .await;
+//             assert_eq!(res.status(), 200);
+//             assert_eq!(res.headers()[CONTENT_ENCODING], "gzip");
+//             assert_eq!(res.headers()[CONTENT_TYPE], "text/css");
+//             assert_eq!(res.into_body().as_ref(), css_content);
+//         }
+//     }
+// }
