@@ -55,7 +55,7 @@ where
     HttpResponse::Ok()
 }
 
-async fn frontend_responder<FRB, FRBO>(frontend: web::Data<FRB>, backend_build_id: web::Data<BackendBuildId>) -> impl Responder
+async fn frontend_responder<FRB, FRBO>(frontend: web::Data<FRB>, shared_data: web::Data<SharedData>) -> impl Responder
 where
     FRB: FrontBuilder<FRBO>,
     FRBO: FrontBuilderOutput,
@@ -70,7 +70,7 @@ where
 
     let html = html::html(
         &frontend.title,
-        backend_build_id.id,
+        shared_data.backend_build_id,
         frontend_build_id,
         &frontend.append_to_head,
         &frontend.body_content,
@@ -80,13 +80,7 @@ where
         .body(html)
 }   
 
-struct BackendBuildId {
-    id: u128
-}
-
-async fn pkg_responder(req: HttpRequest, file: web::Path<String>, compressed_pkg: web::Data<CompressedPkg>) -> Result<NamedFile> {
-    let compressed_pkg = compressed_pkg.compressed_pkg;
-    
+async fn pkg_responder(req: HttpRequest, file: web::Path<String>, shared_data: web::Data<SharedData>) -> Result<NamedFile> {
     let mime = mime_guess::from_path(file.as_str()).first_or_octet_stream();
 
     let encodings = req
@@ -99,7 +93,7 @@ async fn pkg_responder(req: HttpRequest, file: web::Path<String>, compressed_pkg
 
     let mut file = format!("frontend/pkg/{}", file);
 
-    let named_file = match compressed_pkg {
+    let named_file = match shared_data.compressed_pkg {
         true if encodings.contains(&brotli_header_value) => {
             file.push_str(".br");
             NamedFile::open(file)?.set_content_encoding(ContentEncoding::Br)
@@ -114,15 +108,11 @@ async fn pkg_responder(req: HttpRequest, file: web::Path<String>, compressed_pkg
     Ok(named_file.set_content_type(mime))
 }   
 
-struct CompressedPkg {
-    compressed_pkg: bool
-}  
-
-async fn sse_responder(broadcaster: web::Data<Mutex<Broadcaster>>, backend_build_id: web::Data<BackendBuildId>) -> impl Responder {
+async fn sse_responder(broadcaster: web::Data<Mutex<Broadcaster>>, shared_data: web::Data<SharedData>) -> impl Responder {
     let client = broadcaster
         .lock()
         .unwrap()
-        .new_client("backend_build_id", &backend_build_id.id.to_string());
+        .new_client("backend_build_id", &shared_data.backend_build_id.to_string());
 
     HttpResponse::Ok()
         .insert_header(("content-type", "text/event-stream"))
@@ -133,6 +123,12 @@ async fn reload_responder(broadcaster: web::Data<Mutex<Broadcaster>>) -> impl Re
     broadcaster.lock().unwrap().send("reload", "");
     HttpResponse::Ok()
 }   
+
+#[derive(Copy, Clone)]
+struct SharedData {
+    compressed_pkg: bool,
+    backend_build_id: u128,
+}
 
 pub fn start<IN, FRB, FRBO, UPH, UPHO>(
     init: impl FnOnce() -> IN + 'static,
@@ -158,13 +154,15 @@ where
 
         init().await;
 
-        let compressed_pkg = config.compressed_pkg;
+        let shared_data = SharedData {
+            backend_build_id,
+            compressed_pkg: config.compressed_pkg,
+        };
         let broadcaster = Broadcaster::create();
 
         HttpServer::new(move || {
             App::new()
-                .data(BackendBuildId { id: backend_build_id })
-                .data(CompressedPkg { compressed_pkg })
+                .data(shared_data)
                 .data(frontend.clone())
                 .app_data(broadcaster.clone())
                 .route("sse", web::get().to(sse_responder))
