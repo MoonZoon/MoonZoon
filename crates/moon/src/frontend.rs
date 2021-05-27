@@ -42,7 +42,7 @@ impl Frontend {
             .unwrap_or_default();
 
         format!(
-            r#"<!DOCTYPE html>
+        r#"<!DOCTYPE html>
         <html lang="en">
         
         <head>
@@ -59,22 +59,7 @@ impl Frontend {
     
           <script type="text/javascript">
             {reconnecting_event_source}
-            var uri = location.protocol + '//' + location.host + '/sse';
-            var sse = new ReconnectingEventSource(uri);
-            var backendBuildId = null;
-            sse.addEventListener("backend_build_id", function(msg) {{
-                var newBackendBuildId = msg.data;
-                if(backendBuildId === null) {{
-                    backendBuildId = newBackendBuildId;
-                }} else if(backendBuildId !== newBackendBuildId) {{
-                    sse.close();
-                    location.reload();
-                }}
-              }});
-            sse.addEventListener("reload", function(msg) {{
-              sse.close();
-              location.reload();
-            }});
+            {sse}
           </script>
     
           <script type="module">
@@ -87,6 +72,7 @@ impl Frontend {
             title = self.title,
             body_content = self.body_content,
             reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"),
+            sse = include_str!("../js/sse.js"),
             frontend_build_id = frontend_build_id,
             append_to_head = self.append_to_head
         )

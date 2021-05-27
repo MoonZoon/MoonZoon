@@ -19,8 +19,3 @@ serde = { version = "1.0.26", features = ["std", "derive"], default-features = f
 
 [dev-dependencies]
 const_format = "*"
-
-[dev-dependencies.tokio]
-version = "1"
-default-features = false
-features = ["signal", "rt-multi-thread", "macros"]
