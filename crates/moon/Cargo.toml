@@ -14,6 +14,8 @@ actix-web = { version = "4.0.0-beta.6", features = ["rustls"], default-features 
 actix-files = { git = "https://github.com/actix/actix-web", rev = "26e9c806264447d15bb71ad75da1b78a254f9aef", default-features = false }
 actix-http = { version = "3.0.0-beta.6", default-features = false }
 trait-set = { version = "0.2.0", default-features = false }
+envy = { version = "0.4.2", default-features = false }
+serde = { version = "1.0.26", features = ["std", "derive"], default-features = false }
 
 [dev-dependencies]
 const_format = "*"
