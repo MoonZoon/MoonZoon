@@ -23,91 +23,20 @@ use tokio::sync::mpsc::{channel, Receiver, Sender};
 use tokio::fs;
 use std::path::PathBuf;
 use trait_set::trait_set;
+use serde::Deserialize;
 
-
+mod config;
+mod from_env_vars;
+mod frontend;
 mod html;
 mod sse;
 
+use config::Config;
+use from_env_vars::FromEnvVars;
+pub use frontend::Frontend;
 use sse::{Broadcaster, broadcast};
 
-pub struct Frontend {
-    title: String,
-    append_to_head: String,
-    body_content: Cow<'static, str>,
-}
-
-impl Default for Frontend {
-    fn default() -> Self {
-        Self {
-            title: String::new(),
-            append_to_head: String::new(),
-            body_content: Cow::from(r#"<section id="app"></section>"#),
-        }
-    }
-}
-
-impl Frontend {
-    pub fn new() -> Self {
-        Self::default()
-    }
-    pub fn title(mut self, title: impl Into<String>) -> Self {
-        self.title = title.into();
-        self
-    }
-    pub fn append_to_head(mut self, html: &str) -> Self {
-        self.append_to_head.push_str(html);
-        self
-    }
-    pub fn body_content(mut self, content: impl Into<Cow<'static, str>>) -> Self {
-        self.body_content = content.into();
-        self
-    }
-}
-
 pub struct UpMsgRequest {}
-
-#[derive(Debug)]
-struct Config {
-    port: u16,
-    https: bool,
-    redirect_server: RedirectServer,
-    compressed_pkg: bool,
-}
-
-#[derive(Debug)]
-struct RedirectServer {
-    port: u16,
-    enabled: bool,
-}
-
-fn load_config() -> Config {
-    // @TODO envy?
-    // let config = envy::from_env::<Config>().unwrap();
-
-    // // port = 8443
-    // env::set_var("PORT", config.port.to_string());
-    // // https = true
-    // env::set_var("HTTPS", config.https.to_string());
-    //
-    // // [redirect_server]
-    // // port = 8080
-    // env::set_var("REDIRECT_SERVER__PORT", config.redirect_server.port.to_string());
-    // // enabled = true
-    // env::set_var("REDIRECT_SERVER__ENABLED", config.redirect_server.enabled.to_string());
-    //
-    // env::set_var("COMPRESSED_PKG", release.to_string());
-    Config {
-        port: env::var("PORT").map_or(8080, |port| port.parse().unwrap()),
-        https: env::var("HTTPS").map_or(false, |https| https.parse().unwrap()),
-        redirect_server: RedirectServer {
-            port: env::var("REDIRECT_SERVER__PORT").map_or(8081, |port| port.parse().unwrap()),
-            enabled: env::var("REDIRECT_SERVER__ENABLED")
-                .map_or(false, |enabled| enabled.parse().unwrap()),
-        },
-        compressed_pkg: env::var("COMPRESSED_PKG")
-            .map_or(true, |compressed| compressed.parse().unwrap()),
-    }
-}
 
 trait_set!{
     pub trait FrontBuilderOutput = Future<Output = Frontend> + 'static;
@@ -217,7 +146,7 @@ where
     UPH: UpHandler<UPHO>,
     UPHO: UpHandlerOutput,
 {
-    let config = load_config();
+    let config = Config::from_env_vars();
     println!("Moon config: {:#?}", config);
 
     System::new().block_on(async move {
@@ -253,12 +182,6 @@ where
         .run()
         .await        
 
-        // let main_server_routes = up_msg_handler_route
-        //     .or(reload)
-        //     .or(sse)
-        //     .or(pkg_route)
-        //     .or(public_route)
-        //     .or(frontend_route);
 
         // let (shutdown_sender_for_redirect_server, redirect_server_handle) = {
         //     let config_port = config.port;
