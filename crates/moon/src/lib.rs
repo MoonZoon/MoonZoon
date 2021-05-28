@@ -1,8 +1,13 @@
 use std::{collections::BTreeSet, future::Future, sync::Mutex};
+use std::fs::File;
+use std::io::BufReader;
+use std::net::SocketAddr;
 use actix_web::{web, App, HttpServer, Responder, HttpResponse, HttpRequest, Result};
 use actix_http::http::{header, HeaderValue, ContentEncoding};
 use actix_web::http::header::ContentType;
 use actix_files::{Files, NamedFile};
+use rustls::internal::pemfile::{certs, pkcs8_private_keys};
+use rustls::{NoClientAuth, ServerConfig as RustlsServerConfig};
 use tokio::fs;
 pub use trait_set::trait_set;
 
@@ -63,8 +68,9 @@ where
         compressed_pkg: config.compressed_pkg,
     };
     let sse = SSE::start();
+    let address = SocketAddr::from(([0, 0, 0, 0], config.port));
 
-    HttpServer::new(move || {
+    let server = HttpServer::new(move || {
         App::new()
             .data(shared_data)
             .data(frontend.clone())
@@ -80,10 +86,33 @@ where
             .route("pkg/{file:.*}", web::get().to(pkg_responder))
             .route("sse", web::get().to(sse_responder))
             .route("*", web::get().to(frontend_responder::<FRB, FRBO>))
-    })
-    .bind("127.0.0.1:8080")?
-    .run()
-    .await        
+    });
+    let server = if config.https {
+        server.bind_rustls(address, rustls_server_config()?)?
+    } else {
+        server.bind(address)?
+    }.run();
+
+    println!(
+        "Main server is running on {address} [{protocol}://localhost:{port}]",
+        address = address,
+        protocol = if config.https { "https" } else { "http" },
+        port = config.port
+    );
+
+    if config.redirect_server.enabled {
+        let address = SocketAddr::from(([0, 0, 0, 0], config.redirect_server.port));
+
+        // @TODO start redirect server ; then extract to a standalone function
+
+        println!(
+            "Redirect server is running on {address} [http://localhost:{port}]",
+            address = address,
+            port = config.redirect_server.port
+        );
+    }
+
+    server.await
 
 
     // let (shutdown_sender_for_redirect_server, redirect_server_handle) = {
@@ -127,29 +156,7 @@ where
     //     }
     // };
 
-    // let (shutdown_sender_for_main_server, shutdown_receiver_for_main_server) =
-    //     oneshot::channel();
-    // let main_server_handle = {
-    //     let server = warp::serve(main_server_routes);
-    //     if config.https {
-    //         let main_server = server
-    //             .tls()
-    //             .cert_path("backend/private/public.pem")
-    //             .key_path("backend/private/private.pem")
-    //             .bind_with_graceful_shutdown(([0, 0, 0, 0], config.port), async {
-    //                 shutdown_receiver_for_main_server.await.ok();
-    //             })
-    //             .1;
-    //         task::spawn(main_server)
-    //     } else {
-    //         let main_server = server
-    //             .bind_with_graceful_shutdown(([0, 0, 0, 0], config.port), async {
-    //                 shutdown_receiver_for_main_server.await.ok();
-    //             })
-    //             .1;
-    //         task::spawn(main_server)
-    //     }
-    // };
+
 
     // if config.redirect_server.enabled {
     //     println!(
@@ -183,6 +190,16 @@ where
     // println!("Moon shut down");
     
     // Ok(())
+}
+
+fn rustls_server_config() -> std::io::Result<RustlsServerConfig> {
+    let mut config = RustlsServerConfig::new(NoClientAuth::new());
+    let cert_file = &mut BufReader::new(File::open("backend/private/public.pem")?);
+    let key_file = &mut BufReader::new(File::open("backend/private/private.pem")?);
+    let cert_chain = certs(cert_file).expect("certificate parsing failed");
+    let mut keys = pkcs8_private_keys(key_file).expect("private key parsing failed");
+    config.set_single_cert(cert_chain, keys.remove(0)).expect("private key is invalid");
+    Ok(config)
 }
 
 async fn backend_build_id() -> u128 {

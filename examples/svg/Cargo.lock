@@ -806,6 +806,7 @@ dependencies = [
  "envy",
  "futures",
  "mime_guess",
+ "rustls",
  "serde",
  "tokio",
  "tokio-stream",
