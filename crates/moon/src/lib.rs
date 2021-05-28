@@ -25,11 +25,13 @@ pub use actix_web::main as main;
 mod config;
 mod from_env_vars;
 mod frontend;
+mod redirect;
 mod sse;
 
 use config::Config;
 pub use from_env_vars::FromEnvVars;
 pub use frontend::Frontend;
+pub use redirect::Redirect;
 use sse::{SSE, DataSSE};
 
 pub struct UpMsgRequest {}
@@ -70,8 +72,15 @@ where
     let sse = SSE::start();
     let address = SocketAddr::from(([0, 0, 0, 0], config.port));
 
+    let redirect_enabled = config.redirect_server.enabled;
+    let redirect = Redirect::new()
+        .enabled(config.redirect_server.enabled)
+        .http_to_https(config.https)
+        .port(config.redirect_server.port, config.port);
+
     let server = HttpServer::new(move || {
         App::new()
+            .wrap(redirect)
             .data(shared_data)
             .data(frontend.clone())
             .data(up_msg_handler.clone())
