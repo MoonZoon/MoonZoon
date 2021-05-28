@@ -1093,6 +1093,7 @@ dependencies = [
  "envy",
  "futures",
  "mime_guess",
+ "rustls 0.19.1",
  "serde",
  "tokio",
  "tokio-stream",
