@@ -1,5 +1,4 @@
 use std::pin::Pin;
-use std::sync::Mutex;
 use std::task::{Context, Poll};
 use std::time::Duration;
 use std::collections::HashMap;
@@ -9,6 +8,7 @@ use futures::Stream;
 use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender, error::SendError};
 use tokio::time::{interval_at, Instant};
 use uuid::Uuid;
+use parking_lot::Mutex;
 
 type ID = u128;
 
@@ -91,7 +91,7 @@ impl DataSSE for Data<Mutex<SSE>> {
             let mut interval = interval_at(Instant::now(), Duration::from_secs(10));
             loop {
                 interval.tick().await;
-                this.lock().unwrap().connections.retain(|_, connection| {
+                this.lock().connections.retain(|_, connection| {
                     connection.send("ping", "").is_ok()
                 });
             }
@@ -100,14 +100,13 @@ impl DataSSE for Data<Mutex<SSE>> {
 
     fn new_connection(&self) -> (Connection, EventStream) {
         let (connection, event_stream) = Connection::new();
-        self.lock().unwrap().connections.insert(connection.id(), connection.clone());
+        self.lock().connections.insert(connection.id(), connection.clone());
         (connection, event_stream)
     }
 
     fn broadcast(&self, event: &str, data: &str) -> Result<(), Vec<SendError<Bytes>>> {
         let errors = self
             .lock()
-            .unwrap()
             .connections
             .values()
             .filter_map(|connection| connection.send(event, data).err())
