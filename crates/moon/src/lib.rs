@@ -1,6 +1,6 @@
 use std::{collections::BTreeSet, future::Future, sync::Mutex};
 use std::fs::File;
-use std::io::{BufReader, Write, stdout};
+use std::io::BufReader;
 use std::net::SocketAddr;
 use actix_web::{web, App, HttpServer, Responder, HttpResponse, HttpRequest, Result};
 use actix_web::http::header::ContentType;
@@ -27,12 +27,14 @@ pub use actix_web::main as main;
 mod config;
 mod from_env_vars;
 mod frontend;
+mod lazy_message_writer;
 mod redirect;
 mod sse;
 
 use config::Config;
 pub use from_env_vars::FromEnvVars;
 pub use frontend::Frontend;
+use lazy_message_writer::LazyMessageWriter;
 pub use redirect::Redirect;
 use sse::{SSE, DataSSE};
 
@@ -79,7 +81,7 @@ where
         .http_to_https(config.https)
         .port(config.redirect_server.port, config.port);
 
-    let mut messages = Vec::new();
+    let mut lazy_message_writer = LazyMessageWriter::new();
 
     let mut server = HttpServer::new(move || {
         App::new()
@@ -105,37 +107,31 @@ where
     } else {
         server.bind(address)?
     };
-
-    writeln!(
-        &mut messages, 
-        "Server is running on {protocol}://{address} [{protocol}://localhost:{port}]",
-        address = address,
-        protocol = if config.https { "https" } else { "http" },
-        port = config.port
-    )?;
+    lazy_message_writer.server_is_running(&address, &config)?;
 
     server = if config.redirect_server.enabled {
         let address = SocketAddr::from(([0, 0, 0, 0], config.redirect_server.port));
-        writeln!(
-            &mut messages,
-            "Redirect from http://{address} [http://localhost:{port}]",
-            address = address,
-            port = config.redirect_server.port
-        )?;
+        lazy_message_writer.redirect_from(&address, &config)?;
         server.bind(address)?
     } else {
         server
     };
     let server = server.run();
     
-    stdout().write_all(&messages)?;
+    lazy_message_writer.write_all()?;
     
     server.await?;
     println!("Moon shut down");
     Ok(())
 }
 
-// fn bind_server(server: HttpServer<>)
+async fn backend_build_id() -> u128 {
+    fs::read_to_string("backend/private/build_id")
+        .await
+        .ok()
+        .and_then(|uuid| uuid.parse().ok())
+        .unwrap_or_default()
+}
 
 fn rustls_server_config() -> std::io::Result<RustlsServerConfig> {
     let mut config = RustlsServerConfig::new(NoClientAuth::new());
@@ -145,14 +141,6 @@ fn rustls_server_config() -> std::io::Result<RustlsServerConfig> {
     let mut keys = pkcs8_private_keys(key_file).expect("private key parsing failed");
     config.set_single_cert(cert_chain, keys.remove(0)).expect("private key is invalid");
     Ok(config)
-}
-
-async fn backend_build_id() -> u128 {
-    fs::read_to_string("backend/private/build_id")
-        .await
-        .ok()
-        .and_then(|uuid| uuid.parse().ok())
-        .unwrap_or_default()
 }
 
 // ------ ------

@@ -1,10 +1,10 @@
 port = 8000
 # port = 8443
-https = true
+https = false
 cache_busting = true
 
 [redirect_server]
-port = 8082
+port = 8081
 enabled = true
 
 [watch]
