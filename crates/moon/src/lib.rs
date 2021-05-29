@@ -80,10 +80,10 @@ where
     let sse = SSE::start();
     let address = SocketAddr::from(([0, 0, 0, 0], config.port));
 
-    let redirect_enabled = config.redirect_server.enabled;
+    let redirect_enabled = config.redirect.enabled;
     let redirect = Redirect::new()
         .http_to_https(config.https)
-        .port(config.redirect_server.port, config.port);
+        .port(config.redirect.port, config.port);
 
     let mut lazy_message_writer = LazyMessageWriter::new();
 
@@ -117,8 +117,8 @@ where
     };
     lazy_message_writer.server_is_running(&address, &config)?;
 
-    server = if config.redirect_server.enabled {
-        let address = SocketAddr::from(([0, 0, 0, 0], config.redirect_server.port));
+    server = if config.redirect.enabled {
+        let address = SocketAddr::from(([0, 0, 0, 0], config.redirect.port));
         lazy_message_writer.redirect_from(&address, &config)?;
         server.bind(address)?
     } else {

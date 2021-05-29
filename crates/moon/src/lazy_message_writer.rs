@@ -28,7 +28,7 @@ impl LazyMessageWriter {
             &mut self.0,
             "Redirect from http://{address} [http://localhost:{port}]",
             address = address,
-            port = config.redirect_server.port
+            port = config.redirect.port
         )
     }
 }

@@ -3,7 +3,7 @@ port = 8080
 https = false
 cache_busting = true
 
-[redirect_server]
+[redirect]
 port = 8081
 enabled = false
 

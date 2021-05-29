@@ -11,8 +11,8 @@ pub struct Config {
     // COMPRESSED_PKG
     pub compressed_pkg: bool,
 
-    #[serde(default = "RedirectServer::from_env_vars")]
-    pub redirect_server: RedirectServer,
+    #[serde(default = "Redirect::from_env_vars")]
+    pub redirect: Redirect,
 }
 
 impl FromEnvVars for Config {
@@ -25,26 +25,26 @@ impl Default for Config {
             port: 8080,
             https: false,
             compressed_pkg: true,
-            redirect_server: RedirectServer::default()
+            redirect: Redirect::default()
         }
     }
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(default)]
-pub struct RedirectServer {
-    // REDIRECT_SERVER__PORT
+pub struct Redirect {
+    // REDIRECT_PORT
     pub port: u16,
-    // REDIRECT_SERVER__ENABLED
+    // REDIRECT_ENABLED
     pub enabled: bool,
 }
 
-impl FromEnvVars for RedirectServer {
-    const ENTITY_NAME: &'static str = "RedirectServer";
-    const ENV_PREFIX: &'static str = "REDIRECT_SERVER__";
+impl FromEnvVars for Redirect {
+    const ENTITY_NAME: &'static str = "Redirect";
+    const ENV_PREFIX: &'static str = "REDIRECT_";
 }
 
-impl Default for RedirectServer {
+impl Default for Redirect {
     fn default() -> Self {
         Self {
             port: 8081,
