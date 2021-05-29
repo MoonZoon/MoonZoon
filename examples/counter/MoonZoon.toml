@@ -1,5 +1,5 @@
 # port = 8080
-port = 8443
+port = 443
 https = true
 cache_busting = true
 
