@@ -118,16 +118,16 @@ fn set_env_vars(config: &Config, release: bool) {
     // https = true
     env::set_var("HTTPS", config.https.to_string());
 
-    // [redirect_server]
+    // [redirect]
     // port = 8080
     env::set_var(
-        "REDIRECT_SERVER__PORT",
-        config.redirect_server.port.to_string(),
+        "REDIRECT_PORT",
+        config.redirect.port.to_string(),
     );
     // enabled = true
     env::set_var(
-        "REDIRECT_SERVER__ENABLED",
-        config.redirect_server.enabled.to_string(),
+        "REDIRECT_ENABLED",
+        config.redirect.enabled.to_string(),
     );
 
     env::set_var("COMPRESSED_PKG", release.to_string());
@@ -138,12 +138,12 @@ struct Config {
     port: u16,
     https: bool,
     cache_busting: bool,
-    redirect_server: RedirectServer,
+    redirect: Redirect,
     watch: Watch,
 }
 
 #[derive(Debug, Deserialize)]
-struct RedirectServer {
+struct Redirect {
     port: u16,
     enabled: bool,
 }
