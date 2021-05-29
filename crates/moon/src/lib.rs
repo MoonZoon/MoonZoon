@@ -1,11 +1,11 @@
 use std::{collections::BTreeSet, future::Future, sync::Mutex};
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{self, BufReader};
 use std::net::SocketAddr;
-use actix_web::{web, App, HttpServer, Responder, HttpResponse, HttpRequest, Result};
+use actix_web::{web, App, HttpServer, Responder, HttpResponse, HttpRequest, Error};
 use actix_web::http::header::ContentType;
 use actix_web::middleware::Condition;
-use actix_http::http::{header, HeaderValue, ContentEncoding};
+use actix_http::http::{header, ContentEncoding, StatusCode};
 use actix_files::{Files, NamedFile};
 use rustls::internal::pemfile::{certs, pkcs8_private_keys};
 use rustls::{NoClientAuth, ServerConfig as RustlsServerConfig};
@@ -59,13 +59,15 @@ pub async fn start<FRB, FRBO, UPH, UPHO>(
     frontend: FRB,
     up_msg_handler: UPH,
     service_config: impl FnOnce(&mut web::ServiceConfig) + Clone + Send + 'static,
-) -> std::io::Result<()>
+) -> io::Result<()>
 where
     FRB: FrontBuilder<FRBO>,
     FRBO: FrontBuilderOutput,
     UPH: UpHandler<UPHO>,
     UPHO: UpHandlerOutput,
 {
+    // ------ Init ------
+
     let config = Config::from_env_vars();
     println!("Moon config: {:#?}", config);
 
@@ -82,6 +84,8 @@ where
         .port(config.redirect_server.port, config.port);
 
     let mut lazy_message_writer = LazyMessageWriter::new();
+
+    // ------ App ------
 
     let mut server = HttpServer::new(move || {
         App::new()
@@ -101,6 +105,8 @@ where
             .route("sse", web::get().to(sse_responder))
             .route("*", web::get().to(frontend_responder::<FRB, FRBO>))
     });
+
+    // ------ Binds ------
     
     server = if config.https {
         server.bind_rustls(address, rustls_server_config()?)?
@@ -116,13 +122,14 @@ where
     } else {
         server
     };
+
+    // ------ Run ------
+
     let server = server.run();
-    
     lazy_message_writer.write_all()?;
-    
     server.await?;
-    println!("Moon shut down");
-    Ok(())
+
+    Ok(println!("Moon shut down"))
 }
 
 async fn backend_build_id() -> u128 {
@@ -133,7 +140,7 @@ async fn backend_build_id() -> u128 {
         .unwrap_or_default()
 }
 
-fn rustls_server_config() -> std::io::Result<RustlsServerConfig> {
+fn rustls_server_config() -> io::Result<RustlsServerConfig> {
     let mut config = RustlsServerConfig::new(NoClientAuth::new());
     let cert_file = &mut BufReader::new(File::open("backend/private/public.pem")?);
     let key_file = &mut BufReader::new(File::open("backend/private/private.pem")?);
@@ -167,40 +174,48 @@ async fn reload_responder(sse: web::Data<Mutex<SSE>>) -> impl Responder {
 
 // ------ pkg_responder ------
 
-async fn pkg_responder(req: HttpRequest, file: web::Path<String>, shared_data: web::Data<SharedData>) -> Result<NamedFile> {
+async fn pkg_responder(req: HttpRequest, file: web::Path<String>, shared_data: web::Data<SharedData>) -> impl Responder {
     let mime = mime_guess::from_path(file.as_str()).first_or_octet_stream();
 
     let encodings = req
         .headers()
-        .get_all(header::ACCEPT_ENCODING)
-        .collect::<BTreeSet<_>>();
-
-    let brotli_header_value = HeaderValue::from_static("br");
-    let gzip_header_value = HeaderValue::from_static("gzip");
+        .get(header::ACCEPT_ENCODING)
+        .and_then(|accept_encoding| accept_encoding.to_str().ok())
+        .map(|accept_encoding| accept_encoding.split(", ").collect::<BTreeSet<_>>())
+        .unwrap_or_default();
 
     let mut file = format!("frontend/pkg/{}", file);
 
-    let named_file = match shared_data.compressed_pkg {
-        true if encodings.contains(&brotli_header_value) => {
+    let (named_file, encoding) = match shared_data.compressed_pkg {
+        true if encodings.contains(ContentEncoding::Br.as_str()) => {
             file.push_str(".br");
-            NamedFile::open(file)?.set_content_encoding(ContentEncoding::Br)
+            (NamedFile::open(file)?, Some(ContentEncoding::Br))
         }
-        true if encodings.contains(&gzip_header_value) => {
+        true if encodings.contains(ContentEncoding::Gzip.as_str()) => {
             file.push_str(".gz");
-            NamedFile::open(file)?.set_content_encoding(ContentEncoding::Gzip)
+            (NamedFile::open(file)?, Some(ContentEncoding::Gzip))
         }
-        _ => NamedFile::open(file)?
+        _ => (NamedFile::open(file)?, None)
     };
 
-    Ok(named_file.set_content_type(mime))
+    let mut responder = named_file.set_content_type(mime).with_status(StatusCode::OK);
+    if let Some(encoding) = encoding {
+        responder = responder.with_header(encoding);
+    }
+    Ok::<_, Error>(responder)
 }   
 
 // ------ sse_responder ------
 
 async fn sse_responder(sse: web::Data<Mutex<SSE>>, shared_data: web::Data<SharedData>) -> impl Responder {
     let (connection, event_stream) = sse.new_connection();
+    let backend_build_id = shared_data.backend_build_id.to_string();
 
-    connection.send("backend_build_id", &shared_data.backend_build_id.to_string()).unwrap();
+    if connection.send("backend_build_id", &backend_build_id).is_err() {
+        return HttpResponse::InternalServerError()
+            .reason("sending backend_build_id failed")
+            .finish()
+    }
 
     HttpResponse::Ok()
         .insert_header(ContentType(mime::TEXT_EVENT_STREAM))
