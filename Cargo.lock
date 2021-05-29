@@ -1094,6 +1094,7 @@ dependencies = [
  "futures",
  "mime",
  "mime_guess",
+ "parking_lot",
  "rustls 0.19.1",
  "serde",
  "tokio",
