@@ -1092,6 +1092,7 @@ dependencies = [
  "const_format",
  "envy",
  "futures",
+ "mime",
  "mime_guess",
  "rustls 0.19.1",
  "serde",

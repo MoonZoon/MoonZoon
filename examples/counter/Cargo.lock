@@ -793,6 +793,7 @@ dependencies = [
  "actix-web",
  "envy",
  "futures",
+ "mime",
  "mime_guess",
  "rustls",
  "serde",

@@ -17,6 +17,7 @@ pub use actix_files;
 pub use actix_http;
 pub use tokio;
 pub use tokio_stream;
+pub use mime;
 pub use mime_guess;
 pub use serde;
 pub use futures;
@@ -78,7 +79,7 @@ where
         .http_to_https(config.https)
         .port(config.redirect_server.port, config.port);
 
-    let server = HttpServer::new(move || {
+    let mut server = HttpServer::new(move || {
         App::new()
             .wrap(Condition::new(redirect_enabled, redirect))
             .data(shared_data)
@@ -96,32 +97,36 @@ where
             .route("sse", web::get().to(sse_responder))
             .route("*", web::get().to(frontend_responder::<FRB, FRBO>))
     });
-    let server = if config.https {
+    
+    server = if config.https {
         server.bind_rustls(address, rustls_server_config()?)?
     } else {
         server.bind(address)?
-    }.run();
+    };
 
     println!(
-        "Main server is running on {address} [{protocol}://localhost:{port}]",
+        "Server is running on {protocol}://{address} [{protocol}://localhost:{port}]",
         address = address,
         protocol = if config.https { "https" } else { "http" },
         port = config.port
     );
 
-    if config.redirect_server.enabled {
+    server = if config.redirect_server.enabled {
         let address = SocketAddr::from(([0, 0, 0, 0], config.redirect_server.port));
-
-        // @TODO start redirect server ; then extract to a standalone function
-
         println!(
-            "Redirect server is running on {address} [http://localhost:{port}]",
+            "Redirect from http://{address} [http://localhost:{port}]",
             address = address,
             port = config.redirect_server.port
         );
-    }
+        server.bind(address)?
+    } else {
+        server
+    };
 
-    server.await
+    server.run().await?;
+
+    println!("Moon shut down");
+    Ok(())
 
 
     // let (shutdown_sender_for_redirect_server, redirect_server_handle) = {
@@ -279,7 +284,7 @@ async fn sse_responder(sse: web::Data<Mutex<SSE>>, shared_data: web::Data<Shared
     connection.send("backend_build_id", &shared_data.backend_build_id.to_string()).unwrap();
 
     HttpResponse::Ok()
-        .insert_header(("content-type", "text/event-stream"))
+        .insert_header(ContentType(mime::TEXT_EVENT_STREAM))
         .streaming(event_stream)
 }   
 

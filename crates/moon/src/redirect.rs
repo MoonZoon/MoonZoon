@@ -1,6 +1,9 @@
 use actix_web::dev::{Service, Transform, forward_ready, ServiceRequest, ServiceResponse};
 use actix_web::{HttpResponse, Error};
+use actix_web::http::header::LOCATION;
+use actix_web::http::uri::{Uri, Scheme, Authority, InvalidUriParts};
 use futures::future::{Either, ok, Ready};
+use std::convert::TryFrom;
 
 // ------ Redirect ------
 
@@ -65,22 +68,48 @@ pub struct RedirectMiddleware<S> {
 }
 
 impl<S> RedirectMiddleware<S> {
-    fn should_redirect(&self, req: &ServiceRequest) -> bool {
-        println!("Scheme: {}", req.connection_info().scheme());
-        println!("Scheme 2: {:#?}", req.uri().scheme());
-        println!("Port: {:#?}", req.uri().port_u16());
-        true
+    fn uri(req: &ServiceRequest) -> Result<Uri, InvalidUriParts> {
+        let connection_info = req.connection_info();
+
+        // Note: "http/1 does not send host in uri" (https://github.com/actix/actix-web/issues/1111)
+        let mut uri_parts = req.uri().clone().into_parts();
+        uri_parts.scheme = Scheme::try_from(connection_info.scheme()).ok();
+        uri_parts.authority = Authority::try_from(connection_info.host()).ok();
+        
+        Uri::from_parts(uri_parts)
     }
 
-    fn redirect<B>(&self, req: ServiceRequest) -> Ready<Result<ServiceResponse<B>, Error>> {
-        ok(req.into_response(HttpResponse::Ok().finish().into_body()))
+    fn should_redirect(&self, uri: &Uri) -> Option<()> {
+        let from_port = self.redirect.from_port;
+        
+        match (uri.scheme()?, uri.authority()?.port_u16()) {
+            (_, Some(port)) => from_port == port,
+            (scheme, None) if scheme == &Scheme::HTTP => from_port == 80,
+            (scheme, None) if scheme == &Scheme::HTTPS => from_port == 443,
+            _ => None?
+        }.then(||())
+    }
 
-        // ok(req.into_response(
-        //     HttpResponse::MovedPermanently()
-        //         .header(http::header::LOCATION, url)
-        //         .finish()
-        //         .into_body(),
-        // ))
+    fn redirect_uri(&self, uri: Uri) -> Option<Uri> {
+        let mut uri_parts = uri.into_parts();
+
+        if self.redirect.http_to_https && uri_parts.scheme.as_ref()? == &Scheme::HTTP {
+            uri_parts.scheme = Some(Scheme::HTTPS);
+        }
+        uri_parts.authority = Authority::try_from(
+            format!("{}:{}", uri_parts.authority?.host(), self.redirect.to_port).as_str()
+        ).ok();
+
+        Uri::from_parts(uri_parts).ok()
+    }
+
+    fn redirect<B>(&self, req: ServiceRequest, uri: &Uri) -> Ready<Result<ServiceResponse<B>, Error>> {
+        let http_response = HttpResponse::MovedPermanently()
+            .insert_header((LOCATION, uri.to_string()))
+            .finish()
+            .into_body();
+
+        ok(req.into_response(http_response))
     }
 }
 
@@ -90,14 +119,17 @@ where
 {
     type Response = S::Response;
     type Error = S::Error;
-    type Future = Either<Ready<Result<Self::Response, Self::Error>>, S::Future>;
+    type Future = Either<S::Future, Ready<Result<Self::Response, Self::Error>>>;
 
     forward_ready!(service);
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        if self.should_redirect(&req) {
-            return Either::Left(self.redirect(req))
+        if let Ok(uri) = Self::uri(&req) {
+            if self.should_redirect(&uri).is_some() {
+                let redirect_uri = self.redirect_uri(uri).unwrap();
+                return Either::Right(self.redirect(req, &redirect_uri))
+            }
         }
-        Either::Right(self.service.call(req))
+        Either::Left(self.service.call(req))
     }
 }
