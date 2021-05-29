@@ -3,8 +3,9 @@ use std::fs::File;
 use std::io::BufReader;
 use std::net::SocketAddr;
 use actix_web::{web, App, HttpServer, Responder, HttpResponse, HttpRequest, Result};
-use actix_http::http::{header, HeaderValue, ContentEncoding};
 use actix_web::http::header::ContentType;
+use actix_web::middleware::Condition;
+use actix_http::http::{header, HeaderValue, ContentEncoding};
 use actix_files::{Files, NamedFile};
 use rustls::internal::pemfile::{certs, pkcs8_private_keys};
 use rustls::{NoClientAuth, ServerConfig as RustlsServerConfig};
@@ -74,13 +75,12 @@ where
 
     let redirect_enabled = config.redirect_server.enabled;
     let redirect = Redirect::new()
-        .enabled(config.redirect_server.enabled)
         .http_to_https(config.https)
         .port(config.redirect_server.port, config.port);
 
     let server = HttpServer::new(move || {
         App::new()
-            .wrap(redirect)
+            .wrap(Condition::new(redirect_enabled, redirect))
             .data(shared_data)
             .data(frontend.clone())
             .data(up_msg_handler.clone())
