@@ -1,6 +1,6 @@
 use std::{collections::BTreeSet, future::Future, sync::Mutex};
 use std::fs::File;
-use std::io::BufReader;
+use std::io::{BufReader, Write, stdout};
 use std::net::SocketAddr;
 use actix_web::{web, App, HttpServer, Responder, HttpResponse, HttpRequest, Result};
 use actix_web::http::header::ContentType;
@@ -79,6 +79,8 @@ where
         .http_to_https(config.https)
         .port(config.redirect_server.port, config.port);
 
+    let mut messages = Vec::new();
+
     let mut server = HttpServer::new(move || {
         App::new()
             .wrap(Condition::new(redirect_enabled, redirect))
@@ -104,107 +106,36 @@ where
         server.bind(address)?
     };
 
-    println!(
+    writeln!(
+        &mut messages, 
         "Server is running on {protocol}://{address} [{protocol}://localhost:{port}]",
         address = address,
         protocol = if config.https { "https" } else { "http" },
         port = config.port
-    );
+    )?;
 
     server = if config.redirect_server.enabled {
         let address = SocketAddr::from(([0, 0, 0, 0], config.redirect_server.port));
-        println!(
+        writeln!(
+            &mut messages,
             "Redirect from http://{address} [http://localhost:{port}]",
             address = address,
             port = config.redirect_server.port
-        );
+        )?;
         server.bind(address)?
     } else {
         server
     };
-
-    server.run().await?;
-
+    let server = server.run();
+    
+    stdout().write_all(&messages)?;
+    
+    server.await?;
     println!("Moon shut down");
     Ok(())
-
-
-    // let (shutdown_sender_for_redirect_server, redirect_server_handle) = {
-    //     let config_port = config.port;
-    //     let config_https = config.https;
-
-    //     if config.redirect_server.enabled {
-    //         let redirect_server_routes = warp::path::full().and(warp::host::optional()).map(
-    //             move |path: FullPath, authority: Option<Authority>| {
-    //                 let authority = authority.unwrap();
-    //                 let authority = format!("{}:{}", authority.host(), config_port);
-    //                 let authority = authority.parse::<Authority>().unwrap();
-
-    //                 let uri = Uri::builder()
-    //                     .scheme(if config_https { "https" } else { "http" })
-    //                     .authority(authority)
-    //                     .path_and_query(path.as_str())
-    //                     .build()
-    //                     .unwrap();
-    //                 warp::redirect::temporary(uri)
-    //             },
-    //         );
-
-    //         let (shutdown_sender_for_redirect_server, shutdown_receiver_for_redirect_server) =
-    //             oneshot::channel();
-    //         let (_, redirect_server) = warp::serve(redirect_server_routes)
-    //             .bind_with_graceful_shutdown(
-    //                 ([0, 0, 0, 0], config.redirect_server.port),
-    //                 async {
-    //                     shutdown_receiver_for_redirect_server.await.ok();
-    //                 },
-    //             );
-    //         let redirect_server_handle = task::spawn(redirect_server);
-
-    //         (
-    //             Some(shutdown_sender_for_redirect_server),
-    //             Some(redirect_server_handle),
-    //         )
-    //     } else {
-    //         (None, None)
-    //     }
-    // };
-
-
-
-    // if config.redirect_server.enabled {
-    //     println!(
-    //         "Redirect server is running on 0.0.0.0:{port} [http://127.0.0.1:{port}]",
-    //         port = config.redirect_server.port
-    //     );
-    // }
-    // println!(
-    //     "Main server is running on 0.0.0.0:{port} [{protocol}://127.0.0.1:{port}]",
-    //     protocol = if config.https { "https" } else { "http" },
-    //     port = config.port
-    // );
-
-    // signal::ctrl_c().await.unwrap();
-    // if let Some(shutdown_sender_for_redirect_server) = shutdown_sender_for_redirect_server {
-    //     shutdown_sender_for_redirect_server.send(()).unwrap();
-    // }
-    // shutdown_sender_for_main_server.send(()).unwrap();
-    // // time::sleep(time::Duration::from_secs(1)).await;
-    // if let Some(redirect_server_handle) = &redirect_server_handle {
-    //     redirect_server_handle.abort();
-    // }
-    // main_server_handle.abort();
-
-    // let mut handles = vec![main_server_handle];
-    // if let Some(redirect_server_handle) = redirect_server_handle {
-    //     handles.push(redirect_server_handle);
-    // }
-    // futures::future::join_all(handles).await;
-
-    // println!("Moon shut down");
-    
-    // Ok(())
 }
+
+// fn bind_server(server: HttpServer<>)
 
 fn rustls_server_config() -> std::io::Result<RustlsServerConfig> {
     let mut config = RustlsServerConfig::new(NoClientAuth::new());
