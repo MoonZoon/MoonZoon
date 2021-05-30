@@ -1,14 +1,14 @@
+use actix_web::web::{Bytes, Data};
+use actix_web::{rt, Error};
+use futures::Stream;
+use parking_lot::Mutex;
+use std::collections::HashMap;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::time::Duration;
-use std::collections::HashMap;
-use actix_web::web::{Bytes, Data};
-use actix_web::{Error, rt};
-use futures::Stream;
-use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender, error::SendError};
+use tokio::sync::mpsc::{error::SendError, unbounded_channel, UnboundedReceiver, UnboundedSender};
 use tokio::time::{interval_at, Instant};
 use uuid::Uuid;
-use parking_lot::Mutex;
 
 type ID = u128;
 
@@ -17,15 +17,15 @@ type ID = u128;
 #[derive(Clone)]
 pub struct Connection {
     id: ID,
-    sender: UnboundedSender<Bytes>
+    sender: UnboundedSender<Bytes>,
 }
 
 impl Connection {
     fn new() -> (Connection, EventStream) {
         let (sender, receiver) = unbounded_channel();
-        let connection = Self { 
+        let connection = Self {
             id: Uuid::new_v4().as_u128(),
-            sender
+            sender,
         };
         (connection, EventStream(receiver))
     }
@@ -47,10 +47,7 @@ pub struct EventStream(UnboundedReceiver<Bytes>);
 impl Stream for EventStream {
     type Item = Result<Bytes, Error>;
 
-    fn poll_next(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<Self::Item>> {
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         match Pin::new(&mut self.0).poll_recv(cx) {
             Poll::Ready(Some(bytes)) => Poll::Ready(Some(Ok(bytes))),
             Poll::Ready(None) => Poll::Ready(None),
@@ -67,7 +64,9 @@ pub struct SSE {
 
 impl SSE {
     pub fn start() -> Data<Mutex<Self>> {
-        let sse = SSE { connections: HashMap::new() };
+        let sse = SSE {
+            connections: HashMap::new(),
+        };
         let this = Data::new(Mutex::new(sse));
         this.spawn_connection_remover();
         this
@@ -91,16 +90,18 @@ impl DataSSE for Data<Mutex<SSE>> {
             let mut interval = interval_at(Instant::now(), Duration::from_secs(10));
             loop {
                 interval.tick().await;
-                this.lock().connections.retain(|_, connection| {
-                    connection.send("ping", "").is_ok()
-                });
+                this.lock()
+                    .connections
+                    .retain(|_, connection| connection.send("ping", "").is_ok());
             }
         });
     }
 
     fn new_connection(&self) -> (Connection, EventStream) {
         let (connection, event_stream) = Connection::new();
-        self.lock().connections.insert(connection.id(), connection.clone());
+        self.lock()
+            .connections
+            .insert(connection.id(), connection.clone());
         (connection, event_stream)
     }
 
@@ -111,9 +112,9 @@ impl DataSSE for Data<Mutex<SSE>> {
             .values()
             .filter_map(|connection| connection.send(event, data).err())
             .collect::<Vec<_>>();
-        
+
         if errors.is_empty() {
-            return Ok(())
+            return Ok(());
         }
         Err(errors)
     }

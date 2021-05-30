@@ -42,7 +42,7 @@ impl Frontend {
             .unwrap_or_default();
 
         format!(
-        r#"<!DOCTYPE html>
+            r#"<!DOCTYPE html>
         <html lang="en">
         
         <head>

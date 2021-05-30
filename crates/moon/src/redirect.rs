@@ -1,8 +1,8 @@
-use actix_web::dev::{Service, Transform, forward_ready, ServiceRequest, ServiceResponse};
-use actix_web::{HttpResponse, Error};
+use actix_web::dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform};
 use actix_web::http::header::LOCATION;
-use actix_web::http::uri::{Uri, Scheme, Authority, InvalidUriParts};
-use futures::future::{Either, ok, Ready};
+use actix_web::http::uri::{Authority, InvalidUriParts, Scheme, Uri};
+use actix_web::{Error, HttpResponse};
+use futures::future::{ok, Either, Ready};
 use std::convert::TryFrom;
 
 // ------ Redirect ------
@@ -32,15 +32,14 @@ impl Redirect {
     pub fn http_to_https(mut self, http_to_https: bool) -> Self {
         self.http_to_https = http_to_https;
         self
-    } 
+    }
 
     pub fn port(mut self, from_port: u16, to_port: u16) -> Self {
         self.from_port = from_port;
         self.to_port = to_port;
         self
-    } 
+    }
 }
-
 
 impl<S, B> Transform<S, ServiceRequest> for Redirect
 where
@@ -64,7 +63,7 @@ where
 
 pub struct RedirectMiddleware<S> {
     service: S,
-    redirect: Redirect
+    redirect: Redirect,
 }
 
 impl<S> RedirectMiddleware<S> {
@@ -75,19 +74,20 @@ impl<S> RedirectMiddleware<S> {
         let mut uri_parts = req.uri().clone().into_parts();
         uri_parts.scheme = Scheme::try_from(connection_info.scheme()).ok();
         uri_parts.authority = Authority::try_from(connection_info.host()).ok();
-        
+
         Uri::from_parts(uri_parts)
     }
 
     fn should_redirect(&self, uri: &Uri) -> Option<()> {
         let from_port = self.redirect.from_port;
-        
+
         match (uri.scheme()?, uri.authority()?.port_u16()) {
             (_, Some(port)) => from_port == port,
             (scheme, None) if scheme == &Scheme::HTTP => from_port == 80,
             (scheme, None) if scheme == &Scheme::HTTPS => from_port == 443,
-            _ => None?
-        }.then(||())
+            _ => None?,
+        }
+        .then(|| ())
     }
 
     fn redirect_uri(&self, uri: Uri) -> Option<Uri> {
@@ -97,13 +97,18 @@ impl<S> RedirectMiddleware<S> {
             uri_parts.scheme = Some(Scheme::HTTPS);
         }
         uri_parts.authority = Authority::try_from(
-            format!("{}:{}", uri_parts.authority?.host(), self.redirect.to_port).as_str()
-        ).ok();
+            format!("{}:{}", uri_parts.authority?.host(), self.redirect.to_port).as_str(),
+        )
+        .ok();
 
         Uri::from_parts(uri_parts).ok()
     }
 
-    fn redirect<B>(&self, req: ServiceRequest, uri: &Uri) -> Ready<Result<ServiceResponse<B>, Error>> {
+    fn redirect<B>(
+        &self,
+        req: ServiceRequest,
+        uri: &Uri,
+    ) -> Ready<Result<ServiceResponse<B>, Error>> {
         let http_response = HttpResponse::MovedPermanently()
             .insert_header((LOCATION, uri.to_string()))
             .finish()
@@ -127,7 +132,7 @@ where
         if let Ok(uri) = Self::uri(&req) {
             if self.should_redirect(&uri).is_some() {
                 let redirect_uri = self.redirect_uri(uri).unwrap();
-                return Either::Right(self.redirect(req, &redirect_uri))
+                return Either::Right(self.redirect(req, &redirect_uri));
             }
         }
         Either::Left(self.service.call(req))

@@ -1,30 +1,30 @@
-use std::{collections::BTreeSet, future::Future};
+use actix_files::{Files, NamedFile};
+use actix_http::http::{header, ContentEncoding, StatusCode};
+use actix_web::http::header::ContentType;
+use actix_web::middleware::Condition;
+use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder};
+use parking_lot::Mutex;
+use rustls::internal::pemfile::{certs, pkcs8_private_keys};
+use rustls::{NoClientAuth, ServerConfig as RustlsServerConfig};
 use std::fs::File;
 use std::io::{self, BufReader};
 use std::net::SocketAddr;
-use actix_web::{web, App, HttpServer, Responder, HttpResponse, HttpRequest, Error};
-use actix_web::http::header::ContentType;
-use actix_web::middleware::Condition;
-use actix_http::http::{header, ContentEncoding, StatusCode};
-use actix_files::{Files, NamedFile};
-use rustls::internal::pemfile::{certs, pkcs8_private_keys};
-use rustls::{NoClientAuth, ServerConfig as RustlsServerConfig};
+use std::{collections::BTreeSet, future::Future};
 use tokio::fs;
 pub use trait_set::trait_set;
-use parking_lot::Mutex;
 
-pub use actix_web;
 pub use actix_files;
 pub use actix_http;
-pub use tokio;
-pub use tokio_stream;
+pub use actix_web;
+pub use actix_web::main;
+pub use futures;
 pub use mime;
 pub use mime_guess;
-pub use serde;
-pub use futures;
-pub use uuid;
-pub use actix_web::main as main;
 pub use parking_lot;
+pub use serde;
+pub use tokio;
+pub use tokio_stream;
+pub use uuid;
 
 mod config;
 mod from_env_vars;
@@ -38,7 +38,7 @@ pub use from_env_vars::FromEnvVars;
 pub use frontend::Frontend;
 use lazy_message_writer::LazyMessageWriter;
 pub use redirect::Redirect;
-use sse::{SSE, DataSSE};
+use sse::{DataSSE, SSE};
 
 pub struct UpMsgRequest {}
 
@@ -50,7 +50,7 @@ struct SharedData {
 }
 
 // trait aliases
-trait_set!{
+trait_set! {
     pub trait FrontBuilderOutput = Future<Output = Frontend> + 'static;
     pub trait FrontBuilder<FRBO: FrontBuilderOutput> = Fn() -> FRBO + Clone + Send + 'static;
 
@@ -105,8 +105,11 @@ where
             .configure(service_config.clone())
             .service(
                 web::scope("api")
-                    .route("up_msg_handler", web::post().to(up_msg_handler_responder::<UPH, UPHO>))
-                    .route("reload", web::post().to(reload_responder))
+                    .route(
+                        "up_msg_handler",
+                        web::post().to(up_msg_handler_responder::<UPH, UPHO>),
+                    )
+                    .route("reload", web::post().to(reload_responder)),
             )
             .service(Files::new("public", "public/"))
             .route("pkg/{file:.*}", web::get().to(pkg_responder))
@@ -115,7 +118,7 @@ where
     });
 
     // ------ Bind ------
-    
+
     server = if config.https {
         server.bind_rustls(address, rustls_server_config()?)?
     } else {
@@ -154,7 +157,9 @@ fn rustls_server_config() -> io::Result<RustlsServerConfig> {
     let key_file = &mut BufReader::new(File::open("backend/private/private.pem")?);
     let cert_chain = certs(cert_file).expect("certificate parsing failed");
     let mut keys = pkcs8_private_keys(key_file).expect("private key parsing failed");
-    config.set_single_cert(cert_chain, keys.remove(0)).expect("private key is invalid");
+    config
+        .set_single_cert(cert_chain, keys.remove(0))
+        .expect("private key is invalid");
     Ok(config)
 }
 
@@ -178,11 +183,15 @@ where
 async fn reload_responder(sse: web::Data<Mutex<SSE>>) -> impl Responder {
     let _ = sse.broadcast("reload", "");
     HttpResponse::Ok()
-}   
+}
 
 // ------ pkg_responder ------
 
-async fn pkg_responder(req: HttpRequest, file: web::Path<String>, shared_data: web::Data<SharedData>) -> impl Responder {
+async fn pkg_responder(
+    req: HttpRequest,
+    file: web::Path<String>,
+    shared_data: web::Data<SharedData>,
+) -> impl Responder {
     let mime = mime_guess::from_path(file.as_str()).first_or_octet_stream();
 
     let encodings = req
@@ -203,32 +212,40 @@ async fn pkg_responder(req: HttpRequest, file: web::Path<String>, shared_data: w
             file.push_str(".gz");
             (NamedFile::open(file)?, Some(ContentEncoding::Gzip))
         }
-        _ => (NamedFile::open(file)?, None)
+        _ => (NamedFile::open(file)?, None),
     };
 
-    let mut responder = named_file.set_content_type(mime).with_status(StatusCode::OK);
+    let mut responder = named_file
+        .set_content_type(mime)
+        .with_status(StatusCode::OK);
     if let Some(encoding) = encoding {
         responder = responder.with_header(encoding);
     }
     Ok::<_, Error>(responder)
-}   
+}
 
 // ------ sse_responder ------
 
-async fn sse_responder(sse: web::Data<Mutex<SSE>>, shared_data: web::Data<SharedData>) -> impl Responder {
+async fn sse_responder(
+    sse: web::Data<Mutex<SSE>>,
+    shared_data: web::Data<SharedData>,
+) -> impl Responder {
     let (connection, event_stream) = sse.new_connection();
     let backend_build_id = shared_data.backend_build_id.to_string();
 
-    if connection.send("backend_build_id", &backend_build_id).is_err() {
+    if connection
+        .send("backend_build_id", &backend_build_id)
+        .is_err()
+    {
         return HttpResponse::InternalServerError()
             .reason("sending backend_build_id failed")
-            .finish()
+            .finish();
     }
 
     HttpResponse::Ok()
         .insert_header(ContentType(mime::TEXT_EVENT_STREAM))
         .streaming(event_stream)
-}   
+}
 
 // ------ frontend_responder ------
 
@@ -240,14 +257,14 @@ where
     HttpResponse::Ok()
         .content_type(ContentType::html())
         .body(frontend().await.render().await)
-}   
+}
 
 // ====== ====== TESTS ====== ======
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use actix_web::{test, rt as actix_rt};
+    use actix_web::{rt as actix_rt, test};
     use const_format::concatcp;
     use futures::StreamExt;
 
@@ -266,9 +283,10 @@ mod tests {
         };
         let app = test::init_service(
             App::new()
-                    .data(shared_data)
-                    .route("pkg/{file:.*}", web::get().to(pkg_responder)),
-        ).await;
+                .data(shared_data)
+                .route("pkg/{file:.*}", web::get().to(pkg_responder)),
+        )
+        .await;
         let req = test::TestRequest::get().uri("/pkg/index.css").to_request();
 
         // ------ ACT ------
@@ -277,10 +295,17 @@ mod tests {
         // ------ ASSERT ------
         assert_eq!(resp.status(), StatusCode::OK);
         assert_eq!(
-            resp.headers().get(header::CONTENT_TYPE).unwrap().to_str().unwrap(), 
+            resp.headers()
+                .get(header::CONTENT_TYPE)
+                .unwrap()
+                .to_str()
+                .unwrap(),
             mime::TEXT_CSS.to_string()
         );
-        assert_eq!(resp.take_body().into_future().await.0.unwrap().unwrap(), css_content);
+        assert_eq!(
+            resp.take_body().into_future().await.0.unwrap().unwrap(),
+            css_content
+        );
     }
 
     #[actix_rt::test]
@@ -295,9 +320,10 @@ mod tests {
         };
         let app = test::init_service(
             App::new()
-                    .data(shared_data)
-                    .route("pkg/{file:.*}", web::get().to(pkg_responder)),
-        ).await;
+                .data(shared_data)
+                .route("pkg/{file:.*}", web::get().to(pkg_responder)),
+        )
+        .await;
         let req = test::TestRequest::get()
             .insert_header((header::ACCEPT_ENCODING, ContentEncoding::Br.as_str()))
             .uri("/pkg/index.css")
@@ -309,14 +335,25 @@ mod tests {
         // ------ ASSERT ------
         assert_eq!(resp.status(), StatusCode::OK);
         assert_eq!(
-            resp.headers().get(header::CONTENT_TYPE).unwrap().to_str().unwrap(), 
+            resp.headers()
+                .get(header::CONTENT_TYPE)
+                .unwrap()
+                .to_str()
+                .unwrap(),
             mime::TEXT_CSS.to_string()
         );
         assert_eq!(
-            resp.headers().get(header::CONTENT_ENCODING).unwrap().to_str().unwrap(), 
+            resp.headers()
+                .get(header::CONTENT_ENCODING)
+                .unwrap()
+                .to_str()
+                .unwrap(),
             ContentEncoding::Br.as_str()
         );
-        assert_eq!(resp.take_body().into_future().await.0.unwrap().unwrap(), css_content);
+        assert_eq!(
+            resp.take_body().into_future().await.0.unwrap().unwrap(),
+            css_content
+        );
     }
 
     #[actix_rt::test]
@@ -331,9 +368,10 @@ mod tests {
         };
         let app = test::init_service(
             App::new()
-                    .data(shared_data)
-                    .route("pkg/{file:.*}", web::get().to(pkg_responder)),
-        ).await;
+                .data(shared_data)
+                .route("pkg/{file:.*}", web::get().to(pkg_responder)),
+        )
+        .await;
         let req = test::TestRequest::get()
             .insert_header((header::ACCEPT_ENCODING, ContentEncoding::Gzip.as_str()))
             .uri("/pkg/index.css")
@@ -345,13 +383,24 @@ mod tests {
         // ------ ASSERT ------
         assert_eq!(resp.status(), StatusCode::OK);
         assert_eq!(
-            resp.headers().get(header::CONTENT_TYPE).unwrap().to_str().unwrap(), 
+            resp.headers()
+                .get(header::CONTENT_TYPE)
+                .unwrap()
+                .to_str()
+                .unwrap(),
             mime::TEXT_CSS.to_string()
         );
         assert_eq!(
-            resp.headers().get(header::CONTENT_ENCODING).unwrap().to_str().unwrap(), 
+            resp.headers()
+                .get(header::CONTENT_ENCODING)
+                .unwrap()
+                .to_str()
+                .unwrap(),
             ContentEncoding::Gzip.as_str()
         );
-        assert_eq!(resp.take_body().into_future().await.0.unwrap().unwrap(), css_content);
+        assert_eq!(
+            resp.take_body().into_future().await.0.unwrap().unwrap(),
+            css_content
+        );
     }
 }
