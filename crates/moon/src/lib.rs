@@ -46,6 +46,7 @@ pub struct UpMsgRequest {}
 struct SharedData {
     compressed_pkg: bool,
     backend_build_id: u128,
+    pkg_path: &'static str,
 }
 
 // trait aliases
@@ -56,6 +57,10 @@ trait_set!{
     pub trait UpHandlerOutput = Future<Output = ()> + 'static;
     pub trait UpHandler<UPHO: UpHandlerOutput> = Fn(UpMsgRequest) -> UPHO + Clone + Send + 'static;
 }
+
+// ------ ------
+//     Start
+// ------ ------
 
 pub async fn start<FRB, FRBO, UPH, UPHO>(
     frontend: FRB,
@@ -76,6 +81,7 @@ where
     let shared_data = SharedData {
         backend_build_id: backend_build_id().await,
         compressed_pkg: config.compressed_pkg,
+        pkg_path: "frontend/pkg",
     };
     let sse = SSE::start();
     let address = SocketAddr::from(([0, 0, 0, 0], config.port));
@@ -186,7 +192,7 @@ async fn pkg_responder(req: HttpRequest, file: web::Path<String>, shared_data: w
         .map(|accept_encoding| accept_encoding.split(", ").collect::<BTreeSet<_>>())
         .unwrap_or_default();
 
-    let mut file = format!("frontend/pkg/{}", file);
+    let mut file = format!("{}/{}", shared_data.pkg_path, file);
 
     let (named_file, encoding) = match shared_data.compressed_pkg {
         true if encodings.contains(ContentEncoding::Br.as_str()) => {
@@ -236,62 +242,116 @@ where
         .body(frontend().await.render().await)
 }   
 
+// ====== ====== TESTS ====== ======
 
-// @TODO fix or remove (with dev-deps)
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use actix_web::{test, rt as actix_rt};
+    use const_format::concatcp;
+    use futures::StreamExt;
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
+    const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
+    const FIXTURES_DIR: &str = concatcp!(MANIFEST_DIR, "/tests/fixtures");
 
-//     mod pkg_route {
+    #[actix_rt::test]
+    async fn test_uncompressed() {
+        // ------ ARRANGE ------
+        let css_content = include_str!("../tests/fixtures/index.css");
 
-//         use super::*;
-//         use const_format::concatcp;
+        let shared_data = SharedData {
+            backend_build_id: u128::default(),
+            compressed_pkg: false,
+            pkg_path: FIXTURES_DIR,
+        };
+        let app = test::init_service(
+            App::new()
+                    .data(shared_data)
+                    .route("pkg/{file:.*}", web::get().to(pkg_responder)),
+        ).await;
+        let req = test::TestRequest::get().uri("/pkg/index.css").to_request();
 
-//         const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
-//         const FIXTURES_DIR: &str = concatcp!(MANIFEST_DIR, "/tests/fixtures/");
+        // ------ ACT ------
+        let mut resp = test::call_service(&app, req).await;
 
-//         #[tokio::test]
-//         async fn uncompressed() {
-//             let css_content = include_str!("../tests/fixtures/index.css");
-//             let filter = pkg_route(true, FIXTURES_DIR);
-//             let res = warp::test::request()
-//                 .path("/pkg/index.css")
-//                 .reply(&filter)
-//                 .await;
-//             assert_eq!(res.status(), 200);
-//             assert_eq!(res.headers()[CONTENT_TYPE], "text/css");
-//             assert_eq!(res.into_body(), css_content);
-//         }
+        // ------ ASSERT ------
+        assert_eq!(resp.status(), StatusCode::OK);
+        assert_eq!(
+            resp.headers().get(header::CONTENT_TYPE).unwrap().to_str().unwrap(), 
+            mime::TEXT_CSS.to_string()
+        );
+        assert_eq!(resp.take_body().into_future().await.0.unwrap().unwrap(), css_content);
+    }
 
-//         #[tokio::test]
-//         async fn brotli_compressed() {
-//             let css_content = include_bytes!("../tests/fixtures/index.css.br");
-//             let filter = pkg_route(true, FIXTURES_DIR);
-//             let res = warp::test::request()
-//                 .header(ACCEPT_ENCODING, "br")
-//                 .path("/pkg/index.css")
-//                 .reply(&filter)
-//                 .await;
-//             assert_eq!(res.status(), 200);
-//             assert_eq!(res.headers()[CONTENT_ENCODING], "br");
-//             assert_eq!(res.headers()[CONTENT_TYPE], "text/css");
-//             assert_eq!(res.into_body().as_ref(), css_content);
-//         }
+    #[actix_rt::test]
+    async fn test_brotli_compressed() {
+        // ------ ARRANGE ------
+        let css_content = web::Bytes::from_static(include_bytes!("../tests/fixtures/index.css.br"));
 
-//         #[tokio::test]
-//         async fn gzip_compressed() {
-//             let css_content = include_bytes!("../tests/fixtures/index.css.gz");
-//             let filter = pkg_route(true, FIXTURES_DIR);
-//             let res = warp::test::request()
-//                 .header(ACCEPT_ENCODING, "gzip")
-//                 .path("/pkg/index.css")
-//                 .reply(&filter)
-//                 .await;
-//             assert_eq!(res.status(), 200);
-//             assert_eq!(res.headers()[CONTENT_ENCODING], "gzip");
-//             assert_eq!(res.headers()[CONTENT_TYPE], "text/css");
-//             assert_eq!(res.into_body().as_ref(), css_content);
-//         }
-//     }
-// }
+        let shared_data = SharedData {
+            backend_build_id: u128::default(),
+            compressed_pkg: true,
+            pkg_path: FIXTURES_DIR,
+        };
+        let app = test::init_service(
+            App::new()
+                    .data(shared_data)
+                    .route("pkg/{file:.*}", web::get().to(pkg_responder)),
+        ).await;
+        let req = test::TestRequest::get()
+            .insert_header((header::ACCEPT_ENCODING, ContentEncoding::Br.as_str()))
+            .uri("/pkg/index.css")
+            .to_request();
+
+        // ------ ACT ------
+        let mut resp = test::call_service(&app, req).await;
+
+        // ------ ASSERT ------
+        assert_eq!(resp.status(), StatusCode::OK);
+        assert_eq!(
+            resp.headers().get(header::CONTENT_TYPE).unwrap().to_str().unwrap(), 
+            mime::TEXT_CSS.to_string()
+        );
+        assert_eq!(
+            resp.headers().get(header::CONTENT_ENCODING).unwrap().to_str().unwrap(), 
+            ContentEncoding::Br.as_str()
+        );
+        assert_eq!(resp.take_body().into_future().await.0.unwrap().unwrap(), css_content);
+    }
+
+    #[actix_rt::test]
+    async fn test_gzip_compressed() {
+        // ------ ARRANGE ------
+        let css_content = web::Bytes::from_static(include_bytes!("../tests/fixtures/index.css.gz"));
+
+        let shared_data = SharedData {
+            backend_build_id: u128::default(),
+            compressed_pkg: true,
+            pkg_path: FIXTURES_DIR,
+        };
+        let app = test::init_service(
+            App::new()
+                    .data(shared_data)
+                    .route("pkg/{file:.*}", web::get().to(pkg_responder)),
+        ).await;
+        let req = test::TestRequest::get()
+            .insert_header((header::ACCEPT_ENCODING, ContentEncoding::Gzip.as_str()))
+            .uri("/pkg/index.css")
+            .to_request();
+
+        // ------ ACT ------
+        let mut resp = test::call_service(&app, req).await;
+
+        // ------ ASSERT ------
+        assert_eq!(resp.status(), StatusCode::OK);
+        assert_eq!(
+            resp.headers().get(header::CONTENT_TYPE).unwrap().to_str().unwrap(), 
+            mime::TEXT_CSS.to_string()
+        );
+        assert_eq!(
+            resp.headers().get(header::CONTENT_ENCODING).unwrap().to_str().unwrap(), 
+            ContentEncoding::Gzip.as_str()
+        );
+        assert_eq!(resp.take_body().into_future().await.0.unwrap().unwrap(), css_content);
+    }
+}
