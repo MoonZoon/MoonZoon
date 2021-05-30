@@ -120,15 +120,9 @@ fn set_env_vars(config: &Config, release: bool) {
 
     // [redirect]
     // port = 8080
-    env::set_var(
-        "REDIRECT_PORT",
-        config.redirect.port.to_string(),
-    );
+    env::set_var("REDIRECT_PORT", config.redirect.port.to_string());
     // enabled = true
-    env::set_var(
-        "REDIRECT_ENABLED",
-        config.redirect.enabled.to_string(),
-    );
+    env::set_var("REDIRECT_ENABLED", config.redirect.enabled.to_string());
 
     env::set_var("COMPRESSED_PKG", release.to_string());
 }

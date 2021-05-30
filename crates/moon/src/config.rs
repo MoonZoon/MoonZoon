@@ -1,5 +1,5 @@
-use serde::Deserialize;
 use crate::from_env_vars::FromEnvVars;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 #[serde(default)]
@@ -25,7 +25,7 @@ impl Default for Config {
             port: 8080,
             https: false,
             compressed_pkg: true,
-            redirect: Redirect::default()
+            redirect: Redirect::default(),
         }
     }
 }
