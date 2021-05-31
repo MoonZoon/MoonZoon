@@ -1,7 +1,9 @@
 use std::env;
 use structopt::StructOpt;
 use anyhow::Result;
-use tokio::signal;
+use tokio::{signal, select};
+use tokio::time::Duration;
+use std::process::Child;
 
 mod config;
 mod frontend;
@@ -42,22 +44,45 @@ async fn main() -> Result<()> {
             set_env_vars(&config, release);
 
             check_wasm_pack()?;
+
             if config.https {
                 generate_certificate_if_not_present().await?;
             }
 
-            let _ = build_frontend(release, config.cache_busting).await;
-            let frontend_watcher_handle = start_frontend_watcher(&config, release);
+            let debounce_time = Duration::from_millis(100);
 
-            let backend_watcher_handle = start_backend_watcher(
-                config.watch.backend.clone(),
-                release,
-                // open,
-                backend_sender,
-                backend_receiver,
-            );
-            frontend_watcher_handle.await?;
-            backend_watcher_handle.join().unwrap();
+            if let Err(error) = build_frontend(release, config.cache_busting).await {
+                eprintln!("{}", error);
+            }
+            let frontend_watcher_handle = start_frontend_watcher(&config, release, debounce_time);
+            
+            let mut server = None::<Child>;
+            if let Err(error) = build_backend(release).await {
+                eprintln!("{}", error);
+            } else {
+                match run_backend(release) {
+                    Ok(backend) => {
+                        // if open {
+                        //     open = false;
+                        //     let address = "https://127.0.0.1:8443";
+                        //     println!("Open {} in your default web browser", "https://127.0.0.1:8443");
+                        //     open::that(address).unwrap();
+                        // }
+                        server = Some(backend)
+                    }
+                    Err(error) => {
+                        eprintln!("{}", error);
+                    }
+                }
+            }
+            let backend_watcher_handle = start_backend_watcher(&config, release, debounce_time, server);
+
+            select! {
+                result = signal::ctrl_c() => result?,
+                result = frontend_watcher_handle => result??,
+                result = backend_watcher_handle => result??,
+            }
+            println!("mzoon shut down");
         }
         Opt::Build { release } => {
             let config = Config::load_from_moonzoon_toml().await?;
@@ -73,9 +98,6 @@ async fn main() -> Result<()> {
             build_backend(release).await?;
         }
     }
-
-    signal::ctrl_c().await?;
-    println!("mzoon shut down");
     Ok(())
 }
 

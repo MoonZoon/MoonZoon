@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use uuid::Uuid;
 use anyhow::{bail, Context, Result};
+use std::sync::Arc;
 use crate::config::Config;
 
 pub fn check_wasm_pack() -> Result<()> {
@@ -26,23 +27,25 @@ pub fn check_wasm_pack() -> Result<()> {
     }
 }
 
-pub fn start_frontend_watcher(config: &Config, release: bool) -> JoinHandle<Result<()>> {
-    let reload_url = format!(
+pub fn start_frontend_watcher(config: &Config, release: bool, debounce_time: Duration) -> JoinHandle<Result<()>> {
+    let reload_url = Arc::new(format!(
         "{protocol}://localhost:{port}/api/reload",
         protocol = if config.https { "https" } else { "http" },
         port = config.port
-    );
+    ));
     let cache_busting = config.cache_busting;
-    let paths = config.watch.frontend;
+    let paths = config.watch.frontend.clone();
 
     spawn(async move {
-        let (sender, receiver) = mpsc::unbounded_channel();
+        let (sender, mut receiver) = mpsc::unbounded_channel();
 
-        let watcher = immediate_watcher(|event| {
+        let mut watcher = immediate_watcher(move |event| {
             if let Err(error) = event {
-                return println!("Watch error: {:#?}", error);
+                return eprintln!("Frontend watcher failed: {:#?}", error);
             }
-            sender.send(());
+            if let Err(error) = sender.send(()) {
+                return eprintln!("Failed to send with the frontend sender: {:#?}", error);
+            }
         }).context("Failed to create the frontend watcher")?;
 
         let configure_context = "Failed to configure the frontend watcher";
@@ -51,39 +54,60 @@ pub fn start_frontend_watcher(config: &Config, release: bool) -> JoinHandle<Resu
         watcher.configure(notify::Config::OngoingEvents(None)).context(configure_context)?;
 
         for path in paths {
-            watcher.watch(&path, RecursiveMode::Recursive).unwrap();
+            watcher.watch(&path, RecursiveMode::Recursive).context("Failed to set a frontend watched path")?;
         }
 
-        let (debounced_sender, debounced_receiver) = mpsc::unbounded_channel();
+        let (debounced_sender, mut debounced_receiver) = mpsc::unbounded_channel();
 
         spawn(async move {
-            let task = None::<JoinHandle<()>>;
+            let mut debounced_task = None::<JoinHandle<()>>;
+            let debounced_sender = Arc::new(debounced_sender);
             while receiver.recv().await.is_some() {
-                if let Some(task) = task {
-                    task.abort();
+                if let Some(debounced_task) = debounced_task {
+                    debounced_task.abort();
                 }
-                task = Some(spawn(async move {
-                    sleep(Duration::from_millis(100)).await; 
-                    debounced_sender.send(());
+                let debounced_sender = Arc::clone(&debounced_sender);
+                debounced_task = Some(spawn(async move {
+                    sleep(debounce_time).await; 
+                    if let Err(error) = debounced_sender.send(()) {
+                        return eprintln!("Failed to send with the frontend debounced sender: {:#?}", error);
+                    }
                 }));
             }
         });
 
+        let mut build_task = None::<JoinHandle<()>>;
         while debounced_receiver.recv().await.is_some() {
             println!("Build frontend");
-            if build_frontend(release, cache_busting).await.is_ok() {
-                println!("Reload frontend");
-                attohttpc::post(&reload_url)
-                    .danger_accept_invalid_certs(true)
-                    .send()
-                    .context("Failed to send the frontend reload request")?;
+            if let Some(build_task) = build_task.take() {
+                build_task.abort();
             }
+            let reload_url = Arc::clone(&reload_url);
+            build_task = Some(spawn(async move {
+                match build_frontend(release, cache_busting).await {
+                    Ok(()) => {
+                        println!("Reload frontend");
+                        let response = attohttpc::post(reload_url.as_str())
+                            .danger_accept_invalid_certs(true)
+                            .send();
+                        if let Err(error) = response {
+                            eprintln!("Failed to send the frontend reload request: {:#?}", error);
+                        }
+                    }
+                    Err(error) => {
+                        eprintln!("{}", error);
+                    }
+                }
+            }));
         }
+        
         Ok(())
     })
 }
 
 pub async fn build_frontend(release: bool, cache_busting: bool) -> Result<()> {
+    println!("Building frontend...");
+
     let old_build_id = fs::read_to_string("frontend/pkg/build_id")
         .await
         .ok()
@@ -92,7 +116,7 @@ pub async fn build_frontend(release: bool, cache_busting: bool) -> Result<()> {
     if let Some(old_build_id) = old_build_id {
         let old_wasm = format!("frontend/pkg/frontend_bg_{}.wasm", old_build_id);
         let old_js = format!("frontend/pkg/frontend_{}.js", old_build_id);
-        join!(
+        let _ = join!(
             fs::remove_file(&old_wasm),
             fs::remove_file(&old_js),
             fs::remove_file(format!("{}.br", &old_wasm)),
@@ -140,7 +164,7 @@ pub async fn build_frontend(release: bool, cache_busting: bool) -> Result<()> {
         if release {
             compress_pkg(&new_wasm_file_path, &new_js_file_path);
         }
-        return Ok(())
+        return Ok(println!("Frontend built"))
     }
     bail!("Failed to build frontend")
 }

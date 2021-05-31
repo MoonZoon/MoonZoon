@@ -1,14 +1,18 @@
-use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
+use notify::{RecursiveMode, immediate_watcher, Watcher};
 use rcgen::{Certificate, CertificateParams};
-use tokio::{fs, try_join};
 use std::path::Path;
-use std::process::{Child, Command};
-use std::sync::mpsc::{channel, Receiver, Sender};
-use std::thread::{self, JoinHandle};
-use std::time::Duration;
+use std::process::{Command, Child};
+use tokio::{fs, try_join, spawn};
+use tokio::sync::mpsc;
+use tokio::task::JoinHandle;
+use tokio::time::{Duration, sleep};
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 use anyhow::{bail, Context, Result};
+use std::sync::Arc;
+use parking_lot::Mutex;
+use cargo_metadata::MetadataCommand;
+use crate::config::Config;
 
 pub async fn generate_certificate_if_not_present() -> Result<()> {
     let public_pem_path = Path::new("backend/private/public.pem");
@@ -39,82 +43,81 @@ pub async fn generate_certificate_if_not_present() -> Result<()> {
     ).map(|_| ())
 }
 
-pub enum BackendCommand {
-    Rebuild,
-    Stop,
-}
+pub fn start_backend_watcher(config: &Config, release: bool, debounce_time: Duration, server: Option<Child>) -> JoinHandle<Result<()>> {
+    let paths = config.watch.backend.clone();
 
-pub fn start_backend_watcher(
-    paths: Vec<String>,
-    release: bool,
-    // open: bool,
-    sender: Sender<DebouncedEvent>,
-    receiver: Receiver<DebouncedEvent>,
-) -> JoinHandle<()> {
-    thread::spawn(move || {
-        let mut watcher = watcher(sender, Duration::from_millis(100)).unwrap();
+    spawn(async move {
+        let (sender, mut receiver) = mpsc::unbounded_channel();
+
+        let mut watcher = immediate_watcher(move |event| {
+            if let Err(error) = event {
+                return eprintln!("Backend watcher failed: {:#?}", error);
+            }
+            if let Err(error) = sender.send(()) {
+                return eprintln!("Failed to send with the backend sender: {:#?}", error);
+            }
+        }).context("Failed to create the backend watcher")?;
+    
+        let configure_context = "Failed to configure the backend watcher";
+        watcher.configure(notify::Config::PreciseEvents(false)).context(configure_context)?;
+        watcher.configure(notify::Config::NoticeEvents(false)).context(configure_context)?;
+        watcher.configure(notify::Config::OngoingEvents(None)).context(configure_context)?;
+    
         for path in paths {
-            watcher.watch(&path, RecursiveMode::Recursive).unwrap();
+            watcher.watch(&path, RecursiveMode::Recursive).context("Failed to set a backend watched path")?;
         }
+    
+        let (debounced_sender, mut debounced_receiver) = mpsc::unbounded_channel();
 
-        let (server_rebuild_run_sender, server_rebuild_run_receiver) = channel();
-        let backend_handle = thread::spawn(move || {
-            // let mut open = open;
-            loop {
-                // @TODO only on successful build
-                generate_backend_build_id();
-                let mut cargo_and_server_process = build_and_run_backend(release);
-                // @TODO wait for (successful) build
-                // if open {
-                //     open = false;
-                //     let address = "https://127.0.0.1:8443";
-                //     println!("Open {} in your default web browser", "https://127.0.0.1:8443");
-                //     open::that(address).unwrap();
-                // }
-                let command = server_rebuild_run_receiver.recv();
-                match command {
-                    Ok(BackendCommand::Rebuild) => {
-                        let _ = cargo_and_server_process.kill();
-                    }
-                    Ok(BackendCommand::Stop) => {
-                        cargo_and_server_process.wait().unwrap();
-                        break;
-                    }
-                    Err(error) => {
-                        println!("watch backend error: {:?}", error);
-                        break;
-                    }
+        spawn(async move {
+            let mut debounced_task = None::<JoinHandle<()>>;
+            let debounced_sender = Arc::new(debounced_sender);
+            while receiver.recv().await.is_some() {
+                if let Some(debounced_task) = debounced_task {
+                    debounced_task.abort();
                 }
+                let debounced_sender = Arc::clone(&debounced_sender);
+                debounced_task = Some(spawn(async move {
+                    sleep(debounce_time).await; 
+                    if let Err(error) = debounced_sender.send(()) {
+                        return eprintln!("Failed to send with the backend debounced sender: {:#?}", error);
+                    }
+                }));
             }
         });
 
-        loop {
-            match receiver.recv() {
-                Ok(event) => match event {
-                    DebouncedEvent::NoticeWrite(_) | DebouncedEvent::NoticeRemove(_) => (),
-                    DebouncedEvent::Error(notify::Error::Generic(error), _)
-                        if error == "ctrl-c" =>
-                    {
-                        let _ = server_rebuild_run_sender.send(BackendCommand::Stop);
-                        backend_handle.join().unwrap();
-                        return;
-                    }
-                    _ => {
-                        println!("Build backend");
-                        if server_rebuild_run_sender
-                            .send(BackendCommand::Rebuild)
-                            .is_err()
-                        {
-                            return;
+        let mut build_task = None::<JoinHandle<()>>;
+        let server = Arc::new(Mutex::new(server));
+
+        while debounced_receiver.recv().await.is_some() {
+            println!("Build backend");
+            if let Some(build_task) = build_task.take() {
+                build_task.abort();
+            }
+            if let Some(mut server) = server.lock().take() {
+                let _ = server.kill();
+            }
+            let server = Arc::clone(&server);
+            build_task = Some(spawn(async move {
+                match build_backend(release).await {
+                    Ok(()) => {
+                        match run_backend(release) {
+                            Ok(backend) => { 
+                                server.lock().replace(backend);
+                            },
+                            Err(error) => {
+                                eprintln!("{}", error);
+                            }
                         }
                     }
-                },
-                Err(error) => {
-                    println!("watch backend error: {:?}", error);
-                    return;
+                    Err(error) => {
+                        eprintln!("{}", error);
+                    }
                 }
-            }
+            }));
         }
+
+        Ok(())
     })
 }
 
@@ -127,15 +130,27 @@ pub async fn generate_backend_build_id() -> Result<()> {
     .context("Failed to write the backend build id")
 }
 
-pub fn build_and_run_backend(release: bool) -> Child {
-    let mut args = vec!["run", "--package", "backend"];
+pub fn run_backend(release: bool) -> Result<Child> {
+    println!("Run backend");
+    
+    let mut target_directory = MetadataCommand::new()
+        .no_deps()
+        .exec()?
+        .target_directory;
+
     if release {
-        args.push("--release");
-    }
-    Command::new("cargo").args(&args).spawn().unwrap()
+        target_directory.push("release")
+    } else {
+        target_directory.push("debug")
+    };
+    target_directory.push("backend");
+
+    Command::new(target_directory).spawn().context("Failed to run backend")
 }
 
 pub async fn build_backend(release: bool) -> Result<()> {
+    println!("Building backend...");
+
     let mut args = vec!["build", "--package", "backend"];
     if release {
         args.push("--release");
@@ -146,7 +161,8 @@ pub async fn build_backend(release: bool) -> Result<()> {
         .context("Failed to get frontend build status")?
         .success();
     if success {
-        generate_backend_build_id().await?
+        generate_backend_build_id().await?;
+        return Ok(println!("Backend built"))
     }
     bail!("Failed to build backend")
 }
