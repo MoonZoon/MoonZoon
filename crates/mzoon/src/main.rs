@@ -1,8 +1,7 @@
-use notify::DebouncedEvent;
 use std::env;
-use std::sync::mpsc::channel;
 use structopt::StructOpt;
 use anyhow::Result;
+use tokio::signal;
 
 mod config;
 mod frontend;
@@ -33,20 +32,6 @@ enum Opt {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let (frontend_sender, frontend_receiver) = channel();
-    let (backend_sender, backend_receiver) = channel();
-    ctrlc::set_handler({
-        let frontend_sender = frontend_sender.clone();
-        let backend_sender = backend_sender.clone();
-        move || {
-            println!("Shut down MoonZoon CLI");
-            let event = || DebouncedEvent::Error(notify::Error::Generic("ctrl-c".to_owned()), None);
-            frontend_sender.send(event()).unwrap();
-            backend_sender.send(event()).unwrap();
-        }
-    })
-    .unwrap();
-
     let opt = Opt::from_args();
     println!("{:?}", opt);
 
@@ -61,18 +46,8 @@ async fn main() -> Result<()> {
                 generate_certificate_if_not_present().await?;
             }
 
-            let (frontend_build_finished_sender, frontend_build_finished_receiver) = channel();
-            let frontend_watcher_handle = start_frontend_watcher(
-                config.watch.frontend.clone(),
-                release,
-                frontend_sender,
-                frontend_receiver,
-                frontend_build_finished_sender,
-                &config,
-            );
-            // @TODO parallel build instead of waiting (server has to be started after FE build!)
-            // `recv` fails if the sender is dropped because of fail in `start_frontend_watcher`
-            let _ = frontend_build_finished_receiver.recv();
+            let _ = build_frontend(release, config.cache_busting).await;
+            let frontend_watcher_handle = start_frontend_watcher(&config, release);
 
             let backend_watcher_handle = start_backend_watcher(
                 config.watch.backend.clone(),
@@ -81,7 +56,7 @@ async fn main() -> Result<()> {
                 backend_sender,
                 backend_receiver,
             );
-            frontend_watcher_handle.join().unwrap();
+            frontend_watcher_handle.await?;
             backend_watcher_handle.join().unwrap();
         }
         Opt::Build { release } => {
@@ -89,7 +64,7 @@ async fn main() -> Result<()> {
             set_env_vars(&config, release);
 
             check_wasm_pack()?;
-            
+
             if config.https {
                 generate_certificate_if_not_present().await?;
             }
@@ -98,6 +73,9 @@ async fn main() -> Result<()> {
             build_backend(release).await?;
         }
     }
+
+    signal::ctrl_c().await?;
+    println!("mzoon shut down");
     Ok(())
 }
 

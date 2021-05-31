@@ -1,15 +1,15 @@
 use brotli::{enc::backward_references::BrotliEncoderParams, BrotliCompress};
 use flate2::bufread::GzEncoder;
 use flate2::Compression;
-use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
+use notify::{RecursiveMode, immediate_watcher, Watcher};
 use tokio::fs::{self, DirEntry, File};
-use tokio::{try_join, join};
+use tokio::{try_join, join, spawn};
+use tokio::task::JoinHandle;
+use tokio::time::{Duration, sleep};
+use tokio::sync::mpsc;
 use std::io::{self, BufReader, Read};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::sync::mpsc::{Receiver, Sender};
-use std::thread::{self, JoinHandle};
-use std::time::Duration;
 use uuid::Uuid;
 use anyhow::{bail, Context, Result};
 use crate::config::Config;
@@ -26,51 +26,60 @@ pub fn check_wasm_pack() -> Result<()> {
     }
 }
 
-pub fn start_frontend_watcher(
-    paths: Vec<String>,
-    release: bool,
-    sender: Sender<DebouncedEvent>,
-    receiver: Receiver<DebouncedEvent>,
-    frontend_build_finished_sender: Sender<()>,
-    config: &Config,
-) -> JoinHandle<()> {
+pub fn start_frontend_watcher(config: &Config, release: bool) -> JoinHandle<Result<()>> {
     let reload_url = format!(
         "{protocol}://localhost:{port}/api/reload",
         protocol = if config.https { "https" } else { "http" },
         port = config.port
     );
     let cache_busting = config.cache_busting;
+    let paths = config.watch.frontend;
 
-    thread::spawn(move || {
-        let mut watcher = watcher(sender, Duration::from_millis(100)).unwrap();
+    spawn(async move {
+        let (sender, receiver) = mpsc::unbounded_channel();
+
+        let watcher = immediate_watcher(|event| {
+            if let Err(error) = event {
+                return println!("Watch error: {:#?}", error);
+            }
+            sender.send(());
+        }).context("Failed to create the frontend watcher")?;
+
+        let configure_context = "Failed to configure the frontend watcher";
+        watcher.configure(notify::Config::PreciseEvents(false)).context(configure_context)?;
+        watcher.configure(notify::Config::NoticeEvents(false)).context(configure_context)?;
+        watcher.configure(notify::Config::OngoingEvents(None)).context(configure_context)?;
+
         for path in paths {
             watcher.watch(&path, RecursiveMode::Recursive).unwrap();
         }
-        build_frontend(release, cache_busting);
-        frontend_build_finished_sender.send(()).unwrap();
-        loop {
-            match receiver.recv() {
-                Ok(event) => match event {
-                    DebouncedEvent::NoticeWrite(_) | DebouncedEvent::NoticeRemove(_) => (),
-                    DebouncedEvent::Error(notify::Error::Generic(error), _)
-                        if error == "ctrl-c" =>
-                    {
-                        break
-                    }
-                    _ => {
-                        println!("Build frontend");
-                        if build_frontend(release, cache_busting) {
-                            println!("Reload frontend");
-                            attohttpc::post(&reload_url)
-                                .danger_accept_invalid_certs(true)
-                                .send()
-                                .unwrap();
-                        }
-                    }
-                },
-                Err(error) => panic!("watch frontend error: {:?}", error),
+
+        let (debounced_sender, debounced_receiver) = mpsc::unbounded_channel();
+
+        spawn(async move {
+            let task = None::<JoinHandle<()>>;
+            while receiver.recv().await.is_some() {
+                if let Some(task) = task {
+                    task.abort();
+                }
+                task = Some(spawn(async move {
+                    sleep(Duration::from_millis(100)).await; 
+                    debounced_sender.send(());
+                }));
+            }
+        });
+
+        while debounced_receiver.recv().await.is_some() {
+            println!("Build frontend");
+            if build_frontend(release, cache_busting).await.is_ok() {
+                println!("Reload frontend");
+                attohttpc::post(&reload_url)
+                    .danger_accept_invalid_certs(true)
+                    .send()
+                    .context("Failed to send the frontend reload request")?;
             }
         }
+        Ok(())
     })
 }
 
