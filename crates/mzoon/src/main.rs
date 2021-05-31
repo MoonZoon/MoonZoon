@@ -2,6 +2,7 @@ use notify::DebouncedEvent;
 use std::env;
 use std::sync::mpsc::channel;
 use structopt::StructOpt;
+use anyhow::Result;
 
 mod config;
 mod frontend;
@@ -31,7 +32,7 @@ enum Opt {
 // Run from example:  cargo run --manifest-path "../../crates/mzoon/Cargo.toml" start
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<()> {
     let (frontend_sender, frontend_receiver) = channel();
     let (backend_sender, backend_receiver) = channel();
     ctrlc::set_handler({
@@ -52,12 +53,12 @@ async fn main() {
     match opt {
         Opt::New { .. } => {}
         Opt::Start { release } => {
-            let config = load_config();
+            let config = Config::load_from_moonzoon_toml().await?;
             set_env_vars(&config, release);
 
-            check_wasm_pack();
+            check_wasm_pack()?;
             if config.https {
-                generate_certificate();
+                generate_certificate_if_not_present().await?;
             }
 
             let (frontend_build_finished_sender, frontend_build_finished_receiver) = channel();
@@ -84,23 +85,20 @@ async fn main() {
             backend_watcher_handle.join().unwrap();
         }
         Opt::Build { release } => {
-            let config = load_config();
+            let config = Config::load_from_moonzoon_toml().await?;
             set_env_vars(&config, release);
 
-            check_wasm_pack();
+            check_wasm_pack()?;
+            
             if config.https {
-                generate_certificate();
+                generate_certificate_if_not_present().await?;
             }
 
-            if !build_frontend(release, config.cache_busting) {
-                panic!("Build frontend failed!");
-            }
-
-            if !build_backend(release) {
-                panic!("Build backend failed!");
-            }
+            build_frontend(release, config.cache_busting).await?;
+            build_backend(release).await?;
         }
     }
+    Ok(())
 }
 
 fn set_env_vars(config: &Config, release: bool) {
