@@ -1,6 +1,6 @@
 use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
 use rcgen::{Certificate, CertificateParams};
-use std::fs;
+use tokio::{fs, try_join};
 use std::path::Path;
 use std::process::{Child, Command};
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -8,12 +8,13 @@ use std::thread::{self, JoinHandle};
 use std::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
+use anyhow::{bail, Context, Result};
 
-pub fn generate_certificate() {
+pub async fn generate_certificate_if_not_present() -> Result<()> {
     let public_pem_path = Path::new("backend/private/public.pem");
     let private_pem_path = Path::new("backend/private/private.pem");
     if public_pem_path.is_file() && private_pem_path.is_file() {
-        return;
+        return Ok(());
     }
     println!("Generate TLS certificate");
 
@@ -31,8 +32,11 @@ pub fn generate_certificate() {
 
     let public_pem = certificate.serialize_pem().unwrap();
     let private_pem = certificate.serialize_private_key_pem();
-    fs::write(public_pem_path, public_pem).unwrap();
-    fs::write(private_pem_path, private_pem).unwrap();
+
+    try_join!(
+        async { fs::write(public_pem_path, public_pem).await.context("Failed to write the public key") },
+        async { fs::write(private_pem_path, private_pem).await.context("Failed to write the private key") },
+    ).map(|_| ())
 }
 
 pub enum BackendCommand {
@@ -114,12 +118,13 @@ pub fn start_backend_watcher(
     })
 }
 
-pub fn generate_backend_build_id() {
+pub async fn generate_backend_build_id() -> Result<()> {
     fs::write(
         "backend/private/build_id",
         Uuid::new_v4().as_u128().to_string(),
     )
-    .unwrap();
+    .await
+    .context("Failed to write the backend build id")
 }
 
 pub fn build_and_run_backend(release: bool) -> Child {
@@ -130,7 +135,7 @@ pub fn build_and_run_backend(release: bool) -> Child {
     Command::new("cargo").args(&args).spawn().unwrap()
 }
 
-pub fn build_backend(release: bool) -> bool {
+pub async fn build_backend(release: bool) -> Result<()> {
     let mut args = vec!["build", "--package", "backend"];
     if release {
         args.push("--release");
@@ -138,10 +143,10 @@ pub fn build_backend(release: bool) -> bool {
     let success = Command::new("cargo")
         .args(&args)
         .status()
-        .unwrap()
+        .context("Failed to get frontend build status")?
         .success();
     if success {
-        generate_backend_build_id();
+        generate_backend_build_id().await?
     }
-    success
+    bail!("Failed to build backend")
 }
