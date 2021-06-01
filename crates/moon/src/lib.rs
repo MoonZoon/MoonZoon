@@ -104,16 +104,16 @@ where
             .app_data(sse.clone())
             .configure(service_config.clone())
             .service(
-                web::scope("api")
+                web::scope("_api")
                     .route(
                         "up_msg_handler",
                         web::post().to(up_msg_handler_responder::<UPH, UPHO>),
                     )
-                    .route("reload", web::post().to(reload_responder)),
+                    .route("reload", web::post().to(reload_responder))
+                    .service(Files::new("public", "public/"))
+                    .route("pkg/{file:.*}", web::get().to(pkg_responder))
+                    .route("sse", web::get().to(sse_responder))
             )
-            .service(Files::new("public", "public/"))
-            .route("pkg/{file:.*}", web::get().to(pkg_responder))
-            .route("sse", web::get().to(sse_responder))
             .route("*", web::get().to(frontend_responder::<FRB, FRBO>))
     });
 
@@ -284,10 +284,10 @@ mod tests {
         let app = test::init_service(
             App::new()
                 .data(shared_data)
-                .route("pkg/{file:.*}", web::get().to(pkg_responder)),
+                .route("_api/pkg/{file:.*}", web::get().to(pkg_responder)),
         )
         .await;
-        let req = test::TestRequest::get().uri("/pkg/index.css").to_request();
+        let req = test::TestRequest::get().uri("/_api/pkg/index.css").to_request();
 
         // ------ ACT ------
         let mut resp = test::call_service(&app, req).await;
@@ -321,12 +321,12 @@ mod tests {
         let app = test::init_service(
             App::new()
                 .data(shared_data)
-                .route("pkg/{file:.*}", web::get().to(pkg_responder)),
+                .route("_api/pkg/{file:.*}", web::get().to(pkg_responder)),
         )
         .await;
         let req = test::TestRequest::get()
             .insert_header((header::ACCEPT_ENCODING, ContentEncoding::Br.as_str()))
-            .uri("/pkg/index.css")
+            .uri("/_api/pkg/index.css")
             .to_request();
 
         // ------ ACT ------
@@ -369,12 +369,12 @@ mod tests {
         let app = test::init_service(
             App::new()
                 .data(shared_data)
-                .route("pkg/{file:.*}", web::get().to(pkg_responder)),
+                .route("_api/pkg/{file:.*}", web::get().to(pkg_responder)),
         )
         .await;
         let req = test::TestRequest::get()
             .insert_header((header::ACCEPT_ENCODING, ContentEncoding::Gzip.as_str()))
-            .uri("/pkg/index.css")
+            .uri("/_api/pkg/index.css")
             .to_request();
 
         // ------ ACT ------

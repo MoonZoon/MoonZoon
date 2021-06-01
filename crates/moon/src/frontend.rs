@@ -49,8 +49,8 @@ impl Frontend {
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
           <title>{title}</title>
-          <link rel="preload" href="/pkg/frontend_bg_{frontend_build_id}.wasm" as="fetch" type="application/wasm" crossorigin>
-          <link rel="modulepreload" href="/pkg/frontend_{frontend_build_id}.js" crossorigin>
+          <link rel="preload" href="/_api/pkg/frontend_bg_{frontend_build_id}.wasm" as="fetch" type="application/wasm" crossorigin>
+          <link rel="modulepreload" href="/_api/pkg/frontend_{frontend_build_id}.js" crossorigin>
           {append_to_head}
         </head>
     
@@ -63,8 +63,8 @@ impl Frontend {
           </script>
     
           <script type="module">
-            import init from '/pkg/frontend_{frontend_build_id}.js';
-            init('/pkg/frontend_bg_{frontend_build_id}.wasm');
+            import init from '/_api/pkg/frontend_{frontend_build_id}.js';
+            init('/_api/pkg/frontend_bg_{frontend_build_id}.wasm');
           </script>
         </body>
         
