@@ -85,7 +85,7 @@ async fn main() -> Result<()> {
                 result = frontend_watcher_handle => result??,
                 result = backend_watcher_handle => result??,
             }
-            println!("mzoon shut down");
+            println!("Stop mzoon");
         }
         Opt::Build { release } => {
             let config = Config::load_from_moonzoon_toml().await?;
@@ -117,4 +117,5 @@ fn set_env_vars(config: &Config, release: bool) {
     env::set_var("REDIRECT_ENABLED", config.redirect.enabled.to_string());
 
     env::set_var("COMPRESSED_PKG", release.to_string());
+    env::set_var("RUST_LOG", "actix_web=warn");
 }

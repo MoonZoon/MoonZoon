@@ -1,8 +1,9 @@
 use actix_files::{Files, NamedFile};
 use actix_http::http::{header, ContentEncoding, StatusCode};
-use actix_web::http::header::ContentType;
-use actix_web::middleware::Condition;
-use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder};
+use actix_web::http::header::{ContentType, CacheControl, CacheDirective};
+use actix_web::middleware::{Condition, Logger, ErrorHandlers, ErrorHandlerResponse};
+use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder, Result};
+use actix_web::dev::ServiceResponse;
 use parking_lot::Mutex;
 use rustls::internal::pemfile::{certs, pkcs8_private_keys};
 use rustls::{NoClientAuth, ServerConfig as RustlsServerConfig};
@@ -44,8 +45,8 @@ pub struct UpMsgRequest {}
 
 #[derive(Copy, Clone)]
 struct SharedData {
-    compressed_pkg: bool,
     backend_build_id: u128,
+    compressed_pkg: bool,
     pkg_path: &'static str,
 }
 
@@ -75,6 +76,8 @@ where
 {
     // ------ Init ------
 
+    env_logger::init_from_env(env_logger::Env::new().default_filter_or("warn"));
+
     let config = Config::from_env_vars();
     println!("Moon config: {:#?}", config);
 
@@ -97,7 +100,14 @@ where
 
     let mut server = HttpServer::new(move || {
         App::new()
+            // https://docs.rs/actix-web/4.0.0-beta.6/actix_web/middleware/struct.Logger.html
+            .wrap(Logger::new(r#""%r" %s %b "%{Referer}i" %T"#))
             .wrap(Condition::new(redirect_enabled, redirect))
+            .wrap(
+                ErrorHandlers::new()
+                    .handler(StatusCode::INTERNAL_SERVER_ERROR, internal_server_error_handler)
+                    .handler(StatusCode::NOT_FOUND, render_not_found_handler)
+            )
             .data(shared_data)
             .data(frontend.clone())
             .data(up_msg_handler.clone())
@@ -113,7 +123,7 @@ where
                     .service(Files::new("public", "public/"))
                     .route("pkg/{file:.*}", web::get().to(pkg_responder))
                     .route("sse", web::get().to(sse_responder))
-                    .route("ping", web::to(|| async { "Pong" }))
+                    .route("ping", web::to(|| async { "pong" }))
             )
             .route("*", web::get().to(frontend_responder::<FRB, FRBO>))
     });
@@ -141,7 +151,7 @@ where
     lazy_message_writer.write_all()?;
     server.await?;
 
-    Ok(println!("Moon shut down"))
+    Ok(println!("Stop Moon"))
 }
 
 async fn backend_build_id() -> u128 {
@@ -163,6 +173,21 @@ fn rustls_server_config() -> io::Result<RustlsServerConfig> {
         .expect("private key is invalid");
     Ok(config)
 }
+
+// ------ ------
+// ErrorHandlers
+// ------ ------
+
+fn internal_server_error_handler<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
+    eprintln!("INTERNAL_SERVER_ERROR: {:#?}", res.request().uri());
+    Ok(ErrorHandlerResponse::Response(res))
+}
+
+fn render_not_found_handler<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
+    eprintln!("NOT_FOUND: {:#?}", res.request().uri());
+    Ok(ErrorHandlerResponse::Response(res))
+}
+
 
 // ------ ------
 //  Responders
@@ -218,10 +243,15 @@ async fn pkg_responder(
 
     let mut responder = named_file
         .set_content_type(mime)
-        .with_status(StatusCode::OK);
+        .prefer_utf8(true)
+        .use_etag(false)
+        .use_last_modified(false)
+        .with_header(CacheControl(vec![CacheDirective::MaxAge(31536000)]));
+
     if let Some(encoding) = encoding {
         responder = responder.with_header(encoding);
     }
+
     Ok::<_, Error>(responder)
 }
 
