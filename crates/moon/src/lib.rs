@@ -76,10 +76,10 @@ where
 {
     // ------ Init ------
 
-    env_logger::init_from_env(env_logger::Env::new().default_filter_or("warn"));
-
     let config = Config::from_env_vars();
     println!("Moon config: {:#?}", config);
+
+    env_logger::builder().filter_level(config.backend_log_level).init();
 
     let shared_data = SharedData {
         backend_build_id: backend_build_id().await,
