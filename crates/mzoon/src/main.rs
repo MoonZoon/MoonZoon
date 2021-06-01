@@ -1,6 +1,6 @@
 use std::env;
 use structopt::StructOpt;
-use anyhow::Result;
+use anyhow::{Context, Result};
 use tokio::{signal, select};
 use tokio::time::Duration;
 use std::process::Child;
@@ -21,8 +21,8 @@ enum Opt {
     Start {
         #[structopt(short, long)]
         release: bool,
-        // #[structopt(short, long)]
-        // open: bool
+        #[structopt(short, long)]
+        open: bool
     },
     Build {
         #[structopt(short, long)]
@@ -39,7 +39,7 @@ async fn main() -> Result<()> {
 
     match opt {
         Opt::New { .. } => {}
-        Opt::Start { release } => {
+        Opt::Start { release, open } => {
             let config = Config::load_from_moonzoon_toml().await?;
             set_env_vars(&config, release);
 
@@ -62,12 +62,15 @@ async fn main() -> Result<()> {
             } else {
                 match run_backend(release) {
                     Ok(backend) => {
-                        // if open {
-                        //     open = false;
-                        //     let address = "https://127.0.0.1:8443";
-                        //     println!("Open {} in your default web browser", "https://127.0.0.1:8443");
-                        //     open::that(address).unwrap();
-                        // }
+                        if open {
+                            let url = format!(
+                                "{protocol}://localhost:{port}", 
+                                protocol = if config.https { "https" } else { "http" },
+                                port = config.port
+                            );
+                            println!("Open {} in the default web browser", url);
+                            open::that(url).context("Failed to open the URL in the browser")?;
+                        }
                         server = Some(backend)
                     }
                     Err(error) => {
