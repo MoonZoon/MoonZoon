@@ -1,4 +1,4 @@
-var uri = location.protocol + '//' + location.host + '/sse';
+var uri = location.protocol + '//' + location.host + '/_api/sse';
 var sse = new ReconnectingEventSource(uri);
 var backendBuildId = null;
 sse.addEventListener("backend_build_id", function (msg) {
