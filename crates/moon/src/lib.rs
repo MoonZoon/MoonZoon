@@ -113,6 +113,7 @@ where
                     .service(Files::new("public", "public/"))
                     .route("pkg/{file:.*}", web::get().to(pkg_responder))
                     .route("sse", web::get().to(sse_responder))
+                    .route("ping", web::to(|| async { "Pong" }))
             )
             .route("*", web::get().to(frontend_responder::<FRB, FRBO>))
     });
