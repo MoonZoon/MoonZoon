@@ -1,12 +1,14 @@
 use serde::Deserialize;
 use anyhow::{Context, Result};
 use tokio::fs;
+use log::LevelFilter;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
     pub port: u16,
     pub https: bool,
     pub cache_busting: bool,
+    pub backend_log_level: LevelFilter,
     pub redirect: Redirect,
     pub watch: Watch,
 }

@@ -1,5 +1,6 @@
 use crate::from_env_vars::FromEnvVars;
 use serde::Deserialize;
+use log::LevelFilter;
 
 #[derive(Debug, Deserialize)]
 #[serde(default)]
@@ -10,6 +11,8 @@ pub struct Config {
     pub https: bool,
     // COMPRESSED_PKG
     pub compressed_pkg: bool,
+    // BACKEND_LOG_LEVEL
+    pub backend_log_level: LevelFilter,
 
     #[serde(default = "Redirect::from_env_vars")]
     pub redirect: Redirect,
@@ -25,6 +28,7 @@ impl Default for Config {
             port: 8080,
             https: false,
             compressed_pkg: true,
+            backend_log_level: LevelFilter::Warn,
             redirect: Redirect::default(),
         }
     }

@@ -998,6 +998,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51b9bbe6c47d51fc3e1a9b945965946b4c44142ab8792c50835a980d362c2710"
 dependencies = [
  "cfg-if 1.0.0",
+ "serde",
 ]
 
 [[package]]
@@ -1077,6 +1078,7 @@ dependencies = [
  "env_logger",
  "envy",
  "futures",
+ "log",
  "mime",
  "mime_guess",
  "parking_lot",
@@ -1097,6 +1099,7 @@ dependencies = [
  "brotli",
  "cargo_metadata",
  "flate2",
+ "log",
  "notify",
  "open",
  "parking_lot",

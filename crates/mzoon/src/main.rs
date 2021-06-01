@@ -115,7 +115,8 @@ fn set_env_vars(config: &Config, release: bool) {
     env::set_var("REDIRECT_PORT", config.redirect.port.to_string());
     // enabled = true
     env::set_var("REDIRECT_ENABLED", config.redirect.enabled.to_string());
+    // backend_log_level = "warn"
+    env::set_var("BACKEND_LOG_LEVEL", config.backend_log_level.as_str());
 
     env::set_var("COMPRESSED_PKG", release.to_string());
-    env::set_var("RUST_LOG", "actix_web=warn");
 }
