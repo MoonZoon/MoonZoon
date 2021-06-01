@@ -70,11 +70,11 @@ impl Frontend {
         
         </html>"#,
             title = self.title,
+            append_to_head = self.append_to_head,
             body_content = self.body_content,
             reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"),
             sse = include_str!("../js/sse.js"),
             frontend_build_id = frontend_build_id,
-            append_to_head = self.append_to_head
         )
     }
 }
