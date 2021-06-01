@@ -246,6 +246,7 @@ async fn pkg_responder(
         .prefer_utf8(true)
         .use_etag(false)
         .use_last_modified(false)
+        .disable_content_disposition()
         .with_header(CacheControl(vec![CacheDirective::MaxAge(31536000)]));
 
     if let Some(encoding) = encoding {
@@ -331,7 +332,7 @@ mod tests {
                 .unwrap()
                 .to_str()
                 .unwrap(),
-            mime::TEXT_CSS.to_string()
+            mime::TEXT_CSS_UTF_8.to_string()
         );
         assert_eq!(
             resp.take_body().into_future().await.0.unwrap().unwrap(),
@@ -371,7 +372,7 @@ mod tests {
                 .unwrap()
                 .to_str()
                 .unwrap(),
-            mime::TEXT_CSS.to_string()
+            mime::TEXT_CSS_UTF_8.to_string()
         );
         assert_eq!(
             resp.headers()
@@ -419,7 +420,7 @@ mod tests {
                 .unwrap()
                 .to_str()
                 .unwrap(),
-            mime::TEXT_CSS.to_string()
+            mime::TEXT_CSS_UTF_8.to_string()
         );
         assert_eq!(
             resp.headers()
