@@ -1,19 +1,19 @@
-use brotli::{enc::backward_references::BrotliEncoderParams, BrotliCompress};
-use flate2::bufread::GzEncoder;
-use flate2::Compression;
 use notify::{RecursiveMode, immediate_watcher, Watcher};
-use tokio::fs::{self, DirEntry, File};
+use tokio::fs;
+use tokio::io::AsyncReadExt;
 use tokio::{try_join, join, spawn};
 use tokio::task::JoinHandle;
 use tokio::time::{Duration, sleep};
 use tokio::sync::mpsc;
-use std::io::{self, BufReader, Read};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use uuid::Uuid;
 use anyhow::{bail, Context, Result};
 use std::sync::Arc;
+use futures::TryStreamExt;
 use crate::config::Config;
+use crate::file_compressor::{BrotliFileCompressor, GzipFileCompressor, FileCompressor};
+use crate::visit_files::visit_files;
 
 pub fn check_wasm_pack() -> Result<()> {
     let status = Command::new("wasm-pack")
@@ -159,56 +159,33 @@ pub async fn build_frontend(release: bool, cache_busting: bool) -> Result<()> {
             async { fs::rename(wasm_file_path, &new_wasm_file_path).await.context("Failed to rename the Wasm file in the pkg directory") },
             async { fs::rename(js_file_path, &new_js_file_path).await.context("Failed to rename the JS file in the pkg directory") },
             async { fs::write("frontend/pkg/build_id", build_id.to_string()).await.context("Failed to write the frontend build id") },
-        ).map(|_|())?;
+        )?;
 
         if release {
-            compress_pkg(&new_wasm_file_path, &new_js_file_path);
+            compress_pkg(&new_wasm_file_path, &new_js_file_path).await?;
         }
         return Ok(println!("Frontend built"))
     }
     bail!("Failed to build frontend")
 }
 
-pub fn compress_pkg(wasm_file_path: &Path, js_file_path: &Path) {
-    compress_file(wasm_file_path);
-    compress_file(js_file_path);
+pub async fn compress_pkg(wasm_file_path: &Path, js_file_path: &Path) -> Result<()> {
+    create_compressed_files(wasm_file_path).await?;
+    create_compressed_files(js_file_path).await?;
 
-    visit_dirs(
-        Path::new("frontend/pkg/snippets"),
-        &mut |entry: &std::fs::DirEntry| {
-            compress_file(&entry.path());
-        },
-    )
-    .unwrap();
+    visit_files("frontend/pkg/snippets")
+        .try_for_each_concurrent(None, |file| create_compressed_files(file.path()))
+        .await
 }
 
-// @TODO refactor with https://crates.io/crates/async-compression
-pub fn compress_file(file_path: &Path) {
-    BrotliCompress(
-        &mut std::fs::File::open(&file_path).unwrap(),
-        &mut std::fs::File::create(&format!("{}.br", file_path.to_str().unwrap())).unwrap(),
-        &BrotliEncoderParams::default(),
-    )
-    .unwrap();
+pub async fn create_compressed_files(file_path: impl AsRef<Path>) -> Result<()> {
+    let mut content = Vec::new();
+    fs::File::open(&file_path).await?.read_to_end(&mut content).await?;
+    let content = Arc::new(content);
 
-    let file_reader = BufReader::new(std::fs::File::open(&file_path).unwrap());
-    let mut gzip_encoder = GzEncoder::new(file_reader, Compression::best());
-    let mut buffer = Vec::new();
-    gzip_encoder.read_to_end(&mut buffer).unwrap();
-    std::fs::write(&format!("{}.gz", file_path.to_str().unwrap()), buffer).unwrap();
-}
-
-pub fn visit_dirs(dir: &Path, cb: &mut dyn FnMut(&std::fs::DirEntry)) -> io::Result<()> {
-    if dir.is_dir() {
-        for entry in std::fs::read_dir(dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            if path.is_dir() {
-                visit_dirs(&path, cb)?;
-            } else {
-                cb(&entry);
-            }
-        }
-    }
+    try_join!(
+        async { BrotliFileCompressor::compress_file(Arc::clone(&content), file_path.as_ref(), "br").await? }, 
+        async { GzipFileCompressor::compress_file(Arc::clone(&content), file_path.as_ref(), "gz").await? },
+    ).context("Failed to create compressed files")?;
     Ok(())
 }
