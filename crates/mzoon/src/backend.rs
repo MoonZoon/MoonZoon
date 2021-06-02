@@ -1,62 +1,11 @@
 use rcgen::{Certificate, CertificateParams};
 use std::path::Path;
 use std::process::{Command, Child};
-use tokio::{fs, try_join, spawn};
-use tokio::task::JoinHandle;
-use tokio::time::Duration;
+use tokio::{fs, try_join};
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 use anyhow::{bail, Context, Result};
-use std::sync::Arc;
-use parking_lot::Mutex;
 use cargo_metadata::MetadataCommand;
-use crate::config::Config;
-use crate::project_watcher::ProjectWatcher;
-
-pub async fn start_backend_watcher(config: &Config, release: bool, debounce_time: Duration, server: Option<Child>) -> Result<(ProjectWatcher, JoinHandle<Result<()>>)> {
-    let paths = config.watch.backend.clone();
-    let https = config.https;
-
-    let (watcher, mut debounced_receiver) = ProjectWatcher::start(paths, debounce_time)
-            .await
-            .context("Failed to start the backend project watcher")?;
-            
-    let task = spawn(async move {
-        let mut build_task = None::<JoinHandle<()>>;
-        let server = Arc::new(Mutex::new(server));
-
-        while debounced_receiver.recv().await.is_some() {
-            println!("Build backend");
-            if let Some(build_task) = build_task.take() {
-                build_task.abort();
-            }
-            if let Some(mut server) = server.lock().take() {
-                let _ = server.kill();
-            }
-            let server = Arc::clone(&server);
-            build_task = Some(spawn(async move {
-                match build_backend(release, https).await {
-                    Ok(()) => {
-                        match run_backend(release) {
-                            Ok(backend) => { 
-                                server.lock().replace(backend);
-                            },
-                            Err(error) => {
-                                eprintln!("{}", error);
-                            }
-                        }
-                    }
-                    Err(error) => {
-                        eprintln!("{}", error);
-                    }
-                }
-            }));
-        }
-        Ok(())
-    });
-
-    Ok((watcher, task))
-}
 
 pub async fn build_backend(release: bool, https: bool) -> Result<()> {
     println!("Building backend...");

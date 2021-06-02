@@ -1,62 +1,14 @@
 use tokio::fs;
 use tokio::io::AsyncReadExt;
-use tokio::{try_join, join, spawn};
-use tokio::task::JoinHandle;
-use tokio::time::Duration;
+use tokio::{try_join, join};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use uuid::Uuid;
 use anyhow::{bail, Context, Result};
 use std::sync::Arc;
 use futures::TryStreamExt;
-use crate::config::Config;
 use crate::file_compressor::{BrotliFileCompressor, GzipFileCompressor, FileCompressor};
 use crate::visit_files::visit_files;
-use crate::project_watcher::ProjectWatcher;
-
-pub async fn start_frontend_watcher(config: &Config, release: bool, debounce_time: Duration) -> Result<(ProjectWatcher, JoinHandle<Result<()>>)> {
-    let reload_url = Arc::new(format!(
-        "{protocol}://localhost:{port}/_api/reload",
-        protocol = if config.https { "https" } else { "http" },
-        port = config.port
-    ));
-    let cache_busting = config.cache_busting;
-    let paths = config.watch.frontend.clone();
-
-    let (watcher, mut debounced_receiver) = ProjectWatcher::start(paths, debounce_time)
-            .await
-            .context("Failed to start the frontend project watcher")?;
-
-    let task = spawn(async move {
-        let mut build_task = None::<JoinHandle<()>>;
-        while debounced_receiver.recv().await.is_some() {
-            println!("Build frontend");
-            if let Some(build_task) = build_task.take() {
-                build_task.abort();
-            }
-            let reload_url = Arc::clone(&reload_url);
-            build_task = Some(spawn(async move {
-                match build_frontend(release, cache_busting).await {
-                    Ok(()) => {
-                        println!("Reload frontend");
-                        let response = attohttpc::post(reload_url.as_str())
-                            .danger_accept_invalid_certs(true)
-                            .send();
-                        if let Err(error) = response {
-                            eprintln!("Failed to send the frontend reload request: {:#?}", error);
-                        }
-                    }
-                    Err(error) => {
-                        eprintln!("{}", error);
-                    }
-                }
-            }));
-        }
-        Ok(())
-    });
-    
-    Ok((watcher, task))
-}
 
 pub async fn build_frontend(release: bool, cache_busting: bool) -> Result<()> {
     println!("Building frontend...");
