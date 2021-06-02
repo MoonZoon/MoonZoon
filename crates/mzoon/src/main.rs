@@ -1,28 +1,21 @@
-use std::env;
 use structopt::StructOpt;
-use anyhow::{Context, Result};
-use tokio::{signal, time::Duration, join};
-use std::process::Child;
+use anyhow::Result;
 
 mod config;
 mod frontend;
 mod backend;
 mod file_compressor;
 mod visit_files;
-mod project_watcher;
-mod frontend_watcher;
-mod backend_watcher;
-
-use config::*;
-use frontend::*;
-use backend::*;
-use frontend_watcher::FrontendWatcher;
-use backend_watcher::BackendWatcher;
+mod watcher;
+mod set_env_vars;
+mod command;
 
 #[derive(Debug, StructOpt)]
 enum Opt {
     New {
         project_name: String,
+        #[structopt(short, long)]
+        here: bool
     },
     Start {
         #[structopt(short, long)]
@@ -36,82 +29,15 @@ enum Opt {
     },
 }
 
-// Run from example:  cargo run --manifest-path "../../crates/mzoon/Cargo.toml" start
-
 #[tokio::main]
 async fn main() -> Result<()> {
     let opt = Opt::from_args();
     println!("{:?}", opt);
 
     match opt {
-        Opt::New { .. } => {}
-        Opt::Start { release, open } => {
-            let config = Config::load_from_moonzoon_toml().await?;
-            set_env_vars(&config, release);
-
-            let debounce_time = Duration::from_millis(100);
-
-            if let Err(error) = build_frontend(release, config.cache_busting).await {
-                eprintln!("{}", error);
-            }
-            let frontend_watcher = FrontendWatcher::start(&config, release, debounce_time).await?;
-            
-            let mut server = None::<Child>;
-            if let Err(error) = build_backend(release, config.https).await {
-                eprintln!("{}", error);
-            } else {
-                match run_backend(release) {
-                    Ok(backend) => {
-                        if open {
-                            let url = format!(
-                                "{protocol}://localhost:{port}", 
-                                protocol = if config.https { "https" } else { "http" },
-                                port = config.port
-                            );
-                            println!("Open {} in the default web browser", url);
-                            open::that(url).context("Failed to open the URL in the browser")?;
-                        }
-                        server = Some(backend)
-                    }
-                    Err(error) => {
-                        eprintln!("{}", error);
-                    }
-                }
-            }
-            let backend_watcher = BackendWatcher::start(&config, release, debounce_time, server).await?;
-
-            signal::ctrl_c().await?;
-            println!("Stopping mzoon...");
-            let _ = join!(
-                frontend_watcher.stop(),
-                backend_watcher.stop(),
-            );
-            println!("mzoon stopped");
-        }
-        Opt::Build { release } => {
-            let config = Config::load_from_moonzoon_toml().await?;
-            set_env_vars(&config, release);
-
-            build_frontend(release, config.cache_busting).await?;
-            build_backend(release, config.https).await?;
-        }
+        Opt::New { project_name, here } => command::new(project_name, here).await?,
+        Opt::Start { release, open } => command::start(release, open).await?,
+        Opt::Build { release } => command::build(release).await?,
     }
     Ok(())
-}
-
-fn set_env_vars(config: &Config, release: bool) {
-    // port = 8443
-    env::set_var("PORT", config.port.to_string());
-    // https = true
-    env::set_var("HTTPS", config.https.to_string());
-    // backend_log_level = "warn"
-    env::set_var("BACKEND_LOG_LEVEL", config.backend_log_level.as_str());
-
-    // [redirect]
-    // port = 8080
-    env::set_var("REDIRECT_PORT", config.redirect.port.to_string());
-    // enabled = true
-    env::set_var("REDIRECT_ENABLED", config.redirect.enabled.to_string());
-
-    env::set_var("COMPRESSED_PKG", release.to_string());
 }

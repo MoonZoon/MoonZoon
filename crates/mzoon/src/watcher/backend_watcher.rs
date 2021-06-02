@@ -3,7 +3,7 @@ use tokio::{spawn, task::JoinHandle, time::Duration};
 use parking_lot::Mutex;
 use std::sync::Arc;
 use std::process::Child;
-use crate::project_watcher::ProjectWatcher;
+use super::project_watcher::ProjectWatcher;
 use crate::config::Config;
 use crate::backend::{build_backend, run_backend};
 

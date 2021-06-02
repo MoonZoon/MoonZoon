@@ -7,6 +7,8 @@ use uuid::Uuid;
 use anyhow::{bail, Context, Result};
 use cargo_metadata::MetadataCommand;
 
+// -- public --
+
 pub async fn build_backend(release: bool, https: bool) -> Result<()> {
     println!("Building backend...");
 
@@ -48,7 +50,9 @@ pub fn run_backend(release: bool) -> Result<Child> {
     Command::new(target_directory).spawn().context("Failed to run backend")
 }
 
-pub async fn generate_backend_build_id() -> Result<()> {
+// -- private --
+
+async fn generate_backend_build_id() -> Result<()> {
     fs::write(
         "backend/private/build_id",
         Uuid::new_v4().as_u128().to_string(),
