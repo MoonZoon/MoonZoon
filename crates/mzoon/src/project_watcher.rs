@@ -11,7 +11,7 @@ pub struct ProjectWatcher {
 }
 
 impl ProjectWatcher {
-    pub async fn start(paths: Vec<String>, debounce_time: Duration) -> Result<(Self, UnboundedReceiver<()>)>  {
+    pub async fn start(paths: &[String], debounce_time: Duration) -> Result<(Self, UnboundedReceiver<()>)>  {
         let (sender, mut receiver) = mpsc::unbounded_channel();
     
         let mut watcher = immediate_watcher(move |event| {

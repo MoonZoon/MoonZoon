@@ -10,10 +10,14 @@ mod backend;
 mod file_compressor;
 mod visit_files;
 mod project_watcher;
+mod frontend_watcher;
+mod backend_watcher;
 
 use config::*;
 use frontend::*;
 use backend::*;
+use frontend_watcher::FrontendWatcher;
+use backend_watcher::BackendWatcher;
 
 #[derive(Debug, StructOpt)]
 enum Opt {
@@ -50,7 +54,7 @@ async fn main() -> Result<()> {
             if let Err(error) = build_frontend(release, config.cache_busting).await {
                 eprintln!("{}", error);
             }
-            let (frontend_watcher, frontend_watcher_handle) = start_frontend_watcher(&config, release, debounce_time).await?;
+            let frontend_watcher = FrontendWatcher::start(&config, release, debounce_time).await?;
             
             let mut server = None::<Child>;
             if let Err(error) = build_backend(release, config.https).await {
@@ -74,15 +78,13 @@ async fn main() -> Result<()> {
                     }
                 }
             }
-            let (backend_watcher, backend_watcher_handle) = start_backend_watcher(&config, release, debounce_time, server).await?;
+            let backend_watcher = BackendWatcher::start(&config, release, debounce_time, server).await?;
 
             signal::ctrl_c().await?;
             println!("Stopping mzoon...");
             let _ = join!(
                 frontend_watcher.stop(),
                 backend_watcher.stop(),
-                frontend_watcher_handle,
-                backend_watcher_handle,
             );
             println!("mzoon stopped");
         }
