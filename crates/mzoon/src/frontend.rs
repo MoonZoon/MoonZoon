@@ -14,31 +14,20 @@ use crate::file_compressor::{BrotliFileCompressor, GzipFileCompressor, FileCompr
 use crate::visit_files::visit_files;
 use crate::project_watcher::ProjectWatcher;
 
-pub fn check_wasm_pack() -> Result<()> {
-    let status = Command::new("wasm-pack")
-        .args(&["-V"])
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status();
-    match status {
-        Ok(status) if status.success() => Ok(()),
-        _ => bail!("Cannot find `wasm-pack`! Please install it by `cargo install wasm-pack` or download/install pre-built binaries into a globally available directory."),
-    }
-}
-
-pub fn start_frontend_watcher(config: &Config, release: bool, debounce_time: Duration) -> JoinHandle<Result<()>> {
+pub async fn start_frontend_watcher(config: &Config, release: bool, debounce_time: Duration) -> Result<(ProjectWatcher, JoinHandle<Result<()>>)> {
     let reload_url = Arc::new(format!(
-        "{protocol}://localhost:{port}/api/reload",
+        "{protocol}://localhost:{port}/_api/reload",
         protocol = if config.https { "https" } else { "http" },
         port = config.port
     ));
     let cache_busting = config.cache_busting;
     let paths = config.watch.frontend.clone();
 
-    spawn(async move {
-        let project_watcher = ProjectWatcher::new(paths, debounce_time);
-        let mut debounced_receiver = project_watcher.start().await?;
+    let (watcher, mut debounced_receiver) = ProjectWatcher::start(paths, debounce_time)
+            .await
+            .context("Failed to start the frontend project watcher")?;
 
+    let task = spawn(async move {
         let mut build_task = None::<JoinHandle<()>>;
         while debounced_receiver.recv().await.is_some() {
             println!("Build frontend");
@@ -63,13 +52,16 @@ pub fn start_frontend_watcher(config: &Config, release: bool, debounce_time: Dur
                 }
             }));
         }
-        
         Ok(())
-    })
+    });
+    
+    Ok((watcher, task))
 }
 
 pub async fn build_frontend(release: bool, cache_busting: bool) -> Result<()> {
     println!("Building frontend...");
+
+    check_wasm_pack()?;
 
     let old_build_id = fs::read_to_string("frontend/pkg/build_id")
         .await
@@ -132,7 +124,19 @@ pub async fn build_frontend(release: bool, cache_busting: bool) -> Result<()> {
     bail!("Failed to build frontend")
 }
 
-pub async fn compress_pkg(wasm_file_path: &Path, js_file_path: &Path) -> Result<()> {
+fn check_wasm_pack() -> Result<()> {
+    let status = Command::new("wasm-pack")
+        .args(&["-V"])
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .status();
+    match status {
+        Ok(status) if status.success() => Ok(()),
+        _ => bail!("Cannot find `wasm-pack`! Please install it by `cargo install wasm-pack` or download/install pre-built binaries into a globally available directory."),
+    }
+}
+
+async fn compress_pkg(wasm_file_path: &Path, js_file_path: &Path) -> Result<()> {
     create_compressed_files(wasm_file_path).await?;
     create_compressed_files(js_file_path).await?;
 
@@ -141,7 +145,7 @@ pub async fn compress_pkg(wasm_file_path: &Path, js_file_path: &Path) -> Result<
         .await
 }
 
-pub async fn create_compressed_files(file_path: impl AsRef<Path>) -> Result<()> {
+async fn create_compressed_files(file_path: impl AsRef<Path>) -> Result<()> {
     let mut content = Vec::new();
     fs::File::open(&file_path).await?.read_to_end(&mut content).await?;
     let content = Arc::new(content);

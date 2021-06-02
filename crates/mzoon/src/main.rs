@@ -1,8 +1,7 @@
 use std::env;
 use structopt::StructOpt;
 use anyhow::{Context, Result};
-use tokio::{signal, select};
-use tokio::time::Duration;
+use tokio::{signal, time::Duration, join};
 use std::process::Child;
 
 mod config;
@@ -46,21 +45,15 @@ async fn main() -> Result<()> {
             let config = Config::load_from_moonzoon_toml().await?;
             set_env_vars(&config, release);
 
-            check_wasm_pack()?;
-
-            if config.https {
-                generate_certificate_if_not_present().await?;
-            }
-
             let debounce_time = Duration::from_millis(100);
 
             if let Err(error) = build_frontend(release, config.cache_busting).await {
                 eprintln!("{}", error);
             }
-            let frontend_watcher_handle = start_frontend_watcher(&config, release, debounce_time);
+            let (frontend_watcher, frontend_watcher_handle) = start_frontend_watcher(&config, release, debounce_time).await?;
             
             let mut server = None::<Child>;
-            if let Err(error) = build_backend(release).await {
+            if let Err(error) = build_backend(release, config.https).await {
                 eprintln!("{}", error);
             } else {
                 match run_backend(release) {
@@ -81,27 +74,24 @@ async fn main() -> Result<()> {
                     }
                 }
             }
-            let backend_watcher_handle = start_backend_watcher(&config, release, debounce_time, server);
+            let (backend_watcher, backend_watcher_handle) = start_backend_watcher(&config, release, debounce_time, server).await?;
 
-            select! {
-                result = signal::ctrl_c() => result?,
-                result = frontend_watcher_handle => result??,
-                result = backend_watcher_handle => result??,
-            }
-            println!("Stop mzoon");
+            signal::ctrl_c().await?;
+            println!("Stopping mzoon...");
+            let _ = join!(
+                frontend_watcher.stop(),
+                backend_watcher.stop(),
+                frontend_watcher_handle,
+                backend_watcher_handle,
+            );
+            println!("mzoon stopped");
         }
         Opt::Build { release } => {
             let config = Config::load_from_moonzoon_toml().await?;
             set_env_vars(&config, release);
 
-            check_wasm_pack()?;
-
-            if config.https {
-                generate_certificate_if_not_present().await?;
-            }
-
             build_frontend(release, config.cache_busting).await?;
-            build_backend(release).await?;
+            build_backend(release, config.https).await?;
         }
     }
     Ok(())
