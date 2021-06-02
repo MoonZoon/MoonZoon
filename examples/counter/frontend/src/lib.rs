@@ -19,7 +19,6 @@ fn root() -> impl Element {
         .item(Text::with_signal(counter().signal()))
         .item(Button::new().label("+").on_press(increment))
 }
-
 // ------ Alternative ------
 
 fn _root() -> impl Element {
