@@ -1,11 +1,9 @@
-use notify::{RecursiveMode, immediate_watcher, Watcher};
 use rcgen::{Certificate, CertificateParams};
 use std::path::Path;
 use std::process::{Command, Child};
 use tokio::{fs, try_join, spawn};
-use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
-use tokio::time::{Duration, sleep};
+use tokio::time::Duration;
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 use anyhow::{bail, Context, Result};
@@ -13,6 +11,7 @@ use std::sync::Arc;
 use parking_lot::Mutex;
 use cargo_metadata::MetadataCommand;
 use crate::config::Config;
+use crate::project_watcher::ProjectWatcher;
 
 pub async fn generate_certificate_if_not_present() -> Result<()> {
     let public_pem_path = Path::new("backend/private/public.pem");
@@ -47,44 +46,8 @@ pub fn start_backend_watcher(config: &Config, release: bool, debounce_time: Dura
     let paths = config.watch.backend.clone();
 
     spawn(async move {
-        let (sender, mut receiver) = mpsc::unbounded_channel();
-
-        let mut watcher = immediate_watcher(move |event| {
-            if let Err(error) = event {
-                return eprintln!("Backend watcher failed: {:#?}", error);
-            }
-            if let Err(error) = sender.send(()) {
-                return eprintln!("Failed to send with the backend sender: {:#?}", error);
-            }
-        }).context("Failed to create the backend watcher")?;
-    
-        let configure_context = "Failed to configure the backend watcher";
-        watcher.configure(notify::Config::PreciseEvents(false)).context(configure_context)?;
-        watcher.configure(notify::Config::NoticeEvents(false)).context(configure_context)?;
-        watcher.configure(notify::Config::OngoingEvents(None)).context(configure_context)?;
-    
-        for path in paths {
-            watcher.watch(&path, RecursiveMode::Recursive).context("Failed to set a backend watched path")?;
-        }
-    
-        let (debounced_sender, mut debounced_receiver) = mpsc::unbounded_channel();
-
-        spawn(async move {
-            let mut debounced_task = None::<JoinHandle<()>>;
-            let debounced_sender = Arc::new(debounced_sender);
-            while receiver.recv().await.is_some() {
-                if let Some(debounced_task) = debounced_task {
-                    debounced_task.abort();
-                }
-                let debounced_sender = Arc::clone(&debounced_sender);
-                debounced_task = Some(spawn(async move {
-                    sleep(debounce_time).await; 
-                    if let Err(error) = debounced_sender.send(()) {
-                        return eprintln!("Failed to send with the backend debounced sender: {:#?}", error);
-                    }
-                }));
-            }
-        });
+        let project_watcher = ProjectWatcher::new(paths, debounce_time);
+        let mut debounced_receiver = project_watcher.start().await?;
 
         let mut build_task = None::<JoinHandle<()>>;
         let server = Arc::new(Mutex::new(server));

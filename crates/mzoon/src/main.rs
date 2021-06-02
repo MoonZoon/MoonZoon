@@ -10,6 +10,7 @@ mod frontend;
 mod backend;
 mod file_compressor;
 mod visit_files;
+mod project_watcher;
 
 use config::*;
 use frontend::*;
