@@ -9,8 +9,6 @@ pub type BrotliFileCompressor = BrotliEncoder<Compat<fs::File>>;
 pub type GzipFileCompressor = GzipEncoder<Compat<fs::File>>;
 
 pub trait FileCompressor where Self: AsyncWrite + Unpin + Send + Sized {
-    fn with_quality(inner: Compat<fs::File>, level: Level) -> Self;
-
     fn compress_file(
         content: Arc<Vec<u8>>, 
         path: &Path, 
@@ -24,6 +22,8 @@ pub trait FileCompressor where Self: AsyncWrite + Unpin + Send + Sized {
             Ok(())
         })
     }
+
+    fn with_quality(inner: Compat<fs::File>, level: Level) -> Self;
 }
 
 impl FileCompressor for BrotliFileCompressor {

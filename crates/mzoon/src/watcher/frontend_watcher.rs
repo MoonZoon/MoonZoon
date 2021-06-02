@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use tokio::{spawn, task::JoinHandle, time::Duration};
 use std::sync::Arc;
-use crate::project_watcher::ProjectWatcher;
+use super::project_watcher::ProjectWatcher;
 use crate::config::Config;
 use crate::frontend::build_frontend;
 

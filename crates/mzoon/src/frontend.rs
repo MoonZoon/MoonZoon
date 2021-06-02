@@ -10,6 +10,8 @@ use futures::TryStreamExt;
 use crate::file_compressor::{BrotliFileCompressor, GzipFileCompressor, FileCompressor};
 use crate::visit_files::visit_files;
 
+// -- public --
+
 pub async fn build_frontend(release: bool, cache_busting: bool) -> Result<()> {
     println!("Building frontend...");
 
@@ -75,6 +77,8 @@ pub async fn build_frontend(release: bool, cache_busting: bool) -> Result<()> {
     }
     bail!("Failed to build frontend")
 }
+
+// -- private --
 
 fn check_wasm_pack() -> Result<()> {
     let status = Command::new("wasm-pack")
