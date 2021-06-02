@@ -287,9 +287,9 @@ dependencies = [
  "brotli",
  "flate2",
  "futures-core",
+ "futures-io",
  "memchr",
  "pin-project-lite",
- "tokio",
 ]
 
 [[package]]
@@ -764,10 +764,13 @@ version = "0.3.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1812c7ab8aedf8d6f2701a43e1243acdbcc2b36ab26e2ad421eb99ac963d96d1"
 dependencies = [
+ "futures-channel",
  "futures-core",
+ "futures-io",
  "futures-macro",
  "futures-sink",
  "futures-task",
+ "memchr",
  "pin-project-lite",
  "pin-utils",
  "proc-macro-hack",
@@ -1111,9 +1114,8 @@ dependencies = [
  "anyhow",
  "async-compression",
  "attohttpc",
- "brotli",
  "cargo_metadata",
- "flate2",
+ "futures",
  "log",
  "notify",
  "open",
@@ -1122,6 +1124,7 @@ dependencies = [
  "serde",
  "structopt",
  "tokio",
+ "tokio-util",
  "toml",
  "uuid",
 ]
@@ -1887,12 +1890,13 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.6.6"
+version = "0.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "940a12c99365c31ea8dd9ba04ec1be183ffe4920102bb7122c2f515437601e8e"
+checksum = "1caa0b0c8d94a049db56b5acf8cba99dc0623aab1b26d5b5f5e2d945846b3592"
 dependencies = [
  "bytes",
  "futures-core",
+ "futures-io",
  "futures-sink",
  "log",
  "pin-project-lite",

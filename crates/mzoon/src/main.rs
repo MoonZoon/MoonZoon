@@ -8,6 +8,8 @@ use std::process::Child;
 mod config;
 mod frontend;
 mod backend;
+mod file_compressor;
+mod visit_files;
 
 use config::*;
 use frontend::*;
@@ -109,14 +111,14 @@ fn set_env_vars(config: &Config, release: bool) {
     env::set_var("PORT", config.port.to_string());
     // https = true
     env::set_var("HTTPS", config.https.to_string());
+    // backend_log_level = "warn"
+    env::set_var("BACKEND_LOG_LEVEL", config.backend_log_level.as_str());
 
     // [redirect]
     // port = 8080
     env::set_var("REDIRECT_PORT", config.redirect.port.to_string());
     // enabled = true
     env::set_var("REDIRECT_ENABLED", config.redirect.enabled.to_string());
-    // backend_log_level = "warn"
-    env::set_var("BACKEND_LOG_LEVEL", config.backend_log_level.as_str());
 
     env::set_var("COMPRESSED_PKG", release.to_string());
 }
