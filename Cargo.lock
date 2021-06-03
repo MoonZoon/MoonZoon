@@ -279,20 +279,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "90c108c1a94380c89d2215d0ac54ce09796823cca0fd91b299cfff3b33e346fb"
 
 [[package]]
-name = "async-compression"
-version = "0.3.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5443ccbb270374a2b1055fc72da40e1f237809cd6bb0e97e66d264cd138473a6"
-dependencies = [
- "brotli",
- "flate2",
- "futures-core",
- "futures-io",
- "memchr",
- "pin-project-lite",
-]
-
-[[package]]
 name = "attohttpc"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1112,9 +1098,10 @@ name = "mzoon"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "async-compression",
  "attohttpc",
+ "brotli",
  "cargo_metadata",
+ "flate2",
  "futures",
  "log",
  "notify",
@@ -1124,7 +1111,6 @@ dependencies = [
  "serde",
  "structopt",
  "tokio",
- "tokio-util",
  "toml",
  "uuid",
 ]
@@ -1896,7 +1882,6 @@ checksum = "1caa0b0c8d94a049db56b5acf8cba99dc0623aab1b26d5b5f5e2d945846b3592"
 dependencies = [
  "bytes",
  "futures-core",
- "futures-io",
  "futures-sink",
  "log",
  "pin-project-lite",

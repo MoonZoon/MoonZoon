@@ -14,10 +14,10 @@ rcgen = { version = "0.8.9", features = ["pem"], default-features = false }
 open = { version = "1.7.0", default-features = false }
 uuid = { version = "0.8", features = ["v4"], default-features = false }
 tokio = { version = "1.6.1", features = ["rt-multi-thread", "macros", "fs", "signal", "sync", "time", "io-util"], default-features = false }
-tokio-util = { version = "0.6.7", features = ["compat"], default-features = false }
 anyhow = { version = "1.0.40", features = ["std"], default-features = false }
 cargo_metadata = { version = "0.13.1", default-features = false } 
 parking_lot = { version = "0.11.1", default-features = false }
 log = { version = "0.4.14", features = ["serde"], default-features = false }
-async-compression = { version = "0.3.8", features = ["brotli", "gzip", "futures-io"], default-features = false }
 futures = { version = "0.3.13", features = ["std"], default-features = false }
+brotli = { version = "3.3.0", features = ["std"], default-features = false }
+flate2 = { version = "1.0.20", features = ["rust_backend"], default-features = false }
