@@ -10,6 +10,5 @@ namespace = "default"
 description = "Run MZoon"
 command = "cargo"
 args = ["run", "--manifest-path", "../../../crates/mzoon/Cargo.toml", "${@}"]
-dependencies = ["default::install-wasm-pack"]
 
 

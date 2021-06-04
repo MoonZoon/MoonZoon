@@ -2,20 +2,20 @@ use tokio::fs;
 use tokio::io::AsyncReadExt;
 use tokio::{try_join, join};
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
 use uuid::Uuid;
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result};
 use std::sync::Arc;
 use futures::TryStreamExt;
 use crate::file_compressor::{BrotliFileCompressor, GzipFileCompressor, FileCompressor};
 use crate::visit_files::visit_files;
+use crate::wasm_pack::{check_or_install_wasm_pack, build_with_wasm_pack};
 
 // -- public --
 
 pub async fn build_frontend(release: bool, cache_busting: bool) -> Result<()> {
     println!("Building frontend...");
 
-    check_wasm_pack()?;
+    check_or_install_wasm_pack()?;
 
     let old_build_id = fs::read_to_string("frontend/pkg/build_id")
         .await
@@ -36,61 +36,31 @@ pub async fn build_frontend(release: bool, cache_busting: bool) -> Result<()> {
         );
     }
 
-    let mut args = vec![
-        "--log-level",
-        "warn",
-        "build",
-        "frontend",
-        "--target",
-        "web",
-        "--no-typescript",
-    ];
-    if !release {
-        args.push("--dev");
+    build_with_wasm_pack(release)?;
+
+    let build_id = cache_busting
+        .then(|| Uuid::new_v4().as_u128())
+        .unwrap_or_default();
+
+    let wasm_file_path = Path::new("frontend/pkg/frontend_bg.wasm");
+    let new_wasm_file_path =
+        PathBuf::from(format!("frontend/pkg/frontend_bg_{}.wasm", build_id));
+    let js_file_path = Path::new("frontend/pkg/frontend.js");
+    let new_js_file_path = PathBuf::from(format!("frontend/pkg/frontend_{}.js", build_id));
+
+    try_join!(
+        async { fs::rename(wasm_file_path, &new_wasm_file_path).await.context("Failed to rename the Wasm file in the pkg directory") },
+        async { fs::rename(js_file_path, &new_js_file_path).await.context("Failed to rename the JS file in the pkg directory") },
+        async { fs::write("frontend/pkg/build_id", build_id.to_string()).await.context("Failed to write the frontend build id") },
+    )?;
+
+    if release {
+        compress_pkg(&new_wasm_file_path, &new_js_file_path).await?;
     }
-    let success = Command::new("wasm-pack")
-        .args(&args)
-        .status()
-        .context("Failed to get frontend build status")?
-        .success();
-    if success {
-        let build_id = cache_busting
-            .then(|| Uuid::new_v4().as_u128())
-            .unwrap_or_default();
-
-        let wasm_file_path = Path::new("frontend/pkg/frontend_bg.wasm");
-        let new_wasm_file_path =
-            PathBuf::from(format!("frontend/pkg/frontend_bg_{}.wasm", build_id));
-        let js_file_path = Path::new("frontend/pkg/frontend.js");
-        let new_js_file_path = PathBuf::from(format!("frontend/pkg/frontend_{}.js", build_id));
-
-        try_join!(
-            async { fs::rename(wasm_file_path, &new_wasm_file_path).await.context("Failed to rename the Wasm file in the pkg directory") },
-            async { fs::rename(js_file_path, &new_js_file_path).await.context("Failed to rename the JS file in the pkg directory") },
-            async { fs::write("frontend/pkg/build_id", build_id.to_string()).await.context("Failed to write the frontend build id") },
-        )?;
-
-        if release {
-            compress_pkg(&new_wasm_file_path, &new_js_file_path).await?;
-        }
-        return Ok(println!("Frontend built"))
-    }
-    bail!("Failed to build frontend")
+    Ok(println!("Frontend built"))
 }
 
 // -- private --
-
-fn check_wasm_pack() -> Result<()> {
-    let status = Command::new("wasm-pack")
-        .args(&["-V"])
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status();
-    match status {
-        Ok(status) if status.success() => Ok(()),
-        _ => bail!("Cannot find `wasm-pack`! Please install it by `cargo install wasm-pack` or download/install pre-built binaries into a globally available directory."),
-    }
-}
 
 async fn compress_pkg(wasm_file_path: &Path, js_file_path: &Path) -> Result<()> {
     create_compressed_files(wasm_file_path).await?;

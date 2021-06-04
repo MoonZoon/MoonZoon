@@ -9,6 +9,7 @@ mod visit_files;
 mod watcher;
 mod set_env_vars;
 mod command;
+mod wasm_pack;
 
 #[derive(Debug, StructOpt)]
 enum Opt {
