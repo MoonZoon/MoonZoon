@@ -1,5 +1,4 @@
 use tokio::fs;
-use tokio::io::AsyncReadExt;
 use tokio::{try_join, join};
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
@@ -7,7 +6,7 @@ use anyhow::{Context, Result};
 use std::sync::Arc;
 use futures::TryStreamExt;
 use crate::wasm_pack::{check_or_install_wasm_pack, build_with_wasm_pack};
-use crate::helper::{BrotliFileCompressor, GzipFileCompressor, FileCompressor, visit_files};
+use crate::helper::{BrotliFileCompressor, GzipFileCompressor, FileCompressor, visit_files, AsyncReadToVec};
 
 // -- public --
 
@@ -72,13 +71,13 @@ async fn compress_pkg(wasm_file_path: &Path, js_file_path: &Path) -> Result<()> 
 }
 
 async fn create_compressed_files(file_path: impl AsRef<Path>) -> Result<()> {
-    let mut content = Vec::new();
-    fs::File::open(&file_path).await?.read_to_end(&mut content).await?;
-    let content = Arc::new(content);
+    let file_path = file_path.as_ref();
+    let content = Arc::new(fs::File::open(&file_path).await?.read_to_vec().await?);
 
     try_join!(
-        async { BrotliFileCompressor::compress_file(Arc::clone(&content), file_path.as_ref(), "br").await? }, 
-        async { GzipFileCompressor::compress_file(Arc::clone(&content), file_path.as_ref(), "gz").await? },
-    ).with_context(|| format!("Failed to create compressed files for {:#?}", file_path.as_ref()))?;
+        BrotliFileCompressor::compress_file(Arc::clone(&content), file_path, "br"), 
+        GzipFileCompressor::compress_file(content, file_path, "gz"),
+    )
+    .with_context(|| format!("Failed to create compressed files for {:#?}", file_path))?;
     Ok(())
 }
