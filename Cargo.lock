@@ -284,6 +284,7 @@ version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a8bda305457262b339322106c776e3fd21df860018e566eb6a5b1aa4b6ae02d"
 dependencies = [
+ "flate2",
  "http",
  "log",
  "rustls 0.18.1",
@@ -1101,6 +1102,7 @@ dependencies = [
  "attohttpc",
  "brotli",
  "cargo_metadata",
+ "const_format",
  "flate2",
  "futures",
  "log",
@@ -1110,6 +1112,7 @@ dependencies = [
  "rcgen",
  "serde",
  "structopt",
+ "tar",
  "tokio",
  "toml",
  "uuid",
@@ -1748,6 +1751,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-xid",
+]
+
+[[package]]
+name = "tar"
+version = "0.4.35"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7d779dc6aeff029314570f666ec83f19df7280bb36ef338442cfa8c604021b80"
+dependencies = [
+ "filetime",
+ "libc",
 ]
 
 [[package]]

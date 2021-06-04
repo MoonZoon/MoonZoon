@@ -23,4 +23,4 @@ env_logger = {version = "0.8.3" }
 log = { version = "0.4.14", features = ["serde"], default-features = false }
 
 [dev-dependencies]
-const_format = "*"
+const_format = { version = "0.2.14", default-features = false }
