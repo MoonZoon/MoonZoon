@@ -1,8 +1,9 @@
-use tokio::{fs, task::JoinHandle, spawn, io::AsyncWriteExt};
+use tokio::{fs, task::{JoinHandle, spawn, spawn_blocking},io::AsyncWriteExt};
 use anyhow::{Context, Result};
-use std::{sync::Arc, path::Path, io::Read};
+use std::{sync::Arc, path::Path};
 use brotli::{CompressorReader as BrotliEncoder, enc::backward_references::BrotliEncoderParams};
 use flate2::{bufread::GzEncoder, Compression as GzCompression};
+use crate::helper::ReadToVec;
 
 pub trait FileCompressor {
     fn compress_file(
@@ -20,7 +21,10 @@ pub trait FileCompressor {
                 .await
                 .with_context(|| format!("Failed to create the file {:#?}", path))?;
 
-            let compressed_content = Self::compress(&content)?;
+            let compressed_content = spawn_blocking(move || {
+                Self::compress(&content)
+            }).await??;
+
             file_writer.write_all(&compressed_content).await?;
             file_writer.flush().await?;
             Ok(())
@@ -34,12 +38,9 @@ pub struct BrotliFileCompressor;
 
 impl FileCompressor for BrotliFileCompressor {
     fn compress(bytes: &[u8]) -> Result<Vec<u8>> {
-        let params = BrotliEncoderParams::default();
-        let mut compressor = BrotliEncoder::with_params(bytes, 0, &params);
-
-        let mut compressed_bytes = Vec::new();
-        compressor.read_to_end(&mut compressed_bytes)?;
-        Ok(compressed_bytes)
+        BrotliEncoder::with_params(
+            bytes, 0, &BrotliEncoderParams::default()
+        ).read_to_vec()
     }
 }
 
@@ -47,10 +48,6 @@ pub struct GzipFileCompressor;
 
 impl FileCompressor for GzipFileCompressor {
     fn compress(bytes: &[u8]) -> Result<Vec<u8>> {
-        let mut compressor = GzEncoder::new(bytes, GzCompression::best());
-
-        let mut compressed_bytes = Vec::new();
-        compressor.read_to_end(&mut compressed_bytes)?;
-        Ok(compressed_bytes)
+        GzEncoder::new(bytes, GzCompression::best()).read_to_vec()
     }
 }

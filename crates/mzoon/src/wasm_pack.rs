@@ -4,6 +4,7 @@ use flate2::read::GzDecoder;
 use tar::Archive;
 use const_format::{concatcp, formatcp};
 use std::path::PathBuf;
+use crate::helper::download;
 
 const VERSION: &str = "0.9.1";
 
@@ -56,7 +57,7 @@ fn check_wasm_pack() -> Result<()> {
         .args(&["-V"])
         .output()?
         .stdout;
-        
+
     if version == EXPECTED_VERSION_OUTPUT.as_bytes() {
         return Ok(())
     }
@@ -77,12 +78,4 @@ fn unpack_wasm_pack(tar_gz: Vec<u8>) -> Result<()> {
         }
     }
     bail!("Failed to find wasm-pack in the downloaded archive")
-} 
-
-fn download(url: impl AsRef<str>) -> Result<Vec<u8>> {
-    let bytes = attohttpc::get(url)
-        .send()?
-        .error_for_status()?
-        .bytes()?;
-    Ok(bytes)
 }

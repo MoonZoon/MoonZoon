@@ -4,12 +4,11 @@ use anyhow::Result;
 mod config;
 mod frontend;
 mod backend;
-mod file_compressor;
-mod visit_files;
 mod watcher;
 mod set_env_vars;
 mod command;
 mod wasm_pack;
+mod helper;
 
 #[derive(Debug, StructOpt)]
 enum Opt {
