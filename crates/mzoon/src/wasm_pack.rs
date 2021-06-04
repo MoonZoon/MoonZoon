@@ -1,25 +1,26 @@
-use std::process::{Command, Stdio};
+use std::process::Command;
 use anyhow::{bail, Context, Result, anyhow};
 use flate2::read::GzDecoder;
 use tar::Archive;
-use const_format::formatcp;
+use const_format::{concatcp, formatcp};
 use std::path::PathBuf;
+
+const VERSION: &str = "0.9.1";
 
 // -- public --
 
 pub fn check_or_install_wasm_pack() -> Result<()> {
-    const WASM_PACK_VERSION: &str = "0.9.1";
-    const WASM_PACK_DOWNLOAD_URL: &str = formatcp!(
+    const DOWNLOAD_URL: &str = formatcp!(
         "https://github.com/rustwasm/wasm-pack/releases/download/v{version}/wasm-pack-v{version}-{target}.tar.gz",
-        version = WASM_PACK_VERSION,
+        version = VERSION,
         target = env!("TARGET"),
     );
     
-    if check_wasm_pack(WASM_PACK_VERSION) { return Ok(()) }
+    if check_wasm_pack().is_ok() { return Ok(()) }
 
     println!("Installing wasm-pack...");
-    let tar_gz  = download(WASM_PACK_DOWNLOAD_URL)
-        .context(formatcp!("Failed to download wasm-pack from the url '{}'", WASM_PACK_DOWNLOAD_URL))?;
+    let tar_gz  = download(DOWNLOAD_URL)
+        .context(formatcp!("Failed to download wasm-pack from the url '{}'", DOWNLOAD_URL))?;
     unpack_wasm_pack(tar_gz).context("Failed to unpack wasm-pack")?;
     Ok(println!("wasm-pack installed"))
 }
@@ -48,16 +49,18 @@ pub fn build_with_wasm_pack(release: bool) -> Result<()> {
 
 // -- private --
 
-fn check_wasm_pack(version: &str) -> bool {
-    let status = Command::new("frontend/wasm-pack")
+fn check_wasm_pack() -> Result<()> {
+    const EXPECTED_VERSION_OUTPUT: &str = concatcp!("wasm-pack ", VERSION, "\n");
+
+    let version = Command::new("frontend/wasm-pack")
         .args(&["-V"])
-        .stdout(Stdio::null())
-        .stderr(Stdio::null())
-        .status();
-    match status {
-        Ok(status) if status.success() => true,
-        _ => false,
+        .output()?
+        .stdout;
+        
+    if version == EXPECTED_VERSION_OUTPUT.as_bytes() {
+        return Ok(())
     }
+    bail!(concatcp!("wasm-pack's expected version is ", VERSION))
 }
 
 fn unpack_wasm_pack(tar_gz: Vec<u8>) -> Result<()> {
