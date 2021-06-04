@@ -444,7 +444,6 @@ dependencies = [
  "atty",
  "humantime",
  "log",
- "regex",
  "termcolor",
 ]
 

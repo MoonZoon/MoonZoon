@@ -24,3 +24,4 @@ flate2 = { version = "1.0.20", features = ["rust_backend"], default-features = f
 tar = { version = "0.4.35", default-features = false }
 const_format = { version = "0.2.14", default-features = false }
 async-trait = { version = "0.1.50", default-features = false }
+fehler = { version = "1.0.0", default-features = false }

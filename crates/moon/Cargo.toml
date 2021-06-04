@@ -19,7 +19,7 @@ trait-set = { version = "0.2.0", default-features = false }
 envy = { version = "0.4.2", default-features = false }
 serde = { version = "1.0.26", features = ["std", "derive"], default-features = false }
 parking_lot = { version = "0.11.1", default-features = false }
-env_logger = {version = "0.8.3" }
+env_logger = {version = "0.8.3", features = ["termcolor", "atty", "humantime"], default-features = false }
 log = { version = "0.4.14", features = ["serde"], default-features = false }
 
 [dev-dependencies]
