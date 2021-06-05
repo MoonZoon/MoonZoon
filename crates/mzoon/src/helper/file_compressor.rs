@@ -1,4 +1,4 @@
-use tokio::{fs, task::{spawn_blocking},io::AsyncWriteExt};
+use tokio::{fs, task::spawn_blocking, io::AsyncWriteExt};
 use anyhow::{Context, Result};
 use std::{sync::Arc, path::Path};
 use brotli::{CompressorReader as BrotliEncoder, enc::backward_references::BrotliEncoderParams};
@@ -27,8 +27,7 @@ pub trait FileCompressor {
         }).await??;
 
         file_writer.write_all(&compressed_content).await?;
-        file_writer.flush().await?;
-        Ok(())
+        Ok(file_writer.flush().await?)
     }
 
     fn compress(bytes: &[u8]) -> Result<Vec<u8>>;

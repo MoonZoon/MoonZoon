@@ -1,8 +1,9 @@
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, Error};
 use tokio::{spawn, task::JoinHandle, time::Duration};
 use parking_lot::Mutex;
 use std::sync::Arc;
 use std::process::Child;
+use fehler::throws;
 use super::project_watcher::ProjectWatcher;
 use crate::config::Config;
 use crate::backend::{build_backend, run_backend};
@@ -13,7 +14,8 @@ pub struct BackendWatcher {
 }
 
 impl BackendWatcher {
-    pub async fn start(config: &Config, release: bool, debounce_time: Duration, server: Option<Child>) -> Result<Self> {
+    #[throws]
+    pub async fn start(config: &Config, release: bool, debounce_time: Duration, server: Option<Child>) -> Self {
         let (watcher, mut debounced_receiver) = ProjectWatcher::start(&config.watch.backend, debounce_time)
                 .await
                 .context("Failed to start the backend project watcher")?;
@@ -54,15 +56,15 @@ impl BackendWatcher {
             Ok(())
         });
     
-        Ok(Self {
+        Self {
             watcher, 
             task
-        })
+        }
     }
 
-    pub async fn stop(self) -> Result<()> {
+    #[throws]
+    pub async fn stop(self) {
         self.watcher.stop().await?;
         self.task.await??;
-        Ok(())
     }
 }

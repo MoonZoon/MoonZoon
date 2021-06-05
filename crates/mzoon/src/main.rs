@@ -1,5 +1,6 @@
 use structopt::StructOpt;
-use anyhow::Result;
+use anyhow::Error;
+use fehler::throws;
 
 mod config;
 mod frontend;
@@ -29,8 +30,9 @@ enum Opt {
     },
 }
 
+#[throws]
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() {
     let opt = Opt::from_args();
     println!("{:?}", opt);
 
@@ -39,5 +41,4 @@ async fn main() -> Result<()> {
         Opt::Start { release, open } => command::start(release, open).await?,
         Opt::Build { release } => command::build(release).await?,
     }
-    Ok(())
 }

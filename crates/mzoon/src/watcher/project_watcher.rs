@@ -1,9 +1,10 @@
 use notify::{RecursiveMode, immediate_watcher, Watcher, RecommendedWatcher};
 use tokio::sync::mpsc::{self, UnboundedReceiver};
 use tokio::time::{Duration, sleep};
-use anyhow::{Context, Result};
+use anyhow::{Context, Error};
 use tokio::{spawn, task::JoinHandle};
 use std::sync::Arc;
+use fehler::throws;
 
 pub struct ProjectWatcher {
     watcher: RecommendedWatcher,
@@ -11,7 +12,8 @@ pub struct ProjectWatcher {
 }
 
 impl ProjectWatcher {
-    pub async fn start(paths: &[String], debounce_time: Duration) -> Result<(Self, UnboundedReceiver<()>)>  {
+    #[throws]
+    pub async fn start(paths: &[String], debounce_time: Duration) -> (Self, UnboundedReceiver<()>)  {
         let (sender, mut receiver) = mpsc::unbounded_channel();
     
         let mut watcher = immediate_watcher(move |event| {
@@ -58,13 +60,13 @@ impl ProjectWatcher {
             watcher,
             debouncer,
         };
-        Ok((this, debounced_receiver))
+        (this, debounced_receiver)
     }
 
-    pub async fn stop(self) -> Result<()> {
+    #[throws]
+    pub async fn stop(self) {
         let watcher = self.watcher;
         drop(watcher);
         self.debouncer.await?;
-        Ok(())
     }
 }

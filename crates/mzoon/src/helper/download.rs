@@ -1,9 +1,10 @@
-use anyhow::Result;
+use anyhow::Error;
+use fehler::throws;
 
-pub fn download(url: impl AsRef<str>) -> Result<Vec<u8>> {
-    let bytes = attohttpc::get(url)
+#[throws]
+pub fn download(url: impl AsRef<str>) -> Vec<u8> {
+    attohttpc::get(url)
         .send()?
         .error_for_status()?
-        .bytes()?;
-    Ok(bytes)
+        .bytes()?
 }
