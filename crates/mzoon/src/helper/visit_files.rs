@@ -26,7 +26,7 @@ pub fn visit_files(path: impl Into<PathBuf>) -> impl Stream<Item = Result<DirEnt
             let path = to_visit.pop()?;
             let file_stream = match one_level(path, &mut to_visit).await {
                 Ok(files) => stream::iter(files).map(Ok).left_stream(),
-                Err(e) => stream::once(async { Err(e) }).right_stream(),
+                Err(error) => stream::once(async { Err(error) }).right_stream(),
             };
             Some((file_stream, to_visit))
         }

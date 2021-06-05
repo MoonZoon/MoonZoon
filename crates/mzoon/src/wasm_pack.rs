@@ -71,6 +71,7 @@ fn check_wasm_pack() {
 fn unpack_wasm_pack(tar_gz: Vec<u8>) {
     let tar = GzDecoder::new(tar_gz.as_slice());
     let mut archive = Archive::new(tar);
+    
     for entry in archive.entries()? {
         let mut entry = entry?;
         let path = entry.path()?;

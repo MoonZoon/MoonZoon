@@ -6,6 +6,8 @@ pub fn set_env_vars(config: &Config, release: bool) {
     env::set_var("PORT", config.port.to_string());
     // https = true
     env::set_var("HTTPS", config.https.to_string());
+    // cache_busting = true
+    env::set_var("CACHE_BUSTING", config.cache_busting.to_string());
     // backend_log_level = "warn"
     env::set_var("BACKEND_LOG_LEVEL", config.backend_log_level.as_str());
 
