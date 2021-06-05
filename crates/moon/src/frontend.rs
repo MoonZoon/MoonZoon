@@ -18,6 +18,14 @@ impl Default for Frontend {
 }
 
 impl Frontend {
+    pub(crate) async fn build_id() -> u128 {
+        fs::read_to_string("frontend/pkg/build_id")
+            .await
+            .ok()
+            .and_then(|uuid| uuid.parse().ok())
+            .unwrap_or_default()
+    }
+
     pub fn new() -> Self {
         Self::default()
     }
@@ -35,12 +43,6 @@ impl Frontend {
     }
 
     pub(crate) async fn render(self) -> String {
-        let frontend_build_id: u128 = fs::read_to_string("frontend/pkg/build_id")
-            .await
-            .ok()
-            .and_then(|uuid| uuid.parse().ok())
-            .unwrap_or_default();
-
         format!(
             r#"<!DOCTYPE html>
         <html lang="en">
@@ -74,7 +76,7 @@ impl Frontend {
             body_content = self.body_content,
             reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"),
             sse = include_str!("../js/sse.js"),
-            frontend_build_id = frontend_build_id,
+            frontend_build_id = Self::build_id().await,
         )
     }
 }

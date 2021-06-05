@@ -11,6 +11,8 @@ pub struct Config {
     pub https: bool,
     // COMPRESSED_PKG
     pub compressed_pkg: bool,
+    // CACHE_BUSTING
+    pub cache_busting: bool,
     // BACKEND_LOG_LEVEL
     pub backend_log_level: LevelFilter,
 
@@ -28,6 +30,7 @@ impl Default for Config {
             port: 8080,
             https: false,
             compressed_pkg: true,
+            cache_busting: true,
             backend_log_level: LevelFilter::Warn,
             redirect: Redirect::default(),
         }
