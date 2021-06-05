@@ -117,6 +117,7 @@ where
             .data(up_msg_handler.clone())
             .app_data(sse.clone())
             .configure(service_config.clone())
+            .service(Files::new("_api/public", "public"))
             .service(
                 web::scope("_api")
                     .route(
@@ -124,7 +125,6 @@ where
                         web::post().to(up_msg_handler_responder::<UPH, UPHO>),
                     )
                     .route("reload", web::post().to(reload_responder))
-                    .service(Files::new("public", "public/"))
                     .route("pkg/{file:.*}", web::get().to(pkg_responder))
                     .route("sse", web::get().to(sse_responder))
                     .route("ping", web::to(|| async { "pong" }))
@@ -295,14 +295,14 @@ async fn sse_responder(
 
 // ------ frontend_responder ------
 
-async fn frontend_responder<FRB, FRBO>(frontend: web::Data<FRB>) -> impl Responder
+async fn frontend_responder<FRB, FRBO>(frontend: web::Data<FRB>, shared_data: web::Data<SharedData>) -> impl Responder
 where
     FRB: FrontBuilder<FRBO>,
     FRBO: FrontBuilderOutput,
 {
     HttpResponse::Ok()
         .content_type(ContentType::html())
-        .body(frontend().await.render().await)
+        .body(frontend().await.render(shared_data.cache_busting).await)
 }
 
 // ====== ====== TESTS ====== ======
