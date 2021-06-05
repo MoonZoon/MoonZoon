@@ -61,9 +61,13 @@ async fn build_and_reload(reload_url: Arc<String>, release: bool, cache_busting:
         return eprintln!("{}", error);
     }
     println!("Reload frontend");
-    let response = attohttpc::post(reload_url.as_str())
+    let response = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
-        .send();
+        .build()
+        .unwrap()
+        .post(reload_url.as_str())
+        .send()
+        .await;
     if let Err(error) = response {
         eprintln!("Failed to send the frontend reload request: {:#?}", error);
     }
