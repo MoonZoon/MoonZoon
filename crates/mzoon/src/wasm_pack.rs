@@ -4,8 +4,10 @@ use flate2::read::GzDecoder;
 use tar::Archive;
 use const_format::{concatcp, formatcp};
 use std::path::PathBuf;
-use crate::helper::download;
 use fehler::throws;
+use apply::Apply;
+use bool_ext::BoolExt;
+use crate::helper::download;
 
 const VERSION: &str = "0.9.1";
 
@@ -13,18 +15,19 @@ const VERSION: &str = "0.9.1";
 
 #[throws]
 pub async fn check_or_install_wasm_pack() {
+    if check_wasm_pack().await.is_ok() { return; }
+
     const DOWNLOAD_URL: &str = formatcp!(
         "https://github.com/rustwasm/wasm-pack/releases/download/v{version}/wasm-pack-v{version}-{target}.tar.gz",
         version = VERSION,
         target = env!("TARGET"),
     );
-    
-    if check_wasm_pack().await.is_ok() { return; }
 
     println!("Installing wasm-pack...");
-    let tar_gz  = download(DOWNLOAD_URL)
-        .context(formatcp!("Failed to download wasm-pack from the url '{}'", DOWNLOAD_URL))?;
-    unpack_wasm_pack(tar_gz).context("Failed to unpack wasm-pack")?;
+    download(DOWNLOAD_URL)
+        .context(formatcp!("Failed to download wasm-pack from the url '{}'", DOWNLOAD_URL))?
+        .apply(unpack_wasm_pack)
+        .context("Failed to unpack wasm-pack")?;
     println!("wasm-pack installed");
 }
 
@@ -48,15 +51,14 @@ pub async fn build_with_wasm_pack(release: bool) {
         .await
         .context("Failed to get frontend build status")?
         .success()
-        .then(||())
-        .ok_or(anyhow!("Failed to build frontend"))?;   
+        .err(anyhow!("Failed to build frontend"))?;
 }
 
 // -- private --
 
 #[throws]
 async fn check_wasm_pack() {
-    const EXPECTED_VERSION_OUTPUT: &str = concatcp!("wasm-pack ", VERSION, "\n");
+    const EXPECTED_VERSION_OUTPUT: &[u8] = concatcp!("wasm-pack ", VERSION, "\n").as_bytes();
 
     let version = Command::new("frontend/wasm-pack")
         .args(&["-V"])
@@ -64,7 +66,7 @@ async fn check_wasm_pack() {
         .await?
         .stdout;
 
-    if version != EXPECTED_VERSION_OUTPUT.as_bytes() {
+    if version != EXPECTED_VERSION_OUTPUT {
         Err(anyhow!(concatcp!("wasm-pack's expected version is ", VERSION)))?;
     }
 }
