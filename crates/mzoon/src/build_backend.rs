@@ -1,12 +1,11 @@
 use rcgen::{Certificate, CertificateParams};
 use std::path::Path;
-use std::process::{Command, Child};
+use std::process::Command;
 use tokio::{fs, try_join};
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 use anyhow::{anyhow, Context, Error};
 use fehler::throws;
-use cargo_metadata::MetadataCommand;
 
 // -- public --
 
@@ -32,25 +31,6 @@ pub async fn build_backend(release: bool, https: bool) {
         return println!("Backend built");
     }
     Err(anyhow!("Failed to build backend"))?;
-}
-
-#[throws]
-pub fn run_backend(release: bool) -> Child {
-    println!("Run backend");
- 
-    let mut target_directory = MetadataCommand::new()
-        .no_deps()
-        .exec()?
-        .target_directory;
-
-    if release {
-        target_directory.push("release")
-    } else {
-        target_directory.push("debug")
-    };
-    target_directory.push("backend");
-
-    Command::new(target_directory).spawn().context("Failed to run backend")?
 }
 
 // -- private --

@@ -7,7 +7,8 @@ use std::process::Child;
 use fehler::throws;
 use super::project_watcher::ProjectWatcher;
 use crate::config::Config;
-use crate::backend::{build_backend, run_backend};
+use crate::build_backend::build_backend;
+use crate::run_backend::run_backend;
 
 pub struct BackendWatcher {
     watcher: ProjectWatcher,
