@@ -3,8 +3,9 @@ use anyhow::Error;
 use fehler::throws;
 
 mod config;
-mod frontend;
-mod backend;
+mod build_frontend;
+mod build_backend;
+mod run_backend;
 mod watcher;
 mod set_env_vars;
 mod command;

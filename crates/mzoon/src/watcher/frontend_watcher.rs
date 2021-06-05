@@ -5,7 +5,7 @@ use std::sync::Arc;
 use fehler::throws;
 use super::project_watcher::ProjectWatcher;
 use crate::config::Config;
-use crate::frontend::build_frontend;
+use crate::build_frontend::build_frontend;
 
 pub struct FrontendWatcher {
     watcher: ProjectWatcher,

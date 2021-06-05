@@ -5,8 +5,9 @@ use fehler::throws;
 use crate::watcher::{FrontendWatcher, BackendWatcher};
 use crate::set_env_vars::set_env_vars;
 use crate::config::Config;
-use crate::frontend::build_frontend;
-use crate::backend::{build_backend, run_backend};
+use crate::build_frontend::build_frontend;
+use crate::build_backend::build_backend;
+use crate::run_backend::run_backend;
 
 #[throws]
 pub async fn start(release: bool, open: bool) {
