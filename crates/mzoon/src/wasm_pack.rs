@@ -1,4 +1,4 @@
-use std::process::Command;
+use tokio::process::Command;
 use anyhow::{Context, Error, anyhow};
 use flate2::read::GzDecoder;
 use tar::Archive;
@@ -12,14 +12,14 @@ const VERSION: &str = "0.9.1";
 // -- public --
 
 #[throws]
-pub fn check_or_install_wasm_pack() {
+pub async fn check_or_install_wasm_pack() {
     const DOWNLOAD_URL: &str = formatcp!(
         "https://github.com/rustwasm/wasm-pack/releases/download/v{version}/wasm-pack-v{version}-{target}.tar.gz",
         version = VERSION,
         target = env!("TARGET"),
     );
     
-    if check_wasm_pack().is_ok() { return; }
+    if check_wasm_pack().await.is_ok() { return; }
 
     println!("Installing wasm-pack...");
     let tar_gz  = download(DOWNLOAD_URL)
@@ -29,7 +29,7 @@ pub fn check_or_install_wasm_pack() {
 }
 
 #[throws]
-pub fn build_with_wasm_pack(release: bool) {
+pub async fn build_with_wasm_pack(release: bool) {
     let mut args = vec![
         "--log-level",
         "warn",
@@ -45,6 +45,7 @@ pub fn build_with_wasm_pack(release: bool) {
     Command::new("frontend/wasm-pack")
         .args(&args)
         .status()
+        .await
         .context("Failed to get frontend build status")?
         .success()
         .then(||())
@@ -54,12 +55,13 @@ pub fn build_with_wasm_pack(release: bool) {
 // -- private --
 
 #[throws]
-fn check_wasm_pack() {
+async fn check_wasm_pack() {
     const EXPECTED_VERSION_OUTPUT: &str = concatcp!("wasm-pack ", VERSION, "\n");
 
     let version = Command::new("frontend/wasm-pack")
         .args(&["-V"])
-        .output()?
+        .output()
+        .await?
         .stdout;
 
     if version != EXPECTED_VERSION_OUTPUT.as_bytes() {

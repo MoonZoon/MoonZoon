@@ -1,9 +1,9 @@
 use anyhow::{Context, Result, Error};
 use tokio::{spawn, task::JoinHandle, time::Duration};
 use tokio::sync::mpsc::UnboundedReceiver;
+use tokio::process::Child;
 use parking_lot::Mutex;
 use std::sync::Arc;
-use std::process::Child;
 use fehler::throws;
 use super::project_watcher::ProjectWatcher;
 use crate::config::Config;

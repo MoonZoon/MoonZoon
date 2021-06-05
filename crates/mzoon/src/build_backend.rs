@@ -1,7 +1,6 @@
 use rcgen::{Certificate, CertificateParams};
 use std::path::Path;
-use std::process::Command;
-use tokio::{fs, try_join};
+use tokio::{fs, try_join, process::Command};
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 use anyhow::{anyhow, Context, Error};
@@ -24,6 +23,7 @@ pub async fn build_backend(release: bool, https: bool) {
     let success = Command::new("cargo")
         .args(&args)
         .status()
+        .await
         .context("Failed to get frontend build status")?
         .success();
     if success {

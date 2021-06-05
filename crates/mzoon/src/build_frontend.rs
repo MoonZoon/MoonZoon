@@ -16,9 +16,9 @@ use crate::helper::{BrotliFileCompressor, GzipFileCompressor, FileCompressor, vi
 #[throws]
 pub async fn build_frontend(release: bool, cache_busting: bool) {
     println!("Building frontend...");
-    check_or_install_wasm_pack()?;
+    check_or_install_wasm_pack().await?;
     remove_pkg().await?;
-    build_with_wasm_pack(release)?;
+    build_with_wasm_pack(release).await?;
 
     let build_id = Uuid::new_v4().as_u128();
     let (wasm_file_path, js_file_path, _) = try_join!(
