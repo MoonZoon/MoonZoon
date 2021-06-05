@@ -1,6 +1,6 @@
 use actix_files::{Files, NamedFile};
 use actix_http::http::{header, ContentEncoding, StatusCode};
-use actix_web::http::header::{ContentType, CacheControl, CacheDirective};
+use actix_web::http::header::{ContentType, CacheControl, CacheDirective, ETag, EntityTag};
 use actix_web::middleware::{Condition, Logger, ErrorHandlers, ErrorHandlerResponse};
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder, Result};
 use actix_web::dev::ServiceResponse;
@@ -46,6 +46,8 @@ pub struct UpMsgRequest {}
 #[derive(Copy, Clone)]
 struct SharedData {
     backend_build_id: u128,
+    frontend_build_id: u128,
+    cache_busting: bool,
     compressed_pkg: bool,
     pkg_path: &'static str,
 }
@@ -83,6 +85,8 @@ where
 
     let shared_data = SharedData {
         backend_build_id: backend_build_id().await,
+        frontend_build_id: Frontend::build_id().await,
+        cache_busting: config.cache_busting,
         compressed_pkg: config.compressed_pkg,
         pkg_path: "frontend/pkg",
     };
@@ -188,7 +192,6 @@ fn render_not_found_handler<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerRe
     Ok(ErrorHandlerResponse::Response(res))
 }
 
-
 // ------ ------
 //  Responders
 // ------ ------
@@ -219,41 +222,52 @@ async fn pkg_responder(
     shared_data: web::Data<SharedData>,
 ) -> impl Responder {
     let mime = mime_guess::from_path(file.as_str()).first_or_octet_stream();
+    let (named_file, encoding) = named_file_and_encoding(&req, &file, &shared_data)?;
 
-    let encodings = req
+    let named_file = named_file
+        .set_content_type(mime)
+        .prefer_utf8(true)
+        .use_etag(false)
+        .use_last_modified(false)
+        .disable_content_disposition();
+
+    let mut responder =  if shared_data.cache_busting {
+        named_file.with_header(CacheControl(vec![CacheDirective::MaxAge(31536000)]))
+    } else {
+        named_file.with_header(ETag(EntityTag::new(false, shared_data.frontend_build_id.to_string())))
+    };
+
+    if let Some(encoding) = encoding {
+        responder = responder.with_header(encoding);
+    } 
+    Ok::<_, Error>(responder)
+}
+
+fn named_file_and_encoding(
+    req: &HttpRequest, 
+    file: &web::Path<String>, 
+    shared_data: &web::Data<SharedData>
+) -> Result<(NamedFile, Option<ContentEncoding>), Error> {
+    let mut file = format!("{}/{}", shared_data.pkg_path, file);
+    if !shared_data.compressed_pkg {
+        return Ok((NamedFile::open(file)?, None));
+    }
+    let accept_encodings = req
         .headers()
         .get(header::ACCEPT_ENCODING)
         .and_then(|accept_encoding| accept_encoding.to_str().ok())
         .map(|accept_encoding| accept_encoding.split(", ").collect::<BTreeSet<_>>())
         .unwrap_or_default();
 
-    let mut file = format!("{}/{}", shared_data.pkg_path, file);
-
-    let (named_file, encoding) = match shared_data.compressed_pkg {
-        true if encodings.contains(ContentEncoding::Br.as_str()) => {
-            file.push_str(".br");
-            (NamedFile::open(file)?, Some(ContentEncoding::Br))
-        }
-        true if encodings.contains(ContentEncoding::Gzip.as_str()) => {
-            file.push_str(".gz");
-            (NamedFile::open(file)?, Some(ContentEncoding::Gzip))
-        }
-        _ => (NamedFile::open(file)?, None),
-    };
-
-    let mut responder = named_file
-        .set_content_type(mime)
-        .prefer_utf8(true)
-        .use_etag(false)
-        .use_last_modified(false)
-        .disable_content_disposition()
-        .with_header(CacheControl(vec![CacheDirective::MaxAge(31536000)]));
-
-    if let Some(encoding) = encoding {
-        responder = responder.with_header(encoding);
+    if accept_encodings.contains(ContentEncoding::Br.as_str()) {
+        file.push_str(".br");
+        return Ok((NamedFile::open(file)?, Some(ContentEncoding::Br)))
     }
-
-    Ok::<_, Error>(responder)
+    if accept_encodings.contains(ContentEncoding::Gzip.as_str()) {
+        file.push_str(".gz");
+        return Ok((NamedFile::open(file)?, Some(ContentEncoding::Gzip)))
+    }
+    Ok((NamedFile::open(file)?, None))
 }
 
 // ------ sse_responder ------
