@@ -42,7 +42,13 @@ impl Frontend {
         self
     }
 
-    pub(crate) async fn render(self) -> String {
+    pub(crate) async fn render(self, cache_busting: bool) -> String {
+        let cache_busting_string = if cache_busting {
+            Cow::from(format!("_{}", Self::build_id().await))
+        } else {
+            Cow::from("")
+        };
+
         format!(
             r#"<!DOCTYPE html>
         <html lang="en">
@@ -51,8 +57,8 @@ impl Frontend {
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
           <title>{title}</title>
-          <link rel="preload" href="/_api/pkg/frontend_bg_{frontend_build_id}.wasm" as="fetch" type="application/wasm" crossorigin>
-          <link rel="modulepreload" href="/_api/pkg/frontend_{frontend_build_id}.js" crossorigin>
+          <link rel="preload" href="/_api/pkg/frontend_bg{cache_busting_string}.wasm" as="fetch" type="application/wasm" crossorigin>
+          <link rel="modulepreload" href="/_api/pkg/frontend{cache_busting_string}.js" crossorigin>
           {append_to_head}
         </head>
     
@@ -65,8 +71,8 @@ impl Frontend {
           </script>
     
           <script type="module">
-            import init from '/_api/pkg/frontend_{frontend_build_id}.js';
-            init('/_api/pkg/frontend_bg_{frontend_build_id}.wasm');
+            import init from '/_api/pkg/frontend{cache_busting_string}.js';
+            init('/_api/pkg/frontend_bg{cache_busting_string}.wasm');
           </script>
         </body>
         
@@ -76,7 +82,7 @@ impl Frontend {
             body_content = self.body_content,
             reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"),
             sse = include_str!("../js/sse.js"),
-            frontend_build_id = Self::build_id().await,
+            cache_busting_string = cache_busting_string,
         )
     }
 }
