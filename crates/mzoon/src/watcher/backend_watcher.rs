@@ -43,9 +43,12 @@ async fn on_change(mut receiver: UnboundedReceiver<()>, release: bool, https: bo
         if let Some(build_task) = build_task.take() {
             build_task.abort();
         }
-        if let Some(mut server) = server.lock().take() {
-            let _ = server.kill();
+
+        let server_process = { server.lock().take() };
+        if let Some(mut server) = server_process {
+            let _ = server.kill().await;
         }
+        
         build_task = Some(spawn(build_and_run(Arc::clone(&server), release, https)));
     }
     
