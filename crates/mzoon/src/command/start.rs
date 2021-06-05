@@ -1,6 +1,5 @@
 use anyhow::{Context, Error};
-use tokio::{signal, time::Duration, join};
-use std::process::Child;
+use tokio::{signal, time::Duration, join, process::Child};
 use fehler::throws;
 use crate::watcher::{FrontendWatcher, BackendWatcher};
 use crate::set_env_vars::set_env_vars;

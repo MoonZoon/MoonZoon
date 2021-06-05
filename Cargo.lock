@@ -1129,6 +1129,7 @@ name = "mzoon"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "apply",
  "async-trait",
  "attohttpc",
  "brotli",
