@@ -1,14 +1,16 @@
 use std::io::Read;
-use anyhow::Result;
+use anyhow::{Result, Error};
 use tokio::io::{AsyncRead, AsyncReadExt};
 use async_trait::async_trait;
+use fehler::throws;
 
 // ------ ReadToVec ------
 pub trait ReadToVec: Read {
-    fn read_to_vec(&mut self) -> Result<Vec<u8>> {
+    #[throws]
+    fn read_to_vec(&mut self) -> Vec<u8> {
         let mut vec = Vec::new();
         self.read_to_end(&mut vec)?;
-        Ok(vec)
+        vec
     }
 }
 impl<T: Read> ReadToVec for T {}

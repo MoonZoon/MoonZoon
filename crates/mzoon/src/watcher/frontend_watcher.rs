@@ -1,6 +1,7 @@
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, Error};
 use tokio::{spawn, task::JoinHandle, time::Duration};
 use std::sync::Arc;
+use fehler::throws;
 use super::project_watcher::ProjectWatcher;
 use crate::config::Config;
 use crate::frontend::build_frontend;
@@ -11,7 +12,8 @@ pub struct FrontendWatcher {
 }
 
 impl FrontendWatcher {
-    pub async fn start(config: &Config, release: bool, debounce_time: Duration) -> Result<Self> {
+    #[throws]
+    pub async fn start(config: &Config, release: bool, debounce_time: Duration) -> Self {
         let (watcher, mut debounced_receiver) = ProjectWatcher::start(&config.watch.frontend, debounce_time)
                 .await
                 .context("Failed to start the frontend project watcher")?;
@@ -51,16 +53,16 @@ impl FrontendWatcher {
             Ok(())
         });
         
-        Ok(Self {
+        Self {
             watcher,
             task,
-        })
+        }
     }
 
-    pub async fn stop(self) -> Result<()> {
+    #[throws]
+    pub async fn stop(self) {
         self.watcher.stop().await?;
         self.task.await??;
-        Ok(())
     }
 }
 

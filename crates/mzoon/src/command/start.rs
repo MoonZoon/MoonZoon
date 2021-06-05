@@ -1,13 +1,15 @@
-use anyhow::{Context, Result};
+use anyhow::{Context, Error};
 use tokio::{signal, time::Duration, join};
 use std::process::Child;
+use fehler::throws;
 use crate::watcher::{FrontendWatcher, BackendWatcher};
 use crate::set_env_vars::set_env_vars;
 use crate::config::Config;
 use crate::frontend::build_frontend;
 use crate::backend::{build_backend, run_backend};
 
-pub async fn start(release: bool, open: bool) -> Result<()> {
+#[throws]
+pub async fn start(release: bool, open: bool) {
     let config = Config::load_from_moonzoon_toml().await?;
     set_env_vars(&config, release);
 
@@ -48,5 +50,5 @@ pub async fn start(release: bool, open: bool) -> Result<()> {
         frontend_watcher.stop(),
         backend_watcher.stop(),
     );
-    Ok(println!("Watchers stopped"))
+    println!("Watchers stopped");
 }

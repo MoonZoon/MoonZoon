@@ -4,12 +4,14 @@ use std::process::{Command, Child};
 use tokio::{fs, try_join};
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, Context, Error};
+use fehler::throws;
 use cargo_metadata::MetadataCommand;
 
 // -- public --
 
-pub async fn build_backend(release: bool, https: bool) -> Result<()> {
+#[throws]
+pub async fn build_backend(release: bool, https: bool) {
     println!("Building backend...");
 
     if https {
@@ -27,12 +29,13 @@ pub async fn build_backend(release: bool, https: bool) -> Result<()> {
         .success();
     if success {
         generate_backend_build_id().await?;
-        return Ok(println!("Backend built"))
+        return println!("Backend built");
     }
-    bail!("Failed to build backend")
+    Err(anyhow!("Failed to build backend"))?;
 }
 
-pub fn run_backend(release: bool) -> Result<Child> {
+#[throws]
+pub fn run_backend(release: bool) -> Child {
     println!("Run backend");
  
     let mut target_directory = MetadataCommand::new()
@@ -47,25 +50,27 @@ pub fn run_backend(release: bool) -> Result<Child> {
     };
     target_directory.push("backend");
 
-    Command::new(target_directory).spawn().context("Failed to run backend")
+    Command::new(target_directory).spawn().context("Failed to run backend")?
 }
 
 // -- private --
 
-async fn generate_backend_build_id() -> Result<()> {
+#[throws]
+async fn generate_backend_build_id() {
     fs::write(
         "backend/private/build_id",
         Uuid::new_v4().as_u128().to_string(),
     )
     .await
-    .context("Failed to write the backend build id")
+    .context("Failed to write the backend build id")?
 }
 
-async fn generate_certificate_if_not_present() -> Result<()> {
+#[throws]
+async fn generate_certificate_if_not_present() {
     let public_pem_path = Path::new("backend/private/public.pem");
     let private_pem_path = Path::new("backend/private/private.pem");
     if public_pem_path.is_file() && private_pem_path.is_file() {
-        return Ok(());
+        return;
     }
     println!("Generate TLS certificate");
 
@@ -87,5 +92,5 @@ async fn generate_certificate_if_not_present() -> Result<()> {
     try_join!(
         async { fs::write(public_pem_path, public_pem).await.context("Failed to write the public key") },
         async { fs::write(private_pem_path, private_pem).await.context("Failed to write the private key") },
-    ).map(|_| ())
+    )?
 }

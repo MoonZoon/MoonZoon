@@ -1,11 +1,13 @@
 use futures::stream::{self, Stream, StreamExt};
 use std::path::PathBuf;
 use tokio::fs::{self, DirEntry};
-use anyhow::Result;
+use anyhow::{Error, Result};
+use fehler::throws;
 
 // https://stackoverflow.com/a/58825638
 pub fn visit_files(path: impl Into<PathBuf>) -> impl Stream<Item = Result<DirEntry>> + Send + 'static {
-    async fn one_level(path: PathBuf, to_visit: &mut Vec<PathBuf>) -> Result<Vec<DirEntry>> {
+    #[throws]
+    async fn one_level(path: PathBuf, to_visit: &mut Vec<PathBuf>) -> Vec<DirEntry> {
         let mut dir = fs::read_dir(path).await?;
         let mut files = Vec::new();
 
@@ -16,7 +18,7 @@ pub fn visit_files(path: impl Into<PathBuf>) -> impl Stream<Item = Result<DirEnt
                 files.push(child)
             }
         }
-        Ok(files)
+        files
     }
 
     stream::unfold(vec![path.into()], |mut to_visit| {

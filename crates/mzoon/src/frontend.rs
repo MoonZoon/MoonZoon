@@ -2,15 +2,17 @@ use tokio::fs;
 use tokio::{try_join, join};
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
-use anyhow::{Context, Result};
+use anyhow::{Context, Error};
 use std::sync::Arc;
 use futures::TryStreamExt;
+use fehler::throws;
 use crate::wasm_pack::{check_or_install_wasm_pack, build_with_wasm_pack};
 use crate::helper::{BrotliFileCompressor, GzipFileCompressor, FileCompressor, visit_files, AsyncReadToVec};
 
 // -- public --
 
-pub async fn build_frontend(release: bool, cache_busting: bool) -> Result<()> {
+#[throws]
+pub async fn build_frontend(release: bool, cache_busting: bool) {
     println!("Building frontend...");
 
     check_or_install_wasm_pack()?;
@@ -55,22 +57,23 @@ pub async fn build_frontend(release: bool, cache_busting: bool) -> Result<()> {
     if release {
         compress_pkg(&new_wasm_file_path, &new_js_file_path).await?;
     }
-    Ok(println!("Frontend built"))
+    println!("Frontend built");
 }
 
 // -- private --
 
-async fn compress_pkg(wasm_file_path: &Path, js_file_path: &Path) -> Result<()> {
+#[throws]
+async fn compress_pkg(wasm_file_path: &Path, js_file_path: &Path) {
     try_join!(
         create_compressed_files(wasm_file_path),
         create_compressed_files(js_file_path),
         visit_files("frontend/pkg/snippets")
             .try_for_each_concurrent(None, |file| create_compressed_files(file.path()))
-    )?;
-    Ok(())
+    )?
 }
 
-async fn create_compressed_files(file_path: impl AsRef<Path>) -> Result<()> {
+#[throws]
+async fn create_compressed_files(file_path: impl AsRef<Path>) {
     let file_path = file_path.as_ref();
     let content = Arc::new(fs::File::open(&file_path).await?.read_to_vec().await?);
 
@@ -78,6 +81,5 @@ async fn create_compressed_files(file_path: impl AsRef<Path>) -> Result<()> {
         BrotliFileCompressor::compress_file(Arc::clone(&content), file_path, "br"), 
         GzipFileCompressor::compress_file(content, file_path, "gz"),
     )
-    .with_context(|| format!("Failed to create compressed files for {:#?}", file_path))?;
-    Ok(())
+    .with_context(|| format!("Failed to create compressed files for {:#?}", file_path))?
 }
