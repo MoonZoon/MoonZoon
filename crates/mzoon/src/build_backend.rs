@@ -5,6 +5,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 use anyhow::{anyhow, Context, Error};
 use fehler::throws;
+use bool_ext::BoolExt;
 
 // -- public --
 
@@ -20,17 +21,16 @@ pub async fn build_backend(release: bool, https: bool) {
     if release {
         args.push("--release");
     }
-    let success = Command::new("cargo")
+    Command::new("cargo")
         .args(&args)
         .status()
         .await
         .context("Failed to get frontend build status")?
-        .success();
-    if success {
-        generate_backend_build_id().await?;
-        return println!("Backend built");
-    }
-    Err(anyhow!("Failed to build backend"))?;
+        .success()
+        .err(anyhow!("Failed to build backend"))?;
+
+    generate_backend_build_id().await?;
+    println!("Backend built");
 }
 
 // -- private --
