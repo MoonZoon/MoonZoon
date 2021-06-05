@@ -25,6 +25,7 @@ pub async fn check_or_install_wasm_pack() {
 
     println!("Installing wasm-pack...");
     download(DOWNLOAD_URL)
+        .await
         .context(formatcp!("Failed to download wasm-pack from the url '{}'", DOWNLOAD_URL))?
         .apply(unpack_wasm_pack)
         .context("Failed to unpack wasm-pack")?;
