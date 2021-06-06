@@ -33,7 +33,7 @@ pub async fn check_or_install_wasm_pack() {
     const DOWNLOAD_URL: &str = formatcp!(
         "https://github.com/rustwasm/wasm-pack/releases/download/v{version}/wasm-pack-v{version}-{target}.tar.gz",
         version = VERSION,
-        target = TARGET,
+        target = NEAREST_TARGET,
     );
 
     println!("Installing wasm-pack...");
