@@ -27,3 +27,4 @@ async-trait = { version = "0.1.50", default-features = false }
 fehler = { version = "1.0.0", default-features = false }
 apply = { version = "0.3.0", default-features = false }
 bool_ext = { version = "0.5.1", default-features = false }
+cfg-if = { version = "1.0.0", default-features = false }

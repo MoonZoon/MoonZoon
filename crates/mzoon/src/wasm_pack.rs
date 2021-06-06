@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use fehler::throws;
 use apply::Apply;
 use bool_ext::BoolExt;
+use cfg_if::cfg_if;
 use crate::helper::download;
 
 const VERSION: &str = "0.9.1";
@@ -17,13 +18,28 @@ const VERSION: &str = "0.9.1";
 pub async fn check_or_install_wasm_pack() {
     if check_wasm_pack().await.is_ok() { return; }
 
+    const TARGET: &str = env!("TARGET");
+    cfg_if! {
+        if #[cfg(target_os = "macos")] {
+            const NEAREST_TARGET: &str = "x86_64-apple-darwin";
+        } else if #[cfg(target_os = "windows")] {
+            const NEAREST_TARGET: &str = "x86_64-pc-windows-msvc";
+        } else if #[cfg(target_os = "linux")] {
+            const NEAREST_TARGET: &str = "x86_64-unknown-linux-musl";
+        } else {
+            compile_error!("wasm-pack pre-compiled binary hasn't been found for the target platform '{}'", TARGET);
+        }
+    }
     const DOWNLOAD_URL: &str = formatcp!(
         "https://github.com/rustwasm/wasm-pack/releases/download/v{version}/wasm-pack-v{version}-{target}.tar.gz",
         version = VERSION,
-        target = env!("TARGET"),
+        target = TARGET,
     );
 
     println!("Installing wasm-pack...");
+    if TARGET != NEAREST_TARGET {
+        println!("Pre-compiled wasm-pack binary '{}' will be used for the target platform '{}'", NEAREST_TARGET, TARGET);
+    }
     download(DOWNLOAD_URL)
         .await
         .context(formatcp!("Failed to download wasm-pack from the url '{}'", DOWNLOAD_URL))?
