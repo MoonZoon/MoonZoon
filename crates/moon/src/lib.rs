@@ -323,7 +323,9 @@ mod tests {
         let css_content = include_str!("../tests/fixtures/index.css");
 
         let shared_data = SharedData {
+            frontend_build_id: u128::default(),
             backend_build_id: u128::default(),
+            cache_busting: bool::default(),
             compressed_pkg: false,
             pkg_path: FIXTURES_DIR,
         };
@@ -360,7 +362,9 @@ mod tests {
         let css_content = web::Bytes::from_static(include_bytes!("../tests/fixtures/index.css.br"));
 
         let shared_data = SharedData {
+            frontend_build_id: u128::default(),
             backend_build_id: u128::default(),
+            cache_busting: bool::default(),
             compressed_pkg: true,
             pkg_path: FIXTURES_DIR,
         };
@@ -408,7 +412,9 @@ mod tests {
         let css_content = web::Bytes::from_static(include_bytes!("../tests/fixtures/index.css.gz"));
 
         let shared_data = SharedData {
+            frontend_build_id: u128::default(),
             backend_build_id: u128::default(),
+            cache_busting: bool::default(),
             compressed_pkg: true,
             pkg_path: FIXTURES_DIR,
         };
