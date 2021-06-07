@@ -1,14 +1,14 @@
-use tokio::process::Command;
-use anyhow::{Context, Error, anyhow};
-use flate2::read::GzDecoder;
-use tar::Archive;
-use const_format::{concatcp, formatcp};
-use std::path::PathBuf;
-use fehler::throws;
+use crate::helper::download;
+use anyhow::{anyhow, Context, Error};
 use apply::Apply;
 use bool_ext::BoolExt;
 use cfg_if::cfg_if;
-use crate::helper::download;
+use const_format::{concatcp, formatcp};
+use fehler::throws;
+use flate2::read::GzDecoder;
+use std::path::PathBuf;
+use tar::Archive;
+use tokio::process::Command;
 
 const VERSION: &str = "0.9.1";
 
@@ -16,7 +16,9 @@ const VERSION: &str = "0.9.1";
 
 #[throws]
 pub async fn check_or_install_wasm_pack() {
-    if check_wasm_pack().await.is_ok() { return; }
+    if check_wasm_pack().await.is_ok() {
+        return;
+    }
 
     const TARGET: &str = env!("TARGET");
     cfg_if! {
@@ -38,11 +40,17 @@ pub async fn check_or_install_wasm_pack() {
 
     println!("Installing wasm-pack...");
     if TARGET != NEAREST_TARGET {
-        println!("Pre-compiled wasm-pack binary '{}' will be used for the target platform '{}'", NEAREST_TARGET, TARGET);
+        println!(
+            "Pre-compiled wasm-pack binary '{}' will be used for the target platform '{}'",
+            NEAREST_TARGET, TARGET
+        );
     }
     download(DOWNLOAD_URL)
         .await
-        .context(formatcp!("Failed to download wasm-pack from the url '{}'", DOWNLOAD_URL))?
+        .context(formatcp!(
+            "Failed to download wasm-pack from the url '{}'",
+            DOWNLOAD_URL
+        ))?
         .apply(unpack_wasm_pack)
         .context("Failed to unpack wasm-pack")?;
     println!("wasm-pack installed");
@@ -84,7 +92,10 @@ async fn check_wasm_pack() {
         .stdout;
 
     if version != EXPECTED_VERSION_OUTPUT {
-        Err(anyhow!(concatcp!("wasm-pack's expected version is ", VERSION)))?;
+        Err(anyhow!(concatcp!(
+            "wasm-pack's expected version is ",
+            VERSION
+        )))?;
     }
 }
 
@@ -92,16 +103,22 @@ async fn check_wasm_pack() {
 fn unpack_wasm_pack(tar_gz: Vec<u8>) {
     let tar = GzDecoder::new(tar_gz.as_slice());
     let mut archive = Archive::new(tar);
-    
+
     for entry in archive.entries()? {
         let mut entry = entry?;
         let path = entry.path()?;
-        if path.file_stem().ok_or(anyhow!("Entry without a file name"))? == "wasm-pack" {
+        if path
+            .file_stem()
+            .ok_or(anyhow!("Entry without a file name"))?
+            == "wasm-pack"
+        {
             let mut destination = PathBuf::from("frontend");
             destination.push(path.file_name().unwrap());
             entry.unpack(destination)?;
             return;
         }
     }
-    Err(anyhow!("Failed to find wasm-pack in the downloaded archive"))?;
+    Err(anyhow!(
+        "Failed to find wasm-pack in the downloaded archive"
+    ))?;
 }

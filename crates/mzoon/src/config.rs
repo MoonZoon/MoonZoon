@@ -1,8 +1,8 @@
-use serde::Deserialize;
 use anyhow::{Context, Error};
-use tokio::fs;
-use log::LevelFilter;
 use fehler::throws;
+use log::LevelFilter;
+use serde::Deserialize;
+use tokio::fs;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
@@ -17,7 +17,9 @@ pub struct Config {
 impl Config {
     #[throws]
     pub async fn load_from_moonzoon_toml() -> Config {
-        let toml = fs::read_to_string("MoonZoon.toml").await.context("Failed to read MoonZoon.toml")?;
+        let toml = fs::read_to_string("MoonZoon.toml")
+            .await
+            .context("Failed to read MoonZoon.toml")?;
         toml::from_str(&toml).context("Failed to parse MoonZoon.toml")?
     }
 }

@@ -2,9 +2,9 @@ use actix_web::dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Tr
 use actix_web::http::header::LOCATION;
 use actix_web::http::uri::{Authority, InvalidUriParts, Scheme, Uri};
 use actix_web::{Error, HttpResponse};
+use bool_ext::BoolExt;
 use futures::future::{ok, Either, Ready};
 use std::convert::TryFrom;
-use bool_ext::BoolExt;
 
 // ------ Redirect ------
 
@@ -87,7 +87,8 @@ impl<S> RedirectMiddleware<S> {
             (scheme, None) if scheme == &Scheme::HTTP => from_port == 80,
             (scheme, None) if scheme == &Scheme::HTTPS => from_port == 443,
             _ => None?,
-        }.to_option()
+        }
+        .to_option()
     }
 
     fn redirect_uri(&self, uri: Uri) -> Option<Uri> {

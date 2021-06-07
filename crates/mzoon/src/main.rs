@@ -1,29 +1,29 @@
-use structopt::StructOpt;
 use anyhow::Error;
 use fehler::throws;
+use structopt::StructOpt;
 
-mod config;
-mod build_frontend;
 mod build_backend;
-mod run_backend;
-mod watcher;
-mod set_env_vars;
+mod build_frontend;
 mod command;
-mod wasm_pack;
+mod config;
 mod helper;
+mod run_backend;
+mod set_env_vars;
+mod wasm_pack;
+mod watcher;
 
 #[derive(Debug, StructOpt)]
 enum Opt {
     New {
         project_name: String,
         #[structopt(short, long)]
-        here: bool
+        here: bool,
     },
     Start {
         #[structopt(short, long)]
         release: bool,
         #[structopt(short, long)]
-        open: bool
+        open: bool,
     },
     Build {
         #[structopt(short, long)]

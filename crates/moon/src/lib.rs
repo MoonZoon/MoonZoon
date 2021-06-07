@@ -1,9 +1,9 @@
 use actix_files::{Files, NamedFile};
 use actix_http::http::{header, ContentEncoding, StatusCode};
-use actix_web::http::header::{ContentType, CacheControl, CacheDirective, ETag, EntityTag};
-use actix_web::middleware::{Condition, Logger, ErrorHandlers, ErrorHandlerResponse};
-use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder, Result};
 use actix_web::dev::ServiceResponse;
+use actix_web::http::header::{CacheControl, CacheDirective, ContentType, ETag, EntityTag};
+use actix_web::middleware::{Condition, ErrorHandlerResponse, ErrorHandlers, Logger};
+use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder, Result};
 use parking_lot::Mutex;
 use rustls::internal::pemfile::{certs, pkcs8_private_keys};
 use rustls::{NoClientAuth, ServerConfig as RustlsServerConfig};
@@ -81,7 +81,9 @@ where
     let config = Config::from_env_vars();
     println!("Moon config: {:#?}", config);
 
-    env_logger::builder().filter_level(config.backend_log_level).init();
+    env_logger::builder()
+        .filter_level(config.backend_log_level)
+        .init();
 
     let shared_data = SharedData {
         backend_build_id: backend_build_id().await,
@@ -109,8 +111,11 @@ where
             .wrap(Condition::new(redirect_enabled, redirect))
             .wrap(
                 ErrorHandlers::new()
-                    .handler(StatusCode::INTERNAL_SERVER_ERROR, internal_server_error_handler)
-                    .handler(StatusCode::NOT_FOUND, render_not_found_handler)
+                    .handler(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        internal_server_error_handler,
+                    )
+                    .handler(StatusCode::NOT_FOUND, render_not_found_handler),
             )
             .data(shared_data)
             .data(frontend.clone())
@@ -127,7 +132,7 @@ where
                     .route("reload", web::post().to(reload_responder))
                     .route("pkg/{file:.*}", web::get().to(pkg_responder))
                     .route("sse", web::get().to(sse_responder))
-                    .route("ping", web::to(|| async { "pong" }))
+                    .route("ping", web::to(|| async { "pong" })),
             )
             .route("*", web::get().to(frontend_responder::<FRB, FRBO>))
     });
@@ -231,22 +236,25 @@ async fn pkg_responder(
         .use_last_modified(false)
         .disable_content_disposition();
 
-    let mut responder =  if shared_data.cache_busting {
+    let mut responder = if shared_data.cache_busting {
         named_file.with_header(CacheControl(vec![CacheDirective::MaxAge(31536000)]))
     } else {
-        named_file.with_header(ETag(EntityTag::new(false, shared_data.frontend_build_id.to_string())))
+        named_file.with_header(ETag(EntityTag::new(
+            false,
+            shared_data.frontend_build_id.to_string(),
+        )))
     };
 
     if let Some(encoding) = encoding {
         responder = responder.with_header(encoding);
-    } 
+    }
     Ok::<_, Error>(responder)
 }
 
 fn named_file_and_encoding(
-    req: &HttpRequest, 
-    file: &web::Path<String>, 
-    shared_data: &web::Data<SharedData>
+    req: &HttpRequest,
+    file: &web::Path<String>,
+    shared_data: &web::Data<SharedData>,
 ) -> Result<(NamedFile, Option<ContentEncoding>), Error> {
     let mut file = format!("{}/{}", shared_data.pkg_path, file);
     if !shared_data.compressed_pkg {
@@ -261,11 +269,11 @@ fn named_file_and_encoding(
 
     if accept_encodings.contains(ContentEncoding::Br.as_str()) {
         file.push_str(".br");
-        return Ok((NamedFile::open(file)?, Some(ContentEncoding::Br)))
+        return Ok((NamedFile::open(file)?, Some(ContentEncoding::Br)));
     }
     if accept_encodings.contains(ContentEncoding::Gzip.as_str()) {
         file.push_str(".gz");
-        return Ok((NamedFile::open(file)?, Some(ContentEncoding::Gzip)))
+        return Ok((NamedFile::open(file)?, Some(ContentEncoding::Gzip)));
     }
     Ok((NamedFile::open(file)?, None))
 }
@@ -295,7 +303,10 @@ async fn sse_responder(
 
 // ------ frontend_responder ------
 
-async fn frontend_responder<FRB, FRBO>(frontend: web::Data<FRB>, shared_data: web::Data<SharedData>) -> impl Responder
+async fn frontend_responder<FRB, FRBO>(
+    frontend: web::Data<FRB>,
+    shared_data: web::Data<SharedData>,
+) -> impl Responder
 where
     FRB: FrontBuilder<FRBO>,
     FRBO: FrontBuilderOutput,
@@ -335,7 +346,9 @@ mod tests {
                 .route("_api/pkg/{file:.*}", web::get().to(pkg_responder)),
         )
         .await;
-        let req = test::TestRequest::get().uri("/_api/pkg/index.css").to_request();
+        let req = test::TestRequest::get()
+            .uri("/_api/pkg/index.css")
+            .to_request();
 
         // ------ ACT ------
         let mut resp = test::call_service(&app, req).await;

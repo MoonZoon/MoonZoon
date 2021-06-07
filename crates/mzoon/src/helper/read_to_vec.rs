@@ -1,8 +1,8 @@
-use std::io::Read;
-use anyhow::{Result, Error};
-use tokio::io::{AsyncRead, AsyncReadExt};
+use anyhow::{Error, Result};
 use async_trait::async_trait;
 use fehler::throws;
+use std::io::Read;
+use tokio::io::{AsyncRead, AsyncReadExt};
 
 // ------ ReadToVec ------
 pub trait ReadToVec: Read {
@@ -18,7 +18,10 @@ impl<T: Read> ReadToVec for T {}
 // ------ AsyncReadToVec ------
 
 #[async_trait]
-pub trait AsyncReadToVec: AsyncRead where Self: Unpin {
+pub trait AsyncReadToVec: AsyncRead
+where
+    Self: Unpin,
+{
     async fn read_to_vec(&mut self) -> Result<Vec<u8>> {
         let mut vec = Vec::new();
         self.read_to_end(&mut vec).await?;

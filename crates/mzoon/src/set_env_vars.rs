@@ -1,5 +1,5 @@
-use std::env;
 use crate::config::Config;
+use std::env;
 
 pub fn set_env_vars(config: &Config, release: bool) {
     // port = 8443

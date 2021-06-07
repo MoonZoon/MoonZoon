@@ -1,15 +1,17 @@
+use crate::helper::{
+    visit_files, AsyncReadToVec, BrotliFileCompressor, FileCompressor, GzipFileCompressor,
+};
+use crate::wasm_pack::{build_with_wasm_pack, check_or_install_wasm_pack};
+use anyhow::{Context, Error};
+use const_format::concatcp;
+use fehler::throws;
+use futures::TryStreamExt;
+use std::borrow::Cow;
+use std::path::Path;
+use std::sync::Arc;
 use tokio::fs;
 use tokio::try_join;
-use std::path::Path;
 use uuid::Uuid;
-use anyhow::{Context, Error};
-use std::sync::Arc;
-use futures::TryStreamExt;
-use fehler::throws;
-use const_format::concatcp;
-use std::borrow::Cow;
-use crate::wasm_pack::{check_or_install_wasm_pack, build_with_wasm_pack};
-use crate::helper::{BrotliFileCompressor, GzipFileCompressor, FileCompressor, visit_files, AsyncReadToVec};
 
 // -- public --
 
@@ -38,7 +40,9 @@ pub async fn build_frontend(release: bool, cache_busting: bool) {
 async fn remove_pkg() {
     let pkg_path = Path::new("frontend/pkg");
     if pkg_path.is_dir() {
-        fs::remove_dir_all(pkg_path).await.context("Failed to remove pkg")?;
+        fs::remove_dir_all(pkg_path)
+            .await
+            .context("Failed to remove pkg")?;
     }
 }
 
@@ -55,7 +59,9 @@ async fn rename_wasm_file(build_id: u128, cache_busting: bool) -> Cow<'static, s
     const EXTENSION: &str = ".wasm";
     const ORIGINAL_PATH: &str = concatcp!(PATH, EXTENSION);
 
-    if !cache_busting { return Cow::from(ORIGINAL_PATH) };
+    if !cache_busting {
+        return Cow::from(ORIGINAL_PATH);
+    };
 
     let new_path = format!("{}_{}{}", PATH, build_id, EXTENSION);
     fs::rename(ORIGINAL_PATH, &new_path)
@@ -71,7 +77,9 @@ async fn rename_js_file(build_id: u128, cache_busting: bool) -> Cow<'static, str
     const EXTENSION: &str = ".js";
     const ORIGINAL_PATH: &str = concatcp!(PATH, EXTENSION);
 
-    if !cache_busting { return Cow::from(ORIGINAL_PATH) };
+    if !cache_busting {
+        return Cow::from(ORIGINAL_PATH);
+    };
 
     let new_path = format!("{}_{}{}", PATH, build_id, EXTENSION);
     fs::rename(ORIGINAL_PATH, &new_path)
@@ -97,7 +105,7 @@ async fn create_compressed_files(file_path: impl AsRef<Path>) {
     let content = Arc::new(fs::File::open(&file_path).await?.read_to_vec().await?);
 
     try_join!(
-        BrotliFileCompressor::compress_file(Arc::clone(&content), file_path, "br"), 
+        BrotliFileCompressor::compress_file(Arc::clone(&content), file_path, "br"),
         GzipFileCompressor::compress_file(content, file_path, "gz"),
     )
     .with_context(|| format!("Failed to create compressed files for {:#?}", file_path))?

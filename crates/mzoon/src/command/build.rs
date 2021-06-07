@@ -1,9 +1,9 @@
+use crate::build_backend::build_backend;
+use crate::build_frontend::build_frontend;
+use crate::config::Config;
+use crate::set_env_vars::set_env_vars;
 use anyhow::Error;
 use fehler::throws;
-use crate::config::Config;
-use crate::build_frontend::build_frontend;
-use crate::build_backend::build_backend;
-use crate::set_env_vars::set_env_vars;
 
 #[throws]
 pub async fn build(release: bool) {
