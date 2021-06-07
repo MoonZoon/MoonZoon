@@ -5,12 +5,11 @@
 ## Basics
 
 The **Chat** example:
+   - _Note:_ The code below may differ from the current `chat` implementation.
 
 ```rust
 use moon::*;
 use shared::{UpMsg, DownMsg, Message};
-
-async fn init() {}
 
 async fn frontend() -> Frontend {
     Frontend::new().title("Chat example")
@@ -24,15 +23,15 @@ async fn up_msg_handler(req: UpMsgRequest) {
     }
 }
 
-fn main() {
-    start!(init, frontend, up_msg_handler);
+#[moon::main]
+async fn main() -> std::io::Result<()> {
+    start(frontend, up_msg_handler, |_|{}).await
 }
 ```
 
 ### 1. The App Initialization
 
 1. The function `main` is invoked automatically when the Moon app is started on the server.
-1. The function `init` is invoked when the Moon app is ready to work.
 1. The function `frontend` is invoked when the web browser wants to download and run the client (Zoon) app.
 1. The function `up_msg_handler` handles requests from the Zoon.
 
@@ -40,6 +39,37 @@ fn main() {
 1. We need to find the needed _actors_. They are stored in _indices_. `connected_client::by_id` is a Moon's system index where each value is an actor representing a connected Zoon app.
 1. All public actor functions are asynchronous so we have to `await` them and ideally call them all at once in this example to improve the performance a bit.
    - _Note_: The requested actor may live in another server or it doesn't live at all - then the Moon app has to start it and load its state into the main memory before it can process your call. And all those operations and the business logic processing take some time, so asynchronicity allows you to spend the time in better ways than just waiting.  
+
+---
+
+## Actix
+
+Moon is based on [Actix](https://actix.rs/). And there is a way how to use Actix directly:
+
+```rust
+use moon::*;
+use moon::actix_web::{get, Responder};
+
+async fn frontend() -> Frontend {
+    Frontend::new().title("Actix example")
+}
+
+async fn up_msg_handler(_: UpMsgRequest) {}
+
+#[get("hello")]
+async fn hello() -> impl Responder {
+    "Hello!"
+}
+
+#[moon::main]
+async fn main() -> std::io::Result<()> {
+    start(frontend, up_msg_handler, |cfg|{
+        cfg.service(hello);
+    }).await
+}
+```
+
+- `cfg` in the example is [actix_web::web::ServiceConfig](https://docs.rs/actix-web/4.0.0-beta.6/actix_web/web/struct.ServiceConfig.html)
 
 ---
 
@@ -283,8 +313,16 @@ Other related articles:
 1. _"Why another backend framework? Are you mad??"_
    - In the context of my goal to remove all accidental complexity, I treat most popular backend frameworks as low-level building blocks. You are able to write everything with them, but you still have to think about REST API endpoints, choose and connect a database, manage actors manually, setup servers, somehow test serverless functions, etc. Moon will be based on one of those frameworks - this way you don't have to care about low-level things, however you can when you need more control.
 
-1. _"Those are pretty weird actors!"_
-   - Yeah, actually, they are called _Virtual Actors_. I recommend to read [Orleans – Virtual Actors](https://www.microsoft.com/en-us/research/project/orleans-virtual-actors/).
+1. _"Those are pretty weird actors! (And.. what is it an _actor_?)"_
+    - Yeah, actually, they are called _Virtual Actors_.
+
+    - _Actor Model_: An actor is an object that interacts with the world and other actors using asynchronous messages.
+
+    - _Standard Actors_: The actor has to be explicitly created and removed by a developer or by the actor's parent (aka supervisor) by predefined rules.
+
+    - _Virtual Actors_: A runtime system manages actors. It creates, removes or moves actors between servers. All actors are always active and cannot fail from the developer point of view. In the case of hardware failure, the lost actors are automatically recreated on another server and messages forwarded to them.
+   
+    - I recommend to read [Orleans – Virtual Actors](https://www.microsoft.com/en-us/research/project/orleans-virtual-actors/).
 
 1. _"Why virtual actors and not microservices / event sourcing / standard actors / CRDTs / blockchain / orthogonal persistence / ..?"_
    - Virtual actors allow you to start with a small simple project and they won't stop you while you grow.
@@ -294,5 +332,5 @@ Other related articles:
 
 1. _"What about transactions, backups, autoscaling, deploying, storage configuration, ..?"_
    - I try to respect Gall’s Law - "A complex system that works is invariably found to have evolved from a simple system that worked."
-   - So let's start with a single server, simple implementation and minimum features. "Deploy to Heroku" button would be nice.
+   - So let's start with a single server, simple implementation and minimum features.
    - There are research papers about virtual actors and things like transactions. It will take time but the architecture will allow to add many new features when needed.

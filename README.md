@@ -117,7 +117,7 @@
 
 1. _"Is it production-ready?"_
    - No, it's in the early development phase now, but you can subscribe to `#news` channel on our [Discord server](https://discord.gg/eGduTxK2Es) to don't miss the announcement. 
-   - MoonZoon will be battle-tested during the [OpenHope](http://openhope.net) and other projects development.
+   - MoonZoon will be battle-tested during the MoonZoon Cloud, [OpenHope](http://openhope.net) and other projects development.
 
 1. _"Why another framework? Are you mad??"_
    - I want to write products. Reliable products. Quickly. I want to enjoy the development. I don't want to play endlessly with tools, protocols and config files.
