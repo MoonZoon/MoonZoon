@@ -69,6 +69,8 @@ async fn main() -> std::io::Result<()> {
 }
 ```
 
+![Hello](images/hello.png)
+
 - `cfg` in the example is [actix_web::web::ServiceConfig](https://docs.rs/actix-web/4.0.0-beta.6/actix_web/web/struct.ServiceConfig.html)
 
 ---
