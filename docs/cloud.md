@@ -14,4 +14,4 @@
 
    - There is a [buildpack](https://github.com/MoonZoon/heroku-buildpack-moonzoon) for Heroku and Heroku-like PaaS and the [demo](https://github.com/MoonZoon/demo).
 
-   - It should be possible to modify buildpack's code and setup, for instance, GitHub Actions as your own deploy pipeline. Don't hesitate to write about your intentions on our [chat](https://discord.gg/eGduTxK2Es).
+   - It should be possible to modify buildpack's code and then setup, for instance, GitHub Actions as your own deploy pipeline. Don't hesitate to write about your intentions on our [chat](https://discord.gg/eGduTxK2Es).
