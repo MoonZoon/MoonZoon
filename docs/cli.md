@@ -40,7 +40,7 @@ and faster installation methods with pre-compiled binaries will follow.
 - Optional parameters:
    1. **`--release` / `-r`**
       - Example: `mzoon start --release`
-      - Compiles in the release mode and compress frontend files.
+      - Compiles in the release mode and compresses frontend files.
    1. **`--open` / `-o`**
       - Example: `mzoon start --open`
       - Opens the Zoon's URL in a new browser tab (e.g. `localhost:8080`)
@@ -52,6 +52,7 @@ and faster installation methods with pre-compiled binaries will follow.
 - Optional parameters:
    1. **`--release` / `-r`**
       - Example: `mzoon build --release`
+      - Compiles in the release mode and compresses frontend files.
 ---
 
 ## MoonZoon.toml
@@ -62,7 +63,7 @@ and faster installation methods with pre-compiled binaries will follow.
 port = 8080
 # port = 8443
 https = false
-cache_busting = true
+cache_busting = true # add UUID to file names - e.g. `frontend_bg_[uuid].wasm`
 backend_log_level = "warn" # "error" / "warn" / "info" / "debug" / "trace"
 
 [redirect] # useful for HTTP -> HTTPS redirect
