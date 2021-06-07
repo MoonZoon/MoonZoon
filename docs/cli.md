@@ -5,13 +5,16 @@
 
 _
 
-You'll be able to install or update it with _Cargo_: 
+You'll be able to install `mzoon` with _Cargo_: 
 ```sh
 cargo install --locked mzoon
 ```
-([why _--locked_?](https://github.com/rust-lang/cargo/issues/7169))
 
-_Note:_ Faster installation options will be added later.
+and faster installation methods with pre-compiled binaries will follow.
+
+- Notes:
+   - You can use the [demo](https://github.com/MoonZoon/demo) as a template for your new project for now.
+   - Why [_--locked_?](https://github.com/rust-lang/cargo/issues/7169)
 
 ---
 
@@ -20,7 +23,11 @@ _Note:_ Faster installation options will be added later.
 ### 1. `new`
 
 - Example: `mzoon new my_project` 
-- Creates a new directory with a MoonZoon project.
+- Creates a new directory with a new MoonZoon project.
+- Optional parameters:
+   1. **`--here` / `-h`**
+      - Example: `mzoon new my_project --here`
+      - Creates the project in the current directory.
 - _Question:_ Do you think a [code tour](https://github.com/microsoft/codetour) would be useful for you?
 - _Note:_ Not implemented yet, use [MoonZoon/demo](https://github.com/MoonZoon/demo) as a starting project.
 
@@ -37,12 +44,11 @@ _Note:_ Faster installation options will be added later.
    1. **`--open` / `-o`**
       - Example: `mzoon start --open`
       - Opens the Zoon's URL in a new browser tab (e.g. `localhost:8080`)
-      - _Note:_ Not implemented yet.
 
 ### 3. `build`
 
 - Example: `mzoon build`
-- Compiles the app in debug mode.
+- Compiles the app in the debug mode.
 - Optional parameters:
    1. **`--release` / `-r`**
       - Example: `mzoon build --release`
@@ -57,8 +63,9 @@ port = 8080
 # port = 8443
 https = false
 cache_busting = true
+backend_log_level = "warn" # "error" / "warn" / "info" / "debug" / "trace"
 
-[redirect_server] # useful for HTTP -> HTTPS redirect
+[redirect] # useful for HTTP -> HTTPS redirect
 port = 8081
 enabled = false
 
@@ -76,14 +83,16 @@ backend = [
 ---
 
 ## FAQ
-1. _"What about other commands like `deploy`, `test`, `generate`, etc.?"_
+1. _"What about other commands like `deploy` and `test`?"_
    - Other commands will be added later.
+   - You can use standard `cargo test` for testing the backend side.
+   - `mzoon build` automatically installs `wasm-pack` in the `frontend` directory. So you can use `wasm-pack` directly for testing.
 
 1. _"How can I change the port number or enable HTTPS?"_
 
-   - _For development_: Update settings in `MoonZoon.toml` (see `MoonZoon.toml` above or `/examples/counters/MoonZoon.toml`)
+   - _For development_: Update settings in `MoonZoon.toml` (see `MoonZoon.toml` above or `/examples/counter/MoonZoon.toml`)
 
-   - _For production_: Set environment variables (see the function `load_config` in `/crates/moon/src/lib.rs`)
+   - _For production_: Set environment variables (see `/crates/moon/src/config.rs`)
 
 1. _"Some commands or parameters mentioned above don't work!"_
    - They are probably not implemented yet.

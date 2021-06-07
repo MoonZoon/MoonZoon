@@ -2,7 +2,7 @@
 
 ---
 
-_WARNING:_ MoonZoon is in the phase of early development! You may find ugly code in the repo!
+_WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / linters haven't been configured yet.
 
 ## 1. Required tools
 
@@ -32,7 +32,7 @@ _WARNING:_ MoonZoon is in the phase of early development! You may find ugly code
         "examples/counter/Cargo.toml",
         "examples/counters/Cargo.toml",
         "examples/js-framework-benchmark/keyed/Cargo.toml",
-        // ... add more examples as needed
+        "examples/svg/Cargo.toml",
     ],
     "rust-analyzer.diagnostics.disabled": [
         "missing-unsafe",
@@ -48,21 +48,16 @@ _WARNING:_ MoonZoon is in the phase of early development! You may find ugly code
 
 ## 3. Start example
 
-- _Note:_ Not all examples work at the moment
+- _Note:_ Not all examples work at the moment. Try:
+  - `counter`
+  - `counters`
+  - `js-framework-benchmark/keyed`
+  - `svg`
 
 ```sh
 cd examples
 cd counter # or `counters` or ...
-makers mzoon start # or `makers mzoon start -r`
-```
-
-## 4. Open example in the browser
-
-- `Ctrl` + click (or equivalent) on the url in brackets in your terminal
-- _Note:_ Tested with `git-bash` in VS Code
-```bash
-Main server is running on 0.0.0.0:8080 [http://127.0.0.1:8080]
-
+makers mzoon start -o # or `makers mzoon start -r -o`
 ```
 
 ## 5. Have fun!

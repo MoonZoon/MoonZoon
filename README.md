@@ -58,6 +58,7 @@
 - Live demo: [moonzoon-demo.herokuapp.com](https://moonzoon-demo.herokuapp.com/)
    - _Note_: Heroku dyno slow cold starts may occur.
 - Repo: [github.com/MoonZoon/demo](https://github.com/MoonZoon/demo)
+   - _Note_: You can use the repo as a template for your new project for now.
 
 ---
 
@@ -74,6 +75,8 @@
 1. Live demo, Zoon, Examples, Architectures [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-2-live-demo-zoon-examples-architectures-2oem) / [MD](docs/articles/dev_news_2.md)]
 
 1. Signals, React-like Hooks, Optimizations [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-3-signals-react-like-hooks-optimizations-39lp) / [MD](docs/articles/dev_news_3.md)]
+
+1. Actix, Async CLI, Fails [[dev.to (WIP)](https://dev.to/martinkavik/moonzoon-dev-news-4-actix-async-cli-fails-xxxx) / [MD](docs/articles/dev_news_4.md)]
 
 ---
 
@@ -113,7 +116,7 @@
 # FAQ
 
 1. _"Is it production-ready?"_
-   - No, it's in the design & early development phase now, but you can subscribe to `#news` channel on our [Discord server](https://discord.gg/eGduTxK2Es) to don't miss the announcement. 
+   - No, it's in the early development phase now, but you can subscribe to `#news` channel on our [Discord server](https://discord.gg/eGduTxK2Es) to don't miss the announcement. 
    - MoonZoon will be battle-tested during the [OpenHope](http://openhope.net) and other projects development.
 
 1. _"Why another framework? Are you mad??"_
