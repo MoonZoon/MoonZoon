@@ -1,6 +1,6 @@
 use crate::from_env_vars::FromEnvVars;
-use serde::Deserialize;
 use log::LevelFilter;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 #[serde(default)]

@@ -1,12 +1,12 @@
-use rcgen::{Certificate, CertificateParams};
-use std::path::Path;
-use tokio::{fs, try_join, process::Command};
-use std::time::{SystemTime, UNIX_EPOCH};
-use uuid::Uuid;
 use anyhow::{anyhow, Context, Error};
-use fehler::throws;
 use apply::Apply;
 use bool_ext::BoolExt;
+use fehler::throws;
+use rcgen::{Certificate, CertificateParams};
+use std::path::Path;
+use std::time::{SystemTime, UNIX_EPOCH};
+use tokio::{fs, process::Command, try_join};
+use uuid::Uuid;
 
 // -- public --
 
@@ -55,8 +55,16 @@ async fn write_new_certificate_if_not_present() {
     }
     let keys = generate_certificate();
     try_join!(
-        async { fs::write(public_pem_path, &keys.public).await.context("Failed to write the public key") },
-        async { fs::write(private_pem_path, &keys.private).await.context("Failed to write the private key") },
+        async {
+            fs::write(public_pem_path, &keys.public)
+                .await
+                .context("Failed to write the public key")
+        },
+        async {
+            fs::write(private_pem_path, &keys.private)
+                .await
+                .context("Failed to write the private key")
+        },
     )?
 }
 
@@ -81,6 +89,6 @@ fn generate_certificate() -> Keys {
     let certificate = Certificate::from_params(params).unwrap();
     Keys {
         public: certificate.serialize_pem().unwrap(),
-        private: certificate.serialize_private_key_pem()
+        private: certificate.serialize_private_key_pem(),
     }
 }

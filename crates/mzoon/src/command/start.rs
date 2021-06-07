@@ -1,12 +1,12 @@
-use anyhow::{Context, Error};
-use tokio::{signal, time::Duration, join, process::Child};
-use fehler::throws;
-use crate::watcher::{FrontendWatcher, BackendWatcher};
-use crate::set_env_vars::set_env_vars;
-use crate::config::Config;
-use crate::build_frontend::build_frontend;
 use crate::build_backend::build_backend;
+use crate::build_frontend::build_frontend;
+use crate::config::Config;
 use crate::run_backend::run_backend;
+use crate::set_env_vars::set_env_vars;
+use crate::watcher::{BackendWatcher, FrontendWatcher};
+use anyhow::{Context, Error};
+use fehler::throws;
+use tokio::{join, process::Child, signal, time::Duration};
 
 const DEBOUNCE_TIME: Duration = Duration::from_millis(100);
 
@@ -20,10 +20,7 @@ pub async fn start(release: bool, open: bool) {
 
     signal::ctrl_c().await?;
     println!("Stopping watchers...");
-    let _ = join!(
-        frontend_watcher.stop(),
-        backend_watcher.stop(),
-    );
+    let _ = join!(frontend_watcher.stop(), backend_watcher.stop(),);
     println!("Watchers stopped");
 }
 
@@ -62,10 +59,10 @@ async fn build_and_run_backend(config: &Config, release: bool) -> Child {
 #[throws]
 fn open_in_browser(config: &Config) {
     let url = format!(
-        "{protocol}://localhost:{port}", 
+        "{protocol}://localhost:{port}",
         protocol = if config.https { "https" } else { "http" },
         port = config.port
     );
     println!("Open {} in the default web browser", url);
     open::that(url).context("Failed to open the URL in the browser")?;
-} 
+}

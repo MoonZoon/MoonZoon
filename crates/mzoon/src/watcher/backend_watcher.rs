@@ -1,14 +1,14 @@
-use anyhow::{Context, Result, Error};
-use tokio::{spawn, task::JoinHandle, time::Duration};
-use tokio::sync::mpsc::UnboundedReceiver;
-use tokio::process::Child;
+use super::project_watcher::ProjectWatcher;
+use crate::build_backend::build_backend;
+use crate::config::Config;
+use crate::run_backend::run_backend;
+use anyhow::{Context, Error, Result};
+use fehler::throws;
 use parking_lot::Mutex;
 use std::sync::Arc;
-use fehler::throws;
-use super::project_watcher::ProjectWatcher;
-use crate::config::Config;
-use crate::build_backend::build_backend;
-use crate::run_backend::run_backend;
+use tokio::process::Child;
+use tokio::sync::mpsc::UnboundedReceiver;
+use tokio::{spawn, task::JoinHandle, time::Duration};
 
 pub struct BackendWatcher {
     watcher: ProjectWatcher,
@@ -17,13 +17,19 @@ pub struct BackendWatcher {
 
 impl BackendWatcher {
     #[throws]
-    pub async fn start(config: &Config, release: bool, debounce_time: Duration, server: Option<Child>) -> Self {
-        let (watcher, debounced_receiver) = ProjectWatcher::start(&config.watch.backend, debounce_time)
-            .await
-            .context("Failed to start the backend project watcher")?;
+    pub async fn start(
+        config: &Config,
+        release: bool,
+        debounce_time: Duration,
+        server: Option<Child>,
+    ) -> Self {
+        let (watcher, debounced_receiver) =
+            ProjectWatcher::start(&config.watch.backend, debounce_time)
+                .await
+                .context("Failed to start the backend project watcher")?;
         Self {
-            watcher, 
-            task: spawn(on_change(debounced_receiver, release, config.https, server))
+            watcher,
+            task: spawn(on_change(debounced_receiver, release, config.https, server)),
         }
     }
 
@@ -35,7 +41,12 @@ impl BackendWatcher {
 }
 
 #[throws]
-async fn on_change(mut receiver: UnboundedReceiver<()>, release: bool, https: bool, server: Option<Child>) {
+async fn on_change(
+    mut receiver: UnboundedReceiver<()>,
+    release: bool,
+    https: bool,
+    server: Option<Child>,
+) {
     let mut build_task = None::<JoinHandle<()>>;
     let server = Arc::new(Mutex::new(server));
 
@@ -48,14 +59,14 @@ async fn on_change(mut receiver: UnboundedReceiver<()>, release: bool, https: bo
         if let Some(mut server) = server_process {
             let _ = server.kill().await;
         }
-        
+
         build_task = Some(spawn(build_and_run(Arc::clone(&server), release, https)));
     }
-    
+
     if let Some(build_task) = build_task.take() {
         build_task.abort();
     }
-} 
+}
 
 async fn build_and_run(server: Arc<Mutex<Option<Child>>>, release: bool, https: bool) {
     if let Err(error) = build_backend(release, https).await {
@@ -66,4 +77,3 @@ async fn build_and_run(server: Arc<Mutex<Option<Child>>>, release: bool, https: 
         Err(error) => eprintln!("{}", error),
     }
 }
-
