@@ -25,7 +25,6 @@ impl BackendWatcher {
     ) -> Self {
         let (watcher, debounced_receiver) =
             ProjectWatcher::start(&config.watch.backend, debounce_time)
-                .await
                 .context("Failed to start the backend project watcher")?;
         Self {
             watcher,
