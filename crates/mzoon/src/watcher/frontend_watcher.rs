@@ -17,7 +17,6 @@ impl FrontendWatcher {
     pub async fn start(config: &Config, release: bool, debounce_time: Duration) -> Self {
         let (watcher, debounced_receiver) =
             ProjectWatcher::start(&config.watch.frontend, debounce_time)
-                .await
                 .context("Failed to start the frontend project watcher")?;
 
         let reload_url = Arc::new(format!(

@@ -76,7 +76,7 @@
 
 1. Signals, React-like Hooks, Optimizations [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-3-signals-react-like-hooks-optimizations-39lp) / [MD](docs/articles/dev_news_3.md)]
 
-1. Actix, Async CLI, Fails [[dev.to (WIP)](https://dev.to/martinkavik/moonzoon-dev-news-4-actix-async-cli-fails-xxxx) / [MD](docs/articles/dev_news_4.md)]
+1. Actix, Async CLI, Error handling, Fails [[dev.to (WIP)](https://dev.to/martinkavik/moonzoon-dev-news-4-actix-async-cli-error-handling-fails-xxxx) / [MD](docs/articles/dev_news_4.md)]
 
 ---
 

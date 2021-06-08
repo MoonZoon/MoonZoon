@@ -13,7 +13,7 @@ pub struct ProjectWatcher {
 
 impl ProjectWatcher {
     #[throws]
-    pub async fn start(paths: &[String], debounce_time: Duration) -> (Self, UnboundedReceiver<()>) {
+    pub fn start(paths: &[String], debounce_time: Duration) -> (Self, UnboundedReceiver<()>) {
         let (sender, receiver) = mpsc::unbounded_channel();
         let watcher = start_immediate_watcher(sender, paths)?;
         let (debounced_sender, debounced_receiver) = mpsc::unbounded_channel();
