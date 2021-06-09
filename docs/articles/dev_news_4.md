@@ -596,9 +596,56 @@ async fn create_compressed_files(file_path: impl AsRef<Path>) {
 
 ## File Visitor
 
+When you want to iterate over all files in the given directory and its nested folders, then it's relatively straightforward with the standard Rust library. Just go to the Rust docs for `std::fs::read_dir` and copy the provided [example](https://doc.rust-lang.org/std/fs/fn.read_dir.html#examples). Also there is chance we'll see the function [fs::read_dir_all](https://github.com/rust-lang/rust/issues/69684) in `std`. Or you can use the crate [walkdir](https://crates.io/crates/walkdir) from a very experienced maintainer of many Rust libraries.
 
+However the Rust async world is still pretty new and messy. If I chose `smol` instead of `tokio` and was brave enough to use the library with only 602 downloads, then I would probably integrate the crate [async_walkdir](https://crates.io/crates/async-walkdir).
+
+Another approach would be to use `walkdir` to create a list of files and then process the list as needed in parallel. However it doesn't sound as a clean solution and in the case of a large directory tree, you want to return early when the processing fails or when your file search is complete.
+
+I'm not a big fan or recursive functions because:
+- They often lead to increased cognitive load.
+- Stack overflow is difficult to catch and debug.
+- Rust doesn't have a good support for TCO/TCE (_tail call optimization / elimination_), although there are some libraries like [Tailcall](https://crates.io/crates/tailcall) and maybe promising news in [rust-lang/rfcs](https://github.com/rust-lang/rfcs/issues/2691).
+- You often need to use `Box` in Rust recursive constructs (both functions and types need boxed items). The crate [async-recursion](https://crates.io/crates/async-recursion) basically just wraps the `Future` into a `Box`.
+- [Why does NASA not allow recursion?](https://craftofcoding.wordpress.com/2021/03/08/why-does-nasa-not-allow-recursion/)
+
+Fortunately during intensive reading and searching for a better solution, I've found a nice answer on [stackoverflow.com](https://stackoverflow.com/a/58825638) compatible with `tokio` and `futures`. I've refactored it a little bit and saved to [/crates/mzoon/src/helper/visit_files.rs](https://github.com/MoonZoon/MoonZoon/blob/32362a38a35e0d57b291503516de0de2c1c55fc6/crates/mzoon/src/helper/visit_files.rs). The code:
+
+```rust
+pub fn visit_files(path: impl Into<PathBuf>) -> impl Stream<Item = Result<DirEntry>> + Send + 'static {
+    #[throws]
+    async fn one_level(path: PathBuf, to_visit: &mut Vec<PathBuf>) -> Vec<DirEntry> {
+        let mut dir = fs::read_dir(path).await?;
+        let mut files = Vec::new();
+
+        while let Some(child) = dir.next_entry().await? {
+            if child.metadata().await?.is_dir() {
+                to_visit.push(child.path());
+            } else {
+                files.push(child)
+            }
+        }
+        files
+    }
+
+    stream::unfold(vec![path.into()], |mut to_visit| {
+        async {
+            let path = to_visit.pop()?;
+            let file_stream = match one_level(path, &mut to_visit).await {
+                Ok(files) => stream::iter(files).map(Ok).left_stream(),
+                Err(error) => stream::once(async { Err(error) }).right_stream(),
+            };
+            Some((file_stream, to_visit))
+        }
+    })
+    .flatten()
+}
+```
+(Let me know if you know a better solution or a suitable library.)
 
 ## Wasm-pack installer
+
+
 
 ---
 
