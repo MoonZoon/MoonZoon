@@ -45,7 +45,10 @@ And I would like to thank:
 - It's fast, async and popular.
 - Supports HTTP/2 and probably also H3 in the future ([related issue](https://github.com/actix/actix-web/issues/309)).
 - [Actix actor framework](https://crates.io/crates/actix) could be a good foundation for the first version of virtual actors. 
-- The API feels more intuitive than the Warp's one to me. And we were [fighting with Warp](https://github.com/MoonZoon/MoonZoon/pull/6#issuecomment-840037580) during the Moon development.
+- It uses [Tokio](https://crates.io/crates/tokio) under the hood. It's the most popular async runtime and we can use it also in mzoon.
+- The API feels more intuitive than the [Warp](https://crates.io/crates/warp)'s one to me. And we were [fighting with Warp](https://github.com/MoonZoon/MoonZoon/pull/6#issuecomment-840037580) during the Moon development.
+- [Tide](https://crates.io/crates/tide) supports only HTTP/1.x.
+- Async [Rocket](https://crates.io/crates/rocket) working on stable Rust hasn't been released yet. (A Git version would block Moon publishing to [creates.io](https://crates.io/)).
 
 ## Moon API changes
 
@@ -141,7 +144,8 @@ backend = [
 
 - There is a new property `backend_log_level`. It sets the [env_logger](https://crates.io/crates/env_logger) log level. 
    - `info` level is useful for debugging because it shows all requests (demonstrated in the GIF at the top).
-   - _Note:_ There are also independent `404` and `500` error handlers that call `eprintl` with the error before they pass the response to the client. 
+   - _Note:_ There are also independent `404` and `500` error handlers that call `eprintl` with the error before they pass the response to the client.
+   - _Note_: [fern](https://crates.io/crates/fern) looks like a good alternative if we find out `env_logger` isn't good enough. (Thanks [azzamsa](https://github.com/azzamsa) for the suggestion.)
 
 - `[redirect_server]` has been renamed to `[redirect]` because there is no longer a redirection server. The new [RedirectMiddleware](https://github.com/MoonZoon/MoonZoon/blob/32362a38a35e0d57b291503516de0de2c1c55fc6/crates/moon/src/redirect.rs) is activated when you enable the redirect.
 
@@ -484,12 +488,115 @@ So I can imagine there are some opportunities for another refactor round:
 - Use `notify`'s debouncer once it's integrated into the library.
 - Use async drops once Rust supports them or an alternative.
    - See the related article [Asynchronous Destructors](https://boats.gitlab.io/blog/post/poll-drop/) from the `fehler`'s author.
+- If you want to investigate the option "Wait until all task done" so we can just abort all tasks in a standard `drop` and then wait for async runtime to finish, there is [the entrance](https://github.com/tokio-rs/tokio/issues/2053) to the rabbit hole.
 
 Feel free to create a PR when you manage to simplify the code.
 
 ## File Compressors
 
+Frontend files are served compressed to get them quickly to users and to reduce network traffic and server load. Only app files (in the `pkg` directory) are compressed at the moment but we'll probably compress the entire `public` folder in the future.
+
+mzoon compresses files when the app has been built in the release mode. The result is three files instead of one: `file.xxx` (the original), `file.xxx.gz` and `file.xxx.br`. Then Moon serves them according to the `ACCEPT_ENCODING` header sent by clients.  
+
+We would use only [Brotli](https://developer.mozilla.org/en-US/docs/Glossary/brotli_compression) algorithm because it produces the smallest files but Firefox supports only [Gzip](https://developer.mozilla.org/en-US/docs/Glossary/brotli_compression) over HTTP. All browsers support Brotli with HTTPS.
+
+_Note:_ If we decide to compress non-cacheable dynamic content - like messages between frontend and backend - then we will probably choose Gzip because it's faster than Brotli.
+
+Let's look at the implementation. The first snippet is from [/crates/mzoon/src/helper/file_compressor.rs](https://github.com/MoonZoon/MoonZoon/blob/32362a38a35e0d57b291503516de0de2c1c55fc6/crates/mzoon/src/helper/file_compressor.rs):
+
+```rust
+use crate::helper::ReadToVec;
+use async_trait::async_trait;
+use brotli::{enc::backward_references::BrotliEncoderParams, CompressorReader as BrotliEncoder};
+use flate2::{bufread::GzEncoder, Compression as GzCompression};
+// ...
+
+#[async_trait]
+pub trait FileCompressor {
+    async fn compress_file(content: Arc<Vec<u8>>, path: &Path, extension: &str) -> Result<()> {
+        let path = compressed_file_path(path, extension);
+        let mut file_writer = fs::File::create(&path)
+            .await
+            .with_context(|| format!("Failed to create the file {:#?}", path))?;
+
+        let compressed_content = spawn_blocking(move || Self::compress(&content)).await??;
+
+        file_writer.write_all(&compressed_content).await?;
+        file_writer.flush().await?;
+        Ok(())
+    }
+
+    fn compress(bytes: &[u8]) -> Result<Vec<u8>>;
+}
+//...
+// ------ Brotli ------
+
+pub struct BrotliFileCompressor;
+
+#[async_trait]
+impl FileCompressor for BrotliFileCompressor {
+    fn compress(bytes: &[u8]) -> Result<Vec<u8>> {
+        BrotliEncoder::with_params(bytes, 0, &BrotliEncoderParams::default()).read_to_vec()
+    }
+}
+
+// ------ Gzip ------
+
+pub struct GzipFileCompressor;
+
+#[async_trait]
+impl FileCompressor for GzipFileCompressor {
+    fn compress(bytes: &[u8]) -> Result<Vec<u8>> {
+        GzEncoder::new(bytes, GzCompression::best()).read_to_vec()
+    }
+}
+```
+- `#[async_trait]` allows us to write `async` methods in traits. (The crate [async_trait](https://crates.io/crates/async-trait), from the author of `anyhow` and `thiserror`.)
+
+- The combination of `async-trait` and `fehler` is deadly for the Rust compiler. That's why you see `Ok(())` + `Result<()>` instead of `#[throws]`. I'm not sure if it's `async-trait` or `fehler` problem, feel free to investigate it more and let me know.
+
+- We need to call `spawn_blocking` instead of `spawn` to move compression to a new thread because both encoders / compressors are blocking. I was trying to use [async-compression](https://crates.io/crates/async-compression), but there was a bug probably somewhere close to the `GzEncoder` - the MZ example `counter` was producing a wasm file that had always only `9KB` instead of `16KB`. Also I had to use `async-compression`'s `futures` encoders with the [compat layer](https://docs.rs/tokio-util/0.6.7/tokio_util/compat/index.html) to resolve the problem with incompatible `tokio` versions. Feel free to investigate it more and let me know.
+
+- _Tip_: Don't forget to call `.flush()` after `.write_all()`. Sometimes it works without `.flush()`, sometimes it doesn't, so it's difficult to debug.
+
+- `read_to_vec` is a custom helper - see [/crates/mzoon/src/helper/read_to_vec.rs](https://github.com/MoonZoon/MoonZoon/blob/32362a38a35e0d57b291503516de0de2c1c55fc6/crates/mzoon/src/helper/read_to_vec.rs).
+
+- Both encoders are set to compress in the best quality (i.e. to produce the smallest files at the cost of speed).
+
+The second and the last snippet is from [/crates/mzoon/src/build_frontend.rs](https://github.com/MoonZoon/MoonZoon/blob/32362a38a35e0d57b291503516de0de2c1c55fc6/crates/mzoon/src/build_frontend.rs):
+
+```rust
+use futures::TryStreamExt;
+
+#[throws]
+async fn compress_pkg(wasm_file_path: impl AsRef<Path>, js_file_path: impl AsRef<Path>) {
+    try_join!(
+        create_compressed_files(wasm_file_path),
+        create_compressed_files(js_file_path),
+        visit_files("frontend/pkg/snippets")
+            .try_for_each_concurrent(None, |file| create_compressed_files(file.path()))
+    )?
+}
+
+#[throws]
+async fn create_compressed_files(file_path: impl AsRef<Path>) {
+    let file_path = file_path.as_ref();
+    let content = Arc::new(fs::File::open(&file_path).await?.read_to_vec().await?);
+
+    try_join!(
+        BrotliFileCompressor::compress_file(Arc::clone(&content), file_path, "br"),
+        GzipFileCompressor::compress_file(content, file_path, "gz"),
+    )
+    .with_context(|| format!("Failed to create compressed files for {:#?}", file_path))?
+}
+```
+- All files are compressed and generated in parallel thanks to `spawn_blocking` (explained before) and thanks to `tokio::fs` (we don't block the working thread by waiting for OS file operations). 
+
+- `visit_files` is a stream of files (explained in the next section). It works nice with the function [try_for_each_concurrent](https://docs.rs/futures/0.3.15/futures/stream/trait.TryStreamExt.html#method.try_for_each_concurrent).
+
 ## File Visitor
+
+
 
 ## Wasm-pack installer
 
