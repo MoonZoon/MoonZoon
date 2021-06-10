@@ -107,16 +107,16 @@ fn unpack_wasm_pack(tar_gz: Vec<u8>) {
     for entry in archive.entries()? {
         let mut entry = entry?;
         let path = entry.path()?;
-        if path
+        let file_stem = path
             .file_stem()
-            .ok_or(anyhow!("Entry without a file name"))?
-            == "wasm-pack"
-        {
-            let mut destination = PathBuf::from("frontend");
-            destination.push(path.file_name().unwrap());
-            entry.unpack(destination)?;
-            return;
+            .ok_or(anyhow!("Entry without a file name"))?;
+        if file_stem != "wasm-pack" {
+            continue;
         }
+        let mut destination = PathBuf::from("frontend");
+        destination.push(path.file_name().unwrap());
+        entry.unpack(destination)?;
+        return;
     }
     Err(anyhow!(
         "Failed to find wasm-pack in the downloaded archive"
