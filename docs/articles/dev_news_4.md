@@ -2,7 +2,7 @@
 
 Unlimited Actix power!
 
-[![Hello from Actix](images/hello_from_actix.gif)](https://raw.githubusercontent.com/MoonZoon/MoonZoon/main/docs/images/demo.gif)
+![Hello from Actix](images/hello_from_actix.gif)]
 
 ---
 
@@ -125,7 +125,7 @@ async fn main() -> std::io::Result<()> {
 
 - `cfg` in the example is [actix_web::web::ServiceConfig](https://docs.rs/actix-web/4.0.0-beta.6/actix_web/web/struct.ServiceConfig.html). It allows you to create custom Actix endpoints and configure the server as you wish.
 
-- Multiple crates and items are reexported from `moon` to mitigate dependency hell caused by incompatible versions and to make your `Cargo.toml` simple enough. The current list looks like this:
+- Multiple crates and items are reexported from `moon` to mitigate dependency hell caused by incompatible versions and to simplify your `Cargo.toml`. The current list looks like this:
 
 ```rust
 pub use trait_set::trait_set;
@@ -266,7 +266,7 @@ There are also other async runtimes like [async-std](https://crates.io/crates/as
 
 During the mzoon refactor, I've decided to integrate two nice libraries to eliminate boilerplate:
 
-The first one is [**anyhow**](https://crates.io/crates/anyhow). It basically allows you write `?` where you want to return an error early. No need to write error mappers or similar stuff. 
+The first one is [**anyhow**](https://crates.io/crates/anyhow). It allows you to write `?` wherever you want to return an error early. No need to write error mappers or similar stuff. 
 
 `anyhow` also provides the method `context` (and its lazy version `with_context`) and a macro `anyhow!` for creating errors. An example:
 
@@ -291,7 +291,7 @@ pub async fn build_backend(release: bool, https: bool) -> Result<()> {
    - `anyhow` is useful mostly for apps. If you are writing a library, look at [thiserror](https://crates.io/crates/thiserror) (written by the same author).
 
 
-The second error handling library is [**fehler**](https://github.com/withoutboats/fehler). I've decided to integrate it into mzoon once I noticed that many functions were returning `Ok(())` and their signature was `... -> Result<()>`. `Ok(())` is a side-effect of `anyhow` because you want to use `?` as much as possible to automatically convert specific errors to `anyhow::Error`. The second reason why there were many `Ok(())`s is the fact that mzoon does many file operations. 
+The second error handling library is [**fehler**](https://github.com/withoutboats/fehler). I've decided to integrate it into mzoon once I noticed that many functions were returning `Ok(())` and their signature was `... -> Result<()>`. `Ok(())` is a side-effect of `anyhow` because you want to use `?` as much as possible to automatically convert concrete errors to `anyhow::Error`. The second reason why there were many `Ok(())`s is the fact that mzoon does many file operations. 
 
 I recommend to read these articles about `fehler` - [A brief apology of Ok-Wrapping](https://without.boats/blog/why-ok-wrapping/) and [From failure to Fehler](https://without.boats/blog/failure-to-fehler/). 
 
@@ -482,7 +482,7 @@ impl FrontendWatcher {
 
 As you can see, there is another `stop` method that calls the previous `stop` method and the remaining code is very similar to the `ProjectWatcher` implementation. 
 
-Let's look at the last snippet to know the whole watcher story ([crates/mzoon/src/command/start.rs](https://github.com/MoonZoon/MoonZoon/blob/32362a38a35e0d57b291503516de0de2c1c55fc6/crates/mzoon/src/command/start.rs)):
+Let's look at the last snippet to know the whole watcher story ([/crates/mzoon/src/command/start.rs](https://github.com/MoonZoon/MoonZoon/blob/32362a38a35e0d57b291503516de0de2c1c55fc6/crates/mzoon/src/command/start.rs)):
 ```rust
 #[throws]
 pub async fn start(release: bool, open: bool) {
@@ -523,7 +523,7 @@ Frontend files are served compressed to get them quickly to users and to reduce 
 
 mzoon compresses files when the app has been built in the release mode. The result is three files instead of one: `file.xxx` (the original), `file.xxx.gz` and `file.xxx.br`. Then Moon serves them according to the `ACCEPT_ENCODING` header sent by clients.  
 
-We would use only [Brotli](https://developer.mozilla.org/en-US/docs/Glossary/brotli_compression) algorithm because it produces the smallest files but Firefox supports only [Gzip](https://developer.mozilla.org/en-US/docs/Glossary/brotli_compression) over HTTP. All browsers support Brotli with HTTPS.
+We would use only [Brotli](https://developer.mozilla.org/en-US/docs/Glossary/brotli_compression) algorithm because it produces the smallest files but Firefox supports only [Gzip](https://developer.mozilla.org/en-US/docs/Glossary/GZip_compression) over HTTP. All browsers support Brotli with HTTPS.
 
 _Note:_ If we decide to compress non-cacheable dynamic content - like messages between frontend and backend - then we will probably choose Gzip because it's faster than Brotli.
 
@@ -696,7 +696,7 @@ _Note_: `wasm-pack-init.exe` is actually an uncompressed Windows binary with a d
  
 > 2. What is our platform?
 
-There multiple ways to determine the platform. Two of them are used in mzoon:
+There are multiple ways to determine the platform. Two of them are used in mzoon:
 
 There is a build script `build.rs` in the mzoon crate with this code:
 ```rust
@@ -730,7 +730,7 @@ cfg_if! {
 ```
 - _Note_: The macro `cfg_if` belongs to the crate [cfg_if](https://crates.io/crates/cfg-if).
 
-In the code above I assume mzoon will be compiled only on the most common platforms. When somebody will need to compile mzoon on other platforms, we will need to fallback to `cargo install` and somehow test that everything works. There is also a small check to inform you that you may have incompatible platform:
+In the code above I assume mzoon will be compiled only on the most common platforms. When someone wants to compile mzoon on other platforms, we will need to add a fallback to `cargo install`. There is also a small check to inform you that you may have incompatible platform:
 
 ```rust
 if TARGET != NEAREST_TARGET {
@@ -762,7 +762,7 @@ The self-installer copy itself next to the `rustup` executable to make sure it's
 `wasm-pack` uses the crate [binary-install](https://crates.io/crates/binary-install) to install its binary dependencies like `wasm-bindgen` or `wasm-opt`. Those binaries are saved into an OS-specific global cache folder, determined by the function `dirs_next::cache_dir()` from the crate [dirs_next](https://crates.io/crates/dirs-next).
 - It's a better idea, but we still have to manage different `wasm-pack` versions and I don't like to use global caches too much because it's difficult to remove old files when they are no longer needed.
 
-So the remaining option is to download `wasm-pack` directly into the user project. We can store in the `target` directory. But I think the best option is the `frontend` directory. Users can use `wasm-pack` directly if they need it - e.g. to run tests until the `test` command is implemented in mzoon. 
+So the remaining option is to download `wasm-pack` directly into the user project. We can store it in the `target` directory. But I think the best option is the `frontend` directory. Users can use `wasm-pack` directly if they need it - e.g. to run tests until the `test` command is implemented in mzoon. 
 
 --
 
