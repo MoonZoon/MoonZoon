@@ -1,4 +1,4 @@
-# MoonZoon Dev News (4): Actix, Async CLI, Error handling, Fails
+# MoonZoon Dev News (4): Actix, Async CLI, Error handling, Wasm-pack installer
 
 Unlimited Actix power!
 
@@ -19,6 +19,24 @@ Unlimited Actix power!
 
 ---
 
+# Chapters
+- [News](#news)
+- [Actix](#actix)
+   - [Why Actix?](#why-actix)
+   - [Moon API changes](#moon-api-changes)
+   - [MoonZoon.toml changes](#moonzoontoml-changes)
+   - [Server-Sent Events](#server-sent-events)
+   - [Moon endpoint changes](#moon-endpoint-changes)
+- [mzoon](#mzoon)
+   - [Async runtime](#async-runtime)
+   - [Error handling](#error-handling)
+   - [File Watchers](#file-watchers)
+   - [File Compressors](#file-compressors)
+   - [File Visitor](#file-visitor)
+   - [Wasm-pack installer](#wasm-pack-installer)
+
+---
+
 # News
 
 - Moon - [Warp](https://crates.io/crates/warp) replaced with [Actix](https://crates.io/crates/actix-web). There are API changes to allow you to use Actix directly from your apps.
@@ -29,7 +47,7 @@ Unlimited Actix power!
 
 - You can select the required mzoon version for [heroku-buildpack-moonzoon](https://github.com/MoonZoon/heroku-buildpack-moonzoon) by adding the file [mzoon_commit](https://github.com/MoonZoon/demo/blob/main/mzoon_commit) to your repo with a MZ project.
 
-You'll read about Moon and mzoon improvements in the following chapters. The last chapter is dedicated to my development fails, library fails and other notes from trenches. 
+You'll read about Moon and mzoon improvements mentioned above in the following chapters. 
 
 ---
 
@@ -48,7 +66,14 @@ And I would like to thank:
 - It uses [Tokio](https://crates.io/crates/tokio) under the hood. It's the most popular async runtime and we can use it also in mzoon.
 - The API feels more intuitive than the [Warp](https://crates.io/crates/warp)'s one to me. And we were [fighting with Warp](https://github.com/MoonZoon/MoonZoon/pull/6#issuecomment-840037580) during the Moon development.
 - [Tide](https://crates.io/crates/tide) supports only HTTP/1.x.
-- Async [Rocket](https://crates.io/crates/rocket) working on stable Rust hasn't been released yet. (A Git version would block Moon publishing to [creates.io](https://crates.io/)).
+- Why not [Rocket](https://crates.io/crates/rocket) (detailed explanation to answer questions on the MZ [chat](https://discord.gg/eGduTxK2Es)):
+   - It's too much opinionated with too many batteries included to be used as just a library. Moon would fight with Rocket. Examples: We would need to disable Rocket's console logging, then explain to users they can't use `Rocket.toml` and hope that Rocket's live reloading won't break Moon's file watchers, etc.
+   - It's still less popular / downloaded than Actix.
+   - We would need to find a compatible actor framework to write PoC of virtual actors.
+   - I've already rewritten Moon to Actix (before Rocket published the version `0.5.0-rc.1`). Actix works great so I don't see a real reason to sacrifice dozens hours of my free time and slow down Moon development by another rewriting.
+   - Every framework has its own problems - there is a chance we would encounter a show-stopper during the Rocket integration.
+   - It doesn't really matter what framework we choose from the long-term view. The number of reasons why you want to communicate directly with the lower-level framework (Actix/Rocket) in Moon will decrease proportionally to the progress of Moon API development.
+   - Rocket and Actix (and other frameworks) have pretty similar performance and API in many cases so all Rust web developers should be able to learn the Actix API quickly and even migrate a project from other frameworks in a reasonable time.
 
 ## Moon API changes
 
@@ -645,11 +670,165 @@ pub fn visit_files(path: impl Into<PathBuf>) -> impl Stream<Item = Result<DirEnt
 
 ## Wasm-pack installer
 
+I hate complicated installations and configurations, especially if they aren't cross-platform. In an ideal world, we would just write `cargo install mzoon`, hit enter and done. Unfortunately it isn't so simple even in the Rust + Cargo world.
 
+The Rust compiler is pretty slow so if there is a chance to avoid compilation, we should use it. It applies especially for CI pipelines. So we have to download pre-compiled binaries. But to use binaries, we firstly have to answer these questions:
+1. What are available binary versions / supported platforms?
+1. What is our platform?
+1. Where we should download `wasm-pack`?
+1. How should we download and unpack `wasm-pack`?
 
----
+--
 
-# Fails
+> 1. What are available binary versions / supported platforms?
+
+`wasm-pack`'s repo has associated build pipelines for multiple platforms. So we can just look at the [release assets](https://github.com/rustwasm/wasm-pack/releases/latest).
+
+The current list (version `0.9.1`):
+- `wasm-pack-init.exe` (7.16 MB)
+- `wasm-pack-v0.9.1-x86_64-apple-darwin.tar.gz` (2.97 MB)
+- `wasm-pack-v0.9.1-x86_64-pc-windows-msvc.tar.gz` (2.69 MB)
+- `wasm-pack-v0.9.1-x86_64-unknown-linux-musl.tar.gz` (5.02 MB)
+
+_Note_: `wasm-pack-init.exe` is actually an uncompressed Windows binary with a different name.
+
+--
+ 
+> 2. What is our platform?
+
+There multiple ways to determine the platform. Two of them are used in mzoon:
+
+There is a build script `build.rs` in the mzoon crate with this code:
+```rust
+fn main() {
+    println!(
+        "cargo:rustc-env=TARGET={}",
+        std::env::var("TARGET").unwrap()
+    );
+}
+```
+The only purpose is to "forward" the environment variable [TARGET](https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-build-scripts) (available only during the build process) to the compilation. Then we can read it in the mzoon code ([/crates/mzoon/src/wasm_pack.rs](https://github.com/MoonZoon/MoonZoon/blob/32362a38a35e0d57b291503516de0de2c1c55fc6/crates/mzoon/src/wasm_pack.rs)):
+
+```rust
+const TARGET: &str = env!("TARGET");
+```
+
+Unfortunately we can't use it directly because there are cases where it's too strict. For example, [Heroku](https://www.heroku.com/) build pipeline is identified as `x86_64-unknown-linux-gnu` but we have the binary only for `x86_64-unknown-linux-musl`. However the available binary works even in that Heroku pipeline. So we need more relaxed platform matching in practice:
+
+```rust
+cfg_if! {
+    if #[cfg(target_os = "macos")] {
+        const NEAREST_TARGET: &str = "x86_64-apple-darwin";
+    } else if #[cfg(target_os = "windows")] {
+        const NEAREST_TARGET: &str = "x86_64-pc-windows-msvc";
+    } else if #[cfg(target_os = "linux")] {
+        const NEAREST_TARGET: &str = "x86_64-unknown-linux-musl";
+    } else {
+        compile_error!("wasm-pack pre-compiled binary hasn't been found for the target platform '{}'", TARGET);
+    }
+}
+```
+- _Note_: The macro `cfg_if` belongs to the crate [cfg_if](https://crates.io/crates/cfg-if).
+
+In the code above I assume mzoon will be compiled only on the most common platforms. When somebody will need to compile mzoon on other platforms, we will need to fallback to `cargo install` and somehow test that everything works. There is also a small check to inform you that you may have incompatible platform:
+
+```rust
+if TARGET != NEAREST_TARGET {
+    println!(
+        "Pre-compiled wasm-pack binary '{}' will be used for the target platform '{}'",
+        NEAREST_TARGET, TARGET
+    );
+}
+```
+The example output from the Heroku build log: 
+```
+Building frontend...
+
+Installing wasm-pack...
+
+Pre-compiled wasm-pack binary 'x86_64-unknown-linux-musl' will be used for the target platform 'x86_64-unknown-linux-gnu'
+
+wasm-pack installed
+```
+
+--
+
+> 3. Where we should download `wasm-pack`?
+
+`wasm-pack` contains a [self-installer](https://github.com/rustwasm/wasm-pack/blob/master/src/installer.rs), triggered when the executable [name starts with "wasm-pack-init"](https://github.com/rustwasm/wasm-pack/blob/master/src/main.rs#L76).
+The self-installer copy itself next to the `rustup` executable to make sure it's in `PATH`. 
+- It isn't a bad idea but there will be problems when multiple MZ projects will need different `wasm-pack` versions.
+
+`wasm-pack` uses the crate [binary-install](https://crates.io/crates/binary-install) to install its binary dependencies like `wasm-bindgen` or `wasm-opt`. Those binaries are saved into an OS-specific global cache folder, determined by the function `dirs_next::cache_dir()` from the crate [dirs_next](https://crates.io/crates/dirs-next).
+- It's a better idea, but we still have to manage different `wasm-pack` versions and I don't like to use global caches too much because it's difficult to remove old files when they are no longer needed.
+
+So the remaining option is to download `wasm-pack` directly into the user project. We can store in the `target` directory. But I think the best option is the `frontend` directory. Users can use `wasm-pack` directly if they need it - e.g. to run tests until the `test` command is implemented in mzoon. 
+
+--
+
+> 4. How should we download and unpack `wasm-pack`?
+
+[/crates/mzoon/src/helper/download.rs](https://github.com/MoonZoon/MoonZoon/blob/32362a38a35e0d57b291503516de0de2c1c55fc6/crates/mzoon/src/helper/download.rs)
+```rust
+#[throws]
+pub async fn download(url: impl AsRef<str>) -> Vec<u8> {
+    reqwest::get(url.as_ref())
+        .await?
+        .error_for_status()?
+        .bytes()
+        .await?
+        .to_vec()
+}
+```
+- [reqwest](https://crates.io/crates/reqwest) is popular, universal, async and based on `tokio`.  
+
+[/crates/mzoon/src/wasm_pack.rs](https://github.com/MoonZoon/MoonZoon/blob/32362a38a35e0d57b291503516de0de2c1c55fc6/crates/mzoon/src/wasm_pack.rs)
+```rust
+const DOWNLOAD_URL: &str = formatcp!(
+    "https://github.com/rustwasm/wasm-pack/releases/download/v{version}/wasm-pack-v{version}-{target}.tar.gz",
+    version = VERSION,
+    target = NEAREST_TARGET,
+);
+
+// ...
+
+download(DOWNLOAD_URL)
+    .await
+    .context(formatcp!(
+        "Failed to download wasm-pack from the url '{}'",
+        DOWNLOAD_URL
+    ))?
+    .apply(unpack_wasm_pack)
+    .context("Failed to unpack wasm-pack")?;
+
+// ...
+
+#[throws]
+fn unpack_wasm_pack(tar_gz: Vec<u8>) {
+    let tar = GzDecoder::new(tar_gz.as_slice());
+    let mut archive = Archive::new(tar);
+
+    for entry in archive.entries()? {
+        let mut entry = entry?;
+        let path = entry.path()?;
+        let file_stem = path
+            .file_stem()
+            .ok_or(anyhow!("Entry without a file name"))?;
+        if file_stem != "wasm-pack" {
+            continue;
+        }
+        let mut destination = PathBuf::from("frontend");
+        destination.push(path.file_name().unwrap());
+        entry.unpack(destination)?;
+        return;
+    }
+    Err(anyhow!(
+        "Failed to find wasm-pack in the downloaded archive"
+    ))?;
+}
+```
+- The `formatcp!` macro is exported from the nice library [const_format](https://crates.io/crates/const_format).
+- Decompressing and unpacking is sync (aka blocking), but we still need to wait for `wasm-pack` installation before we can do anything else (e.g. build frontend). So why complicate our lives with extra wrappers like `spawn_blocking`? Also we can _unblock_ it later when needed.
 
 ---
 
