@@ -3,7 +3,7 @@ version = "0.1.0"
 name = "frontend"
 repository = "https://github.com/MartinKavik/MoonZoon"
 authors = ["Martin Kavík <martin@kavik.cz>"]
-description = "Chat - MoonZoon example"
+description = "Counter - MoonZoon example"
 categories = ["MoonZoon", "example"]
 license = "MIT"
 readme = "../README.md"
@@ -17,7 +17,12 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 # zoon = { git = "https://github.com/MartinKavik/MoonZoon" }
-zoon = { path = "../../../crates/zoon" }
+zoon = { path = "../../../zoon" }
+
+[profile.release]
+lto = true
+opt-level = 'z'
+codegen-units = 1
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ['-Os']
