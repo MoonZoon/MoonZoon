@@ -108,7 +108,8 @@
 
 # Examples
 
-- [Examples](examples) in the repo
+- [Examples](examples) in the repo. 
+   - See [development.md](docs/development.md) for instructions how to run them.
 - [Raytracer on MoonZoon](https://github.com/MartinKavik/ray_tracer)
 
 ---
