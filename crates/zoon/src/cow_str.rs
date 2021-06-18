@@ -1,4 +1,6 @@
+use crate::*;
 use std::borrow::Cow;
+use dominator::traits::AsStr as _;
 
 // ------ ------
 //  IntoCowStr
@@ -89,5 +91,12 @@ pub struct CowStrWrapper<'a>(Cow<'a, str>);
 impl dominator::traits::AsStr for CowStrWrapper<'_> {
     fn as_str(&self) -> &str {
         &self.0
+    }
+}
+
+impl<'a> From<CowStrWrapper<'a>> for JsValue {
+    fn from(cow_str_wrapper: CowStrWrapper<'a>) -> Self {
+        #[allow(deprecated)]
+        JsValue::from_str(cow_str_wrapper.as_str())
     }
 }

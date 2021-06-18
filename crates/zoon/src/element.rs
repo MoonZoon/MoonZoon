@@ -11,11 +11,17 @@ pub use column::Column;
 pub mod el;
 pub use el::El;
 
+pub mod label;
+pub use label::Label;
+
 pub mod row;
 pub use row::Row;
 
 pub mod text;
 pub use text::Text;
+
+pub mod text_input;
+pub use text_input::TextInput;
 
 pub mod raw_el;
 pub use raw_el::{RawEl, RawHtmlEl, RawSvgEl};

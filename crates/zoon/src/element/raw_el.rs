@@ -67,6 +67,7 @@ where
     T: AsRef<Node>,
     T: AsRef<EventTarget>,
     T: AsRef<web_sys::Element>,
+    T: AsRef<JsValue>,
 {
     pub fn attr(mut self, name: &str, value: &str) -> Self {
         self.dom_builder = self.dom_builder.attribute(name, value);
@@ -79,6 +80,23 @@ where
         value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
     ) -> Self {
         self.dom_builder = self.dom_builder.attribute_signal(
+            name.into_cow_str_wrapper(),
+            value.map(|value| value.into_option_cow_str_wrapper()),
+        );
+        self
+    }
+
+    pub fn prop(mut self, name: &str, value: &str) -> Self {
+        self.dom_builder = self.dom_builder.property(name, JsValue::from_str(value));
+        self
+    }
+
+    pub fn prop_signal(
+        mut self,
+        name: impl IntoCowStr<'static>,
+        value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
+    ) -> Self {
+        self.dom_builder = self.dom_builder.property_signal(
             name.into_cow_str_wrapper(),
             value.map(|value| value.into_option_cow_str_wrapper()),
         );
