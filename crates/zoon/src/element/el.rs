@@ -27,6 +27,13 @@ impl Element for El<ChildFlagSet> {
     }
 }
 
+impl<ChildFlag> UpdateRawHtmlEl for El<ChildFlag> {
+    fn update_raw_html_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+        self.raw_el = updater(self.raw_el);
+        self
+    }
+}
+
 // ------ ------
 //  Attributes
 // ------ ------

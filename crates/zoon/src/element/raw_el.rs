@@ -8,12 +8,12 @@ pub type RawSvgEl = RawEl<web_sys::SvgElement>;
 
 // ------ Traits ------
 
-pub trait AsRawHtmlEl {
-    fn as_raw_html_el(&self) -> &RawHtmlEl;
+pub trait UpdateRawHtmlEl {
+    fn update_raw_html_el(self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self;
 }
 
-pub trait AsRawSvgEl {
-    fn as_raw_html_el(&self) -> &RawSvgEl;
+pub trait UpdateRawSvgEl {
+    fn update_raw_svg_el(self, updater: impl FnOnce(RawSvgEl) -> RawSvgEl) -> Self;
 }
 
 // ------ ------
@@ -80,6 +80,7 @@ where
     T: AsRef<EventTarget>,
     T: AsRef<web_sys::Element>,
     T: AsRef<JsValue>,
+    T: AsRef<web_sys::HtmlElement>,
 {
     pub fn attr(mut self, name: &str, value: &str) -> Self {
         self.dom_builder = self.dom_builder.attribute(name, value);
@@ -162,6 +163,11 @@ where
         self.dom_builder = self.dom_builder.children_signal_vec(
             children.map(|child| child.into_element().into_raw_element().into_dom()),
         );
+        self
+    }
+
+    pub fn focus(mut self) -> Self {
+        self.dom_builder = self.dom_builder.focused(true);
         self
     }
 }

@@ -2,13 +2,13 @@ use zoon::*;
 use std::mem;
 use shared::{UpMsg, DownMsg, Message};
 
+// ------ ------
+//    Statics 
+// ------ ------
+
 #[static_ref]
 fn username() -> &'static Mutable<String> {
     Mutable::new("John".to_owned())
-}
-
-fn set_username(name: String) {
-    username().set(name);
 }
 
 #[static_ref]
@@ -21,10 +21,6 @@ fn new_message_text() -> &'static Mutable<String> {
     Mutable::new(String::new())
 }
 
-fn set_new_message_text(text: String) {
-    new_message_text().set(text);
-}
-
 // #[static_ref]
 // fn connection() -> &'static Connection<UpMsg, DownMsg> {
 //     Connection::new(|down_msg, _| {
@@ -34,12 +30,28 @@ fn set_new_message_text(text: String) {
 //     })
 // }
 
+// ------ ------
+//   Commands 
+// ------ ------
+
+fn set_username(name: String) {
+    username().set(name);
+}
+
+fn set_new_message_text(text: String) {
+    new_message_text().set(text);
+}
+
 fn send_message() {
     // connection.send_up_msg(UpMsg::SendMessage(Message {
     //     username: username().get_cloned(),
     //     text: new_message_text().map_mut(mem::take),
     // }), None);
 }
+
+// ------ ------
+//     View 
+// ------ ------
 
 fn root() -> impl Element {
     Column::new()
@@ -50,7 +62,6 @@ fn root() -> impl Element {
 
 fn received_messages() -> impl Element {
     Column::new().items_signal_vec(
-        // messages().signal_vec_cloned().map(received_message)
         messages().signal_vec_cloned().map(received_message)
     )
 }
@@ -74,7 +85,7 @@ fn new_message_panel() -> impl Element {
 
 fn new_message_input() -> impl Element {
     TextInput::new()
-        // .focus()
+        .focus()
         .on_change(set_new_message_text)
         .label_hidden("New message text")
         .placeholder(Placeholder::new("Message"))
@@ -112,6 +123,10 @@ fn username_input(id: &str) -> impl Element {
         .placeholder(Placeholder::new("Joe"))
         .text_signal(username().signal_cloned())
 }
+
+// ------ ------
+//     Start 
+// ------ ------
 
 #[wasm_bindgen(start)]
 pub fn start() {
