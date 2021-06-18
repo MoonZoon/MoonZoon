@@ -1,7 +1,7 @@
 [package]
 version = "0.1.0"
 name = "frontend"
-repository = "https://github.com/MartinKavik/MoonZoon"
+repository = "https://github.com/MoonZoon/MoonZoon"
 authors = ["Martin Kavík <martin@kavik.cz>"]
 description = "Chat - MoonZoon example"
 categories = ["MoonZoon", "example"]
@@ -16,8 +16,9 @@ crate-type = ["cdylib"]
 wasm-bindgen-test = "0.3.19"
 
 [dependencies]
-# zoon = { git = "https://github.com/MartinKavik/MoonZoon" }
+# zoon = { git = "https://github.com/MoonZoon/MoonZoon" }
 zoon = { path = "../../../crates/zoon" }
+shared = { path = "../shared" }
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ['-Os']
