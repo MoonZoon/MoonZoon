@@ -21,7 +21,7 @@ pub mod text;
 pub use text::Text;
 
 pub mod text_input;
-pub use text_input::TextInput;
+pub use text_input::{TextInput, Placeholder};
 
 pub mod raw_el;
 pub use raw_el::{RawEl, RawHtmlEl, RawSvgEl};
