@@ -33,7 +33,13 @@ async fn frontend() -> Frontend {
         </style>")
 }
 
-async fn up_msg_handler(_: UpMsgRequest) {}
+async fn up_msg_handler(_req: UpMsgRequest) {
+    // if let UpMsg::SendMessage(message) = req.up_msg {
+    //     join_all(connected_client::by_id().iter().map(|(_, client)| {
+    //         client.send_down_msg(message, req.cor_id)
+    //     })).await
+    // }
+}
 
 #[moon::main]
 async fn main() -> std::io::Result<()> {

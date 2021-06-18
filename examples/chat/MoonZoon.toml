@@ -13,6 +13,8 @@ frontend = [
     "public",
     "frontend/Cargo.toml",
     "frontend/src",
+    "shared/Cargo.toml",
+    "shared/src",
     "../../crates/zoon/Cargo.toml",
     "../../crates/zoon/src",
     "../../crates/static_ref_macro/Cargo.toml",
@@ -21,6 +23,8 @@ frontend = [
 backend = [
     "backend/Cargo.toml",
     "backend/src",
+    "shared/Cargo.toml",
+    "shared/src",
     "../../crates/moon/Cargo.toml",
     "../../crates/moon/src",
 ]
