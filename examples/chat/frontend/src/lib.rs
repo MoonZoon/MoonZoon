@@ -75,9 +75,9 @@ fn new_message_panel() -> impl Element {
 fn new_message_input() -> impl Element {
     TextInput::new()
         // .focus()
-        // .on_change(set_new_message_text)
-        // .label_hidden("New message text")
-        // .placeholder(Placeholder::new("Message"))
+        .on_change(set_new_message_text)
+        .label_hidden("New message text")
+        .placeholder(Placeholder::new("Message"))
         // .on_key_down(|event| {
         //     if let Key::Enter = event.key {
         //         send_message()
@@ -108,8 +108,8 @@ fn username_input_label(id: &str) -> impl Element {
 fn username_input(id: &str) -> impl Element {
     TextInput::new()
         .id(id)
-        // .on_change(set_username)
-        // .placeholder(Placeholder::new("Joe"))
+        .on_change(set_username)
+        .placeholder(Placeholder::new("Joe"))
         .text_signal(username().signal_cloned())
 }
 
