@@ -1,12 +1,24 @@
 use crate::*;
 use web_sys::{EventTarget, Node};
 
-// ------ ------
-//   Element
-// ------ ------
+// ------ Types ------
 
 pub type RawHtmlEl = RawEl<web_sys::HtmlElement>;
 pub type RawSvgEl = RawEl<web_sys::SvgElement>;
+
+// ------ Traits ------
+
+pub trait AsRawHtmlEl {
+    fn as_raw_html_el(&self) -> &RawHtmlEl;
+}
+
+pub trait AsRawSvgEl {
+    fn as_raw_html_el(&self) -> &RawSvgEl;
+}
+
+// ------ ------
+//   Element
+// ------ ------
 
 pub struct RawEl<T> {
     dom_builder: DomBuilder<T>,

@@ -23,11 +23,21 @@ pub use text::Text;
 pub mod text_input;
 pub use text_input::{TextInput, Placeholder};
 
+// --
+
 pub mod raw_el;
-pub use raw_el::{RawEl, RawHtmlEl, RawSvgEl};
+pub use raw_el::{RawEl, RawHtmlEl, RawSvgEl, AsRawHtmlEl, AsRawSvgEl};
 
 pub mod raw_text;
 pub use raw_text::RawText;
+
+// --
+
+pub mod focusable;
+pub use focusable::Focusable;
+
+pub mod styleable;
+pub use styleable::Styleable;
 
 // ------ Element ------
 
