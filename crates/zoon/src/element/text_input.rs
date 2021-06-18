@@ -34,6 +34,15 @@ impl<OnChangeFlag, PlaceholderFlag, TextFlag> Element for TextInput<IdFlagNotSet
     }
 }
 
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> UpdateRawHtmlEl for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {
+    fn update_raw_html_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+        self.raw_el = updater(self.raw_el);
+        self
+    }
+}
+
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Focusable for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {}
+
 // ------ ------
 //  Attributes
 // ------ ------
