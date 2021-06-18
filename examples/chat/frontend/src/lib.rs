@@ -73,8 +73,7 @@ fn new_message_panel() -> impl Element {
 }
 
 fn new_message_input() -> impl Element {
-    Text::new("there will be TextInput")
-    // TextInput::new()
+    TextInput::new()
         // .focus()
         // .on_change(set_new_message_text)
         // .label_hidden("New message text")
@@ -84,7 +83,7 @@ fn new_message_input() -> impl Element {
         //         send_message()
         //     }
         // })
-        // .text_signal(new_message_text().signal_cloned())
+        .text_signal(new_message_text().signal_cloned())
 }
 
 fn send_button() -> impl Element {
@@ -109,8 +108,8 @@ fn username_input_label(id: &str) -> impl Element {
 fn username_input(id: &str) -> impl Element {
     TextInput::new()
         .id(id)
-        .on_change(set_username)
-        .placeholder(Placeholder::new("Joe"))
+        // .on_change(set_username)
+        // .placeholder(Placeholder::new("Joe"))
         .text_signal(username().signal_cloned())
 }
 
