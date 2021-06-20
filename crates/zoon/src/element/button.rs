@@ -39,6 +39,8 @@ impl<LabelFlag, OnPressFlag> UpdateRawEl<RawHtmlEl> for Button<LabelFlag, OnPres
 
 impl<LabelFlag, OnPressFlag> Styleable<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
 
+impl<LabelFlag, OnPressFlag> Focusable for Button<LabelFlag, OnPressFlag> {}
+
 // ------ ------
 //  Attributes
 // ------ ------

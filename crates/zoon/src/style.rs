@@ -17,7 +17,8 @@ impl<'a> Font<'a> {
         }
     }
 
-    pub fn bold(self) -> Self {
+    pub fn bold(mut self) -> Self {
+        self.css_props.insert("font-weight", "bold");
         self
     }
 }
