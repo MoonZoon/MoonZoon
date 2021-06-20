@@ -45,4 +45,10 @@ impl RawEl for RawSvgEl {
         self.dom_builder = updater(self.dom_builder);
         self
     }
+
+    fn style(self, _name: &str, _value: &str) -> Self {
+        self.update_dom_builder(|_dom_builder| {
+            todo!("implement `style` body in `raw_el.rs` once it's implemented for Element in Dominator");
+        })
+    }
 }

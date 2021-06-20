@@ -33,11 +33,8 @@ pub use raw_text::RawText;
 
 // --
 
-pub mod focusable;
-pub use focusable::Focusable;
-
-pub mod styleable;
-pub use styleable::Styleable;
+pub mod ability;
+pub use ability::{Focusable, Styleable};
 
 // ------ Element ------
 

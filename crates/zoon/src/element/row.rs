@@ -34,6 +34,8 @@ impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Row<EmptyFlag> {
     }
 }
 
+impl<EmptyFlag> Styleable<RawHtmlEl> for Row<EmptyFlag> {}
+
 // ------ ------
 //  Attributes
 // ------ ------

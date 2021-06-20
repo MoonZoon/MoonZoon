@@ -109,4 +109,6 @@ pub trait RawEl: Sized {
             )
         })
     }
+
+    fn style(self, name: &str, value: &str) -> Self;
 }
