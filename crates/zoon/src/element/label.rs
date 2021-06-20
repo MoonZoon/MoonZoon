@@ -34,6 +34,8 @@ impl<LabelFlag, ForInputFlag> UpdateRawEl<RawHtmlEl> for Label<LabelFlag, ForInp
     }
 }
 
+impl<LabelFlag, ForInputFlag> Styleable<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
+
 // ------ ------
 //  Attributes
 // ------ ------

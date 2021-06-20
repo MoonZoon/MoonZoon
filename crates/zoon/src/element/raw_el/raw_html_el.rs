@@ -45,6 +45,12 @@ impl RawEl for RawHtmlEl {
         self.dom_builder = updater(self.dom_builder);
         self
     }
+
+    fn style(self, name: &str, value: &str) -> Self {
+        self.update_dom_builder(|dom_builder| {
+            dom_builder.style(name, value)
+        })
+    }
 }
 
 impl RawHtmlEl {
