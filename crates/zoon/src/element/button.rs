@@ -30,8 +30,8 @@ impl<OnPressFlag> Element for Button<LabelFlagSet, OnPressFlag> {
     }
 }
 
-impl<LabelFlag, OnPressFlag> UpdateRawHtmlEl for Button<LabelFlag, OnPressFlag> {
-    fn update_raw_html_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<LabelFlag, OnPressFlag> UpdateRawEl<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {
+    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }

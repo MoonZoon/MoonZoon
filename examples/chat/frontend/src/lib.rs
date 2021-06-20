@@ -13,7 +13,11 @@ fn username() -> &'static Mutable<String> {
 
 #[static_ref]
 fn messages() -> &'static MutableVec<Message> {
-    MutableVec::new()
+    // MutableVec::new()
+    MutableVec::new_with_values(vec![Message {
+        text: "I'm text".to_owned(),
+        username: "Martin".to_owned(),
+    }])
 }
 
 #[static_ref]
@@ -70,7 +74,7 @@ fn received_message(message: Message) -> impl Element {
     Row::new()
         .item(Column::new()
             .item(El::new()
-                // .style(Font::new().bold())
+                .style(Font::new().bold())
                 .child(message.username)
             )
             .item(message.text)

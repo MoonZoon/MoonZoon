@@ -27,8 +27,8 @@ impl<ForInputFlag> Element for Label<LabelFlagSet, ForInputFlag> {
     }
 }
 
-impl<LabelFlag, ForInputFlag> UpdateRawHtmlEl for Label<LabelFlag, ForInputFlag> {
-    fn update_raw_html_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<LabelFlag, ForInputFlag> UpdateRawEl<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {
+    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }

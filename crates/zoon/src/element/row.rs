@@ -27,8 +27,8 @@ impl Element for Row<EmptyFlagNotSet> {
     }
 }
 
-impl<EmptyFlag> UpdateRawHtmlEl for Row<EmptyFlag> {
-    fn update_raw_html_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Row<EmptyFlag> {
+    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
