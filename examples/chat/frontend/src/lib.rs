@@ -1,6 +1,5 @@
 use zoon::*;
-use std::mem;
-use shared::{UpMsg, DownMsg, Message};
+use shared::{UpMsg, DownMsg, Message, CorId, AuthToken};
 
 // ------ ------
 //    Statics 
@@ -13,11 +12,7 @@ fn username() -> &'static Mutable<String> {
 
 #[static_ref]
 fn messages() -> &'static MutableVec<Message> {
-    // MutableVec::new()
-    MutableVec::new_with_values(vec![Message {
-        username: "Martin".to_owned(),
-        text: "I'm text".to_owned(),
-    }])
+    MutableVec::new()
 }
 
 #[static_ref]
@@ -25,14 +20,12 @@ fn new_message_text() -> &'static Mutable<String> {
     Mutable::new(String::new())
 }
 
-// #[static_ref]
-// fn connection() -> &'static Connection<UpMsg, DownMsg> {
-//     Connection::new(|down_msg, _| {
-//         if let DownMsg::MessageReceived(message) = down_msg {
-//             messages().lock_mut().push_cloned(message);
-//         }
-//     })
-// }
+#[static_ref]
+fn connection() -> &'static Connection<UpMsg, DownMsg, CorId, AuthToken> {
+    Connection::new(|DownMsg::MessageReceived(message), _| {
+        messages().lock_mut().push_cloned(message);
+    })
+}
 
 // ------ ------
 //   Commands 
@@ -47,11 +40,10 @@ fn set_new_message_text(text: String) {
 }
 
 fn send_message() {
-    zoon::println!("Send message");
-    // connection.send_up_msg(UpMsg::SendMessage(Message {
-    //     username: username().get_cloned(),
-    //     text: new_message_text().map_mut(mem::take),
-    // }), None);
+    connection().send_up_msg(UpMsg::SendMessage(Message {
+        username: username().get_cloned(),
+        text: new_message_text().take(),
+    }), None);
 }
 
 // ------ ------

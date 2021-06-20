@@ -1,4 +1,5 @@
 use moon::*;
+use shared::{UpMsg, DownMsg, Message};
 
 async fn frontend() -> Frontend {
     Frontend::new()
@@ -34,10 +35,12 @@ async fn frontend() -> Frontend {
 }
 
 async fn up_msg_handler(_req: UpMsgRequest) {
+    println!("UpMsgHanlder!");
+
     // if let UpMsg::SendMessage(message) = req.up_msg {
-    //     join_all(connected_client::by_id().iter().map(|(_, client)| {
-    //         client.send_down_msg(message, req.cor_id)
-    //     })).await
+    //     // join_all(connected_client::by_id().iter().map(|(_, client)| {
+    //     //     client.send_down_msg(message, req.cor_id)
+    //     // })).await
     // }
 }
 

@@ -1,12 +1,14 @@
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 
+mod connection;
 mod console;
 mod cow_str;
 mod dom;
-pub mod element;
+mod element;
 mod futures_signals_ext;
-pub mod style;
+mod style;
 
+pub use connection::Connection;
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use style::*;
 pub use console::log;

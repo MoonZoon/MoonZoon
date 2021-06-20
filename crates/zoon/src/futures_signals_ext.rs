@@ -3,6 +3,7 @@ use futures_signals::{
     signal::Mutable,
     signal_vec::{MutableVec, MutableVecLockMut, MutableVecLockRef},
 };
+use std::mem;
 
 pub trait MutableExt<A> {
     fn map<B>(&self, f: impl FnOnce(&A) -> B) -> B;
@@ -14,6 +15,10 @@ pub trait MutableExt<A> {
         A: Copy;
 
     fn update_mut(&self, f: impl FnOnce(&mut A));
+
+    fn take(&self) -> A where A: Default {
+        self.map_mut(mem::take)
+    }
 }
 
 impl<A> MutableExt<A> for Mutable<A> {
