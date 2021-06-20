@@ -111,4 +111,10 @@ pub trait RawEl: Sized {
     }
 
     fn style(self, name: &str, value: &str) -> Self;
+
+    fn style_signal<'a>(
+        self,
+        name: impl IntoCowStr<'static>,
+        value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
+    ) -> Self;
 }
