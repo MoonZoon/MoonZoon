@@ -34,7 +34,12 @@ impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Row<EmptyFlag> {
     }
 }
 
+// ------ ------
+//   Abilities
+// ------ ------
+
 impl<EmptyFlag> Styleable<RawHtmlEl> for Row<EmptyFlag> {}
+impl<EmptyFlag> KeyboardEventHandling<RawHtmlEl> for Row<EmptyFlag> {}
 
 // ------ ------
 //  Attributes
