@@ -18,7 +18,7 @@ wasm-bindgen-test = "0.3.19"
 [dependencies]
 # zoon = { git = "https://github.com/MoonZoon/MoonZoon" }
 zoon = { path = "../../../crates/zoon" }
-shared = { path = "../shared" }
+shared = { path = "../shared", features = ["frontend"] }
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ['-Os']

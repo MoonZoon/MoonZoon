@@ -12,3 +12,4 @@ edition = "2018"
 [dependencies]
 # moon = { git = "https://github.com/MoonZoon/MoonZoon" }
 moon = { path = "../../../crates/moon" }
+shared = { path = "../shared", features = ["backend"] }
