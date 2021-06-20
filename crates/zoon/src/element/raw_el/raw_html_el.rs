@@ -1,5 +1,4 @@
 use crate::*;
-use web_sys::{EventTarget, Node};
 
 // ------ ------
 //   Element
@@ -39,91 +38,16 @@ impl Element for RawHtmlEl {
 //  Attributes
 // ------ ------
 
-impl<'a> RawHtmlEl {
-    pub fn attr(mut self, name: &str, value: &str) -> Self {
-        self.dom_builder = self.dom_builder.attribute(name, value);
+impl RawEl for RawHtmlEl {
+    type WSElement = web_sys::HtmlElement;
+
+    fn update_dom_builder(mut self, updater: impl FnOnce(DomBuilder<Self::WSElement>) -> DomBuilder<Self::WSElement>) -> Self {
+        self.dom_builder = updater(self.dom_builder);
         self
     }
+}
 
-    pub fn attr_signal(
-        mut self,
-        name: impl IntoCowStr<'static>,
-        value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
-    ) -> Self {
-        self.dom_builder = self.dom_builder.attribute_signal(
-            name.into_cow_str_wrapper(),
-            value.map(|value| value.into_option_cow_str_wrapper()),
-        );
-        self
-    }
-
-    pub fn prop(mut self, name: &str, value: &str) -> Self {
-        self.dom_builder = self.dom_builder.property(name, JsValue::from_str(value));
-        self
-    }
-
-    pub fn prop_signal(
-        mut self,
-        name: impl IntoCowStr<'static>,
-        value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
-    ) -> Self {
-        self.dom_builder = self.dom_builder.property_signal(
-            name.into_cow_str_wrapper(),
-            value.map(|value| value.into_option_cow_str_wrapper()),
-        );
-        self
-    }
-
-    pub fn event_handler<E: StaticEvent>(
-        mut self,
-        handler: impl FnOnce(E) + Clone + 'static,
-    ) -> Self {
-        let handler = move |event: E| handler.clone()(event);
-        self.dom_builder = self.dom_builder.event(handler);
-        self
-    }
-
-    pub fn child(mut self, child: impl IntoOptionElement<'a> + 'a) -> Self {
-        if let Some(child) = child.into_option_element() {
-            self.dom_builder = self.dom_builder.child(child.into_raw_element().into_dom())
-        }
-        self
-    }
-
-    pub fn child_signal(
-        mut self,
-        child: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
-    ) -> Self {
-        self.dom_builder = self.dom_builder.child_signal(child.map(|child| {
-            child
-                .into_option_element()
-                .map(|element| element.into_raw_element().into_dom())
-        }));
-        self
-    }
-
-    pub fn children(
-        mut self,
-        children: impl IntoIterator<Item = impl IntoElement<'a> + 'a>,
-    ) -> Self {
-        self.dom_builder = self.dom_builder.children(
-            children
-                .into_iter()
-                .map(|child| child.into_element().into_raw_element().into_dom()),
-        );
-        self
-    }
-
-    pub fn children_signal_vec(
-        mut self,
-        children: impl SignalVec<Item = impl IntoElement<'a>> + Unpin + 'static,
-    ) -> Self {
-        self.dom_builder = self.dom_builder.children_signal_vec(
-            children.map(|child| child.into_element().into_raw_element().into_dom()),
-        );
-        self
-    }
-
+impl RawHtmlEl {
     pub fn focus(mut self) -> Self {
         self.dom_builder = self.dom_builder.focused(true);
         self
