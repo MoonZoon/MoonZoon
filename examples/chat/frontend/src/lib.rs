@@ -15,8 +15,8 @@ fn username() -> &'static Mutable<String> {
 fn messages() -> &'static MutableVec<Message> {
     // MutableVec::new()
     MutableVec::new_with_values(vec![Message {
-        text: "I'm text".to_owned(),
         username: "Martin".to_owned(),
+        text: "I'm text".to_owned(),
     }])
 }
 
@@ -47,6 +47,7 @@ fn set_new_message_text(text: String) {
 }
 
 fn send_message() {
+    zoon::println!("Send message");
     // connection.send_up_msg(UpMsg::SendMessage(Message {
     //     username: username().get_cloned(),
     //     text: new_message_text().map_mut(mem::take),
@@ -72,14 +73,14 @@ fn received_messages() -> impl Element {
 
 fn received_message(message: Message) -> impl Element {
     Row::new()
-        .item(Column::new()
-            .item(El::new()
-                .style(Font::new().bold())
-                .child(message.username)
-            )
-            .item(message.text)
+        .item(El::new()
+            .style(Font::new().bold())
+            .child(message.username)
         )
+        .item(El::new().child(message.text))
 }
+
+// ------ new_message_panel ------
 
 fn new_message_panel() -> impl Element {
     Row::new()
@@ -93,11 +94,7 @@ fn new_message_input() -> impl Element {
         .on_change(set_new_message_text)
         .label_hidden("New message text")
         .placeholder(Placeholder::new("Message"))
-        // .on_key_down(|event| {
-        //     if let Key::Enter = event.key {
-        //         send_message()
-        //     }
-        // })
+        .on_key_down(|event| event.if_key(Key::Enter, send_message))
         .text_signal(new_message_text().signal_cloned())
 }
 
@@ -106,6 +103,8 @@ fn send_button() -> impl Element {
         .on_press(send_message)
         .label("Send")
 }
+
+// ------ username_panel ------
 
 fn username_panel() -> impl Element {
     let id = "username_input";

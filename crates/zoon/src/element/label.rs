@@ -34,7 +34,12 @@ impl<LabelFlag, ForInputFlag> UpdateRawEl<RawHtmlEl> for Label<LabelFlag, ForInp
     }
 }
 
+// ------ ------
+//   Abilities
+// ------ ------
+
 impl<LabelFlag, ForInputFlag> Styleable<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> KeyboardEventHandling<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
 
 // ------ ------
 //  Attributes

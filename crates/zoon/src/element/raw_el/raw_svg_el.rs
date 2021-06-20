@@ -48,7 +48,7 @@ impl RawEl for RawSvgEl {
 
     fn style(self, _name: &str, _value: &str) -> Self {
         self.update_dom_builder(|_dom_builder| {
-            todo!("implement `style` body in `raw_el.rs` once it's implemented for Element in Dominator");
+            todo!("implement `style` body in `raw_el.rs` once it's implemented for Element in Dominator or write `DomBuilderExt");
         })
     }
 
@@ -58,7 +58,7 @@ impl RawEl for RawSvgEl {
         _value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
     ) -> Self {
         self.update_dom_builder(|_dom_builder| {
-            todo!("implement `style_signal` body in `raw_el.rs` once it's implemented for Element in Dominator");
+            todo!("implement `style_signal` body in `raw_el.rs` once it's implemented for Element in Dominator or write `DomBuilderExt");
         })
     }
 }
