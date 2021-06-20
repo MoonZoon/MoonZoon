@@ -51,4 +51,14 @@ impl RawEl for RawSvgEl {
             todo!("implement `style` body in `raw_el.rs` once it's implemented for Element in Dominator");
         })
     }
+
+    fn style_signal<'a>(
+        self,
+        _name: impl IntoCowStr<'static>,
+        _value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
+    ) -> Self {
+        self.update_dom_builder(|_dom_builder| {
+            todo!("implement `style_signal` body in `raw_el.rs` once it's implemented for Element in Dominator");
+        })
+    }
 }

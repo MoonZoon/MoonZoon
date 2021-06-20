@@ -51,6 +51,19 @@ impl RawEl for RawHtmlEl {
             dom_builder.style(name, value)
         })
     }
+
+    fn style_signal<'a>(
+        self,
+        name: impl IntoCowStr<'static>,
+        value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
+    ) -> Self {
+        self.update_dom_builder(|dom_builder| {
+            dom_builder.style_signal(
+                name.into_cow_str_wrapper(),
+                value.map(|value| value.into_option_cow_str_wrapper()),
+            )
+        })
+    }
 }
 
 impl RawHtmlEl {
