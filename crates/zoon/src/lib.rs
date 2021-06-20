@@ -5,9 +5,10 @@ mod cow_str;
 mod dom;
 pub mod element;
 mod futures_signals_ext;
+pub mod style;
 
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
-
+pub use style::*;
 pub use console::log;
 pub use dom::{document, window};
 pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};

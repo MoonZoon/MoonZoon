@@ -27,12 +27,14 @@ impl Element for El<ChildFlagSet> {
     }
 }
 
-impl<ChildFlag> UpdateRawHtmlEl for El<ChildFlag> {
-    fn update_raw_html_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<ChildFlag> UpdateRawEl<RawHtmlEl> for El<ChildFlag> {
+    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
 }
+
+impl<ChildFlag> Styleable<RawHtmlEl> for El<ChildFlag> {}
 
 // ------ ------
 //  Attributes

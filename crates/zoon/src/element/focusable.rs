@@ -1,7 +1,7 @@
 use crate::*;
 
-pub trait Focusable: UpdateRawHtmlEl + Sized {
+pub trait Focusable: UpdateRawEl<RawHtmlEl> + Sized {
     fn focus(self) -> Self {
-        self.update_raw_html_el(|raw| raw.focus())
+        self.update_raw_el(|raw| raw.focus())
     } 
 }
