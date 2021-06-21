@@ -1,5 +1,4 @@
-use serde_lite::{Deserialize, Serialize};
-use rusty_ulid as ulid;
+use moonlight::serde_lite::{self, Deserialize, Serialize};
 
 // ------ Message ------
 
@@ -22,20 +21,3 @@ pub enum UpMsg {
 pub enum DownMsg {
     MessageReceived(Message)
 }
-
-// ------ CorId ------
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct CorId(String);
-
-#[cfg(feature = "frontend")]
-impl Default for CorId {
-    fn default() -> Self {
-        CorId(ulid::generate_ulid_string())
-    }
-}
-
-// ------ AuthToken ------
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
-pub struct AuthToken;

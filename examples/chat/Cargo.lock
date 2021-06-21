@@ -864,6 +864,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "moonlight"
+version = "0.1.0"
+dependencies = [
+ "getrandom",
+ "rusty_ulid",
+ "serde-lite",
+]
+
+[[package]]
 name = "ntapi"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1261,9 +1270,7 @@ checksum = "2579985fda508104f7587689507983eadd6a6e84dd35d6d115361f530916fa0d"
 name = "shared"
 version = "0.1.0"
 dependencies = [
- "getrandom",
- "rusty_ulid",
- "serde-lite",
+ "moonlight",
 ]
 
 [[package]]
@@ -1778,6 +1785,7 @@ dependencies = [
  "dominator",
  "enclose",
  "futures-signals",
+ "moonlight",
  "once_cell",
  "paste",
  "static_ref_macro",

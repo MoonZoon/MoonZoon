@@ -19,6 +19,8 @@ frontend = [
     "../../crates/zoon/src",
     "../../crates/static_ref_macro/Cargo.toml",
     "../../crates/static_ref_macro/src",
+    "../../crates/moonlight/Cargo.toml",
+    "../../crates/moonlight/src",
 ]
 backend = [
     "backend/Cargo.toml",
@@ -27,4 +29,6 @@ backend = [
     "shared/src",
     "../../crates/moon/Cargo.toml",
     "../../crates/moon/src",
+    "../../crates/moonlight/Cargo.toml",
+    "../../crates/moonlight/src",
 ]

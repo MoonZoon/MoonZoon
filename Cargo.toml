@@ -2,6 +2,7 @@
 members = [
     "crates/static_ref_macro",
     "crates/moon",
+    "crates/moonlight",
     "crates/mzoon",
     "crates/zoon",
 ]
