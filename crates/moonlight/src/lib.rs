@@ -1,5 +1,5 @@
 pub use serde_lite;
-pub use serde_json_wasm;
+pub use serde_json;
 use std::{fmt, str::FromStr};
 pub use rusty_ulid::{self, Ulid, DecodingError};
 
