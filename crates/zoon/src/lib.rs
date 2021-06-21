@@ -7,6 +7,7 @@ mod dom;
 mod element;
 mod futures_signals_ext;
 mod style;
+mod task;
 
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use style::*;
@@ -22,6 +23,7 @@ pub use futures_signals::{
 };
 pub use futures_signals_ext::{MutableExt, MutableVecExt};
 pub use paste;
+pub use task::Task;
 
 #[cfg(feature = "connection")]
 pub use connection::Connection;

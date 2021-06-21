@@ -30,8 +30,14 @@ impl<UMsg, DMsg> Connection<UMsg, DMsg> {
         self
     }
 
-    pub fn send_up_msg(&self, up_msg: UMsg) {
+    pub async fn send_up_msg(&self, up_msg: UMsg) {
+        let auth_token = self
+            .auth_token_getter
+            .as_ref()
+            .and_then(|auth_token_getter| auth_token_getter());
 
+        let url = "_api/up_msg_handler";
+        crate::println!("send_up_msg_task");
     }
 }
 

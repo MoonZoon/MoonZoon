@@ -350,6 +350,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
+name = "chrono"
+version = "0.4.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73"
+dependencies = [
+ "libc",
+ "num-integer",
+ "num-traits",
+ "winapi",
+]
+
+[[package]]
 name = "console_error_panic_hook"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -601,8 +613,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c9495705279e7140bf035dde1f6e750c162df8b625267cd52cc44e0b156732c8"
 dependencies = [
  "cfg-if 1.0.0",
+ "js-sys",
  "libc",
  "wasi",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -838,6 +852,7 @@ dependencies = [
  "log",
  "mime",
  "mime_guess",
+ "moonlight",
  "parking_lot",
  "rustls",
  "serde",
@@ -851,6 +866,7 @@ dependencies = [
 name = "moonlight"
 version = "0.1.0"
 dependencies = [
+ "getrandom",
  "rusty_ulid",
  "serde-lite",
 ]
@@ -862,6 +878,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f6bb902e437b6d86e03cce10a7e2af662292c5dfef23b65899ea3ac9354ad44"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "num-integer"
+version = "0.1.44"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d2cc698a63b549a70bc047073d2949cce27cd1c7b0a4a862d08a8031bc2801db"
+dependencies = [
+ "autocfg",
+ "num-traits",
+]
+
+[[package]]
+name = "num-traits"
+version = "0.2.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a64b1ec5cda2586e284722486d802acf1f7dbdc623e2bfc57e65ca1cd099290"
+dependencies = [
+ "autocfg",
 ]
 
 [[package]]
@@ -1099,6 +1134,10 @@ name = "rusty_ulid"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1f20752f9e92feede73bccf88845bb4004b28fac9fdcb2e0c8731d939df67b2d"
+dependencies = [
+ "chrono",
+ "rand",
+]
 
 [[package]]
 name = "ryu"
@@ -1743,6 +1782,7 @@ dependencies = [
  "paste",
  "static_ref_macro",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
  "web-sys",
  "wee_alloc",
 ]
