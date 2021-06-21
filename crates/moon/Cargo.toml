@@ -22,6 +22,7 @@ parking_lot = { version = "0.11.1", default-features = false }
 env_logger = {version = "0.8.3", features = ["termcolor", "atty", "humantime"], default-features = false }
 log = { version = "0.4.14", features = ["serde"], default-features = false }
 bool_ext = { version = "0.5.1", default-features = false }
+moonlight = { path = "../moonlight", features = ["backend"] }
 
 [dev-dependencies]
 const_format = { version = "0.2.14", default-features = false }

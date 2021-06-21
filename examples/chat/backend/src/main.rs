@@ -35,7 +35,7 @@ async fn frontend() -> Frontend {
 }
 
 async fn up_msg_handler(_req: UpMsgRequest) {
-    println!("UpMsgHanlder!");
+    println!("UpMsgHandler!");
 
     // if let UpMsg::SendMessage(message) = req.up_msg {
     //     // join_all(connected_client::by_id().iter().map(|(_, client)| {

@@ -42,10 +42,14 @@ fn set_new_message_text(text: String) {
 }
 
 fn send_message() {
-    connection().send_up_msg(UpMsg::SendMessage(Message {
-        username: username().get_cloned(),
-        text: new_message_text().take(),
-    }));
+    connection()
+        .send_up_msg(UpMsg::SendMessage(Message {
+            username: username().get_cloned(),
+            text: new_message_text().take(),
+        }))
+        .apply(Task::new)
+        .perform();
+    Task::new(async { zoon::println!("second taks!") }).perform();
 }
 
 // ------ ------
