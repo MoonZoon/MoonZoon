@@ -1,0 +1,14 @@
+[package]
+name = "moonlight"
+version = "0.1.0"
+authors = ["Martin Kavík <martin@kavik.cz>"]
+edition = "2018"
+
+[dependencies]
+serde-lite = { version = "0.1.1", features = ["derive"], default-features = false }
+rusty_ulid = { version = "0.10.1", default-features = false }
+getrandom = { version = "0.2", features = ["js"], default-features = false, optional = true }
+
+[features]
+frontend = ["getrandom", "rusty_ulid/ulid-generation"]
+backend = []

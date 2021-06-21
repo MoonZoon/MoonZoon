@@ -8,7 +8,6 @@ mod element;
 mod futures_signals_ext;
 mod style;
 
-pub use connection::Connection;
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use style::*;
 pub use console::log;
@@ -23,6 +22,12 @@ pub use futures_signals::{
 };
 pub use futures_signals_ext::{MutableExt, MutableVecExt};
 pub use paste;
+
+#[cfg(feature = "connection")]
+pub use connection::Connection;
+
+#[cfg(feature = "moonlight")]
+pub use moonlight::{self, CorId, AuthToken};
 
 #[cfg(feature = "panic_hook")]
 pub use console_error_panic_hook;

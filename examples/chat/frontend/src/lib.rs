@@ -1,5 +1,5 @@
 use zoon::*;
-use shared::{UpMsg, DownMsg, Message, CorId, AuthToken};
+use shared::{UpMsg, DownMsg, Message};
 
 // ------ ------
 //    Statics 
@@ -21,10 +21,12 @@ fn new_message_text() -> &'static Mutable<String> {
 }
 
 #[static_ref]
-fn connection() -> &'static Connection<UpMsg, DownMsg, CorId, AuthToken> {
-    Connection::new(|DownMsg::MessageReceived(message), _| {
-        messages().lock_mut().push_cloned(message);
-    })
+fn connection() -> &'static Connection<UpMsg, DownMsg> {
+    Connection::new()
+        .down_msg_handler(|DownMsg::MessageReceived(message), _| {
+            messages().lock_mut().push_cloned(message);
+        })
+        .auth_token_getter(|| AuthToken::new("im auth token"))
 }
 
 // ------ ------
@@ -43,7 +45,7 @@ fn send_message() {
     connection().send_up_msg(UpMsg::SendMessage(Message {
         username: username().get_cloned(),
         text: new_message_text().take(),
-    }), None);
+    }));
 }
 
 // ------ ------
@@ -56,6 +58,8 @@ fn root() -> impl Element {
         .item(new_message_panel())
         .item(username_panel())
 }
+
+// ------ received_messages ------
 
 fn received_messages() -> impl Element {
     Column::new().items_signal_vec(
