@@ -1,4 +1,4 @@
-use zoon::*;
+use zoon::{*, eprintln};
 use shared::{UpMsg, DownMsg, Message};
 
 // ------ ------
@@ -42,14 +42,17 @@ fn set_new_message_text(text: String) {
 }
 
 fn send_message() {
-    connection()
-        .send_up_msg(UpMsg::SendMessage(Message {
-            username: username().get_cloned(),
-            text: new_message_text().take(),
-        }))
-        .apply(Task::new)
-        .perform();
-    Task::new(async { zoon::println!("second taks!") }).perform();
+    Task::start(async {
+        connection()
+            .send_up_msg(UpMsg::SendMessage(Message {
+                username: username().get_cloned(),
+                text: new_message_text().take(),
+            }))
+            .await
+            .unwrap_or_else(|error| {
+                eprintln!("Failed to send message: {:?}", error)
+            })
+    });
 }
 
 // ------ ------

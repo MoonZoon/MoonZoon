@@ -1,18 +1,9 @@
-use std::future::Future;
-use wasm_bindgen_futures::spawn_local;
+use crate::*;
 
-pub struct Task<F> {
-    future: F
-}
+pub struct Task;
 
-impl<F: Future<Output = ()> + 'static> Task<F> {
-    pub fn new(future: F) -> Self {
-        Self {
-            future
-        }
-    }
-
-    pub fn perform(self) {
-        spawn_local(self.future)
+impl Task {
+    pub fn start(future: impl Future<Output = ()> + 'static) {
+        spawn_local(future)
     }
 }
