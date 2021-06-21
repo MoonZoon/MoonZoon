@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 serde-lite = { version = "0.1.1", features = ["derive"], default-features = false }
+serde-json-wasm = { version = "0.3.1", default-features = false }
 rusty_ulid = { version = "0.10.1", features = ["ulid-generation"], default-features = false }
 getrandom = { version = "0.2", features = ["js"], default-features = false, optional = true }
 

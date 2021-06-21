@@ -1,7 +1,7 @@
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 
 mod connection;
-mod console;
+pub mod console;
 mod cow_str;
 mod dom;
 mod element;
@@ -11,7 +11,6 @@ mod task;
 
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use style::*;
-pub use console::log;
 pub use dom::{document, window};
 pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};
 pub use element::*;
@@ -24,9 +23,12 @@ pub use futures_signals::{
 pub use futures_signals_ext::{MutableExt, MutableVecExt};
 pub use paste;
 pub use task::Task;
+pub use std::future::Future;
+use wasm_bindgen_futures::spawn_local;
+pub use wasm_bindgen_futures::JsFuture;
 
 #[cfg(feature = "connection")]
-pub use connection::Connection;
+pub use connection::{Connection, SendUpMsgError};
 
 #[cfg(feature = "moonlight")]
 pub use moonlight::{self, CorId, AuthToken};
