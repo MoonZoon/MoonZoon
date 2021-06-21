@@ -1,6 +1,6 @@
 use crate::*;
 use std::marker::PhantomData;
-use moonlight::{CorId, AuthToken, serde_lite::{Serialize, Deserialize}, serde_json_wasm};
+use moonlight::{CorId, AuthToken, serde_lite::{Serialize, Deserialize}, serde_json};
 use web_sys::{Request, RequestInit, Response};
 use std::error::Error;
 use std::fmt;
@@ -38,7 +38,7 @@ impl<UMsg: Serialize, DMsg: Deserialize> Connection<UMsg, DMsg> {
 
     pub async fn send_up_msg(&self, up_msg: UMsg) -> Result<(), SendUpMsgError> {
         // ---- RequestInit ----
-        let body = serde_json_wasm::to_string(&up_msg.serialize().unwrap_throw()).unwrap_throw();
+        let body = serde_json::to_string(&up_msg.serialize().unwrap_throw()).unwrap_throw();
 
         let mut request_init = RequestInit::new();
         request_init
@@ -46,7 +46,7 @@ impl<UMsg: Serialize, DMsg: Deserialize> Connection<UMsg, DMsg> {
             .body(Some(&JsValue::from(body)));
 
         // ---- Request ----
-        let request = Request::new_with_str_and_init("api/up_msg_handler", &request_init).unwrap_throw();
+        let request = Request::new_with_str_and_init("_api/up_msg_handler", &request_init).unwrap_throw();
 
         // ---- Headers ----
         let headers = request.headers();
