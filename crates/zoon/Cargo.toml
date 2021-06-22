@@ -7,8 +7,8 @@ edition = "2018"
 [dependencies]
 wasm-bindgen = { version = "0.2.74", default-features = false }
 wasm-bindgen-futures = { version = "0.4.24", default-features = false }
-futures-signals = { version = "0.3.20", default-features = false }
-dominator = { version = "0.5.16", default-features = false }
+futures-signals = { version = "0.3.22", default-features = false }
+dominator = { version = "0.5.19", default-features = false }
 paste = { version = "1.0.5", default-features = false }
 
 static_ref_macro = { path = "../static_ref_macro", optional = true }

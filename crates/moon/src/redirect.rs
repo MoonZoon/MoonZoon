@@ -1,9 +1,9 @@
-use actix_web::dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform};
+use actix_web::dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform, ResponseBody};
 use actix_web::http::header::LOCATION;
 use actix_web::http::uri::{Authority, InvalidUriParts, Scheme, Uri};
 use actix_web::{Error, HttpResponse};
 use bool_ext::BoolExt;
-use futures::future::{ok, Either, Ready};
+use futures::future::{ok, Either, Ready, LocalBoxFuture};
 use std::convert::TryFrom;
 
 // ------ Redirect ------
@@ -45,8 +45,10 @@ impl Redirect {
 impl<S, B> Transform<S, ServiceRequest> for Redirect
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S::Future: 'static,
+    B: 'static,
 {
-    type Response = S::Response;
+    type Response = ServiceResponse<ResponseBody<B>>;
     type Error = S::Error;
     type InitError = ();
     type Transform = RedirectMiddleware<S>;
@@ -109,11 +111,11 @@ impl<S> RedirectMiddleware<S> {
         &self,
         req: ServiceRequest,
         uri: &Uri,
-    ) -> Ready<Result<ServiceResponse<B>, Error>> {
+    ) -> Ready<Result<ServiceResponse<ResponseBody<B>>, Error>> {
         let http_response = HttpResponse::MovedPermanently()
             .insert_header((LOCATION, uri.to_string()))
             .finish()
-            .into_body();
+            .map_body(|_, body| ResponseBody::Other(body));
 
         ok(req.into_response(http_response))
     }
@@ -122,10 +124,15 @@ impl<S> RedirectMiddleware<S> {
 impl<S, B> Service<ServiceRequest> for RedirectMiddleware<S>
 where
     S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error>,
+    S::Future: 'static,
+    B: 'static,
 {
-    type Response = S::Response;
+    type Response = ServiceResponse<ResponseBody<B>>;
     type Error = S::Error;
-    type Future = Either<S::Future, Ready<Result<Self::Response, Self::Error>>>;
+    type Future = Either<
+        LocalBoxFuture<'static, Result<Self::Response, Self::Error>>, 
+        Ready<Result<Self::Response, Self::Error>>
+    >;
 
     forward_ready!(service);
 
@@ -136,6 +143,9 @@ where
                 return Either::Right(self.redirect(req, &redirect_uri));
             }
         }
-        Either::Left(self.service.call(req))
+        let service_future = self.service.call(req);
+        Either::Left(Box::pin(async move { 
+            Ok(service_future.await?.map_body(|_, body| ResponseBody::Body(body)))
+        }))
     }
 }

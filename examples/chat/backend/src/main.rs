@@ -44,7 +44,15 @@ async fn up_msg_handler(_req: UpMsgRequest) {
     // }
 }
 
-#[moon::main]
-async fn main() -> std::io::Result<()> {
-    start(frontend, up_msg_handler, |_|{}).await
+// #[moon::main]
+// async fn main() -> std::io::Result<()> {
+//     start(frontend, up_msg_handler, |_|{}).await
+// }
+
+fn main() -> std::io::Result<()> {
+    actix_web::rt::System::new().block_on(async move { 
+        start(frontend, up_msg_handler, |_|{}).await
+    })
 }
+
+

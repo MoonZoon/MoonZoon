@@ -20,9 +20,11 @@ dependencies = [
 
 [[package]]
 name = "actix-files"
-version = "0.6.0-beta.4"
-source = "git+https://github.com/actix/actix-web?rev=26e9c806264447d15bb71ad75da1b78a254f9aef#26e9c806264447d15bb71ad75da1b78a254f9aef"
+version = "0.6.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e62877c4a385ea5a319758298efee683b71c4836806a7781a4c97b2d9893c152"
 dependencies = [
+ "actix-http",
  "actix-service",
  "actix-utils",
  "actix-web",
@@ -40,9 +42,9 @@ dependencies = [
 
 [[package]]
 name = "actix-http"
-version = "3.0.0-beta.6"
+version = "3.0.0-beta.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59d51c2ba06062e698a5d212d860e9fb2afc931c285ede687aaae896c8150347"
+checksum = "8a6b8dd8ffcb0277cebef2c4b496821c888e0320817c1862a83359d4e384797a"
 dependencies = [
  "actix-codec",
  "actix-rt",
@@ -67,7 +69,6 @@ dependencies = [
  "log",
  "mime",
  "once_cell",
- "paste",
  "percent-encoding",
  "pin-project",
  "pin-project-lite",
@@ -173,9 +174,9 @@ dependencies = [
 
 [[package]]
 name = "actix-web"
-version = "4.0.0-beta.6"
+version = "4.0.0-beta.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff12e933051557d700b0fcad20fe25b9ca38395cc87bbc5aeaddaef17b937a2f"
+checksum = "944b85410c2f6e22529d25e92506491f669c3336b8dc50ad2603f4f611ffdaf3"
 dependencies = [
  "actix-codec",
  "actix-http",
@@ -199,6 +200,7 @@ dependencies = [
  "log",
  "mime",
  "once_cell",
+ "paste",
  "pin-project",
  "regex",
  "serde",
@@ -212,9 +214,9 @@ dependencies = [
 
 [[package]]
 name = "actix-web-codegen"
-version = "0.5.0-beta.2"
+version = "0.5.0-beta.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7f138ac357a674c3b480ddb7bbd894b13c1b6e8927d728bc9ea5e17eee2f8fc9"
+checksum = "0d048c6986743105c1e8e9729fbc8d5d1667f2f62393a58be8d85a7d9a5a6c8d"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -424,9 +426,9 @@ checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 
 [[package]]
 name = "dominator"
-version = "0.5.18"
+version = "0.5.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "868c6e1b05d4df78b5926cbc3840ed90b77b8e161bcc3d6662813f380c7029ca"
+checksum = "f5c7decce484ce8cece3e46a484183954f253cd04db4170d48b33651d96f08e5"
 dependencies = [
  "discard",
  "futures-channel",
@@ -733,9 +735,9 @@ dependencies = [
 
 [[package]]
 name = "language-tags"
-version = "0.2.2"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a91d884b6667cd606bb5a69aa0c99ba811a115fc68915e7056ec08a46e93199a"
+checksum = "d4345964bb142484797b161f473a503a434de77149dd8c7427788c6e13379388"
 
 [[package]]
 name = "lazy_static"
@@ -1457,9 +1459,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.7.0"
+version = "1.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c79ba603c337335df6ba6dd6afc38c38a7d5e1b0c871678439ea973cd62a118e"
+checksum = "5fb2ed024293bb19f7a5dc54fe83bf86532a44c12a2bb8ba40d64a4509395ca2"
 dependencies = [
  "autocfg",
  "bytes",
