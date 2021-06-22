@@ -10,6 +10,7 @@ use std::fs::File;
 use std::io::{self, BufReader};
 use std::net::SocketAddr;
 use std::{collections::BTreeSet, future::Future};
+use std::ops::Deref;
 use tokio::fs;
 use moonlight::{serde_lite::Deserialize, serde_json, CorId, AuthToken};
 use futures::StreamExt;
@@ -58,8 +59,24 @@ struct SharedData {
 #[derive(Clone)]
 struct ReloadSSE(ShareableSSE);
 
+impl Deref for ReloadSSE {
+    type Target = ShareableSSE;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 #[derive(Clone)]
 struct MessageSSE(ShareableSSE);
+
+impl Deref for MessageSSE {
+    type Target = ShareableSSE;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 // trait aliases
 trait_set! {
@@ -275,7 +292,6 @@ fn parse_auth_token(headers: &HeaderMap) -> Result<Option<AuthToken>, Error> {
 // ------ reload_responder ------
 
 async fn reload_responder(sse: web::Data<ReloadSSE>) -> impl Responder {
-    let ReloadSSE(sse) = sse.as_ref();
     let _ = sse.broadcast("reload", "");
     HttpResponse::Ok()
 }
@@ -345,7 +361,6 @@ async fn reload_sse_responder(
     sse: web::Data<ReloadSSE>,
     shared_data: web::Data<SharedData>,
 ) -> impl Responder {
-    let ReloadSSE(sse) = sse.as_ref();
     let (connection, event_stream) = sse.new_connection();
     let backend_build_id = shared_data.backend_build_id.to_string();
 
@@ -360,6 +375,7 @@ async fn reload_sse_responder(
 
     HttpResponse::Ok()
         .insert_header(ContentType(mime::TEXT_EVENT_STREAM))
+        .insert_header(CacheControl(vec![CacheDirective::NoCache]))
         .streaming(event_stream)
 }
 
@@ -368,11 +384,11 @@ async fn reload_sse_responder(
 async fn message_sse_responder(
     sse: web::Data<MessageSSE>,
 ) -> impl Responder {
-    let MessageSSE(sse) = sse.as_ref();
     let (_, event_stream) = sse.new_connection();
 
     HttpResponse::Ok()
         .insert_header(ContentType(mime::TEXT_EVENT_STREAM))
+        .insert_header(CacheControl(vec![CacheDirective::NoCache]))
         .streaming(event_stream)
 }
 
