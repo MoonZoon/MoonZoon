@@ -1,4 +1,4 @@
-use actix_web::web::{Bytes, Data};
+use actix_web::web::Bytes;
 use actix_web::{rt, Error};
 use futures::Stream;
 use parking_lot::Mutex;
@@ -6,10 +6,12 @@ use std::collections::HashMap;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::time::Duration;
+use std::sync::Arc;
 use tokio::sync::mpsc::{error::SendError, unbounded_channel, UnboundedReceiver, UnboundedSender};
 use tokio::time::{interval_at, Instant};
 use uuid::Uuid;
 
+pub type ShareableSSE = Arc<Mutex<SSE>>;
 type ID = u128;
 
 // ------ Connection ------
@@ -63,19 +65,19 @@ pub struct SSE {
 }
 
 impl SSE {
-    pub fn start() -> Data<Mutex<Self>> {
+    pub fn start() -> ShareableSSE {
         let sse = SSE {
             connections: HashMap::new(),
         };
-        let this = Data::new(Mutex::new(sse));
+        let this = Arc::new(Mutex::new(sse));
         this.spawn_connection_remover();
         this
     }
 }
 
-// ------ DataSSE ------
+// ------ ShareableSSEMethods ------
 
-pub trait DataSSE {
+pub trait ShareableSSEMethods {
     fn spawn_connection_remover(&self);
 
     fn new_connection(&self) -> (Connection, EventStream);
@@ -83,7 +85,7 @@ pub trait DataSSE {
     fn broadcast(&self, event: &str, data: &str) -> Result<(), Vec<SendError<Bytes>>>;
 }
 
-impl DataSSE for Data<Mutex<SSE>> {
+impl ShareableSSEMethods for ShareableSSE {
     fn spawn_connection_remover(&self) {
         let this = self.clone();
         rt::spawn(async move {

@@ -4,7 +4,6 @@ use actix_web::dev::ServiceResponse;
 use actix_web::http::header::{CacheControl, CacheDirective, ContentType, ETag, EntityTag};
 use actix_web::middleware::{Condition, ErrorHandlerResponse, ErrorHandlers, Logger, Compat};
 use actix_web::{web, App, error::{self, Error}, HttpRequest, HttpResponse, HttpServer, Responder, Result};
-use parking_lot::Mutex;
 use rustls::internal::pemfile::{certs, pkcs8_private_keys};
 use rustls::{NoClientAuth, ServerConfig as RustlsServerConfig};
 use std::fs::File;
@@ -42,7 +41,7 @@ pub use from_env_vars::FromEnvVars;
 pub use frontend::Frontend;
 use lazy_message_writer::LazyMessageWriter;
 pub use redirect::Redirect;
-use sse::{DataSSE, SSE};
+use sse::{ShareableSSE, ShareableSSEMethods, SSE};
 pub use up_msg_request::UpMsgRequest;
 
 const MAX_UP_MSG_BYTES: usize = 2 * 1_048_576;
@@ -55,6 +54,12 @@ struct SharedData {
     compressed_pkg: bool,
     pkg_path: &'static str,
 }
+
+#[derive(Clone)]
+struct ReloadSSE(ShareableSSE);
+
+#[derive(Clone)]
+struct MessageSSE(ShareableSSE);
 
 // trait aliases
 trait_set! {
@@ -97,7 +102,8 @@ where
         compressed_pkg: config.compressed_pkg,
         pkg_path: "frontend/pkg",
     };
-    let sse = SSE::start();
+    let reload_sse = ReloadSSE(SSE::start());
+    let message_sse = MessageSSE(SSE::start());
     let address = SocketAddr::from(([0, 0, 0, 0], config.port));
 
     let redirect_enabled = config.redirect.enabled;
@@ -125,7 +131,8 @@ where
             .data(shared_data)
             .data(frontend.clone())
             .data(up_msg_handler.clone())
-            .app_data(sse.clone())
+            .data(reload_sse.clone())
+            .data(message_sse.clone())
             .configure(service_config.clone())
             .service(Files::new("_api/public", "public"))
             .service(
@@ -136,7 +143,8 @@ where
                     )
                     .route("reload", web::post().to(reload_responder))
                     .route("pkg/{file:.*}", web::get().to(pkg_responder))
-                    .route("sse", web::get().to(sse_responder))
+                    .route("message_sse", web::get().to(message_sse_responder))
+                    .route("reload_sse", web::get().to(reload_sse_responder))
                     .route("ping", web::to(|| async { "pong" })),
             )
             .route("*", web::get().to(frontend_responder::<FRB, FRBO>))
@@ -266,7 +274,8 @@ fn parse_auth_token(headers: &HeaderMap) -> Result<Option<AuthToken>, Error> {
 
 // ------ reload_responder ------
 
-async fn reload_responder(sse: web::Data<Mutex<SSE>>) -> impl Responder {
+async fn reload_responder(sse: web::Data<ReloadSSE>) -> impl Responder {
+    let ReloadSSE(sse) = sse.as_ref();
     let _ = sse.broadcast("reload", "");
     HttpResponse::Ok()
 }
@@ -330,12 +339,13 @@ fn named_file_and_encoding(
     Ok((NamedFile::open(file)?, None))
 }
 
-// ------ sse_responder ------
+// ------ reload_sse_responder ------
 
-async fn sse_responder(
-    sse: web::Data<Mutex<SSE>>,
+async fn reload_sse_responder(
+    sse: web::Data<ReloadSSE>,
     shared_data: web::Data<SharedData>,
 ) -> impl Responder {
+    let ReloadSSE(sse) = sse.as_ref();
     let (connection, event_stream) = sse.new_connection();
     let backend_build_id = shared_data.backend_build_id.to_string();
 
@@ -347,6 +357,19 @@ async fn sse_responder(
             .reason("sending backend_build_id failed")
             .finish();
     }
+
+    HttpResponse::Ok()
+        .insert_header(ContentType(mime::TEXT_EVENT_STREAM))
+        .streaming(event_stream)
+}
+
+// ------ message_sse_responder ------
+
+async fn message_sse_responder(
+    sse: web::Data<MessageSSE>,
+) -> impl Responder {
+    let MessageSSE(sse) = sse.as_ref();
+    let (_, event_stream) = sse.new_connection();
 
     HttpResponse::Ok()
         .insert_header(ContentType(mime::TEXT_EVENT_STREAM))
