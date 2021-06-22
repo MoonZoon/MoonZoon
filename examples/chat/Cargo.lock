@@ -214,9 +214,9 @@ dependencies = [
 
 [[package]]
 name = "actix-web-codegen"
-version = "0.5.0-beta.3"
+version = "0.5.0-beta.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d048c6986743105c1e8e9729fbc8d5d1667f2f62393a58be8d85a7d9a5a6c8d"
+checksum = "7f138ac357a674c3b480ddb7bbd894b13c1b6e8927d728bc9ea5e17eee2f8fc9"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -390,9 +390,9 @@ checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
 
 [[package]]
 name = "cpufeatures"
-version = "0.1.4"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed00c67cb5d0a7d64a44f6ad2668db7e7530311dd53ea79bcd4fb022c64911c8"
+checksum = "66c99696f6c9dd7f35d486b9d04d7e6e202aa3e8c40d553f2fdf5e7e0c6a71ef"
 dependencies = [
  "libc",
 ]
@@ -851,6 +851,7 @@ dependencies = [
  "actix-files",
  "actix-http",
  "actix-web",
+ "actix-web-codegen",
  "bool_ext",
  "env_logger",
  "envy",
