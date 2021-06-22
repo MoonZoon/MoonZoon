@@ -1193,6 +1193,7 @@ dependencies = [
  "actix-files",
  "actix-http",
  "actix-web",
+ "actix-web-codegen",
  "bool_ext",
  "const_format",
  "env_logger",

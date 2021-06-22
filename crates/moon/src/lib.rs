@@ -17,7 +17,7 @@ pub use trait_set::trait_set;
 pub use actix_files;
 pub use actix_http;
 pub use actix_web;
-pub use actix_web::main;
+pub use actix_web_codegen::main;
 pub use futures;
 pub use mime;
 pub use mime_guess;

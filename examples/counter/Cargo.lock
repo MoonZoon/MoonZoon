@@ -849,6 +849,7 @@ dependencies = [
  "actix-files",
  "actix-http",
  "actix-web",
+ "actix-web-codegen",
  "bool_ext",
  "env_logger",
  "envy",
