@@ -12,8 +12,10 @@ use std::io::{self, BufReader};
 use std::net::SocketAddr;
 use std::{collections::BTreeSet, future::Future};
 use tokio::fs;
-pub use trait_set::trait_set;
+use moonlight::{serde_lite::Deserialize, serde_json, CorId, AuthToken};
+use futures::StreamExt;
 
+pub use trait_set::trait_set;
 pub use actix_files;
 pub use actix_http;
 pub use actix_web;
@@ -33,6 +35,7 @@ mod frontend;
 mod lazy_message_writer;
 mod redirect;
 mod sse;
+mod up_msg_request;
 
 use config::Config;
 pub use from_env_vars::FromEnvVars;
@@ -40,8 +43,9 @@ pub use frontend::Frontend;
 use lazy_message_writer::LazyMessageWriter;
 pub use redirect::Redirect;
 use sse::{DataSSE, SSE};
+pub use up_msg_request::UpMsgRequest;
 
-pub struct UpMsgRequest {}
+const MAX_UP_MSG_BYTES: usize = 1_048_576;
 
 #[derive(Copy, Clone)]
 struct SharedData {
@@ -58,14 +62,14 @@ trait_set! {
     pub trait FrontBuilder<FRBO: FrontBuilderOutput> = Fn() -> FRBO + Clone + Send + 'static;
 
     pub trait UpHandlerOutput = Future<Output = ()> + 'static;
-    pub trait UpHandler<UPHO: UpHandlerOutput> = Fn(UpMsgRequest) -> UPHO + Clone + Send + 'static;
+    pub trait UpHandler<UPHO: UpHandlerOutput, UMsg> = Fn(UpMsgRequest<UMsg>) -> UPHO + Clone + Send + 'static;
 }
 
 // ------ ------
 //     Start
 // ------ ------
 
-pub async fn start<FRB, FRBO, UPH, UPHO>(
+pub async fn start<'de, FRB, FRBO, UPH, UPHO, UMsg>(
     frontend: FRB,
     up_msg_handler: UPH,
     service_config: impl FnOnce(&mut web::ServiceConfig) + Clone + Send + 'static,
@@ -73,8 +77,9 @@ pub async fn start<FRB, FRBO, UPH, UPHO>(
 where
     FRB: FrontBuilder<FRBO>,
     FRBO: FrontBuilderOutput,
-    UPH: UpHandler<UPHO>,
+    UPH: UpHandler<UPHO, UMsg>,
     UPHO: UpHandlerOutput,
+    UMsg: 'static + Deserialize,
 {
     // ------ Init ------
 
@@ -127,7 +132,7 @@ where
                 web::scope("_api")
                     .route(
                         "up_msg_handler",
-                        web::post().to(up_msg_handler_responder::<UPH, UPHO>),
+                        web::post().to(up_msg_handler_responder::<UPH, UPHO, UMsg>),
                     )
                     .route("reload", web::post().to(reload_responder))
                     .route("pkg/{file:.*}", web::get().to(pkg_responder))
@@ -203,13 +208,43 @@ fn render_not_found_handler<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerRe
 
 // ------ up_msg_handler_responder ------
 
-async fn up_msg_handler_responder<UPH, UPHO>(up_msg_handler: web::Data<UPH>) -> impl Responder
+async fn up_msg_handler_responder<UPH, UPHO, UMsg>(req: HttpRequest, payload: web::Payload, up_msg_handler: web::Data<UPH>) -> impl Responder
 where
-    UPH: UpHandler<UPHO>,
+    UPH: UpHandler<UPHO, UMsg>,
     UPHO: UpHandlerOutput,
+    UMsg: Deserialize,
 {
-    up_msg_handler(UpMsgRequest {}).await;
+    let up_msg: UMsg = deserialize_up_msg(payload).await.unwrap();
+    let headers = req.headers();
+    let cor_id: CorId = headers.get("X-Correlation-ID").unwrap().to_str().unwrap().parse().unwrap();
+    let auth_token: Option<AuthToken> = headers.get("X-Auth-Token").map(|auth_token| {
+        AuthToken::new(auth_token.to_str().unwrap())
+    });
+
+    let req = UpMsgRequest {
+        up_msg,
+        cor_id,
+        auth_token
+    };
+    up_msg_handler(req).await;
     HttpResponse::Ok()
+}
+
+async fn deserialize_up_msg<UMsg: Deserialize>(mut payload: web::Payload) -> Result<UMsg, UpMsgHandlerError> {
+    let mut body = web::BytesMut::new();
+    while let Some(chunk) = payload.next().await {
+        let chunk = chunk.unwrap();
+        if (body.len() + chunk.len()) > MAX_UP_MSG_BYTES {
+            Err(UpMsgHandlerError::PayloadTooLarge)?
+        }
+        body.extend_from_slice(&chunk);
+    }
+    Ok(UMsg::deserialize(&serde_json::from_slice(&body).unwrap()).unwrap())
+}
+
+#[derive(Debug)]
+pub enum UpMsgHandlerError {
+    PayloadTooLarge
 }
 
 // ------ reload_responder ------
