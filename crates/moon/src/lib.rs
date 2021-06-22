@@ -1,9 +1,9 @@
 use actix_files::{Files, NamedFile};
-use actix_http::http::{header, ContentEncoding, StatusCode};
+use actix_http::http::{header, ContentEncoding, StatusCode, HeaderMap};
 use actix_web::dev::ServiceResponse;
 use actix_web::http::header::{CacheControl, CacheDirective, ContentType, ETag, EntityTag};
 use actix_web::middleware::{Condition, ErrorHandlerResponse, ErrorHandlers, Logger, Compat};
-use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder, Result};
+use actix_web::{web, App, error::{self, Error}, HttpRequest, HttpResponse, HttpServer, Responder, Result};
 use parking_lot::Mutex;
 use rustls::internal::pemfile::{certs, pkcs8_private_keys};
 use rustls::{NoClientAuth, ServerConfig as RustlsServerConfig};
@@ -45,7 +45,7 @@ pub use redirect::Redirect;
 use sse::{DataSSE, SSE};
 pub use up_msg_request::UpMsgRequest;
 
-const MAX_UP_MSG_BYTES: usize = 1_048_576;
+const MAX_UP_MSG_BYTES: usize = 2 * 1_048_576;
 
 #[derive(Copy, Clone)]
 struct SharedData {
@@ -208,43 +208,60 @@ fn render_not_found_handler<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerRe
 
 // ------ up_msg_handler_responder ------
 
-async fn up_msg_handler_responder<UPH, UPHO, UMsg>(req: HttpRequest, payload: web::Payload, up_msg_handler: web::Data<UPH>) -> impl Responder
+async fn up_msg_handler_responder<UPH, UPHO, UMsg>(
+    req: HttpRequest, 
+    payload: web::Payload, 
+    up_msg_handler: web::Data<UPH>
+) -> Result<HttpResponse, Error>
 where
     UPH: UpHandler<UPHO, UMsg>,
     UPHO: UpHandlerOutput,
     UMsg: Deserialize,
 {
-    let up_msg: UMsg = deserialize_up_msg(payload).await.unwrap();
     let headers = req.headers();
-    let cor_id: CorId = headers.get("X-Correlation-ID").unwrap().to_str().unwrap().parse().unwrap();
-    let auth_token: Option<AuthToken> = headers.get("X-Auth-Token").map(|auth_token| {
-        AuthToken::new(auth_token.to_str().unwrap())
-    });
 
-    let req = UpMsgRequest {
-        up_msg,
-        cor_id,
-        auth_token
+    let up_msg_request = UpMsgRequest {
+        up_msg: parse_up_msg(payload).await?,
+        cor_id: parse_cor_id(headers)?,
+        auth_token: parse_auth_token(headers)?,
     };
-    up_msg_handler(req).await;
-    HttpResponse::Ok()
+    up_msg_handler(up_msg_request).await;
+    Ok(HttpResponse::Ok().finish())
 }
 
-async fn deserialize_up_msg<UMsg: Deserialize>(mut payload: web::Payload) -> Result<UMsg, UpMsgHandlerError> {
+async fn parse_up_msg<UMsg: Deserialize>(mut payload: web::Payload) -> Result<UMsg, Error> {
     let mut body = web::BytesMut::new();
     while let Some(chunk) = payload.next().await {
-        let chunk = chunk.unwrap();
+        let chunk = chunk?;
         if (body.len() + chunk.len()) > MAX_UP_MSG_BYTES {
-            Err(UpMsgHandlerError::PayloadTooLarge)?
+            Err(error::JsonPayloadError::Overflow { limit: MAX_UP_MSG_BYTES })?
         }
         body.extend_from_slice(&chunk);
     }
-    Ok(UMsg::deserialize(&serde_json::from_slice(&body).unwrap()).unwrap())
+    UMsg::deserialize(
+        &serde_json::from_slice(&body).map_err(error::JsonPayloadError::Deserialize)?
+    ).map_err(error::ErrorBadRequest)
 }
 
-#[derive(Debug)]
-pub enum UpMsgHandlerError {
-    PayloadTooLarge
+fn parse_cor_id(headers: &HeaderMap) -> Result<CorId, Error> {
+    headers
+        .get("X-Correlation-ID")
+        .ok_or_else(|| error::ErrorBadRequest("header 'X-Correlation-ID' is missing"))?
+        .to_str()
+        .map_err(error::ErrorBadRequest)?
+        .parse()
+        .map_err(error::ErrorBadRequest)
+}
+
+fn parse_auth_token(headers: &HeaderMap) -> Result<Option<AuthToken>, Error> {
+    if let Some(auth_token) = headers.get("X-Auth-Token") {
+        let auth_token = auth_token
+            .to_str()
+            .map_err(error::ErrorBadRequest)
+            .map(AuthToken::new)?;
+        return Ok(Some(auth_token))
+    }
+    Ok(None)
 }
 
 // ------ reload_responder ------
