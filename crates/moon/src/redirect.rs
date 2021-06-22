@@ -3,7 +3,7 @@ use actix_web::http::header::LOCATION;
 use actix_web::http::uri::{Authority, InvalidUriParts, Scheme, Uri};
 use actix_web::{Error, HttpResponse};
 use bool_ext::BoolExt;
-use futures::future::{ok, Either, Ready, LocalBoxFuture};
+use futures::future::{ok, Either, Ready, LocalBoxFuture, FutureExt};
 use std::convert::TryFrom;
 
 // ------ Redirect ------
@@ -140,12 +140,14 @@ where
         if let Ok(uri) = Self::uri(&req) {
             if self.should_redirect(&uri).is_some() {
                 let redirect_uri = self.redirect_uri(uri).unwrap();
-                return Either::Right(self.redirect(req, &redirect_uri));
+                return self.redirect(req, &redirect_uri).right_future();
             }
         }
-        let service_future = self.service.call(req);
-        Either::Left(Box::pin(async move { 
-            Ok(service_future.await?.map_body(|_, body| ResponseBody::Body(body)))
-        }))
+        self.service.call(req)
+            .map(|result| result.map(|response| {
+                response.map_body(|_, body| ResponseBody::Body(body))
+            }))
+            .boxed_local()
+            .left_future()
     }
 }
