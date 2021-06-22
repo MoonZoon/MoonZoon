@@ -2,7 +2,7 @@ use actix_files::{Files, NamedFile};
 use actix_http::http::{header, ContentEncoding, StatusCode};
 use actix_web::dev::ServiceResponse;
 use actix_web::http::header::{CacheControl, CacheDirective, ContentType, ETag, EntityTag};
-use actix_web::middleware::{Condition, ErrorHandlerResponse, ErrorHandlers, Logger};
+use actix_web::middleware::{Condition, ErrorHandlerResponse, ErrorHandlers, Logger, Compat};
 use actix_web::{web, App, Error, HttpRequest, HttpResponse, HttpServer, Responder, Result};
 use parking_lot::Mutex;
 use rustls::internal::pemfile::{certs, pkcs8_private_keys};
@@ -106,9 +106,9 @@ where
 
     let mut server = HttpServer::new(move || {
         App::new()
+            .wrap(Condition::new(redirect_enabled, Compat::new(redirect)))
             // https://docs.rs/actix-web/4.0.0-beta.6/actix_web/middleware/struct.Logger.html
             .wrap(Logger::new(r#""%r" %s %b "%{Referer}i" %T"#))
-            .wrap(Condition::new(redirect_enabled, redirect))
             .wrap(
                 ErrorHandlers::new()
                     .handler(

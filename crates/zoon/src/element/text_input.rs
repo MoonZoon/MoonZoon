@@ -99,7 +99,10 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> TextInput<I
     {
         self.raw_el = self
             .raw_el
-            .event_handler(move |event: events::Input| (on_change.clone())(event.value().unwrap()));
+            .event_handler(move |event: events::Input| {
+                #[allow(deprecated)]
+                (on_change.clone())(event.value().unwrap())
+            });
         self.into_type()
     }
 

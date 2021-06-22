@@ -11,9 +11,9 @@ futures = { version = "0.3.13", default-features = false }
 uuid = { version = "0.8", features = ["v4"], default-features = false }
 mime = { version = "0.3.16", default-features = false }
 mime_guess = { version = "2.0.3", default-features = false }
-actix-web = { version = "4.0.0-beta.6", features = ["rustls"], default-features = false }
-actix-files = { git = "https://github.com/actix/actix-web", rev = "26e9c806264447d15bb71ad75da1b78a254f9aef", default-features = false }
-actix-http = { version = "3.0.0-beta.6", default-features = false }
+actix-web = { version = "4.0.0-beta.7", features = ["rustls"], default-features = false }
+actix-files = { version = "0.6.0-beta.5", default-features = false }
+actix-http = { version = "3.0.0-beta.7", default-features = false }
 rustls = { version = "0.19", default-features = false }
 trait-set = { version = "0.2.0", default-features = false }
 envy = { version = "0.4.2", default-features = false }

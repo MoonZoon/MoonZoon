@@ -20,9 +20,11 @@ dependencies = [
 
 [[package]]
 name = "actix-files"
-version = "0.6.0-beta.4"
-source = "git+https://github.com/actix/actix-web?rev=26e9c806264447d15bb71ad75da1b78a254f9aef#26e9c806264447d15bb71ad75da1b78a254f9aef"
+version = "0.6.0-beta.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e62877c4a385ea5a319758298efee683b71c4836806a7781a4c97b2d9893c152"
 dependencies = [
+ "actix-http",
  "actix-service",
  "actix-utils",
  "actix-web",
@@ -40,9 +42,9 @@ dependencies = [
 
 [[package]]
 name = "actix-http"
-version = "3.0.0-beta.6"
+version = "3.0.0-beta.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "59d51c2ba06062e698a5d212d860e9fb2afc931c285ede687aaae896c8150347"
+checksum = "8a6b8dd8ffcb0277cebef2c4b496821c888e0320817c1862a83359d4e384797a"
 dependencies = [
  "actix-codec",
  "actix-rt",
@@ -67,7 +69,6 @@ dependencies = [
  "log",
  "mime",
  "once_cell",
- "paste",
  "percent-encoding",
  "pin-project",
  "pin-project-lite",
@@ -82,9 +83,9 @@ dependencies = [
 
 [[package]]
 name = "actix-macros"
-version = "0.2.0"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dbcb2b608f0accc2f5bcf3dd872194ce13d94ee45b571487035864cf966b04ef"
+checksum = "c2f86cd6857c135e6e9fe57b1619a88d1f94a7df34c00e11fe13e64fd3438837"
 dependencies = [
  "quote",
  "syn",
@@ -173,9 +174,9 @@ dependencies = [
 
 [[package]]
 name = "actix-web"
-version = "4.0.0-beta.6"
+version = "4.0.0-beta.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff12e933051557d700b0fcad20fe25b9ca38395cc87bbc5aeaddaef17b937a2f"
+checksum = "944b85410c2f6e22529d25e92506491f669c3336b8dc50ad2603f4f611ffdaf3"
 dependencies = [
  "actix-codec",
  "actix-http",
@@ -199,6 +200,7 @@ dependencies = [
  "log",
  "mime",
  "once_cell",
+ "paste",
  "pin-project",
  "regex",
  "serde",
@@ -420,16 +422,16 @@ checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 
 [[package]]
 name = "dominator"
-version = "0.5.16"
+version = "0.5.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d06ec539aec42182c6561243dcf7f533fa755951b372c566c51256467a3bfd00"
+checksum = "f5c7decce484ce8cece3e46a484183954f253cd04db4170d48b33651d96f08e5"
 dependencies = [
  "discard",
  "futures-channel",
  "futures-signals",
  "futures-util",
  "js-sys",
- "lazy_static",
+ "once_cell",
  "pin-project",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -553,9 +555,9 @@ dependencies = [
 
 [[package]]
 name = "futures-signals"
-version = "0.3.20"
+version = "0.3.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4becd9f1f62d8dd8ab17de157fee146baeb0f714da06521f2dfc9e1dc10e0c35"
+checksum = "9e7c31ebfcb97c87ac64db66a2d4d6ae71b487d5a8ef631c80c3d7e65a772a8c"
 dependencies = [
  "discard",
  "futures-channel",
@@ -728,9 +730,9 @@ dependencies = [
 
 [[package]]
 name = "language-tags"
-version = "0.2.2"
+version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a91d884b6667cd606bb5a69aa0c99ba811a115fc68915e7056ec08a46e93199a"
+checksum = "d4345964bb142484797b161f473a503a434de77149dd8c7427788c6e13379388"
 
 [[package]]
 name = "lazy_static"
