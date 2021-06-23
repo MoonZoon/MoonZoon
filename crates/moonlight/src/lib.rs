@@ -5,7 +5,7 @@ pub use rusty_ulid::{self, Ulid, DecodingError};
 
 // ------ SessionId ------
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SessionId(Ulid);
 
 impl SessionId {

@@ -1,15 +1,13 @@
 use moonlight::{SessionId, CorId};
 use crate::actor::{Actor, Index, PVar};
-use std::borrow::Borrow;
 use futures::future::join_all;
 use apply::Apply;
 
-pub async fn broadcast_down_msg<DMsg, BDMsg: Borrow<DMsg>>(down_msg: BDMsg, cor_id: CorId) {
-    let down_msg = down_msg.borrow();
+pub async fn broadcast_down_msg<DMsg>(down_msg: &DMsg, cor_id: CorId) {
     by_session_id()
         .into_iter()
         .map(|(_, session_actor)| {
-            async move { session_actor.send_down_msg::<DMsg, &DMsg>(down_msg, cor_id).await }
+            async move { session_actor.send_down_msg(down_msg, cor_id).await }
         })
         .apply(join_all)
         .await;
@@ -45,7 +43,7 @@ impl PVar for PVarSessionId {
 
 // ------ Actor ------
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default)]
 pub struct SessionActor {
     pub session_id: PVarSessionId,
 }
@@ -65,7 +63,7 @@ impl SessionActor {
         }
     }
 
-    pub async fn send_down_msg<DMsg, BDMsg: Borrow<DMsg>>(&self, down_msg: BDMsg, cor_id: CorId) {
+    pub async fn send_down_msg<DMsg>(&self, _down_msg: &DMsg, _cor_id: CorId) {
 
     }
 }

@@ -4,11 +4,11 @@ pub trait PVar: Default {
     const KEY: &'static str = "session_Id";
     type Value;
 
-    fn create(value: Self::Value, actor_id: ActorId) -> Self {
+    fn create(_value: Self::Value, _actor_id: ActorId) -> Self {
         todo!()
     }
 
-    fn remove(actor_id: ActorId) {
+    fn remove(_actor_id: ActorId) {
         todo!()
     }
 }

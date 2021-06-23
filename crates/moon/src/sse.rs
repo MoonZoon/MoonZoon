@@ -9,31 +9,30 @@ use std::time::Duration;
 use std::sync::Arc;
 use tokio::sync::mpsc::{error::SendError, unbounded_channel, UnboundedReceiver, UnboundedSender};
 use tokio::time::{interval_at, Instant};
-use uuid::Uuid;
+use moonlight::SessionId;
 
 pub type ShareableSSE = Arc<Mutex<SSE>>;
-type ID = u128;
 
 // ------ Connection ------
 
 #[derive(Clone)]
 pub struct Connection {
-    id: ID,
+    session_id: SessionId,
     sender: UnboundedSender<Bytes>,
 }
 
 impl Connection {
-    fn new() -> (Connection, EventStream) {
+    fn new(session_id: Option<SessionId>) -> (Connection, EventStream) {
         let (sender, receiver) = unbounded_channel();
         let connection = Self {
-            id: Uuid::new_v4().as_u128(),
+            session_id: session_id.unwrap_or_else(SessionId::new),
             sender,
         };
         (connection, EventStream(receiver))
     }
 
-    fn id(&self) -> ID {
-        self.id
+    fn session_id(&self) -> SessionId {
+        self.session_id
     }
 
     pub fn send(&self, event: &str, data: &str) -> Result<(), SendError<Bytes>> {
@@ -61,7 +60,7 @@ impl Stream for EventStream {
 // ------ SSE ------
 
 pub struct SSE {
-    connections: HashMap<ID, Connection>,
+    connections: HashMap<SessionId, Connection>,
 }
 
 impl SSE {
@@ -80,7 +79,7 @@ impl SSE {
 pub trait ShareableSSEMethods {
     fn spawn_connection_remover(&self);
 
-    fn new_connection(&self) -> (Connection, EventStream);
+    fn new_connection(&self, session_id: Option<SessionId>) -> (Connection, EventStream);
 
     fn broadcast(&self, event: &str, data: &str) -> Result<(), Vec<SendError<Bytes>>>;
 }
@@ -99,11 +98,11 @@ impl ShareableSSEMethods for ShareableSSE {
         });
     }
 
-    fn new_connection(&self) -> (Connection, EventStream) {
-        let (connection, event_stream) = Connection::new();
+    fn new_connection(&self, session_id: Option<SessionId>) -> (Connection, EventStream) {
+        let (connection, event_stream) = Connection::new(session_id);
         self.lock()
             .connections
-            .insert(connection.id(), connection.clone());
+            .insert(connection.session_id(), connection.clone());
         (connection, event_stream)
     }
 
