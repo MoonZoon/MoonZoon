@@ -12,9 +12,11 @@ use std::net::SocketAddr;
 use std::{collections::BTreeSet, future::Future};
 use std::ops::Deref;
 use tokio::fs;
-use moonlight::{serde_lite::Deserialize, serde_json, CorId, AuthToken};
+use moonlight::{serde_lite::Deserialize, serde_json};
+
 use futures::StreamExt;
 
+pub use moonlight::{CorId, AuthToken, SessionId};
 pub use trait_set::trait_set;
 pub use actix_files;
 pub use actix_http;
@@ -28,6 +30,8 @@ pub use serde;
 pub use tokio;
 pub use tokio_stream;
 pub use uuid;
+pub use enclose::enc as clone;
+pub use apply::{Also, Apply};
 
 mod config;
 mod from_env_vars;
@@ -36,14 +40,17 @@ mod lazy_message_writer;
 mod redirect;
 mod sse;
 mod up_msg_request;
+mod actor;
 
+use lazy_message_writer::LazyMessageWriter;
 use config::Config;
+use sse::{ShareableSSE, ShareableSSEMethods, SSE};
+
 pub use from_env_vars::FromEnvVars;
 pub use frontend::Frontend;
-use lazy_message_writer::LazyMessageWriter;
 pub use redirect::Redirect;
-use sse::{ShareableSSE, ShareableSSEMethods, SSE};
 pub use up_msg_request::UpMsgRequest;
+pub use actor::{sessions::{self, SessionActor}, ActorId, Actor, PVar, Index};
 
 const MAX_UP_MSG_BYTES: usize = 2 * 1_048_576;
 
@@ -247,6 +254,7 @@ where
 
     let up_msg_request = UpMsgRequest {
         up_msg: parse_up_msg(payload).await?,
+        session_id: parse_session_id(headers)?,
         cor_id: parse_cor_id(headers)?,
         auth_token: parse_auth_token(headers)?,
     };
@@ -266,6 +274,16 @@ async fn parse_up_msg<UMsg: Deserialize>(mut payload: web::Payload) -> Result<UM
     UMsg::deserialize(
         &serde_json::from_slice(&body).map_err(error::JsonPayloadError::Deserialize)?
     ).map_err(error::ErrorBadRequest)
+}
+
+fn parse_session_id(headers: &HeaderMap) -> Result<SessionId, Error> {
+    headers
+        .get("X-Session-ID")
+        .ok_or_else(|| error::ErrorBadRequest("header 'X-Session-ID' is missing"))?
+        .to_str()
+        .map_err(error::ErrorBadRequest)?
+        .parse()
+        .map_err(error::ErrorBadRequest)
 }
 
 fn parse_cor_id(headers: &HeaderMap) -> Result<CorId, Error> {

@@ -37,11 +37,15 @@ async fn frontend() -> Frontend {
 async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
     println!("{:#?}", req);
 
-    let UpMsgRequest { up_msg, cor_id, _auth_token } = req;
+    let UpMsgRequest { up_msg, session_id, cor_id, .. } = req;
+    let UpMsg::SendMessage(message) = up_msg;
 
-    if let UpMsg::SendMessage(message) = up_msg {
-        connected_clients::broadcast_down_msg(DownMsg::MessageReceived(message), cor_id).await
-    }
+    sessions::broadcast_down_msg(DownMsg::MessageReceived(message.clone()), cor_id).await;
+    sessions::by_session_id()
+        .get(session_id)
+        .unwrap()
+        .send_down_msg(DownMsg::MessageReceived(message), cor_id)
+        .await;
 }
 
 #[moon::main]

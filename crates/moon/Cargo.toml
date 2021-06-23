@@ -24,6 +24,8 @@ env_logger = {version = "0.8.3", features = ["termcolor", "atty", "humantime"], 
 log = { version = "0.4.14", features = ["serde"], default-features = false }
 bool_ext = { version = "0.5.1", default-features = false }
 moonlight = { path = "../moonlight", features = ["backend"] }
+enclose = { version = "1.1.8", default-features = false }
+apply = { version = "0.3.0", default-features = false }
 
 [dev-dependencies]
 const_format = { version = "0.2.14", default-features = false }

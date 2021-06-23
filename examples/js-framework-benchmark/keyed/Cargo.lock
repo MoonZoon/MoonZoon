@@ -244,6 +244,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "apply"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f47b57fc4521e3cae26a4d45b5227f8fadee4c345be0fefd8d5d1711afb8aeb9"
+
+[[package]]
 name = "askama_escape"
 version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -419,6 +425,12 @@ name = "either"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
+
+[[package]]
+name = "enclose"
+version = "1.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1056f553da426e9c025a662efa48b52e62e0a3a7648aa2d15aeaaf7f0d329357"
 
 [[package]]
 name = "encoding_rs"
@@ -839,7 +851,9 @@ dependencies = [
  "actix-http",
  "actix-web",
  "actix-web-codegen",
+ "apply",
  "bool_ext",
+ "enclose",
  "env_logger",
  "envy",
  "futures",
