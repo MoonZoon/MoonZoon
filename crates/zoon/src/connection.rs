@@ -1,6 +1,6 @@
 use crate::*;
 use std::marker::PhantomData;
-use moonlight::{CorId, AuthToken, serde_lite::{Serialize, Deserialize}, serde_json};
+use moonlight::{CorId, AuthToken, serde_lite::{Serialize, Deserialize}, serde_json, SessionId};
 use web_sys::{Request, RequestInit, Response};
 use std::error::Error;
 use std::fmt;
@@ -8,6 +8,7 @@ use std::fmt;
 // ------ Connection ------
 
 pub struct Connection<UMsg, DMsg> {
+    session_id: SessionId,
     down_msg_handler: Option<Box<dyn Fn(DMsg, CorId) + Send + Sync>>,
     auth_token_getter: Option<Box<dyn Fn() -> Option<AuthToken> + Send + Sync>>,
     msg_types: PhantomData<(UMsg, DMsg)>,
@@ -16,6 +17,7 @@ pub struct Connection<UMsg, DMsg> {
 impl<UMsg: Serialize, DMsg: Deserialize> Connection<UMsg, DMsg> {
     pub fn new() -> Self {
         Connection {
+            session_id: SessionId::new(),
             down_msg_handler: None,
             auth_token_getter: None,
             msg_types: PhantomData
@@ -51,6 +53,7 @@ impl<UMsg: Serialize, DMsg: Deserialize> Connection<UMsg, DMsg> {
         // ---- Headers ----
         let headers = request.headers();
         headers.set("X-Correlation-ID", &CorId::new().to_string()).unwrap_throw();
+        headers.set("X-Session-ID", &self.session_id.to_string()).unwrap_throw();
 
         let auth_token = self
             .auth_token_getter

@@ -379,7 +379,7 @@ async fn reload_sse_responder(
     sse: web::Data<ReloadSSE>,
     shared_data: web::Data<SharedData>,
 ) -> impl Responder {
-    let (connection, event_stream) = sse.new_connection();
+    let (connection, event_stream) = sse.new_connection(None);
     let backend_build_id = shared_data.backend_build_id.to_string();
 
     if connection
@@ -400,14 +400,16 @@ async fn reload_sse_responder(
 // ------ message_sse_responder ------
 
 async fn message_sse_responder(
+    req: HttpRequest,
     sse: web::Data<MessageSSE>,
-) -> impl Responder {
-    let (_, event_stream) = sse.new_connection();
+) -> Result<HttpResponse, Error> {
+    let session_id = parse_session_id(req.headers())?;
+    let (_, event_stream) = sse.new_connection(Some(session_id));
 
-    HttpResponse::Ok()
+    Ok(HttpResponse::Ok()
         .insert_header(ContentType(mime::TEXT_EVENT_STREAM))
         .insert_header(CacheControl(vec![CacheDirective::NoCache]))
-        .streaming(event_stream)
+        .streaming(event_stream))
 }
 
 // ------ frontend_responder ------
