@@ -13,7 +13,7 @@ paste = { version = "1.0.5", default-features = false }
 
 static_ref_macro = { path = "../static_ref_macro", optional = true }
 moonlight = { path = "../moonlight", features = ["frontend"], optional = true }
-once_cell = { version = "1.7.2", features = ["race", "alloc"], default-features = false, optional = true }
+once_cell = { version = "1.8.0", features = ["alloc"], default-features = false, optional = true }
 
 console_error_panic_hook = { version = "0.1.6", default-features = false, optional = true }
 wee_alloc = { version = "0.4.5", default-features = false, optional = true }
