@@ -10,24 +10,36 @@ use std::sync::Arc;
 use tokio::sync::mpsc::{error::SendError, unbounded_channel, UnboundedReceiver, UnboundedSender};
 use tokio::time::{interval_at, Instant};
 use moonlight::SessionId;
+use crate::actor::{sessions, Index};
 
 pub type ShareableSSE = Arc<Mutex<SSE>>;
 
 // ------ Connection ------
 
-// #[derive(Clone)]
 pub struct Connection {
+    predefined_session_id: bool,
     session_id: SessionId,
     sender: UnboundedSender<Bytes>,
 }
 
+impl Drop for Connection {
+    fn drop(&mut self) {
+        if self.predefined_session_id {
+            if let Some(session_actor) = sessions::by_session_id().get(self.session_id) {
+                session_actor.remove();
+            }
+        }
+    }
+}
+
 impl Connection {
-    fn new(session_id: Option<SessionId>) -> (Connection, EventStream) {
+    fn new(session_id: Option<SessionId>) -> (Arc<Connection>, EventStream) {
         let (sender, receiver) = unbounded_channel();
-        let connection = Self {
+        let connection = Arc::new(Self {
+            predefined_session_id: session_id.is_some(),
             session_id: session_id.unwrap_or_else(SessionId::new),
             sender,
-        };
+        });
         (connection, EventStream(receiver))
     }
 
@@ -60,7 +72,7 @@ impl Stream for EventStream {
 // ------ SSE ------
 
 pub struct SSE {
-    connections: HashMap<SessionId, Connection>,
+    connections: HashMap<SessionId, Arc<Connection>>,
 }
 
 impl SSE {
@@ -79,7 +91,7 @@ impl SSE {
 pub trait ShareableSSEMethods {
     fn spawn_connection_remover(&self);
 
-    fn new_connection(&self, session_id: Option<SessionId>) -> (Connection, EventStream);
+    fn new_connection(&self, session_id: Option<SessionId>) -> (Arc<Connection>, EventStream);
 
     fn broadcast(&self, event: &str, data: &str) -> Result<(), Vec<SendError<Bytes>>>;
 
@@ -95,9 +107,6 @@ impl ShareableSSEMethods for ShareableSSE {
             let mut interval = interval_at(Instant::now(), Duration::from_secs(10));
             loop {
                 interval.tick().await;
-
-                // @TODO remove SessionActor if SSE is in MessageSSE
-
                 this.lock()
                     .connections
                     .retain(|_, connection| connection.send("ping", "").is_ok());
@@ -105,7 +114,7 @@ impl ShareableSSEMethods for ShareableSSE {
         });
     }
 
-    fn new_connection(&self, session_id: Option<SessionId>) -> (Connection, EventStream) {
+    fn new_connection(&self, session_id: Option<SessionId>) -> (Arc<Connection>, EventStream) {
         let (connection, event_stream) = Connection::new(session_id);
         self.lock()
             .connections
@@ -136,8 +145,6 @@ impl ShareableSSEMethods for ShareableSSE {
     }
 
     fn remove_connection(&self, session_id: &SessionId) {
-        // @TODO remove SessionActor if SSE is in MessageSSE
-        
         self
             .lock()
             .connections
