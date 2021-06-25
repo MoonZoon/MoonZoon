@@ -170,7 +170,7 @@ impl SessionActorInstance {
     pub async fn send_down_msg<DMsg>(&self, down_msg: &DMsg, cor_id: CorId) {
         let session_id = self.session_id.read().unwrap();
 
-        // @TODO serialize DownMsg + CorId
+        // @TODO serialize DownMsg + CorId with Moonlight
 
         self.message_sse.send(&session_id, "down_msg", "test message");
     }
