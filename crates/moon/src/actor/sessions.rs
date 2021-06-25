@@ -1,5 +1,7 @@
 use moonlight::{SessionId, CorId};
 use crate::actor::{ActorInstance, ActorId, Index, PVar};
+use crate::MessageSSE;
+use crate::sse::ShareableSSEMethods;
 use futures::future::join_all;
 use std::{borrow::Borrow, collections::HashMap};
 use parking_lot::Mutex;
@@ -100,9 +102,9 @@ pub struct SessionActor {
 }
 
 impl SessionActor {
-    pub fn create(session_id: SessionId) -> Self {
+    pub fn create(session_id: SessionId, message_sse: MessageSSE) -> Self {
         Self {
-            actor_id: SessionActorInstance::create(session_id)
+            actor_id: SessionActorInstance::create(session_id, message_sse)
         }
     }
 
@@ -112,8 +114,11 @@ impl SessionActor {
         }
     }
 
-    pub async fn send_down_msg<DMsg>(&self, _down_msg: &DMsg, _cor_id: CorId) {
-        
+    pub async fn send_down_msg<DMsg>(&self, down_msg: &DMsg, cor_id: CorId) {
+        let instances = SESSION_ACTOR_INSTANCES.lock();
+        if let Some(instance) = instances.get(&self.actor_id) {
+            instance.send_down_msg(down_msg, cor_id).await;
+        }
     }
 }
 
@@ -123,9 +128,10 @@ static SESSION_ACTOR_INSTANCES: Lazy<Mutex<HashMap<ActorId, SessionActorInstance
     Mutex::new(HashMap::new())
 });
 
-pub struct SessionActorInstance {
+struct SessionActorInstance {
     actor_id: ActorId,   
-    pub session_id: PVarSessionId,
+    message_sse: MessageSSE,
+    session_id: PVarSessionId,
 }
 
 impl ActorInstance for SessionActorInstance {
@@ -135,31 +141,38 @@ impl ActorInstance for SessionActorInstance {
         self.actor_id
     }
 
-    fn revive(actor_id: ActorId) -> Self {
-        Self {
-            actor_id,
-            session_id: PVarSessionId(actor_id),
-        } 
+    fn revive(_actor_id: ActorId) -> Self {
+        unimplemented!("revive not implemented for SessionActorInstance");
     }
 
     fn remove(&self) {
-        SESSION_ACTOR_INSTANCES.lock().remove(&self.actor_id);
+        self.message_sse.remove_connection(&self.session_id.read().unwrap());
         self.session_id.remove();
+        SESSION_ACTOR_INSTANCES.lock().remove(&self.actor_id);
     }
 }
 
 impl SessionActorInstance {
-    fn create(session_id: SessionId) -> ActorId {
+    fn create(session_id: SessionId, message_sse: MessageSSE) -> ActorId {
         let actor_id = ActorId::new();
 
         by_session_id().insert(session_id, actor_id);
 
         let actor_instance = Self {
             actor_id,
+            message_sse,
             session_id: PVarSessionId(actor_id).create(session_id),
         };
         SESSION_ACTOR_INSTANCES.lock().insert(actor_id, actor_instance);
         actor_id
+    }
+
+    pub async fn send_down_msg<DMsg>(&self, down_msg: &DMsg, cor_id: CorId) {
+        let session_id = self.session_id.read().unwrap();
+
+        // @TODO serialize DownMsg + CorId
+
+        self.message_sse.send(&session_id, "down_msg", "test message");
     }
 }
 
