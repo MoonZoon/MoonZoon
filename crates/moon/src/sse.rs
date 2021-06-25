@@ -15,7 +15,7 @@ pub type ShareableSSE = Arc<Mutex<SSE>>;
 
 // ------ Connection ------
 
-#[derive(Clone)]
+// #[derive(Clone)]
 pub struct Connection {
     session_id: SessionId,
     sender: UnboundedSender<Bytes>,
@@ -82,6 +82,10 @@ pub trait ShareableSSEMethods {
     fn new_connection(&self, session_id: Option<SessionId>) -> (Connection, EventStream);
 
     fn broadcast(&self, event: &str, data: &str) -> Result<(), Vec<SendError<Bytes>>>;
+
+    fn send(&self, session_id: &SessionId, event: &str, data: &str) -> Option<Result<(), SendError<Bytes>>>;
+
+    fn remove_connection(&self, session_id: &SessionId);
 }
 
 impl ShareableSSEMethods for ShareableSSE {
@@ -91,6 +95,9 @@ impl ShareableSSEMethods for ShareableSSE {
             let mut interval = interval_at(Instant::now(), Duration::from_secs(10));
             loop {
                 interval.tick().await;
+
+                // @TODO remove SessionActor if SSE is in MessageSSE
+
                 this.lock()
                     .connections
                     .retain(|_, connection| connection.send("ping", "").is_ok());
@@ -118,5 +125,22 @@ impl ShareableSSEMethods for ShareableSSE {
             return Ok(());
         }
         Err(errors)
+    }
+
+    fn send(&self, session_id: &SessionId, event: &str, data: &str) -> Option<Result<(), SendError<Bytes>>> {
+        self
+            .lock()
+            .connections
+            .get(session_id)
+            .map(|connection| connection.send(event, data))
+    }
+
+    fn remove_connection(&self, session_id: &SessionId) {
+        // @TODO remove SessionActor if SSE is in MessageSSE
+        
+        self
+            .lock()
+            .connections
+            .remove(session_id);
     }
 }

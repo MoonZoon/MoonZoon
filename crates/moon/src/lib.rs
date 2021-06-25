@@ -75,7 +75,7 @@ impl Deref for ReloadSSE {
 }
 
 #[derive(Clone)]
-struct MessageSSE(ShareableSSE);
+pub struct MessageSSE(ShareableSSE);
 
 impl Deref for MessageSSE {
     type Target = ShareableSSE;
@@ -405,6 +405,8 @@ async fn message_sse_responder(
 ) -> Result<HttpResponse, Error> {
     let session_id = parse_session_id(req.headers())?;
     let (_, event_stream) = sse.new_connection(Some(session_id));
+
+    SessionActor::create(session_id, MessageSSE::clone(&sse));
 
     Ok(HttpResponse::Ok()
         .insert_header(ContentType(mime::TEXT_EVENT_STREAM))
