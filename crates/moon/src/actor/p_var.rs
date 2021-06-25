@@ -10,6 +10,14 @@ pub trait PVar: Sized {
         todo!()
     }
 
+    fn read(&self) -> Option<Self::Value> {
+        todo!()
+    }
+
+    fn write(&self, _value: Self::Value) {
+        todo!()
+    }
+
     fn remove(&self) {
         todo!()
     }

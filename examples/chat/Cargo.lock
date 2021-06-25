@@ -862,6 +862,7 @@ dependencies = [
  "mime",
  "mime_guess",
  "moonlight",
+ "once_cell",
  "parking_lot",
  "rustls",
  "serde",

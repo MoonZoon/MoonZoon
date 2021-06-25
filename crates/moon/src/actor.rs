@@ -8,23 +8,19 @@ use uuid::Uuid;
 
 // ------ ActorId ------
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Hash)]
 pub struct ActorId(Uuid);
 
 impl ActorId {
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self(Uuid::new_v4())
     }
 }
 
-// ------ Actor ------
+// ------ ActorInstance ------
 
-pub trait Actor {
+pub trait ActorInstance {
     const KEY: &'static str;
-
-    fn new_actor_id() -> ActorId {
-        ActorId::new()
-    }
 
     fn actor_id(&self) -> ActorId;
 

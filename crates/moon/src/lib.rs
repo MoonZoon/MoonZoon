@@ -50,7 +50,7 @@ pub use from_env_vars::FromEnvVars;
 pub use frontend::Frontend;
 pub use redirect::Redirect;
 pub use up_msg_request::UpMsgRequest;
-pub use actor::{sessions::{self, SessionActor}, ActorId, Actor, PVar, Index};
+pub use actor::{sessions::{self, SessionActor}, ActorId, ActorInstance, PVar, Index};
 
 const MAX_UP_MSG_BYTES: usize = 2 * 1_048_576;
 
