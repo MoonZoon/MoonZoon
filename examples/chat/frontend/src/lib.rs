@@ -135,4 +135,5 @@ fn username_input(id: &str) -> impl Element {
 #[wasm_bindgen(start)]
 pub fn start() {
     start_app("app", root);
+    connection();
 }
