@@ -1,4 +1,4 @@
-use moonlight::{SessionId, CorId};
+use moonlight::{SessionId, CorId, DownMsgTransporterForSer, serde_json, Serialize};
 use crate::actor::{ActorInstance, ActorId, Index, PVar};
 use crate::MessageSSE;
 use crate::sse::ShareableSSEMethods;
@@ -9,7 +9,7 @@ use once_cell::sync::Lazy;
 
 // @TODO rewrite to a proper virtual actor
 
-pub async fn broadcast_down_msg<DMsg>(down_msg: &DMsg, cor_id: CorId) {
+pub async fn broadcast_down_msg<DMsg: Serialize>(down_msg: &DMsg, cor_id: CorId) {
     let mut send_down_msg_futs = vec![];
     by_session_id().for_each(|_, session_actor| {
         send_down_msg_futs.push(async move {
@@ -114,7 +114,7 @@ impl SessionActor {
         }
     }
 
-    pub async fn send_down_msg<DMsg>(&self, down_msg: &DMsg, cor_id: CorId) {
+    pub async fn send_down_msg<DMsg: Serialize>(&self, down_msg: &DMsg, cor_id: CorId) {
         let instances = SESSION_ACTOR_INSTANCES.lock();
         if let Some(instance) = instances.get(&self.actor_id) {
             instance.send_down_msg(down_msg, cor_id).await;
@@ -167,12 +167,16 @@ impl SessionActorInstance {
         actor_id
     }
 
-    pub async fn send_down_msg<DMsg>(&self, down_msg: &DMsg, cor_id: CorId) {
+    pub async fn send_down_msg<DMsg: Serialize>(&self, down_msg: &DMsg, cor_id: CorId) {
         let session_id = self.session_id.read().unwrap();
 
-        // @TODO serialize DownMsg + CorId with Moonlight
+        let down_msg_transporter = DownMsgTransporterForSer {
+            down_msg,
+            cor_id
+        };
+        let down_msg_transporter = serde_json::to_string(&down_msg_transporter.serialize().unwrap()).unwrap();
 
-        self.message_sse.send(&session_id, "down_msg", "test message");
+        self.message_sse.send(&session_id, "down_msg", &down_msg_transporter);
     }
 }
 

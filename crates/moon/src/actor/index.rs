@@ -13,6 +13,8 @@ pub trait Index {
         todo!()
     }
 
-    fn for_each(&self, f: impl FnMut(<Self::PVar as PVar>::Value, Self::Actor));
+    fn for_each(&self, _f: impl FnMut(<Self::PVar as PVar>::Value, Self::Actor)) {
+        todo!()
+    }
 }
 

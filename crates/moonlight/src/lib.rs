@@ -1,4 +1,4 @@
-pub use serde_lite;
+pub use serde_lite::{self, Serialize, Deserialize, Intermediate};
 pub use serde_json;
 use std::{fmt, str::FromStr};
 pub use rusty_ulid::{self, Ulid, DecodingError};
@@ -53,6 +53,26 @@ impl FromStr for CorId {
     }
 }
 
+impl Serialize for CorId {
+    fn serialize(&self) -> Result<Intermediate, serde_lite::Error> {
+        Ok(Intermediate::String(self.to_string()))
+    }
+}
+
+impl Deserialize for CorId {
+    fn deserialize(itermediate: &Intermediate) -> Result<Self, serde_lite::Error> {
+        itermediate
+            .as_str()
+            .ok_or_else(|| {
+                serde_lite::Error::invalid_value("CorId can be deserialized only from String")
+            })?
+            .parse()
+            .map_err(|error| {
+                serde_lite::Error::invalid_value(error)
+            })
+    }
+}
+
 // ------ AuthToken ------
 
 #[derive(Debug, Clone)]
@@ -70,4 +90,18 @@ impl AuthToken {
     pub fn as_str(&self) -> &str {
         &self.0
     }
+}
+
+// ------ DownMsgTransporter ------
+
+#[derive(Serialize)]
+pub struct DownMsgTransporterForSer<'a, DMsg: Serialize> {
+    pub down_msg: &'a DMsg,
+    pub cor_id: CorId,
+}
+
+#[derive(Deserialize)]
+pub struct DownMsgTransporterForDe<DMsg: Deserialize> {
+    pub down_msg: DMsg,
+    pub cor_id: CorId,
 }
