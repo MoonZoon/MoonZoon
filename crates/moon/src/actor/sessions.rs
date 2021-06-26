@@ -108,7 +108,7 @@ impl SessionActor {
         }
     }
 
-    pub fn remove(&self) {
+    pub(crate) fn remove(&self) {
         if let Some(instance) = SESSION_ACTOR_INSTANCES.lock().remove(&self.actor_id) {
             instance.remove();
         }
@@ -146,7 +146,6 @@ impl ActorInstance for SessionActorInstance {
     }
 
     fn remove(&self) {
-        self.message_sse.remove_connection(&self.session_id.read().unwrap());
         self.session_id.remove();
         SESSION_ACTOR_INSTANCES.lock().remove(&self.actor_id);
     }

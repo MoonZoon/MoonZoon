@@ -12,7 +12,7 @@ pub struct SSE {
 
 impl Drop for SSE {
     fn drop(&mut self) {
-        self.reconnecting_event_source.close()
+        self.reconnecting_event_source.close();
     }
 }
 
