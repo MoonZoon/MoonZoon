@@ -98,7 +98,7 @@ pub trait ShareableSSEMethods {
 
     fn send(&self, session_id: &SessionId, event: &str, data: &str) -> Option<Result<(), SendError<Bytes>>>;
 
-    // fn remove_connection(&self, session_id: &SessionId);
+    fn remove_connection(&self, session_id: &SessionId);
 }
 
 impl ShareableSSEMethods for ShareableSSE {
@@ -108,7 +108,7 @@ impl ShareableSSEMethods for ShareableSSE {
             let mut interval = interval_at(Instant::now(), Duration::from_secs(10));
             loop {
                 interval.tick().await;
-                this.lock()
+                this.try_lock().expect("LOCK 1")
                     .connections
                     .retain(|_, connection| connection.send("ping", "").is_ok());
             }
@@ -117,7 +117,7 @@ impl ShareableSSEMethods for ShareableSSE {
 
     fn new_connection(&self, session_id: Option<SessionId>) -> (Arc<Connection>, EventStream) {
         let (connection, event_stream) = Connection::new(session_id);
-        self.lock()
+        self.try_lock().expect("LOCK 2")
             .connections
             .insert(connection.session_id(), connection.clone());
         (connection, event_stream)
@@ -125,7 +125,7 @@ impl ShareableSSEMethods for ShareableSSE {
 
     fn broadcast(&self, event: &str, data: &str) -> Result<(), Vec<SendError<Bytes>>> {
         let errors = self
-            .lock()
+            .try_lock().expect("LOCK 3")
             .connections
             .values()
             .filter_map(|connection| connection.send(event, data).err())
@@ -139,16 +139,16 @@ impl ShareableSSEMethods for ShareableSSE {
 
     fn send(&self, session_id: &SessionId, event: &str, data: &str) -> Option<Result<(), SendError<Bytes>>> {
         self
-            .lock()
+            .try_lock().expect("LOCK 4")
             .connections
             .get(session_id)
             .map(|connection| connection.send(event, data))
     }
 
-    // fn remove_connection(&self, session_id: &SessionId) {
-    //     self
-    //         .lock()
-    //         .connections
-    //         .remove(session_id);
-    // }
+    fn remove_connection(&self, session_id: &SessionId) {
+        self
+            .try_lock().expect("LOCK 5")
+            .connections
+            .remove(session_id);
+    }
 }
