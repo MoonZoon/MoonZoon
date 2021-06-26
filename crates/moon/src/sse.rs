@@ -25,6 +25,7 @@ pub struct Connection {
 impl Drop for Connection {
     fn drop(&mut self) {
         if self.predefined_session_id {
+            println!("Connection with session_id '{}' dropped.", self.session_id);
             if let Some(session_actor) = sessions::by_session_id().get(self.session_id) {
                 session_actor.remove();
             }
@@ -97,7 +98,7 @@ pub trait ShareableSSEMethods {
 
     fn send(&self, session_id: &SessionId, event: &str, data: &str) -> Option<Result<(), SendError<Bytes>>>;
 
-    fn remove_connection(&self, session_id: &SessionId);
+    // fn remove_connection(&self, session_id: &SessionId);
 }
 
 impl ShareableSSEMethods for ShareableSSE {
@@ -144,10 +145,10 @@ impl ShareableSSEMethods for ShareableSSE {
             .map(|connection| connection.send(event, data))
     }
 
-    fn remove_connection(&self, session_id: &SessionId) {
-        self
-            .lock()
-            .connections
-            .remove(session_id);
-    }
+    // fn remove_connection(&self, session_id: &SessionId) {
+    //     self
+    //         .lock()
+    //         .connections
+    //         .remove(session_id);
+    // }
 }
