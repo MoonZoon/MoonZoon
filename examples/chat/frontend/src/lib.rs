@@ -22,11 +22,9 @@ fn new_message_text() -> &'static Mutable<String> {
 
 #[static_ref]
 fn connection() -> &'static Connection<UpMsg, DownMsg> {
-    Connection::new()
-        .down_msg_handler(|DownMsg::MessageReceived(message), _| {
-            messages().lock_mut().push_cloned(message);
-        })
-        .auth_token_getter(|| AuthToken::new("im auth token"))
+    Connection::new(|DownMsg::MessageReceived(message), _| {
+        messages().lock_mut().push_cloned(message);
+    }).auth_token_getter(|| AuthToken::new("im auth token"))
 }
 
 // ------ ------
