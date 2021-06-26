@@ -12,7 +12,7 @@ use sse::SSE;
 
 pub struct Connection<UMsg, DMsg> {
     session_id: SessionId,
-    _sse: SSE<DMsg>,
+    _sse: SSE,
     auth_token_getter: Option<Box<dyn Fn() -> Option<AuthToken> + Send + Sync>>,
     msg_types: PhantomData<(UMsg, DMsg)>,
 }

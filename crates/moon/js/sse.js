@@ -1,5 +1,8 @@
-var uri = location.protocol + '//' + location.host + '/_api/reload_sse';
-var sse = new ReconnectingEventSource(uri);
+// https://github.com/fanout/reconnecting-eventsource
+var sse = new ReconnectingEventSource('/_api/reload_sse', {
+    withCredentials: false,
+    max_retry_time: 5000,
+});
 var backendBuildId = null;
 sse.addEventListener("backend_build_id", function (msg) {
     var newBackendBuildId = msg.data;
