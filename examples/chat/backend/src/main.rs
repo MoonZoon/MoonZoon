@@ -43,11 +43,11 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
     let down_msg = DownMsg::MessageReceived(message);
 
     sessions::broadcast_down_msg(&down_msg, cor_id).await;
-    sessions::by_session_id()
-        .get(session_id)
-        .expect("session not found")
-        .send_down_msg(&down_msg, cor_id)
-        .await;
+    // sessions::by_session_id()
+    //     .get(session_id)
+    //     .expect("session not found")
+    //     .send_down_msg(&down_msg, cor_id)
+    //     .await;
 }
 
 #[moon::main]
