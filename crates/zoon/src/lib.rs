@@ -26,6 +26,7 @@ pub use task::Task;
 pub use std::future::Future;
 use wasm_bindgen_futures::spawn_local;
 pub use wasm_bindgen_futures::JsFuture;
+pub use send_wrapper::SendWrapper;
 
 #[cfg(feature = "connection")]
 pub use connection::{Connection, SendUpMsgError};

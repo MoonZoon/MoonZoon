@@ -1,17 +1,16 @@
 use crate::*;
 use crate::moonlight::{SessionId, CorId, DownMsgTransporterForDe};
-use std::sync::{Arc, Mutex};
 
 // ------ SSE ------
 
 pub struct SSE {
     // down_msg_handler: Box<dyn Fn(DMsg, CorId) + Send + Sync>,
-    // reconnecting_event_source: Arc<Mutex<ReconnectingEventSource>>,
+    reconnecting_event_source: SendWrapper<ReconnectingEventSource>,
 }
 
 impl Drop for SSE {
     fn drop(&mut self) {
-        // self.reconnecting_event_source.close()
+        self.reconnecting_event_source.close()
     }
 }
 
@@ -23,7 +22,7 @@ impl SSE {
 
         Self {
             // down_msg_handler: Box::new(down_msg_handler),
-            // reconnecting_event_source: Arc::new(Mutex::new(reconnecting_event_source)),
+            reconnecting_event_source: SendWrapper::new(reconnecting_event_source),
         }
     }
 
