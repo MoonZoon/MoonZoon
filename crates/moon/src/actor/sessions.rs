@@ -36,19 +36,19 @@ impl Index for BySessionId {
     // --
 
     fn insert(&self, key: <Self::PVar as PVar>::Value, actor_id: ActorId) {
-        BY_SESSION_ID.lock().insert(key, SessionActor { actor_id });
+        BY_SESSION_ID.try_lock().expect("LOCK 6").insert(key, SessionActor { actor_id });
     }
 
     fn get(&self, key: impl Borrow<<Self::PVar as PVar>::Value>) -> Option<Self::Actor> {
         BY_SESSION_ID
-            .lock()
+            .try_lock().expect("LOCK 7")
             .get(key.borrow())
             .copied()
     }
 
     fn for_each(&self, mut f: impl FnMut(SessionId, SessionActor)) {
         BY_SESSION_ID
-            .lock()
+            .try_lock().expect("LOCK 8")
             .iter()
             .for_each(|(session_id, session_actor)| {
                 f(*session_id, *session_actor)
@@ -75,20 +75,20 @@ impl PVar for PVarSessionId {
     // --
 
     fn create(self, value: Self::Value) -> Self {
-        PVAR_SESSION_IDS.lock().insert(self.0, value);
+        PVAR_SESSION_IDS.try_lock().expect("LOCK 9").insert(self.0, value);
         self
     }
 
     fn read(&self) -> Option<Self::Value> {
-        PVAR_SESSION_IDS.lock().get(&self.0).cloned()
+        PVAR_SESSION_IDS.try_lock().expect("LOCK 10").get(&self.0).cloned()
     }
 
     fn write(&self, value: Self::Value) {
-        PVAR_SESSION_IDS.lock().insert(self.0, value);
+        PVAR_SESSION_IDS.try_lock().expect("LOCK 11").insert(self.0, value);
     }
 
     fn remove(&self) {
-        PVAR_SESSION_IDS.lock().remove(&self.0);
+        PVAR_SESSION_IDS.try_lock().expect("LOCK 12").remove(&self.0);
     }
 }
 
@@ -109,13 +109,13 @@ impl SessionActor {
     }
 
     pub(crate) fn remove(&self) {
-        if let Some(instance) = SESSION_ACTOR_INSTANCES.lock().remove(&self.actor_id) {
+        if let Some(instance) = SESSION_ACTOR_INSTANCES.try_lock().expect("LOCK 13").remove(&self.actor_id) {
             instance.remove();
         }
     }
 
     pub async fn send_down_msg<DMsg: Serialize>(&self, down_msg: &DMsg, cor_id: CorId) {
-        let instances = SESSION_ACTOR_INSTANCES.lock();
+        let instances = SESSION_ACTOR_INSTANCES.try_lock().expect("LOCK 14");
         if let Some(instance) = instances.get(&self.actor_id) {
             instance.send_down_msg(down_msg, cor_id).await;
         }
@@ -147,7 +147,7 @@ impl ActorInstance for SessionActorInstance {
 
     fn remove(&self) {
         self.session_id.remove();
-        SESSION_ACTOR_INSTANCES.lock().remove(&self.actor_id);
+        SESSION_ACTOR_INSTANCES.try_lock().expect("LOCK 15").remove(&self.actor_id);
     }
 }
 
@@ -162,7 +162,7 @@ impl SessionActorInstance {
             message_sse,
             session_id: PVarSessionId(actor_id).create(session_id),
         };
-        SESSION_ACTOR_INSTANCES.lock().insert(actor_id, actor_instance);
+        SESSION_ACTOR_INSTANCES.try_lock().expect("LOCK 16").insert(actor_id, actor_instance);
         actor_id
     }
 
