@@ -1,5 +1,3 @@
-pub use wasm_bindgen::{self, prelude::*, JsCast};
-
 mod connection;
 pub mod console;
 mod cow_str;
@@ -9,6 +7,8 @@ mod futures_signals_ext;
 mod style;
 mod task;
 
+pub use wasm_bindgen::{self, prelude::*, JsCast};
+pub use js_sys::{self, Reflect};
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use style::*;
 pub use dom::{document, window};

@@ -2600,6 +2600,7 @@ dependencies = [
  "dominator",
  "enclose",
  "futures-signals",
+ "js-sys",
  "lexical",
  "moonlight",
  "once_cell",

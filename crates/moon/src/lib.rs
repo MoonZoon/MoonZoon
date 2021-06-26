@@ -167,7 +167,7 @@ where
                     )
                     .route("reload", web::post().to(reload_responder))
                     .route("pkg/{file:.*}", web::get().to(pkg_responder))
-                    .route("message_sse", web::get().to(message_sse_responder))
+                    .route("message_sse/{session_id}", web::get().to(message_sse_responder))
                     .route("reload_sse", web::get().to(reload_sse_responder))
                     .route("ping", web::to(|| async { "pong" })),
             )
@@ -400,10 +400,10 @@ async fn reload_sse_responder(
 // ------ message_sse_responder ------
 
 async fn message_sse_responder(
-    req: HttpRequest,
+    session_id: web::Path<String>,
     sse: web::Data<MessageSSE>,
 ) -> Result<HttpResponse, Error> {
-    let session_id = parse_session_id(req.headers())?;
+    let session_id = session_id.parse().map_err(error::ErrorBadRequest)?;
     let (_, event_stream) = sse.new_connection(Some(session_id));
 
     SessionActor::create(session_id, MessageSSE::clone(&sse));
