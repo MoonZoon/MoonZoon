@@ -27,6 +27,7 @@ moonlight = { path = "../moonlight", features = ["backend"] }
 enclose = { version = "1.1.8", default-features = false }
 apply = { version = "0.3.0", default-features = false }
 once_cell = { version = "1.8.0", features = ["std"], default-features = false }
+chashmap = { version = "2.2.2", default-features = false }
 
 [dev-dependencies]
 const_format = { version = "0.2.14", default-features = false }

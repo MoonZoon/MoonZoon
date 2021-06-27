@@ -2,11 +2,12 @@ use actix_web::web::Bytes;
 use actix_web::{rt, Error};
 use futures::Stream;
 use parking_lot::Mutex;
-use std::collections::HashMap;
+use chashmap::CHashMap;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use std::time::Duration;
 use std::sync::Arc;
+use std::cell::RefCell;
 use tokio::sync::mpsc::{error::SendError, unbounded_channel, UnboundedReceiver, UnboundedSender};
 use tokio::time::{interval_at, Instant};
 use moonlight::SessionId;
@@ -17,18 +18,18 @@ pub type ShareableSSE = Arc<Mutex<SSE>>;
 // ------ Connection ------
 
 pub struct Connection {
-    predefined_session_id: bool,
+    remove_session_actor_on_remove: bool,
     session_id: SessionId,
     sender: UnboundedSender<Bytes>,
 }
 
 impl Drop for Connection {
     fn drop(&mut self) {
-        if self.predefined_session_id {
+        if self.remove_session_actor_on_remove {
             println!("Connection with session_id '{}' dropped.", self.session_id);
-            if let Some(session_actor) = sessions::by_session_id().get(self.session_id) {
-                session_actor.remove();
-            }
+            // if let Some(session_actor) = sessions::by_session_id().get(self.session_id) {
+            //     session_actor.remove();
+            // }
         }
     }
 }
@@ -37,7 +38,7 @@ impl Connection {
     fn new(session_id: Option<SessionId>) -> (Arc<Connection>, EventStream) {
         let (sender, receiver) = unbounded_channel();
         let connection = Arc::new(Self {
-            predefined_session_id: session_id.is_some(),
+            remove_session_actor_on_remove: session_id.is_some(),
             session_id: session_id.unwrap_or_else(SessionId::new),
             sender,
         });
@@ -73,13 +74,13 @@ impl Stream for EventStream {
 // ------ SSE ------
 
 pub struct SSE {
-    connections: HashMap<SessionId, Arc<Connection>>,
+    connections: CHashMap<SessionId, Arc<Connection>>,
 }
 
 impl SSE {
     pub fn start() -> ShareableSSE {
         let sse = SSE {
-            connections: HashMap::new(),
+            connections: CHashMap::new(),
         };
         let this = Arc::new(Mutex::new(sse));
         this.spawn_connection_remover();
@@ -124,13 +125,17 @@ impl ShareableSSEMethods for ShareableSSE {
     }
 
     fn broadcast(&self, event: &str, data: &str) -> Result<(), Vec<SendError<Bytes>>> {
-        let errors = self
+        let errors = RefCell::new(Vec::new());
+        self
             .try_lock().expect("LOCK 3")
             .connections
-            .values()
-            .filter_map(|connection| connection.send(event, data).err())
-            .collect::<Vec<_>>();
-
+            .retain(|_, connection| {
+                if let Err(error) = connection.send(event, data) {
+                    errors.borrow_mut().push(error);
+                }
+                true
+            });
+        let errors = errors.into_inner();
         if errors.is_empty() {
             return Ok(());
         }

@@ -3,9 +3,10 @@ use crate::actor::{ActorInstance, ActorId, Index, PVar};
 use crate::MessageSSE;
 use crate::sse::ShareableSSEMethods;
 use futures::future::join_all;
-use std::{borrow::Borrow, collections::HashMap};
-use parking_lot::Mutex;
+use std::borrow::Borrow;
 use once_cell::sync::Lazy;
+use chashmap::CHashMap;
+use std::cell::RefCell;
 
 // @TODO rewrite to a proper virtual actor
 
@@ -21,9 +22,7 @@ pub async fn broadcast_down_msg<DMsg: Serialize>(down_msg: &DMsg, cor_id: CorId)
 
 // ------ Indices ------
 
-static BY_SESSION_ID: Lazy<Mutex<HashMap<SessionId, SessionActor>>> = Lazy::new(|| {
-    Mutex::new(HashMap::new())
-});
+static BY_SESSION_ID: Lazy<CHashMap<SessionId, SessionActor>> = Lazy::new(CHashMap::new);
 
 pub const fn by_session_id() -> BySessionId { 
     BySessionId
@@ -36,31 +35,28 @@ impl Index for BySessionId {
     // --
 
     fn insert(&self, key: <Self::PVar as PVar>::Value, actor_id: ActorId) {
-        BY_SESSION_ID.try_lock().expect("LOCK 6").insert(key, SessionActor { actor_id });
+        BY_SESSION_ID.insert(key, SessionActor { actor_id });
     }
 
     fn get(&self, key: impl Borrow<<Self::PVar as PVar>::Value>) -> Option<Self::Actor> {
         BY_SESSION_ID
-            .try_lock().expect("LOCK 7")
             .get(key.borrow())
-            .copied()
+            .map(|session_actor| *session_actor)
     }
 
-    fn for_each(&self, mut f: impl FnMut(SessionId, SessionActor)) {
+    fn for_each(&self, f: impl FnMut(SessionId, SessionActor)) {
+        let f = RefCell::new(f);
         BY_SESSION_ID
-            .try_lock().expect("LOCK 8")
-            .iter()
-            .for_each(|(session_id, session_actor)| {
-                f(*session_id, *session_actor)
+            .retain(|session_id, session_actor| {
+                f.borrow_mut()(*session_id, *session_actor);
+                true
             });
     }
 }
 
 // ------ PVars ------
 
-static PVAR_SESSION_IDS: Lazy<Mutex<HashMap<ActorId, SessionId>>> = Lazy::new(|| {
-    Mutex::new(HashMap::new())
-});
+static PVAR_SESSION_IDS: Lazy<CHashMap<ActorId, SessionId>> = Lazy::new(CHashMap::new);
 
 #[derive(Clone, Copy)]
 pub struct PVarSessionId(ActorId);
@@ -75,20 +71,22 @@ impl PVar for PVarSessionId {
     // --
 
     fn create(self, value: Self::Value) -> Self {
-        PVAR_SESSION_IDS.try_lock().expect("LOCK 9").insert(self.0, value);
+        PVAR_SESSION_IDS.insert(self.0, value);
         self
     }
 
     fn read(&self) -> Option<Self::Value> {
-        PVAR_SESSION_IDS.try_lock().expect("LOCK 10").get(&self.0).cloned()
+        PVAR_SESSION_IDS
+            .get(&self.0)
+            .map(|session_id| session_id.clone())
     }
 
     fn write(&self, value: Self::Value) {
-        PVAR_SESSION_IDS.try_lock().expect("LOCK 11").insert(self.0, value);
+        PVAR_SESSION_IDS.insert(self.0, value);
     }
 
     fn remove(&self) {
-        PVAR_SESSION_IDS.try_lock().expect("LOCK 12").remove(&self.0);
+        PVAR_SESSION_IDS.remove(&self.0);
     }
 }
 
@@ -109,14 +107,13 @@ impl SessionActor {
     }
 
     pub(crate) fn remove(&self) {
-        if let Some(instance) = SESSION_ACTOR_INSTANCES.try_lock().expect("LOCK 13").remove(&self.actor_id) {
-            instance.remove();
+        if let Some(instance) = SESSION_ACTOR_INSTANCES.remove(&self.actor_id) {
+            instance.remove()
         }
     }
 
     pub async fn send_down_msg<DMsg: Serialize>(&self, down_msg: &DMsg, cor_id: CorId) {
-        let instances = SESSION_ACTOR_INSTANCES.try_lock().expect("LOCK 14");
-        if let Some(instance) = instances.get(&self.actor_id) {
+        if let Some(instance) = SESSION_ACTOR_INSTANCES.get(&self.actor_id) {
             instance.send_down_msg(down_msg, cor_id).await;
         }
     }
@@ -124,9 +121,7 @@ impl SessionActor {
 
 // -- SessionActorInstance --
 
-static SESSION_ACTOR_INSTANCES: Lazy<Mutex<HashMap<ActorId, SessionActorInstance>>> = Lazy::new(|| {
-    Mutex::new(HashMap::new())
-});
+static SESSION_ACTOR_INSTANCES: Lazy<CHashMap<ActorId, SessionActorInstance>> = Lazy::new(CHashMap::new);
 
 struct SessionActorInstance {
     actor_id: ActorId,   
@@ -147,7 +142,7 @@ impl ActorInstance for SessionActorInstance {
 
     fn remove(&self) {
         self.session_id.remove();
-        SESSION_ACTOR_INSTANCES.try_lock().expect("LOCK 15").remove(&self.actor_id);
+        SESSION_ACTOR_INSTANCES.remove(&self.actor_id);
     }
 }
 
@@ -162,7 +157,7 @@ impl SessionActorInstance {
             message_sse,
             session_id: PVarSessionId(actor_id).create(session_id),
         };
-        SESSION_ACTOR_INSTANCES.try_lock().expect("LOCK 16").insert(actor_id, actor_instance);
+        SESSION_ACTOR_INSTANCES.insert(actor_id, actor_instance);
         actor_id
     }
 
