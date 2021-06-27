@@ -24,7 +24,7 @@ fn new_message_text() -> &'static Mutable<String> {
 fn connection() -> &'static Connection<UpMsg, DownMsg> {
     Connection::new(|DownMsg::MessageReceived(message), _| {
         messages().lock_mut().push_cloned(message);
-    }).auth_token_getter(|| AuthToken::new("im auth token"))
+    })
 }
 
 // ------ ------
