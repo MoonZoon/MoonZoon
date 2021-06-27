@@ -32,6 +32,7 @@ pub use tokio_stream;
 pub use uuid;
 pub use enclose::enc as clone;
 pub use apply::{Also, Apply};
+pub use chashmap;
 
 mod config;
 mod from_env_vars;
