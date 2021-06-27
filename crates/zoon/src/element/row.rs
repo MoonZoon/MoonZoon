@@ -15,7 +15,9 @@ pub struct Row<EmptyFlag> {
 impl Row<EmptyFlagSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("div").attr("class", "row"),
+            raw_el: RawHtmlEl::new("div")
+                .attr("class", "row")
+                .style("display", "flex"),
             flags: PhantomData,
         }
     }

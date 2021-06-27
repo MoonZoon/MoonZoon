@@ -15,7 +15,10 @@ pub struct Column<EmptyFlag> {
 impl Column<EmptyFlagSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("div").attr("class", "column"),
+            raw_el: RawHtmlEl::new("div")
+                .attr("class", "column")
+                .style("display", "flex")
+                .style("flex-direction", "column"),
             flags: PhantomData,
         }
     }
