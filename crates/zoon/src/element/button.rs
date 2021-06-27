@@ -18,7 +18,9 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
             raw_el: RawHtmlEl::new("div")
                 .attr("class", "button")
                 .attr("role", "button")
-                .attr("tabindex", "0"),
+                .attr("tabindex", "0")
+                .style("cursor", "pointer")
+                .style("user-select", "none"),
             flags: PhantomData,
         }
     }
