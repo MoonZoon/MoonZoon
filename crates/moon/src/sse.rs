@@ -1,7 +1,6 @@
 use actix_web::web::Bytes;
 use actix_web::{rt, Error};
 use futures::Stream;
-use parking_lot::Mutex;
 use chashmap::CHashMap;
 use std::pin::Pin;
 use std::task::{Context, Poll};
@@ -13,7 +12,7 @@ use tokio::time::{interval_at, Instant};
 use moonlight::SessionId;
 use crate::actor::{sessions, Index};
 
-pub type ShareableSSE = Arc<Mutex<SSE>>;
+pub type ShareableSSE = Arc<SSE>;
 
 // ------ Connection ------
 
@@ -27,9 +26,6 @@ impl Drop for Connection {
     fn drop(&mut self) {
         if self.remove_session_actor_on_remove {
             println!("Connection with session_id '{}' dropped.", self.session_id);
-            // if let Some(session_actor) = sessions::by_session_id().get(self.session_id) {
-            //     session_actor.remove();
-            // }
         }
     }
 }
@@ -82,7 +78,7 @@ impl SSE {
         let sse = SSE {
             connections: CHashMap::new(),
         };
-        let this = Arc::new(Mutex::new(sse));
+        let this = Arc::new(sse);
         this.spawn_connection_remover();
         this
     }
@@ -109,16 +105,24 @@ impl ShareableSSEMethods for ShareableSSE {
             let mut interval = interval_at(Instant::now(), Duration::from_secs(10));
             loop {
                 interval.tick().await;
-                this.try_lock().expect("LOCK 1")
+                this
                     .connections
-                    .retain(|_, connection| connection.send("ping", "").is_ok());
+                    .retain(|session_id, connection| {
+                        let active = connection.send("ping", "").is_ok();
+                        if !active {
+                            if let Some(session_actor) = sessions::by_session_id().get(session_id) {
+                                session_actor.remove();
+                            }
+                        }
+                        active
+                    });
             }
         });
     }
 
     fn new_connection(&self, session_id: Option<SessionId>) -> (Arc<Connection>, EventStream) {
         let (connection, event_stream) = Connection::new(session_id);
-        self.try_lock().expect("LOCK 2")
+        self
             .connections
             .insert(connection.session_id(), connection.clone());
         (connection, event_stream)
@@ -127,7 +131,6 @@ impl ShareableSSEMethods for ShareableSSE {
     fn broadcast(&self, event: &str, data: &str) -> Result<(), Vec<SendError<Bytes>>> {
         let errors = RefCell::new(Vec::new());
         self
-            .try_lock().expect("LOCK 3")
             .connections
             .retain(|_, connection| {
                 if let Err(error) = connection.send(event, data) {
@@ -144,7 +147,6 @@ impl ShareableSSEMethods for ShareableSSE {
 
     fn send(&self, session_id: &SessionId, event: &str, data: &str) -> Option<Result<(), SendError<Bytes>>> {
         self
-            .try_lock().expect("LOCK 4")
             .connections
             .get(session_id)
             .map(|connection| connection.send(event, data))
@@ -152,8 +154,11 @@ impl ShareableSSEMethods for ShareableSSE {
 
     fn remove_connection(&self, session_id: &SessionId) {
         self
-            .try_lock().expect("LOCK 5")
             .connections
             .remove(session_id);
+
+        if let Some(session_actor) = sessions::by_session_id().get(session_id) {
+            session_actor.remove();
+        }
     }
 }
