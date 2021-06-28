@@ -61,7 +61,7 @@ make_into_cow_str_impls!(u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128
 pub trait IntoOptionCowStr<'a> {
     fn into_option_cow_str(self) -> Option<Cow<'a, str>>;
 
-    fn into_option_cow_str_for_box(self: Box<Self>) -> Option<Cow<'a, str>> {
+    fn mut_into_option_cow_str(&mut self) -> Option<Cow<'a, str>> {
         None
     }
 
@@ -86,9 +86,9 @@ impl<'a, T: IntoCowStr<'a>> IntoOptionCowStr<'a> for Option<T> {
     }
 }
 
-impl IntoOptionCowStr<'static> for Box<dyn IntoOptionCowStr<'static>> {
-    fn into_option_cow_str(self) -> Option<Cow<'static, str>> {
-        self.into_option_cow_str_for_box()
+impl<'a> IntoOptionCowStr<'a> for Box<dyn IntoOptionCowStr<'a>> {
+    fn into_option_cow_str(mut self) -> Option<Cow<'a, str>> {
+        self.mut_into_option_cow_str()
     }
 }
 
