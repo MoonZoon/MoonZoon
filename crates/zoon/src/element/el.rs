@@ -39,7 +39,7 @@ impl<ChildFlag> UpdateRawEl<RawHtmlEl> for El<ChildFlag> {
 // ------ ------
 
 impl<ChildFlag> Styleable<RawHtmlEl> for El<ChildFlag> {}
-impl<ChildFlag> KeyboardEventHandling<RawHtmlEl> for El<ChildFlag> {}
+impl<ChildFlag> KeyboardEventAware<RawHtmlEl> for El<ChildFlag> {}
 
 // ------ ------
 //  Attributes

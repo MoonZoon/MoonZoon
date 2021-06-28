@@ -1,30 +1,17 @@
-use std::collections::BTreeMap;
+use crate::*;
 
-pub trait Style<'a> {
-    fn into_css_props(self) -> BTreeMap<&'a str, &'a str>;
+mod background;
+mod font;
+mod color;
+
+pub use background::Background;
+pub use font::Font;
+pub use color::{Color, NamedColor};
+
+pub trait Style {
+    fn update_raw_el_style<T: RawEl>(self, raw_el: T) -> T;
 }
 
-// ------ Font ------
 
-pub struct Font<'a> {
-    css_props: BTreeMap<&'a str, &'a str>
-}
 
-impl<'a> Font<'a> {
-    pub fn new() -> Self {
-        Self {
-            css_props: BTreeMap::new()
-        }
-    }
 
-    pub fn bold(mut self) -> Self {
-        self.css_props.insert("font-weight", "bold");
-        self
-    }
-}
-
-impl<'a> Style<'a> for Font<'a> {
-    fn into_css_props(self) -> BTreeMap<&'a str, &'a str> {
-        self.css_props
-    }
-}

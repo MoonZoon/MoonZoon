@@ -12,19 +12,16 @@ pub trait Focusable: UpdateRawEl<RawHtmlEl> + Sized {
 // ------ Styleable ------
 
 pub trait Styleable<T: RawEl>: UpdateRawEl<T> + Sized {
-    fn style<'a>(self, style: impl Style<'a>) -> Self {
-        self.update_raw_el(|mut raw_el| {
-            for (name, value) in style.into_css_props() {
-                raw_el = raw_el.style(name, value);
-            }
-            raw_el
+    fn style(self, style: impl Style) -> Self {
+        self.update_raw_el(|raw_el| {
+            style.update_raw_el_style(raw_el)
         })
     } 
 }
 
-// ------ KeyboardEventHandling ------
+// ------ KeyboardEventAware ------
 
-pub trait KeyboardEventHandling<T: RawEl>: UpdateRawEl<T> + Sized {
+pub trait KeyboardEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
     fn on_key_down(self, handler: impl FnOnce(KeyboardEvent) + Clone + 'static) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el.event_handler(move |event: events::KeyDown| {
@@ -68,3 +65,19 @@ impl From<String> for Key {
     }
 }
 
+// ------ Hoverable ------
+
+pub trait Hoverable<T: RawEl>: UpdateRawEl<T> + Sized {
+    fn on_hovered_change(self, handler: impl FnOnce(bool) + Clone + 'static) -> Self {
+        let handler = |hovered| (handler.clone())(hovered);
+        // self.update_raw_el(|raw_el| {
+        //     raw_el.event_handler(move |event: events::KeyDown| {
+        //         let keyboard_event = KeyboardEvent {
+        //             key: Key::from(event.key())
+        //         };
+        //         (handler.clone())(keyboard_event)
+        //     })
+        // })
+        self
+    } 
+}

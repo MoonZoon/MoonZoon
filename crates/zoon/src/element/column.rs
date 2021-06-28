@@ -42,7 +42,7 @@ impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Column<EmptyFlag> {
 // ------ ------
 
 impl<EmptyFlag> Styleable<RawHtmlEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> KeyboardEventHandling<RawHtmlEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Column<EmptyFlag> {}
 
 // ------ ------
 //  Attributes

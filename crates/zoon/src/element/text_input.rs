@@ -46,7 +46,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> UpdateRawEl<Raw
 // ------ ------
 
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Styleable<RawHtmlEl> for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {}
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> KeyboardEventHandling<RawHtmlEl> for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {}
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> KeyboardEventAware<RawHtmlEl> for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {}
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Focusable for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {}
 
 
