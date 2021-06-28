@@ -69,15 +69,16 @@ impl From<String> for Key {
 
 pub trait Hoverable<T: RawEl>: UpdateRawEl<T> + Sized {
     fn on_hovered_change(self, handler: impl FnOnce(bool) + Clone + 'static) -> Self {
-        let handler = |hovered| (handler.clone())(hovered);
-        // self.update_raw_el(|raw_el| {
-        //     raw_el.event_handler(move |event: events::KeyDown| {
-        //         let keyboard_event = KeyboardEvent {
-        //             key: Key::from(event.key())
-        //         };
-        //         (handler.clone())(keyboard_event)
-        //     })
-        // })
-        self
+        let mouse_enter_handler = move |hovered| (handler.clone())(hovered);
+        let mouse_leave_handler = mouse_enter_handler.clone();
+        self.update_raw_el(|raw_el| {
+            raw_el
+                .event_handler(move |_: events::MouseEnter| {
+                    mouse_enter_handler(true)
+                })
+                .event_handler(move |_: events::MouseLeave| {
+                    mouse_leave_handler(false)
+                })
+        })
     } 
 }
