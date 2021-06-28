@@ -1,5 +1,5 @@
-use crate::*;
-use crate::style::{StaticCSSProps, DynamicCSSProps};
+use crate::{*, format};
+use crate::style::{StaticCSSProps, DynamicCSSProps, box_css_signal};
 
 #[derive(Default)]
 pub struct Font<'a> {
@@ -7,9 +7,26 @@ pub struct Font<'a> {
     dynamic_css_props: DynamicCSSProps,
 }
 
-impl Font<'_> {
+impl<'a> Font<'a> {
     pub fn bold(mut self) -> Self {
-        self.static_css_props.insert("font-weight", "bold");
+        self.static_css_props.insert("font-weight", "bold".into());
+        self
+    }
+
+    pub fn color(mut self, color: impl Color<'a>) -> Self {
+        if let Some(color) = color.into_option_cow_str() {
+            self.static_css_props.insert("color", color);
+        }
+        self
+    }
+
+    pub fn color_signal(mut self, color: impl Signal<Item = impl Color<'static> + 'static> + Unpin + 'static) -> Self {
+        self.dynamic_css_props.insert("color", box_css_signal(color));
+        self
+    }
+
+    pub fn size(mut self, size: u32) -> Self {
+        self.static_css_props.insert("font-size", format!("{}px", size).into());
         self
     }
 }

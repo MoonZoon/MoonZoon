@@ -7,7 +7,14 @@ pub struct Background<'a> {
     dynamic_css_props: DynamicCSSProps,
 }
 
-impl Background<'_> {
+impl<'a> Background<'a> {
+    pub fn color(mut self, color: impl Color<'a>) -> Self {
+        if let Some(color) = color.into_option_cow_str() {
+            self.static_css_props.insert("color", color);
+        }
+        self
+    }
+
     pub fn color_signal(mut self, color: impl Signal<Item = impl Color<'static> + 'static> + Unpin + 'static) -> Self {
         self.dynamic_css_props.insert("background-color", box_css_signal(color));
         self

@@ -11,6 +11,7 @@ pub trait Color<'a>: IntoOptionCowStr<'a> {}
 pub enum NamedColor {
     Green2,
     Green5,
+    Gray10,
 }
 
 impl Color<'_> for NamedColor {}
@@ -20,6 +21,7 @@ impl<'a> IntoOptionCowStr<'a> for NamedColor {
         let color = match self {
             NamedColor::Green2 => "darkgreen",
             NamedColor::Green5 => "green",
+            NamedColor::Gray10 => "white",
         };
         Some(color.into())
     }
