@@ -10,7 +10,15 @@ pub use font::Font;
 pub use color::{Color, NamedColor};
 
 type StaticCSSProps<'a> = BTreeMap<&'a str, &'a str>;
-type DynamicCSSProps = BTreeMap<&'static str, Box<dyn Signal<Item = Box<dyn IntoOptionCowStr<'static>>> + Unpin>>;
+type DynamicCSSProps = BTreeMap<&'static str, BoxedCssSignal>;
+
+type BoxedCssSignal = Box<dyn Signal<Item = Box<dyn IntoOptionCowStr<'static>>> + Unpin>;
+
+fn box_css_signal(signal: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static) -> BoxedCssSignal {
+    Box::new(signal.map(|value| {
+        Box::new(value) as Box<dyn IntoOptionCowStr<'static>>
+    }))
+}
 
 pub trait Style<'a>: Default {
     fn new() -> Self {
