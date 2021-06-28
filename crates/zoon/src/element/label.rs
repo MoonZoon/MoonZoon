@@ -38,7 +38,7 @@ impl<LabelFlag, ForInputFlag> UpdateRawEl<RawHtmlEl> for Label<LabelFlag, ForInp
 //   Abilities
 // ------ ------
 
-impl<LabelFlag, ForInputFlag> Styleable<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> Styleable<'_, RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
 impl<LabelFlag, ForInputFlag> KeyboardEventAware<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
 
 // ------ ------

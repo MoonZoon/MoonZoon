@@ -40,7 +40,7 @@ impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Row<EmptyFlag> {
 //   Abilities
 // ------ ------
 
-impl<EmptyFlag> Styleable<RawHtmlEl> for Row<EmptyFlag> {}
+impl<EmptyFlag> Styleable<'_, RawHtmlEl> for Row<EmptyFlag> {}
 impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Row<EmptyFlag> {}
 
 // ------ ------

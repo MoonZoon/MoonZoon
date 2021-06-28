@@ -41,7 +41,7 @@ impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Column<EmptyFlag> {
 //   Abilities
 // ------ ------
 
-impl<EmptyFlag> Styleable<RawHtmlEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> Styleable<'_, RawHtmlEl> for Column<EmptyFlag> {}
 impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Column<EmptyFlag> {}
 
 // ------ ------

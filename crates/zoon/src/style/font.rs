@@ -4,7 +4,7 @@ use crate::style::{StaticCSSProps, DynamicCSSProps};
 #[derive(Default)]
 pub struct Font<'a> {
     static_css_props: StaticCSSProps<'a>,
-    _dynamic_css_props: DynamicCSSProps<'a>,
+    dynamic_css_props: DynamicCSSProps,
 }
 
 impl Font<'_> {
@@ -14,11 +14,8 @@ impl Font<'_> {
     }
 }
 
-impl Style for Font<'_> {
-    fn update_raw_el_style<T: RawEl>(self, mut raw_el: T) -> T {
-        for (name, value) in self.static_css_props {
-            raw_el = raw_el.style(name, value);
-        }
-        raw_el
+impl<'a> Style<'a> for Font<'a> {
+    fn into_css_props(self) -> (StaticCSSProps<'a>, DynamicCSSProps) {
+        (self.static_css_props, self.dynamic_css_props)
     }
 }
