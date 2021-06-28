@@ -42,6 +42,7 @@ impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Row<EmptyFlag> {
 
 impl<EmptyFlag> Styleable<'_, RawHtmlEl> for Row<EmptyFlag> {}
 impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Row<EmptyFlag> {}
+impl<EmptyFlag> Hoverable<RawHtmlEl> for Row<EmptyFlag> {}
 
 // ------ ------
 //  Attributes

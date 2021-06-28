@@ -40,6 +40,7 @@ impl<ChildFlag> UpdateRawEl<RawHtmlEl> for El<ChildFlag> {
 
 impl<ChildFlag> Styleable<'_, RawHtmlEl> for El<ChildFlag> {}
 impl<ChildFlag> KeyboardEventAware<RawHtmlEl> for El<ChildFlag> {}
+impl<ChildFlag> Hoverable<RawHtmlEl> for El<ChildFlag> {}
 
 // ------ ------
 //  Attributes
