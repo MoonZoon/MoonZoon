@@ -146,6 +146,7 @@ impl ShareableSSEMethods for ShareableSSE {
     }
 
     fn send(&self, session_id: &SessionId, event: &str, data: &str) -> Option<Result<(), SendError<Bytes>>> {
+        // @TODO Last-Event-Id
         self
             .connections
             .get(session_id)
