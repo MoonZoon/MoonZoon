@@ -23,4 +23,8 @@ impl<'a> IntoOptionCowStr<'a> for NamedColor {
         };
         Some(color.into())
     }
+
+    fn take_into_option_cow_str(&mut self) -> Option<Cow<'a, str>> {
+        self.into_option_cow_str()
+    }
 }
