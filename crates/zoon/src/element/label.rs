@@ -39,7 +39,7 @@ impl<LabelFlag, ForInputFlag> UpdateRawEl<RawHtmlEl> for Label<LabelFlag, ForInp
 // ------ ------
 
 impl<LabelFlag, ForInputFlag> Styleable<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> KeyboardEventHandling<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> KeyboardEventAware<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
 
 // ------ ------
 //  Attributes

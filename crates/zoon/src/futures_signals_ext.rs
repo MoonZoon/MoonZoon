@@ -1,6 +1,6 @@
 use crate::*;
 use futures_signals::{
-    signal::Mutable,
+    signal::{Mutable, MutableSignal, MutableSignalCloned},
     signal_vec::{MutableVec, MutableVecLockMut, MutableVecLockRef},
 };
 use std::mem;
@@ -19,6 +19,16 @@ pub trait MutableExt<A> {
     fn take(&self) -> A where A: Default {
         self.map_mut(mem::take)
     }
+
+    fn new_and_signal(value: A) -> (Self, MutableSignal<A>)
+    where 
+        A: Copy,
+        Self: Sized;
+
+    fn new_and_signal_cloned(value: A) -> (Self, MutableSignalCloned<A>)
+    where 
+        A: Clone,
+        Self: Sized;
 }
 
 impl<A> MutableExt<A> for Mutable<A> {
@@ -43,6 +53,24 @@ impl<A> MutableExt<A> for Mutable<A> {
     #[inline]
     fn update_mut(&self, f: impl FnOnce(&mut A)) {
         f(&mut self.lock_mut())
+    }
+
+    fn new_and_signal(value: A) -> (Self, MutableSignal<A>)
+    where 
+        A: Copy,
+    {
+        let this = Self::new(value);
+        let signal = this.signal();
+        (this, signal)
+    }
+
+    fn new_and_signal_cloned(value: A) -> (Self, MutableSignalCloned<A>)
+    where 
+        A: Clone,
+    {
+        let this = Self::new(value);
+        let signal = this.signal_cloned();
+        (this, signal)
     }
 }
 

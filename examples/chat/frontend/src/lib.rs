@@ -102,8 +102,8 @@ fn new_message_input() -> impl Element {
 fn send_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .style(Background::new().color_signal(hovered.map(|hovered| {
-            if hovered { NamedColor::Green } else { NamedColor::DarkGreen }
+        .style(Background::new().color_signal(hovered_signal.map(|hovered| {
+            if hovered { NamedColor::Green5 } else { NamedColor::Green2 }
         })))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .on_press(send_message)

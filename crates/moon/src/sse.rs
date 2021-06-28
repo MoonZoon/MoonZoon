@@ -109,7 +109,7 @@ impl ShareableSSEMethods for ShareableSSE {
                     .connections
                     .retain(|session_id, connection| {
                         let active = connection.send("ping", "").is_ok();
-                        if !active {
+                        if !active && connection.remove_session_actor_on_remove {
                             if let Some(session_actor) = sessions::by_session_id().get(session_id) {
                                 session_actor.remove();
                             }
@@ -153,12 +153,16 @@ impl ShareableSSEMethods for ShareableSSE {
     }
 
     fn remove_connection(&self, session_id: &SessionId) {
-        self
+        let connection = self
             .connections
             .remove(session_id);
 
-        if let Some(session_actor) = sessions::by_session_id().get(session_id) {
-            session_actor.remove();
+        if let Some(connection) = connection {
+            if connection.remove_session_actor_on_remove {
+                if let Some(session_actor) = sessions::by_session_id().get(session_id) {
+                    session_actor.remove();
+                }
+            }
         }
     }
 }
