@@ -40,6 +40,7 @@ impl<LabelFlag, ForInputFlag> UpdateRawEl<RawHtmlEl> for Label<LabelFlag, ForInp
 
 impl<LabelFlag, ForInputFlag> Styleable<'_, RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
 impl<LabelFlag, ForInputFlag> KeyboardEventAware<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> Hoverable<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
 
 // ------ ------
 //  Attributes
