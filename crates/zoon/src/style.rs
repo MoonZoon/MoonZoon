@@ -6,11 +6,13 @@ mod background;
 mod font;
 mod color;
 mod padding;
+mod spacing;
 
 pub use background::Background;
 pub use font::Font;
 pub use color::{Color, NamedColor};
 pub use padding::Padding;
+pub use spacing::Spacing;
 
 type StaticCSSProps<'a> = BTreeMap<&'a str, Cow<'a, str>>;
 type DynamicCSSProps = BTreeMap<&'static str, BoxedCssSignal>;

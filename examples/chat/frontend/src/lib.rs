@@ -59,6 +59,8 @@ fn send_message() {
 
 fn root() -> impl Element {
     Column::new()
+        .style(Padding::new().all(30))
+        .style(Spacing::new(20))
         .item(received_messages())
         .item(new_message_panel())
         .item(username_panel())
@@ -73,12 +75,17 @@ fn received_messages() -> impl Element {
 }
 
 fn received_message(message: Message) -> impl Element {
-    Row::new()
+    Column::new()
+        .style(Padding::new().all(10))
+        .style(Spacing::new(6))
         .item(El::new()
-            .style(Font::new().bold())
+            .style(Font::new().bold().color(NamedColor::Gray10).size(17))
             .child(message.username)
         )
-        .item(El::new().child(message.text))
+        .item(El::new()
+            .style(Font::new().color(NamedColor::Gray8).size(17))
+            .child(message.text)
+        )
 }
 
 // ------ new_message_panel ------
@@ -91,6 +98,8 @@ fn new_message_panel() -> impl Element {
 
 fn new_message_input() -> impl Element {
     TextInput::new()
+        .style(Padding::new().x(10))
+        .style(Font::new().size(17))
         .focus()
         .on_change(set_new_message_text)
         .label_hidden("New message text")
@@ -105,7 +114,7 @@ fn send_button() -> impl Element {
         .style(Background::new().color_signal(hovered_signal.map(|hovered| {
             if hovered { NamedColor::Green5 } else { NamedColor::Green2 }
         })))
-        .style(Font::new().color(NamedColor::Gray10))
+        .style(Font::new().color(NamedColor::Gray10).size(20))
         .style(Padding::new().all(10))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .on_press(send_message)
@@ -123,12 +132,15 @@ fn username_panel() -> impl Element {
 
 fn username_input_label(id: &str) -> impl Element {
     Label::new()
+        .style(Font::new().color(NamedColor::Gray10))
+        .style(Padding::new().all(10))
         .for_input(id)
         .label("Username:")
 }
 
 fn username_input(id: &str) -> impl Element {
     TextInput::new()
+        .style(Padding::new().x(10))
         .id(id)
         .on_change(set_username)
         .placeholder(Placeholder::new("Joe"))

@@ -12,22 +12,6 @@ async fn frontend() -> Frontend {
         </style>")
 }
 
-// html {
-//     color: lightgray;
-// }
-
-// #app * {
-//     padding: 5px;
-// }
-    
-// .button {
-//     background-color: darkgreen;
-// }
-
-// .button:hover {
-//     background-color: green;
-// }
-
 async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
     println!("{:#?}", req);
 
