@@ -105,6 +105,8 @@ fn send_button() -> impl Element {
         .style(Background::new().color_signal(hovered_signal.map(|hovered| {
             if hovered { NamedColor::Green5 } else { NamedColor::Green2 }
         })))
+        .style(Font::new().color(NamedColor::Gray10))
+        .style(Padding::new().all(10))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .on_press(send_message)
         .label("Send")
