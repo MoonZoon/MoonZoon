@@ -1,5 +1,5 @@
-use crate::{*, format};
-use crate::style::{StaticCSSProps, DynamicCSSProps};
+use crate::*;
+use crate::style::{StaticCSSProps, DynamicCSSProps, px};
 
 #[derive(Default)]
 pub struct Padding<'a> {
@@ -21,22 +21,22 @@ impl<'a> Padding<'a> {
     }
 
     pub fn top(mut self, top: u32) -> Self {
-        self.static_css_props.insert("padding-top", format!("{}px", top).into());
+        self.static_css_props.insert("padding-top", px(top));
         self
     }
 
     pub fn right(mut self, right: u32) -> Self {
-        self.static_css_props.insert("padding-right", format!("{}px", right).into());
+        self.static_css_props.insert("padding-right", px(right));
         self
     }
 
     pub fn bottom(mut self, bottom: u32) -> Self {
-        self.static_css_props.insert("padding-bottom", format!("{}px", bottom).into());
+        self.static_css_props.insert("padding-bottom", px(bottom));
         self
     }
 
     pub fn left(mut self, left: u32) -> Self {
-        self.static_css_props.insert("padding-left", format!("{}px", left).into());
+        self.static_css_props.insert("padding-left", px(left));
         self
     }
 }

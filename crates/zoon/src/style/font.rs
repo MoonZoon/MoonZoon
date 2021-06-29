@@ -1,5 +1,5 @@
-use crate::{*, format};
-use crate::style::{StaticCSSProps, DynamicCSSProps, box_css_signal};
+use crate::*;
+use crate::style::{StaticCSSProps, DynamicCSSProps, box_css_signal, px};
 
 #[derive(Default)]
 pub struct Font<'a> {
@@ -26,7 +26,7 @@ impl<'a> Font<'a> {
     }
 
     pub fn size(mut self, size: u32) -> Self {
-        self.static_css_props.insert("font-size", format!("{}px", size).into());
+        self.static_css_props.insert("font-size", px(size));
         self
     }
 }

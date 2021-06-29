@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{*, format};
 use std::collections::BTreeMap;
 use std::borrow::Cow;
 
@@ -24,6 +24,12 @@ fn box_css_signal(signal: impl Signal<Item = impl IntoOptionCowStr<'static> + 's
         Box::new(value) as Box<dyn IntoOptionCowStr<'static>>
     }))
 }
+
+fn px<'a>(px: u32) -> Cow<'a, str> {
+    format!("{}px", px).into()
+}
+
+// ------ Style ------
 
 pub trait Style<'a>: Default {
     fn new() -> Self {
