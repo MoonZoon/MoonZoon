@@ -149,7 +149,7 @@ where
     let mut server = HttpServer::new(move || {
         App::new()
             .wrap(Condition::new(redirect_enabled, Compat::new(redirect)))
-            // https://docs.rs/actix-web/4.0.0-beta.6/actix_web/middleware/struct.Logger.html
+            // https://docs.rs/actix-web/4.0.0-beta.8/actix_web/middleware/struct.Logger.html
             .wrap(Logger::new(r#""%r" %s %b "%{Referer}i" %T"#))
             .wrap(
                 ErrorHandlers::new()
@@ -159,11 +159,11 @@ where
                     )
                     .handler(StatusCode::NOT_FOUND, render_not_found_handler),
             )
-            .data(shared_data)
-            .data(frontend.clone())
-            .data(up_msg_handler.clone())
-            .data(reload_sse.clone())
-            .data(message_sse.clone())
+            .app_data(web::Data::new(shared_data))
+            .app_data(web::Data::new(frontend.clone()))
+            .app_data(web::Data::new(up_msg_handler.clone()))
+            .app_data(web::Data::new(reload_sse.clone()))
+            .app_data(web::Data::new(message_sse.clone()))
             .configure(service_config.clone())
             .service(Files::new("_api/public", "public"))
             .service(
