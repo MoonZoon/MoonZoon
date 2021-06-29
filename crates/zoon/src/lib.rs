@@ -1,4 +1,6 @@
+#[cfg(feature = "connection")]
 mod connection;
+
 pub mod console;
 mod cow_str;
 mod css_property_name;
