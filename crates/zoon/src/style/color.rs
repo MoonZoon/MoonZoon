@@ -3,7 +3,7 @@ use std::borrow::Cow;
 
 // ------ Color ------
 
-pub trait Color<'a>: IntoOptionCowStr<'a> {}
+pub trait Color<'a>: IntoCowStr<'a> {}
 
 // ------ NamedColor ------
 
@@ -17,18 +17,17 @@ pub enum NamedColor {
 
 impl Color<'_> for NamedColor {}
 
-impl<'a> IntoOptionCowStr<'a> for NamedColor {
-    fn into_option_cow_str(self) -> Option<Cow<'a, str>> {
-        let color = match self {
+impl<'a> IntoCowStr<'a> for NamedColor {
+    fn into_cow_str(self) -> Cow<'a, str> {
+        match self {
             NamedColor::Green2 => "darkgreen",
             NamedColor::Green5 => "green",
             NamedColor::Gray8 => "lightgray",
             NamedColor::Gray10 => "white",
-        };
-        Some(color.into())
+        }.into()
     }
 
-    fn take_into_option_cow_str(&mut self) -> Option<Cow<'a, str>> {
-        self.into_option_cow_str()
+    fn take_into_cow_str(&mut self) -> Cow<'a, str> {
+        self.into_cow_str()
     }
 }
