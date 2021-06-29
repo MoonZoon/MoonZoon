@@ -1,7 +1,7 @@
-use crate::*;
 use crate::css_property_name::CssPropertyName;
-use std::{borrow::Cow, mem};
+use crate::*;
 use dominator::traits::AsStr;
+use std::{borrow::Cow, mem};
 
 // ------ ------
 //  IntoCowStr

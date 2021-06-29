@@ -66,16 +66,11 @@ impl<'a, LabelFlag, ForInputFlag> Label<LabelFlag, ForInputFlag> {
         self.into_type()
     }
 
-    pub fn for_input(
-        mut self,
-        id: impl IntoCowStr<'a>,
-    ) -> Label<LabelFlag, ForInputFlagSet>
+    pub fn for_input(mut self, id: impl IntoCowStr<'a>) -> Label<LabelFlag, ForInputFlagSet>
     where
         ForInputFlag: FlagNotSet,
     {
-        self.raw_el = self
-            .raw_el
-            .attr("for", &id.into_cow_str());
+        self.raw_el = self.raw_el.attr("for", &id.into_cow_str());
         self.into_type()
     }
 

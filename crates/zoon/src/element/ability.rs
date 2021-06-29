@@ -6,17 +6,15 @@ use std::borrow::Borrow;
 pub trait Focusable: UpdateRawEl<RawHtmlEl> + Sized {
     fn focus(self) -> Self {
         self.update_raw_el(|raw_el| raw_el.focus())
-    } 
+    }
 }
 
 // ------ Styleable ------
 
 pub trait Styleable<'a, T: RawEl>: UpdateRawEl<T> + Sized {
     fn s(self, style: impl Style<'a>) -> Self {
-        self.update_raw_el(|raw_el| {
-            style.update_raw_el_style(raw_el)
-        })
-    } 
+        self.update_raw_el(|raw_el| style.update_raw_el_style(raw_el))
+    }
 }
 
 // ------ KeyboardEventAware ------
@@ -26,7 +24,7 @@ pub trait KeyboardEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
         self.update_raw_el(|raw_el| {
             raw_el.event_handler(move |event: events::KeyDown| {
                 let keyboard_event = KeyboardEvent {
-                    key: Key::from(event.key())
+                    key: Key::from(event.key()),
                 };
                 (handler.clone())(keyboard_event)
             })
@@ -35,7 +33,7 @@ pub trait KeyboardEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
 }
 
 pub struct KeyboardEvent {
-    key: Key
+    key: Key,
 }
 
 impl KeyboardEvent {
@@ -54,13 +52,13 @@ impl KeyboardEvent {
 pub enum Key {
     Enter,
     Other(String),
-} 
+}
 
 impl From<String> for Key {
     fn from(event: String) -> Self {
         match event.as_str() {
             "Enter" => Key::Enter,
-            _ => Key::Other(event)
+            _ => Key::Other(event),
         }
     }
 }
@@ -73,12 +71,8 @@ pub trait Hoverable<T: RawEl>: UpdateRawEl<T> + Sized {
         let mouse_leave_handler = mouse_enter_handler.clone();
         self.update_raw_el(|raw_el| {
             raw_el
-                .event_handler(move |_: events::MouseEnter| {
-                    mouse_enter_handler(true)
-                })
-                .event_handler(move |_: events::MouseLeave| {
-                    mouse_leave_handler(false)
-                })
+                .event_handler(move |_: events::MouseEnter| mouse_enter_handler(true))
+                .event_handler(move |_: events::MouseLeave| mouse_leave_handler(false))
         })
-    } 
+    }
 }

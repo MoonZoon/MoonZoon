@@ -21,7 +21,7 @@ pub mod text;
 pub use text::Text;
 
 pub mod text_input;
-pub use text_input::{TextInput, Placeholder};
+pub use text_input::{Placeholder, TextInput};
 
 // --
 
@@ -34,7 +34,7 @@ pub use raw_text::RawText;
 // --
 
 pub mod ability;
-pub use ability::{Focusable, Styleable, KeyboardEventAware, KeyboardEvent, Key, Hoverable};
+pub use ability::{Focusable, Hoverable, Key, KeyboardEvent, KeyboardEventAware, Styleable};
 
 // ------ Element ------
 

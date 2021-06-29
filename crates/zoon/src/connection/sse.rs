@@ -1,6 +1,9 @@
+use crate::moonlight::{CorId, DownMsgTransporterForDe, SessionId};
 use crate::*;
-use moonlight::{serde_json, serde_lite::{self, Deserialize}};
-use crate::moonlight::{SessionId, CorId, DownMsgTransporterForDe};
+use moonlight::{
+    serde_json,
+    serde_lite::{self, Deserialize},
+};
 use std::{error::Error, fmt};
 
 // ------ SSE ------
@@ -17,47 +20,57 @@ impl Drop for SSE {
 }
 
 impl SSE {
-    pub fn new<DMsg: Deserialize>(session_id: SessionId, down_msg_handler: impl FnOnce(DMsg, CorId) + Clone + 'static) -> Self {
+    pub fn new<DMsg: Deserialize>(
+        session_id: SessionId,
+        down_msg_handler: impl FnOnce(DMsg, CorId) + Clone + 'static,
+    ) -> Self {
         let down_msg_handler = down_msg_handler_closure(down_msg_handler);
-        
+
         let reconnecting_event_source = connect(session_id);
-        reconnecting_event_source.add_event_listener("down_msg", down_msg_handler.as_ref().unchecked_ref());
+        reconnecting_event_source
+            .add_event_listener("down_msg", down_msg_handler.as_ref().unchecked_ref());
 
         Self {
             reconnecting_event_source: SendWrapper::new(reconnecting_event_source),
             _down_msg_handler: SendWrapper::new(down_msg_handler),
         }
     }
-} 
-
-fn down_msg_handler_closure<DMsg: Deserialize>(down_msg_handler: impl FnOnce(DMsg, CorId) + Clone + 'static) -> Closure<dyn Fn(JsValue)> {
-    let down_msg_handler = move |down_msg, cor_id| (down_msg_handler.clone())(down_msg, cor_id);
-    Closure::wrap(Box::new(move |event: JsValue| {
-        match down_msg_transporter_from_event(event) {
-            Ok(DownMsgTransporterForDe { down_msg, cor_id }) => down_msg_handler(down_msg, cor_id),
-            Err(error) => crate::eprintln!("{:#?}", error),
-        }
-    }) as Box<dyn Fn(JsValue)>)
 }
 
-fn down_msg_transporter_from_event<DMsg: Deserialize>(event: JsValue) -> Result<DownMsgTransporterForDe<DMsg>, DownMsgError> {
+fn down_msg_handler_closure<DMsg: Deserialize>(
+    down_msg_handler: impl FnOnce(DMsg, CorId) + Clone + 'static,
+) -> Closure<dyn Fn(JsValue)> {
+    let down_msg_handler = move |down_msg, cor_id| (down_msg_handler.clone())(down_msg, cor_id);
+    Closure::wrap(Box::new(
+        move |event: JsValue| match down_msg_transporter_from_event(event) {
+            Ok(DownMsgTransporterForDe { down_msg, cor_id }) => down_msg_handler(down_msg, cor_id),
+            Err(error) => crate::eprintln!("{:#?}", error),
+        },
+    ) as Box<dyn Fn(JsValue)>)
+}
+
+fn down_msg_transporter_from_event<DMsg: Deserialize>(
+    event: JsValue,
+) -> Result<DownMsgTransporterForDe<DMsg>, DownMsgError> {
     let down_msg_transporter = Reflect::get(&event, &JsValue::from("data"))
         .unwrap()
         .as_string()
         .ok_or(DownMsgError::InvalidDataValue)?;
 
     DownMsgTransporterForDe::deserialize(
-        &serde_json::from_str(&down_msg_transporter).map_err(DownMsgError::JsonDeserializationFailed)?
-    ).map_err(DownMsgError::DeserializationFailed)
+        &serde_json::from_str(&down_msg_transporter)
+            .map_err(DownMsgError::JsonDeserializationFailed)?,
+    )
+    .map_err(DownMsgError::DeserializationFailed)
 }
 
 fn connect(session_id: SessionId) -> ReconnectingEventSource {
     ReconnectingEventSource::new(
-        &format!("/_api/message_sse/{}", session_id), 
+        &format!("/_api/message_sse/{}", session_id),
         Some(ReconnectingEventSourceOptions {
             withCredentials: false,
             max_retry_time: 5000,
-        })
+        }),
     )
 }
 
@@ -77,7 +90,11 @@ impl fmt::Display for DownMsgError {
                 write!(f, "invalid DownMsg data value")
             }
             DownMsgError::JsonDeserializationFailed(error) => {
-                write!(f, "failed to JSON deserialize DownMsgTransporter: {:?}", error)
+                write!(
+                    f,
+                    "failed to JSON deserialize DownMsgTransporter: {:?}",
+                    error
+                )
             }
             DownMsgError::DeserializationFailed(error) => {
                 write!(f, "failed to deserialize DownMsgTransporter: {:?}", error)

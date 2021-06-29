@@ -1,6 +1,6 @@
 use crate::*;
-use std::marker::PhantomData;
 use std::borrow::Cow;
+use std::marker::PhantomData;
 
 // ------ ------
 //    Element
@@ -13,7 +13,15 @@ pub struct TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
     flags: PhantomData<(IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag)>,
 }
 
-impl TextInput<IdFlagNotSet, OnChangeFlagNotSet, PlaceholderFlagNotSet, TextFlagNotSet, LabelFlagNotSet> {
+impl
+    TextInput<
+        IdFlagNotSet,
+        OnChangeFlagNotSet,
+        PlaceholderFlagNotSet,
+        TextFlagNotSet,
+        LabelFlagNotSet,
+    >
+{
     pub fn new() -> Self {
         Self {
             raw_el: RawHtmlEl::new("input").attr("class", "text_input"),
@@ -22,19 +30,25 @@ impl TextInput<IdFlagNotSet, OnChangeFlagNotSet, PlaceholderFlagNotSet, TextFlag
     }
 }
 
-impl<OnChangeFlag, PlaceholderFlag, TextFlag> Element for TextInput<IdFlagSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagNotSet> {
+impl<OnChangeFlag, PlaceholderFlag, TextFlag> Element
+    for TextInput<IdFlagSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagNotSet>
+{
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<OnChangeFlag, PlaceholderFlag, TextFlag> Element for TextInput<IdFlagNotSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagSet> {
+impl<OnChangeFlag, PlaceholderFlag, TextFlag> Element
+    for TextInput<IdFlagNotSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagSet>
+{
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> UpdateRawEl<RawHtmlEl> for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> UpdateRawEl<RawHtmlEl>
+    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+{
     fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
@@ -45,18 +59,34 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> UpdateRawEl<Raw
 //   Abilities
 // ------ ------
 
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Styleable<'_, RawHtmlEl> for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {}
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> KeyboardEventAware<RawHtmlEl> for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {}
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Focusable for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {}
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Hoverable<RawHtmlEl> for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {}
-
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Styleable<'_, RawHtmlEl>
+    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+{
+}
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> KeyboardEventAware<RawHtmlEl>
+    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+{
+}
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Focusable
+    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+{
+}
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Hoverable<RawHtmlEl>
+    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+{
+}
 
 // ------ ------
 //  Attributes
 // ------ ------
 
-impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {
-    pub fn id(mut self, id: impl IntoCowStr<'a>) -> TextInput<IdFlagSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+    TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+{
+    pub fn id(
+        mut self,
+        id: impl IntoCowStr<'a>,
+    ) -> TextInput<IdFlagSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
     where
         IdFlag: FlagNotSet,
     {
@@ -64,7 +94,10 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> TextInput<I
         self.into_type()
     }
 
-    pub fn placeholder(mut self, placeholder: Placeholder<'a>) -> TextInput<IdFlag, OnChangeFlag, PlaceholderFlagSet, TextFlag, LabelFlag>
+    pub fn placeholder(
+        mut self,
+        placeholder: Placeholder<'a>,
+    ) -> TextInput<IdFlag, OnChangeFlag, PlaceholderFlagSet, TextFlag, LabelFlag>
     where
         PlaceholderFlag: FlagNotSet,
     {
@@ -72,7 +105,10 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> TextInput<I
         self.into_type()
     }
 
-    pub fn text(mut self, text: impl IntoCowStr<'a>) -> TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlagSet, LabelFlag>
+    pub fn text(
+        mut self,
+        text: impl IntoCowStr<'a>,
+    ) -> TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlagSet, LabelFlag>
     where
         TextFlag: FlagNotSet,
     {
@@ -98,16 +134,17 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> TextInput<I
     where
         OnChangeFlag: FlagNotSet,
     {
-        self.raw_el = self
-            .raw_el
-            .event_handler(move |event: events::Input| {
-                #[allow(deprecated)]
-                (on_change.clone())(event.value().unwrap())
-            });
+        self.raw_el = self.raw_el.event_handler(move |event: events::Input| {
+            #[allow(deprecated)]
+            (on_change.clone())(event.value().unwrap())
+        });
         self.into_type()
     }
 
-    pub fn label_hidden(mut self, label: impl IntoCowStr<'a>) -> TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagSet>
+    pub fn label_hidden(
+        mut self,
+        label: impl IntoCowStr<'a>,
+    ) -> TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagSet>
     where
         LabelFlag: FlagNotSet,
     {
@@ -115,8 +152,9 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> TextInput<I
         self.into_type()
     }
 
-    fn into_type<NewIdFlag, NewOnChangeFlag, NewPlaceholderFlag, NewTextFlag, NewLabelFlag>(self)
-     -> TextInput<NewIdFlag, NewOnChangeFlag, NewPlaceholderFlag, NewTextFlag, NewLabelFlag> {
+    fn into_type<NewIdFlag, NewOnChangeFlag, NewPlaceholderFlag, NewTextFlag, NewLabelFlag>(
+        self,
+    ) -> TextInput<NewIdFlag, NewOnChangeFlag, NewPlaceholderFlag, NewTextFlag, NewLabelFlag> {
         TextInput {
             raw_el: self.raw_el,
             flags: PhantomData,
@@ -132,8 +170,8 @@ pub struct Placeholder<'a> {
 
 impl<'a> Placeholder<'a> {
     pub fn new(text: impl IntoCowStr<'a>) -> Self {
-        Placeholder { 
-            text: text.into_cow_str() 
+        Placeholder {
+            text: text.into_cow_str(),
         }
     }
 }

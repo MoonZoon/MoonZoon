@@ -1,6 +1,6 @@
-pub mod sessions;
 pub mod index;
 pub mod p_var;
+pub mod sessions;
 
 pub use index::Index;
 pub use p_var::PVar;

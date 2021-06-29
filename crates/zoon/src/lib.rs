@@ -1,17 +1,14 @@
 mod connection;
 pub mod console;
 mod cow_str;
+mod css_property_name;
 mod dom;
 mod element;
 mod futures_signals_ext;
 mod style;
 mod task;
-mod css_property_name;
 
-pub use wasm_bindgen::{self, prelude::*, JsCast};
-pub use js_sys::{self, Reflect};
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
-pub use style::*;
 pub use dom::{document, window};
 pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};
 pub use element::*;
@@ -22,18 +19,21 @@ pub use futures_signals::{
     signal_vec::{MutableVec, SignalVec, SignalVecExt},
 };
 pub use futures_signals_ext::{MutableExt, MutableVecExt};
+pub use js_sys::{self, Reflect};
 pub use paste;
-pub use task::Task;
+pub use send_wrapper::SendWrapper;
 pub use std::future::Future;
+pub use style::*;
+pub use task::Task;
+pub use wasm_bindgen::{self, prelude::*, JsCast};
 use wasm_bindgen_futures::spawn_local;
 pub use wasm_bindgen_futures::JsFuture;
-pub use send_wrapper::SendWrapper;
 
 #[cfg(feature = "connection")]
 pub use connection::{Connection, SendUpMsgError};
 
 #[cfg(feature = "moonlight")]
-pub use moonlight::{self, CorId, AuthToken};
+pub use moonlight::{self, AuthToken, CorId};
 
 #[cfg(feature = "panic_hook")]
 pub use console_error_panic_hook;

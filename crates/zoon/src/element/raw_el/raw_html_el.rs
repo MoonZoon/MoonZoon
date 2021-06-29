@@ -1,5 +1,5 @@
-use crate::*;
 use crate::css_property_name::CssPropertyName;
+use crate::*;
 
 // ------ ------
 //   Element
@@ -42,15 +42,16 @@ impl Element for RawHtmlEl {
 impl RawEl for RawHtmlEl {
     type WSElement = web_sys::HtmlElement;
 
-    fn update_dom_builder(mut self, updater: impl FnOnce(DomBuilder<Self::WSElement>) -> DomBuilder<Self::WSElement>) -> Self {
+    fn update_dom_builder(
+        mut self,
+        updater: impl FnOnce(DomBuilder<Self::WSElement>) -> DomBuilder<Self::WSElement>,
+    ) -> Self {
         self.dom_builder = updater(self.dom_builder);
         self
     }
 
     fn style(self, name: &str, value: &str) -> Self {
-        self.update_dom_builder(|dom_builder| {
-            dom_builder.style(CssPropertyName::new(name), value)
-        })
+        self.update_dom_builder(|dom_builder| dom_builder.style(CssPropertyName::new(name), value))
     }
 
     fn style_signal<'a>(

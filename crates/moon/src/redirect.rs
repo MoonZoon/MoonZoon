@@ -1,9 +1,11 @@
-use actix_web::dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform, ResponseBody};
+use actix_web::dev::{
+    forward_ready, ResponseBody, Service, ServiceRequest, ServiceResponse, Transform,
+};
 use actix_web::http::header::LOCATION;
 use actix_web::http::uri::{Authority, InvalidUriParts, Scheme, Uri};
 use actix_web::{Error, HttpResponse};
 use bool_ext::BoolExt;
-use futures::future::{ok, Either, Ready, LocalBoxFuture, FutureExt};
+use futures::future::{ok, Either, FutureExt, LocalBoxFuture, Ready};
 use std::convert::TryFrom;
 
 // ------ Redirect ------
@@ -130,8 +132,8 @@ where
     type Response = ServiceResponse<ResponseBody<B>>;
     type Error = S::Error;
     type Future = Either<
-        LocalBoxFuture<'static, Result<Self::Response, Self::Error>>, 
-        Ready<Result<Self::Response, Self::Error>>
+        LocalBoxFuture<'static, Result<Self::Response, Self::Error>>,
+        Ready<Result<Self::Response, Self::Error>>,
     >;
 
     forward_ready!(service);
@@ -143,10 +145,11 @@ where
                 return self.redirect(req, &redirect_uri).right_future();
             }
         }
-        self.service.call(req)
-            .map(|result| result.map(|response| {
-                response.map_body(|_, body| ResponseBody::Body(body))
-            }))
+        self.service
+            .call(req)
+            .map(|result| {
+                result.map(|response| response.map_body(|_, body| ResponseBody::Body(body)))
+            })
             .boxed_local()
             .left_future()
     }

@@ -1,9 +1,13 @@
 use crate::*;
-use std::marker::PhantomData;
-use moonlight::{CorId, AuthToken, serde_lite::{Serialize, Deserialize}, serde_json, SessionId};
-use web_sys::{Request, RequestInit, Response};
+use moonlight::{
+    serde_json,
+    serde_lite::{Deserialize, Serialize},
+    AuthToken, CorId, SessionId,
+};
 use std::error::Error;
 use std::fmt;
+use std::marker::PhantomData;
+use web_sys::{Request, RequestInit, Response};
 
 mod sse;
 use sse::SSE;
@@ -24,12 +28,16 @@ impl<UMsg: Serialize, DMsg: Deserialize> Connection<UMsg, DMsg> {
             session_id,
             _sse: SSE::new(session_id, down_msg_handler),
             auth_token_getter: None,
-            msg_types: PhantomData
+            msg_types: PhantomData,
         }
     }
 
-    pub fn auth_token_getter<IAT>(mut self, getter: impl FnOnce() -> IAT + Clone + Send + Sync + 'static) -> Self 
-        where IAT: Into<Option<AuthToken>>
+    pub fn auth_token_getter<IAT>(
+        mut self,
+        getter: impl FnOnce() -> IAT + Clone + Send + Sync + 'static,
+    ) -> Self
+    where
+        IAT: Into<Option<AuthToken>>,
     {
         let getter = move || (getter.clone())().into();
         self.auth_token_getter = Some(Box::new(getter));
@@ -41,24 +49,29 @@ impl<UMsg: Serialize, DMsg: Deserialize> Connection<UMsg, DMsg> {
         let body = serde_json::to_string(&up_msg.serialize().unwrap_throw()).unwrap_throw();
 
         let mut request_init = RequestInit::new();
-        request_init
-            .method("POST")
-            .body(Some(&JsValue::from(body)));
+        request_init.method("POST").body(Some(&JsValue::from(body)));
 
         // ---- Request ----
-        let request = Request::new_with_str_and_init("_api/up_msg_handler", &request_init).unwrap_throw();
+        let request =
+            Request::new_with_str_and_init("_api/up_msg_handler", &request_init).unwrap_throw();
 
         // ---- Headers ----
         let headers = request.headers();
-        headers.set("X-Correlation-ID", &CorId::new().to_string()).unwrap_throw();
-        headers.set("X-Session-ID", &self.session_id.to_string()).unwrap_throw();
+        headers
+            .set("X-Correlation-ID", &CorId::new().to_string())
+            .unwrap_throw();
+        headers
+            .set("X-Session-ID", &self.session_id.to_string())
+            .unwrap_throw();
 
         let auth_token = self
             .auth_token_getter
             .as_ref()
             .and_then(|auth_token_getter| auth_token_getter());
         if let Some(auth_token) = auth_token {
-            headers.set("X-Auth-Token", auth_token.as_str()).unwrap_throw();
+            headers
+                .set("X-Auth-Token", auth_token.as_str())
+                .unwrap_throw();
         }
 
         // ---- Response ----
@@ -68,7 +81,7 @@ impl<UMsg: Serialize, DMsg: Deserialize> Connection<UMsg, DMsg> {
             .unchecked_into::<Response>();
 
         if response.ok() {
-            return Ok(())
+            return Ok(());
         }
         Err(SendUpMsgError::ResponseIsNot2xx)
     }
@@ -96,5 +109,3 @@ impl fmt::Display for SendUpMsgError {
 }
 
 impl Error for SendUpMsgError {}
-
-

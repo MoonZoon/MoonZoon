@@ -1,8 +1,8 @@
-use zoon::{*, eprintln};
-use shared::{UpMsg, DownMsg, Message};
+use shared::{DownMsg, Message, UpMsg};
+use zoon::{eprintln, *};
 
 // ------ ------
-//    Statics 
+//    Statics
 // ------ ------
 
 #[static_ref]
@@ -28,7 +28,7 @@ fn connection() -> &'static Connection<UpMsg, DownMsg> {
 }
 
 // ------ ------
-//   Commands 
+//   Commands
 // ------ ------
 
 fn set_username(name: String) {
@@ -47,14 +47,12 @@ fn send_message() {
                 text: new_message_text().take(),
             }))
             .await
-            .unwrap_or_else(|error| {
-                eprintln!("Failed to send message: {:?}", error)
-            })
+            .unwrap_or_else(|error| eprintln!("Failed to send message: {:?}", error))
     });
 }
 
 // ------ ------
-//     View 
+//     View
 // ------ ------
 
 fn root() -> impl Element {
@@ -69,31 +67,29 @@ fn root() -> impl Element {
 // ------ received_messages ------
 
 fn received_messages() -> impl Element {
-    Column::new().items_signal_vec(
-        messages().signal_vec_cloned().map(received_message)
-    )
+    Column::new().items_signal_vec(messages().signal_vec_cloned().map(received_message))
 }
 
 fn received_message(message: Message) -> impl Element {
     Column::new()
         .s(Padding::new().all(10))
         .s(Spacing::new(6))
-        .item(El::new()
-            .s(Font::new().bold().color(NamedColor::Gray10).size(17))
-            .child(message.username)
+        .item(
+            El::new()
+                .s(Font::new().bold().color(NamedColor::Gray10).size(17))
+                .child(message.username),
         )
-        .item(El::new()
-            .s(Font::new().color(NamedColor::Gray8).size(17))
-            .child(message.text)
+        .item(
+            El::new()
+                .s(Font::new().color(NamedColor::Gray8).size(17))
+                .child(message.text),
         )
 }
 
 // ------ new_message_panel ------
 
 fn new_message_panel() -> impl Element {
-    Row::new()
-        .item(new_message_input())
-        .item(send_button())
+    Row::new().item(new_message_input()).item(send_button())
 }
 
 fn new_message_input() -> impl Element {
@@ -110,12 +106,19 @@ fn new_message_input() -> impl Element {
 
 fn send_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+
+    let background = Background::new().color_signal(hovered_signal.map(|hovered| {
+        if hovered {
+            NamedColor::Green5
+        } else {
+            NamedColor::Green2
+        }
+    }));
+
     Button::new()
-        .s(Background::new().color_signal(hovered_signal.map(|hovered| {
-            if hovered { NamedColor::Green5 } else { NamedColor::Green2 }
-        })))
-        .s(Font::new().color(NamedColor::Gray10).size(20))
         .s(Padding::new().all(10))
+        .s(background)
+        .s(Font::new().color(NamedColor::Gray10).size(20))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .on_press(send_message)
         .label("Send")
@@ -148,7 +151,7 @@ fn username_input(id: &str) -> impl Element {
 }
 
 // ------ ------
-//     Start 
+//     Start
 // ------ ------
 
 #[wasm_bindgen(start)]

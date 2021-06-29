@@ -1,7 +1,7 @@
-pub use serde_lite::{self, Serialize, Deserialize, Intermediate};
+pub use rusty_ulid::{self, DecodingError, Ulid};
 pub use serde_json;
+pub use serde_lite::{self, Deserialize, Intermediate, Serialize};
 use std::{fmt, str::FromStr};
-pub use rusty_ulid::{self, Ulid, DecodingError};
 
 // ------ SessionId ------
 
@@ -67,9 +67,7 @@ impl Deserialize for CorId {
                 serde_lite::Error::invalid_value("CorId can be deserialized only from String")
             })?
             .parse()
-            .map_err(|error| {
-                serde_lite::Error::invalid_value(error)
-            })
+            .map_err(|error| serde_lite::Error::invalid_value(error))
     }
 }
 

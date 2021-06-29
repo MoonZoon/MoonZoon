@@ -11,7 +11,7 @@ pub enum UpMsg {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum DownMsg {
-    MessageReceived(Message)
+    MessageReceived(Message),
 }
 
 // ------ Message ------
