@@ -41,7 +41,10 @@ impl Element for RawSvgEl {
 impl RawEl for RawSvgEl {
     type WSElement = web_sys::SvgElement;
 
-    fn update_dom_builder(mut self, updater: impl FnOnce(DomBuilder<Self::WSElement>) -> DomBuilder<Self::WSElement>) -> Self {
+    fn update_dom_builder(
+        mut self,
+        updater: impl FnOnce(DomBuilder<Self::WSElement>) -> DomBuilder<Self::WSElement>,
+    ) -> Self {
         self.dom_builder = updater(self.dom_builder);
         self
     }

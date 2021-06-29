@@ -1,4 +1,4 @@
-use moonlight::{CorId, AuthToken, SessionId};
+use moonlight::{AuthToken, CorId, SessionId};
 
 #[derive(Debug)]
 pub struct UpMsgRequest<UMsg> {

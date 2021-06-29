@@ -1,11 +1,11 @@
-use moonlight::{SessionId, CorId, DownMsgTransporterForSer, serde_json, Serialize};
-use crate::actor::{ActorInstance, ActorId, Index, PVar};
-use crate::MessageSSE;
+use crate::actor::{ActorId, ActorInstance, Index, PVar};
 use crate::sse::ShareableSSEMethods;
-use futures::future::join_all;
-use std::borrow::Borrow;
-use once_cell::sync::Lazy;
+use crate::MessageSSE;
 use chashmap::CHashMap;
+use futures::future::join_all;
+use moonlight::{serde_json, CorId, DownMsgTransporterForSer, Serialize, SessionId};
+use once_cell::sync::Lazy;
+use std::borrow::Borrow;
 use std::cell::RefCell;
 
 // @TODO rewrite to a proper virtual actor
@@ -13,9 +13,7 @@ use std::cell::RefCell;
 pub async fn broadcast_down_msg<DMsg: Serialize>(down_msg: &DMsg, cor_id: CorId) {
     let mut send_down_msg_futs = vec![];
     by_session_id().for_each(|_, session_actor| {
-        send_down_msg_futs.push(async move {
-            session_actor.send_down_msg(down_msg, cor_id).await
-        });
+        send_down_msg_futs.push(async move { session_actor.send_down_msg(down_msg, cor_id).await });
     });
     join_all(send_down_msg_futs).await;
 }
@@ -24,7 +22,7 @@ pub async fn broadcast_down_msg<DMsg: Serialize>(down_msg: &DMsg, cor_id: CorId)
 
 static BY_SESSION_ID: Lazy<CHashMap<SessionId, SessionActor>> = Lazy::new(CHashMap::new);
 
-pub const fn by_session_id() -> BySessionId { 
+pub const fn by_session_id() -> BySessionId {
     BySessionId
 }
 pub struct BySessionId;
@@ -46,11 +44,10 @@ impl Index for BySessionId {
 
     fn for_each(&self, f: impl FnMut(SessionId, SessionActor)) {
         let f = RefCell::new(f);
-        BY_SESSION_ID
-            .retain(|session_id, session_actor| {
-                f.borrow_mut()(*session_id, *session_actor);
-                true
-            });
+        BY_SESSION_ID.retain(|session_id, session_actor| {
+            f.borrow_mut()(*session_id, *session_actor);
+            true
+        });
     }
 }
 
@@ -96,13 +93,13 @@ impl PVar for PVarSessionId {
 
 #[derive(Clone, Copy)]
 pub struct SessionActor {
-    actor_id: ActorId
+    actor_id: ActorId,
 }
 
 impl SessionActor {
     pub fn create(session_id: SessionId, message_sse: MessageSSE) -> Self {
         Self {
-            actor_id: SessionActorInstance::create(session_id, message_sse)
+            actor_id: SessionActorInstance::create(session_id, message_sse),
         }
     }
 
@@ -121,10 +118,11 @@ impl SessionActor {
 
 // -- SessionActorInstance --
 
-static SESSION_ACTOR_INSTANCES: Lazy<CHashMap<ActorId, SessionActorInstance>> = Lazy::new(CHashMap::new);
+static SESSION_ACTOR_INSTANCES: Lazy<CHashMap<ActorId, SessionActorInstance>> =
+    Lazy::new(CHashMap::new);
 
 struct SessionActorInstance {
-    actor_id: ActorId,   
+    actor_id: ActorId,
     message_sse: MessageSSE,
     session_id: PVarSessionId,
 }
@@ -164,14 +162,11 @@ impl SessionActorInstance {
     pub async fn send_down_msg<DMsg: Serialize>(&self, down_msg: &DMsg, cor_id: CorId) {
         let session_id = self.session_id.read().unwrap();
 
-        let down_msg_transporter = DownMsgTransporterForSer {
-            down_msg,
-            cor_id
-        };
-        let down_msg_transporter = serde_json::to_string(&down_msg_transporter.serialize().unwrap()).unwrap();
+        let down_msg_transporter = DownMsgTransporterForSer { down_msg, cor_id };
+        let down_msg_transporter =
+            serde_json::to_string(&down_msg_transporter.serialize().unwrap()).unwrap();
 
-        self.message_sse.send(&session_id, "down_msg", &down_msg_transporter);
+        self.message_sse
+            .send(&session_id, "down_msg", &down_msg_transporter);
     }
 }
-
-

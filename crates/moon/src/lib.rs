@@ -1,39 +1,43 @@
 use actix_files::{Files, NamedFile};
-use actix_http::http::{header, ContentEncoding, StatusCode, HeaderMap};
+use actix_http::http::{header, ContentEncoding, HeaderMap, StatusCode};
 use actix_web::dev::ServiceResponse;
 use actix_web::http::header::{CacheControl, CacheDirective, ContentType, ETag, EntityTag};
-use actix_web::middleware::{Condition, ErrorHandlerResponse, ErrorHandlers, Logger, Compat};
-use actix_web::{web, App, error::{self, Error}, HttpRequest, HttpResponse, HttpServer, Responder, Result};
+use actix_web::middleware::{Compat, Condition, ErrorHandlerResponse, ErrorHandlers, Logger};
+use actix_web::{
+    error::{self, Error},
+    web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result,
+};
+use moonlight::{serde_json, serde_lite::Deserialize};
 use rustls::internal::pemfile::{certs, pkcs8_private_keys};
 use rustls::{NoClientAuth, ServerConfig as RustlsServerConfig};
 use std::fs::File;
 use std::io::{self, BufReader};
 use std::net::SocketAddr;
-use std::{collections::BTreeSet, future::Future};
 use std::ops::Deref;
+use std::{collections::BTreeSet, future::Future};
 use tokio::fs;
-use moonlight::{serde_lite::Deserialize, serde_json};
 
 use futures::StreamExt;
 
-pub use moonlight::{CorId, AuthToken, SessionId};
-pub use trait_set::trait_set;
 pub use actix_files;
 pub use actix_http;
 pub use actix_web;
 pub use actix_web_codegen::main;
+pub use apply::{Also, Apply};
+pub use chashmap;
+pub use enclose::enc as clone;
 pub use futures;
 pub use mime;
 pub use mime_guess;
+pub use moonlight::{AuthToken, CorId, SessionId};
 pub use parking_lot;
 pub use serde;
 pub use tokio;
 pub use tokio_stream;
+pub use trait_set::trait_set;
 pub use uuid;
-pub use enclose::enc as clone;
-pub use apply::{Also, Apply};
-pub use chashmap;
 
+mod actor;
 mod config;
 mod from_env_vars;
 mod frontend;
@@ -41,17 +45,19 @@ mod lazy_message_writer;
 mod redirect;
 mod sse;
 mod up_msg_request;
-mod actor;
 
-use lazy_message_writer::LazyMessageWriter;
 use config::Config;
+use lazy_message_writer::LazyMessageWriter;
 use sse::{ShareableSSE, ShareableSSEMethods, SSE};
 
+pub use actor::{
+    sessions::{self, SessionActor},
+    ActorId, ActorInstance, Index, PVar,
+};
 pub use from_env_vars::FromEnvVars;
 pub use frontend::Frontend;
 pub use redirect::Redirect;
 pub use up_msg_request::UpMsgRequest;
-pub use actor::{sessions::{self, SessionActor}, ActorId, ActorInstance, PVar, Index};
 
 const MAX_UP_MSG_BYTES: usize = 2 * 1_048_576;
 
@@ -168,7 +174,10 @@ where
                     )
                     .route("reload", web::post().to(reload_responder))
                     .route("pkg/{file:.*}", web::get().to(pkg_responder))
-                    .route("message_sse/{session_id}", web::get().to(message_sse_responder))
+                    .route(
+                        "message_sse/{session_id}",
+                        web::get().to(message_sse_responder),
+                    )
                     .route("reload_sse", web::get().to(reload_sse_responder))
                     .route("ping", web::to(|| async { "pong" })),
             )
@@ -242,9 +251,9 @@ fn render_not_found_handler<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerRe
 // ------ up_msg_handler_responder ------
 
 async fn up_msg_handler_responder<UPH, UPHO, UMsg>(
-    req: HttpRequest, 
-    payload: web::Payload, 
-    up_msg_handler: web::Data<UPH>
+    req: HttpRequest,
+    payload: web::Payload,
+    up_msg_handler: web::Data<UPH>,
 ) -> Result<HttpResponse, Error>
 where
     UPH: UpHandler<UPHO, UMsg>,
@@ -268,13 +277,14 @@ async fn parse_up_msg<UMsg: Deserialize>(mut payload: web::Payload) -> Result<UM
     while let Some(chunk) = payload.next().await {
         let chunk = chunk?;
         if (body.len() + chunk.len()) > MAX_UP_MSG_BYTES {
-            Err(error::JsonPayloadError::Overflow { limit: MAX_UP_MSG_BYTES })?
+            Err(error::JsonPayloadError::Overflow {
+                limit: MAX_UP_MSG_BYTES,
+            })?
         }
         body.extend_from_slice(&chunk);
     }
-    UMsg::deserialize(
-        &serde_json::from_slice(&body).map_err(error::JsonPayloadError::Deserialize)?
-    ).map_err(error::ErrorBadRequest)
+    UMsg::deserialize(&serde_json::from_slice(&body).map_err(error::JsonPayloadError::Deserialize)?)
+        .map_err(error::ErrorBadRequest)
 }
 
 fn parse_session_id(headers: &HeaderMap) -> Result<SessionId, Error> {
@@ -303,7 +313,7 @@ fn parse_auth_token(headers: &HeaderMap) -> Result<Option<AuthToken>, Error> {
             .to_str()
             .map_err(error::ErrorBadRequest)
             .map(AuthToken::new)?;
-        return Ok(Some(auth_token))
+        return Ok(Some(auth_token));
     }
     Ok(None)
 }

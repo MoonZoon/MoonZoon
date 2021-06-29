@@ -16,17 +16,20 @@ pub trait MutableExt<A> {
 
     fn update_mut(&self, f: impl FnOnce(&mut A));
 
-    fn take(&self) -> A where A: Default {
+    fn take(&self) -> A
+    where
+        A: Default,
+    {
         self.map_mut(mem::take)
     }
 
     fn new_and_signal(value: A) -> (Self, MutableSignal<A>)
-    where 
+    where
         A: Copy,
         Self: Sized;
 
     fn new_and_signal_cloned(value: A) -> (Self, MutableSignalCloned<A>)
-    where 
+    where
         A: Clone,
         Self: Sized;
 }
@@ -56,7 +59,7 @@ impl<A> MutableExt<A> for Mutable<A> {
     }
 
     fn new_and_signal(value: A) -> (Self, MutableSignal<A>)
-    where 
+    where
         A: Copy,
     {
         let this = Self::new(value);
@@ -65,7 +68,7 @@ impl<A> MutableExt<A> for Mutable<A> {
     }
 
     fn new_and_signal_cloned(value: A) -> (Self, MutableSignalCloned<A>)
-    where 
+    where
         A: Clone,
     {
         let this = Self::new(value);

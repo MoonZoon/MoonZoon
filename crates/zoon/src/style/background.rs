@@ -1,5 +1,5 @@
+use crate::style::{box_css_signal, DynamicCSSProps, StaticCSSProps};
 use crate::*;
-use crate::style::{StaticCSSProps, DynamicCSSProps, box_css_signal};
 
 #[derive(Default)]
 pub struct Background<'a> {
@@ -13,8 +13,12 @@ impl<'a> Background<'a> {
         self
     }
 
-    pub fn color_signal(mut self, color: impl Signal<Item = impl Color<'static> + 'static> + Unpin + 'static) -> Self {
-        self.dynamic_css_props.insert("background-color", box_css_signal(color));
+    pub fn color_signal(
+        mut self,
+        color: impl Signal<Item = impl Color<'static> + 'static> + Unpin + 'static,
+    ) -> Self {
+        self.dynamic_css_props
+            .insert("background-color", box_css_signal(color));
         self
     }
 }

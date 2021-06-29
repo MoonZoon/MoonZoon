@@ -17,4 +17,3 @@ pub trait Index {
         todo!()
     }
 }
-

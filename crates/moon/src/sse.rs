@@ -1,16 +1,16 @@
+use crate::actor::{sessions, Index};
 use actix_web::web::Bytes;
 use actix_web::{rt, Error};
-use futures::Stream;
 use chashmap::CHashMap;
+use futures::Stream;
+use moonlight::SessionId;
+use std::cell::RefCell;
 use std::pin::Pin;
+use std::sync::Arc;
 use std::task::{Context, Poll};
 use std::time::Duration;
-use std::sync::Arc;
-use std::cell::RefCell;
 use tokio::sync::mpsc::{error::SendError, unbounded_channel, UnboundedReceiver, UnboundedSender};
 use tokio::time::{interval_at, Instant};
-use moonlight::SessionId;
-use crate::actor::{sessions, Index};
 
 pub type ShareableSSE = Arc<SSE>;
 
@@ -93,7 +93,12 @@ pub trait ShareableSSEMethods {
 
     fn broadcast(&self, event: &str, data: &str) -> Result<(), Vec<SendError<Bytes>>>;
 
-    fn send(&self, session_id: &SessionId, event: &str, data: &str) -> Option<Result<(), SendError<Bytes>>>;
+    fn send(
+        &self,
+        session_id: &SessionId,
+        event: &str,
+        data: &str,
+    ) -> Option<Result<(), SendError<Bytes>>>;
 
     fn remove_connection(&self, session_id: &SessionId);
 }
@@ -105,39 +110,34 @@ impl ShareableSSEMethods for ShareableSSE {
             let mut interval = interval_at(Instant::now(), Duration::from_secs(10));
             loop {
                 interval.tick().await;
-                this
-                    .connections
-                    .retain(|session_id, connection| {
-                        let active = connection.send("ping", "").is_ok();
-                        if !active && connection.remove_session_actor_on_remove {
-                            if let Some(session_actor) = sessions::by_session_id().get(session_id) {
-                                session_actor.remove();
-                            }
+                this.connections.retain(|session_id, connection| {
+                    let active = connection.send("ping", "").is_ok();
+                    if !active && connection.remove_session_actor_on_remove {
+                        if let Some(session_actor) = sessions::by_session_id().get(session_id) {
+                            session_actor.remove();
                         }
-                        active
-                    });
+                    }
+                    active
+                });
             }
         });
     }
 
     fn new_connection(&self, session_id: Option<SessionId>) -> (Arc<Connection>, EventStream) {
         let (connection, event_stream) = Connection::new(session_id);
-        self
-            .connections
+        self.connections
             .insert(connection.session_id(), connection.clone());
         (connection, event_stream)
     }
 
     fn broadcast(&self, event: &str, data: &str) -> Result<(), Vec<SendError<Bytes>>> {
         let errors = RefCell::new(Vec::new());
-        self
-            .connections
-            .retain(|_, connection| {
-                if let Err(error) = connection.send(event, data) {
-                    errors.borrow_mut().push(error);
-                }
-                true
-            });
+        self.connections.retain(|_, connection| {
+            if let Err(error) = connection.send(event, data) {
+                errors.borrow_mut().push(error);
+            }
+            true
+        });
         let errors = errors.into_inner();
         if errors.is_empty() {
             return Ok(());
@@ -145,18 +145,20 @@ impl ShareableSSEMethods for ShareableSSE {
         Err(errors)
     }
 
-    fn send(&self, session_id: &SessionId, event: &str, data: &str) -> Option<Result<(), SendError<Bytes>>> {
+    fn send(
+        &self,
+        session_id: &SessionId,
+        event: &str,
+        data: &str,
+    ) -> Option<Result<(), SendError<Bytes>>> {
         // @TODO Last-Event-Id
-        self
-            .connections
+        self.connections
             .get(session_id)
             .map(|connection| connection.send(event, data))
     }
 
     fn remove_connection(&self, session_id: &SessionId) {
-        let connection = self
-            .connections
-            .remove(session_id);
+        let connection = self.connections.remove(session_id);
 
         if let Some(connection) = connection {
             if connection.remove_session_actor_on_remove {

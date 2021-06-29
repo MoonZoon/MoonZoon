@@ -24,7 +24,8 @@ impl<'a> IntoCowStr<'a> for NamedColor {
             NamedColor::Green5 => "green",
             NamedColor::Gray8 => "lightgray",
             NamedColor::Gray10 => "white",
-        }.into()
+        }
+        .into()
     }
 
     fn take_into_cow_str(&mut self) -> Cow<'a, str> {
