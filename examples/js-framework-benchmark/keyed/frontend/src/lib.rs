@@ -1,16 +1,41 @@
-use zoon::{*, format};
 use rand::prelude::*;
-use std::{iter::repeat_with, array, ops::Not};
-use std::sync::{Arc, atomic::{AtomicUsize, Ordering}};
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc,
+};
+use std::{array, iter::repeat_with, ops::Not};
+use zoon::{format, *};
 
 // ------ ------
-//    Statics 
+//    Statics
 // ------ ------
 
 static ADJECTIVES: &[&'static str] = &[
-    "pretty", "large", "big", "small", "tall", "short", "long", "handsome", "plain", 
-    "quaint", "clean", "elegant", "easy", "angry", "crazy", "helpful", "mushy", "odd", 
-    "unsightly", "adorable", "important", "inexpensive", "cheap", "expensive", "fancy"
+    "pretty",
+    "large",
+    "big",
+    "small",
+    "tall",
+    "short",
+    "long",
+    "handsome",
+    "plain",
+    "quaint",
+    "clean",
+    "elegant",
+    "easy",
+    "angry",
+    "crazy",
+    "helpful",
+    "mushy",
+    "odd",
+    "unsightly",
+    "adorable",
+    "important",
+    "inexpensive",
+    "cheap",
+    "expensive",
+    "fancy",
 ];
 
 static COLOURS: &[&'static str] = &[
@@ -43,7 +68,7 @@ struct Row {
 }
 
 // ------ ------
-//    Signals 
+//    Signals
 // ------ ------
 
 fn rows_exist() -> impl Signal<Item = bool> {
@@ -51,7 +76,7 @@ fn rows_exist() -> impl Signal<Item = bool> {
 }
 
 // ------ ------
-//   Commands 
+//   Commands
 // ------ ------
 
 fn create_row() -> Arc<Row> {
@@ -62,9 +87,9 @@ fn create_row() -> Arc<Row> {
         COLOURS.choose(&mut generator).unwrap_throw(),
         NOUNS.choose(&mut generator).unwrap_throw(),
     );
-    Arc::new(Row { 
-        id: NEXT_ID.fetch_add(1, Ordering::SeqCst), 
-        label: Mutable::new(label)
+    Arc::new(Row {
+        id: NEXT_ID.fetch_add(1, Ordering::SeqCst),
+        label: Mutable::new(label),
     })
 }
 
@@ -93,7 +118,9 @@ fn clear_rows() {
 
 fn swap_rows() {
     let mut rows = rows().lock_mut();
-    if rows.len() < 999 { return }
+    if rows.len() < 999 {
+        return;
+    }
     rows.swap(1, 998)
 }
 
@@ -106,7 +133,7 @@ fn remove_row(id: ID) {
 }
 
 // ------ ------
-//     View 
+//     View
 // ------ ------
 
 fn root() -> RawHtmlEl {
@@ -117,29 +144,23 @@ fn root() -> RawHtmlEl {
             table(),
             RawHtmlEl::new("span")
                 .attr("class", "preloadicon glyphicon glyphicon-remove")
-                .attr("aria-hidden", "")
+                .attr("aria-hidden", ""),
         ]))
 }
 
 fn jumbotron() -> RawHtmlEl {
-    RawHtmlEl::new("div")
-        .attr("class", "jumbotron")
-        .child(
-            RawHtmlEl::new("div")
-                .attr("class", "row")
-                .children(array::IntoIter::new([
-                    RawHtmlEl::new("div")
-                        .attr("class", "col-md-6")
-                        .child(
-                            RawHtmlEl::new("h1").child("MoonZoon")
-                        ),
-                    RawHtmlEl::new("div")
-                        .attr("class", "col-md-6")
-                        .child(
-                            action_buttons()
-                        ),
-                ]))
-        )
+    RawHtmlEl::new("div").attr("class", "jumbotron").child(
+        RawHtmlEl::new("div")
+            .attr("class", "row")
+            .children(array::IntoIter::new([
+                RawHtmlEl::new("div")
+                    .attr("class", "col-md-6")
+                    .child(RawHtmlEl::new("h1").child("MoonZoon")),
+                RawHtmlEl::new("div")
+                    .attr("class", "col-md-6")
+                    .child(action_buttons()),
+            ])),
+    )
 }
 
 fn action_buttons() -> RawHtmlEl {
@@ -155,11 +176,7 @@ fn action_buttons() -> RawHtmlEl {
         ]))
 }
 
-fn action_button(
-    id: &'static str, 
-    title: &'static str, 
-    on_click: fn(),
-) -> RawHtmlEl {
+fn action_button(id: &'static str, title: &'static str, on_click: fn()) -> RawHtmlEl {
     RawHtmlEl::new("div")
         .attr("class", "col-sm-6 smallpad")
         .child(
@@ -168,24 +185,20 @@ fn action_button(
                 .attr("class", "btn btn-primary btn-block")
                 .attr("type", "button")
                 .event_handler(move |_: events::Click| on_click())
-                .child(
-                    title
-                )
+                .child(title),
         )
 }
 
 fn table() -> RawHtmlEl {
     RawHtmlEl::new("table")
         .attr("class", "table table-hover table-striped test-data")
-        .child_signal(
-            rows_exist().map(|rows_exist| rows_exist.then(|| {
+        .child_signal(rows_exist().map(|rows_exist| {
+            rows_exist.then(|| {
                 RawHtmlEl::new("tbody")
                     .attr("id", "tbody")
-                    .children_signal_vec(
-                        rows().signal_vec_cloned().map(row)
-                    )
-            }))
-        )
+                    .children_signal_vec(rows().signal_vec_cloned().map(row))
+            })
+        }))
 }
 
 fn row(row: Arc<Row>) -> RawHtmlEl {
@@ -193,51 +206,42 @@ fn row(row: Arc<Row>) -> RawHtmlEl {
     RawHtmlEl::new("tr")
         .attr_signal(
             "class",
-            selected_row().signal_ref(move |selected_id| {
-                ((*selected_id)? == id).then(|| "danger")
-            })
+            selected_row().signal_ref(move |selected_id| ((*selected_id)? == id).then(|| "danger")),
         )
         .children(array::IntoIter::new([
             row_id(id),
             row_label(id, row.label.signal_cloned()),
             row_remove_button(id),
-            RawHtmlEl::new("td")
-                .attr("class", "col-md-6")
+            RawHtmlEl::new("td").attr("class", "col-md-6"),
         ]))
 }
 
 fn row_id(id: ID) -> RawHtmlEl {
-    RawHtmlEl::new("td")
-        .attr("class", "col-md-1")
-        .child(id)
+    RawHtmlEl::new("td").attr("class", "col-md-1").child(id)
 }
 
 fn row_label(id: ID, label: impl Signal<Item = String> + Unpin + 'static) -> RawHtmlEl {
-    RawHtmlEl::new("td")
-        .attr("class", "col-md-4")
-        .child(
-            RawHtmlEl::new("a")
-                .event_handler(move |_: events::Click| select_row(id))
-                .child(Text::with_signal(label))
-        )
+    RawHtmlEl::new("td").attr("class", "col-md-4").child(
+        RawHtmlEl::new("a")
+            .event_handler(move |_: events::Click| select_row(id))
+            .child(Text::with_signal(label)),
+    )
 }
 
 fn row_remove_button(id: ID) -> RawHtmlEl {
-    RawHtmlEl::new("td")
-        .attr("class", "col-md-1")
-        .child(
-            RawHtmlEl::new("a")
-                .event_handler(move |_: events::Click| remove_row(id))
-                .child(
-                    RawHtmlEl::new("span")
-                        .attr("class", "glyphicon glyphicon-remove remove")
-                        .attr("aria-hidden", "true"),
-                )
-        )
+    RawHtmlEl::new("td").attr("class", "col-md-1").child(
+        RawHtmlEl::new("a")
+            .event_handler(move |_: events::Click| remove_row(id))
+            .child(
+                RawHtmlEl::new("span")
+                    .attr("class", "glyphicon glyphicon-remove remove")
+                    .attr("aria-hidden", "true"),
+            ),
+    )
 }
 
 // ------ ------
-//     Start 
+//     Start
 // ------ ------
 
 #[wasm_bindgen(start)]
