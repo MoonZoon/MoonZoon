@@ -1,6 +1,6 @@
-use zoon::*;
 use std::{collections::VecDeque, iter::FromIterator};
-use strum::{IntoStaticStr, EnumIter, IntoEnumIterator};
+use strum::{EnumIter, IntoEnumIterator, IntoStaticStr};
+use zoon::*;
 
 #[derive(Clone, Copy, IntoStaticStr, EnumIter)]
 enum Color {
