@@ -104,12 +104,17 @@ impl<A> MutableVecExt<A> for MutableVec<A> {
 // ------ SignalExtMapBool ------
 
 pub trait SignalExtMapBool {
-    fn map_bool<B, TM: FnMut() -> B, FM: FnMut() -> B>(self, t: TM, f: FM) -> MapBool<Self, TM, FM> where Self: Sized;
+    fn map_bool<B, TM: FnMut() -> B, FM: FnMut() -> B>(self, t: TM, f: FM) -> MapBool<Self, TM, FM>
+    where
+        Self: Sized;
 }
 
 impl<T: Signal<Item = bool>> SignalExtMapBool for T {
     #[inline]
-    fn map_bool<B, TM: FnMut() -> B, FM: FnMut() -> B>(self, t: TM, f: FM) -> MapBool<Self, TM, FM> where Self: Sized {
+    fn map_bool<B, TM: FnMut() -> B, FM: FnMut() -> B>(self, t: TM, f: FM) -> MapBool<Self, TM, FM>
+    where
+        Self: Sized,
+    {
         MapBool {
             signal: self,
             true_mapper: t,
@@ -133,17 +138,14 @@ impl<I, S: Signal<Item = bool>, TM: FnMut() -> I, FM: FnMut() -> I> Signal for M
 
     #[inline]
     fn poll_change(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
-        let MapBoolProj { signal, true_mapper, false_mapper } = self.project();
+        let MapBoolProj {
+            signal,
+            true_mapper,
+            false_mapper,
+        } = self.project();
 
-        signal.poll_change(cx).map(|opt| opt.map(|value| {
-            if value {
-                true_mapper()
-            } else {
-                false_mapper()
-            }
-        }))
+        signal
+            .poll_change(cx)
+            .map(|opt| opt.map(|value| if value { true_mapper() } else { false_mapper() }))
     }
 }
-
-
-
