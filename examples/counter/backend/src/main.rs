@@ -1,41 +1,29 @@
 use moon::*;
 
 async fn frontend() -> Frontend {
-    Frontend::new()
-        .title("Counter example")
-        .append_to_head("<style>html {
-            background-color: black;
-            color: lightgray;
-        }
-        
-        #app * {
-            padding: 5px;
-        }
+    Frontend::new().title("Counter example").append_to_head(
+        "
+        <style>
+            html {
+                background-color: black;
+                color: lightgray;
+            }
+
+            .button {
+                background-color: darkgreen;
+                padding: 5px;
+            }
             
-        .button {
-            cursor: pointer;
-            background-color: darkgreen;
-            user-select: none;
-        }
-        
-        .button:hover {
-            background-color: green;
-        }
-        
-        .column {
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .row {
-            display: flex;
-        }
-        </style>")
+            .button:hover {
+                background-color: green;
+            }
+        </style>",
+    )
 }
 
-async fn up_msg_handler(_: UpMsgRequest) {}
+async fn up_msg_handler(_: UpMsgRequest<()>) {}
 
 #[moon::main]
 async fn main() -> std::io::Result<()> {
-    start(frontend, up_msg_handler, |_|{}).await
+    start(frontend, up_msg_handler, |_| {}).await
 }
