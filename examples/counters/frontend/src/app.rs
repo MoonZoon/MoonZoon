@@ -1,10 +1,10 @@
-use zoon::*;
 use std::iter::repeat;
+use zoon::*;
 
 pub mod view;
 
 // ------ ------
-//    Statics 
+//    Statics
 // ------ ------
 
 #[static_ref]
@@ -23,7 +23,7 @@ fn test_counter_value() -> &'static Mutable<i32> {
 }
 
 // ------ ------
-//    Signals 
+//    Signals
 // ------ ------
 
 fn column_count() -> impl Signal<Item = usize> {
@@ -35,7 +35,7 @@ fn row_count() -> impl Signal<Item = usize> {
 }
 
 pub fn counter_count() -> impl Signal<Item = usize> {
-    map_ref!{
+    map_ref! {
         let column_count = column_count(),
         let row_count = row_count() =>
         column_count * row_count
@@ -43,12 +43,11 @@ pub fn counter_count() -> impl Signal<Item = usize> {
 }
 
 pub fn counter_count_hundreds() -> impl Signal<Item = String> {
-    counter_count()
-        .map(|count| format!("{:.2}", count as f64 / 1_000.))
+    counter_count().map(|count| format!("{:.2}", count as f64 / 1_000.))
 }
 
 // ------ ------
-//   Handlers 
+//   Handlers
 // ------ ------
 
 pub fn on_column_counter_change(step: i32) {
@@ -64,7 +63,7 @@ pub fn on_test_counter_change(step: i32) {
 }
 
 // ------ ------
-//    Helpers 
+//    Helpers
 // ------ ------
 
 fn change_vec_size(vec: &MutableVec<()>, step: i32) {
