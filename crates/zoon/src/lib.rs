@@ -23,6 +23,7 @@ pub use futures_signals::{
 pub use futures_signals_ext::{MutableExt, MutableVecExt, SignalExtMapBool};
 pub use js_sys::{self, Reflect};
 pub use paste;
+pub use pin_project::pin_project;
 pub use send_wrapper::SendWrapper;
 pub use std::future::Future;
 pub use style::*;
@@ -30,7 +31,6 @@ pub use task::Task;
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 use wasm_bindgen_futures::spawn_local;
 pub use wasm_bindgen_futures::JsFuture;
-pub use pin_project::pin_project;
 
 #[cfg(feature = "connection")]
 pub use connection::{Connection, SendUpMsgError};
