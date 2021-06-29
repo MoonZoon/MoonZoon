@@ -1,5 +1,5 @@
-use crate::{*, format};
-use crate::style::{StaticCSSProps, DynamicCSSProps};
+use crate::*;
+use crate::style::{StaticCSSProps, DynamicCSSProps, px};
 
 #[derive(Default)]
 pub struct Spacing<'a> {
@@ -10,7 +10,7 @@ pub struct Spacing<'a> {
 impl<'a> Spacing<'a> {
     pub fn new(spacing: u32) -> Self {
         let mut this = Self::default();
-        this.static_css_props.insert("gap", format!("{}px", spacing).into());
+        this.static_css_props.insert("gap", px(spacing));
         this
     }
 }
