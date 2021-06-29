@@ -1,4 +1,5 @@
 use crate::*;
+use crate::css_property_name::CssPropertyName;
 
 // ------ ------
 //   Element
@@ -48,7 +49,7 @@ impl RawEl for RawHtmlEl {
 
     fn style(self, name: &str, value: &str) -> Self {
         self.update_dom_builder(|dom_builder| {
-            dom_builder.style(name, value)
+            dom_builder.style(CssPropertyName::new(name), value)
         })
     }
 
@@ -59,7 +60,7 @@ impl RawEl for RawHtmlEl {
     ) -> Self {
         self.update_dom_builder(|dom_builder| {
             dom_builder.style_signal(
-                name.into_cow_str_wrapper(),
+                name.into_cow_str_wrapper().into_css_property_name(),
                 value.map(|value| value.into_option_cow_str_wrapper()),
             )
         })
