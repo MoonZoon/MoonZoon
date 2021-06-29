@@ -20,7 +20,7 @@ pub use futures_signals::{
     signal_map::{MutableBTreeMap, SignalMap, SignalMapExt},
     signal_vec::{MutableVec, SignalVec, SignalVecExt},
 };
-pub use futures_signals_ext::{MutableExt, MutableVecExt};
+pub use futures_signals_ext::{MutableExt, MutableVecExt, SignalExtMapBool};
 pub use js_sys::{self, Reflect};
 pub use paste;
 pub use send_wrapper::SendWrapper;
@@ -30,6 +30,7 @@ pub use task::Task;
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 use wasm_bindgen_futures::spawn_local;
 pub use wasm_bindgen_futures::JsFuture;
+pub use pin_project::pin_project;
 
 #[cfg(feature = "connection")]
 pub use connection::{Connection, SendUpMsgError};
