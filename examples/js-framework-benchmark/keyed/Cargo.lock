@@ -1938,6 +1938,7 @@ dependencies = [
  "lexical",
  "once_cell",
  "paste",
+ "pin-project",
  "send_wrapper",
  "static_ref_macro",
  "ufmt",

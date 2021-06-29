@@ -4,6 +4,10 @@ use futures_signals::{
     signal_vec::{MutableVec, MutableVecLockMut, MutableVecLockRef},
 };
 use std::mem;
+use std::pin::Pin;
+use std::task::{Context, Poll};
+
+// ------ MutableExt ------
 
 pub trait MutableExt<A> {
     fn map<B>(&self, f: impl FnOnce(&A) -> B) -> B;
@@ -77,6 +81,8 @@ impl<A> MutableExt<A> for Mutable<A> {
     }
 }
 
+// ------ MutableVecExt ------
+
 pub trait MutableVecExt<A> {
     fn update_mut(&self, f: impl FnOnce(&mut MutableVecLockMut<A>));
 
@@ -94,3 +100,50 @@ impl<A> MutableVecExt<A> for MutableVec<A> {
         f(&self.lock_ref())
     }
 }
+
+// ------ SignalExtMapBool ------
+
+pub trait SignalExtMapBool {
+    fn map_bool<B, TM: FnMut() -> B, FM: FnMut() -> B>(self, t: TM, f: FM) -> MapBool<Self, TM, FM> where Self: Sized;
+}
+
+impl<T: Signal<Item = bool>> SignalExtMapBool for T {
+    #[inline]
+    fn map_bool<B, TM: FnMut() -> B, FM: FnMut() -> B>(self, t: TM, f: FM) -> MapBool<Self, TM, FM> where Self: Sized {
+        MapBool {
+            signal: self,
+            true_mapper: t,
+            false_mapper: f,
+        }
+    }
+}
+
+#[pin_project(project = MapBoolProj)]
+#[derive(Debug)]
+#[must_use = "Signals do nothing unless polled"]
+pub struct MapBool<S, TM, FM> {
+    #[pin]
+    signal: S,
+    true_mapper: TM,
+    false_mapper: FM,
+}
+
+impl<I, S: Signal<Item = bool>, TM: FnMut() -> I, FM: FnMut() -> I> Signal for MapBool<S, TM, FM> {
+    type Item = I;
+
+    #[inline]
+    fn poll_change(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
+        let MapBoolProj { signal, true_mapper, false_mapper } = self.project();
+
+        signal.poll_change(cx).map(|opt| opt.map(|value| {
+            if value {
+                true_mapper()
+            } else {
+                false_mapper()
+            }
+        }))
+    }
+}
+
+
+
