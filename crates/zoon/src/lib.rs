@@ -6,6 +6,7 @@ mod element;
 mod futures_signals_ext;
 mod style;
 mod task;
+mod css_property_name;
 
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 pub use js_sys::{self, Reflect};

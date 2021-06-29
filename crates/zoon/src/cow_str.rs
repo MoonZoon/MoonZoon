@@ -1,6 +1,7 @@
 use crate::*;
+use crate::css_property_name::CssPropertyName;
 use std::{borrow::Cow, mem};
-use dominator::traits::AsStr as _;
+use dominator::traits::AsStr;
 
 // ------ ------
 //  IntoCowStr
@@ -130,7 +131,13 @@ impl<'a> IntoOptionCowStr<'a> for Box<dyn IntoOptionCowStr<'a>> {
 
 pub struct CowStrWrapper<'a>(Cow<'a, str>);
 
-impl dominator::traits::AsStr for CowStrWrapper<'_> {
+impl<'a> CowStrWrapper<'a> {
+    pub fn into_css_property_name(self) -> CssPropertyName<'a> {
+        CssPropertyName::new(self.0)
+    }
+}
+
+impl AsStr for CowStrWrapper<'_> {
     fn as_str(&self) -> &str {
         &self.0
     }
