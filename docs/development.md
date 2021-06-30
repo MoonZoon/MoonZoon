@@ -9,13 +9,13 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 - [Rust](https://www.rust-lang.org/)
   ```bash
   rustup update
-  rustc -V # rustc 1.52.1 (9bc8c42bb 2021-05-09)
+  rustc -V # rustc 1.53.0 (53cb7b09b 2021-06-17)
   ```
 
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
   ```bash
   cargo install cargo-make
-  makers -V # makers 0.33.0
+  makers -V # makers 0.34.0
   ```
 
 ## 2. VS Code settings
@@ -49,7 +49,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 
 ## 3. Start example
 
-- _Note:_ Not all examples work at the moment. Try:
+- Runnable examples (the list is continuously updated):
   - `chat`
   - `counter`
   - `counters`
@@ -58,8 +58,8 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 
 ```sh
 cd examples
-cd counter # or `counters` or ...
-makers mzoon start -o # or `makers mzoon start -r -o`
+cd chat # or another example
+makers mzoon start -o # add -r for the release mode
 ```
 
 ## 5. Have fun!
