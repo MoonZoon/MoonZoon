@@ -5,46 +5,113 @@
 ## Basics
 
 The **Chat** example:
-   - _Note:_ The code below may differ from the current `chat` implementation.
 
 ```rust
 use moon::*;
-use shared::{UpMsg, DownMsg, Message};
+use shared::{DownMsg, UpMsg};
 
 async fn frontend() -> Frontend {
-    Frontend::new().title("Chat example")
+    Frontend::new().title("Chat example").append_to_head(
+        "
+        <style>
+            html {
+                background-color: black;
+            }
+        </style>",
+    )
 }
 
-async fn up_msg_handler(req: UpMsgRequest) {
-    if let UpMsg::SendMessage(message) = req.up_msg {
-        join_all(connected_client::by_id().iter().map(|(_, client)| {
-            client.send_down_msg(message, req.cor_id)
-        })).await
-    }
+async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
+    println!("{:#?}", req);
+
+    let UpMsgRequest { up_msg, cor_id, .. } = req;
+    let UpMsg::SendMessage(message) = up_msg;
+
+    sessions::broadcast_down_msg(&DownMsg::MessageReceived(message), cor_id).await;
 }
 
 #[moon::main]
 async fn main() -> std::io::Result<()> {
-    start(frontend, up_msg_handler, |_|{}).await
+    start(frontend, up_msg_handler, |_| {}).await
 }
 ```
 
 ### 1. The App Initialization
 
-1. The function `main` is invoked automatically when the Moon app is started on the server.
-1. The function `frontend` is invoked when the web browser wants to download and run the client (Zoon) app.
-1. The function `up_msg_handler` handles requests from the Zoon.
+1. The function `main` is invoked.
 
-### 2. Calling Actor Functions
-1. We need to find the needed _actors_. They are stored in _indices_. `connected_client::by_id` is a Moon's system index where each value is an actor representing a connected Zoon app.
-1. All public actor functions are asynchronous so we have to `await` them and ideally call them all at once in this example to improve the performance a bit.
-   - _Note_: The requested actor may live in another server or it doesn't live at all - then the Moon app has to start it and load its state into the main memory before it can process your call. And all those operations and the business logic processing take some time, so asynchronicity allows you to spend the time in better ways than just waiting.  
+1. The function `frontend` is invoked on the the web browser request (if the path doesn't start with `_api`). The response is HTML that starts the Zoon (the frontend part).
+
+1. The function `up_msg_handler` handles message requests from the Zoon. Zoon sends in the `UpMsgRequest`:
+   - Your `UpMsg`.
+   - New `CorId` (aka [_correlation id_](https://www.rapid7.com/blog/post/2016/12/23/the-value-of-correlation-ids/)) generated for each request.
+   - `SessionId` generated in the Zoon app before it connects to the Moon.
+   - `Option<AuthToken>` containing `String` defined in your Zoon app.
+
+### 2. Calling Actor functions
+
+`sessions` are [_virtual actors_](https://www.microsoft.com/en-us/research/publication/orleans-distributed-virtual-actors-for-programmability-and-scalability/) managed by the Moon. Each actor represents a live connection between Zoon and Moon apps.
+
+You can send your `DownMsg` to all connected Zoon apps by calling `sessions::broadcast_down_msg` (demonstrated in the code snippet above).
+
+If you want to send the message to only one `session` (e.g. to simulate a standard request-response mechanism):
+```rust
+let UpMsgRequest { up_msg, cor_id, session_id, .. } = req;
+let UpMsg::SendMessage(message) = up_msg;
+
+sessions::by_session_id()
+    .get(session_id)
+    .unwrap()
+    .send_down_msg(&DownMsg::MessageReceived(message), cor_id).await;
+```
+
+Where `by_session_id()` returns an _actor index_. Then we try to find the actor and calls its method `send_down_msg`.
+
+_Notes_: 
+
+- All actor methods are asynchronous because the requested actor may live in another server or it doesn't live at all - then the Moon app has to start it and load its state into the main memory before it can process your call. And all those operations and the business logic processing take some time, so asynchronicity allows you to spend the time in better ways than just waiting.
+
+- Index API will change a bit during the future development to support server clusters (e.g. `get` will be probably `async`).
+
+---
+
+## Moonlight
+
+`moonlight` is the crate that connects Zoon and Moon worlds. It contains things like `CorId`, `SessionId` and `AuthToken` that are used on the both sides.
+
+You need it to define your `UpMsg` and `DownMsg`. See the content of `/examples/chat/shared/src/lib.rs` below.
+
+```rust
+use moonlight::serde_lite::{self, Deserialize, Serialize};
+
+// ------ UpMsg ------
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum UpMsg {
+    SendMessage(Message),
+}
+
+// ------ DownMsg ------
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum DownMsg {
+    MessageReceived(Message),
+}
+
+// ------ Message ------
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct Message {
+    pub username: String,
+    pub text: String,
+}
+```
 
 ---
 
 ## Actix
 
-Moon is based on [Actix](https://actix.rs/). And there is a way how to use Actix directly:
+Moon is based on [Actix](https://actix.rs/). And there is a way to use Actix directly:
 
 ```rust
 use moon::*;
@@ -54,7 +121,7 @@ async fn frontend() -> Frontend {
     Frontend::new().title("Actix example")
 }
 
-async fn up_msg_handler(_: UpMsgRequest) {}
+async fn up_msg_handler(_: UpMsgRequest<()>) {}
 
 #[get("hello")]
 async fn hello() -> impl Responder {
@@ -71,11 +138,13 @@ async fn main() -> std::io::Result<()> {
 
 ![Hello](images/hello.png)
 
-- `cfg` in the example is [actix_web::web::ServiceConfig](https://docs.rs/actix-web/4.0.0-beta.6/actix_web/web/struct.ServiceConfig.html)
+- `cfg` in the example is [actix_web::web::ServiceConfig](https://docs.rs/actix-web/4.0.0-beta.8/actix_web/web/struct.ServiceConfig.html)
 
 ---
 
 ## Actors
+
+_WARNING_: The Actor API will be changed to reduce the number of used macros and to cover more real-world cases. However the main goals and principles explained below won't change.
 
 We'll use the **Time Tracker** example parts to demonstrate how to define an _actor_ and create its instances.
 
@@ -301,7 +370,7 @@ _
 
 So let's wait a bit until we see clear requirements and how technologies like _WebAuthn_ work in practice before we try to design special auth libraries and finalize MoonZoon API.
 
-MoonZoon will allow you from the beginning to send a token in the request's header so you have at least a basic foundation to integrate, for instance, _JWT_ auth.
+MoonZoon already allows you to send a token in the request's header so you have at least a basic foundation to integrate, for instance, _JWT_ auth.
 
 Your opinions on the [chat](https://discord.gg/eGduTxK2Es) are very welcome!
 
