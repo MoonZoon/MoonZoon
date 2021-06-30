@@ -277,9 +277,9 @@ fn todo(todo: Arc<super::Todo>) -> impl Element {
         super::selected_todo().signal(|selected_id| selected_id == Some(todo_id));
     };
     Row::new()
-        .style(Font::new().size(24))
-        .style(Padding::new().all(15))
-        .style(Spacing::new(10))
+        .s(Font::new().size(24))
+        .s(Padding::new().all(15))
+        .s(Spacing::new(10))
         .on_hovered_change(move |hovered| row_hovered.set(hovered))
         .item(
             todo_checkbox(checkbox_id, &todo)
@@ -306,15 +306,15 @@ fn todo(todo: Arc<super::Todo>) -> impl Element {
 ## Color
 
 ```rust
-.style(Background::new().color(hsl(0, 0, 100)))
-.style(
+.s(Background::new().color(hsl(0, 0, 100)))
+.s(
     BorderShadow::new()
         .offset_xy(0, 2)
         .size(0)
         .blur(4)
         .color(hsla(0, 0, 0, 20))
 )
-.style(Font::new().color_signal(hovered.map(|hovered| {
+.s(Font::new().color_signal(hovered.map(|hovered| {
     if hovered { hsl(12, 35, 60) } else { hsl(10, 30, 50) }
 })))
 ```
@@ -392,8 +392,8 @@ So I suggest to make the _font size_ an alias for the [_cap height_](https://en.
 
 ```rust
 Paragraph::new()
-    .style(Font::new().size(40))
-    .style(Spacing::new(30))
+    .s(Font::new().size(40))
+    .s(Spacing::new(30))
     .content("Moon")
     .content("Zoon")
 ```
@@ -462,28 +462,36 @@ fn stop_timeout() {
 }
 ```
 
-### Connection
+### Connection + Task
 
 - `UpMsg` are sent from Zoon to Moon. `DownMsg` in the opposite direction.
 - `UpMsg` could be buffered when the Moon server is offline. And `DownMsg` when the Zoon client is automatically reconnecting.
 - `UpMsg` are sent in a short-lived _fetch_ request, `DownMsg` are sent in a _server-sent event_ to provide real-time communication.
-- A _correlation id_ is automatically generated and sent to the Moon with each request. Moon sends it back. You can also send a token together with the `UpMsg`.
+- A _correlation id_ is automatically generated and sent to the Moon with each request. Moon can send it back with the next `DownMsg`. You can also send an auth token together with the `UpMsg`.
+- A _session id_ is automatically generated when the `Connection` is created. Then it's sent with each `UpMsg`. You can use it to simulate standard request-response mechanism.
+- `Task::start` spawn the given `Future`. (_Note:_ Multithreading isn't supported yet.) 
 - See `examples/chat` for the entire code.
-    - _Note:_ The code below may differ from the current `chat` implementation.
 
 ```rust
-    #[static_ref]
-    fn connection() -> &'static Mutable<Connection<UpMsg, DownMsg>> {
-        Connection::new(|down_msg, _| {
-            if let DownMsg::MessageReceived(message) = down_msg {
-                ...
-            }
-        })
-    }
+#[static_ref]
+fn connection() -> &'static Connection<UpMsg, DownMsg> {
+    Connection::new(|DownMsg::MessageReceived(message), _| {
+        messages().lock_mut().push_cloned(message);
+    })
+    // .auth_token_getter(|| AuthToken::new("my_auth_token"))
+}
 
-    fn send_message() {
-        connection().lock_ref().send_up_msg(UpMsg::SendMessage(...), None);
-    }
+fn send_message() {
+    Task::start(async {
+        connection()
+            .send_up_msg(UpMsg::SendMessage(Message {
+                username: username().get_cloned(),
+                text: new_message_text().take(),
+            }))
+            .await
+            .unwrap_or_else(|error| eprintln!("Failed to send message: {:?}", error))
+    });
+}
 ```
 
 ### Routing
@@ -493,14 +501,14 @@ fn stop_timeout() {
     - _Note:_ The code below may differ from the current `pages` implementation.
 
 ```rust
-    #[route]
-    enum Route {
-        #[route("admin", ..)]
-        Admin(admin::Route),
-        #[route()]
-        Root,
-        Unknown,
-    }
+#[route]
+enum Route {
+    #[route("admin", ..)]
+    Admin(admin::Route),
+    #[route()]
+    Root,
+    Unknown,
+}
 ```
 
 _
@@ -510,49 +518,48 @@ _
     - _Note:_ The code below may differ from the current `time_tracker` implementation.
 
 ```rust
+#[route]
+enum Route {
+    #[route("login")]
+    #[before_route(before_login_route)]
+    Login,
 
-    #[route]
-    enum Route {
-        #[route("login")]
-        #[before_route(before_login_route)]
-        Login,
+    #[route("clients_and_projects")]
+    #[before_route(before_protected_route)]
+    ClientsAndProjects,
 
-        #[route("clients_and_projects")]
-        #[before_route(before_protected_route)]
-        ClientsAndProjects,
+    #[route()]
+    Home,
 
-        #[route()]
-        Home,
+    #[before_route(before_unknown_route)]
+    Unknown,
+}
 
-        #[before_route(before_unknown_route)]
-        Unknown,
+fn before_login_route(route: Route) -> Route {
+    if user().map(Option::is_none) {
+        return route
     }
+    Route::home()
+}
 
-    fn before_login_route(route: Route) -> Route {
-        if user().map(Option::is_none) {
-            return route
-        }
-        Route::home()
+fn before_protected_route(route: Route) -> Route {
+    if user().map(Option::is_some) {
+        return route
     }
+    Route::login()
+}
 
-    fn before_protected_route(route: Route) -> Route {
-        if user().map(Option::is_some) {
-            return route
-        }
-        Route::login()
-    }
+fn before_unknown_route(route: Route) -> Route {
+    Route::home()
+}
 
-    fn before_unknown_route(route: Route) -> Route {
-        Route::home()
-    }
+fn route() -> impl Signal<Item = Route> {
+    url().signal().map(Route::from)
+}
 
-    fn route() -> impl Signal<Item = Route> {
-        url().signal().map(Route::from)
-    }
-
-    fn set_route(route: Route) {
-        url().set(Url::from(route))
-    }
+fn set_route(route: Route) {
+    url().set(Url::from(route))
+}
 ```
 
 ---
@@ -561,7 +568,7 @@ _
 
 - When the request comes from a robot (e.g. _Googlebot_), then MoonZoon renders elements to a HTML string and sends it back to the robot. (It's basically a limited _Server-Side Rendering_.)  
 
-- You'll be able to configure the default page title, _The Open Graph Metadata_ and other things in the Moon app. The example (draft API design):
+- You'll be able to configure the default page title, _The Open Graph Metadata_ and other things in the Moon app. The example below will be continuously updated once.
     ```rust
     async fn frontend() -> Frontend {
         Frontend::new().title("Time Tracker example")
