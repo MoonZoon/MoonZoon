@@ -100,11 +100,9 @@ The **Counter** example part:
 Button::new().label("-").on_press(decrement)
 ```
 
-The `Button` element:
-   - _Notes:_ 
-       - The only requirement is that the element has to implement the trait `Element`.
-       - `Button` is a Zoon element, but you'll create custom ones the same way.
-       - The code below may differ from the current `Button` implementation in Zoon.
+We'll look at the `Button` element code (`crates/zoon/src/element/button.rs`). `Button` is a Zoon element, but you can create custom ones the same way.
+
+There are three sections: `Element`, `Abilities` and `Attributes`.
 
 ```rust
 use zoon::*;
@@ -117,17 +115,19 @@ use std::marker::PhantomData;
 make_flags!(Label, OnPress);
 
 pub struct Button<LabelFlag, OnPressFlag> {
-    raw_el: RawEl,
-    flags: PhantomData<(LabelFlag, OnPressFlag)>
+    raw_el: RawHtmlEl,
+    flags: PhantomData<(LabelFlag, OnPressFlag)>,
 }
 
 impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawEl::new("div")
+            raw_el: RawHtmlEl::new("div")
                 .attr("class", "button")
                 .attr("role", "button")
-                .attr("tabindex", "0"),
+                .attr("tabindex", "0")
+                .style("cursor", "pointer")
+                .style("user-select", "none"),
             flags: PhantomData,
         }
     }
@@ -139,48 +139,96 @@ impl<OnPressFlag> Element for Button<LabelFlagSet, OnPressFlag> {
     }
 }
 
+impl<LabelFlag, OnPressFlag> UpdateRawEl<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {
+    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+        self.raw_el = updater(self.raw_el);
+        self
+    }
+}
+```
+- The macro `make_flags!` will be explained later.
+- The element has to implement the trait `Element`.
+- It's recommended to implement `UpdateRawEl` to allow users to customize the element and it's required for _abilities_.
+- `RawHtmlEl::style` automatically add vendor prefixes for CSS property names when required. E.g. `"user-select"` will be replaced with `"-webkit-user-select"` on Safari and browsers on iOS. (Values aren't prefixed, let us know when it becomes a show-stopper for you.)
+
+```rust
 // ------ ------
-//  Attributes 
+//   Abilities
+// ------ ------
+
+impl<LabelFlag, OnPressFlag> Styleable<'_, RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
+impl<LabelFlag, OnPressFlag> KeyboardEventAware<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
+impl<LabelFlag, OnPressFlag> Focusable for Button<LabelFlag, OnPressFlag> {}
+impl<LabelFlag, OnPressFlag> Hoverable<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
+```
+Abilities are basically simple traits. For example when you implement `Styleable` then users can call the `.s(...)` method on your element:
+
+```rust
+MyElement::new().s(Padding::new().all(6))
+``` 
+
+You can find all built-in abilities in `crates/zoon/src/element/ability.rs`. The `Styleable` ability:
+
+```rust
+pub trait Styleable<'a, T: RawEl>: UpdateRawEl<T> + Sized {
+    fn s(self, style: impl Style<'a>) -> Self {
+        self.update_raw_el(|raw_el| style.update_raw_el_style(raw_el))
+    }
+}
+```
+
+_Note_: You can also implement your custom abilities.
+
+```rust
+// ------ ------
+//  Attributes
 // ------ ------
 
 impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
-    pub fn label(
-        self, 
-        label: impl IntoElement<'a> + 'a
-    ) -> Button<LabelFlagSet, OnPressFlag>
-        where LabelFlag: FlagNotSet
+    pub fn label(mut self, label: impl IntoElement<'a> + 'a) -> Button<LabelFlagSet, OnPressFlag>
+    where
+        LabelFlag: FlagNotSet,
     {
-        Button {
-            raw_el: self.raw_el.child(label),
-            flags: PhantomData
-        }
+        self.raw_el = self.raw_el.child(label);
+        self.into_type()
     }
 
     pub fn label_signal(
-        self, 
-        label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static
-    ) -> Button<LabelFlagSet, OnPressFlag> 
-        where LabelFlag: FlagNotSet
+        mut self,
+        label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static,
+    ) -> Button<LabelFlagSet, OnPressFlag>
+    where
+        LabelFlag: FlagNotSet,
     {
-        Button {
-            raw_el: self.raw_el.child_signal(label),
-            flags: PhantomData
-        }
+        self.raw_el = self.raw_el.child_signal(label);
+        self.into_type()
     }
 
     pub fn on_press(
-        self, 
-        on_press: impl FnOnce() + Clone + 'static
-    ) -> Button<LabelFlag, OnPressFlagSet> 
-        where OnPressFlag: FlagNotSet
+        mut self,
+        on_press: impl FnOnce() + Clone + 'static,
+    ) -> Button<LabelFlag, OnPressFlagSet>
+    where
+        OnPressFlag: FlagNotSet,
     {
+        self.raw_el = self
+            .raw_el
+            .event_handler(move |_: events::Click| (on_press.clone())());
+        self.into_type()
+    }
+
+    fn into_type<NewLabelFlag, NewOnPressFlag>(self) -> Button<NewLabelFlag, NewOnPressFlag> {
         Button {
-            raw_el: self.raw_el.event_handler(move |_: events::Click| (on_press.clone())()),
-            flags: PhantomData
+            raw_el: self.raw_el,
+            flags: PhantomData,
         }
     }
-} 
+}
 ```
+
+_Note_: Attribute implementations look a bit verbose because of long types and generics but it's a trade-off for the user's comfort and safety. Also we will improve it once stable Rust has better support for const generics and other things. And you can always write your custom elements without generics to make the code simpler.
+
+--
 
 `make_flags!(Label, OnPress);` generates code like:
 ```rust
