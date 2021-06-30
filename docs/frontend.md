@@ -35,7 +35,7 @@ pub fn start() {
 }
 ```
 
-The alternative **Counter** example:
+The alternative **Counter** example with a local state:
 
 ```rust
 use zoon::{*, println};
@@ -43,12 +43,12 @@ use zoon::{*, println};
 fn root() -> impl Element {
     println!("I'm different.");
 
-    let counter = Mutable::new(0);
-    let on_press = clone!((counter) move |step: i32| *counter.lock_mut() += step);
+    let (counter, counter_signal) = Mutable::new_and_signal(0);
+    let on_press = move |step: i32| *counter.lock_mut() += step;
 
     Column::new()
         .item(Button::new().label("-").on_press(clone!((on_press) move || on_press(-1))))
-        .item_signal(counter.signal())
+        .item_signal(counter_signal)
         .item(Button::new().label("+").on_press(move || on_press(1)))
 }
 
@@ -77,7 +77,7 @@ pub fn start() {
 
 1. `counter`'s value is decremented.
 
-1. `counter` has type `Mutable` - it sends its updated value to all associated signals.
+1. `counter` has type `Mutable` => it sends its updated value to all associated signals.
 
 1. The new `counter` value is received through a signal and the corresponding text is updated.
     - In the original example, only the content of the `Text` element is changed.
