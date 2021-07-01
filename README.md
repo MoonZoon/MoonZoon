@@ -53,12 +53,22 @@
 
 ---
 
-# Demo
+# Demos
+
+## GUI Benchmark
 
 - Live demo: [moonzoon-demo.herokuapp.com](https://moonzoon-demo.herokuapp.com/)
-   - _Note_: Heroku dyno slow cold starts may occur.
+   - Heroku dyno slow cold starts may occur.
 - Repo: [github.com/MoonZoon/demo](https://github.com/MoonZoon/demo)
-   - _Note_: You can use the repo as a template for your new project for now.
+   - You can use the repo as a template for your new project for now.
+
+## Chat
+
+ - Live demo: [mz-chat-example.mzoon.app](https://mz-chat-example.mzoon.app/)
+ - Repo will be available when [MoonZoon Cloud](docs/cloud.md) is stable enough.
+    - It's based on [examples/chat](examples/chat).
+
+![Chat example](docs/images/chat_example.gif)
 
 ---
 
@@ -119,6 +129,7 @@
 1. _"Is it production-ready?"_
    - No, it's in the early development phase now, but you can subscribe to `#news` channel on our [Discord server](https://discord.gg/eGduTxK2Es) to don't miss the announcement. 
    - MoonZoon will be battle-tested during the MoonZoon Cloud, [OpenHope](http://openhope.net) and other projects development.
+   - [Sponsor](https://github.com/sponsors/MartinKavik) me if you want to speed up the development and get some other benefits.
 
 1. _"Why another framework? Are you mad??"_
    - I want to write products. Reliable products. Quickly. I want to enjoy the development. I don't want to play endlessly with tools, protocols and config files.
