@@ -108,5 +108,5 @@ async fn create_compressed_files(file_path: impl AsRef<Path>) {
         BrotliFileCompressor::compress_file(Arc::clone(&content), file_path, "br"),
         GzipFileCompressor::compress_file(content, file_path, "gz"),
     )
-    .with_context(|| format!("Failed to create compressed files for {:#?}", file_path))?
+    .with_context(|| format!("Failed to create compressed files for {:?}", file_path))?
 }

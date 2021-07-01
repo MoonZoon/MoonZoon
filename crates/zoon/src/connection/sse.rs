@@ -44,7 +44,7 @@ fn down_msg_handler_closure<DMsg: Deserialize>(
     Closure::wrap(Box::new(
         move |event: JsValue| match down_msg_transporter_from_event(event) {
             Ok(DownMsgTransporterForDe { down_msg, cor_id }) => down_msg_handler(down_msg, cor_id),
-            Err(error) => crate::eprintln!("{:#?}", error),
+            Err(error) => crate::eprintln!("{:?}", error),
         },
     ) as Box<dyn Fn(JsValue)>)
 }

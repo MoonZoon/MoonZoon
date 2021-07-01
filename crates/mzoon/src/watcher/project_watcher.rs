@@ -54,10 +54,10 @@ fn start_immediate_watcher(sender: UnboundedSender<()>, paths: &[String]) -> Rec
 
 fn on_change(event: notify::Result<Event>, sender: &UnboundedSender<()>) {
     if let Err(error) = event {
-        return eprintln!("Watcher failed: {:#?}", error);
+        return eprintln!("Watcher failed: {:?}", error);
     }
     if let Err(error) = sender.send(()) {
-        return eprintln!("Failed to send with the sender: {:#?}", error);
+        return eprintln!("Failed to send with the sender: {:?}", error);
     }
 }
 
@@ -94,6 +94,6 @@ async fn debounced_on_change(
 async fn debounce(debounced_sender: Arc<UnboundedSender<()>>, debounce_time: Duration) {
     sleep(debounce_time).await;
     if let Err(error) = debounced_sender.send(()) {
-        return eprintln!("Failed to send with the debounced sender: {:#?}", error);
+        return eprintln!("Failed to send with the debounced sender: {:?}", error);
     }
 }

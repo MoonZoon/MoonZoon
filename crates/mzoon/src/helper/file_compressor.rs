@@ -16,7 +16,7 @@ pub trait FileCompressor {
         let path = compressed_file_path(path, extension);
         let mut file_writer = fs::File::create(&path)
             .await
-            .with_context(|| format!("Failed to create the file {:#?}", path))?;
+            .with_context(|| format!("Failed to create the file {:?}", path))?;
 
         let compressed_content = spawn_blocking(move || Self::compress(&content)).await??;
 

@@ -13,7 +13,7 @@ async fn frontend() -> Frontend {
 }
 
 async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
-    println!("{:#?}", req);
+    println!("{:?}", req);
 
     let UpMsgRequest { up_msg, cor_id, .. } = req;
     let UpMsg::SendMessage(message) = up_msg;

@@ -81,6 +81,6 @@ async fn build_and_reload(reload_url: Arc<String>, release: bool, cache_busting:
         .send()
         .await;
     if let Err(error) = response {
-        eprintln!("Failed to send the frontend reload request: {:#?}", error);
+        eprintln!("Failed to send the frontend reload request: {:?}", error);
     }
 }

@@ -120,7 +120,7 @@ where
     // ------ Init ------
 
     let config = Config::from_env_vars();
-    println!("Moon config: {:#?}", config);
+    println!("Moon config: {:?}", config);
 
     env_logger::builder()
         .filter_level(config.backend_log_level)
@@ -235,12 +235,12 @@ fn rustls_server_config() -> io::Result<RustlsServerConfig> {
 // ------ ------
 
 fn internal_server_error_handler<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
-    eprintln!("INTERNAL_SERVER_ERROR: {:#?}", res.request().uri());
+    eprintln!("INTERNAL_SERVER_ERROR: {:?}", res.request().uri());
     Ok(ErrorHandlerResponse::Response(res))
 }
 
 fn render_not_found_handler<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
-    eprintln!("NOT_FOUND: {:#?}", res.request().uri());
+    eprintln!("NOT_FOUND: {:?}", res.request().uri());
     Ok(ErrorHandlerResponse::Response(res))
 }
 
