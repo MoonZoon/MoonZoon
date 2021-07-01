@@ -22,14 +22,6 @@ pub struct Connection {
     sender: UnboundedSender<Bytes>,
 }
 
-impl Drop for Connection {
-    fn drop(&mut self) {
-        if self.remove_session_actor_on_remove {
-            println!("Connection with session_id '{}' dropped.", self.session_id);
-        }
-    }
-}
-
 impl Connection {
     fn new(session_id: Option<SessionId>) -> (Arc<Connection>, EventStream) {
         let (sender, receiver) = unbounded_channel();

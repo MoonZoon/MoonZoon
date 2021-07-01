@@ -105,7 +105,15 @@ impl SessionActor {
 
     pub(crate) fn remove(&self) {
         if let Some(instance) = SESSION_ACTOR_INSTANCES.remove(&self.actor_id) {
-            instance.remove()
+            let session_id = instance.session_id.read();
+            instance.remove();
+            if let Some(session_id) = session_id {
+                println!(
+                    "Session `{}` closed. (Session count: {})",
+                    session_id,
+                    SESSION_ACTOR_INSTANCES.len(),
+                )
+            }
         }
     }
 
@@ -156,6 +164,12 @@ impl SessionActorInstance {
             session_id: PVarSessionId(actor_id).create(session_id),
         };
         SESSION_ACTOR_INSTANCES.insert(actor_id, actor_instance);
+
+        println!(
+            "New session: `{}`. (Session count: {})",
+            session_id,
+            SESSION_ACTOR_INSTANCES.len()
+        );
         actor_id
     }
 

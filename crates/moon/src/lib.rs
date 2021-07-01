@@ -418,8 +418,6 @@ async fn message_sse_responder(
     let (_, event_stream) = sse.new_connection(Some(session_id));
     SessionActor::create(session_id, MessageSSE::clone(&sse));
 
-    println!("New connection with session_id '{}'.", session_id);
-
     Ok(HttpResponse::Ok()
         .insert_header(ContentType(mime::TEXT_EVENT_STREAM))
         .insert_header(CacheControl(vec![CacheDirective::NoCache]))
