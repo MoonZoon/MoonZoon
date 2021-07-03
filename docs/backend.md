@@ -50,7 +50,7 @@ async fn main() -> std::io::Result<()> {
 
 ### 2. Calling Actor functions
 
-`sessions` are [_virtual actors_](https://www.microsoft.com/en-us/research/publication/orleans-distributed-virtual-actors-for-programmability-and-scalability/) managed by the Moon. Each actor represents a live connection between Zoon and Moon apps.
+`sessions` are [_virtual actors_](https://www.microsoft.com/en-us/research/publication/orleans-distributed-virtual-actors-for-programmability-and-scalability/) managed by the Moon. Each `SessionActor` represents a live connection between Zoon and Moon apps.
 
 You can send your `DownMsg` to all connected Zoon apps by calling `sessions::broadcast_down_msg` (demonstrated in the code snippet above).
 
