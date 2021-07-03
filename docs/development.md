@@ -17,6 +17,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   cargo install cargo-make
   makers -V # makers 0.34.0
   ```
+  - _Note_: `cargo-make` is needed only for MoonZoon development and running its examples, you don't need it for your apps.
 
 ## 2. VS Code settings
 
