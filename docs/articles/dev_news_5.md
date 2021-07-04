@@ -256,7 +256,7 @@ fn connection() -> &'static Connection<UpMsg, DownMsg> {
 ```
 - Data stored in functions marked by the attribute `#[static_ref]` are lazily initialized on the first call.
 
-- Read the excellent [tutorial](https://docs.rs/futures-signals/0.3.20/futures_signals/tutorial/index.html) for `Mutable` and _signals_ in the `futures_signals` crate.
+- Read the excellent [tutorial](https://docs.rs/futures-signals/0.3.22/futures_signals/tutorial/index.html) for `Mutable` and _signals_ in the `futures_signals` crate.
 
 - A _correlation id_ is automatically generated and sent to the Moon with each request.
 
@@ -349,7 +349,7 @@ fn received_message(message: Message) -> impl Element {
 
 - `NamedColor` is a very small and temporary enum of colors. It will be replaced probably with color pallets or a compile-time color generator later. In the meantime, you can create your own enums or other items that implement the trait `Color`. See also the [Color section](https://github.com/MoonZoon/MoonZoon/blob/main/docs/frontend.md#color) in the MZ docs.
 
-- It's surprisingly difficult to set the font size correctly. See [Size and Font Size sections](https://github.com/MoonZoon/MoonZoon/blob/main/docs/frontend.md#size) in the MZ docs for more info. `Font::size` just set `font-size` in `px` until I resolve it properly.
+- It's surprisingly difficult to set the font size correctly. See [Size and Font Size sections](https://github.com/MoonZoon/MoonZoon/blob/main/docs/frontend.md#size) in the MZ docs for more info. `Font::size` just sets `font-size` in `px` until I resolve it properly.
 
 - `El` is a simple `div`. It must have one child (otherwise you get a compilation error).
 
@@ -451,7 +451,7 @@ MoonZoon development goes quite well. Some important Zoon APIs are still missing
 MoonZoon Cloud is the serverless platform for your MoonZoon apps. Predictable pricing, simplicity and scalability are main goals.  
 
 - The web administration will be written in MoonZoon.
-- The CLI part will be implemented as extra `mzoon` commands.
+- The CLI part will be implemented as extra `mzoon` (MoonZoon CLI tool) commands.
 - The default app URL will be `https://[your_app_name].mzoon.app`
 
 ## Current MZ Cloud state
@@ -463,11 +463,11 @@ Research.
 Another possible provider could be [Google Cloud Run](https://cloud.google.com/run) because it supports scaling to zero and also server-sent events. 
 But Clever Cloud has more predictable pricing and it's less complex because you don't need to manage Docker containers.
 
-However MZ Cloud can offer multiple providers in the future - it means you would be able to choose Clever or Google Cloud. (Please let me know if you know other suitable providers.)
+However MZ Cloud may offer multiple providers in the future - it means you would be able to choose Clever or Google Cloud. (Please let me know if you know other suitable providers.)
 
 ## Why I'm creating MZ Cloud?
 
-There are two reasons why I want to write MZ Cloud:
+There are three reasons why I want to write MZ Cloud:
 
 - It's the missing piece to complete my journey to an ideal web development experience.
 

@@ -85,7 +85,7 @@ pub fn start() {
 
 _Notes:_
 
-- Read the excellent [tutorial](https://docs.rs/futures-signals/0.3.20/futures_signals/tutorial/index.html) for `Mutable` and signals in the `futures_signals` crate.
+- Read the excellent [tutorial](https://docs.rs/futures-signals/0.3.22/futures_signals/tutorial/index.html) for `Mutable` and signals in the `futures_signals` crate.
 - `zoon::*` reimports most needed types and you can access some of Zoon's dependencies by `zoon::library` like `zoon::futures_signals`.
 - `clone!` is a type alias for [enclose::enc](https://docs.rs/enclose/1.1.8/enclose/macro.enc.html).
 - `static_ref`, `clone!` and other things can be disabled or set by Zoon's [features](https://doc.rust-lang.org/cargo/reference/features.html).
