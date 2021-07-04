@@ -475,6 +475,8 @@ There are two reasons why I want to write MZ Cloud:
 
 - I hope it will be the main source of income for the MoonZoon development. So if you want to speed up the MZ development, make it sustainable and get early access to the Cloud (once it's ready for it) and other benefits - please visit my [Sponsors](https://github.com/sponsors/MartinKavik) page.
 
+_Note:_ If the topic "Open-Source & Financial Struggle" is new to you, I've written down one idea how to resolve it and a list of related articles, videos and books: [OpenHope](http://openhope.net/).
+
 _Note for Seed users_: I continue to maintain Seed as usual. Also I can imagine we can write tools for deploying Seed apps to the MZ Cloud when there is demand for it. However I'll focus mainly on my sponsors, because these people and companies rely on Seed and I want to cover their back and watch their successes. Also Seed is now basically feature-complete, I don't remember where somebody reported a bug, community is nice to newcomers and I can't work indefinitely for free.
 
 Don't hesitate to write me (public or private message) if you have some questions about Cloud or ideas or requirements or other things on your mind. You are awesome, thank you.

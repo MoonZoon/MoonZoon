@@ -613,3 +613,27 @@ fn set_route(route: Route) {
 
 1. _"Hey Martin, what about [Seed](https://seed-rs.org/)?"_
    - Zoon and Seed have very different features and goals. I assume we will be able to implement some interesting features inspired by Zoon in Seed, if needed. I'll maintain Seed as usual.
+
+1. _"How do I get a standalone html+wasm output? I previously used Yew + Trunk."_ (by `@Noir` on the MZ Discord)
+
+    <details>
+
+    <summary>Longer answer with explanation</summary>
+
+    It's possible, I have to do that to make js-framework-benchmark work: https://github.com/MartinKavik/js-framework-benchmark/tree/framework/moonzoon/frameworks/keyed/moonzoon. 
+
+    You have to create `index.html` similar to the HTML output from the Moon app. You can also disable `cache_busting` in your `MoonZoon.toml` to disable file name suffix generator for wasm and js files. 
+
+    `mzoon` uses wasm-pack under the hood so you'll find your "dist files" in `pkg` folder (https://github.com/MartinKavik/js-framework-benchmark/tree/framework/moonzoon/frameworks/keyed/moonzoon/frontend/pkg). Trunk uses wasm-bindgen directly (instead of indirectly through wasm-pack) so Trunk moves the files to `dist`.
+
+    I can imagine you want to use a standalone Zoon app for deploying to Netlify / Render / Azure Static Web Apps / DO App Platform for free or to use it with your custom server. It makes sense and I have an official support for standalone Zoon app on my roadmap, but there are some problems:
+    - Custom server integration is a Pandora's box:
+        - We need to take into account CORS and other security settings for communication with the backend. 
+        - There is a chance you need to change base url or use hash routing to mitigate url conflicts with the server.
+        - You have to be able to change urls for requests and SSE. Or disable SSE. Or many services don't support SSE at all or only Websockets - so we would need to resolve it somehow.
+        - You need prerendering or SSR for SEO. 
+        - And other problems that I had to resolve during the Seed development.
+        - There will be also conflicts between HTML generated from Moon and what Trunk expects. We need "adapters" for such cases.
+    - And non-technical problems - I have some sponsors but I have to follow money to pay my rent - I hope MoonZoon Cloud or a business based on MZ will cover my expenses. It means I don't have a reason to work on standalone Zoon apps personally for now.
+
+    </details>
