@@ -67,6 +67,7 @@
  - Live demo: [mz-chat-example.mzoon.app](https://mz-chat-example.mzoon.app/)
  - Repo will be available when [MoonZoon Cloud](docs/cloud.md) is stable enough.
     - It's based on [examples/chat](examples/chat).
+    - Related blog post: _"Chat example, MoonZoon Cloud [[dev.to WIP](https://dev.to/martinkavik/moonzoon-dev-news-5-chat-example-moonzoon-cloud-xxxx) / [MD](docs/articles/dev_news_5.md)]_.
 
 ![Chat example](docs/images/chat_example.gif)
 
@@ -88,7 +89,7 @@
 
 1. Actix, Async CLI, Error handling, Wasm-pack installer [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-4-actix-async-cli-error-handling-wasm-pack-installer-57cp) / [MD](docs/articles/dev_news_4.md)]
 
-1. Chat example, MoonZoon Cloud [[dev.to WIP](https://dev.to/martinkavik/moonzoon-dev-news-5-chat-example-moonzoon-cloud-xxxx) / [MD](docs/articles/dev_news_5.md)]
+1. **Chat example, MoonZoon Cloud [[dev.to WIP](https://dev.to/martinkavik/moonzoon-dev-news-5-chat-example-moonzoon-cloud-xxxx) / [MD](docs/articles/dev_news_5.md)]**
 
 ---
 
@@ -179,7 +180,7 @@
     - If you think MoonZoon will be useful for your project, I want to know that! (Use [chat](https://discord.gg/eGduTxK2Es) or [martin@moonzoon.rs](mailto:martin@moonzoon.rs)).
     - Don't hesitate to tell your friends about MoonZoon and feel free to share the link ([http://moonzoon.rs](http://moonzoon.rs)) on social platforms / forums / blogs / newsletters. 
 
-1. _"My only concern is the “no SQL” comment. Will it be possible to use MZ with something like SQLx if I prefer?_" (by [@duspom](https://twitter.com/duspom/status/1362934142770450433))
+1. _"My only concern is the “no SQL” comment. Will it be possible to use MZ with something like SQLx if I prefer?"_ (by [@duspom](https://twitter.com/duspom/status/1362934142770450433))
     - From the [Philosophy & Non-Goals](docs/philosophy_and_non_goals.md) section: "E) Don't build artificial barriers for MoonZoon users - if they want to use REST, CSS or SQL, don't try to stop them."
     - You don't have to use built-in persistent variables in actors. Or you can use them and query the persistent store (e.g. Postgre) directly.
 ---
