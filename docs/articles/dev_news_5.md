@@ -31,7 +31,7 @@ Live demo: [mz-chat-example.mzoon.app](https://mz-chat-example.mzoon.app/)
 
 - Chat example works! The most of this blog post will cover it - I hope it will be interesting even for people who hear about the MoonZoon for the first time.
 
-- I've done some research related to MoonZoon Cloud. You'll read about it in the second chapter.
+- The second chapter is dedicated to the MoonZoon Cloud - research & reasons.
 
 - I've updated my sponsors page and added "Sponsor" button to MZ repositories. More info in the MZ Cloud chapter. 
 
@@ -43,12 +43,12 @@ And I would like to thank:
    - [tokcum](https://github.com/tokcum) ($96 / month)
    - [arn-the-long-beard](https://github.com/arn-the-long-beard) ($24 / m)
    - [Tomáš Lauer](https://github.com/TomciikL) ($24 / m)
+   - [Jesus Guzman, Jr.](https://github.com/JesusGuzmanJr) ($10 / m)
    - [Colin Woodbury](https://github.com/fosskers) ($8 / m)
    - [Craig Mayhew](https://github.com/craigmayhew) ($8 / m)
    - [Dustin Bensing](https://github.com/pythoneer) ($8 / m)
    - [Dusty Pomerleau](https://github.com/dustypomerleau) ($8 / m)
    - [Jay Sistar](https://github.com/Type1J) ($8 / m)
-   - [Jesus Guzman, Jr.](https://github.com/JesusGuzmanJr) ($8 / m)
    - [Ke Ding](https://github.com/DingDean) ($8 / m)
    - [Kuma Taro](https://github.com/km-tr) ($8 / m)
    - [sabine](https://github.com/sabine) ($8 / m)
@@ -440,11 +440,44 @@ pub fn start() {
 
 ### A question from MZ Discord
 
-**JaySistar**: "Can a Connection contain app spicific state? I thought that i saw that it could, but I don't know which example uses it. In the case of chat, it could be added, so that after a user has "logged in" the username wouldn't need to be sent with each message, but a "username" change message could be sent to change it."
+**JaySistar**: "Can a Connection contain app specific state? I thought that i saw that it could, but I don't know which example uses it. In the case of chat, it could be added, so that after a user has "logged in" the username wouldn't need to be sent with each message, but a "username" change message could be sent to change it."
 
 **MartinKavik**: "Excellent question. It was the first time I was trying to write MZ actors (`SessionActor`) and to improve its API during the process. I'm not sure yet if the right solution would be to allow to add a custom state directly to `SessionActor`s or developers should create new custom actors like `UserActor` and create/remove them when "associated" `SessionActor` is created/removed. So I decided to choose the simplest approach for now (i.e. send `username` in the `Message`, basically keep the state in the Zoon app) and eventually revisit the chat example when actors API is stable enough."
 
 # MoonZoon Cloud
+
+MoonZoon development goes quite well. Some important Zoon APIs are still missing - like routing, timers or channels. But I've already written them during the [Seed](https://seed-rs.org/) development and their MoonZoon alternatives are designed so it's only matter of time. Moon is already usable for writing apps because `Up/DownMsg` communication works and for other cases you can use Actix directly. The last big missing Moon part is a virtual actor system. However distributable virtual actors are pretty useless without the platform where we can run them and without a storage where we can save their state. Also we would like to deploy simple apps without actors as soon as possible. We need the MoonZoon Cloud. 
+
+MoonZoon Cloud is the serverless platform for your MoonZoon apps. Predictable pricing, simplicity and scalability are main goals.  
+
+- The web administration will be written in MoonZoon.
+- The CLI part will be implemented as extra `mzoon` commands.
+- The default app URL will be `https://[your_app_name].mzoon.app`
+
+## Current MZ Cloud state
+
+Research. 
+
+[Clever Cloud](https://www.clever-cloud.com/en/) looks like the best candidate for the MoonZoon Cloud infrastructure provider. The MZ chat example works without problems: [mz-chat-example.mzoon.app](https://mz-chat-example.mzoon.app/) (HTTP/2, automatic HTTPS on a custom domain, native support for Rust apps, API for almost everything, etc.). Their support is excellent. 
+
+Another possible provider could be [Google Cloud Run](https://cloud.google.com/run) because it supports scaling to zero and also server-sent events. 
+But Clever Cloud has more predictable pricing and it's less complex because you don't need to manage Docker containers.
+
+However MZ Cloud can offer multiple providers in the future - it means you would be able to choose Clever or Google Cloud. (Please let me know if you know other suitable providers.)
+
+## Why I'm creating MZ Cloud?
+
+There are two reasons why I want to write MZ Cloud:
+
+- It's the missing piece to complete my journey to an ideal web development experience.
+
+- I need it for my MoonZoon apps.
+
+- I hope it will be the main source of income for the MoonZoon development. So if you want to speed up the MZ development, make it sustainable and get early access to the Cloud (once it's ready for it) and other benefits - please visit my [Sponsors](https://github.com/sponsors/MartinKavik) page.
+
+_Note for Seed users_: I continue to maintain Seed as usual. Also I can imagine we can write tools for deploying Seed apps to the MZ Cloud when there is demand for it. However I'll focus mainly on my sponsors, because these people and companies rely on Seed and I want to cover their back and watch their successes. Also Seed is now basically feature-complete, I don't remember where somebody reported a bug, community is nice to newcomers and I can't work indefinitely for free.
+
+Don't hesitate to write me (public or private message) if you have some questions about Cloud or ideas or requirements or other things on your mind. You are awesome, thank you.
 
 ---
 
@@ -455,5 +488,3 @@ Martin
 
 P.S.
 We are waiting for you on [Discord](https://discord.gg/eGduTxK2Es).
-
-
