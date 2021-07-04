@@ -67,7 +67,7 @@
  - Live demo: [mz-chat-example.mzoon.app](https://mz-chat-example.mzoon.app/)
  - Repo will be available when [MoonZoon Cloud](docs/cloud.md) is stable enough.
     - It's based on [examples/chat](examples/chat).
-    - Related blog post: _"Chat example, MoonZoon Cloud [[dev.to WIP](https://dev.to/martinkavik/moonzoon-dev-news-5-chat-example-moonzoon-cloud-xxxx) / [MD](docs/articles/dev_news_5.md)]_.
+    - Related blog post: _"Chat example, MoonZoon Cloud [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-5-chat-example-moonzoon-cloud-5de4) / [MD](docs/articles/dev_news_5.md)]_.
 
 ![Chat example](docs/images/chat_example.gif)
 
@@ -89,7 +89,7 @@
 
 1. Actix, Async CLI, Error handling, Wasm-pack installer [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-4-actix-async-cli-error-handling-wasm-pack-installer-57cp) / [MD](docs/articles/dev_news_4.md)]
 
-1. **Chat example, MoonZoon Cloud [[dev.to WIP](https://dev.to/martinkavik/moonzoon-dev-news-5-chat-example-moonzoon-cloud-xxxx) / [MD](docs/articles/dev_news_5.md)]**
+1. **Chat example, MoonZoon Cloud [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-5-chat-example-moonzoon-cloud-5de4) / [MD](docs/articles/dev_news_5.md)]**
 
 ---
 
