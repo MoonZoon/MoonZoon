@@ -1,122 +1,101 @@
-#![no_std]
-
 use zoon::*;
-use std::ops::Not;
 
-blocks!{
+// -- stopwatch --
 
-    // -- stopwatch --
-
-    #[s_var]
-    fn seconds() -> u32 {
-        0
-    }
-
-    #[s_var]
-    fn stopwatch() -> Option<Timer> {
-        None
-    }
-
-    #[update]
-    fn start_stopwatch() {
-        stopwatch().set(Some(Timer::new(1_000, increment_seconds)));
-    }
-
-    #[update]
-    fn stop_stopwatch() {
-        stopwatch().set(None);
-    }
-
-    #[update]
-    fn increment_seconds() {
-        seconds().update(|seconds| seconds + 1);
-    }
-
-    // -- timeout --
-
-    #[s_var]
-    fn timeout() -> Option<Timer> {
-        None
-    }
-
-    #[update]
-    fn start_timeout() {
-        timeout().set(Some(Timer::new(2_000, stop_timeout)));
-    }
-
-    #[update]
-    fn stop_timeout() {
-        timeout().set(None);
-    }
-
-    // -- el --
-
-    #[el]
-    fn root() -> Column {
-        column![
-            spacing(30),
-            stopwatch_panel(),
-            timeout_panel(),
-        ]
-    }
-
-    #[el]
-    fn stopwatch_panel() -> Row {
-        let seconds = seconds().inner();
-        let enabled = stopwatch().map(Option::is_some);
-        row![
-            spacing(10),
-            format!("Seconds: {}", seconds),
-            button![
-                background::color(if enabled {
-                    color::gray(),
-                } else {
-                    color::green().set_l(66),
-                }),
-                enabled.not().then(|| button::on_press(start_stopwatch)),
-                "Start",
-            ],
-            button![
-                background::color(if enabled {
-                    color::red().set_l(66),
-                } else {
-                    color::gray(),
-                }),
-                enabled.then(|| button::on_press(stop_stopwatch)),
-                "Stop",
-            ],
-        ]
-    }
-
-    #[el]
-    fn timeout_panel() -> Row {
-        let enabled = timeout().map(Option::is_some);
-        row![
-            spacing(10),
-            button![
-                background::color(if enabled {
-                    color::gray(),
-                } else {
-                    color::green().set_l(66),
-                }),
-                enabled.not().then(|| button::on_press(start_timeout)),
-                "Start 2s timeout",
-            ],
-            button![
-                background::color(if enabled {
-                    color::red().set_l(66),
-                } else {
-                    color::gray(),
-                }),
-                enabled.then(|| button::on_press(stop_timeout)),
-                "Stop",
-            ],
-        ]
-    }
-
+#[static_ref]
+fn seconds() -> &'static Mutable<u32> {
+    Mutable::new(0)
 }
+
+#[static_ref]
+fn stopwatch() -> &'static Mutable<Option<Timer>> {
+    Mutable::new(None)
+}
+
+fn stopwatch_enabled() -> impl Signal<Item = bool> {
+    stopwatch().signal_ref(Option::is_some)
+} 
+
+fn start_stopwatch() {
+    stopwatch().set(Some(Timer::new(1_000, increment_seconds)));
+}
+
+fn stop_stopwatch() {
+    stopwatch().take();
+}
+
+fn increment_seconds() {
+    seconds().update(|seconds| seconds + 1);
+}
+
+// -- timeout --
+
+#[static_ref]
+fn timeout() -> &'static Mutable<Option<Timer>> {
+    Mutable::new(None)
+}
+
+fn timeout_enabled() -> impl Signal<Item = bool> {
+    timeout().signal_ref(Option::is_some)
+} 
+
+fn start_timeout() {
+    timeout().set(Some(Timer::new(2_000, stop_timeout)));
+}
+
+fn stop_timeout() {
+    timeout().take();
+}
+
+// ------ ------
+//     View
+// ------ ------
+
+fn root() -> impl Element {
+    Column::new()
+        .s(Spacing::new(30))
+        .item(stopwatch_panel())
+        .item(timeout_panel())
+}
+
+fn stopwatch_panel() -> impl Element {
+    Row::new()
+        .s(Spacing::new(10))
+        .item(format!("Seconds: {}", seconds().get()))
+        .item_signal(
+            stopwatch_enabled().map_bool(|| {
+                Button::new()
+                    .label("Start")
+                    .on_press(start_stopwatch)
+            }, || {
+                Button::new()
+                    .label("Stop")
+                    .on_press(stop_stopwatch)
+            })
+        )
+}
+
+fn timeout_panel() -> impl Element {
+    Row::new()
+        .s(Spacing::new(10))
+        .item_signal(
+            timeout_enabled().map_bool(|| {
+                Button::new()
+                    .label("Start 2s timeout")
+                    .on_press(start_timeout)
+            }, || {
+                Button::new()
+                    .label("Stop")
+                    .on_press(stop_timeout)
+            })
+        )
+}
+
+// ------ ------
+//     Start
+// ------ ------
 
 #[wasm_bindgen(start)]
 pub fn start() {
-    start!()
+    start_app("app", root);
 }
