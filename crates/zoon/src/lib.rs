@@ -9,6 +9,7 @@ mod element;
 mod futures_signals_ext;
 mod style;
 mod task;
+mod timer;
 
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use dom::{document, window};
@@ -28,6 +29,7 @@ pub use send_wrapper::SendWrapper;
 pub use std::future::Future;
 pub use style::*;
 pub use task::Task;
+pub use timer::Timer;
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 use wasm_bindgen_futures::spawn_local;
 pub use wasm_bindgen_futures::JsFuture;
