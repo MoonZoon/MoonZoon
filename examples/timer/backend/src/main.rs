@@ -1,13 +1,20 @@
 use moon::*;
 
-async fn init() {}
-
 async fn frontend() -> Frontend {
-    Frontend::new().title("Timer example")
+    Frontend::new().title("Timer example").append_to_head(
+        "
+        <style>
+            html {
+                background-color: black;
+                color: lightgray;
+            }
+        </style>",
+    )
 }
 
-async fn up_msg_handler(req: UpMsgRequest) {}
+async fn up_msg_handler(_: UpMsgRequest<()>) {}
 
-fn main() {
-    start!(init, frontend, up_msg_handler);
+#[moon::main]
+async fn main() -> std::io::Result<()> {
+    start(frontend, up_msg_handler, |_| {}).await
 }
