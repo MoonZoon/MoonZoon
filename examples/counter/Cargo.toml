@@ -2,6 +2,7 @@
 members = [
     "frontend",
     "backend",
+    "shared",
 ]
 
 [profile.release]
