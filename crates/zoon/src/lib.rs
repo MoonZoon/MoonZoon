@@ -5,6 +5,7 @@ pub mod console;
 mod cow_str;
 mod css_property_name;
 mod dom;
+mod either;
 mod element;
 mod futures_signals_ext;
 mod style;
@@ -14,6 +15,7 @@ mod timer;
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use dom::{document, window};
 pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};
+pub use either::{Either, IntoEither};
 pub use element::*;
 pub use futures_signals::{
     self, map_mut, map_ref,

@@ -286,8 +286,8 @@ fn todo(todo: Arc<super::Todo>) -> impl Element {
         )
         .item_signal(
             selected.map(clone!((todo) move |selected| {
-                if selected { Box::new(selected_todo_title()) } 
-                else { Box::new(todo_label(checkbox_id, &todo)) }
+                if selected { selected_todo_title().left_element() } 
+                else { todo_label(checkbox_id, &todo).right_element() }
             }))
         )
         .item_signal(
@@ -445,20 +445,23 @@ fn root() -> impl IntoRoot {
  
 - Could be used as a timeout or stopwatch (to set an interval between callback calls).
 - See `examples/timer` for the entire code.
-    - _Note:_ The code below may differ from the current `timer` implementation.
 
 ```rust
 #[static_ref]
 fn timeout() -> &'static Mutable<Option<Timer>> {
     Mutable::new(None)
-} 
+}
+
+fn timeout_enabled() -> impl Signal<Item = bool> {
+    timeout().signal_ref(Option::is_some)
+}
 
 fn start_timeout() {
     timeout().set(Some(Timer::new(2_000, stop_timeout)));
 }
 
 fn stop_timeout() {
-    timeout().set(None);
+    timeout().take();
 }
 ```
 

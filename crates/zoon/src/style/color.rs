@@ -13,6 +13,8 @@ pub enum NamedColor {
     Green5,
     Gray8,
     Gray10,
+    Red2,
+    Red5,
 }
 
 impl Color<'_> for NamedColor {}
@@ -24,6 +26,8 @@ impl<'a> IntoCowStr<'a> for NamedColor {
             NamedColor::Green5 => "green",
             NamedColor::Gray8 => "lightgray",
             NamedColor::Gray10 => "white",
+            NamedColor::Red2 => "darkred",
+            NamedColor::Red5 => "firebrick",
         }
         .into()
     }

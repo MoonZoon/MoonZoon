@@ -9,7 +9,8 @@ pub struct Background<'a> {
 
 impl<'a> Background<'a> {
     pub fn color(mut self, color: impl Color<'a>) -> Self {
-        self.static_css_props.insert("color", color.into_cow_str());
+        self.static_css_props
+            .insert("background-color", color.into_cow_str());
         self
     }
 
