@@ -516,6 +516,7 @@ name = "frontend"
 version = "0.1.0"
 dependencies = [
  "wasm-bindgen-test",
+ "web-sys",
  "zoon",
 ]
 
