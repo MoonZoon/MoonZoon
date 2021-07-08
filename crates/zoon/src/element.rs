@@ -1,4 +1,4 @@
-use dominator::Dom;
+use crate::*;
 
 // -- modules --
 

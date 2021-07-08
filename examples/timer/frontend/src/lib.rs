@@ -62,14 +62,11 @@ fn root() -> impl Element {
 fn stopwatch_panel() -> impl Element {
     Row::new()
         .s(Spacing::new(20))
-        .item(Text::with_signal(
-            seconds()
-                .signal()
-                .map(|seconds| format!("Seconds: {}", seconds)),
-        ))
+        .item("Seconds: ")
+        .item(Text::with_signal(seconds().signal()))
         .item_signal(stopwatch_enabled().map_bool(
-            || Button::new().label("Stop").on_press(stop_stopwatch),
-            || Button::new().label("Start").on_press(start_stopwatch),
+            || stop_button(stop_stopwatch).left_either(),
+            || start_button(start_stopwatch).right_either(),
         ))
 }
 
@@ -78,13 +75,33 @@ fn timeout_panel() -> impl Element {
         .s(Spacing::new(20))
         .item("2s Timeout")
         .item_signal(timeout_enabled().map_bool(
-            || Button::new().label("Stop").on_press(stop_timeout),
-            || Button::new().label("Start").on_press(start_timeout),
+            || stop_button(stop_timeout).left_either(),
+            || start_button(start_timeout).right_either(),
         ))
 }
 
-fn start_button() -> impl Element {
-    
+fn start_button(on_press: fn()) -> impl Element {
+    button("Start", NamedColor::Green2, NamedColor::Green5, on_press)
+}
+
+fn stop_button(on_press: fn()) -> impl Element {
+    button("Stop", NamedColor::Red2, NamedColor::Red5, on_press)
+}
+
+fn button(
+    label: &str,
+    bg_color: NamedColor,
+    bg_color_hovered: NamedColor,
+    on_press: fn(),
+) -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Button::new()
+        .s(Padding::new().all(6))
+        .s(Background::new()
+            .color_signal(hovered_signal.map_bool(move || bg_color_hovered, move || bg_color)))
+        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .label(label)
+        .on_press(on_press)
 }
 
 // ------ ------
