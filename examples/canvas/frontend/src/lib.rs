@@ -85,11 +85,9 @@ fn root() -> impl Element {
 }
 
 fn canvas() -> impl Element {
-    Text::new("12")
-
-    // Canvas::new()
-    //     .width(300)
-    //     .height(300)
+    Canvas::new()
+        .width(300)
+        .height(300)
     //     .after_insert(set_canvas_html_el)
     //     .after_remove(|_| unset_canvas_html_el())
 

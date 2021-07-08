@@ -5,6 +5,9 @@ use crate::*;
 pub mod button;
 pub use button::Button;
 
+pub mod canvas;
+pub use canvas::Canvas;
+
 pub mod column;
 pub use column::Column;
 
