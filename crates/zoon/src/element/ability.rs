@@ -76,3 +76,17 @@ pub trait Hoverable<T: RawEl>: UpdateRawEl<T> + Sized {
         })
     }
 }
+
+// ------ Hookable ------
+
+pub trait Hookable<T: RawEl>: UpdateRawEl<T> + Sized {
+    fn after_insert(self, handler: impl FnOnce() + Clone + 'static) -> Self {
+        let handler = move || (handler.clone())();
+        self
+    }
+
+    fn after_remove(self, handler: impl FnOnce() + Clone + 'static) -> Self {
+        let handler = move || (handler.clone())();
+        self
+    }
+}
