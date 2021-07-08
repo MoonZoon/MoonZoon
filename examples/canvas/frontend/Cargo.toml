@@ -19,5 +19,13 @@ wasm-bindgen-test = "0.3.19"
 # zoon = { git = "https://github.com/MoonZoon/MoonZoon" }
 zoon = { path = "../../../crates/zoon" }
 
+[dependencies.web-sys]
+version = "0.3.51"
+features = [
+  'HtmlCanvasElement',
+  'CanvasRenderingContext2d',
+]
+default-features = false
+
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ['-Os']
