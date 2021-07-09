@@ -30,6 +30,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // rust-analyzer ignores `main.rs` when `linkedProjects` are set
         "crates/mzoon/Cargo.toml",
         // examples are ignored because they have own workspaces
+        "examples/canvas/Cargo.toml",
         "examples/chat/Cargo.toml",
         "examples/counter/Cargo.toml",
         "examples/counters/Cargo.toml",
@@ -52,6 +53,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 ## 3. Start example
 
 - Runnable examples (the list is continuously updated):
+  - `canvas`
   - `chat`
   - `counter`
   - `counters`
