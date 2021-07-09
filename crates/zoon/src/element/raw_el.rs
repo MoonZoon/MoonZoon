@@ -12,7 +12,7 @@ pub trait UpdateRawEl<T: RawEl> {
 }
 
 pub trait RawEl: Sized {
-    type WSElement: AsRef<Node> + AsRef<EventTarget> + AsRef<JsValue> + AsRef<web_sys::Element>;
+    type WSElement: AsRef<Node> + AsRef<EventTarget> + AsRef<JsValue> + AsRef<web_sys::Element> + Clone + 'static;
 
     fn update_dom_builder(
         self,
@@ -108,4 +108,12 @@ pub trait RawEl: Sized {
         name: impl IntoCowStr<'static>,
         value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
     ) -> Self;
+
+    fn after_insert(self, handler: impl FnOnce(Self::WSElement) + 'static) -> Self {
+        self.update_dom_builder(|dom_builder| dom_builder.after_inserted(handler))
+    }
+
+    fn after_remove(self, handler: impl FnOnce(Self::WSElement) + 'static) -> Self {
+        self.update_dom_builder(|dom_builder| dom_builder.after_removed(handler))
+    }
 }
