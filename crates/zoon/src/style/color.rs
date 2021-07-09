@@ -11,6 +11,7 @@ pub trait Color<'a>: IntoCowStr<'a> {}
 pub enum NamedColor {
     Green2,
     Green5,
+    Gray5,
     Gray8,
     Gray10,
     Red2,
@@ -24,6 +25,7 @@ impl<'a> IntoCowStr<'a> for NamedColor {
         match self {
             NamedColor::Green2 => "darkgreen",
             NamedColor::Green5 => "green",
+            NamedColor::Gray5 => "gray",
             NamedColor::Gray8 => "lightgray",
             NamedColor::Gray10 => "white",
             NamedColor::Red2 => "darkred",
