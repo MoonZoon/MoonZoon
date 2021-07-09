@@ -105,7 +105,7 @@ We'll look at the `Button` element code (`crates/zoon/src/element/button.rs`). `
 There are three sections: `Element`, `Abilities` and `Attributes`.
 
 ```rust
-use zoon::*;
+use crate::{web_sys::HtmlDivElement, *}; // `crate` == `zoon`
 use std::marker::PhantomData;
 
 // ------ ------
@@ -160,6 +160,9 @@ impl<LabelFlag, OnPressFlag> Styleable<'_, RawHtmlEl> for Button<LabelFlag, OnPr
 impl<LabelFlag, OnPressFlag> KeyboardEventAware<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
 impl<LabelFlag, OnPressFlag> Focusable for Button<LabelFlag, OnPressFlag> {}
 impl<LabelFlag, OnPressFlag> Hoverable<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
+impl<LabelFlag, OnPressFlag> Hookable<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {
+    type WSElement = HtmlDivElement;
+}
 ```
 Abilities are basically simple traits. For example when you implement `Styleable` then users can call the `.s(...)` method on your element:
 
@@ -260,6 +263,75 @@ error[E0277]: the trait bound `LabelFlagSet: FlagNotSet` is not satisfied
 20 |.label("+"))
    | ^^^^^ the trait `FlagNotSet` is not implemented for `LabelFlagSet`
 ```
+
+---
+
+## Lifecycle Hooks
+
+The **Canvas** example parts:
+
+```rust
+use zoon::{*, web_sys::{CanvasRenderingContext2d, HtmlCanvasElement}};
+
+#[static_ref]
+fn canvas_context() -> &'static Mutable<Option<SendWrapper<CanvasRenderingContext2d>>> {
+    Mutable::new(None)
+}
+
+fn set_canvas_context(canvas: HtmlCanvasElement) {
+    let ctx = canvas
+        .get_context("2d")
+        .unwrap_throw()
+        .unwrap_throw()
+        .unchecked_into::<CanvasRenderingContext2d>();
+    canvas_context().set(Some(SendWrapper::new(ctx)));
+    paint_canvas();
+}
+
+fn remove_canvas_context() {
+    canvas_context().take();
+}
+
+fn canvas() -> impl Element {
+    Canvas::new()
+        .width(300)
+        .height(300)
+        .after_insert(set_canvas_context)
+        .after_remove(|_| remove_canvas_context())
+}
+```
+
+- You can call methods (_hooks_) `after_insert` and `after_remove` on all _elements_ that implement the _ability_ `Hookable`.
+
+- Hooks allow you to access the DOM nodes directly. It may be quite verbose but you have the full power of the crate [web_sys](https://docs.rs/web-sys/) under your hands.
+
+- [SendWrapper](https://docs.rs/send_wrapper/0.5.0/send_wrapper/struct.SendWrapper.html) allows you to store non-`Send` types (e.g. `web_sys` elements) to statics. 
+  - _Note:_ The Hooks API will be probably revisited once Wasm fully support multithreading and we know more use-cases.
+
+The `Hookable` ability / trait:
+
+```rust
+pub trait Hookable<T: RawEl>: UpdateRawEl<T> + Sized {
+    type WSElement: JsCast;
+
+    fn after_insert(self, handler: impl FnOnce(Self::WSElement) + Clone + 'static) -> Self {
+        // ...
+    }
+
+    fn after_remove(self, handler: impl FnOnce(Self::WSElement) + Clone + 'static) -> Self {
+        // ...
+    }
+}
+```
+and the implementation for `Canvas`:
+```rust
+impl<WidthFlag, HeightFlag> Hookable<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {
+    type WSElement = HtmlCanvasElement;
+}
+```
+- It means hooks invoke your callbacks with a specific `web_sys` element defined in the implementation.
+   - In most cases it would be [HtmlDivElement](https://docs.rs/web-sys/0.3.51/web_sys/struct.HtmlDivElement.html).
+   - All `web_sys` elements implement [JsCast](https://docs.rs/wasm-bindgen/0.2.74/wasm_bindgen/trait.JsCast.html). It allows you to "convert" for instance `HtmlDivElement` to `HtmlElement` with `div.unchecked_ref::<HtmlElement>()`.
 
 ---
 

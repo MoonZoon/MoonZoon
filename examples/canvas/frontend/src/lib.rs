@@ -1,5 +1,7 @@
-use zoon::web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
-use zoon::*;
+use zoon::{
+    web_sys::{CanvasRenderingContext2d, HtmlCanvasElement},
+    *,
+};
 
 // ------ ------
 //    Statics
