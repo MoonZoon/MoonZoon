@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{web_sys::HtmlInputElement, *};
 use std::borrow::Cow;
 use std::marker::PhantomData;
 
@@ -74,6 +74,11 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Focusable
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Hoverable<RawHtmlEl>
     for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
 {
+}
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Hookable<RawHtmlEl>
+    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+{
+    type WSElement = HtmlInputElement;
 }
 
 // ------ ------

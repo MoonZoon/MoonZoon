@@ -22,7 +22,6 @@ zoon = { path = "../../../crates/zoon" }
 [dependencies.web-sys]
 version = "0.3.51"
 features = [
-  'HtmlCanvasElement',
   'CanvasRenderingContext2d',
 ]
 default-features = false
