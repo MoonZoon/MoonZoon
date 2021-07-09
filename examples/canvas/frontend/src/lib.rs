@@ -1,5 +1,5 @@
+use zoon::web_sys::{CanvasRenderingContext2d, HtmlCanvasElement};
 use zoon::*;
-use zoon::web_sys::{HtmlCanvasElement, CanvasRenderingContext2d};
 
 // ------ ------
 //    Statics
@@ -17,7 +17,7 @@ fn color() -> &'static Mutable<Color> {
 }
 
 #[static_ref]
-fn canvas_html_el() -> &'static Mutable<Option<SendWrapper<HtmlCanvasElement>>> {
+fn canvas_context() -> &'static Mutable<Option<SendWrapper<CanvasRenderingContext2d>>> {
     Mutable::new(None)
 }
 
@@ -26,52 +26,50 @@ fn canvas_html_el() -> &'static Mutable<Option<SendWrapper<HtmlCanvasElement>>> 
 // ------ ------
 
 fn toggle_color() {
-    use self::Color::{Red, Blue};
+    use self::Color::{Blue, Red};
     color().update(|color| if let Red = color { Blue } else { Red });
     paint_canvas();
 }
 
-fn paint_canvas() {
-    let canvas_lock = canvas_html_el().lock_ref();
-    let canvas = match canvas_lock.as_ref() {
-        Some(canvas) => canvas,
-        None => return
-    };
-
-    let style: JsValue = match color().get() {
-        Color::Red => "darkred",
-        Color::Blue => "darkblue"
-    }.into();
-
+fn set_canvas_context(canvas: HtmlCanvasElement) {
     let ctx = canvas
         .get_context("2d")
         .unwrap_throw()
         .unwrap_throw()
         .unchecked_into::<CanvasRenderingContext2d>();
-
-    ctx.set_line_width(10.);
-    ctx.set_fill_style(&style);
-    ctx.set_stroke_style(&style);
-    // Wall
-    ctx.stroke_rect(75., 140., 150., 110.);
-    // Door
-    ctx.fill_rect(130., 190., 40., 60.);
-    // Roof
-    ctx.begin_path();
-    ctx.move_to(50., 140.);
-    ctx.line_to(150., 60.);
-    ctx.line_to(250., 140.);
-    ctx.close_path();
-    ctx.stroke();
-}
-
-fn set_canvas_html_el(canvas: HtmlCanvasElement) {
-    canvas_html_el().set(Some(SendWrapper::new(canvas)));
+    canvas_context().set(Some(SendWrapper::new(ctx)));
     paint_canvas();
 }
 
-fn unset_canvas_html_el() {
-    canvas_html_el().take();
+fn remove_canvas_context() {
+    canvas_context().take();
+}
+
+fn paint_canvas() {
+    canvas_context().use_ref(|ctx| {
+        if let Some(ctx) = ctx.as_ref() {
+            let style = match color().get() {
+                Color::Red => "darkred",
+                Color::Blue => "darkblue",
+            }
+            .apply(JsValue::from);
+
+            ctx.set_line_width(10.);
+            ctx.set_fill_style(&style);
+            ctx.set_stroke_style(&style);
+            // Wall
+            ctx.stroke_rect(75., 140., 150., 110.);
+            // Door
+            ctx.fill_rect(130., 190., 40., 60.);
+            // Roof
+            ctx.begin_path();
+            ctx.move_to(50., 140.);
+            ctx.line_to(150., 60.);
+            ctx.line_to(250., 140.);
+            ctx.close_path();
+            ctx.stroke();
+        }
+    });
 }
 
 // ------ ------
@@ -89,8 +87,8 @@ fn canvas() -> impl Element {
     Canvas::new()
         .width(300)
         .height(300)
-        .after_insert(set_canvas_html_el)
-        .after_remove(|_| unset_canvas_html_el())
+        .after_insert(set_canvas_context)
+        .after_remove(|_| remove_canvas_context())
 }
 
 fn change_color_button() -> impl Element {
@@ -98,8 +96,7 @@ fn change_color_button() -> impl Element {
     Button::new()
         .s(Padding::new().all(10))
         .s(Background::new()
-            .color_signal(hovered_signal.map_bool(|| NamedColor::Green5, || NamedColor::Green2))
-        )
+            .color_signal(hovered_signal.map_bool(|| NamedColor::Green5, || NamedColor::Green2)))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .label("Change color")
         .on_press(toggle_color)
@@ -113,4 +110,3 @@ fn change_color_button() -> impl Element {
 pub fn start() {
     start_app("app", root);
 }
-

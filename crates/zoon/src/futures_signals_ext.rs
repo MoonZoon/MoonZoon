@@ -1,6 +1,6 @@
 use crate::*;
 use futures_signals::{
-    signal::{Mutable, MutableSignal, MutableSignalCloned},
+    signal::{Mutable, MutableLockRef, MutableSignal, MutableSignalCloned},
     signal_vec::{MutableVec, MutableVecLockMut, MutableVecLockRef},
 };
 use std::mem;
@@ -26,6 +26,8 @@ pub trait MutableExt<A> {
     {
         self.map_mut(mem::take)
     }
+
+    fn use_ref(&self, f: impl FnOnce(&MutableLockRef<A>));
 
     fn new_and_signal(value: A) -> (Self, MutableSignal<A>)
     where
@@ -60,6 +62,11 @@ impl<A> MutableExt<A> for Mutable<A> {
     #[inline]
     fn update_mut(&self, f: impl FnOnce(&mut A)) {
         f(&mut self.lock_mut())
+    }
+
+    #[inline]
+    fn use_ref(&self, f: impl FnOnce(&MutableLockRef<A>)) {
+        f(&self.lock_ref())
     }
 
     fn new_and_signal(value: A) -> (Self, MutableSignal<A>)

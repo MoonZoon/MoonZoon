@@ -37,7 +37,9 @@ pub use raw_text::RawText;
 // --
 
 pub mod ability;
-pub use ability::{Focusable, Hoverable, Hookable, Key, KeyboardEvent, KeyboardEventAware, Styleable};
+pub use ability::{
+    Focusable, Hookable, Hoverable, Key, KeyboardEvent, KeyboardEventAware, Styleable,
+};
 
 // ------ Element ------
 
