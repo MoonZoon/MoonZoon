@@ -36,6 +36,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         "examples/counters/Cargo.toml",
         "examples/js-framework-benchmark/keyed/Cargo.toml",
         "examples/svg/Cargo.toml",
+        "examples/viewport/Cargo.toml",
         "examples/timer/Cargo.toml",
     ],
     "rust-analyzer.diagnostics.disabled": [
@@ -59,6 +60,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   - `counters`
   - `js-framework-benchmark/keyed`
   - `svg`
+  - `viewport`
   - `timer`
 
 ```sh

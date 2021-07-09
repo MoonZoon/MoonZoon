@@ -16,7 +16,6 @@ crate-type = ["cdylib"]
 wasm-bindgen-test = "0.3.19"
 
 [dependencies]
-# zoon = { git = "https://github.com/MoonZoon/MoonZoon" }
 zoon = { path = "../../../crates/zoon" }
 strum = { version = "0.20.0", default-features = false, features = ["derive"] }
 
