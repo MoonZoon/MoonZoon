@@ -1,5 +1,4 @@
-use crate::web_sys::HtmlCanvasElement;
-use crate::*;
+use crate::{web_sys::HtmlCanvasElement, *};
 use std::marker::PhantomData;
 
 // ------ ------

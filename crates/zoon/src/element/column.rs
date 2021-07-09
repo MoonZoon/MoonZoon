@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{web_sys::HtmlDivElement, *};
 use std::marker::PhantomData;
 
 // ------ ------
@@ -44,6 +44,9 @@ impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Column<EmptyFlag> {
 impl<EmptyFlag> Styleable<'_, RawHtmlEl> for Column<EmptyFlag> {}
 impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Column<EmptyFlag> {}
 impl<EmptyFlag> Hoverable<RawHtmlEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> Hookable<RawHtmlEl> for Column<EmptyFlag> {
+    type WSElement = HtmlDivElement;
+}
 
 // ------ ------
 //  Attributes
