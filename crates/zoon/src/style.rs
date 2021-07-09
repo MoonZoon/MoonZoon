@@ -5,18 +5,18 @@ use std::collections::BTreeMap;
 mod background;
 mod color;
 mod font;
+mod height;
 mod padding;
 mod spacing;
 mod width;
-mod height;
 
 pub use background::Background;
 pub use color::{Color, NamedColor};
 pub use font::Font;
+pub use height::Height;
 pub use padding::Padding;
 pub use spacing::Spacing;
 pub use width::Width;
-pub use height::Height;
 
 type StaticCSSProps<'a> = BTreeMap<&'a str, Cow<'a, str>>;
 type DynamicCSSProps = BTreeMap<&'static str, BoxedCssSignal>;
