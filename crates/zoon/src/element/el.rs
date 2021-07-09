@@ -21,7 +21,7 @@ impl El<ChildFlagNotSet> {
     }
 }
 
-impl Element for El<ChildFlagSet> {
+impl<ChildFlag> Element for El<ChildFlag> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
