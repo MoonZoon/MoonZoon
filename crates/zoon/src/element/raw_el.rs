@@ -12,7 +12,7 @@ pub trait UpdateRawEl<T: RawEl> {
 }
 
 pub trait RawEl: Sized {
-    type WSElement: AsRef<Node> + AsRef<EventTarget> + AsRef<JsValue> + AsRef<web_sys::Element> + Clone + 'static;
+    type WSElement: AsRef<Node> + AsRef<EventTarget> + AsRef<JsValue> + AsRef<web_sys::Element> + Clone + 'static + JsCast;
 
     fn update_dom_builder(
         self,
