@@ -1,5 +1,5 @@
 use zoon::*;
-use zoon::web_sys::{HtmlElement, HtmlCanvasElement, CanvasRenderingContext2d};
+use zoon::web_sys::{HtmlCanvasElement, CanvasRenderingContext2d};
 
 // ------ ------
 //    Statics
@@ -17,7 +17,7 @@ fn color() -> &'static Mutable<Color> {
 }
 
 #[static_ref]
-fn canvas_html_el() -> &'static Mutable<Option<SendWrapper<HtmlElement>>> {
+fn canvas_html_el() -> &'static Mutable<Option<SendWrapper<HtmlCanvasElement>>> {
     Mutable::new(None)
 }
 
@@ -44,7 +44,6 @@ fn paint_canvas() {
     }.into();
 
     let ctx = canvas
-        .unchecked_ref::<HtmlCanvasElement>()
         .get_context("2d")
         .unwrap_throw()
         .unwrap_throw()
@@ -66,7 +65,7 @@ fn paint_canvas() {
     ctx.stroke();
 }
 
-fn set_canvas_html_el(canvas: HtmlElement) {
+fn set_canvas_html_el(canvas: HtmlCanvasElement) {
     canvas_html_el().set(Some(SendWrapper::new(canvas)));
     paint_canvas();
 }

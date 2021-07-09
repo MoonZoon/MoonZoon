@@ -80,17 +80,17 @@ pub trait Hoverable<T: RawEl>: UpdateRawEl<T> + Sized {
 // ------ Hookable ------
 
 pub trait Hookable<T: RawEl>: UpdateRawEl<T> + Sized {
-    fn after_insert(self, handler: impl FnOnce(T::WSElement) + Clone + 'static) -> Self {
-        // let handler = move |ws_element| (handler.clone())(ws_element);
+    type WSElement: JsCast;
+
+    fn after_insert(self, handler: impl FnOnce(Self::WSElement) + Clone + 'static) -> Self {
         self.update_raw_el(|raw_el| {
-            raw_el.after_insert(handler)
+            raw_el.after_insert(|ws_element| handler(ws_element.unchecked_into()))
         })
     }
 
-    fn after_remove(self, handler: impl FnOnce(T::WSElement) + Clone + 'static) -> Self {
-        // let handler = move |ws_element| (handler.clone())(ws_element);
+    fn after_remove(self, handler: impl FnOnce(Self::WSElement) + Clone + 'static) -> Self {
         self.update_raw_el(|raw_el| {
-            raw_el.after_remove(handler)
+            raw_el.after_remove(|ws_element| handler(ws_element.unchecked_into()))
         })
     }
 }
