@@ -30,6 +30,7 @@ lexical = { git = "https://github.com/Alexhuszagh/rust-lexical", rev = "7010efd"
 [dependencies.web-sys]
 version = "0.3.51"
 features = [
+  'Element',
   'Headers',
   'HtmlButtonElement',
   'HtmlCanvasElement',
