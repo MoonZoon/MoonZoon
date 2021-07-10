@@ -1,0 +1,8 @@
+body {
+    min-height: 100vh;
+}
+
+* {
+    flex: none;
+    overflow: auto;
+}

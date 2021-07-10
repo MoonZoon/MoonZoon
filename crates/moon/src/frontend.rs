@@ -59,6 +59,8 @@ impl Frontend {
           <title>{title}</title>
           <link rel="preload" href="/_api/pkg/frontend_bg{cache_busting_string}.wasm" as="fetch" type="application/wasm" crossorigin>
           <link rel="modulepreload" href="/_api/pkg/frontend{cache_busting_string}.js" crossorigin>
+          <style>{normalize_css}</style>
+          <style>{basic_css}</style>
           {append_to_head}
         </head>
     
@@ -78,6 +80,8 @@ impl Frontend {
         
         </html>"#,
             title = self.title,
+            normalize_css = include_str!("../css/modern-normalize.min.css"),
+            basic_css = include_str!("../css/basic.css"),
             append_to_head = self.append_to_head,
             body_content = self.body_content,
             reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"),
