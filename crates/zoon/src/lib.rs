@@ -33,7 +33,7 @@ pub use std::future::Future;
 pub use style::*;
 pub use task::Task;
 pub use timer::Timer;
-pub use viewport::{Viewport, Scene};
+pub use viewport::{Scene, Viewport};
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 use wasm_bindgen_futures::spawn_local;
 pub use wasm_bindgen_futures::JsFuture;

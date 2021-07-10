@@ -17,7 +17,7 @@ impl Row<EmptyFlagSet> {
         Self {
             raw_el: RawHtmlEl::new("div")
                 .attr("class", "row")
-                .style("display", "flex"),
+                .style("display", "inline-flex"),
             flags: PhantomData,
         }
     }
