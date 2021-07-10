@@ -11,6 +11,7 @@ mod futures_signals_ext;
 mod style;
 mod task;
 mod timer;
+mod viewport;
 
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use dom::{document, window};
@@ -32,6 +33,7 @@ pub use std::future::Future;
 pub use style::*;
 pub use task::Task;
 pub use timer::Timer;
+pub use viewport::{Viewport, Scene};
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 use wasm_bindgen_futures::spawn_local;
 pub use wasm_bindgen_futures::JsFuture;

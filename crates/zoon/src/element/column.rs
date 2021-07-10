@@ -44,6 +44,7 @@ impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Column<EmptyFlag> {
 impl<EmptyFlag> Styleable<'_, RawHtmlEl> for Column<EmptyFlag> {}
 impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Column<EmptyFlag> {}
 impl<EmptyFlag> Hoverable<RawHtmlEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> MutableViewport<RawHtmlEl> for Column<EmptyFlag> {}
 impl<EmptyFlag> Hookable<RawHtmlEl> for Column<EmptyFlag> {
     type WSElement = HtmlDivElement;
 }
