@@ -17,7 +17,7 @@ impl Column<EmptyFlagSet> {
         Self {
             raw_el: RawHtmlEl::new("div")
                 .attr("class", "column")
-                .style("display", "flex")
+                .style("display", "inline-flex")
                 .style("flex-direction", "column"),
             flags: PhantomData,
         }
