@@ -35,6 +35,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         "examples/counter/Cargo.toml",
         "examples/counters/Cargo.toml",
         "examples/js-framework-benchmark/keyed/Cargo.toml",
+        "examples/pages/Cargo.toml",
         "examples/svg/Cargo.toml",
         "examples/viewport/Cargo.toml",
         "examples/timer/Cargo.toml",
@@ -59,6 +60,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   - `counter`
   - `counters`
   - `js-framework-benchmark/keyed`
+  - `pages`
   - `svg`
   - `viewport`
   - `timer`
