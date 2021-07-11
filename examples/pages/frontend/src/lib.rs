@@ -1,6 +1,20 @@
 use zoon::*;
 
-mod admin;
+mod report;
+mod route;
+
+use route::{Route, router};
+
+// ------ ------
+//     Types
+// ------ ------
+
+#[derive(Clone, Copy, PartialEq, PartialOrd)]
+enum PageId {
+    Report,
+    Home,
+    Unknown,
+}
 
 // ------ ------
 //    Statics
@@ -8,21 +22,17 @@ mod admin;
 
 static USER_NAME: &str = "John Doe";
 
-// ------ ------
-//    Signals
-// ------ ------
-
-#[route]
-#[derive(Copy, Clone)]
-enum Route {
-    #[route("admin", ..)]
-    Admin(admin::Route),
-    #[route()]
-    Root,
+#[static_ref]
+fn page_id() -> &'static Mutable<PageId> {
+    Mutable::new(PageId::Unknown)
 }
 
-fn route_signal() -> impl Signal<Item = Option<Route>> {
-    url().map(Route::from_url)
+// ------ ------
+//   Commands
+// ------ ------
+
+fn set_page_id(page_id: PageId) {
+    page_id()().set_neq(page_id);
 }
 
 // ------ ------
@@ -38,23 +48,16 @@ fn root() -> impl Element {
 fn header() -> impl Element {
     Row::new()
         .item(Link::new().label("Home").to(Route::root()))
-        .item(Link::new().label("Report").to(Route::admin().report().frequency(None)))
+        .item(Link::new().label("Report").to(Route::report()))
 }
 
 fn page() -> impl Element {
     El::new()
-        .child_signal(route_signal().map(|route| match route {
-                Some(Route::Admin(route)) => {
-                    admin::page(route).into_raw_element()
-                }
-                Some(Route::Root) => {
-                    El::new().child("welcome home!").into_raw_element()
-                }
-                None => {
-                    El::new().child("404").into_raw_element()
-                }
+        .child_signal(page_id().signal().map(|page_id| match page_id {
+            PageId::Report => report::page().into_raw_element(),
+            PageId::Home => El::new().child("welcome home!").into_raw_element(),
+            PageId::Unknown => El::new().child("404").into_raw_element(),
         }))
-        
 }
 
 // ------ ------
@@ -63,5 +66,6 @@ fn page() -> impl Element {
 
 #[wasm_bindgen(start)]
 pub fn start() {
+    router();
     start_app("app", root);
 }
