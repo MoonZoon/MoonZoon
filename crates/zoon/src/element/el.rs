@@ -51,7 +51,7 @@ impl<ChildFlag> Hookable<RawHtmlEl> for El<ChildFlag> {
 // ------ ------
 
 impl<'a, ChildFlag> El<ChildFlag> {
-    pub fn child(mut self, child: impl IntoElement<'a> + 'a) -> El<ChildFlagSet>
+    pub fn child(mut self, child: impl IntoOptionElement<'a> + 'a) -> El<ChildFlagSet>
     where
         ChildFlag: FlagNotSet,
     {
@@ -61,7 +61,7 @@ impl<'a, ChildFlag> El<ChildFlag> {
 
     pub fn child_signal(
         mut self,
-        child: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static,
+        child: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> El<ChildFlagSet>
     where
         ChildFlag: FlagNotSet,

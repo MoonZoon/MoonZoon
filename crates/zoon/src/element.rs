@@ -63,6 +63,12 @@ impl IntoDom for RawElement {
     }
 }
 
+impl Element for RawElement {
+    fn into_raw_element(self) -> RawElement {
+        self
+    }
+}
+
 // ------ IntoDom ------
 
 pub trait IntoDom {
