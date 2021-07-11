@@ -1,5 +1,5 @@
+use crate::{report, set_page_id, PageId};
 use zoon::*;
-use crate::{PageId, set_page_id, report};
 
 // ------ Router ------
 

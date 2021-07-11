@@ -1,5 +1,9 @@
+use crate::{route::Route, USER_NAME};
+use std::borrow::Cow;
 use zoon::*;
-use crate::{USER_NAME, route::Route};
+
+const DAILY: &str = "daily";
+const WEEKLY: &str = "weekly";
 
 // ------ ------
 //     Types
@@ -14,21 +18,25 @@ pub enum Frequency {
 impl Frequency {
     fn as_str(&self) -> &'static str {
         match self {
-            Self::Daily => "daily",
-            Self::Weekly => "weekly",
+            Self::Daily => DAILY,
+            Self::Weekly => WEEKLY,
         }
     }
 }
 
-impl FromRouteSegment for Frequency {
+impl RouteSegment for Frequency {
     fn from_route_segment(segment: &str) -> Option<Self> {
         match segment {
-            "daily" => Some(Frequency::Daily),
-            "weekly" => Some(Frequency::Weekly),
+            DAILY => Some(Frequency::Daily),
+            WEEKLY => Some(Frequency::Weekly),
             _ => None,
         }
     }
-} 
+
+    fn into_route_segment(self) -> Cow<'static, str> {
+        self.as_str()
+    }
+}
 
 // ------ ------
 //    Statics
@@ -52,9 +60,12 @@ pub fn set_frequency(frequency: Frequency) {
 // ------ ------
 
 fn frequency_for_link() -> impl Signal<Item = Frequency> {
-    use Frequency::{Daily, Weekly};
     frequency().signal().map(|frequency| {
-        if let Daily = frequency { Weekly } else { Daily }
+        if let Frequency::Daily = frequency {
+            Frequency::Weekly
+        } else {
+            Frequency::Daily
+        }
     })
 }
 
@@ -69,7 +80,11 @@ pub fn page() -> impl Element {
 }
 
 fn greeting(frequency: Frequency) -> impl Element {
-    format!("Hello {}! This is your {} report.", USER_NAME, frequency.as_str())
+    format!(
+        "Hello {}! This is your {} report.",
+        USER_NAME,
+        frequency.as_str()
+    )
 }
 
 fn switch_frequency_link(frequency: Frequency) -> impl Element {
