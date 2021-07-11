@@ -32,7 +32,7 @@ fn page_id() -> &'static Mutable<PageId> {
 // ------ ------
 
 fn set_page_id(page_id: PageId) {
-    page_id()().set_neq(page_id);
+    page_id().set_neq(page_id);
 }
 
 // ------ ------
@@ -47,8 +47,8 @@ fn root() -> impl Element {
 
 fn header() -> impl Element {
     Row::new()
-        .item(Link::new().label("Home").to(Route::root()))
-        .item(Link::new().label("Report").to(Route::report()))
+        .item(Link::new().label("Home").to(Route::Root))
+        .item(Link::new().label("Report").to(Route::Report))
 }
 
 fn page() -> impl Element {
