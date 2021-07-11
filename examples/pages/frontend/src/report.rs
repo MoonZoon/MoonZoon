@@ -1,5 +1,5 @@
 use zoon::*;
-use crate::USER_NAME;
+use crate::{USER_NAME, route::Route};
 
 // ------ ------
 //     Types
@@ -75,5 +75,5 @@ fn greeting(frequency: Frequency) -> impl Element {
 fn switch_frequency_link(frequency: Frequency) -> impl Element {
     Link::new()
         .label(format!("Switch to {}", frequency.as_str()))
-        .to(Route::report_with_frequency(frequency))
+        .to(Route::ReportWithFrequency { frequency })
 }

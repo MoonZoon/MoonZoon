@@ -6,11 +6,11 @@ use crate::{PageId, set_page_id, report};
 #[static_ref]
 pub fn router() -> &'static Router<Route> {
     Router::new(|route| match route {
-        Some(Route::Report(Some(frequency))) => {
+        Some(Route::ReportWithFrequency { frequency }) => {
             set_page_id(PageId::Report);
             report::set_frequency(frequency);
         }
-        Some(Route::Report(None)) => {
+        Some(Route::Report) => {
             set_page_id(PageId::Report);
         }
         Some(Route::Root) => {
@@ -26,23 +26,10 @@ pub fn router() -> &'static Router<Route> {
 
 #[route]
 pub enum Route {
-    Report(Option<report::Frequency>),
-    Root,
-}
-
-impl Route {  
     #[route("report", frequency)]
-    fn report_with_frequency(frequency: report::Frequency) -> Route {
-        Route::Report(Some(frequency))
-    }
-
+    ReportWithFrequency { frequency: report::Frequency },
     #[route("report")]
-    fn report() -> Route {
-        Route::Report(None)
-    }
-
+    Report,
     #[route]
-    fn root() -> Route {
-        Route::Root
-    }
+    Root,
 }
