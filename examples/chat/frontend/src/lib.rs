@@ -96,7 +96,7 @@ fn new_message_input() -> impl Element {
     TextInput::new()
         .s(Padding::new().x(10))
         .s(Font::new().size(17))
-        .focus()
+        .focused()
         .on_change(set_new_message_text)
         .label_hidden("New message text")
         .placeholder(Placeholder::new("Message"))

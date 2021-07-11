@@ -4,8 +4,8 @@ use std::borrow::Borrow;
 // ------ Focusable ------
 
 pub trait Focusable: UpdateRawEl<RawHtmlEl> + Sized {
-    fn focus(self) -> Self {
-        self.update_raw_el(|raw_el| raw_el.focus())
+    fn focused(self) -> Self {
+        self.update_raw_el(|raw_el| raw_el.focused())
     }
 }
 
@@ -125,11 +125,11 @@ pub trait MutableViewport<T: RawEl>: UpdateRawEl<T> + Sized {
         })
     }
 
-    fn signal_for_viewport_x(self, x: impl Signal<Item = i32> + Unpin + 'static) -> Self {
+    fn viewport_x_signal(self, x: impl Signal<Item = i32> + Unpin + 'static) -> Self {
         self.update_raw_el(|raw_el| raw_el.prop_signal("scrollLeft", x))
     }
 
-    fn signal_for_viewport_y(self, y: impl Signal<Item = i32> + Unpin + 'static) -> Self {
+    fn viewport_y_signal(self, y: impl Signal<Item = i32> + Unpin + 'static) -> Self {
         self.update_raw_el(|raw_el| raw_el.prop_signal("scrollTop", y))
     }
 }

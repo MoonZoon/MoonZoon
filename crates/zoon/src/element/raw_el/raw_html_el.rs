@@ -69,7 +69,7 @@ impl RawEl for RawHtmlEl {
 }
 
 impl RawHtmlEl {
-    pub fn focus(mut self) -> Self {
+    pub fn focused(mut self) -> Self {
         self.dom_builder = self.dom_builder.focused(true);
         self
     }
