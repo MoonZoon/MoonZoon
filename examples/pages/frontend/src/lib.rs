@@ -3,7 +3,7 @@ use zoon::*;
 mod report;
 mod route;
 
-use route::{Route, router};
+use route::{router, Route};
 
 // ------ ------
 //     Types
@@ -40,9 +40,7 @@ fn set_page_id(page_id: PageId) {
 // ------ ------
 
 fn root() -> impl Element {
-    Column::new()
-        .item(header())
-        .item(page())
+    Column::new().item(header()).item(page())
 }
 
 fn header() -> impl Element {
@@ -52,12 +50,11 @@ fn header() -> impl Element {
 }
 
 fn page() -> impl Element {
-    El::new()
-        .child_signal(page_id().signal().map(|page_id| match page_id {
-            PageId::Report => report::page().into_raw_element(),
-            PageId::Home => El::new().child("welcome home!").into_raw_element(),
-            PageId::Unknown => El::new().child("404").into_raw_element(),
-        }))
+    El::new().child_signal(page_id().signal().map(|page_id| match page_id {
+        PageId::Report => report::page().into_raw_element(),
+        PageId::Home => El::new().child("Welcome Home!").into_raw_element(),
+        PageId::Unknown => El::new().child("404").into_raw_element(),
+    }))
 }
 
 // ------ ------
