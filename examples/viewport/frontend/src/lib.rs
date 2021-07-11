@@ -60,8 +60,8 @@ fn rectangles() -> impl Element {
         .s(Padding::new().all(15))
         .s(Background::new().color(NamedColor::Gray5))
         .on_viewport_location_change(on_viewport_change)
-        .signal_for_viewport_x(viewport_x().signal())
-        .signal_for_viewport_y(viewport_y().signal())
+        .viewport_x_signal(viewport_x().signal())
+        .viewport_y_signal(viewport_y().signal())
         .items(iter::repeat_with(rectangle).take(5))
 }
 

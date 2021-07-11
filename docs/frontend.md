@@ -409,13 +409,13 @@ _
 
 But there is also a problem with HSL. Let's compare these two colors:
 
-<img src="images/yellow_hsl.svg" height="30px">
-<img src="images/blue_hsl.svg" height="30px">
+<img src="images/yellow_hsl.svg" height="30px" alt="Yellow HSL">
+<img src="images/blue_hsl.svg" height="30px" alt="Blue HSL">
 
 Are we sure they have the same lightness `50%`? I don't think so. The human eye perceives yellow as brighter than blue. Fortunately there is a color system that takes into account this perception: [HSLuv](https://www.hsluv.org/).
 
-<img src="images/yellow_hsluv.svg" height="30px">
-<img src="images/blue_hsluv.svg" height="30px">
+<img src="images/yellow_hsluv.svg" height="30px" alt="Yellow HSLuv">
+<img src="images/blue_hsluv.svg" height="30px" alt="Blue HSLuv">
 
 That's why Zoon uses only HSLuv, represented in the code as `hsl(h, s, l)` or `hsla(h, s, l, a)`, where:
 - `h` ;  _hue_  ; 0 - 360
@@ -448,7 +448,7 @@ CSS supports `cm`, `mm`, `in`, `px`, `pt`, `pc`, `em`, `ex`, `ch`, `rem`, `vw`, 
 
 Have you ever ever tried to align an element with a text block? An example:
 
-<img src="images/element_text_alignment.svg" height="100px">
+<img src="images/element_text_alignment.svg" height="100px" alt="Element text alignment">
 
 How can we measure or even remove the space above the `Zoon` text? It's an incredibly difficult task because the space is different for each font and it's impossible in CSS without ugly error-prone hacks.
 
@@ -472,7 +472,7 @@ Paragraph::new()
 
 would be rendered as:
 
-<img src="images/font_size_example.svg" height="110px">
+<img src="images/font_size_example.svg" height="110px" alt="Font Size example">
 
 --
 
@@ -480,33 +480,51 @@ Related blog post: [_Font size is useless; let’s fix it_](https://tonsky.me/bl
 
 ---
 
-## View & Viewport
+## Viewport
 
-The **Time Tracker** example part:
-   - _Note:_ The code below may differ from the current Time Tracker implementation.
+The **Viewport** example parts:
 
 ```rust
-fn root() -> impl IntoRoot {
-    View::new()
-        .on_click(super::view_clicked)
-        .viewport(
-            ViewPort::new()
-                .on_width_change(super::update_viewport_width)
-        )
-        .child(
-            Column::new()
-                .items(array::IntoIter::new([
-                    header(),
-                    menu_panel(),
-                    page(),
-                ])
-        )
+#[static_ref]
+fn viewport_y() -> &'static Mutable<i32> {
+    Mutable::new(0)
+}
+
+fn jump_to_top() {
+    viewport_y().set(0);
+}
+
+fn jump_to_bottom() {
+    viewport_y().set(i32::MAX);
+}
+
+fn on_viewport_change(_scene: Scene, viewport: Viewport) {
+    viewport_y().set(viewport.y());
+    // ...
+}
+
+fn rectangles() -> impl Element {
+    Column::new()
+        // ...
+        .on_viewport_location_change(on_viewport_change)
+        .viewport_y_signal(viewport_y().signal())
+        .items(iter::repeat_with(rectangle).take(5))
 }
 ```
 
-- `View` represents the root container for the web page.
-- `Viewport` represents a part of the _View_ currently visible by the user. It could be used for scrolling and to help with writing responsive elements.
-- The _view/viewport_ concept will probably be used for scrollable elements, too.  
+The concept of `Scene` + `Viewport` has been "stolen" from the Elm world. Just like the picture below. You can find them in [Elm docs](https://package.elm-lang.org/packages/elm/browser/latest/Browser.Dom).
+
+<img src="images/scene_viewport.svg" width="500px" alt="Scene and Viewport">
+
+- `Scene` is the part of an element that contains other elements.
+
+- `Viewport` represents the part of the _Scene_ currently visible by the user. It could be used for scrolling/jumping and to help with writing responsive elements.
+
+- You can set the `Viewport` location in elements that implement the `MutableViewport` ability (e.g. `Row`, `Column` or `El`).
+
+- _Notes_:
+   - `Viewport`'s `x` and `y` may be negative while the user is scrolling on the phone.
+   - `x` and `y` are automatically clamped. So you can write things like `viewport_y().set(i32::MAX)` and don't be afraid the viewport will be moved outside of the scene.
 
 ---
 
