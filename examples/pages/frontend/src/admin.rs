@@ -1,27 +1,19 @@
+use zoon::*;
+
 mod report;
 
-blocks!{
-    append_blocks![report]
+#[route]
+#[derive(Copy, Clone)]
+enum Route {
+    #[route("report", ..)]
+    Report(report::Route),
+}
 
-    #[route]
-    #[derive(Copy, Clone)]
-    enum Route {
-        #[route("report", ..)]
-        Report(report::Route),
-    }
+// ------ ------
+//     View
+// ------ ------
 
-    #[cache]
-    fn route() -> Option<Route> {
-        if let app::Route::Admin(route) = app::route() {
-            Some(route)
-        } else {
-            None
-        }
-    }
-
-    #[el]
-    fn page() -> El {
-        report::page()
-    }
-
+fn page(route: Route) -> impl Element {
+    let Route::Report(route) = route;
+    report::page(route)
 }

@@ -2,72 +2,64 @@ use zoon::*;
 
 mod admin;
 
-blocks!{
-    append_blocks![admin]
+// ------ ------
+//    Statics
+// ------ ------
 
-    #[route]
-    #[derive(Copy, Clone)]
-    enum Route {
-        #[route("admin", ..)]
-        Admin(admin::Route),
-        #[route()]
-        Root,
-        Unknown,
-    }
+static USER_NAME: &str = "John Doe";
 
-    #[cache]
-    fn route() -> Route {
-        url().map(Route::from)
-    }
+// ------ ------
+//    Signals
+// ------ ------
 
-    #[s_var]
-    fn logged_user() -> &'static str {
-        "John Doe"
-    }
-
-    #[el]
-    fn root() -> Column {
-        column![
-            header(),
-            page(),
-        ]
-    }
-
-    #[el]
-    fn header() -> Row {
-        row![
-            link![
-                link::url(Route::root())
-                "Home"
-            ],
-            link![
-                link::url(Route::admin().report().frequency(None)),
-                "Report"
-            ],
-        ]
-    }
-
-    #[el]
-    fn page() -> El {
-        let route = route().inner();
-        match route {
-            Route::Admin(_) => {
-                admin::page()
-            }
-            Route::Root => {
-                el![
-                    "welcome home!",
-                ]
-            }
-            Route::Unknown => {
-                el![
-                    "404"
-                ]
-            }
-        }
-    }
-
+#[route]
+#[derive(Copy, Clone)]
+enum Route {
+    #[route("admin", ..)]
+    Admin(admin::Route),
+    #[route()]
+    Root,
 }
+
+fn route_signal() -> impl Signal<Item = Option<Route>> {
+    url().map(Route::from_url)
+}
+
+// ------ ------
+//     View
+// ------ ------
+
+fn root() -> impl Element {
+    Column::new()
+        .item(header())
+        .item(page())
+}
+
+fn header() -> impl Element {
+    Row::new()
+        .item(Link::new().label("Home").to(Route::root()))
+        .item(Link::new().label("Report").to(Route::admin().report().frequency(None)))
+}
+
+fn page() -> impl Element {
+    El::new()
+        .child_signal(route_signal().map(|route| match route {
+                Some(Route::Admin(route)) => {
+                    admin::page(route).into_raw_element()
+                }
+                Some(Route::Root) => {
+                    El::new().child("welcome home!").into_raw_element()
+                }
+                None => {
+                    El::new().child("404").into_raw_element()
+                }
+        }))
+        
+}
+
+// ------ ------
+//     Start
+// ------ ------
 
 #[wasm_bindgen(start)]
 pub fn start() {
