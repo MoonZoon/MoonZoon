@@ -1,39 +1,73 @@
 use zoon::*;
 
-#[static_ref]
-fn counter() -> &'static Mutable<i32> {
-    Mutable::new(0)
-}
+mod admin;
 
-fn increment() {
-    counter().update(|counter| counter + 1)
-}
+blocks!{
+    append_blocks![admin]
 
-fn decrement() {
-    counter().update(|counter| counter - 1)
-}
+    #[route]
+    #[derive(Copy, Clone)]
+    enum Route {
+        #[route("admin", ..)]
+        Admin(admin::Route),
+        #[route()]
+        Root,
+        Unknown,
+    }
 
-fn root() -> impl Element {
-    Column::new()
-        .item(Button::new().label("-").on_press(decrement))
-        .item(Text::with_signal(counter().signal()))
-        .item(Button::new().label("+").on_press(increment))
-}
+    #[cache]
+    fn route() -> Route {
+        url().map(Route::from)
+    }
 
-// ------ Alternative ------
-fn _root() -> impl Element {
-    let (counter, counter_signal) = Mutable::new_and_signal(0);
-    let on_press = move |step: i32| *counter.lock_mut() += step;
-    Column::new()
-        .item(
-            Button::new()
-                .label("-")
-                .on_press(clone!((on_press) move || on_press(-1))),
-        )
-        .item_signal(counter_signal)
-        .item(Button::new().label("+").on_press(move || on_press(1)))
+    #[s_var]
+    fn logged_user() -> &'static str {
+        "John Doe"
+    }
+
+    #[el]
+    fn root() -> Column {
+        column![
+            header(),
+            page(),
+        ]
+    }
+
+    #[el]
+    fn header() -> Row {
+        row![
+            link![
+                link::url(Route::root())
+                "Home"
+            ],
+            link![
+                link::url(Route::admin().report().frequency(None)),
+                "Report"
+            ],
+        ]
+    }
+
+    #[el]
+    fn page() -> El {
+        let route = route().inner();
+        match route {
+            Route::Admin(_) => {
+                admin::page()
+            }
+            Route::Root => {
+                el![
+                    "welcome home!",
+                ]
+            }
+            Route::Unknown => {
+                el![
+                    "404"
+                ]
+            }
+        }
+    }
+
 }
-// ---------- // -----------
 
 #[wasm_bindgen(start)]
 pub fn start() {
