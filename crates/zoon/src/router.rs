@@ -15,10 +15,18 @@ impl<R> Router<R> {
     }
 }
 
+// ------ FromRouteSegments ------
+
+pub trait FromRouteSegments: Sized {
+    fn from_route_segments(segments: Vec<String>) -> Option<Self>;
+}
+
 // ------ RouteSegment ------
 
 pub trait RouteSegment: Sized {
-    fn from_route_segment(segment: &str) -> Option<Self>;
+    fn from_string_segment(segment: &str) -> Option<Self>;
 
-    fn into_route_segment(self) -> Cow<'static, str>;
+    fn into_string_segment(self) -> Cow<'static, str>;
 }
+
+// @TODO for basic types (similar to `IntoCowStr` impls)
