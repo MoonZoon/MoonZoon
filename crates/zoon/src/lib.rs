@@ -29,7 +29,7 @@ pub use futures_signals_ext::{MutableExt, MutableVecExt, SignalExtMapBool};
 pub use js_sys::{self, Reflect};
 pub use paste;
 pub use pin_project::pin_project;
-pub use router::{Router, RouteSegment};
+pub use router::{Router, RouteSegment, FromRouteSegments};
 pub use send_wrapper::SendWrapper;
 pub use std::future::Future;
 pub use style::*;

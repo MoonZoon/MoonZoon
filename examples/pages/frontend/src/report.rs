@@ -25,7 +25,7 @@ impl Frequency {
 }
 
 impl RouteSegment for Frequency {
-    fn from_route_segment(segment: &str) -> Option<Self> {
+    fn from_string_segment(segment: &str) -> Option<Self> {
         match segment {
             DAILY => Some(Frequency::Daily),
             WEEKLY => Some(Frequency::Weekly),
@@ -33,7 +33,7 @@ impl RouteSegment for Frequency {
         }
     }
 
-    fn into_route_segment(self) -> Cow<'static, str> {
+    fn into_string_segment(self) -> Cow<'static, str> {
         self.as_str().into()
     }
 }
