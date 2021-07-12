@@ -24,12 +24,42 @@ pub fn router() -> &'static Router<Route> {
 
 // ------ Route ------
 
-#[route]
+// #[route]
+// pub enum Route {
+//     #[route("report", frequency)]
+//     ReportWithFrequency { frequency: report::Frequency },
+//     #[route("report")]
+//     Report,
+//     #[route]
+//     Root,
+// }
+
+// #[route]
 pub enum Route {
-    #[route("report", frequency)]
+    // #[route("report", frequency)]
     ReportWithFrequency { frequency: report::Frequency },
-    #[route("report")]
+    // #[route("report")]
     Report,
-    #[route]
+    // #[route]
     Root,
+}
+
+impl<'a> IntoCowStr<'a> for Route {
+    fn into_cow_str(self) -> std::borrow::Cow<'a, str> {
+        match self {
+            Route::ReportWithFrequency { frequency } => {
+                format!("/report/{}", frequency.into_route_segment()).into()
+            }
+            Route::Report => {
+                "/report".into()
+            }
+            Route::Root => {
+                "/".into()
+            }
+        }
+    }
+
+    fn take_into_cow_str(&mut self) -> std::borrow::Cow<'a, str> {
+        unimplemented!("take_into_cow_str not implemented for Route")
+    }
 }

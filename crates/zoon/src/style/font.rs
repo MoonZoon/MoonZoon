@@ -31,6 +31,11 @@ impl<'a> Font<'a> {
         self.static_css_props.insert("font-size", px(size));
         self
     }
+
+    pub fn underline(mut self) -> Self {
+        self.static_css_props.insert("text-decoration", "underline".into());
+        self
+    }
 }
 
 impl<'a> Style<'a> for Font<'a> {

@@ -9,6 +9,7 @@ pub trait Color<'a>: IntoCowStr<'a> {}
 
 #[derive(Clone, Copy, PartialEq, PartialOrd)]
 pub enum NamedColor {
+    Blue7,
     Green2,
     Green5,
     Gray5,
@@ -23,6 +24,7 @@ impl Color<'_> for NamedColor {}
 impl<'a> IntoCowStr<'a> for NamedColor {
     fn into_cow_str(self) -> Cow<'a, str> {
         match self {
+            NamedColor::Blue7 => "cornflowerblue",
             NamedColor::Green2 => "darkgreen",
             NamedColor::Green5 => "green",
             NamedColor::Gray5 => "gray",
