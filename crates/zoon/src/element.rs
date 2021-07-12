@@ -17,6 +17,9 @@ pub use el::El;
 pub mod label;
 pub use label::Label;
 
+pub mod link;
+pub use link::Link;
+
 pub mod row;
 pub use row::Row;
 

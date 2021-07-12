@@ -24,15 +24,15 @@ static USER_NAME: &str = "John Doe";
 
 #[static_ref]
 fn page_id() -> &'static Mutable<PageId> {
-    Mutable::new(PageId::Unknown)
+    Mutable::new(PageId::Report)
 }
 
 // ------ ------
 //   Commands
 // ------ ------
 
-fn set_page_id(page_id: PageId) {
-    page_id().set_neq(page_id);
+fn set_page_id(new_page_id: PageId) {
+    page_id().set_neq(new_page_id);
 }
 
 // ------ ------
@@ -40,13 +40,27 @@ fn set_page_id(page_id: PageId) {
 // ------ ------
 
 fn root() -> impl Element {
-    Column::new().item(header()).item(page())
+    Column::new()
+        .s(Padding::new().all(20))
+        .s(Spacing::new(20))
+        .item(header())
+        .item(page())
 }
 
 fn header() -> impl Element {
     Row::new()
-        .item(Link::new().label("Home").to(Route::Root))
-        .item(Link::new().label("Report").to(Route::Report))
+        .s(Spacing::new(20))
+        .item(
+            Link::new()
+                .s(Font::new().underline().color(NamedColor::Blue7))
+                .label("Home")
+                .to(Route::Root))
+        .item(
+            Link::new()
+                .s(Font::new().underline().color(NamedColor::Blue7))
+                .label("Report")
+                .to(Route::Report)
+            )
 }
 
 fn page() -> impl Element {

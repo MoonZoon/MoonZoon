@@ -32,6 +32,7 @@ version = "0.3.51"
 features = [
   'Element',
   'Headers',
+  'HtmlAnchorElement',
   'HtmlButtonElement',
   'HtmlCanvasElement',
   'HtmlDivElement',

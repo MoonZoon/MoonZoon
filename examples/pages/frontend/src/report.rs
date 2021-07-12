@@ -34,7 +34,7 @@ impl RouteSegment for Frequency {
     }
 
     fn into_route_segment(self) -> Cow<'static, str> {
-        self.as_str()
+        self.as_str().into()
     }
 }
 
@@ -51,8 +51,8 @@ fn frequency() -> &'static Mutable<Frequency> {
 //   Commands
 // ------ ------
 
-pub fn set_frequency(frequency: Frequency) {
-    frequency().set_neq(frequency);
+pub fn set_frequency(new_frequency: Frequency) {
+    frequency().set_neq(new_frequency);
 }
 
 // ------ ------
@@ -74,21 +74,28 @@ fn frequency_for_link() -> impl Signal<Item = Frequency> {
 // ------ ------
 
 pub fn page() -> impl Element {
-    Row::new()
-        .item(Text::with_signal(frequency().signal().map(greeting)))
-        .item_signal(frequency_for_link().map(switch_frequency_link))
+    Column::new()
+        .s(Spacing::new(20))
+        .item(greeting())
+        .item(switch_frequency_link())
 }
 
-fn greeting(frequency: Frequency) -> impl Element {
-    format!(
+fn greeting() -> impl Element {
+    let greeting = |frequency: Frequency| format!(
         "Hello {}! This is your {} report.",
         USER_NAME,
         frequency.as_str()
-    )
+    );
+    Text::with_signal(frequency().signal().map(greeting))
 }
 
-fn switch_frequency_link(frequency: Frequency) -> impl Element {
+fn switch_frequency_link() -> impl Element {
     Link::new()
-        .label(format!("Switch to {}", frequency.as_str()))
-        .to(Route::ReportWithFrequency { frequency })
+        .s(Font::new().underline().color(NamedColor::Blue7))
+        .label_signal(frequency_for_link().map(|frequency| {
+            format!("Switch to {}", frequency.as_str())
+        }))
+        .to_signal(frequency_for_link().map(|frequency| {
+            Route::ReportWithFrequency { frequency }
+        }))
 }
