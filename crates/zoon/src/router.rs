@@ -1,6 +1,8 @@
 use crate::*;
 use std::marker::PhantomData;
 use web_sys::Event;
+use futures_signals::signal::{channel, Sender};
+use futures_util::future::{abortable, AbortHandle, ready};
 
 mod route_segment;
 mod from_route_segments;
@@ -9,38 +11,85 @@ pub use route_segment::RouteSegment;
 pub use from_route_segments::FromRouteSegments;
 
 pub struct Router<R> {
-    _route_type: PhantomData<R>,
     popstate_listener: SendWrapper<Closure<dyn Fn()>>,
     link_interceptor: SendWrapper<Closure<dyn Fn(Event)>>,
+    url_change_sender: Sender<Option<Vec<String>>>,
+    url_change_handle: AbortHandle,
+    _route_type: PhantomData<R>,
 }
 
 impl<R: FromRouteSegments> Router<R> {
     pub fn new(on_route_change: impl FnOnce(Option<R>) + Clone + 'static) -> Self {
-        let popstate_listener = Self::setup_popstate_listener();
-        let link_interceptor = Self::setup_link_interceptor();
-        Router {
-            _route_type: PhantomData,
-            popstate_listener,
-            link_interceptor,
-        }
-    }
+        let on_route_change = move |route: Option<R>| on_route_change.clone()(route);
 
-    pub fn go_to<'a>(to: impl IntoCowStr<'a>) {
-        let to = to.into_cow_str();
-        history()
-            .push_state_with_url(&JsValue::NULL, "", Some(&to))
-            .unwrap_throw();
+        let (url_change_sender, url_change_receiver) = channel(Self::current_url_segments());
+        let url_change_handler = url_change_receiver
+            .for_each(move |segments| { 
+                crate::println!("url changed!!!, {:#?}", segments);
+                let route = segments.and_then(R::from_route_segments);
+                on_route_change(route);
+                ready(())
+            });
+        let (url_change_handler, url_change_handle) = abortable(url_change_handler);
+        spawn_local(async { let _ = url_change_handler.await; });
+
+        Router {
+            popstate_listener: Self::setup_popstate_listener(url_change_sender.clone()),
+            link_interceptor: Self::setup_link_interceptor(url_change_sender.clone()),
+            url_change_sender,
+            url_change_handle,
+            _route_type: PhantomData,
+        }
     }
 
     pub fn current_url() -> String {
         window().location().href().unwrap_throw()
     }
 
+    pub fn go_to<'a>(&self, to: impl IntoCowStr<'a>) {
+        Self::inner_go_to(&self.url_change_sender, to);
+    }
+
     // -- private --
 
-    fn setup_popstate_listener() -> SendWrapper<Closure<dyn Fn()>> {
+    fn inner_go_to<'a>(url_change_sender: &Sender<Option<Vec<String>>>, to: impl IntoCowStr<'a>) {
+        let to = to.into_cow_str();
+
+        let mut segments = Vec::new();
+        for segment in to.trim_start_matches('/').split_terminator('/') {
+            segments.push(segment.to_owned());
+        }
+        
+        history()
+            .push_state_with_url(&JsValue::NULL, "", Some(&to))
+            .unwrap_throw();
+        
+        url_change_sender.send(Some(segments)).unwrap_throw();
+    }
+
+    fn current_url_segments() -> Option<Vec<String>> {
+        let path = window().location().pathname().unwrap_throw();
+        let mut segments = Vec::new();
+        for segment in path.trim_start_matches('/').split_terminator('/') {
+            match Self::decode_uri_component(segment) {
+                Ok(segment) => segments.push(segment),
+                Err(error) => {
+                    crate::eprintln!("Cannot decode the URL segment '{}'. Error: {:#?}", segment, error);
+                    None?
+                }
+            }
+        }
+        Some(segments)
+    }
+
+    fn decode_uri_component(component: impl AsRef<str>) -> Result<String, JsValue> {
+        let decoded = js_sys::decode_uri_component(component.as_ref())?;
+        Ok(String::from(decoded))
+    }
+
+    fn setup_popstate_listener(url_change_sender: Sender<Option<Vec<String>>>) -> SendWrapper<Closure<dyn Fn()>> {
         let closure = Closure::wrap(Box::new(move || {
-            crate::println!("popstate!");
+            url_change_sender.send(Self::current_url_segments()).unwrap_throw();
         }) as Box<dyn Fn()>);
     
         window()
@@ -50,7 +99,7 @@ impl<R: FromRouteSegments> Router<R> {
         SendWrapper::new(closure)
     }
 
-    fn setup_link_interceptor() -> SendWrapper<Closure<dyn Fn(Event)>> {
+    fn setup_link_interceptor(url_change_sender: Sender<Option<Vec<String>>>) -> SendWrapper<Closure<dyn Fn(Event)>> {
         let closure = Closure::wrap(Box::new(move |event: Event| {
             event.target()
                 .and_then(|et| et.dyn_into::<web_sys::Element>().ok())
@@ -79,7 +128,7 @@ impl<R: FromRouteSegments> Router<R> {
                         event.prevent_default(); // Prevent page refresh
                     } else {
                         event.prevent_default();
-                        Self::go_to(href);
+                        Self::inner_go_to(&url_change_sender, href);
                     }
                 });
         }) as Box<dyn Fn(Event)>);
@@ -101,5 +150,7 @@ impl<R> Drop for Router<R> {
         document()
             .remove_event_listener_with_callback("click", self.link_interceptor.as_ref().unchecked_ref())
             .unwrap_throw();
+
+        self.url_change_handle.abort();
     }
 }
