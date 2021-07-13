@@ -24,7 +24,7 @@ static USER_NAME: &str = "John Doe";
 
 #[static_ref]
 fn page_id() -> &'static Mutable<PageId> {
-    Mutable::new(PageId::Report)
+    Mutable::new(PageId::Unknown)
 }
 
 // ------ ------

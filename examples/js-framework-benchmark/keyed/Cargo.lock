@@ -1938,6 +1938,7 @@ version = "0.1.0"
 dependencies = [
  "dominator",
  "futures-signals",
+ "futures-util",
  "js-sys",
  "lexical",
  "once_cell",

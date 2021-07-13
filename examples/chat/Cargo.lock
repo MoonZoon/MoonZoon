@@ -1909,6 +1909,7 @@ dependencies = [
  "dominator",
  "enclose",
  "futures-signals",
+ "futures-util",
  "js-sys",
  "moonlight",
  "once_cell",
