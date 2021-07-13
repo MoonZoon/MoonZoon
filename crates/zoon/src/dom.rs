@@ -1,9 +1,13 @@
 use crate::*;
 
 pub fn window() -> web_sys::Window {
-    web_sys::window().expect_throw("window")
+    web_sys::window().unwrap_throw()
 }
 
 pub fn document() -> web_sys::Document {
-    window().document().expect_throw("document")
+    window().document().unwrap_throw()
+}
+
+pub fn history() -> web_sys::History {
+    window().history().unwrap_throw()
 }

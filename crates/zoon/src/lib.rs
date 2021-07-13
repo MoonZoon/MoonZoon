@@ -15,7 +15,7 @@ mod timer;
 mod viewport;
 
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
-pub use dom::{document, window};
+pub use dom::{document, window, history};
 pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};
 pub use either::{Either, IntoEither};
 pub use element::*;

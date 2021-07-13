@@ -31,13 +31,16 @@ lexical = { git = "https://github.com/Alexhuszagh/rust-lexical", rev = "7010efd"
 version = "0.3.51"
 features = [
   'Element',
+  'Event',
   'Headers',
+  'History',
   'HtmlAnchorElement',
   'HtmlButtonElement',
   'HtmlCanvasElement',
   'HtmlDivElement',
   'HtmlInputElement',
   'HtmlLabelElement',
+  'Location',
   'Response',
   'Request',
   'RequestInit',
