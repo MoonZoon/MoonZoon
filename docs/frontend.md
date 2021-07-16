@@ -663,9 +663,9 @@ fn set_route(route: Route) {
 
 ## SEO
 
-- When the request comes from a robot (e.g. _Googlebot_), then MoonZoon renders elements to a HTML string and sends it back to the robot. (It's basically a limited _Server-Side Rendering_.)  
+- When the request comes from a robot (e.g. _Googlebot_), then MoonZoon renders elements to a HTML string and sends it back to the robot. (It's basically a limited _Server-Side Rendering_ / [_Dynamic Rendering_](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering).)  
 
-- You'll be able to configure the default page title, _The Open Graph Metadata_ and other things in the Moon app. The example below will be continuously updated once.
+- You'll be able to configure the default page title, _The Open Graph Metadata_ and other things in the Moon app. The example below will be continuously updated.
     ```rust
     async fn frontend() -> Frontend {
         Frontend::new().title("Time Tracker example")
