@@ -3,6 +3,7 @@ use tokio::fs;
 
 pub struct Frontend {
     pub(crate) title: String,
+    pub(crate) default_styles: bool,
     pub(crate) append_to_head: String,
     pub(crate) body_content: Cow<'static, str>,
 }
@@ -11,6 +12,7 @@ impl Default for Frontend {
     fn default() -> Self {
         Self {
             title: String::new(),
+            default_styles: true,
             append_to_head: String::new(),
             body_content: Cow::from(r#"<section id="app"></section>"#),
         }
@@ -29,14 +31,22 @@ impl Frontend {
     pub fn new() -> Self {
         Self::default()
     }
+
     pub fn title(mut self, title: impl Into<String>) -> Self {
         self.title = title.into();
         self
     }
+
+    pub fn default_styles(mut self, enabled: bool) -> Self {
+        self.default_styles = enabled;
+        self
+    }
+
     pub fn append_to_head(mut self, html: &str) -> Self {
         self.append_to_head.push_str(html);
         self
     }
+
     pub fn body_content(mut self, content: impl Into<Cow<'static, str>>) -> Self {
         self.body_content = content.into();
         self
@@ -49,6 +59,19 @@ impl Frontend {
             Cow::from("")
         };
 
+        let default_styles = if self.default_styles {
+            concat!(
+                "<style>",
+                include_str!("../css/modern-normalize.min.css"),
+                "</style>",
+                "<style>",
+                include_str!("../css/basic.css"),
+                "</style>"
+            )
+        } else {
+            ""
+        };
+
         format!(
             r#"<!DOCTYPE html>
         <html lang="en">
@@ -59,8 +82,7 @@ impl Frontend {
           <title>{title}</title>
           <link rel="preload" href="/_api/pkg/frontend_bg{cache_busting_string}.wasm" as="fetch" type="application/wasm" crossorigin>
           <link rel="modulepreload" href="/_api/pkg/frontend{cache_busting_string}.js" crossorigin>
-          <style>{normalize_css}</style>
-          <style>{basic_css}</style>
+          {default_styles}
           {append_to_head}
         </head>
     
@@ -80,8 +102,7 @@ impl Frontend {
         
         </html>"#,
             title = self.title,
-            normalize_css = include_str!("../css/modern-normalize.min.css"),
-            basic_css = include_str!("../css/basic.css"),
+            default_styles = default_styles,
             append_to_head = self.append_to_head,
             body_content = self.body_content,
             reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"),
