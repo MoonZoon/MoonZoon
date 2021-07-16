@@ -476,7 +476,11 @@ would be rendered as:
 
 --
 
-Related blog post: [_Font size is useless; let’s fix it_](https://tonsky.me/blog/font-size/) by Nikita Prokopov
+- Related blog post: [_Font size is useless; let’s fix it_](https://tonsky.me/blog/font-size/) by Nikita Prokopov
+- https://caniuse.com/sr_leading-trim-text-edge
+- Inspirations for a future MZ polyfill: 
+   - https://github.com/MathGeniusJodie/tailwindcss-leading-trim
+   - https://seek-oss.github.io/capsize/
 
 ---
 
