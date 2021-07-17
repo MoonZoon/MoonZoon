@@ -31,8 +31,10 @@ pub use js_sys::{self, Reflect};
 pub use not::not;
 pub use paste;
 pub use pin_project::pin_project;
-pub use router::{FromRouteSegments, RouteSegment, Router, decode_uri_component, encode_uri_component};
 pub use route_macro::route;
+pub use router::{
+    decode_uri_component, encode_uri_component, FromRouteSegments, RouteSegment, Router,
+};
 pub use send_wrapper::SendWrapper;
 pub use std::future::Future;
 pub use style::*;
