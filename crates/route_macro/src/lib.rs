@@ -1,5 +1,5 @@
 use proc_macro::TokenStream;
-use syn::{parse_quote, spanned::Spanned, ItemFn, ReturnType, Type};
+use syn::{parse_quote, spanned::Spanned, ItemEnum, Attribute, Variant};
 
 // ```
 // #[route]
@@ -72,7 +72,7 @@ use syn::{parse_quote, spanned::Spanned, ItemFn, ReturnType, Type};
 //             Self::ReportWithFrequency { frequency } => {
 //                 format!(
 //                     "/report/{}", 
-//                     zoon::encode_uri_component(frequency.into_string_segment()),
+//                     encode_uri_component(frequency.into_string_segment()),
 //                 ).into()
 //             }
 //             Self::Report => "/report".into(),
@@ -89,10 +89,12 @@ use syn::{parse_quote, spanned::Spanned, ItemFn, ReturnType, Type};
 
 #[proc_macro_attribute]
 pub fn route(_args: TokenStream, input: TokenStream) -> TokenStream {
-    // let mut input_fn: ItemFn = syn::parse(input).unwrap();
+    let mut input_enum: ItemEnum = syn::parse(input)
+        .expect("'route' attribute is applicable only to enums and their variants");
 
-    // let data_type =
-    //     data_type(&input_fn.sig.output).expect("the function has to return &'static MyType");
+    for variant in &mut input_enum.variants {
+        let route_attr = get_route_attr(variant);
+    }
 
     // let inner_block = input_fn.block;
     // input_fn.block = parse_quote!({
@@ -101,28 +103,15 @@ pub fn route(_args: TokenStream, input: TokenStream) -> TokenStream {
     //     INSTANCE.get_or_init(move || Box::new(#inner_block))
     // });
 
-    // quote::quote_spanned!(input_fn.span()=>
-    //     #input_fn
-    // )
-    // .into()
- 
-    input
+    quote::quote_spanned!(input_enum.span()=>
+        #input_enum
+    )
+    .into()
 }
 
-// fn data_type(return_type: &ReturnType) -> Option<&Box<Type>> {
-//     let type_ = match return_type {
-//         ReturnType::Type(_, type_) => type_,
-//         _ => None?,
-//     };
-//     let type_reference = match type_.as_ref() {
-//         Type::Reference(type_reference) => type_reference,
-//         _ => None?,
-//     };
-//     if type_reference.mutability.is_some() {
-//         None?
-//     }
-//     if type_reference.lifetime.as_ref()?.ident != "static" {
-//         None?
-//     }
-//     Some(&type_reference.elem)
-// }
+fn get_route_attr(variant: &mut Variant) -> Attribute {
+    let route_attr_index = variant.attrs.iter().position(|attr| {
+        attr.path.get_ident().map(|ident| ident == "route").unwrap_or_default()
+    }).expect("'route' attribute is required for all variants");
+    variant.attrs.remove(route_attr_index)
+}
