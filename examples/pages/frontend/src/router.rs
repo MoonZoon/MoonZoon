@@ -1,4 +1,4 @@
-use crate::{report, set_page_id, PageId, is_user_logged};
+use crate::{report, app::{self, PageId}};
 use zoon::*;
 
 // ------ Router ------
@@ -7,23 +7,23 @@ use zoon::*;
 pub fn router() -> &'static Router<Route> {
     Router::new(|route| match route {
         Some(Route::ReportWithFrequency { frequency }) => {
-            if not(is_user_logged()) { return router().replace(Route::Login) }
-            set_page_id(PageId::Report);
+            if not(app::is_user_logged()) { return router().replace(Route::Login) }
+            app::set_page_id(PageId::Report);
             report::set_frequency(frequency);
         }
         Some(Route::Report) => {
-            if not(is_user_logged()) { return router().replace(Route::Login) }
-            set_page_id(PageId::Report);
+            if not(app::is_user_logged()) { return router().replace(Route::Login) }
+            app::set_page_id(PageId::Report);
         }
         Some(Route::Login) => {
-            if is_user_logged() { return router().replace(Route::Root) }
-            set_page_id(PageId::Login);
+            if app::is_user_logged() { return router().replace(Route::Root) }
+            app::set_page_id(PageId::Login);
         }
         Some(Route::Root) => {
-            set_page_id(PageId::Home);
+            app::set_page_id(PageId::Home);
         }
         None => {
-            set_page_id(PageId::Unknown);
+            app::set_page_id(PageId::Unknown);
         }
     })
 }
