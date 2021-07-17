@@ -1,4 +1,5 @@
 use zoon::*;
+use crate::app;
 
 // ------ ------
 //    Statics
@@ -18,7 +19,7 @@ fn set_name(new_name: String) {
 }
 
 fn log_in() {
-    crate::log_in(name().get_cloned()); 
+    app::log_in(name().get_cloned()); 
 }
 
 // ------ ------
