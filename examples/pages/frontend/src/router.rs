@@ -50,34 +50,3 @@ pub enum Route {
     #[route()]
     Root,
 }
-
-impl Route {
-    fn route_0_from_route_segments(segments: &[String]) -> Option<Self> {
-        if segments.len() != 2 { None? }
-        if segments[0] != "report" { None? }
-        let route = Self::ReportWithFrequency { 
-            frequency: RouteSegment::from_string_segment(&segments[1])? 
-        };
-        Some(route)
-    }
-
-    fn route_1_from_route_segments(segments: &[String]) -> Option<Self> {
-        if segments.len() != 1 { None? }
-        if segments[0] != "report" { None? }
-        let route = Self::Report;
-        Some(route)
-    }
-
-    fn route_2_from_route_segments(segments: &[String]) -> Option<Self> {
-        if segments.len() != 1 { None? }
-        if segments[0] != "login" { None? }
-        let route = Self::Login;
-        Some(route)
-    }
-
-    fn route_3_from_route_segments(segments: &[String]) -> Option<Self> {
-        if segments.len() != 0 { None? }
-        let route = Self::Root;
-        Some(route)
-    }
-}

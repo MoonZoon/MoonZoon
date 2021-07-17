@@ -28,7 +28,8 @@ pub struct Router<R> {
     _route_type: PhantomData<R>,
 }
 
-// @TODO: Encoding
+// @TODO: feature "router"?
+// @TODO: fn back
 
 impl<R: FromRouteSegments> Router<R> {
     pub fn new(on_route_change: impl FnOnce(Option<R>) + Clone + 'static) -> Self {
