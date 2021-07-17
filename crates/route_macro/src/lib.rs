@@ -1,7 +1,9 @@
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use syn::{
-    parse_quote, spanned::Spanned, Ident, ItemEnum, ItemImpl, Attribute, Variant, Arm, LitStr, Token, 
+    parse_quote, spanned::Spanned, Ident, ItemEnum, ItemImpl, 
+    Attribute, Variant, Arm, LitStr, Token, ItemFn, ExprIf,
+    FieldValue,
     punctuated::{Punctuated, Pair}, 
     parse::{self, Parse, ParseStream}};
 use quote::format_ident;
@@ -34,30 +36,26 @@ use quote::format_ident;
 //     fn route_0_from_route_segments(segments: &[String]) -> Option<Self> {
 //         if segments.len() != 2 { None? }
 //         if segments[0] != "report" { None? }
-//         let route = Self::ReportWithFrequency { 
+//         Some(Self::ReportWithFrequency { 
 //             frequency: RouteSegment::from_string_segment(&segments[1])? 
-//         };
-//         Some(route)
+//         })
 //     }
 //
 //     fn route_1_from_route_segments(segments: &[String]) -> Option<Self> {
 //         if segments.len() != 1 { None? }
 //         if segments[0] != "report" { None? }
-//         let route = Self::Report;
-//         Some(route)
+//         Some(Self::Report {})
 //     }
 //
 //     fn route_2_from_route_segments(segments: &[String]) -> Option<Self> {
 //         if segments.len() != 1 { None? }
 //         if segments[0] != "login" { None? }
-//         let route = Self::Login;
-//         Some(route)
+//         Some(Self::Login {})
 //     }
 //
 //     fn route_3_from_route_segments(segments: &[String]) -> Option<Self> {
 //         if segments.len() != 0 { None? }
-//         let route = Self::Root;
-//         Some(route)
+//         Some(Self::Root {})
 //     }
 // }
 //
@@ -188,38 +186,53 @@ fn get_route_segments(route_attr: &Attribute) -> Vec<RouteSegment> {
 // ------ generate_route_fns ------
 
 fn generate_route_fns(routes: &[Route]) -> ItemImpl {
+    let route_fns = routes.iter().enumerate().map(route_fn);
     parse_quote!(
         impl Route {
-            fn route_0_from_route_segments(segments: &[String]) -> Option<Self> {
-                if segments.len() != 2 { None? }
-                if segments[0] != "report" { None? }
-                let route = Self::ReportWithFrequency { 
-                    frequency: RouteSegment::from_string_segment(&segments[1])? 
-                };
-                Some(route)
-            }
-        
-            fn route_1_from_route_segments(segments: &[String]) -> Option<Self> {
-                if segments.len() != 1 { None? }
-                if segments[0] != "report" { None? }
-                let route = Self::Report;
-                Some(route)
-            }
-        
-            fn route_2_from_route_segments(segments: &[String]) -> Option<Self> {
-                if segments.len() != 1 { None? }
-                if segments[0] != "login" { None? }
-                let route = Self::Login;
-                Some(route)
-            }
-        
-            fn route_3_from_route_segments(segments: &[String]) -> Option<Self> {
-                if segments.len() != 0 { None? }
-                let route = Self::Root;
-                Some(route)
-            }
+            #(#route_fns)*
         }
     )
+}
+
+fn route_fn((index, route): (usize, &Route)) -> ItemFn {
+    let fn_name = format_ident!("route_{}_from_route_segments", index);
+    let route_segment_count = route.segments.len(); 
+    let lit_str_validations = lit_str_validations(&route.segments);
+    let variant_name = route.ident;
+    let route_fields = route_fields(&route.segments);
+    parse_quote!(
+        fn #fn_name(segments: &[String]) -> Option<Self> {
+            if segments.len() != #route_segment_count { None? }
+            #(#lit_str_validations)*
+            Some(Self::#variant_name { 
+                #(#route_fields),* 
+            })
+        }
+    )
+}
+
+fn lit_str_validations(segments: &[RouteSegment]) -> impl Iterator<Item = ExprIf> + '_ {
+    segments.iter().enumerate().filter_map(|(index, segment)| {
+        if let RouteSegment::LitStr(lit_str) = segment {
+            Some(parse_quote!(
+                if segments[#index] != #lit_str { None? }
+            ))
+        } else {
+            None
+        }
+    })
+}
+
+fn route_fields(segments: &[RouteSegment]) -> impl Iterator<Item = FieldValue> + '_ {
+    segments.iter().enumerate().filter_map(|(index, segment)| {
+        if let RouteSegment::Ident(ident) = segment {
+            Some(parse_quote!(
+                #ident: RouteSegment::from_string_segment(&segments[#index])?
+            ))
+        } else {
+            None
+        }
+    })
 }
 
 // ------ generate_impl_from_route_segments ------
