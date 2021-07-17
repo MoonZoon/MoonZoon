@@ -1,12 +1,13 @@
 use proc_macro::TokenStream;
 use proc_macro2::Span;
-use syn::{
-    parse_quote, spanned::Spanned, Ident, ItemEnum, ItemImpl, 
-    Attribute, Variant, Arm, LitStr, Token, ItemFn, ExprIf,
-    FieldValue,
-    punctuated::{Punctuated, Pair}, 
-    parse::{self, Parse, ParseStream}};
 use quote::format_ident;
+use syn::{
+    parse::{self, Parse, ParseStream},
+    parse_quote,
+    punctuated::{Pair, Punctuated},
+    spanned::Spanned,
+    Arm, Attribute, ExprIf, FieldValue, Ident, ItemEnum, ItemFn, ItemImpl, LitStr, Token, Variant,
+};
 
 // ```
 // #[route]
@@ -36,8 +37,8 @@ use quote::format_ident;
 //     fn route_0_from_route_segments(segments: &[String]) -> Option<Self> {
 //         if segments.len() != 2 { None? }
 //         if segments[0] != "report" { None? }
-//         Some(Self::ReportWithFrequency { 
-//             frequency: RouteSegment::from_string_segment(&segments[1])? 
+//         Some(Self::ReportWithFrequency {
+//             frequency: RouteSegment::from_string_segment(&segments[1])?
 //         })
 //     }
 //
@@ -81,7 +82,7 @@ use quote::format_ident;
 //     fn into_cow_str(self) -> std::borrow::Cow<'a, str> {
 //         match self {
 //             Self::ReportWithFrequency { frequency } => format!(
-//                 "/report/{frequency}", 
+//                 "/report/{frequency}",
 //                 frequency = encode_uri_component(frequency.into_string_segment()),
 //             ).into(),
 //             Self::Report => "/report".into(),
@@ -130,8 +131,8 @@ impl Parse for RouteSegment {
 pub fn route(_args: TokenStream, input: TokenStream) -> TokenStream {
     let mut input_enum: ItemEnum = syn::parse(input)
         .expect("'route' attribute is applicable only to enums and their variants");
-    
-    let routes = extract_routes(&mut input_enum); 
+
+    let routes = extract_routes(&mut input_enum);
 
     let route_fns = generate_route_fns(&routes);
     let impl_from_route_segments = generate_impl_from_route_segments(routes.len());
@@ -153,9 +154,16 @@ fn extract_routes(input_enum: &mut ItemEnum) -> Vec<Route> {
     for variant in &mut input_enum.variants {
         let route_attr = take_route_attr(variant);
 
-        let fields = variant.fields.iter().map(|field| {
-            field.ident.as_ref().expect("variant can contain only named fields")
-        }).collect::<Vec<_>>();
+        let fields: Vec<&Ident> = variant
+            .fields
+            .iter()
+            .map(|field| {
+                field
+                    .ident
+                    .as_ref()
+                    .expect("variant can contain only named fields")
+            })
+            .collect();
 
         let route = Route {
             ident: &variant.ident,
@@ -168,9 +176,16 @@ fn extract_routes(input_enum: &mut ItemEnum) -> Vec<Route> {
 }
 
 fn take_route_attr(variant: &mut Variant) -> Attribute {
-    let route_attr_index = variant.attrs.iter().position(|attr| {
-        attr.path.get_ident().map(|ident| ident == "route").unwrap_or_default()
-    }).expect("'route' attribute is required for all variants");
+    let route_attr_index = variant
+        .attrs
+        .iter()
+        .position(|attr| {
+            attr.path
+                .get_ident()
+                .map(|ident| ident == "route")
+                .unwrap_or_default()
+        })
+        .expect("'route' attribute is required for all variants");
     variant.attrs.remove(route_attr_index)
 }
 
@@ -196,7 +211,7 @@ fn generate_route_fns(routes: &[Route]) -> ItemImpl {
 
 fn route_fn((index, route): (usize, &Route)) -> ItemFn {
     let fn_name = format_ident!("route_{}_from_route_segments", index);
-    let route_segment_count = route.segments.len(); 
+    let route_segment_count = route.segments.len();
     let lit_str_validations = lit_str_validations(&route.segments);
     let variant_name = route.ident;
     let route_fields = route_fields(&route.segments);
@@ -204,8 +219,8 @@ fn route_fn((index, route): (usize, &Route)) -> ItemFn {
         fn #fn_name(segments: &[String]) -> Option<Self> {
             if segments.len() != #route_segment_count { None? }
             #(#lit_str_validations)*
-            Some(Self::#variant_name { 
-                #(#route_fields),* 
+            Some(Self::#variant_name {
+                #(#route_fields),*
             })
         }
     )
@@ -238,9 +253,8 @@ fn route_fields(segments: &[RouteSegment]) -> impl Iterator<Item = FieldValue> +
 // ------ generate_impl_from_route_segments ------
 
 fn generate_impl_from_route_segments(route_count: usize) -> ItemImpl {
-    let route_fn_idents = (0..route_count).map(|index| {
-        format_ident!("route_{}_from_route_segments", index)
-    });
+    let route_fn_idents =
+        (0..route_count).map(|index| format_ident!("route_{}_from_route_segments", index));
     parse_quote!(
         impl FromRouteSegments for Route {
             fn from_route_segments(segments: Vec<String>) -> Option<Self> {
@@ -278,7 +292,11 @@ fn generate_impl_into_cow_str(routes: &[Route]) -> ItemImpl {
 }
 
 fn match_arm(route: &Route) -> Arm {
-    let Route { ident, fields, segments} = route;
+    let Route {
+        ident,
+        fields,
+        segments,
+    } = route;
     let url_template = assemble_url_template(segments);
 
     if fields.is_empty() {
@@ -300,9 +318,7 @@ fn assemble_url_template(segments: &[RouteSegment]) -> LitStr {
     for segment in segments {
         url_template.push('/');
         match segment {
-            RouteSegment::LitStr(lit_str) => {
-                url_template.push_str(&lit_str.value())
-            }
+            RouteSegment::LitStr(lit_str) => url_template.push_str(&lit_str.value()),
             RouteSegment::Ident(ident) => {
                 url_template.push('{');
                 url_template.push_str(&ident.to_string());
