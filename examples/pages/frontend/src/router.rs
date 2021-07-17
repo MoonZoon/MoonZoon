@@ -98,7 +98,7 @@ impl<'a> IntoCowStr<'a> for Route {
             Self::ReportWithFrequency { frequency } => {
                 format!(
                     "/report/{}", 
-                    zoon::encode_uri_component(frequency.into_string_segment()),
+                    encode_uri_component(frequency.into_string_segment()),
                 ).into()
             }
             Self::Report => "/report".into(),
