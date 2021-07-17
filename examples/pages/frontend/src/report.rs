@@ -1,4 +1,4 @@
-use crate::{route::Route, USER_NAME};
+use crate::route::Route;
 use std::borrow::Cow;
 use zoon::*;
 
@@ -83,7 +83,7 @@ pub fn page() -> impl Element {
 fn greeting() -> impl Element {
     let greeting = |frequency: Frequency| format!(
         "Hello {}! This is your {} report.",
-        USER_NAME,
+        super::logged_user().lock_ref().as_ref().unwrap_throw(),
         frequency.as_str()
     );
     Text::with_signal(frequency().signal().map(greeting))
