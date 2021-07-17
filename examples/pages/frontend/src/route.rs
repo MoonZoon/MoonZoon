@@ -1,4 +1,4 @@
-use crate::{report, set_page_id, PageId};
+use crate::{report, set_page_id, PageId, is_user_logged};
 use zoon::*;
 
 // ------ Router ------
@@ -7,11 +7,17 @@ use zoon::*;
 pub fn router() -> &'static Router<Route> {
     Router::new(|route| match route {
         Some(Route::ReportWithFrequency { frequency }) => {
+            if not(is_user_logged()) { return router().replace(Route::Login) }
             set_page_id(PageId::Report);
             report::set_frequency(frequency);
         }
         Some(Route::Report) => {
+            if not(is_user_logged()) { return router().replace(Route::Login) }
             set_page_id(PageId::Report);
+        }
+        Some(Route::Login) => {
+            if is_user_logged() { return router().replace(Route::Root) }
+            set_page_id(PageId::Login);
         }
         Some(Route::Root) => {
             set_page_id(PageId::Home);
@@ -30,6 +36,8 @@ pub fn router() -> &'static Router<Route> {
 //     ReportWithFrequency { frequency: report::Frequency },
 //     #[route("report")]
 //     Report,
+//     #[route("login")]
+//     Login,
 //     #[route()]
 //     Root,
 // }
@@ -40,6 +48,8 @@ pub enum Route {
     ReportWithFrequency { frequency: report::Frequency },
     // #[route("report")]
     Report,
+    // #[route("login")]
+    Login,
     // #[route()]
     Root,
 }
@@ -62,6 +72,13 @@ impl Route {
     }
 
     fn route_2_from_route_segments(segments: &[String]) -> Option<Self> {
+        if segments.len() != 1 { None? }
+        if segments[0] != "login" { None? }
+        let route = Self::Login;
+        Some(route)
+    }
+
+    fn route_3_from_route_segments(segments: &[String]) -> Option<Self> {
         if segments.len() != 0 { None? }
         let route = Self::Root;
         Some(route)
@@ -74,6 +91,7 @@ impl FromRouteSegments for Route {
             .or_else(|| Self::route_0_from_route_segments(&segments))
             .or_else(|| Self::route_1_from_route_segments(&segments))
             .or_else(|| Self::route_2_from_route_segments(&segments))
+            .or_else(|| Self::route_3_from_route_segments(&segments))
     }
 }
 
@@ -88,6 +106,9 @@ impl<'a> IntoCowStr<'a> for Route {
             }
             Self::Report => {
                 "/report".into()
+            }
+            Self::Login => {
+                "/login".into()
             }
             Self::Root => {
                 "/".into()

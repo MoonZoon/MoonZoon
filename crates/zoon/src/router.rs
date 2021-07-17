@@ -18,6 +18,8 @@ pub struct Router<R> {
     _route_type: PhantomData<R>,
 }
 
+// @TODO: Encoding
+
 impl<R: FromRouteSegments> Router<R> {
     pub fn new(on_route_change: impl FnOnce(Option<R>) + Clone + 'static) -> Self {
         let on_route_change = move |route: Option<R>| on_route_change.clone()(route);
@@ -25,7 +27,6 @@ impl<R: FromRouteSegments> Router<R> {
         let (url_change_sender, url_change_receiver) = channel(Self::current_url_segments());
         let url_change_handler = url_change_receiver
             .for_each(move |segments| { 
-                crate::println!("url changed!!!, {:#?}", segments);
                 let route = segments.and_then(R::from_route_segments);
                 on_route_change(route);
                 ready(())
@@ -46,13 +47,28 @@ impl<R: FromRouteSegments> Router<R> {
         window().location().href().unwrap_throw()
     }
 
-    pub fn go_to<'a>(&self, to: impl IntoCowStr<'a>) {
-        Self::inner_go_to(&self.url_change_sender, to);
+    pub fn go<'a>(&self, to: impl IntoCowStr<'a>) {
+        Self::inner_go(&self.url_change_sender, to);
+    }
+
+    pub fn replace<'a>(&self, with: impl IntoCowStr<'a>) {
+        let with = with.into_cow_str();
+
+        let mut segments = Vec::new();
+        for segment in with.trim_start_matches('/').split_terminator('/') {
+            segments.push(segment.to_owned());
+        }
+
+        history()
+            .replace_state_with_url(&JsValue::NULL, "", Some(&with))
+            .unwrap_throw();
+
+        self.url_change_sender.send(Some(segments)).unwrap_throw();
     }
 
     // -- private --
 
-    fn inner_go_to<'a>(url_change_sender: &Sender<Option<Vec<String>>>, to: impl IntoCowStr<'a>) {
+    fn inner_go<'a>(url_change_sender: &Sender<Option<Vec<String>>>, to: impl IntoCowStr<'a>) {
         let to = to.into_cow_str();
 
         let mut segments = Vec::new();
@@ -128,7 +144,7 @@ impl<R: FromRouteSegments> Router<R> {
                         event.prevent_default(); // Prevent page refresh
                     } else {
                         event.prevent_default();
-                        Self::inner_go_to(&url_change_sender, href);
+                        Self::inner_go(&url_change_sender, href);
                     }
                 });
         }) as Box<dyn Fn(Event)>);
