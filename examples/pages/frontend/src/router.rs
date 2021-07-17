@@ -82,16 +82,6 @@ impl Route {
     }
 }
 
-impl FromRouteSegments for Route {
-    fn from_route_segments(segments: Vec<String>) -> Option<Self> {
-        None
-            .or_else(|| Self::route_0_from_route_segments(&segments))
-            .or_else(|| Self::route_1_from_route_segments(&segments))
-            .or_else(|| Self::route_2_from_route_segments(&segments))
-            .or_else(|| Self::route_3_from_route_segments(&segments))
-    }
-}
-
 impl<'a> IntoCowStr<'a> for Route {
     fn into_cow_str(self) -> std::borrow::Cow<'a, str> {
         match self {
