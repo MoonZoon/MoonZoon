@@ -81,7 +81,7 @@ pub fn page() -> impl Element {
 }
 
 fn greeting() -> impl Element {
-    let greeting = |frequency: Frequency| format!(
+    let greeting = move |frequency: Frequency| format!(
         "Hello {}! This is your {} report.",
         app::logged_user().lock_ref().as_ref().unwrap_throw(),
         frequency.as_str()
