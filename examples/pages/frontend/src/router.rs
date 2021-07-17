@@ -81,23 +81,3 @@ impl Route {
         Some(route)
     }
 }
-
-impl<'a> IntoCowStr<'a> for Route {
-    fn into_cow_str(self) -> std::borrow::Cow<'a, str> {
-        match self {
-            Self::ReportWithFrequency { frequency } => {
-                format!(
-                    "/report/{}", 
-                    encode_uri_component(frequency.into_string_segment()),
-                ).into()
-            }
-            Self::Report => "/report".into(),
-            Self::Login => "/login".into(),
-            Self::Root => "/".into(),
-        }
-    }
-
-    fn take_into_cow_str(&mut self) -> std::borrow::Cow<'a, str> {
-        unimplemented!()
-    }
-}
