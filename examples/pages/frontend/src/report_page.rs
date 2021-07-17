@@ -1,4 +1,4 @@
-use crate::{router::Route, app};
+use crate::{app, router::Route};
 use std::borrow::Cow;
 use zoon::*;
 
@@ -81,21 +81,21 @@ pub fn page() -> impl Element {
 }
 
 fn greeting() -> impl Element {
-    let greeting = move |frequency: Frequency| format!(
-        "Hello {}! This is your {} report.",
-        app::logged_user().lock_ref().as_ref().unwrap_throw(),
-        frequency.as_str()
-    );
+    let greeting = move |frequency: Frequency| {
+        format!(
+            "Hello {}! This is your {} report.",
+            app::logged_user().lock_ref().as_ref().unwrap_throw(),
+            frequency.as_str()
+        )
+    };
     Text::with_signal(frequency().signal().map(greeting))
 }
 
 fn switch_frequency_link() -> impl Element {
     Link::new()
         .s(Font::new().underline().color(NamedColor::Blue7))
-        .label_signal(frequency_for_link().map(|frequency| {
-            format!("Switch to {}", frequency.as_str())
-        }))
-        .to_signal(frequency_for_link().map(|frequency| {
-            Route::ReportWithFrequency { frequency }
-        }))
+        .label_signal(
+            frequency_for_link().map(|frequency| format!("Switch to {}", frequency.as_str())),
+        )
+        .to_signal(frequency_for_link().map(|frequency| Route::ReportWithFrequency { frequency }))
 }

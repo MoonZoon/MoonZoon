@@ -2,8 +2,8 @@ use zoon::*;
 
 mod app;
 mod header;
-mod login;
-mod report;
+mod login_page;
+mod report_page;
 mod router;
 
 // ------ ------
