@@ -1,5 +1,6 @@
 use proc_macro::TokenStream;
-use syn::{parse_quote, spanned::Spanned, ItemEnum, Attribute, Variant};
+use syn::{parse_quote, spanned::Spanned, Ident, ItemEnum, ItemImpl, Attribute, Variant};
+use quote::format_ident;
 
 // ```
 // #[route]
@@ -55,17 +56,25 @@ use syn::{parse_quote, spanned::Spanned, ItemEnum, Attribute, Variant};
 //         Some(route)
 //     }
 // }
-
+//
 // impl FromRouteSegments for Route {
 //     fn from_route_segments(segments: Vec<String>) -> Option<Self> {
+//         let route_fns = [
+//             Self::route_0_from_route_segments,
+//             Self::route_1_from_route_segments,
+//             Self::route_2_from_route_segments,
+//             Self::route_3_from_route_segments,
+//         ];
+//         for route_fn in route_fns {
+//             let this = route_fn(&segments);
+//             if this.is_some() {
+//                 return this
+//             }
+//         }
 //         None
-//             .or_else(|| Self::route_0_from_route_segments(&segments))
-//             .or_else(|| Self::route_1_from_route_segments(&segments))
-//             .or_else(|| Self::route_2_from_route_segments(&segments))
-//             .or_else(|| Self::route_3_from_route_segments(&segments))
 //     }
 // }
-
+//
 // impl<'a> IntoCowStr<'a> for Route {
 //     fn into_cow_str(self) -> std::borrow::Cow<'a, str> {
 //         match self {
@@ -92,19 +101,17 @@ pub fn route(_args: TokenStream, input: TokenStream) -> TokenStream {
     let mut input_enum: ItemEnum = syn::parse(input)
         .expect("'route' attribute is applicable only to enums and their variants");
 
+    let variant_count = input_enum.variants.len();
+
     for variant in &mut input_enum.variants {
         let route_attr = get_route_attr(variant);
     }
 
-    // let inner_block = input_fn.block;
-    // input_fn.block = parse_quote!({
-    //     use once_cell::race::OnceBox;
-    //     static INSTANCE: OnceBox<#data_type> = OnceBox::new();
-    //     INSTANCE.get_or_init(move || Box::new(#inner_block))
-    // });
+    let from_route_segments = generate_from_route_segments(variant_count);
 
     quote::quote_spanned!(input_enum.span()=>
         #input_enum
+        #from_route_segments
     )
     .into()
 }
@@ -114,4 +121,27 @@ fn get_route_attr(variant: &mut Variant) -> Attribute {
         attr.path.get_ident().map(|ident| ident == "route").unwrap_or_default()
     }).expect("'route' attribute is required for all variants");
     variant.attrs.remove(route_attr_index)
+}
+
+fn generate_from_route_segments(variant_count: usize) -> ItemImpl {
+    let route_fn_idents = (0..variant_count).map(|index| {
+        format_ident!("route_{}_from_route_segments", index)
+    }).collect::<Vec<_>>();
+
+    parse_quote!(
+        impl FromRouteSegments for Route {
+            fn from_route_segments(segments: Vec<String>) -> Option<Self> {
+                let route_fns = [
+                    #(Self::#route_fn_idents),*
+                ];
+                for route_fn in route_fns {
+                    let this = route_fn(&segments);
+                    if this.is_some() {
+                        return this
+                    }
+                }
+                None
+            }
+        }
+    )
 }
