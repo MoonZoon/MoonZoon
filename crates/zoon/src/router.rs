@@ -10,6 +10,16 @@ mod route_segment;
 pub use from_route_segments::FromRouteSegments;
 pub use route_segment::RouteSegment;
 
+pub fn decode_uri_component(component: impl AsRef<str>) -> Result<String, JsValue> {
+    let decoded = js_sys::decode_uri_component(component.as_ref())?;
+    Ok(String::from(decoded))
+}
+
+pub fn encode_uri_component(component: impl AsRef<str>) -> String {
+    let encoded = js_sys::encode_uri_component(component.as_ref());
+    String::from(encoded)
+}
+
 pub struct Router<R> {
     popstate_listener: SendWrapper<Closure<dyn Fn()>>,
     link_interceptor: SendWrapper<Closure<dyn Fn(Event)>>,
@@ -88,7 +98,7 @@ impl<R: FromRouteSegments> Router<R> {
         let path = window().location().pathname().unwrap_throw();
         let mut segments = Vec::new();
         for segment in path.trim_start_matches('/').split_terminator('/') {
-            match Self::decode_uri_component(segment) {
+            match decode_uri_component(segment) {
                 Ok(segment) => segments.push(segment),
                 Err(error) => {
                     crate::eprintln!(
@@ -101,11 +111,6 @@ impl<R: FromRouteSegments> Router<R> {
             }
         }
         Some(segments)
-    }
-
-    fn decode_uri_component(component: impl AsRef<str>) -> Result<String, JsValue> {
-        let decoded = js_sys::decode_uri_component(component.as_ref())?;
-        Ok(String::from(decoded))
     }
 
     fn setup_popstate_listener(

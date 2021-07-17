@@ -39,15 +39,15 @@ pub fn router() -> &'static Router<Route> {
 
 // ------ Route ------
 
-// #[route]
+#[route]
 pub enum Route {
-    // #[route("report", frequency)]
+    #[route("report", frequency)]
     ReportWithFrequency { frequency: report_page::Frequency },
-    // #[route("report")]
+    #[route("report")]
     Report,
-    // #[route("login")]
+    #[route("login")]
     Login,
-    // #[route()]
+    #[route()]
     Root,
 }
 
@@ -98,7 +98,7 @@ impl<'a> IntoCowStr<'a> for Route {
             Self::ReportWithFrequency { frequency } => {
                 format!(
                     "/report/{}", 
-                    frequency.into_string_segment(),
+                    zoon::encode_uri_component(frequency.into_string_segment()),
                 ).into()
             }
             Self::Report => "/report".into(),
