@@ -1,14 +1,14 @@
 use crate::*;
+use futures_signals::signal::{channel, Sender};
+use futures_util::future::{abortable, ready, AbortHandle};
 use std::marker::PhantomData;
 use web_sys::Event;
-use futures_signals::signal::{channel, Sender};
-use futures_util::future::{abortable, AbortHandle, ready};
 
-mod route_segment;
 mod from_route_segments;
+mod route_segment;
 
-pub use route_segment::RouteSegment;
 pub use from_route_segments::FromRouteSegments;
+pub use route_segment::RouteSegment;
 
 pub struct Router<R> {
     popstate_listener: SendWrapper<Closure<dyn Fn()>>,
@@ -25,14 +25,15 @@ impl<R: FromRouteSegments> Router<R> {
         let on_route_change = move |route: Option<R>| on_route_change.clone()(route);
 
         let (url_change_sender, url_change_receiver) = channel(Self::current_url_segments());
-        let url_change_handler = url_change_receiver
-            .for_each(move |segments| { 
-                let route = segments.and_then(R::from_route_segments);
-                on_route_change(route);
-                ready(())
-            });
+        let url_change_handler = url_change_receiver.for_each(move |segments| {
+            let route = segments.and_then(R::from_route_segments);
+            on_route_change(route);
+            ready(())
+        });
         let (url_change_handler, url_change_handle) = abortable(url_change_handler);
-        spawn_local(async { let _ = url_change_handler.await; });
+        spawn_local(async {
+            let _ = url_change_handler.await;
+        });
 
         Router {
             popstate_listener: Self::setup_popstate_listener(url_change_sender.clone()),
@@ -75,11 +76,11 @@ impl<R: FromRouteSegments> Router<R> {
         for segment in to.trim_start_matches('/').split_terminator('/') {
             segments.push(segment.to_owned());
         }
-        
+
         history()
             .push_state_with_url(&JsValue::NULL, "", Some(&to))
             .unwrap_throw();
-        
+
         url_change_sender.send(Some(segments)).unwrap_throw();
     }
 
@@ -90,7 +91,11 @@ impl<R: FromRouteSegments> Router<R> {
             match Self::decode_uri_component(segment) {
                 Ok(segment) => segments.push(segment),
                 Err(error) => {
-                    crate::eprintln!("Cannot decode the URL segment '{}'. Error: {:#?}", segment, error);
+                    crate::eprintln!(
+                        "Cannot decode the URL segment '{}'. Error: {:#?}",
+                        segment,
+                        error
+                    );
                     None?
                 }
             }
@@ -103,21 +108,28 @@ impl<R: FromRouteSegments> Router<R> {
         Ok(String::from(decoded))
     }
 
-    fn setup_popstate_listener(url_change_sender: Sender<Option<Vec<String>>>) -> SendWrapper<Closure<dyn Fn()>> {
+    fn setup_popstate_listener(
+        url_change_sender: Sender<Option<Vec<String>>>,
+    ) -> SendWrapper<Closure<dyn Fn()>> {
         let closure = Closure::wrap(Box::new(move || {
-            url_change_sender.send(Self::current_url_segments()).unwrap_throw();
+            url_change_sender
+                .send(Self::current_url_segments())
+                .unwrap_throw();
         }) as Box<dyn Fn()>);
-    
+
         window()
             .add_event_listener_with_callback("popstate", closure.as_ref().unchecked_ref())
             .unwrap_throw();
-    
+
         SendWrapper::new(closure)
     }
 
-    fn setup_link_interceptor(url_change_sender: Sender<Option<Vec<String>>>) -> SendWrapper<Closure<dyn Fn(Event)>> {
+    fn setup_link_interceptor(
+        url_change_sender: Sender<Option<Vec<String>>>,
+    ) -> SendWrapper<Closure<dyn Fn(Event)>> {
         let closure = Closure::wrap(Box::new(move |event: Event| {
-            event.target()
+            event
+                .target()
                 .and_then(|et| et.dyn_into::<web_sys::Element>().ok())
                 .and_then(|el| el.closest("a[href]").ok().flatten())
                 .and_then(|href_el| {
@@ -148,7 +160,7 @@ impl<R: FromRouteSegments> Router<R> {
                     }
                 });
         }) as Box<dyn Fn(Event)>);
-    
+
         document()
             .add_event_listener_with_callback("click", closure.as_ref().unchecked_ref())
             .unwrap_throw();
@@ -160,11 +172,17 @@ impl<R: FromRouteSegments> Router<R> {
 impl<R> Drop for Router<R> {
     fn drop(&mut self) {
         window()
-            .remove_event_listener_with_callback("popstate", self.popstate_listener.as_ref().unchecked_ref())
+            .remove_event_listener_with_callback(
+                "popstate",
+                self.popstate_listener.as_ref().unchecked_ref(),
+            )
             .unwrap_throw();
 
         document()
-            .remove_event_listener_with_callback("click", self.link_interceptor.as_ref().unchecked_ref())
+            .remove_event_listener_with_callback(
+                "click",
+                self.link_interceptor.as_ref().unchecked_ref(),
+            )
             .unwrap_throw();
 
         self.url_change_handle.abort();

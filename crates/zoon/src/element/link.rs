@@ -73,10 +73,7 @@ impl<'a, LabelFlag, ToFlag> Link<LabelFlag, ToFlag> {
         self.into_type()
     }
 
-    pub fn to(
-        mut self,
-        to: impl IntoCowStr<'a>,
-    ) -> Link<LabelFlag, ToFlagSet>
+    pub fn to(mut self, to: impl IntoCowStr<'a>) -> Link<LabelFlag, ToFlagSet>
     where
         ToFlag: FlagNotSet,
     {

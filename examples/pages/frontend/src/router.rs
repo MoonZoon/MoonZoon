@@ -1,4 +1,7 @@
-use crate::{report, app::{self, PageId}};
+use crate::{
+    app::{self, PageId},
+    report_page,
+};
 use zoon::*;
 
 // ------ Router ------
@@ -7,16 +10,22 @@ use zoon::*;
 pub fn router() -> &'static Router<Route> {
     Router::new(|route| match route {
         Some(Route::ReportWithFrequency { frequency }) => {
-            if not(app::is_user_logged()) { return router().replace(Route::Login) }
+            if not(app::is_user_logged()) {
+                return router().replace(Route::Login);
+            }
             app::set_page_id(PageId::Report);
-            report::set_frequency(frequency);
+            report_page::set_frequency(frequency);
         }
         Some(Route::Report) => {
-            if not(app::is_user_logged()) { return router().replace(Route::Login) }
+            if not(app::is_user_logged()) {
+                return router().replace(Route::Login);
+            }
             app::set_page_id(PageId::Report);
         }
         Some(Route::Login) => {
-            if app::is_user_logged() { return router().replace(Route::Root) }
+            if app::is_user_logged() {
+                return router().replace(Route::Root);
+            }
             app::set_page_id(PageId::Login);
         }
         Some(Route::Root) => {
@@ -31,21 +40,9 @@ pub fn router() -> &'static Router<Route> {
 // ------ Route ------
 
 // #[route]
-// pub enum Route {
-//     #[route("report", frequency)]
-//     ReportWithFrequency { frequency: report::Frequency },
-//     #[route("report")]
-//     Report,
-//     #[route("login")]
-//     Login,
-//     #[route()]
-//     Root,
-// }
-
-// #[route]
 pub enum Route {
     // #[route("report", frequency)]
-    ReportWithFrequency { frequency: report::Frequency },
+    ReportWithFrequency { frequency: report_page::Frequency },
     // #[route("report")]
     Report,
     // #[route("login")]
@@ -104,15 +101,9 @@ impl<'a> IntoCowStr<'a> for Route {
                     frequency.into_string_segment(),
                 ).into()
             }
-            Self::Report => {
-                "/report".into()
-            }
-            Self::Login => {
-                "/login".into()
-            }
-            Self::Root => {
-                "/".into()
-            }
+            Self::Report => "/report".into(),
+            Self::Login => "/login".into(),
+            Self::Root => "/".into(),
         }
     }
 

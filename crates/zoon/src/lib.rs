@@ -16,7 +16,7 @@ mod timer;
 mod viewport;
 
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
-pub use dom::{document, window, history};
+pub use dom::{document, history, window};
 pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};
 pub use either::{Either, IntoEither};
 pub use element::*;
@@ -28,10 +28,10 @@ pub use futures_signals::{
 };
 pub use futures_signals_ext::{MutableExt, MutableVecExt, SignalExtMapBool};
 pub use js_sys::{self, Reflect};
+pub use not::not;
 pub use paste;
 pub use pin_project::pin_project;
-pub use not::not;
-pub use router::{Router, RouteSegment, FromRouteSegments};
+pub use router::{FromRouteSegments, RouteSegment, Router};
 pub use send_wrapper::SendWrapper;
 pub use std::future::Future;
 pub use style::*;

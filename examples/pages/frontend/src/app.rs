@@ -1,6 +1,9 @@
+use crate::{
+    header::header,
+    login_page, report_page,
+    router::{router, Route},
+};
 use zoon::*;
-use crate::{router::{router, Route}, report, login, header::header};
-
 
 // ------ ------
 //     Types
@@ -68,8 +71,8 @@ pub fn root() -> impl Element {
 
 fn page() -> impl Element {
     El::new().child_signal(page_id().signal().map(|page_id| match page_id {
-        PageId::Report => report::page().into_raw_element(),
-        PageId::Login => login::page().into_raw_element(),
+        PageId::Report => report_page::page().into_raw_element(),
+        PageId::Login => login_page::page().into_raw_element(),
         PageId::Home => El::new().child("Welcome Home!").into_raw_element(),
         PageId::Unknown => El::new().child("404").into_raw_element(),
     }))
