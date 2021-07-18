@@ -496,6 +496,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "evalexpr"
+version = "6.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a38d3a2020f4a2aa90ba6d53a23acb3fa5256c016d36ef1336aa5926e62f2d1"
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -515,6 +521,7 @@ dependencies = [
 name = "frontend"
 version = "0.1.0"
 dependencies = [
+ "evalexpr",
  "wasm-bindgen-test",
  "zoon",
 ]

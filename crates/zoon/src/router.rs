@@ -75,7 +75,7 @@ impl<R: FromRouteSegments> Router<R> {
             .replace_state_with_url(&JsValue::NULL, "", Some(&with))
             .unwrap_throw();
 
-        self.url_change_sender.send(Some(segments)).unwrap_throw();
+        self.url_change_sender.send(Self::current_url_segments()).unwrap_throw();
     }
 
     // -- private --
@@ -92,7 +92,7 @@ impl<R: FromRouteSegments> Router<R> {
             .push_state_with_url(&JsValue::NULL, "", Some(&to))
             .unwrap_throw();
 
-        url_change_sender.send(Some(segments)).unwrap_throw();
+        url_change_sender.send(Self::current_url_segments()).unwrap_throw();
     }
 
     fn current_url_segments() -> Option<Vec<String>> {

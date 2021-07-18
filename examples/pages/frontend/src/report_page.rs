@@ -97,5 +97,5 @@ fn switch_frequency_link() -> impl Element {
         .label_signal(
             frequency_for_link().map(|frequency| format!("Switch to {}", frequency.as_str())),
         )
-        .to_signal(frequency_for_link().map(|frequency| Route::ReportWithFrequency { frequency }))
+        .to_signal(frequency_for_link().map(|frequency| Route::Report { frequency }))
 }

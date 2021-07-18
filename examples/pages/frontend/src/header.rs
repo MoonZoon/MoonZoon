@@ -9,7 +9,8 @@ pub fn header() -> impl Element {
     Row::new()
         .s(Spacing::new(20))
         .item(link("Home", Route::Root))
-        .item(link("Report", Route::Report))
+        .item(link("Report", Route::ReportRoot))
+        .item(link("Calc", Route::CalcRoot))
         .item_signal(app::logged_user().signal_ref(|name| {
             if let Some(name) = name {
                 log_out_button(name).left_either()
