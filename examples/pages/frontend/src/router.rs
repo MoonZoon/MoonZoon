@@ -1,7 +1,6 @@
 use crate::{
     app::{self, PageId},
-    calc_page,
-    report_page,
+    calc_page, report_page,
 };
 use zoon::*;
 
@@ -35,11 +34,13 @@ pub fn router() -> &'static Router<Route> {
             }
             app::set_page_id(PageId::Calc);
         }
-        Some(Route::Calc { operand_a, operator, operand_b }) => {
+        Some(Route::Calc {
+            operand_a,
+            operator,
+            operand_b,
+        }) => {
             app::set_page_id(PageId::Calc);
-            calc_page::set_expression(
-                calc_page::Expression::new(operand_a, operator, operand_b)
-            );
+            calc_page::set_expression(calc_page::Expression::new(operand_a, operator, operand_b));
         }
         Some(Route::Root) => {
             app::set_page_id(PageId::Home);
@@ -56,7 +57,6 @@ pub fn router() -> &'static Router<Route> {
 pub enum Route {
     #[route("report")]
     ReportRoot,
-
     #[route("report", frequency)]
     Report { frequency: report_page::Frequency },
 
@@ -65,9 +65,12 @@ pub enum Route {
 
     #[route("calc")]
     CalcRoot,
-
     #[route("calc", operand_a, operator, operand_b)]
-    Calc { operand_a: f64, operator: String, operand_b: f64 },
+    Calc {
+        operand_a: f64,
+        operator: String,
+        operand_b: f64,
+    },
 
     #[route()]
     Root,
