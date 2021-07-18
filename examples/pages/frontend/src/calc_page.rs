@@ -1,7 +1,7 @@
 use crate::router::Route;
-use zoon::*;
-use std::fmt;
 use evalexpr::eval;
+use std::fmt;
+use zoon::*;
 
 // ------ ------
 //     Types
@@ -15,7 +15,11 @@ pub struct Expression {
 }
 
 impl Expression {
-    pub fn new(operand_a: impl Into<f64>, operator: impl Into<String>, operand_b: impl Into<f64>) -> Self {
+    pub fn new(
+        operand_a: impl Into<f64>,
+        operator: impl Into<String>,
+        operand_b: impl Into<f64>,
+    ) -> Self {
         Self {
             operand_a: operand_a.into(),
             operator: operator.into(),
@@ -24,7 +28,11 @@ impl Expression {
     }
 
     pub fn into_route(self) -> Route {
-        let Self { operand_a, operator,  operand_b} = self;
+        let Self {
+            operand_a,
+            operator,
+            operand_b,
+        } = self;
         Route::Calc {
             operand_a,
             operator,

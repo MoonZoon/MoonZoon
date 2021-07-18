@@ -1,6 +1,7 @@
 use crate::{
+    calc_page,
     header::header,
-    login_page, report_page, calc_page,
+    login_page, report_page,
     router::{router, Route},
 };
 use zoon::*;

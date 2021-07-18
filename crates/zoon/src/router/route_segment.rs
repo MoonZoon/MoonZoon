@@ -35,7 +35,7 @@ macro_rules! make_route_segment_impls {
             fn from_string_segment(segment: &str) -> Option<Self> {
                 segment.parse().ok()
             }
-        
+
             fn into_string_segment(self) -> Cow<'static, str> {
                 self.to_string().into()
             }
