@@ -2,6 +2,7 @@ use zoon::*;
 
 mod app;
 mod header;
+mod calc_page;
 mod login_page;
 mod report_page;
 mod router;

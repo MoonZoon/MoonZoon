@@ -20,6 +20,8 @@ pub trait IntoCowStr<'a> {
     }
 }
 
+//-- impls --
+
 impl<'a> IntoCowStr<'a> for String {
     fn into_cow_str(self) -> Cow<'a, str> {
         self.into()
@@ -75,7 +77,7 @@ macro_rules! make_into_cow_str_impls {
         )*
     )
 }
-make_into_cow_str_impls!(u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize);
+make_into_cow_str_impls!(u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64);
 
 // -------- --------
 // IntoOptionCowStr
@@ -94,6 +96,8 @@ pub trait IntoOptionCowStr<'a> {
             .map(|this| this.into_cow_str_wrapper())
     }
 }
+
+//-- impls --
 
 impl<'a, T: IntoCowStr<'a>> IntoOptionCowStr<'a> for T {
     fn into_option_cow_str(self) -> Option<Cow<'a, str>> {
@@ -130,6 +134,8 @@ impl<'a> IntoOptionCowStr<'a> for Box<dyn IntoOptionCowStr<'a>> {
 // ------ ------
 
 pub struct CowStrWrapper<'a>(Cow<'a, str>);
+
+//-- impls --
 
 impl<'a> CowStrWrapper<'a> {
     pub fn into_css_property_name(self) -> CssPropertyName<'a> {
