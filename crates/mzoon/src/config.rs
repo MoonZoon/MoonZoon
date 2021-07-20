@@ -2,10 +2,12 @@ use anyhow::{Context, Error};
 use fehler::throws;
 use log::LevelFilter;
 use serde::Deserialize;
+use std::net::IpAddr;
 use tokio::fs;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
+    pub address: IpAddr,
     pub port: u16,
     pub https: bool,
     pub cache_busting: bool,

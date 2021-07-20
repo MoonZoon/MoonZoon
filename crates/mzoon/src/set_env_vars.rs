@@ -2,6 +2,7 @@ use crate::config::Config;
 use std::env;
 
 pub fn set_env_vars(config: &Config, release: bool) {
+    env::set_var("ADDRESS", config.address.to_string());
     // port = 8443
     env::set_var("PORT", config.port.to_string());
     // https = true

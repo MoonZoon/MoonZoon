@@ -1,10 +1,13 @@
 use crate::from_env_vars::FromEnvVars;
 use log::LevelFilter;
 use serde::Deserialize;
+use std::net::IpAddr;
 
 #[derive(Debug, Deserialize)]
 #[serde(default)]
 pub struct Config {
+    // ADDRESS
+    pub address: IpAddr,
     // PORT
     pub port: u16,
     // HTTPS
@@ -27,6 +30,7 @@ impl FromEnvVars for Config {
 impl Default for Config {
     fn default() -> Self {
         Self {
+            address: [0, 0, 0, 0].into(),
             port: 8080,
             https: false,
             compressed_pkg: true,
