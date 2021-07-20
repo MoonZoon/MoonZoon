@@ -28,5 +28,7 @@ async fn up_msg_handler(_: UpMsgRequest<()>) {}
 
 #[moon::main]
 async fn main() -> std::io::Result<()> {
-    start(frontend, up_msg_handler, |_| {}).await
+    let config = Config::from_env_vars();
+    println!("Moon config: {:?}", config);
+    start(frontend, up_msg_handler, config, |_| {}).await
 }

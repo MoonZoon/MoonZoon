@@ -46,7 +46,7 @@ mod redirect;
 mod sse;
 mod up_msg_request;
 
-use config::Config;
+pub use config::Config;
 use lazy_message_writer::LazyMessageWriter;
 use sse::{ShareableSSE, ShareableSSEMethods, SSE};
 
@@ -108,6 +108,7 @@ trait_set! {
 pub async fn start<'de, FRB, FRBO, UPH, UPHO, UMsg>(
     frontend: FRB,
     up_msg_handler: UPH,
+    config: Config,
     service_config: impl FnOnce(&mut web::ServiceConfig) + Clone + Send + 'static,
 ) -> io::Result<()>
 where
@@ -118,9 +119,6 @@ where
     UMsg: 'static + Deserialize,
 {
     // ------ Init ------
-
-    let config = Config::from_env_vars();
-    println!("Moon config: {:?}", config);
 
     env_logger::builder()
         .filter_level(config.backend_log_level)
