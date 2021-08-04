@@ -95,10 +95,10 @@ impl Deref for MessageSSE {
 // trait aliases
 trait_set! {
     pub trait FrontBuilderOutput = Future<Output = Frontend> + 'static;
-    pub trait FrontBuilder<FRBO: FrontBuilderOutput> = Fn() -> FRBO + Clone + Send + 'static;
+    pub trait FrontBuilder<FRBO: FrontBuilderOutput> = FnOnce() -> FRBO + Clone + Send + 'static;
 
     pub trait UpHandlerOutput = Future<Output = ()> + 'static;
-    pub trait UpHandler<UPHO: UpHandlerOutput, UMsg> = Fn(UpMsgRequest<UMsg>) -> UPHO + Clone + Send + 'static;
+    pub trait UpHandler<UPHO: UpHandlerOutput, UMsg> = FnOnce(UpMsgRequest<UMsg>) -> UPHO + Clone + Send + 'static;
 }
 
 // ------ ------
@@ -268,7 +268,7 @@ where
         cor_id: parse_cor_id(headers)?,
         auth_token: parse_auth_token(headers)?,
     };
-    up_msg_handler(up_msg_request).await;
+    up_msg_handler.get_ref().clone()(up_msg_request).await;
     Ok(HttpResponse::Ok().finish())
 }
 
@@ -436,7 +436,7 @@ where
 {
     HttpResponse::Ok()
         .content_type(ContentType::html())
-        .body(frontend().await.render(shared_data.cache_busting).await)
+        .body(frontend.get_ref().clone()().await.render(shared_data.cache_busting).await)
 }
 
 // ====== ====== TESTS ====== ======
