@@ -4,11 +4,23 @@ use futures_util::future::{abortable, ready, AbortHandle};
 use std::marker::PhantomData;
 use web_sys::Event;
 
+// @TODO: feature "routing"?
+
 mod from_route_segments;
 mod route_segment;
 
 pub use from_route_segments::FromRouteSegments;
 pub use route_segment::RouteSegment;
+
+// ------ pub functions ------
+
+pub fn current_url() -> String {
+    window().location().href().unwrap_throw()
+}
+
+pub fn back() {
+    history().back().unwrap_throw();
+}
 
 pub fn decode_uri_component(component: impl AsRef<str>) -> Result<String, JsValue> {
     let decoded = js_sys::decode_uri_component(component.as_ref())?;
@@ -20,6 +32,8 @@ pub fn encode_uri_component(component: impl AsRef<str>) -> String {
     String::from(encoded)
 }
 
+// ------ Router ------
+
 pub struct Router<R> {
     popstate_listener: SendWrapper<Closure<dyn Fn()>>,
     link_interceptor: SendWrapper<Closure<dyn Fn(Event)>>,
@@ -27,9 +41,6 @@ pub struct Router<R> {
     url_change_handle: AbortHandle,
     _route_type: PhantomData<R>,
 }
-
-// @TODO: feature "router"?
-// @TODO: fn back
 
 impl<R: FromRouteSegments> Router<R> {
     pub fn new(on_route_change: impl FnOnce(Option<R>) + Clone + 'static) -> Self {
@@ -53,10 +64,6 @@ impl<R: FromRouteSegments> Router<R> {
             url_change_handle,
             _route_type: PhantomData,
         }
-    }
-
-    pub fn current_url() -> String {
-        window().location().href().unwrap_throw()
     }
 
     pub fn go<'a>(&self, to: impl IntoCowStr<'a>) {
