@@ -83,7 +83,7 @@ use syn::{
 //         match self {
 //             Self::ReportWithFrequency { frequency } => format!(
 //                 "/report/{frequency}",
-//                 frequency = encode_uri_component(frequency.into_string_segment()),
+//                 frequency = routing::encode_uri_component(frequency.into_string_segment()),
 //             ).into(),
 //             Self::Report => "/report".into(),
 //             Self::Login => "/login".into(),
@@ -307,7 +307,7 @@ fn match_arm(route: &Route) -> Arm {
         parse_quote!(
             Self::#ident { #(#fields),* } => format!(
                 #url_template,
-                #(#fields = encode_uri_component(#fields.into_string_segment())),*
+                #(#fields = routing::encode_uri_component(#fields.into_string_segment())),*
             ).into()
         )
     }

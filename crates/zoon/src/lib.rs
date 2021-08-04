@@ -9,7 +9,7 @@ mod either;
 mod element;
 mod futures_signals_ext;
 mod not;
-mod router;
+pub mod routing;
 mod style;
 mod task;
 mod timer;
@@ -32,8 +32,8 @@ pub use not::not;
 pub use paste;
 pub use pin_project::pin_project;
 pub use route_macro::route;
-pub use router::{
-    decode_uri_component, encode_uri_component, FromRouteSegments, RouteSegment, Router,
+pub use routing::{
+    FromRouteSegments, RouteSegment, Router,
 };
 pub use send_wrapper::SendWrapper;
 pub use std::future::Future;
