@@ -69,9 +69,6 @@ pub fn root() -> impl Element {
         .s(Spacing::new(20))
         .item(header())
         .item(page())
-        .item(Link::new().label("example.com").to("http://example.com"))
-        .item(Button::new().label("Go to example.com").on_press(|| router().go("http://example.com")))
-        .item(Button::new().label("Replace with example.com").on_press(|| router().replace("http://example.com")))
 }
 
 fn page() -> impl Element {
