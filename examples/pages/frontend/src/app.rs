@@ -2,7 +2,7 @@ use crate::{
     calc_page,
     header::header,
     login_page, report_page,
-    router::{router, Route},
+    router::{previous_route, router, Route},
 };
 use zoon::*;
 
@@ -51,7 +51,7 @@ pub fn set_page_id(new_page_id: PageId) {
 
 pub fn log_in(name: String) {
     logged_user().set(Some(name));
-    router().go(Route::Root);
+    router().go(previous_route().unwrap_or(Route::Root));
 }
 
 pub fn log_out() {
