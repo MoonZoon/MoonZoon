@@ -2,7 +2,7 @@ use crate::*;
 use futures_signals::signal::{channel, Sender};
 use futures_util::future::{abortable, ready, AbortHandle};
 use std::marker::PhantomData;
-use web_sys::Event;
+use web_sys::MouseEvent;
 
 // @TODO: feature "routing"?
 
@@ -36,7 +36,7 @@ pub fn encode_uri_component(component: impl AsRef<str>) -> String {
 
 pub struct Router<R> {
     popstate_listener: SendWrapper<Closure<dyn Fn()>>,
-    link_interceptor: SendWrapper<Closure<dyn Fn(Event)>>,
+    link_interceptor: SendWrapper<Closure<dyn Fn(MouseEvent)>>,
     url_change_sender: Sender<Option<Vec<String>>>,
     url_change_handle: AbortHandle,
     _route_type: PhantomData<R>,
@@ -143,46 +143,28 @@ impl<R: FromRouteSegments> Router<R> {
 
     fn setup_link_interceptor(
         url_change_sender: Sender<Option<Vec<String>>>,
-    ) -> SendWrapper<Closure<dyn Fn(Event)>> {
-        let closure = Closure::wrap(Box::new(move |event: Event| {
-            event
-                .target()
-                .and_then(|et| et.dyn_into::<web_sys::Element>().ok())
-                .and_then(|el| el.closest("a[href]").ok().flatten())
-                .and_then(|href_el| {
-                    if href_el.has_attribute("download") {
-                        None
-                    } else {
-                        href_el.get_attribute("href")
-                    }
-                })
-                // The first character being / or empty href indicates a rel link, which is what
-                // we're intercepting.
-                // @TODO: Resolve it properly, see Elm implementation:
-                // @TODO: https://github.com/elm/browser/blob/9f52d88b424dd12cab391195d5b090dd4639c3b0/src/Elm/Kernel/Browser.js#L157
-                .and_then(|href| {
-                    if href.is_empty() || href.starts_with('/') {
-                        Some(href)
-                    } else {
-                        None
-                    }
-                })
-                .map(|href| {
-                    // @TODO should be empty href ignored?
-                    if href.is_empty() {
-                        event.prevent_default(); // Prevent page refresh
-                    } else {
-                        event.prevent_default();
-                        Self::inner_go(&url_change_sender, href);
-                    }
-                });
-        }) as Box<dyn Fn(Event)>);
+    ) -> SendWrapper<Closure<dyn Fn(MouseEvent)>> {
+        let closure = Closure::wrap(Box::new(move |event| {
+            Self::link_click_handler(event, &url_change_sender);
+        }) as Box<dyn Fn(MouseEvent)>);
 
         document()
             .add_event_listener_with_callback("click", closure.as_ref().unchecked_ref())
             .unwrap_throw();
 
         SendWrapper::new(closure)
+    }
+
+    fn link_click_handler(event: MouseEvent, url_change_sender: &Sender<Option<Vec<String>>>) -> Option<()> {
+        if event.ctrl_key() || event.meta_key() || event.shift_key() || event.button() != 0 {
+            None?
+        }
+        let ws_element: web_sys::Element = event.target()?.dyn_into().ok()?;
+        let a: web_sys::Element = ws_element.closest(r#"a[href^="/"]:not([download], [target="_blank"])"#).ok()??;
+        let href = a.get_attribute("href")?;
+        event.prevent_default();
+        Self::inner_go(url_change_sender, href);    
+        Some(())
     }
 }
 
