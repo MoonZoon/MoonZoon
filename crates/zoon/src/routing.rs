@@ -72,16 +72,12 @@ impl<R: FromRouteSegments> Router<R> {
 
     pub fn replace<'a>(&self, with: impl IntoCowStr<'a>) {
         let with = with.into_cow_str();
-
-        let mut segments = Vec::new();
-        for segment in with.trim_start_matches('/').split_terminator('/') {
-            segments.push(segment.to_owned());
+        if !with.starts_with('/') {
+            return window().location().replace(&with).unwrap_throw();
         }
-
         history()
             .replace_state_with_url(&JsValue::NULL, "", Some(&with))
             .unwrap_throw();
-
         self.url_change_sender
             .send(Self::current_url_segments())
             .unwrap_throw();
@@ -91,16 +87,12 @@ impl<R: FromRouteSegments> Router<R> {
 
     fn inner_go<'a>(url_change_sender: &Sender<Option<Vec<String>>>, to: impl IntoCowStr<'a>) {
         let to = to.into_cow_str();
-
-        let mut segments = Vec::new();
-        for segment in to.trim_start_matches('/').split_terminator('/') {
-            segments.push(segment.to_owned());
+        if !to.starts_with('/') {
+            return window().location().assign(&to).unwrap_throw();
         }
-
         history()
             .push_state_with_url(&JsValue::NULL, "", Some(&to))
             .unwrap_throw();
-
         url_change_sender
             .send(Self::current_url_segments())
             .unwrap_throw();
