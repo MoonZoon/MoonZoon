@@ -593,71 +593,106 @@ fn send_message() {
 
 ### Routing
 
-- An example with the nested route `admin::Route`.
-- See `examples/pages` for the entire code.
-    - _Note:_ The code below may differ from the current `pages` implementation.
+- You just need the struct `Router` and the `route` macro to implement basic routing in your app.
+- The callback passed into `Router::new` is called when the url has been changed.
+- `#[route("segment_a", "segment_b")]` will be transformed to the url `"/segment_a/segment_b"`.
+- Dynamic route segments (aka parameters / arguments) have to implement the trait `RouteSegment` (see the code below for an example). It has been already implemented for basic items like `f64` or `String`.
+- Dynamic segment names have to match to the associated enum variant fields. Notice `frequency` in this snippet:
+   ```rust
+   #[route("report", frequency)]
+   Report { frequency: report_page::Frequency },
+   ```
+- Urls are automatically encoded and decoded (see [encodeURIComponent() on MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) for more info).
+- There are helpers like `routing::back`, `routing::current_url`, `Router::go` and `Router::replace`.
+- Routes are matched against the incoming url path from the first one to the last one. The example of the generated code for matching the route `#[route("report", frequency)]`:
+   ```rust
+   fn route_0_from_route_segments(segments: &[String]) -> Option<Self> {
+       if segments.len() != 2 { None? }
+       if segments[0] != "report" { None? }
+       Some(Self::ReportWithFrequency {
+           frequency: RouteSegment::from_string_segment(&segments[1])?
+       })
+   }
+   ```
+- The simplified part of the `examples/pages` below. See the original code to learn how to write "guards", redirect after login, etc.
 
 ```rust
+// ------ router ------
+
+#[static_ref]
+pub fn router() -> &'static Router<Route> {
+    Router::new(|route| match route { 
+        Some(Route::Report { frequency }) => {
+            app::set_page_id(PageId::Report);
+            report_page::set_frequency(frequency);
+        }
+        Some(Route::Calc { operand_a, operator, operand_b }) => {
+            app::set_page_id(PageId::Calc);
+            calc_page::set_expression(
+                calc_page::Expression::new(operand_a, operator, operand_b)
+            );
+        }
+        Some(Route::Root) => {
+            app::set_page_id(PageId::Home);
+        }
+        None => {
+            app::set_page_id(PageId::Unknown);
+        }
+    })
+}
+
+// ------ Route ------
+
 #[route]
-enum Route {
-    #[route("admin", ..)]
-    Admin(admin::Route),
+pub enum Route {
+    #[route("report", frequency)]
+    Report { frequency: report_page::Frequency },
+
+    #[route("calc", operand_a, operator, operand_b)]
+    Calc {
+        operand_a: f64,
+        operator: String,
+        operand_b: f64,
+    },
+
     #[route()]
     Root,
-    Unknown,
 }
+
+//...
+
+impl RouteSegment for Frequency {
+    fn from_string_segment(segment: &str) -> Option<Self> {
+        match segment {
+            DAILY => Some(Frequency::Daily),
+            WEEKLY => Some(Frequency::Weekly),
+            _ => None,
+        }
+    }
+
+    fn into_string_segment(self) -> Cow<'static, str> {
+        self.as_str().into()
+    }
+}
+
 ```
 
-_
+--
 
-- A more complete example with _guards_ and Zoon's URL helpers.
-- See `examples/time_tracker` for the entire code.
-    - _Note:_ The code below may differ from the current `time_tracker` implementation.
+Link handling
 
-```rust
-#[route]
-enum Route {
-    #[route("login")]
-    #[before_route(before_login_route)]
-    Login,
 
-    #[route("clients_and_projects")]
-    #[before_route(before_protected_route)]
-    ClientsAndProjects,
-
-    #[route()]
-    Home,
-
-    #[before_route(before_unknown_route)]
-    Unknown,
-}
-
-fn before_login_route(route: Route) -> Route {
-    if user().map(Option::is_none) {
-        return route
-    }
-    Route::home()
-}
-
-fn before_protected_route(route: Route) -> Route {
-    if user().map(Option::is_some) {
-        return route
-    }
-    Route::login()
-}
-
-fn before_unknown_route(route: Route) -> Route {
-    Route::home()
-}
-
-fn route() -> impl Signal<Item = Route> {
-    url().signal().map(Route::from)
-}
-
-fn set_route(route: Route) {
-    url().set(Url::from(route))
-}
+All urls starting with `/` are treated as _internal_. It means when you click the link like 
+```html
+<a href="/something">I'm a link with an internal url</a>
 ```
+then the `click` event will be in most cases fully handled by the Zoon to prevent browser tab reloading.
+
+Exceptions when the link click isn't intercepted even if its `href` starts with `/`:
+- The link has the `download` attribute.
+- The link has the `target` attribute with the value `_blank`.
+- The user holds the key `ctrl`, `meta` or `shift` while clicking.
+- The user hasn't clicked by the primary button (left button for right-handed).
 
 ---
 
