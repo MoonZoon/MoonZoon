@@ -1,6 +1,9 @@
 #[cfg(feature = "connection")]
 mod connection;
 
+#[cfg(feature = "routing")]
+pub mod routing;
+
 pub mod console;
 mod cow_str;
 mod css_property_name;
@@ -9,7 +12,6 @@ mod either;
 mod element;
 mod futures_signals_ext;
 mod not;
-pub mod routing;
 mod style;
 mod task;
 mod timer;
@@ -31,10 +33,6 @@ pub use js_sys::{self, Reflect};
 pub use not::not;
 pub use paste;
 pub use pin_project::pin_project;
-pub use route_macro::route;
-pub use routing::{
-    FromRouteSegments, RouteSegment, Router,
-};
 pub use send_wrapper::SendWrapper;
 pub use std::future::Future;
 pub use style::*;
@@ -48,6 +46,13 @@ pub use web_sys;
 
 #[cfg(feature = "connection")]
 pub use connection::{Connection, SendUpMsgError};
+
+#[cfg(feature = "routing")]
+pub use routing::{
+    FromRouteSegments, RouteSegment, Router,
+};
+#[cfg(feature = "routing")]
+pub use route_macro::route;
 
 #[cfg(feature = "moonlight")]
 pub use moonlight::{self, AuthToken, CorId};
