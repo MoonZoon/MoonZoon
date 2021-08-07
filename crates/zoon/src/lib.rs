@@ -48,11 +48,9 @@ pub use web_sys;
 pub use connection::{Connection, SendUpMsgError};
 
 #[cfg(feature = "routing")]
-pub use routing::{
-    FromRouteSegments, RouteSegment, Router,
-};
-#[cfg(feature = "routing")]
 pub use route_macro::route;
+#[cfg(feature = "routing")]
+pub use routing::{FromRouteSegments, RouteSegment, Router};
 
 #[cfg(feature = "moonlight")]
 pub use moonlight::{self, AuthToken, CorId};
