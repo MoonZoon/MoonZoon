@@ -1221,15 +1221,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "route_macro"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "rustc_version"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1953,7 +1944,6 @@ dependencies = [
  "once_cell",
  "paste",
  "pin-project",
- "route_macro",
  "send_wrapper",
  "static_ref_macro",
  "ufmt",
