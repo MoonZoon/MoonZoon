@@ -1,10 +1,10 @@
-#![no_std]
-
 use zoon::*;
 
 mod app;
+mod router;
 
 #[wasm_bindgen(start)]
 pub fn start() {
-    start!(app)
+    router::router();
+    start_app("app", app::view::root);
 }

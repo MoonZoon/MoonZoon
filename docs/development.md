@@ -9,7 +9,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 - [Rust](https://www.rust-lang.org/)
   ```bash
   rustup update
-  rustc -V # rustc 1.53.0 (53cb7b09b 2021-06-17)
+  rustc -V # rustc 1.54.0 (a178d0322 2021-07-26)
   ```
 
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
@@ -39,6 +39,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         "examples/svg/Cargo.toml",
         "examples/viewport/Cargo.toml",
         "examples/timer/Cargo.toml",
+        "examples/todos/Cargo.toml",
     ],
     "rust-analyzer.diagnostics.disabled": [
         "missing-unsafe",
@@ -64,6 +65,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   - `svg`
   - `viewport`
   - `timer`
+  - `todos`
 
 ```sh
 cd examples

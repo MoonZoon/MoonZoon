@@ -51,14 +51,16 @@ impl KeyboardEvent {
 #[derive(PartialEq, Eq)]
 pub enum Key {
     Enter,
+    Escape,
     Other(String),
 }
 
 impl From<String> for Key {
-    fn from(event: String) -> Self {
-        match event.as_str() {
+    fn from(key: String) -> Self {
+        match key.as_ref() {
             "Enter" => Key::Enter,
-            _ => Key::Other(event),
+            "Escape" => Key::Escape,
+            _ => Key::Other(key),
         }
     }
 }
