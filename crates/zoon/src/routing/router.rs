@@ -1,4 +1,4 @@
-use crate::{*, routing::decode_uri_component};
+use crate::{routing::decode_uri_component, *};
 use futures_signals::signal::{channel, Sender};
 use futures_util::future::{abortable, ready, AbortHandle};
 use std::marker::PhantomData;
@@ -57,9 +57,9 @@ impl<R> Drop for Router<R> {
 
 // ------ helpers -------
 
-fn setup_url_change_handler<R: FromRouteSegments>(on_route_change: impl FnOnce(Option<R>) + Clone + 'static) 
-    -> (UrlChangeSender, AbortHandle) 
-{
+fn setup_url_change_handler<R: FromRouteSegments>(
+    on_route_change: impl FnOnce(Option<R>) + Clone + 'static,
+) -> (UrlChangeSender, AbortHandle) {
     let on_route_change = move |route: Option<R>| on_route_change.clone()(route);
 
     let (url_change_sender, url_change_receiver) = channel(current_url_segments());
@@ -120,9 +120,7 @@ fn current_url_segments() -> Option<Vec<String>> {
     Some(segments)
 }
 
-fn setup_popstate_listener(
-    url_change_sender: UrlChangeSender,
-) -> SendWrapper<Closure<dyn Fn()>> {
+fn setup_popstate_listener(url_change_sender: UrlChangeSender) -> SendWrapper<Closure<dyn Fn()>> {
     let closure = Closure::wrap(Box::new(move || {
         url_change_sender
             .send(current_url_segments())
@@ -155,9 +153,11 @@ fn link_click_handler(event: MouseEvent, url_change_sender: &UrlChangeSender) ->
         None?
     }
     let ws_element: web_sys::Element = event.target()?.dyn_into().ok()?;
-    let a: web_sys::Element = ws_element.closest(r#"a[href^="/"]:not([download], [target="_blank"])"#).ok()??;
+    let a: web_sys::Element = ws_element
+        .closest(r#"a[href^="/"]:not([download], [target="_blank"])"#)
+        .ok()??;
     let href = a.get_attribute("href")?;
     event.prevent_default();
-    go(url_change_sender, href);    
+    go(url_change_sender, href);
     Some(())
 }

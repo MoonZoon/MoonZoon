@@ -434,9 +434,12 @@ where
     FRB: FrontBuilder<FRBO>,
     FRBO: FrontBuilderOutput,
 {
-    HttpResponse::Ok()
-        .content_type(ContentType::html())
-        .body(frontend.get_ref().clone()().await.render(shared_data.cache_busting).await)
+    HttpResponse::Ok().content_type(ContentType::html()).body(
+        frontend.get_ref().clone()()
+            .await
+            .render(shared_data.cache_busting)
+            .await,
+    )
 }
 
 // ====== ====== TESTS ====== ======
