@@ -119,7 +119,7 @@ fn todo(todo: Arc<Todo>) -> impl Element {
         .s(Spacing::new(10))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .item(todo_checkbox(todo.clone()))
-        .item_signal(super::is_todo_selected(todo.id).map(clone!((todo) move |is_selected| not(is_selected).then(|| todo_label(&todo)))))
+        .item_signal(super::is_todo_selected(todo.id).map_false(clone!((todo) move || todo_label(&todo))))
         .item_signal(super::is_todo_selected(todo.id).map_true(selected_todo_title))
         .item_signal(hovered_signal.map_true(move || remove_todo_button(&todo)))
 }
