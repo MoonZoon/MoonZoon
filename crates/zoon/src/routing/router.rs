@@ -1,6 +1,6 @@
 use crate::{routing::decode_uri_component, *};
 use futures_signals::signal::{channel, Sender};
-use futures_util::future::{abortable, ready, AbortHandle};
+use futures_util::future::ready;
 use std::marker::PhantomData;
 use web_sys::MouseEvent;
 
@@ -10,18 +10,18 @@ pub struct Router<R> {
     popstate_listener: SendWrapper<Closure<dyn Fn()>>,
     link_interceptor: SendWrapper<Closure<dyn Fn(MouseEvent)>>,
     url_change_sender: UrlChangeSender,
-    url_change_handle: AbortHandle,
+    _url_change_handle: TaskHandle,
     _route_type: PhantomData<R>,
 }
 
 impl<R: FromRouteSegments> Router<R> {
     pub fn new(on_route_change: impl FnOnce(Option<R>) + Clone + 'static) -> Self {
-        let (url_change_sender, url_change_handle) = setup_url_change_handler(on_route_change);
+        let (url_change_sender, _url_change_handle) = setup_url_change_handler(on_route_change);
         Router {
             popstate_listener: setup_popstate_listener(url_change_sender.clone()),
             link_interceptor: setup_link_interceptor(url_change_sender.clone()),
             url_change_sender,
-            url_change_handle,
+            _url_change_handle,
             _route_type: PhantomData,
         }
     }
@@ -50,8 +50,6 @@ impl<R> Drop for Router<R> {
                 self.link_interceptor.as_ref().unchecked_ref(),
             )
             .unwrap_throw();
-
-        self.url_change_handle.abort();
     }
 }
 
@@ -59,7 +57,7 @@ impl<R> Drop for Router<R> {
 
 fn setup_url_change_handler<R: FromRouteSegments>(
     on_route_change: impl FnOnce(Option<R>) + Clone + 'static,
-) -> (UrlChangeSender, AbortHandle) {
+) -> (UrlChangeSender, TaskHandle) {
     let on_route_change = move |route: Option<R>| on_route_change.clone()(route);
 
     let (url_change_sender, url_change_receiver) = channel(current_url_segments());
@@ -68,10 +66,7 @@ fn setup_url_change_handler<R: FromRouteSegments>(
         on_route_change(route);
         ready(())
     });
-    let (url_change_handler, url_change_handle) = abortable(url_change_handler);
-    spawn_local(async {
-        let _ = url_change_handler.await;
-    });
+    let url_change_handle = Task::start_droppable(url_change_handler);
     (url_change_sender, url_change_handle)
 }
 
