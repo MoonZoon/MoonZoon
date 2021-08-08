@@ -8,6 +8,9 @@ pub use button::Button;
 pub mod canvas;
 pub use canvas::Canvas;
 
+pub mod checkbox;
+pub use checkbox::Checkbox;
+
 pub mod column;
 pub use column::Column;
 

@@ -189,8 +189,11 @@ fn remove_completed_todos() {
     todos().lock_mut().retain(|todo| not(todo.completed.get()));
 }
 
-fn set_all_todos_completed(completed: bool) {
-    for todo in todos().lock_ref().iter() {
-        todo.completed.set_neq(completed);
-    }
+fn check_or_uncheck_all_todos() {
+    Task::start(async {
+        let completed = are_all_completed().to_future().await;
+        for todo in todos().lock_ref().iter() {
+            todo.completed.set_neq(completed);
+        }
+    })
 }
