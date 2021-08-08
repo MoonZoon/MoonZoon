@@ -98,7 +98,7 @@ fn new_todo_title() -> impl Element {
             // font::italic(),
             // font::light(),
             // font::color(hsla(0, 0, 0, 40)),
-            Placeholder::new("what needs to be done?")
+            Placeholder::new("What needs to be done?")
         )
         .on_key_down(|event| event.if_key(Key::Enter, super::add_todo))
         .text_signal(super::new_todo_title().signal_cloned())
@@ -203,15 +203,15 @@ fn panel_footer() -> impl Element {
 }
 
 fn active_items_count() -> impl Element {
-    Text::new("active_items_count")
-    // let active_count = super::active_count().inner();
-    // paragraph![
-    //     el![
-    //         font::bold(),
-    //         active_count,
-    //     ],
-    //     format!(" item{} left", if active_count == 1 { "" } else { "s" }),
-    // ]
+    Paragraph::new()
+        .content(
+            El::new()
+                .s(Font::new().bold())
+                .child(Text::with_signal(super::active_count()))
+        )
+        .content(Text::with_signal(super::active_count().map(|count| {
+            format!(" item{} left", if count == 1 { "" } else { "s" })
+        })))
 }
 
 fn filters() -> impl Element {
@@ -253,25 +253,28 @@ fn clear_completed_button() -> impl Element {
 
 fn footer() -> impl Element {
     Column::new()
-        //  paragraph![
-        //     "Double-click to edit a todo",
-        // ],
-        // paragraph![
-        //     "Created by ",
-        //     link![
-        //         link::new_tab(),
-        //         link::url("https://github.com/MartinKavik"),
-        //         "Martin Kavík",
-        //     ],
-        // ],
-        // paragraph![
-        //     "Part of ",
-        //     link![
-        //         link::new_tab(),
-        //         link::url("http://todomvc.com"),
-        //         "TodoMVC",
-        //     ],
-        // ],
-        .item("footer")
+        .item(Paragraph::new().content("Double-click to edit a todo"))
+        .item(
+            Paragraph::new()
+                .content("Created by ")
+                .content(
+                    Link::new()
+                        .label("Martin Kavík")
+                        .to("https://github.com/MartinKavik")
+                        .new_tab()
+                )
+
+        )
+        .item(
+            Paragraph::new()
+                .content("Part of ")
+                .content(
+                    Link::new()
+                        .label("TodoMVC")
+                        .to("http://todomvc.com")
+                        .new_tab()
+                )
+
+        )
 }
 
