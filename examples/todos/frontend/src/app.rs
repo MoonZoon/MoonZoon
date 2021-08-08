@@ -79,51 +79,46 @@ fn todos_exist() -> impl Signal<Item = bool> {
     todos_count().map(|count| count != 0).dedupe()
 }
 
-fn todos_with_completed_signal() -> impl SignalVec<Item = Arc<Todo>> {
+fn completed_count() -> impl Signal<Item = usize> {
     todos()
         .signal_vec_cloned()
-        .map_signal(|todo| todo.completed.signal().map(move |_| todo.clone()))
-}
-
-fn completed_todos() -> impl SignalVec<Item = Arc<Todo>> {
-    todos_with_completed_signal()
-        .filter(|todo| todo.completed.get())
-}
-
-fn completed_count() -> impl Signal<Item = usize> {
-    completed_todos().len()
+        .map_signal(|todo| todo.completed.signal().dedupe())
+        .filter(|completed| *completed)
+        .len()
 }      
 
 fn completed_exist() -> impl Signal<Item = bool> {
     completed_count().map(|count| count != 0).dedupe()
 }
 
-fn are_all_completed() -> impl Signal<Item = bool> {
-    (map_ref! {
-        let todos_count = todos_count(),
-        let completed_count = completed_count() =>
-        todos_count == completed_count
-    }).dedupe()
+fn all_and_completed() -> impl Signal<Item = (usize, usize)> {
+    map_ref! {
+        let all = todos_count(),
+        let completed = completed_count() =>
+        (*all, *completed)
+    }
 }
 
-fn active_todos() -> impl SignalVec<Item = Arc<Todo>> {
-    todos_with_completed_signal()
-        .filter(|todo| not(todo.completed.get()))
+fn are_all_completed() -> impl Signal<Item = bool> {
+    all_and_completed().map(|(all, completed)| all == completed).dedupe()
 }
 
 fn active_count() -> impl Signal<Item = usize> {
-    active_todos().len()
+    all_and_completed().map(|(all, completed)| all - completed).dedupe()
 }    
 
 fn filtered_todos() -> impl SignalVec<Item = Arc<Todo>> {
-    todos_with_completed_signal().filter_signal_cloned(|todo| {
-        let completed = todo.completed.get();
-        selected_filter().signal().map(move |filter| match filter {
-            Filter::All => true,
-            Filter::Active => not(completed),
-            Filter::Completed => completed,
+    todos()
+        .signal_vec_cloned()
+        .map_signal(|todo| todo.completed.signal().dedupe().map(move |_| todo.clone()))
+        .filter_signal_cloned(|todo| {
+            let completed = todo.completed.get();
+            selected_filter().signal().dedupe().map(move |filter| match filter {
+                Filter::All => true,
+                Filter::Active => not(completed),
+                Filter::Completed => completed,
+            })
         })
-    })
 }
 
 fn is_todo_selected(id: TodoId) -> impl Signal<Item = bool> {
