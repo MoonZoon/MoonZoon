@@ -192,12 +192,10 @@ fn action_button(id: &'static str, title: &'static str, on_click: fn()) -> RawHt
 fn table() -> RawHtmlEl {
     RawHtmlEl::new("table")
         .attr("class", "table table-hover table-striped test-data")
-        .child_signal(rows_exist().map(|rows_exist| {
-            rows_exist.then(|| {
-                RawHtmlEl::new("tbody")
-                    .attr("id", "tbody")
-                    .children_signal_vec(rows().signal_vec_cloned().map(row))
-            })
+        .child_signal(rows_exist().map_true(|| {
+            RawHtmlEl::new("tbody")
+                .attr("id", "tbody")
+                .children_signal_vec(rows().signal_vec_cloned().map(row))
         }))
 }
 
