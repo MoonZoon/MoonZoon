@@ -54,8 +54,8 @@ fn panel() -> impl Element {
         //     shadow::color(hsla(0, 0, 0, 10)),
         // ),
         .item(panel_header())
-        .item_signal(super::todos_exist().map(|exist| exist.then(todos)))
-        .item_signal(super::todos_exist().map(|exist| exist.then(panel_footer)))
+        .item_signal(super::todos_exist().map_true(todos))
+        .item_signal(super::todos_exist().map_true(panel_footer))
 }
 
 fn panel_header() -> impl Element {
@@ -69,7 +69,7 @@ fn panel_header() -> impl Element {
         //      shadow::size(0),
         //      shadow::color(hsla(0, 0, 0, 3)),
         //  ),
-        .item_signal(super::todos_exist().map(|exist| exist.then(toggle_all_checkbox)))
+        .item_signal(super::todos_exist().map_true(toggle_all_checkbox))
         .item(new_todo_title())
 }
 
@@ -117,11 +117,11 @@ fn todo(todo: Arc<Todo>) -> impl Element {
         .s(Font::new().size(24))
         .s(Padding::new().all(15))
         .s(Spacing::new(10))
-        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .item(todo_checkbox(todo.clone()))
         .item_signal(super::is_todo_selected(todo.id).map(clone!((todo) move |is_selected| not(is_selected).then(|| todo_label(&todo)))))
-        .item_signal(super::is_todo_selected(todo.id).map(|is_selected| is_selected.then(selected_todo_title)))
-        .item_signal(hovered_signal.map(move |hovered| hovered.then(|| remove_todo_button(&todo))))
+        .item_signal(super::is_todo_selected(todo.id).map_true(selected_todo_title))
+        .item_signal(hovered_signal.map_true(move || remove_todo_button(&todo)))
 }
 
 fn todo_checkbox(todo: Arc<Todo>) -> impl Element {
@@ -191,7 +191,7 @@ fn remove_todo_button(todo: &Todo) -> impl Element {
         // size::height!(20),
         .s(Font::new().size(30))
         // font::color(if hovered().inner() { hsl(10.5, 37.7, 48.8) } else { hsl(12.2, 34.7, 68.2) }),
-        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(move || super::remove_todo(id))
         .label("x")
 }
@@ -200,7 +200,7 @@ fn panel_footer() -> impl Element {
     Row::new()
         .item(active_items_count())
         .item(filters())
-        .item_signal(super::completed_exist().map(|exist| exist.then(clear_completed_button)))
+        .item_signal(super::completed_exist().map_true(clear_completed_button))
 }
 
 fn active_items_count() -> impl Element {
@@ -238,7 +238,7 @@ fn filter(filter: Filter) -> impl Element {
         // border::solid(),
         // border::width!(1),
         // border::color(hsla(12.2, 72.8, 40.2, border_alpha)),
-        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(move || router().go(route))
         .label(label)
 }
@@ -247,7 +247,7 @@ fn clear_completed_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         //  hovered.inner().then(font::underline),
-        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(super::remove_completed_todos)
         .label("Clear completed")
 }
@@ -271,7 +271,7 @@ fn author_link() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Link::new()
         .s(Font::new().underline_signal(hovered_signal))
-        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .label("Martin Kavík")
         .to("https://github.com/MartinKavik")
         .new_tab()
@@ -281,7 +281,7 @@ fn todomvc_link() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Link::new()
         .s(Font::new().underline_signal(hovered_signal))
-        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .label("TodoMVC")
         .to("http://todomvc.com")
         .new_tab()
