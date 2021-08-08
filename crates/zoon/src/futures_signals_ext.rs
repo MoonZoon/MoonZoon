@@ -156,3 +156,49 @@ impl<I, S: Signal<Item = bool>, TM: FnMut() -> I, FM: FnMut() -> I> Signal for M
             .map(|opt| opt.map(|value| if value { true_mapper() } else { false_mapper() }))
     }
 }
+
+// ------ SignalExtMapTrue ------
+
+pub trait SignalExtMapTrue {
+    fn map_true<B, F: FnMut() -> B>(self, f: F) -> MapTrue<Self, F>
+    where
+        Self: Sized;
+}
+
+impl<T: Signal<Item = bool>> SignalExtMapTrue for T {
+    #[inline]
+    fn map_true<B, F: FnMut() -> B>(self, f: F) -> MapTrue<Self, F>
+    where
+        Self: Sized,
+    {
+        MapTrue {
+            signal: self,
+            f,
+        }
+    }
+}
+
+#[pin_project(project = MapTrueProj)]
+#[derive(Debug)]
+#[must_use = "Signals do nothing unless polled"]
+pub struct MapTrue<S, F> {
+    #[pin]
+    signal: S,
+    f: F,
+}
+
+impl<I, S: Signal<Item = bool>, F: FnMut() -> I> Signal for MapTrue<S, F> {
+    type Item = Option<I>;
+
+    #[inline]
+    fn poll_change(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
+        let MapTrueProj {
+            signal,
+            f,
+        } = self.project();
+
+        signal
+            .poll_change(cx)
+            .map(|opt| opt.map(|value| value.then(f)))
+    }
+}

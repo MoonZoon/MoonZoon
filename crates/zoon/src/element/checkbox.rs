@@ -193,5 +193,5 @@ pub fn default_icon(checked_signal: MutableSignal<bool>) -> impl Element {
         .s(Font::new().size(16))
         .s(Width::new(20))
         .s(Height::new(20))
-        .child_signal(checked_signal.map(|checked| checked.then(|| "V")))
+        .child_signal(checked_signal.map_true(|| "V"))
 }
