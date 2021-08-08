@@ -263,7 +263,6 @@ fn footer() -> impl Element {
                         .to("https://github.com/MartinKavik")
                         .new_tab()
                 )
-
         )
         .item(
             Paragraph::new()
@@ -274,7 +273,5 @@ fn footer() -> impl Element {
                         .to("http://todomvc.com")
                         .new_tab()
                 )
-
         )
 }
-
