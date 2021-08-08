@@ -257,21 +257,31 @@ fn footer() -> impl Element {
         .item(
             Paragraph::new()
                 .content("Created by ")
-                .content(
-                    Link::new()
-                        .label("Martin Kavík")
-                        .to("https://github.com/MartinKavik")
-                        .new_tab()
-                )
+                .content(author_link())
         )
         .item(
             Paragraph::new()
                 .content("Part of ")
-                .content(
-                    Link::new()
-                        .label("TodoMVC")
-                        .to("http://todomvc.com")
-                        .new_tab()
-                )
+                .content(todomvc_link())
         )
+}
+
+fn author_link() -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Link::new()
+        .s(Font::new().underline_signal(hovered_signal))
+        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .label("Martin Kavík")
+        .to("https://github.com/MartinKavik")
+        .new_tab()
+}
+
+fn todomvc_link() -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Link::new()
+        .s(Font::new().underline_signal(hovered_signal))
+        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .label("TodoMVC")
+        .to("http://todomvc.com")
+        .new_tab()
 }
