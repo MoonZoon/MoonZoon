@@ -29,7 +29,7 @@ pub use futures_signals::{
     signal_map::{MutableBTreeMap, SignalMap, SignalMapExt, MutableSignalMap},
     signal_vec::{MutableVec, SignalVec, SignalVecExt, MutableSignalVec},
 };
-pub use futures_signals_ext::{MutableExt, MutableVecExt, SignalExtMapBool, SignalExtMapTrue};
+pub use futures_signals_ext::{MutableExt, MutableVecExt, SignalExtMapBool, SignalExtMapTrue, SignalExtMapFalse};
 pub use js_sys::{self, Reflect};
 pub use not::not;
 pub use paste;
