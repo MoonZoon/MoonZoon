@@ -13,6 +13,8 @@ const STORAGE_KEY: &str = "todos-zoon";
 //     Types
 // ------ ------
 
+// ------ Filter -------
+
 #[derive(Copy, Clone, Eq, PartialEq, EnumIter)]
 pub enum Filter {
     All,
@@ -20,12 +22,16 @@ pub enum Filter {
     Completed,
 }
 
+// ------ Todo -------
+
 // #[derive(Deserialize, Serialize)]
 struct Todo {
     id: TodoId,
     title: Mutable<String>,
     completed: Mutable<bool>,
 }
+
+// ------ TodoId -------
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 struct TodoId(Uuid);
