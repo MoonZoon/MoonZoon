@@ -74,19 +74,20 @@ fn panel_header() -> impl Element {
 }
 
 fn toggle_all_checkbox() -> impl Element {
-    Text::new("toggle_all_checkbox")
-    // let checked = super::are_all_completed().inner();
-    // checkbox![
-    //     checkbox::checked(checked),
-    //     checkbox::on_change(super::check_or_uncheck_all),
-    //     input::label_hidden("Toggle All"),
-    //     el![
-    //         font::color(hsla(0, 0, if checked { 48.4 } else { 91.3 })),
-    //         font::size(22),
-    //         rotate(90),
-    //         "❯",
-    //     ],
-    // ]
+    Checkbox::new()
+        .checked_signal(super::are_all_completed())
+        .on_click(super::check_or_uncheck_all_todos)
+        .label_hidden("Toggle All")
+        .icon(|checked_signal| {
+            El::new()
+                .s(
+                    Font::new()
+                    .size(22)
+                    // font::color(hsla(0, 0, if checked { 48.4 } else { 91.3 })),
+                )
+                // rotate(90),
+                .child(">")
+        })
 }
 
 fn new_todo_title() -> impl Element {
@@ -123,20 +124,19 @@ fn todo(todo: Arc<Todo>) -> impl Element {
 }
 
 fn todo_checkbox(todo: &Todo) -> impl Element {
-    Text::new("todo_checkbox")
-    // let completed = todo.map(|todo| todo.completed);
-    // checkbox![
-    //     id(checkbox_id.inner()),
-    //     checkbox::checked(completed),
-    //     checkbox::on_change(|_| super::toggle_todo(todo)),
-    //     el![
-    //         background::image(if completed {
-    //             completed_todo_checkbox_icon()
-    //         } else {
-    //             active_todo_checkbox_icon()
-    //         }),
-    //     ],
-    // ]
+    Checkbox::new()
+        .id(todo.id.to_string())
+        .checked_signal(todo.completed.signal())
+        .on_change(super::toggle_todo(todo))
+        .icon(Checkbox::default_icon)
+        // .icon(|checked_signal| {
+        //     El::new()
+        //     // background::image(if completed {
+        //     //     completed_todo_checkbox_icon()
+        //     // } else {
+        //     //     active_todo_checkbox_icon()
+        //     // }),
+        // })
 }
 
 fn active_todo_checkbox_icon() -> &'static str {
