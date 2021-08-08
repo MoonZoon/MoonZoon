@@ -1,53 +1,61 @@
-use crate::{web_sys::HtmlInputElement, *};
-use std::borrow::Cow;
+use crate::{web_sys::HtmlDivElement, *};
 use std::marker::PhantomData;
+use futures_util::future::ready;
 
 // ------ ------
 //    Element
 // ------ ------
 
-make_flags!(Id, OnChange, Placeholder, Text, Label);
+make_flags!(Id, OnChange, Label);
 
-pub struct Checkbox<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {
+pub struct Checkbox<IdFlag, OnChangeFlag, LabelFlag> {
+    checked: Mutable<bool>,
     raw_el: RawHtmlEl,
-    flags: PhantomData<(IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag)>,
+    flags: PhantomData<(IdFlag, OnChangeFlag, LabelFlag)>,
 }
 
 impl
     Checkbox<
         IdFlagNotSet,
         OnChangeFlagNotSet,
-        PlaceholderFlagNotSet,
-        TextFlagNotSet,
         LabelFlagNotSet,
     >
 {
     pub fn new() -> Self {
+        let checked = Mutable::new(false);
         Self {
-            raw_el: RawHtmlEl::new("input").attr("class", "text_input"),
+            checked: checked.clone(),
+            raw_el: RawHtmlEl::new("div")
+                .attr("class", "checkbox")
+                .attr("role", "checkbox")
+                .attr("aria-live", "polite")
+                .attr("tabindex", "0")
+                .attr_signal("aria-checked", checked.signal().map(|checked| checked.to_string()))
+                .style("cursor", "pointer")
+                .event_handler(move |_: events::Click| checked.update(|checked| !checked)),
             flags: PhantomData,
         }
     }
 }
 
-impl<OnChangeFlag, PlaceholderFlag, TextFlag> Element
-    for Checkbox<IdFlagSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagNotSet>
+impl<OnChangeFlag> Element
+    for Checkbox<IdFlagSet, OnChangeFlag, LabelFlagNotSet>
 {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<OnChangeFlag, PlaceholderFlag, TextFlag> Element
-    for Checkbox<IdFlagNotSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagSet>
+impl<OnChangeFlag> Element
+    for Checkbox<IdFlagNotSet, OnChangeFlag, LabelFlagSet>
 {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> UpdateRawEl<RawHtmlEl>
-    for Checkbox<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag> UpdateRawEl<RawHtmlEl>
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag>
 {
     fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
         self.raw_el = updater(self.raw_el);
@@ -59,39 +67,39 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> UpdateRawEl<Raw
 //   Abilities
 // ------ ------
 
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Styleable<'_, RawHtmlEl>
-    for Checkbox<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag> Styleable<'_, RawHtmlEl>
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag>
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> KeyboardEventAware<RawHtmlEl>
-    for Checkbox<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag> KeyboardEventAware<RawHtmlEl>
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag>
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Focusable
-    for Checkbox<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag> Focusable
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag>
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Hoverable<RawHtmlEl>
-    for Checkbox<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag> Hoverable<RawHtmlEl>
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag>
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Hookable<RawHtmlEl>
-    for Checkbox<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag> Hookable<RawHtmlEl>
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag>
 {
-    type WSElement = HtmlInputElement;
+    type WSElement = HtmlDivElement;
 }
 
 // ------ ------
 //  Attributes
 // ------ ------
 
-impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
-    Checkbox<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+impl<'a, IdFlag, OnChangeFlag, LabelFlag>
+    Checkbox<IdFlag, OnChangeFlag, LabelFlag>
 {
     pub fn id(
         mut self,
         id: impl IntoCowStr<'a>,
-    ) -> Checkbox<IdFlagSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+    ) -> Checkbox<IdFlagSet, OnChangeFlag, LabelFlag>
     where
         IdFlag: FlagNotSet,
     {
@@ -99,57 +107,55 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
         self.into_type()
     }
 
-    pub fn placeholder(
-        mut self,
-        placeholder: Placeholder<'a>,
-    ) -> Checkbox<IdFlag, OnChangeFlag, PlaceholderFlagSet, TextFlag, LabelFlag>
-    where
-        PlaceholderFlag: FlagNotSet,
+    pub fn checked(
+        self,
+        checked: bool,
+    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlag>
+    // where
+    //     TextFlag: FlagNotSet,
     {
-        self.raw_el = self.raw_el.attr("placeholder", &placeholder.text);
+        self.checked.set_neq(checked);
         self.into_type()
     }
 
-    pub fn text(
+    pub fn checked_signal(
         mut self,
-        text: impl IntoCowStr<'a>,
-    ) -> Checkbox<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlagSet, LabelFlag>
-    where
-        TextFlag: FlagNotSet,
+        checked: impl Signal<Item = bool> + Unpin + 'static,
+    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlag>
+    // where
+    //     TextFlag: FlagNotSet,
     {
-        self.raw_el = self.raw_el.prop("value", &text.into_cow_str());
-        self.into_type()
-    }
-
-    pub fn text_signal(
-        mut self,
-        text: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static,
-    ) -> Checkbox<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlagSet, LabelFlag>
-    where
-        TextFlag: FlagNotSet,
-    {
-        self.raw_el = self.raw_el.prop_signal("value", text);
+        let checked_mutable = self.checked.clone();
+        let checked_changer = checked.for_each(move |checked| {
+            checked_mutable.set_neq(checked);
+            ready(())
+        });
+        let task_handle = Task::start_droppable(checked_changer);
+        self.raw_el = self.raw_el.after_remove(move |_| drop(task_handle));
         self.into_type()
     }
 
     pub fn on_change(
         mut self,
-        on_change: impl FnOnce(String) + Clone + 'static,
-    ) -> Checkbox<IdFlag, OnChangeFlagSet, PlaceholderFlag, TextFlag, LabelFlag>
+        on_change: impl FnOnce(bool) + Clone + 'static,
+    ) -> Checkbox<IdFlag, OnChangeFlagSet, LabelFlag>
     where
         OnChangeFlag: FlagNotSet,
     {
-        self.raw_el = self.raw_el.event_handler(move |event: events::Input| {
-            #[allow(deprecated)]
-            (on_change.clone())(event.value().unwrap())
+        let on_change = move |checked| on_change.clone()(checked);
+        let on_change_invoker = self.checked.signal().for_each(move |checked| { 
+            on_change(checked);
+            ready(())
         });
+        let task_handle = Task::start_droppable(on_change_invoker);
+        self.raw_el = self.raw_el.after_remove(move |_| drop(task_handle));
         self.into_type()
     }
 
     pub fn label_hidden(
         mut self,
         label: impl IntoCowStr<'a>,
-    ) -> Checkbox<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagSet>
+    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlagSet>
     where
         LabelFlag: FlagNotSet,
     {
@@ -157,26 +163,35 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
         self.into_type()
     }
 
-    fn into_type<NewIdFlag, NewOnChangeFlag, NewPlaceholderFlag, NewTextFlag, NewLabelFlag>(
+    pub fn icon<IE: IntoElement<'a> + 'a>(
+        mut self,
+        icon: impl FnOnce(MutableSignal<bool>) -> IE
+    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlag> {
+        let icon = icon(self.checked.signal());
+        self.raw_el = self.raw_el.child(icon);
+        self.into_type()
+    }
+
+    fn into_type<NewIdFlag, NewOnChangeFlag, NewLabelFlag>(
         self,
-    ) -> Checkbox<NewIdFlag, NewOnChangeFlag, NewPlaceholderFlag, NewTextFlag, NewLabelFlag> {
+    ) -> Checkbox<NewIdFlag, NewOnChangeFlag, NewLabelFlag> {
         Checkbox {
+            checked: self.checked,
             raw_el: self.raw_el,
             flags: PhantomData,
         }
     }
 }
 
-// ------ Placehholder ------
+// ------ ------
+//     Extra
+// ------ ------
 
-pub struct Placeholder<'a> {
-    text: Cow<'a, str>,
-}
-
-impl<'a> Placeholder<'a> {
-    pub fn new(text: impl IntoCowStr<'a>) -> Self {
-        Placeholder {
-            text: text.into_cow_str(),
-        }
-    }
+pub fn default_icon(checked_signal: MutableSignal<bool>) -> impl Element {
+    El::new()
+        .s(Background::new().color(NamedColor::Gray8))
+        .s(Font::new().size(16))
+        .s(Width::new(20))
+        .s(Height::new(20))
+        .child_signal(checked_signal.map(|checked| checked.then(|| "V")))
 }

@@ -22,11 +22,12 @@ pub use dom::{document, history, window};
 pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};
 pub use either::{Either, IntoEither};
 pub use element::*;
+pub use futures_util;
 pub use futures_signals::{
     self, map_mut, map_ref,
-    signal::{Mutable, Signal, SignalExt},
-    signal_map::{MutableBTreeMap, SignalMap, SignalMapExt},
-    signal_vec::{MutableVec, SignalVec, SignalVecExt},
+    signal::{Mutable, Signal, SignalExt, MutableSignal},
+    signal_map::{MutableBTreeMap, SignalMap, SignalMapExt, MutableSignalMap},
+    signal_vec::{MutableVec, SignalVec, SignalVecExt, MutableSignalVec},
 };
 pub use futures_signals_ext::{MutableExt, MutableVecExt, SignalExtMapBool};
 pub use js_sys::{self, Reflect};
@@ -36,7 +37,7 @@ pub use pin_project::pin_project;
 pub use send_wrapper::SendWrapper;
 pub use std::future::Future;
 pub use style::*;
-pub use task::Task;
+pub use task::{Task, TaskHandle};
 pub use timer::Timer;
 pub use viewport::{Scene, Viewport};
 pub use wasm_bindgen::{self, prelude::*, JsCast};

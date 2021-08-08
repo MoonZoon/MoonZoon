@@ -181,10 +181,6 @@ fn remove_todo(id: TodoId) {
     todos().lock_mut().retain(|todo| todo.id != id);
 }
 
-fn toggle_todo(todo: &Todo) {
-    todo.completed.update(|completed| !completed);
-}
-
 fn remove_completed_todos() {
     todos().lock_mut().retain(|todo| not(todo.completed.get()));
 }
