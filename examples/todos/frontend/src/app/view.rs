@@ -76,18 +76,19 @@ fn panel_header() -> impl Element {
 fn toggle_all_checkbox() -> impl Element {
     Checkbox::new()
         .checked_signal(super::are_all_completed())
-        .on_click(super::check_or_uncheck_all_todos)
+        // .on_click(super::check_or_uncheck_all_todos)
         .label_hidden("Toggle All")
-        .icon(|checked_signal| {
-            El::new()
-                .s(
-                    Font::new()
-                    .size(22)
-                    // font::color(hsla(0, 0, if checked { 48.4 } else { 91.3 })),
-                )
-                // rotate(90),
-                .child(">")
-        })
+        .icon(checkbox::default_icon)
+        // .icon(|checked_signal| {
+        //     El::new()
+        //         .s(
+        //             Font::new()
+        //             .size(22)
+        //             // font::color(hsla(0, 0, if checked { 48.4 } else { 91.3 })),
+        //         )
+        //         // rotate(90),
+        //         .child(">")
+        // })
 }
 
 fn new_todo_title() -> impl Element {
@@ -117,18 +118,18 @@ fn todo(todo: Arc<Todo>) -> impl Element {
         .s(Padding::new().all(15))
         .s(Spacing::new(10))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
-        .item(todo_checkbox(&todo))
+        .item(todo_checkbox(todo.clone()))
         .item_signal(super::is_todo_selected(todo.id).map(clone!((todo) move |is_selected| not(is_selected).then(|| todo_label(&todo)))))
         .item_signal(super::is_todo_selected(todo.id).map(|is_selected| is_selected.then(selected_todo_title)))
         .item_signal(hovered_signal.map(move |hovered| hovered.then(|| remove_todo_button(&todo))))
 }
 
-fn todo_checkbox(todo: &Todo) -> impl Element {
+fn todo_checkbox(todo: Arc<Todo>) -> impl Element {
     Checkbox::new()
         .id(todo.id.to_string())
         .checked_signal(todo.completed.signal())
-        .on_change(super::toggle_todo(todo))
-        .icon(Checkbox::default_icon)
+        .on_change(move |checked| todo.completed.set_neq(checked))
+        .icon(checkbox::default_icon)
         // .icon(|checked_signal| {
         //     El::new()
         //     // background::image(if completed {
