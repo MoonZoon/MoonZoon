@@ -20,6 +20,9 @@ pub use label::Label;
 pub mod link;
 pub use link::Link;
 
+pub mod paragraph;
+pub use paragraph::Paragraph;
+
 pub mod row;
 pub use row::Row;
 

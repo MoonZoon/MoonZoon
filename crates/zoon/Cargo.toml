@@ -42,6 +42,7 @@ features = [
   'HtmlDivElement',
   'HtmlInputElement',
   'HtmlLabelElement',
+  'HtmlParagraphElement',
   'Location',
   'Response',
   'Request',
