@@ -18,18 +18,18 @@ pub use padding::Padding;
 pub use spacing::Spacing;
 pub use width::Width;
 
-type StaticCSSProps<'a> = BTreeMap<&'a str, Cow<'a, str>>;
-type DynamicCSSProps = BTreeMap<&'static str, BoxedCssSignal>;
+pub type StaticCSSProps<'a> = BTreeMap<&'a str, Cow<'a, str>>;
+pub type DynamicCSSProps = BTreeMap<&'static str, BoxedCssSignal>;
 
-type BoxedCssSignal = Box<dyn Signal<Item = Box<dyn IntoOptionCowStr<'static>>> + Unpin>;
+pub type BoxedCssSignal = Box<dyn Signal<Item = Box<dyn IntoOptionCowStr<'static>>> + Unpin>;
 
-fn box_css_signal(
+pub fn box_css_signal(
     signal: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static,
 ) -> BoxedCssSignal {
     Box::new(signal.map(|value| Box::new(value) as Box<dyn IntoOptionCowStr<'static>>))
 }
 
-fn px<'a>(px: u32) -> Cow<'a, str> {
+pub fn px<'a>(px: u32) -> Cow<'a, str> {
     format!("{}px", px).into()
 }
 

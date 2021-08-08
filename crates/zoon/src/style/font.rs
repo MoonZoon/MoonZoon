@@ -37,6 +37,16 @@ impl<'a> Font<'a> {
             .insert("text-decoration", "underline".into());
         self
     }
+
+    pub fn underline_signal(
+        mut self,
+        underline: impl Signal<Item = bool> + Unpin + 'static,
+    ) -> Self {
+        let underline = underline.map_bool(|| "underline", || "none");
+        self.dynamic_css_props
+            .insert("text-decoration", box_css_signal(underline));
+        self
+    }
 }
 
 impl<'a> Style<'a> for Font<'a> {
