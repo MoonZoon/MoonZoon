@@ -92,6 +92,11 @@ impl<'a, LabelFlag, ToFlag> Link<LabelFlag, ToFlag> {
         self.into_type()
     }
 
+    pub fn new_tab(mut self) -> Link<LabelFlag, ToFlag> {
+        self.raw_el = self.raw_el.attr("target", "_blank");
+        self.into_type()
+    }
+
     fn into_type<NewLabelFlag, NewToFlag>(self) -> Link<NewLabelFlag, NewToFlag> {
         Link {
             raw_el: self.raw_el,
