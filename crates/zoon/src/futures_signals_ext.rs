@@ -108,15 +108,23 @@ impl<A> MutableVecExt<A> for MutableVec<A> {
     }
 }
 
-// ------ SignalExtMapBool ------
+// ------ SignalExtBool ------
 
-pub trait SignalExtMapBool {
+pub trait SignalExtBool {
     fn map_bool<B, TM: FnMut() -> B, FM: FnMut() -> B>(self, t: TM, f: FM) -> MapBool<Self, TM, FM>
+    where
+        Self: Sized;
+
+    fn map_true<B, F: FnMut() -> B>(self, f: F) -> MapTrue<Self, F>
+    where
+        Self: Sized;
+
+    fn map_false<B, F: FnMut() -> B>(self, f: F) -> MapFalse<Self, F>
     where
         Self: Sized;
 }
 
-impl<T: Signal<Item = bool>> SignalExtMapBool for T {
+impl<T: Signal<Item = bool>> SignalExtBool for T {
     #[inline]
     fn map_bool<B, TM: FnMut() -> B, FM: FnMut() -> B>(self, t: TM, f: FM) -> MapBool<Self, TM, FM>
     where
@@ -128,7 +136,31 @@ impl<T: Signal<Item = bool>> SignalExtMapBool for T {
             false_mapper: f,
         }
     }
+
+    #[inline]
+    fn map_true<B, F: FnMut() -> B>(self, f: F) -> MapTrue<Self, F>
+    where
+        Self: Sized,
+    {
+        MapTrue {
+            signal: self,
+            f,
+        }
+    }
+
+    #[inline]
+    fn map_false<B, F: FnMut() -> B>(self, f: F) -> MapFalse<Self, F>
+    where
+        Self: Sized,
+    {
+        MapFalse {
+            signal: self,
+            f,
+        }
+    }
 }
+
+// -- MapBool --
 
 #[pin_project(project = MapBoolProj)]
 #[derive(Debug)]
@@ -157,26 +189,7 @@ impl<I, S: Signal<Item = bool>, TM: FnMut() -> I, FM: FnMut() -> I> Signal for M
     }
 }
 
-// ------ SignalExtMapTrue ------
-
-pub trait SignalExtMapTrue {
-    fn map_true<B, F: FnMut() -> B>(self, f: F) -> MapTrue<Self, F>
-    where
-        Self: Sized;
-}
-
-impl<T: Signal<Item = bool>> SignalExtMapTrue for T {
-    #[inline]
-    fn map_true<B, F: FnMut() -> B>(self, f: F) -> MapTrue<Self, F>
-    where
-        Self: Sized,
-    {
-        MapTrue {
-            signal: self,
-            f,
-        }
-    }
-}
+// -- MapTrue --
 
 #[pin_project(project = MapTrueProj)]
 #[derive(Debug)]
@@ -203,26 +216,7 @@ impl<I, S: Signal<Item = bool>, F: FnMut() -> I> Signal for MapTrue<S, F> {
     }
 }
 
-// ------ SignalExtMapFalse ------
-
-pub trait SignalExtMapFalse {
-    fn map_false<B, F: FnMut() -> B>(self, f: F) -> MapFalse<Self, F>
-    where
-        Self: Sized;
-}
-
-impl<T: Signal<Item = bool>> SignalExtMapFalse for T {
-    #[inline]
-    fn map_false<B, F: FnMut() -> B>(self, f: F) -> MapFalse<Self, F>
-    where
-        Self: Sized,
-    {
-        MapFalse {
-            signal: self,
-            f,
-        }
-    }
-}
+// -- MapFalse --
 
 #[pin_project(project = MapFalseProj)]
 #[derive(Debug)]
