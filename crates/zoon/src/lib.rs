@@ -25,7 +25,7 @@ pub use element::*;
 pub use futures_util;
 pub use futures_signals::{
     self, map_mut, map_ref,
-    signal::{Mutable, Signal, SignalExt, MutableSignal},
+    signal::{Mutable, Signal, SignalExt, MutableSignal, ReadOnlyMutable},
     signal_map::{MutableBTreeMap, SignalMap, SignalMapExt, MutableSignalMap},
     signal_vec::{MutableVec, SignalVec, SignalVecExt, MutableSignalVec},
 };
