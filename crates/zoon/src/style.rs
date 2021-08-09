@@ -15,7 +15,7 @@ mod width;
 pub use align::Align;
 pub use background::Background;
 pub use color::{Color, NamedColor, HSLuv, hsl, hsla};
-pub use font::Font;
+pub use font::{Font, NamedWeight, FontWeight, FontFamily};
 pub use height::Height;
 pub use padding::Padding;
 pub use scrollbars::Scrollbars;
