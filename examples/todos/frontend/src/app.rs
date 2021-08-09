@@ -1,4 +1,4 @@
-use zoon::{*, futures_util::StreamExt};
+use zoon::*;
 // use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 use uuid::Uuid;
@@ -71,6 +71,23 @@ fn new_todo_title() -> &'static Mutable<String> {
 }
 
 // ------ ------
+//    Caches
+// ------ ------
+
+#[static_ref]
+fn are_all_completed() -> &'static Mutable<bool> {
+    let mutable = Mutable::new(false);
+    Task::start(all_and_completed()
+        .map(|(all, completed)| all == completed)
+        .for_each(clone!((mutable) move |all_completed| {
+            mutable.set_neq(all_completed);
+            async {}
+        }))
+    );
+    mutable
+}
+
+// ------ ------
 //   Signals
 // ------ ------
 
@@ -100,10 +117,6 @@ fn all_and_completed() -> impl Signal<Item = (usize, usize)> {
         let completed = completed_count() =>
         (*all, *completed)
     }
-}
-
-fn are_all_completed() -> impl Signal<Item = bool> {
-    all_and_completed().map(|(all, completed)| all == completed).dedupe()
 }
 
 fn active_count() -> impl Signal<Item = usize> {
@@ -192,11 +205,8 @@ fn remove_completed_todos() {
 }
 
 fn check_or_uncheck_all_todos() {
-    Task::start(async {
-        let completed = are_all_completed().to_stream().next().await.unwrap_throw();
-        zoon::println!("{:#?}", completed);
-        for todo in todos().lock_ref().iter() {
-            todo.completed.set_neq(!completed);
-        }
-    })
+    let completed = are_all_completed().get();
+    for todo in todos().lock_ref().iter() {
+        todo.completed.set_neq(!completed);
+    }
 }

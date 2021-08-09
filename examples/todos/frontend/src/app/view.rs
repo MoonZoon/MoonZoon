@@ -75,7 +75,7 @@ fn panel_header() -> impl Element {
 
 fn toggle_all_checkbox() -> impl Element {
     Checkbox::new()
-        .checked_signal(super::are_all_completed())
+        .checked_signal(super::are_all_completed().signal())
         .on_click(super::check_or_uncheck_all_todos)
         .label_hidden("Toggle All")
         .icon(checkbox::default_icon)
