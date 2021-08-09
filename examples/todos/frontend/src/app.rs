@@ -75,16 +75,17 @@ fn new_todo_title() -> &'static Mutable<String> {
 // ------ ------
 
 #[static_ref]
-fn are_all_completed() -> &'static Mutable<bool> {
+fn are_all_completed() -> &'static ReadOnlyMutable<bool> {
     let mutable = Mutable::new(false);
+    let read_only = mutable.read_only();
     Task::start(all_and_completed()
         .map(|(all, completed)| all == completed)
-        .for_each(clone!((mutable) move |all_completed| {
+        .for_each(move |all_completed| {
             mutable.set_neq(all_completed);
             async {}
-        }))
+        })
     );
-    mutable
+    read_only
 }
 
 // ------ ------
