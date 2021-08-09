@@ -1,9 +1,8 @@
-use zoon::*;
+use zoon::{*, futures_util::StreamExt};
 // use serde::{Deserialize, Serialize};
 use strum::EnumIter;
 use uuid::Uuid;
-use std::sync::Arc;
-use std::ops::Deref;
+use std::{sync::Arc, ops::Deref};
 
 pub mod view;
 
@@ -25,15 +24,18 @@ pub enum Filter {
 // ------ Todo -------
 
 // #[derive(Deserialize, Serialize)]
+#[derive(Debug)]
 struct Todo {
     id: TodoId,
     title: Mutable<String>,
     completed: Mutable<bool>,
+    // #[serde(skip)]
+    edited_title: Mutable<Option<String>>,
 }
 
 // ------ TodoId -------
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
 struct TodoId(Uuid);
 
 impl Deref for TodoId {
@@ -59,12 +61,7 @@ fn todos() -> &'static MutableVec<Arc<Todo>> {
 }
 
 #[static_ref]
-fn selected_todo() -> &'static Mutable<Option<TodoId>> {
-    Mutable::new(None)
-}
-
-#[static_ref]
-fn selected_todo_title() -> &'static Mutable<Option<String>> {
+fn selected_todo() -> &'static Mutable<Option<Arc<Todo>>> {
     Mutable::new(None)
 }
 
@@ -128,8 +125,12 @@ fn filtered_todos() -> impl SignalVec<Item = Arc<Todo>> {
 }
 
 fn is_todo_selected(id: TodoId) -> impl Signal<Item = bool> {
-    selected_todo().signal().map(move |selected_id| {
-        selected_id.map(|selected_id| selected_id == id).unwrap_or_default()
+    selected_todo().signal_ref(move |todo| {
+        if let Some(todo) = todo {
+            todo.id == id
+        } else {
+            false
+        }
     }).dedupe()
 }
 
@@ -147,12 +148,13 @@ pub fn select_filter(filter: Filter) {
     selected_filter().set_neq(filter);
 }
 
-fn select_todo(id: Option<TodoId>) {
-    selected_todo().set_neq(id);
-}
-
-fn set_selected_todo_title(title: String) {
-    selected_todo_title().set(Some(title))
+fn select_todo(todo: Option<Arc<Todo>>) {
+    if let Some(todo) = &todo {
+        if todo.edited_title.map(|title| title.is_none()) {
+            todo.edited_title.set(Some(todo.title.get_cloned()))
+        }
+    }
+    selected_todo().set(todo);
 }
 
 fn set_new_todo_title(title: String) {
@@ -160,7 +162,9 @@ fn set_new_todo_title(title: String) {
 }
 
 fn save_selected_todo() {
-
+    let todo = selected_todo().take().unwrap_throw();
+    let new_title = todo.edited_title.take().unwrap_throw();
+    todo.title.set(new_title);
 }
 
 fn add_todo() {
@@ -173,6 +177,7 @@ fn add_todo() {
         id: TodoId(Uuid::new_v4()),
         title: Mutable::new(title.to_owned()),
         completed: Mutable::new(false),
+        edited_title: Mutable::new(None),
     };
     todos().lock_mut().push_cloned(Arc::new(todo));
     new_todo_title.clear();
@@ -188,9 +193,10 @@ fn remove_completed_todos() {
 
 fn check_or_uncheck_all_todos() {
     Task::start(async {
-        let completed = are_all_completed().to_future().await;
+        let completed = are_all_completed().to_stream().next().await.unwrap_throw();
+        zoon::println!("{:#?}", completed);
         for todo in todos().lock_ref().iter() {
-            todo.completed.set_neq(completed);
+            todo.completed.set_neq(!completed);
         }
     })
 }

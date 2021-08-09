@@ -71,7 +71,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Focusable
     for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Hoverable<RawHtmlEl>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> MouseEventAware<RawHtmlEl>
     for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
 {
 }

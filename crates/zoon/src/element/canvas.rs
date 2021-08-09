@@ -40,7 +40,7 @@ impl<WidthFlag, HeightFlag> UpdateRawEl<RawHtmlEl> for Canvas<WidthFlag, HeightF
 
 impl<WidthFlag, HeightFlag> Styleable<'_, RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
 impl<WidthFlag, HeightFlag> KeyboardEventAware<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
-impl<WidthFlag, HeightFlag> Hoverable<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> MouseEventAware<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
 impl<WidthFlag, HeightFlag> Hookable<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {
     type WSElement = HtmlCanvasElement;
 }
