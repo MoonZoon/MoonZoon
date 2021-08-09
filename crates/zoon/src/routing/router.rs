@@ -1,6 +1,5 @@
 use crate::{routing::decode_uri_component, *};
 use futures_signals::signal::{channel, Sender};
-use futures_util::future::ready;
 use std::marker::PhantomData;
 use web_sys::MouseEvent;
 
@@ -64,7 +63,7 @@ fn setup_url_change_handler<R: FromRouteSegments>(
     let url_change_handler = url_change_receiver.for_each(move |segments| {
         let route = segments.and_then(R::from_route_segments);
         on_route_change(route);
-        ready(())
+        async {}
     });
     let url_change_handle = Task::start_droppable(url_change_handler);
     (url_change_sender, url_change_handle)
