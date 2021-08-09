@@ -6,14 +6,19 @@ use strum::IntoEnumIterator;
 
 pub fn root() -> impl Element {
     Column::new()
-        // font::family!("Helvetica Neue", "Helvetica", "Arial", font::sans_serif()),
-        // font::light
         .s(Width::fill())
         .s(Height::fill().min_screen())
         .s(
             Font::new()
                 .size(14)
                 .color(hsl(0, 0, 5.1))
+                .weight(NamedWeight::Light)
+                .family(vec![
+                    FontFamily::new("Helvetica Neue"),
+                    FontFamily::new("Helvetica"),
+                    FontFamily::new("Arial"),
+                    FontFamily::SansSerif,
+                ])
         )
         .s(Background::new().color(hsl(0, 0, 96.5)))
         .item(content())
@@ -37,13 +42,14 @@ fn content() -> impl Element {
 fn header() -> impl Element {
     El::new()
         // region::h1(),
-        // font::extra_light(),
         .s(Align::new().center_x())
         .s(Scrollbars::new().both(false))
         .s(Height::new(130))
         .s(Font::new()
             .size(100)
-            .color(hsla(10.5, 62.8, 44.5, 15)))
+            .color(hsla(10.5, 62.8, 44.5, 15))
+            .weight(NamedWeight::Hairline)
+        )
         .child("todos")
 }
 
@@ -223,7 +229,7 @@ fn active_items_count() -> impl Element {
     Paragraph::new()
         .content(
             El::new()
-                .s(Font::new().bold())
+                .s(Font::new().weight(NamedWeight::Bold))
                 .child(Text::with_signal(super::active_count()))
         )
         .content(Text::with_signal(super::active_count().map(|count| {

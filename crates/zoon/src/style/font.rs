@@ -1,5 +1,11 @@
-use crate::style::{box_css_signal, px, DynamicCSSProps, StaticCSSProps};
 use crate::*;
+use std::borrow::Cow;
+
+mod font_weight;
+pub use font_weight::{FontWeight, NamedWeight};
+
+mod font_family;
+pub use font_family::FontFamily;
 
 #[derive(Default)]
 pub struct Font<'a> {
@@ -8,8 +14,8 @@ pub struct Font<'a> {
 }
 
 impl<'a> Font<'a> {
-    pub fn bold(mut self) -> Self {
-        self.static_css_props.insert("font-weight", "bold".into());
+    pub fn weight(mut self, weight: impl FontWeight<'a>) -> Self {
+        self.static_css_props.insert("font-weight", weight.into_cow_str());
         self
     }
 
@@ -67,6 +73,16 @@ impl<'a> Font<'a> {
     pub fn center(mut self) -> Self {
         self.static_css_props
             .insert("text-align", "center".into());
+        self
+    }
+
+    pub fn family(mut self, family: impl IntoIterator<Item = FontFamily<'a>>) -> Self {
+        let font_family = family
+            .into_iter()
+            .map(|family| family.into_cow_str())
+            .collect::<Cow<_>>()
+            .join(", ");
+        self.static_css_props.insert("font-family", font_family.into());
         self
     }
 }
