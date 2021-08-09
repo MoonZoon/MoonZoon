@@ -76,7 +76,7 @@ fn panel_header() -> impl Element {
 fn toggle_all_checkbox() -> impl Element {
     Checkbox::new()
         .checked_signal(super::are_all_completed())
-        // .on_click(super::check_or_uncheck_all_todos)
+        .on_click(super::check_or_uncheck_all_todos)
         .label_hidden("Toggle All")
         .icon(checkbox::default_icon)
         // .icon(|checked_signal| {
@@ -119,8 +119,8 @@ fn todo(todo: Arc<Todo>) -> impl Element {
         .s(Spacing::new(10))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .item(todo_checkbox(todo.clone()))
-        .item_signal(super::is_todo_selected(todo.id).map_false(clone!((todo) move || todo_label(&todo))))
-        .item_signal(super::is_todo_selected(todo.id).map_true(selected_todo_title))
+        .item_signal(super::is_todo_selected(todo.id).map_false(clone!((todo) move || todo_label(todo.clone()))))
+        .item_signal(super::is_todo_selected(todo.id).map_true(clone!((todo) move || edited_todo_title(todo.clone()))))
         .item_signal(hovered_signal.map_true(move || remove_todo_button(&todo)))
 }
 
@@ -148,17 +148,18 @@ fn completed_todo_checkbox_icon() -> &'static str {
     "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%22-10%20-18%20100%20135%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22none%22%20stroke%3D%22%23bddad5%22%20stroke-width%3D%223%22/%3E%3Cpath%20fill%3D%22%235dc2af%22%20d%3D%22M72%2025L42%2071%2027%2056l-4%204%2020%2020%2034-52z%22/%3E%3C/svg%3E"
 }
 
-fn todo_label(todo: &Todo) -> impl Element {
+fn todo_label(todo: Arc<Todo>) -> impl Element {
     Label::new()
         // checked.then(font::strike),
         // font::regular(),
         // font::color(hsl(0, 0, 32.7)),
-        // on_double_click(|| select_todo(Some(todo))),
         .for_input(todo.id.to_string())
         .label_signal(todo.title.signal_cloned())
+        .on_double_click(move || super::select_todo(Some(todo)))
 }
 
-fn selected_todo_title() -> impl Element {
+fn edited_todo_title(todo: Arc<Todo>) -> impl Element {
+    let text_signal = todo.edited_title.signal_cloned().map(Option::unwrap_throw);
     TextInput::new()
         .s(Padding::new().x(16).y(12))
         // width!(fill()),
@@ -173,14 +174,14 @@ fn selected_todo_title() -> impl Element {
         // ),
         .label_hidden("selected todo title")
         .focused()
-        // on_blur(super::save_selected_todo),
-        .on_change(super::set_selected_todo_title)
+        .on_blur(super::save_selected_todo)
+        .on_change(move |text| todo.edited_title.set_neq(Some(text)))
         .on_key_down(|event| match event.key() {
             Key::Escape => super::select_todo(None),
             Key::Enter => super::save_selected_todo(),
             _ => ()
         })
-        .text_signal(super::selected_todo_title().signal_cloned().map(Option::unwrap_or_default))
+        .text_signal(text_signal)
 }
 
 fn remove_todo_button(todo: &Todo) -> impl Element {

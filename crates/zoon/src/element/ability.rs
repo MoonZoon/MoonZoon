@@ -1,11 +1,19 @@
 use crate::*;
 use std::borrow::Borrow;
+use std::convert::TryFrom;
 
 // ------ Focusable ------
 
 pub trait Focusable: UpdateRawEl<RawHtmlEl> + Sized {
     fn focused(self) -> Self {
         self.update_raw_el(|raw_el| raw_el.focused())
+    }
+
+    fn on_blur(self, handler: impl FnOnce() + Clone + 'static) -> Self {
+        let handler = move || handler.clone()();
+        self.update_raw_el(|raw_el| {
+            raw_el.event_handler(move |_: events::Blur| handler())
+        })
     }
 }
 
@@ -65,9 +73,9 @@ impl From<String> for Key {
     }
 }
 
-// ------ Hoverable ------
+// ------ MouseEventAware ------
 
-pub trait Hoverable<T: RawEl>: UpdateRawEl<T> + Sized {
+pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
     fn on_hovered_change(self, handler: impl FnOnce(bool) + Clone + 'static) -> Self {
         let mouse_enter_handler = move |hovered| (handler.clone())(hovered);
         let mouse_leave_handler = mouse_enter_handler.clone();
@@ -75,6 +83,20 @@ pub trait Hoverable<T: RawEl>: UpdateRawEl<T> + Sized {
             raw_el
                 .event_handler(move |_: events::MouseEnter| mouse_enter_handler(true))
                 .event_handler(move |_: events::MouseLeave| mouse_leave_handler(false))
+        })
+    }
+
+    fn on_click(self, handler: impl FnOnce() + Clone + 'static) -> Self {
+        let handler = move || handler.clone()();
+        self.update_raw_el(|raw_el| {
+            raw_el.event_handler(move |_: events::Click| handler())
+        })
+    }
+
+    fn on_double_click(self, handler: impl FnOnce() + Clone + 'static) -> Self {
+        let handler = move || handler.clone()();
+        self.update_raw_el(|raw_el| {
+            raw_el.event_handler(move |_: events::DoubleClick| handler())
         })
     }
 }
@@ -98,8 +120,6 @@ pub trait Hookable<T: RawEl>: UpdateRawEl<T> + Sized {
 }
 
 // ------ MutableViewport ------
-
-use std::convert::TryFrom;
 
 pub trait MutableViewport<T: RawEl>: UpdateRawEl<T> + Sized {
     fn on_viewport_location_change(

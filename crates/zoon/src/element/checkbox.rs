@@ -79,7 +79,7 @@ impl<IdFlag, OnChangeFlag, LabelFlag> Focusable
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag> Hoverable<RawHtmlEl>
+impl<IdFlag, OnChangeFlag, LabelFlag> MouseEventAware<RawHtmlEl>
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag>
 {
 }
