@@ -2,19 +2,23 @@ use crate::{format, *};
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
+mod align;
 mod background;
 mod color;
 mod font;
 mod height;
 mod padding;
+mod scrollbars;
 mod spacing;
 mod width;
 
+pub use align::Align;
 pub use background::Background;
-pub use color::{Color, NamedColor};
+pub use color::{Color, NamedColor, HSLuv, hsl, hsla};
 pub use font::Font;
 pub use height::Height;
 pub use padding::Padding;
+pub use scrollbars::Scrollbars;
 pub use spacing::Spacing;
 pub use width::Width;
 

@@ -2,13 +2,10 @@ html {
     line-height: normal;
 }
 
-body {
-    min-height: 100vh;
-}
-
 * {
     flex: none;
     overflow: auto;
+    margin: 0;
 }
 
 .paragraph > * {

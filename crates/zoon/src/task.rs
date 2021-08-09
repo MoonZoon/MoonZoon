@@ -21,6 +21,7 @@ impl Task {
 
 // ------ TaskHandle ------
 
+#[must_use]
 pub struct TaskHandle(AbortHandle);
 
 impl Drop for TaskHandle {

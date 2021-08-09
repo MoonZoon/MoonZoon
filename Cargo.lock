@@ -1778,6 +1778,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "rust-hsluv"
+version = "0.1.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "efe2374f2385cdd8755a446f80b2a646de603c9d8539ca38734879b5c71e378b"
+
+[[package]]
 name = "rustc_version"
 version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2726,6 +2732,7 @@ dependencies = [
  "paste",
  "pin-project",
  "route_macro",
+ "rust-hsluv",
  "send_wrapper",
  "static_ref_macro",
  "ufmt",

@@ -47,6 +47,28 @@ impl<'a> Font<'a> {
             .insert("text-decoration", box_css_signal(underline));
         self
     }
+
+    pub fn strike(mut self) -> Self {
+        self.static_css_props
+            .insert("text-decoration", "line-through".into());
+        self
+    }
+
+    pub fn strike_signal(
+        mut self,
+        strike: impl Signal<Item = bool> + Unpin + 'static,
+    ) -> Self {
+        let strike = strike.map_bool(|| "line-through", || "none");
+        self.dynamic_css_props
+            .insert("text-decoration", box_css_signal(strike));
+        self
+    }
+
+    pub fn center(mut self) -> Self {
+        self.static_css_props
+            .insert("text-align", "center".into());
+        self
+    }
 }
 
 impl<'a> Style<'a> for Font<'a> {
