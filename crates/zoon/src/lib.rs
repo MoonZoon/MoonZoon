@@ -34,6 +34,7 @@ pub use js_sys::{self, Reflect};
 pub use not::not;
 pub use paste;
 pub use pin_project::pin_project;
+pub use hsluv;
 pub use send_wrapper::SendWrapper;
 pub use std::future::Future;
 pub use style::*;

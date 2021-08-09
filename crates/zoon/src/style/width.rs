@@ -13,6 +13,22 @@ impl<'a> Width<'a> {
         this.static_css_props.insert("width", px(width));
         this
     }
+
+    pub fn fill() -> Self {
+        let mut this = Self::default();
+        this.static_css_props.insert("width", "100%".into());
+        this
+    }
+
+    pub fn min(mut self, width: u32) -> Self {
+        self.static_css_props.insert("min-width", px(width));
+        self
+    }
+
+    pub fn max(mut self, width: u32) -> Self {
+        self.static_css_props.insert("max-width", px(width));
+        self
+    }
 }
 
 impl<'a> Style<'a> for Width<'a> {

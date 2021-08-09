@@ -5,16 +5,30 @@ use std::sync::Arc;
 use strum::IntoEnumIterator;
 
 pub fn root() -> impl Element {
-    El::new()
-        // font::size(14),
+    Column::new()
         // font::family!("Helvetica Neue", "Helvetica", "Arial", font::sans_serif()),
-        // font::color(hsl(0, 0, 5.1))
-        // background::color(hsl(0, 0, 96.5)),
-        .child(
+        // font::light
+        .s(Width::fill())
+        .s(Height::fill().min_screen())
+        .s(
+            Font::new()
+                .size(14)
+                .color(hsl(0, 0, 5.1))
+        )
+        .s(Background::new().color(hsl(0, 0, 96.5)))
+        .item(content())
+}
+
+fn content() -> impl Element {
+    Column::new()
+        // region::header(),
+        .s(Width::fill().min(230).max(550))
+        .s(Align::new().center_x())
+        .item(header())
+        .item(
             Column::new()
-                // width!(fill(), minimum(230), maximum(550)),
-                // center_x(),
-                .item(header())
+                .s(Width::fill())
+                .s(Spacing::new(65))
                 .item(panel())
                 .item(footer())
         )
@@ -22,25 +36,20 @@ pub fn root() -> impl Element {
 
 fn header() -> impl Element {
     El::new()
-        // region::header(),
-        // width!(fill()),
-        // padding!(top(35), bottom(32)),
-        .child(
-            El::new()
-                // region::h1(),
-                // center_x(),
-                // font::size(80),
-                // font::color(hsl(10.5, 62.8, 44.5)),
-                // font::extra_light(),
-                .child("todos")
-        )
+        // region::h1(),
+        // font::extra_light(),
+        .s(Align::new().center_x())
+        .s(Scrollbars::new().both(false))
+        .s(Height::new(130))
+        .s(Font::new()
+            .size(100)
+            .color(hsla(10.5, 62.8, 44.5, 15)))
+        .child("todos")
 }
 
 fn panel() -> impl Element {
     Column::new()
         // region::section(),
-        // width!(fill()),
-        // background::color(hsl(0, 0, 100)),
         // border::shadow!(
         //     shadow::offsetXY(0, 2),
         //     shadow::size(0),
@@ -53,6 +62,8 @@ fn panel() -> impl Element {
         //     shadow::blur(50),
         //     shadow::color(hsla(0, 0, 0, 10)),
         // ),
+        .s(Width::fill())
+        .s(Background::new().color(hsl(0, 0, 100)))
         .item(panel_header())
         .item_signal(super::todos_exist().map_true(todos))
         .item_signal(super::todos_exist().map_true(panel_footer))
@@ -77,7 +88,7 @@ fn toggle_all_checkbox() -> impl Element {
     Checkbox::new()
         .checked_signal(super::are_all_completed().signal())
         .on_click(super::check_or_uncheck_all_todos)
-        .label_hidden("Toggle All")
+        .label_hidden("Mark (in)complete")
         .icon(checkbox::default_icon)
         // .icon(|checked_signal| {
         //     El::new()
@@ -150,9 +161,13 @@ fn completed_todo_checkbox_icon() -> &'static str {
 
 fn todo_label(todo: Arc<Todo>) -> impl Element {
     Label::new()
-        // checked.then(font::strike),
-        // font::regular(),
-        // font::color(hsl(0, 0, 32.7)),
+        .s(Font::new()
+            .color_signal(todo.completed.signal().map_bool(
+                || hsl(0, 0, 86.7),
+                || hsl(0, 0, 32.7)
+            ))
+            .strike_signal(todo.completed.signal())
+        )
         .for_input(todo.id.to_string())
         .label_signal(todo.title.signal_cloned())
         .on_double_click(move || super::select_todo(Some(todo)))
@@ -188,8 +203,8 @@ fn remove_todo_button(todo: &Todo) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let id = todo.id;
     Button::new()
-        // size::width!(20),
-        // size::height!(20),
+        .s(Width::new(20))
+        .s(Height::new(20))
         .s(Font::new().size(30))
         // font::color(if hovered().inner() { hsl(10.5, 37.7, 48.8) } else { hsl(12.2, 34.7, 68.2) }),
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
@@ -247,7 +262,7 @@ fn filter(filter: Filter) -> impl Element {
 fn clear_completed_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        //  hovered.inner().then(font::underline),
+        .s(Font::new().underline_signal(hovered_signal))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(super::remove_completed_todos)
         .label("Clear completed")
@@ -255,10 +270,18 @@ fn clear_completed_button() -> impl Element {
 
 fn footer() -> impl Element {
     Column::new()
+        // region::footer
+        .s(Spacing::new(9))
+        .s(
+            Font::new()
+                .size(10)
+                .color(hsl(0, 0, 77.3))
+                .center()
+        )
         .item(Paragraph::new().content("Double-click to edit a todo"))
         .item(
             Paragraph::new()
-                .content("Created by ")
+                .content("Written by ")
                 .content(author_link())
         )
         .item(

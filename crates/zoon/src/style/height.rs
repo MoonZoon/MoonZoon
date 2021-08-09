@@ -13,6 +13,17 @@ impl<'a> Height<'a> {
         this.static_css_props.insert("height", px(height));
         this
     }
+
+    pub fn fill() -> Self {
+        let mut this = Self::default();
+        this.static_css_props.insert("height", "100%".into());
+        this
+    }
+
+    pub fn min_screen(mut self) -> Self {
+        self.static_css_props.insert("min-height", "100vh".into());
+        self
+    }
 }
 
 impl<'a> Style<'a> for Height<'a> {
