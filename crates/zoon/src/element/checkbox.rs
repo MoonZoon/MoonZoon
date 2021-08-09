@@ -1,6 +1,5 @@
 use crate::{web_sys::HtmlDivElement, *};
 use std::marker::PhantomData;
-use futures_util::future::ready;
 
 // ------ ------
 //    Element
@@ -128,7 +127,7 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag>
         let checked_mutable = self.checked.clone();
         let checked_changer = checked.for_each(move |checked| {
             checked_mutable.set_neq(checked);
-            ready(())
+            async {}
         });
         let task_handle = Task::start_droppable(checked_changer);
         self.raw_el = self.raw_el.after_remove(move |_| drop(task_handle));
@@ -145,7 +144,7 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag>
         let on_change = move |checked| on_change.clone()(checked);
         let on_change_invoker = self.checked.signal().for_each(move |checked| { 
             on_change(checked);
-            ready(())
+            async {}
         });
         let task_handle = Task::start_droppable(on_change_invoker);
         self.raw_el = self.raw_el.after_remove(move |_| drop(task_handle));
