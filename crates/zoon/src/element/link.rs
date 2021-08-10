@@ -48,6 +48,7 @@ impl<LabelFlag, ToFlag> MouseEventAware<RawHtmlEl> for Link<LabelFlag, ToFlag> {
 impl<LabelFlag, ToFlag> Hookable<RawHtmlEl> for Link<LabelFlag, ToFlag> {
     type WSElement = HtmlAnchorElement;
 }
+impl<LabelFlag, ToFlag> AddNearby<'_> for Link<LabelFlag, ToFlag> {}
 
 // ------ ------
 //  Attributes
