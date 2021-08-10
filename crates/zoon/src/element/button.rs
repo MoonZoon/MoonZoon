@@ -50,6 +50,7 @@ impl<LabelFlag, OnPressFlag> MouseEventAware<RawHtmlEl> for Button<LabelFlag, On
 impl<LabelFlag, OnPressFlag> Hookable<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {
     type WSElement = HtmlDivElement;
 }
+impl<LabelFlag, OnPressFlag> AddNearby<'_> for Button<LabelFlag, OnPressFlag> {}
 
 // ------ ------
 //  Attributes

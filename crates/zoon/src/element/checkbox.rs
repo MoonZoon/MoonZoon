@@ -87,6 +87,7 @@ impl<IdFlag, OnChangeFlag, LabelFlag> Hookable<RawHtmlEl>
 {
     type WSElement = HtmlDivElement;
 }
+impl<IdFlag, OnChangeFlag, LabelFlag> AddNearby<'_> for Checkbox<IdFlag, OnChangeFlag, LabelFlag> {}
 
 // ------ ------
 //  Attributes

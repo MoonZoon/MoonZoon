@@ -47,6 +47,7 @@ impl<EmptyFlag> MutableViewport<RawHtmlEl> for Row<EmptyFlag> {}
 impl<EmptyFlag> Hookable<RawHtmlEl> for Row<EmptyFlag> {
     type WSElement = HtmlDivElement;
 }
+impl<EmptyFlag> AddNearby<'_> for Row<EmptyFlag> {}
 
 // ------ ------
 //  Attributes

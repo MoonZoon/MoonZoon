@@ -46,6 +46,7 @@ impl<EmptyFlag> MutableViewport<RawHtmlEl> for Paragraph<EmptyFlag> {}
 impl<EmptyFlag> Hookable<RawHtmlEl> for Paragraph<EmptyFlag> {
     type WSElement = HtmlParagraphElement;
 }
+impl<EmptyFlag> AddNearby<'_> for Paragraph<EmptyFlag> {}
 
 // ------ ------
 //  Attributes
