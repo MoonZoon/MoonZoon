@@ -80,7 +80,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> Hookable<RawHtm
 {
     type WSElement = HtmlInputElement;
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> AddNearby<'_> for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {}
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> AddNearbyElement<'_> for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> {}
 
 
 // ------ ------

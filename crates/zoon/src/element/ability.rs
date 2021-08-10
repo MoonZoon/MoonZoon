@@ -156,16 +156,17 @@ pub trait MutableViewport<T: RawEl>: UpdateRawEl<T> + Sized {
     }
 }
 
-// ------ AddNearby ------
+// ------ AddNearbyElement ------
 
-pub trait AddNearby<'a>: UpdateRawEl<RawHtmlEl> + Sized {
-    fn add_above(self, element: impl IntoElement<'a> + 'a) -> Self {
+pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
+    fn element_above(self, element: impl IntoElement<'a> + 'a) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el
                 .child(
                     RawHtmlEl::new("div")
                         .style("position", "absolute")
                         .style("bottom", "100%")
+                        .style("left", "0")
                         .style("width", "100%")
                         .style("pointer-events", "none")
                         .attr("class", "above")
@@ -174,13 +175,14 @@ pub trait AddNearby<'a>: UpdateRawEl<RawHtmlEl> + Sized {
         })
     }
 
-    fn add_below(self, element: impl IntoElement<'a> + 'a) -> Self {
+    fn element_below(self, element: impl IntoElement<'a> + 'a) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el
                 .child(
                     RawHtmlEl::new("div")
                         .style("position", "absolute")
                         .style("top", "100%")
+                        .style("left", "0")
                         .style("width", "100%")
                         .style("pointer-events", "none")
                         .attr("class", "below")
@@ -189,13 +191,14 @@ pub trait AddNearby<'a>: UpdateRawEl<RawHtmlEl> + Sized {
         })
     }
 
-    fn add_on_left(self, element: impl IntoElement<'a> + 'a) -> Self {
+    fn element_on_left(self, element: impl IntoElement<'a> + 'a) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el
                 .child(
                     RawHtmlEl::new("div")
                         .style("position", "absolute")
                         .style("right", "100%")
+                        .style("top", "0")
                         .style("height", "100%")
                         .style("pointer-events", "none")
                         .attr("class", "on_left")
@@ -204,13 +207,14 @@ pub trait AddNearby<'a>: UpdateRawEl<RawHtmlEl> + Sized {
         })
     }
 
-    fn add_on_right(self, element: impl IntoElement<'a> + 'a) -> Self {
+    fn element_on_right(self, element: impl IntoElement<'a> + 'a) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el
                 .child(
                     RawHtmlEl::new("div")
                         .style("position", "absolute")
                         .style("left", "100%")
+                        .style("top", "0")
                         .style("height", "100%")
                         .style("pointer-events", "none")
                         .attr("class", "on_right")

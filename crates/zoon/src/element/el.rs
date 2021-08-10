@@ -45,7 +45,7 @@ impl<ChildFlag> MutableViewport<RawHtmlEl> for El<ChildFlag> {}
 impl<ChildFlag> Hookable<RawHtmlEl> for El<ChildFlag> {
     type WSElement = HtmlDivElement;
 }
-impl<ChildFlag> AddNearby<'_> for El<ChildFlag> {}
+impl<ChildFlag> AddNearbyElement<'_> for El<ChildFlag> {}
 
 // ------ ------
 //  Attributes

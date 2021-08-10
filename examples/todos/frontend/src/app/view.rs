@@ -103,8 +103,10 @@ fn todos() -> impl Element {
     //     , Border.solid
     //     , Border.color <| rgb255 230 230 230
     Column::new()
+        .s(Background::new().color(hsl(0, 0, 93.7)))
+        .s(Spacing::new(1))
         .items_signal_vec(super::filtered_todos().map(todo))
-        .add_above(toggle_all_checkbox())
+        .element_above(toggle_all_checkbox())
 }
 
 fn toggle_all_checkbox() -> impl Element {
@@ -132,16 +134,28 @@ fn toggle_all_checkbox() -> impl Element {
 }
 
 fn todo(todo: Arc<Todo>) -> impl Element {
-    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    // let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Row::new()
-        .s(Font::new().size(24))
-        .s(Padding::new().all(15))
-        .s(Spacing::new(10))
-        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-        .item(todo_checkbox(todo.clone()))
-        .item_signal(super::is_todo_selected(todo.id).map_false(clone!((todo) move || todo_label(todo.clone()))))
-        .item_signal(super::is_todo_selected(todo.id).map_true(clone!((todo) move || edited_todo_title(todo.clone()))))
-        .item_signal(hovered_signal.map_true(move || remove_todo_button(&todo)))
+        .s(Width::fill())
+        .s(Background::new().color(hsl(0, 0, 100)))
+        .s(Spacing::new(5))
+        .items_signal_vec(super::is_todo_selected(todo.id).map(move |selected| {
+            if selected {
+                vec![editing_todo_title(todo.clone()).into_raw_element()]
+            } else {
+                vec![
+                    todo_checkbox(todo.clone()).into_raw_element(),
+                    todo_title(todo.clone()).into_raw_element(),
+                ]
+            }
+        }).to_signal_vec())
+        // .s(Padding::new().all(15))
+        // .s(Spacing::new(10))
+        // .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        // .item(todo_checkbox(todo.clone()))
+        // .item_signal(super::is_todo_selected(todo.id).map_false(clone!((todo) move || todo_label(todo.clone()))))
+        // .item_signal(super::is_todo_selected(todo.id).map_true(clone!((todo) move || edited_todo_title(todo.clone()))))
+        // .item_signal(hovered_signal.map_true(move || remove_todo_button(&todo)))
 }
 
 fn todo_checkbox(todo: Arc<Todo>) -> impl Element {
@@ -162,21 +176,46 @@ fn todo_checkbox(todo: Arc<Todo>) -> impl Element {
         })
 }
 
-fn todo_label(todo: Arc<Todo>) -> impl Element {
+fn todo_title(todo: Arc<Todo>) -> impl Element {
     Label::new()
+        .s(Width::fill())
         .s(Font::new()
             .color_signal(todo.completed.signal().map_bool(
                 || hsl(0, 0, 86.7),
                 || hsl(0, 0, 32.7)
             ))
             .strike_signal(todo.completed.signal())
+            .size(24)
         )
+        .s(Padding::new().y(17).left(15).right(60))
         .for_input(todo.id.to_string())
         .label_signal(todo.title.signal_cloned())
+        .element_on_right(remove_todo_button(&todo))
         .on_double_click(move || super::select_todo(Some(todo)))
 }
 
-fn edited_todo_title(todo: Arc<Todo>) -> impl Element {
+fn remove_todo_button(todo: &Todo) -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    let id = todo.id;
+    Button::new()
+        .s(Width::new(40))
+        .s(Height::new(40))
+        .s(Transform::new().move_left(50).move_down(14))
+        .s(
+            Font::new()
+            .size(30)
+            .center()
+            .color_signal(hovered_signal.map_bool(
+                || hsl(10.5, 37.7, 48.8),
+                || hsl(12.2, 34.7, 68.2),
+            ))
+        )
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .on_press(move || super::remove_todo(id))
+        .label("×")
+}
+
+fn editing_todo_title(todo: Arc<Todo>) -> impl Element {
     let text_signal = todo.edited_title.signal_cloned().map(Option::unwrap_throw);
     TextInput::new()
         .s(Padding::new().x(16).y(12))
@@ -200,19 +239,6 @@ fn edited_todo_title(todo: Arc<Todo>) -> impl Element {
             _ => ()
         })
         .text_signal(text_signal)
-}
-
-fn remove_todo_button(todo: &Todo) -> impl Element {
-    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
-    let id = todo.id;
-    Button::new()
-        .s(Width::new(20))
-        .s(Height::new(20))
-        .s(Font::new().size(30))
-        // font::color(if hovered().inner() { hsl(10.5, 37.7, 48.8) } else { hsl(12.2, 34.7, 68.2) }),
-        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-        .on_press(move || super::remove_todo(id))
-        .label("x")
 }
 
 fn panel_footer() -> impl Element {
