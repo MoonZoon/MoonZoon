@@ -5,6 +5,7 @@ mod connection;
 pub mod routing;
 
 pub mod console;
+pub mod events_extra;
 mod cow_str;
 mod css_property_name;
 mod dom;

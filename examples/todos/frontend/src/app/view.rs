@@ -134,7 +134,6 @@ fn toggle_all_checkbox() -> impl Element {
 }
 
 fn todo(todo: Arc<Todo>) -> impl Element {
-    // let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Row::new()
         .s(Width::fill())
         .s(Background::new().color(hsl(0, 0, 100)))
@@ -149,13 +148,6 @@ fn todo(todo: Arc<Todo>) -> impl Element {
                 ]
             }
         }).to_signal_vec())
-        // .s(Padding::new().all(15))
-        // .s(Spacing::new(10))
-        // .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-        // .item(todo_checkbox(todo.clone()))
-        // .item_signal(super::is_todo_selected(todo.id).map_false(clone!((todo) move || todo_label(todo.clone()))))
-        // .item_signal(super::is_todo_selected(todo.id).map_true(clone!((todo) move || edited_todo_title(todo.clone()))))
-        // .item_signal(hovered_signal.map_true(move || remove_todo_button(&todo)))
 }
 
 fn todo_checkbox(todo: Arc<Todo>) -> impl Element {
@@ -177,6 +169,7 @@ fn todo_checkbox(todo: Arc<Todo>) -> impl Element {
 }
 
 fn todo_title(todo: Arc<Todo>) -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Label::new()
         .s(Width::fill())
         .s(Font::new()
@@ -190,8 +183,9 @@ fn todo_title(todo: Arc<Todo>) -> impl Element {
         .s(Padding::new().y(17).left(15).right(60))
         .for_input(todo.id.to_string())
         .label_signal(todo.title.signal_cloned())
-        .element_on_right(remove_todo_button(&todo))
-        .on_double_click(move || super::select_todo(Some(todo)))
+        .on_double_click(clone!((todo )move || super::select_todo(Some(todo))))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .element_on_right_signal(hovered_signal.map_true(move || remove_todo_button(&todo)))
 }
 
 fn remove_todo_button(todo: &Todo) -> impl Element {
