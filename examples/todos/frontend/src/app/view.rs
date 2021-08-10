@@ -127,17 +127,21 @@ fn toggle_all_checkbox() -> impl Element {
         .checked_signal(super::are_all_completed().signal())
         .on_click(super::check_or_uncheck_all_todos)
         .label_hidden("Mark (in)complete")
-        .icon(checkbox::default_icon)
-        // .icon(|checked_signal| {
-        //     El::new()
-        //         .s(
-        //             Font::new()
-        //             .size(22)
-        //             // font::color(hsla(0, 0, if checked { 48.4 } else { 91.3 })),
-        //         )
-        //         // rotate(90),
-        //         .child(">")
-        // })
+        .icon(|checked_signal| {
+            El::new()
+                .s(
+                    Font::new()
+                    .size(22)
+                    .color_signal(checked_signal.map_bool(
+                        || hsl(0, 0, 48.4), 
+                        || hsl(0, 0, 91.3)
+                    ))
+                )
+                .s(Transform::new().rotate(90).move_up(18))
+                .s(Height::new(34))
+                .s(Padding::new().x(27).y(10))
+                .child("❯")
+        })
 }
 
 fn todo(todo: Arc<Todo>) -> impl Element {
