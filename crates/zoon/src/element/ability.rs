@@ -77,11 +77,11 @@ impl From<String> for Key {
 
 pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
     fn on_hovered_change(self, handler: impl FnOnce(bool) + Clone + 'static) -> Self {
-        let mouse_enter_handler = move |hovered| (handler.clone())(hovered);
-        let mouse_leave_handler = mouse_enter_handler.clone();
+        let mouse_over_handler = move |hovered| (handler.clone())(hovered);
+        let mouse_leave_handler = mouse_over_handler.clone();
         self.update_raw_el(|raw_el| {
             raw_el
-                .event_handler(move |_: events::MouseEnter| mouse_enter_handler(true))
+                .event_handler(move |_: events_extra::MouseOver| mouse_over_handler(true))
                 .event_handler(move |_: events::MouseLeave| mouse_leave_handler(false))
         })
     }
@@ -159,7 +159,7 @@ pub trait MutableViewport<T: RawEl>: UpdateRawEl<T> + Sized {
 // ------ AddNearbyElement ------
 
 pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
-    fn element_above(self, element: impl IntoElement<'a> + 'a) -> Self {
+    fn element_above(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el
                 .child(
@@ -175,7 +175,7 @@ pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
         })
     }
 
-    fn element_below(self, element: impl IntoElement<'a> + 'a) -> Self {
+    fn element_below(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el
                 .child(
@@ -191,7 +191,7 @@ pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
         })
     }
 
-    fn element_on_left(self, element: impl IntoElement<'a> + 'a) -> Self {
+    fn element_on_left(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el
                 .child(
@@ -207,7 +207,7 @@ pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
         })
     }
 
-    fn element_on_right(self, element: impl IntoElement<'a> + 'a) -> Self {
+    fn element_on_right(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el
                 .child(
@@ -219,6 +219,25 @@ pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
                         .style("pointer-events", "none")
                         .attr("class", "on_right")
                         .child(element)
+                )
+        })
+    }
+
+    fn element_on_right_signal(
+        self, 
+        element: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static
+    ) -> Self {
+        self.update_raw_el(|raw_el| {
+            raw_el
+                .child(
+                    RawHtmlEl::new("div")
+                        .style("position", "absolute")
+                        .style("left", "100%")
+                        .style("top", "0")
+                        .style("height", "100%")
+                        .style("pointer-events", "none")
+                        .attr("class", "on_right")
+                        .child_signal(element)
                 )
         })
     }
