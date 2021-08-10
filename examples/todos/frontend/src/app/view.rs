@@ -42,8 +42,8 @@ fn content() -> impl Element {
 fn header() -> impl Element {
     El::new()
         // region::h1(),
+        .s(Padding::new().top(10))
         .s(Align::new().center_x())
-        .s(Scrollbars::new().both(false))
         .s(Height::new(130))
         .s(Font::new()
             .size(100)
@@ -70,7 +70,8 @@ fn panel() -> impl Element {
         // ),
         .s(Width::fill())
         .s(Background::new().color(hsl(0, 0, 100)))
-        .item(panel_header())
+        // .item(panel_header())
+        .item(new_todo_title())  // ?
         .item_signal(super::todos_exist().map_true(todos))
         .item_signal(super::todos_exist().map_true(panel_footer))
 }
@@ -90,8 +91,39 @@ fn panel_header() -> impl Element {
         .item(new_todo_title())
 }
 
+fn new_todo_title() -> impl Element {
+    TextInput::new()
+        .s(Padding::new().y(20).left(60).right(16))
+        .s(Font::new().size(24))
+        .s(Background::new().color(hsla(0, 0, 0, 0.3)))
+        .focused()
+        .on_change(super::set_new_todo_title)
+        .label_hidden("What needs to be done?")
+        .placeholder(
+            // font::italic(),
+            // font::light(),
+            // font::color(hsla(0, 0, 0, 40)),
+            Placeholder::new("What needs to be done?")
+        )
+        .on_key_down(|event| event.if_key(Key::Enter, super::add_todo))
+        .text_signal(super::new_todo_title().signal_cloned())
+}
+
+fn todos() -> impl Element {
+    // [ width fill
+    //     , transparent <| List.isEmpty entries
+    //     , Border.widthEach { edges | top = 1 }
+    //     , Border.solid
+    //     , Border.color <| rgb255 230 230 230
+    Column::new()
+        .items_signal_vec(super::filtered_todos().map(todo))
+        .add_above(toggle_all_checkbox())
+}
+
 fn toggle_all_checkbox() -> impl Element {
     Checkbox::new()
+        .s(Width::new(60))
+        .s(Height::fill())
         .checked_signal(super::are_all_completed().signal())
         .on_click(super::check_or_uncheck_all_todos)
         .label_hidden("Mark (in)complete")
@@ -106,26 +138,6 @@ fn toggle_all_checkbox() -> impl Element {
         //         // rotate(90),
         //         .child(">")
         // })
-}
-
-fn new_todo_title() -> impl Element {
-    TextInput::new()
-        .focused()
-        .on_change(super::set_new_todo_title)
-        .label_hidden("New Todo Title")
-        .placeholder(
-            // font::italic(),
-            // font::light(),
-            // font::color(hsla(0, 0, 0, 40)),
-            Placeholder::new("What needs to be done?")
-        )
-        .on_key_down(|event| event.if_key(Key::Enter, super::add_todo))
-        .text_signal(super::new_todo_title().signal_cloned())
-}
-
-fn todos() -> impl Element {
-    Column::new()
-        .items_signal_vec(super::filtered_todos().map(todo))
 }
 
 fn todo(todo: Arc<Todo>) -> impl Element {

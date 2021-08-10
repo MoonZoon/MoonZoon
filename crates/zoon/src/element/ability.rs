@@ -155,3 +155,67 @@ pub trait MutableViewport<T: RawEl>: UpdateRawEl<T> + Sized {
         self.update_raw_el(|raw_el| raw_el.prop_signal("scrollTop", y))
     }
 }
+
+// ------ AddNearby ------
+
+pub trait AddNearby<'a>: UpdateRawEl<RawHtmlEl> + Sized {
+    fn add_above(self, element: impl IntoElement<'a> + 'a) -> Self {
+        self.update_raw_el(|raw_el| {
+            raw_el
+                .child(
+                    RawHtmlEl::new("div")
+                        .style("position", "absolute")
+                        .style("bottom", "100%")
+                        .style("width", "100%")
+                        .style("pointer-events", "none")
+                        .attr("class", "above")
+                        .child(element)
+                )
+        })
+    }
+
+    fn add_below(self, element: impl IntoElement<'a> + 'a) -> Self {
+        self.update_raw_el(|raw_el| {
+            raw_el
+                .child(
+                    RawHtmlEl::new("div")
+                        .style("position", "absolute")
+                        .style("top", "100%")
+                        .style("width", "100%")
+                        .style("pointer-events", "none")
+                        .attr("class", "below")
+                        .child(element)
+                )
+        })
+    }
+
+    fn add_on_left(self, element: impl IntoElement<'a> + 'a) -> Self {
+        self.update_raw_el(|raw_el| {
+            raw_el
+                .child(
+                    RawHtmlEl::new("div")
+                        .style("position", "absolute")
+                        .style("right", "100%")
+                        .style("height", "100%")
+                        .style("pointer-events", "none")
+                        .attr("class", "on_left")
+                        .child(element)
+                )
+        })
+    }
+
+    fn add_on_right(self, element: impl IntoElement<'a> + 'a) -> Self {
+        self.update_raw_el(|raw_el| {
+            raw_el
+                .child(
+                    RawHtmlEl::new("div")
+                        .style("position", "absolute")
+                        .style("left", "100%")
+                        .style("height", "100%")
+                        .style("pointer-events", "none")
+                        .attr("class", "on_right")
+                        .child(element)
+                )
+        })
+    }
+}

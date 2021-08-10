@@ -8,20 +8,26 @@ pub struct Scrollbars<'a> {
 }
 
 impl<'a> Scrollbars<'a> {
-    pub fn both(self, visible: bool) -> Self {
-        self.x(visible).y(visible)
+    pub fn both() -> Self {
+        let mut this = Self::default();
+        this.static_css_props.insert("overflow", "auto".into());
+        this
     }
 
-    pub fn x(mut self, visible: bool) -> Self {
-        let overflow = if visible { "scroll" } else { "hidden" };
-        self.static_css_props.insert("overflow-x", overflow.into());
-        self
+    /// https://css-tricks.com/popping-hidden-overflow/
+    pub fn x_and_clip_y() -> Self {
+        let mut this = Self::default();
+        this.static_css_props.insert("overflow-x", "auto".into());
+        this.static_css_props.insert("overflow-y", "hidden".into());
+        this
     }
 
-    pub fn y(mut self, visible: bool) -> Self {
-        let overflow = if visible { "scroll" } else { "hidden" };
-        self.static_css_props.insert("overflow-y", overflow.into());
-        self
+    /// https://css-tricks.com/popping-hidden-overflow/
+    pub fn y_and_clip_x() -> Self {
+        let mut this = Self::default();
+        this.static_css_props.insert("overflow-y", "auto".into());
+        this.static_css_props.insert("overflow-x", "hidden".into());
+        this
     }
 }
 
