@@ -21,6 +21,24 @@ impl<'a> Background<'a> {
             .insert("background-color", box_css_signal(color));
         self
     }
+
+    pub fn url(mut self, url: impl IntoCowStr<'a>) -> Self {
+        let url = ["url(", &url.into_cow_str(), ")"].concat();
+        self.static_css_props .insert("background-image", url.into());
+        self
+    }
+
+    pub fn url_signal(
+        mut self,
+        url: impl Signal<Item = impl IntoCowStr<'static> + 'static> + Unpin + 'static,
+    ) -> Self {
+        let url = url.map(|url| {
+            ["url(", &url.into_cow_str(), ")"].concat()
+        });
+        self.dynamic_css_props
+            .insert("background-image", box_css_signal(url));
+        self
+    }
 }
 
 impl<'a> Style<'a> for Background<'a> {

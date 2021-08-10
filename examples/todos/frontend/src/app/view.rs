@@ -70,25 +70,9 @@ fn panel() -> impl Element {
         // ),
         .s(Width::fill())
         .s(Background::new().color(hsl(0, 0, 100)))
-        // .item(panel_header())
-        .item(new_todo_title())  // ?
+        .item(new_todo_title())
         .item_signal(super::todos_exist().map_true(todos))
         .item_signal(super::todos_exist().map_true(panel_footer))
-}
-
-fn panel_header() -> impl Element {
-    Row::new()
-        //  width!(fill()),
-        //  background::color(hsla(0, 0, 0, 0.3)),
-        //  padding!(16),
-        //  border::shadow!(
-        //      shadow::inner(),
-        //      shadow::offsetXY(-2, 1),
-        //      shadow::size(0),
-        //      shadow::color(hsla(0, 0, 0, 3)),
-        //  ),
-        .item_signal(super::todos_exist().map_true(toggle_all_checkbox))
-        .item(new_todo_title())
 }
 
 fn new_todo_title() -> impl Element {
@@ -100,10 +84,13 @@ fn new_todo_title() -> impl Element {
         .on_change(super::set_new_todo_title)
         .label_hidden("What needs to be done?")
         .placeholder(
-            // font::italic(),
-            // font::light(),
-            // font::color(hsla(0, 0, 0, 40)),
             Placeholder::new("What needs to be done?")
+                // .s(
+                //     Font::new()
+                //         .weight(FontWeight::Bold)
+                //         .italic(true)
+                //         .color(hsla(0, 0, 0, 40))
+                // )
         )
         .on_key_down(|event| event.if_key(Key::Enter, super::add_todo))
         .text_signal(super::new_todo_title().signal_cloned())
@@ -126,7 +113,7 @@ fn toggle_all_checkbox() -> impl Element {
         .s(Height::fill())
         .checked_signal(super::are_all_completed().signal())
         .on_click(super::check_or_uncheck_all_todos)
-        .label_hidden("Mark (in)complete")
+        .label_hidden("Toggle all")
         .icon(|checked_signal| {
             El::new()
                 .s(
@@ -158,27 +145,21 @@ fn todo(todo: Arc<Todo>) -> impl Element {
 }
 
 fn todo_checkbox(todo: Arc<Todo>) -> impl Element {
+    static ACTIVE_ICON: &str = "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%22-10%20-18%20100%20135%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22none%22%20stroke%3D%22%23ededed%22%20stroke-width%3D%223%22/%3E%3C/svg%3E";
+    static COMPLETED_ICON: &str = "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%22-10%20-18%20100%20135%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22none%22%20stroke%3D%22%23bddad5%22%20stroke-width%3D%223%22/%3E%3Cpath%20fill%3D%22%235dc2af%22%20d%3D%22M72%2025L42%2071%2027%2056l-4%204%2020%2020%2034-52z%22/%3E%3C/svg%3E";
+    
     Checkbox::new()
         .id(todo.id.to_string())
         .checked_signal(todo.completed.signal())
         .on_change(move |checked| todo.completed.set_neq(checked))
-        .icon(checkbox::default_icon)
-        // .icon(|checked_signal| {
-        //     El::new()
-        //     // background::image(if completed {
-        //     //     completed_todo_checkbox_icon()
-        //     // } else {
-        //     //     active_todo_checkbox_icon()
-        //     // }),
-        // })
-}
-
-fn active_todo_checkbox_icon() -> &'static str {
-    "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%22-10%20-18%20100%20135%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22none%22%20stroke%3D%22%23ededed%22%20stroke-width%3D%223%22/%3E%3C/svg%3E"
-}
-
-fn completed_todo_checkbox_icon() -> &'static str {
-    "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%22-10%20-18%20100%20135%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22none%22%20stroke%3D%22%23bddad5%22%20stroke-width%3D%223%22/%3E%3Cpath%20fill%3D%22%235dc2af%22%20d%3D%22M72%2025L42%2071%2027%2056l-4%204%2020%2020%2034-52z%22/%3E%3C/svg%3E"
+        .icon(|checked_signal| {
+            El::new()
+                .s(Width::new(40))
+                .s(Height::new(40))
+                .s(Background::new().url_signal(checked_signal.map_bool(
+                    || COMPLETED_ICON, || ACTIVE_ICON
+                )))
+        })
 }
 
 fn todo_label(todo: Arc<Todo>) -> impl Element {
