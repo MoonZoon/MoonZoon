@@ -3,24 +3,36 @@ use std::borrow::Cow;
 use std::collections::BTreeMap;
 
 mod align;
-mod background;
-mod color;
-mod font;
-mod height;
-mod padding;
-mod scrollbars;
-mod spacing;
-mod width;
-
 pub use align::Align;
+
+mod background;
 pub use background::Background;
+
+mod color;
 pub use color::{Color, NamedColor, HSLuv, hsl, hsla};
+
+mod font;
 pub use font::{Font, NamedWeight, FontWeight, FontFamily};
+
+mod height;
 pub use height::Height;
+
+mod padding;
 pub use padding::Padding;
+
+mod transform;
+pub use transform::Transform;
+
+mod scrollbars;
 pub use scrollbars::Scrollbars;
+
+mod spacing;
 pub use spacing::Spacing;
+
+mod width;
 pub use width::Width;
+
+// --
 
 pub type StaticCSSProps<'a> = BTreeMap<&'a str, Cow<'a, str>>;
 pub type DynamicCSSProps = BTreeMap<&'static str, BoxedCssSignal>;
