@@ -4,10 +4,14 @@ html {
 
 * {
     flex: none;
-    overflow: auto;
     margin: 0;
+    position: relative;
 }
 
 .paragraph > * {
     display: inline;
+}
+
+.above > *, .below > *, .on_left > *, .on_right > * {
+    pointer-events: auto;
 }

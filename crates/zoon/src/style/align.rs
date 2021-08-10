@@ -1,4 +1,4 @@
-use crate::style::{px, DynamicCSSProps, StaticCSSProps};
+use crate::style::{DynamicCSSProps, StaticCSSProps};
 use crate::*;
 
 #[derive(Default)]

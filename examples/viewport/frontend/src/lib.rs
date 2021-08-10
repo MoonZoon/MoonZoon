@@ -59,6 +59,7 @@ fn rectangles() -> impl Element {
         .s(Spacing::new(20))
         .s(Padding::new().all(15))
         .s(Background::new().color(NamedColor::Gray5))
+        .s(Scrollbars::both())
         .on_viewport_location_change(on_viewport_change)
         .viewport_x_signal(viewport_x().signal())
         .viewport_y_signal(viewport_y().signal())
