@@ -44,7 +44,7 @@ impl<WidthFlag, HeightFlag> MouseEventAware<RawHtmlEl> for Canvas<WidthFlag, Hei
 impl<WidthFlag, HeightFlag> Hookable<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {
     type WSElement = HtmlCanvasElement;
 }
-impl<WidthFlag, HeightFlag> AddNearby<'_> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> AddNearbyElement<'_> for Canvas<WidthFlag, HeightFlag> {}
 
 // ------ ------
 //  Attributes

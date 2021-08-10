@@ -17,7 +17,8 @@ impl Row<EmptyFlagSet> {
         Self {
             raw_el: RawHtmlEl::new("div")
                 .attr("class", "row")
-                .style("display", "inline-flex"),
+                .style("display", "inline-flex")
+                .style("align-items", "center"),
             flags: PhantomData,
         }
     }
@@ -47,7 +48,7 @@ impl<EmptyFlag> MutableViewport<RawHtmlEl> for Row<EmptyFlag> {}
 impl<EmptyFlag> Hookable<RawHtmlEl> for Row<EmptyFlag> {
     type WSElement = HtmlDivElement;
 }
-impl<EmptyFlag> AddNearby<'_> for Row<EmptyFlag> {}
+impl<EmptyFlag> AddNearbyElement<'_> for Row<EmptyFlag> {}
 
 // ------ ------
 //  Attributes

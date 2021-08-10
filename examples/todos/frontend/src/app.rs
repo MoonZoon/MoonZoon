@@ -47,7 +47,7 @@ impl Deref for TodoId {
 }
 
 // ------ ------
-//    Statics
+//    States
 // ------ ------
 
 #[static_ref]

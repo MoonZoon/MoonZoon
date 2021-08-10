@@ -3,7 +3,6 @@ html {
 }
 
 * {
-    flex: none;
     margin: 0;
     position: relative;
     border: none;

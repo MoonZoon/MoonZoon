@@ -44,7 +44,7 @@ impl<LabelFlag, ForInputFlag> MouseEventAware<RawHtmlEl> for Label<LabelFlag, Fo
 impl<LabelFlag, ForInputFlag> Hookable<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {
     type WSElement = HtmlLabelElement;
 }
-impl<LabelFlag, ForInputFlag> AddNearby<'_> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> AddNearbyElement<'_> for Label<LabelFlag, ForInputFlag> {}
 
 // ------ ------
 //  Attributes
