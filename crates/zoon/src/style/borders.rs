@@ -7,6 +7,7 @@ use std::{borrow::{Cow, Borrow}, sync::Arc};
 pub struct Borders<'a> {
     static_css_props: StaticCSSProps<'a>,
     dynamic_css_props: DynamicCSSProps,
+    task_handles: Vec<TaskHandle>,
 }
 
 impl<'a> Borders<'a> {
@@ -18,10 +19,10 @@ impl<'a> Borders<'a> {
     pub fn all_signal(mut self, border: impl Signal<Item = Border<'static>> + Unpin + 'static) -> Self {
         let mutable = Mutable::new(Border::new());
         self = self.x_signal(mutable.signal_cloned()).y_signal(mutable.signal_cloned());
-        Task::start(border.for_each(move |new_border| {
+        self.task_handles.push(Task::start_droppable(border.for_each(move |new_border| {
             mutable.set(new_border);
             async {}
-        }));
+        })));
         self
     }
 
@@ -33,10 +34,10 @@ impl<'a> Borders<'a> {
     pub fn x_signal(mut self, border: impl Signal<Item = Border<'static>> + Unpin + 'static) -> Self {
         let mutable = Mutable::new(Border::new());
         self = self.left_signal(mutable.signal_cloned()).right_signal(mutable.signal_cloned());
-        Task::start(border.for_each(move |new_border| {
+        self.task_handles.push(Task::start_droppable(border.for_each(move |new_border| {
             mutable.set(new_border);
             async {}
-        }));
+        })));
         self
     }
 
@@ -48,10 +49,10 @@ impl<'a> Borders<'a> {
     pub fn y_signal(mut self, border: impl Signal<Item = Border<'static>> + Unpin + 'static) -> Self {
         let mutable = Mutable::new(Border::new());
         self = self.top_signal(mutable.signal_cloned()).bottom_signal(mutable.signal_cloned());
-        Task::start(border.for_each(move |new_border| {
+        self.task_handles.push(Task::start_droppable(border.for_each(move |new_border| {
             mutable.set(new_border);
             async {}
-        }));
+        })));
         self
     }
 
@@ -121,8 +122,17 @@ impl<'a> Borders<'a> {
 }
 
 impl<'a> Style<'a> for Borders<'a> {
-    fn into_css_props(self) -> (StaticCSSProps<'a>, DynamicCSSProps) {
-        (self.static_css_props, self.dynamic_css_props)
+    fn into_css_props_container(self) -> CssPropsContainer<'a> {
+        let Self { 
+            static_css_props, 
+            dynamic_css_props,
+            task_handles,
+        } = self;
+        CssPropsContainer {
+            static_css_props,
+            dynamic_css_props,
+            task_handles,
+        }
     }
 }
 

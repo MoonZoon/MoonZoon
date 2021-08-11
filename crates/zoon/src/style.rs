@@ -59,16 +59,32 @@ pub trait Style<'a>: Default {
         Self::default()
     }
 
-    fn into_css_props(self) -> (StaticCSSProps<'a>, DynamicCSSProps);
+    fn into_css_props_container(self) -> CssPropsContainer<'a>;
 
     fn update_raw_el_style<T: RawEl>(self, mut raw_el: T) -> T {
-        let (static_css_props, dynamic_css_props) = self.into_css_props();
+        let CssPropsContainer { 
+            static_css_props,
+            dynamic_css_props,
+            task_handles,
+         } = self.into_css_props_container();
+
         for (name, value) in static_css_props {
             raw_el = raw_el.style(name, &value);
         }
         for (name, value) in dynamic_css_props {
             raw_el = raw_el.style_signal(name, value);
         }
+        if not(task_handles.is_empty()) {
+            raw_el = raw_el.after_remove(move |_| drop(task_handles))
+        }
         raw_el
     }
+}
+
+// ------ CssPropsContainer ------
+
+pub struct CssPropsContainer<'a> {
+    pub static_css_props: StaticCSSProps<'a>,
+    pub dynamic_css_props: DynamicCSSProps,
+    pub task_handles: Vec<TaskHandle>,
 }

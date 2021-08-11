@@ -15,7 +15,15 @@ impl<'a> Spacing<'a> {
 }
 
 impl<'a> Style<'a> for Spacing<'a> {
-    fn into_css_props(self) -> (StaticCSSProps<'a>, DynamicCSSProps) {
-        (self.static_css_props, self.dynamic_css_props)
+    fn into_css_props_container(self) -> CssPropsContainer<'a> {
+        let Self { 
+            static_css_props, 
+            dynamic_css_props 
+        } = self;
+        CssPropsContainer {
+            static_css_props,
+            dynamic_css_props,
+            task_handles: Vec::new()
+        }
     }
 }
