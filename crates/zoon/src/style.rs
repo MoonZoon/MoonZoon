@@ -8,6 +8,9 @@ pub use align::Align;
 mod background;
 pub use background::Background;
 
+mod borders;
+pub use borders::{Borders, Border};
+
 mod color;
 pub use color::{Color, NamedColor, HSLuv, hsl, hsla};
 
