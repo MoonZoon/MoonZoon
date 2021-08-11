@@ -23,14 +23,17 @@ pub use height::Height;
 mod padding;
 pub use padding::Padding;
 
-mod transform;
-pub use transform::Transform;
+mod rounded_corners;
+pub use rounded_corners::RoundedCorners;
 
 mod scrollbars;
 pub use scrollbars::Scrollbars;
 
 mod spacing;
 pub use spacing::Spacing;
+
+mod transform;
+pub use transform::Transform;
 
 mod width;
 pub use width::Width;
@@ -61,7 +64,7 @@ pub trait Style<'a>: Default {
 
     fn into_css_props_container(self) -> CssPropsContainer<'a>;
 
-    fn update_raw_el_style<T: RawEl>(self, mut raw_el: T) -> T {
+    fn update_raw_el_styles<T: RawEl>(self, mut raw_el: T) -> T {
         let CssPropsContainer { 
             static_css_props,
             dynamic_css_props,

@@ -279,7 +279,7 @@ fn filter(filter: Filter) -> impl Element {
             let border_alpha = if selected { 20 } else if hovered { 10 } else { 0 };
             Border::new().width(1).solid().color(hsla(12.2, 72.8, 40.2, border_alpha))
         })))
-        // .s(RoundedCorners::all(3))
+        .s(RoundedCorners::new().all(3))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(move || router().go(route))
         .label(label)
