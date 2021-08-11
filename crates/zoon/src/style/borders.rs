@@ -1,5 +1,5 @@
 use crate::*;
-use std::borrow::{Cow, Borrow};
+use std::{borrow::{Cow, Borrow}, sync::Arc};
 
 // ------ Borders -----
 
@@ -15,9 +15,29 @@ impl<'a> Borders<'a> {
         self.x(border).y(border)
     }
 
+    pub fn all_signal(mut self, border: impl Signal<Item = Border<'static>> + Unpin + 'static) -> Self {
+        let mutable = Mutable::new(Border::new());
+        self = self.x_signal(mutable.signal_cloned()).y_signal(mutable.signal_cloned());
+        Task::start(border.for_each(move |new_border| {
+            mutable.set(new_border);
+            async {}
+        }));
+        self
+    }
+
     pub fn x(self, border: impl Borrow<Border<'a>>) -> Self {
         let border = border.borrow();
         self.left(border).right(border)
+    }
+
+    pub fn x_signal(mut self, border: impl Signal<Item = Border<'static>> + Unpin + 'static) -> Self {
+        let mutable = Mutable::new(Border::new());
+        self = self.left_signal(mutable.signal_cloned()).right_signal(mutable.signal_cloned());
+        Task::start(border.for_each(move |new_border| {
+            mutable.set(new_border);
+            async {}
+        }));
+        self
     }
 
     pub fn y(self, border: impl Borrow<Border<'a>>) -> Self {
@@ -25,13 +45,29 @@ impl<'a> Borders<'a> {
         self.top(border).bottom(border)
     }
 
+    pub fn y_signal(mut self, border: impl Signal<Item = Border<'static>> + Unpin + 'static) -> Self {
+        let mutable = Mutable::new(Border::new());
+        self = self.top_signal(mutable.signal_cloned()).bottom_signal(mutable.signal_cloned());
+        Task::start(border.for_each(move |new_border| {
+            mutable.set(new_border);
+            async {}
+        }));
+        self
+    }
+
     pub fn top(mut self, border: impl Borrow<Border<'a>>) -> Self {
         self.static_css_props.insert("border-top", border.borrow().to_cow_str());
         self
     }
 
-    pub fn right(mut self, border: impl Borrow<Border<'a>>) -> Self {
-        self.static_css_props.insert("border-right", border.borrow().to_cow_str());
+    pub fn top_signal(
+        mut self,
+        border: impl Signal<Item = Border<'static>> + Unpin + 'static
+    ) -> Self {
+        let border = border.map(|border| {
+            border.to_cow_str()
+        });
+        self.dynamic_css_props.insert("border-top", box_css_signal(border));
         self
     }
 
@@ -40,8 +76,46 @@ impl<'a> Borders<'a> {
         self
     }
 
+    pub fn bottom_signal(
+        mut self,
+        border: impl Signal<Item = Border<'static>> + Unpin + 'static
+    ) -> Self {
+        let border = border.map(|border| {
+            border.to_cow_str()
+        });
+        self.dynamic_css_props.insert("border-bottom", box_css_signal(border));
+        self
+    }
+
+    pub fn right(mut self, border: impl Borrow<Border<'a>>) -> Self {
+        self.static_css_props.insert("border-right", border.borrow().to_cow_str());
+        self
+    }
+
+    pub fn right_signal(
+        mut self,
+        border: impl Signal<Item = Border<'static>> + Unpin + 'static
+    ) -> Self {
+        let border = border.map(|border| {
+            border.to_cow_str()
+        });
+        self.dynamic_css_props.insert("border-right", box_css_signal(border));
+        self
+    }
+
     pub fn left(mut self, border: impl Borrow<Border<'a>>) -> Self {
         self.static_css_props.insert("border-left", border.borrow().to_cow_str());
+        self
+    }
+
+    pub fn left_signal(
+        mut self,
+        border: impl Signal<Item = Border<'static>> + Unpin + 'static
+    ) -> Self {
+        let border = border.map(|border| {
+            border.to_cow_str()
+        });
+        self.dynamic_css_props.insert("border-left", box_css_signal(border));
         self
     }
 }
@@ -54,10 +128,11 @@ impl<'a> Style<'a> for Borders<'a> {
 
 // ------ Border ------
 
+#[derive(Clone)]
 pub struct Border<'a> {
     width: u32,
     style: BorderStyle,
-    color: Cow<'a, str>
+    color: Arc<Cow<'a, str>>
 }
 
 impl<'a> Border<'a> {
@@ -65,7 +140,7 @@ impl<'a> Border<'a> {
         Self {
             width: 1,
             style: BorderStyle::Solid,
-            color: Cow::from("black"),
+            color: Arc::new(Cow::from("black")),
         }
     }
 
@@ -75,7 +150,7 @@ impl<'a> Border<'a> {
     }
 
     pub fn color(mut self, color: impl Color<'a> + 'a) -> Self {
-        self.color = color.into_cow_str();
+        self.color = Arc::new(color.into_cow_str());
         self
     }
 

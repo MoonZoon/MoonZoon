@@ -257,6 +257,7 @@ fn active_items_count() -> impl Element {
 
 fn filters() -> impl Element {
     Row::new()
+        .s(Spacing::new(10))
         .items(Filter::iter().map(filter))
 }
 
@@ -272,12 +273,13 @@ fn filter(filter: Filter) -> impl Element {
         let selected = super::is_filter_selected(filter) =>
         (*hovered, *selected)
     };
-    // let border_alpha = if selected { 20 } else if hovered { 10 } else { 0 };
     Button::new()
         .s(Padding::new().x(7).y(3))
-        // border::solid(),
-        // border::width!(1),
-        // border::color(hsla(12.2, 72.8, 40.2, border_alpha)),
+        .s(Borders::new().all_signal(is_hovered_selected.map(|(hovered, selected)| {
+            let border_alpha = if selected { 20 } else if hovered { 10 } else { 0 };
+            Border::new().width(1).solid().color(hsla(12.2, 72.8, 40.2, border_alpha))
+        })))
+        // .s(RoundedCorners::all(3))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(move || router().go(route))
         .label(label)
