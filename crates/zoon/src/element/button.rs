@@ -20,7 +20,8 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
                 .attr("role", "button")
                 .attr("tabindex", "0")
                 .style("cursor", "pointer")
-                .style("user-select", "none"),
+                .style("user-select", "none")
+                .style("text-align", "center"),
             flags: PhantomData,
         }
     }

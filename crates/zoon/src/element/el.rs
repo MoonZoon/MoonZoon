@@ -15,7 +15,10 @@ pub struct El<ChildFlag> {
 impl El<ChildFlagNotSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("div").attr("class", "el"),
+            raw_el: RawHtmlEl::new("div")
+                .attr("class", "el")
+                .style("display", "flex")
+                .style("flex-direction", "column"),
             flags: PhantomData,
         }
     }

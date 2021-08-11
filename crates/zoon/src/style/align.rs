@@ -7,9 +7,25 @@ pub struct Align<'a> {
 }
 
 impl<'a> Align<'a> {
-    pub fn center_x(mut self) -> Self {
-        self.static_css_props.insert("align-self", "center".into());
-        self
+    // @TODO make it work in other elements (not only El, Column) / rename / more typed CSS API?
+    pub fn center_x() -> Self {
+        let mut this = Self::default();
+        this.static_css_props.insert("align-self", "center".into());
+        this
+    }
+
+    // @TODO make it work in other elements (not only Row) / rename / more typed CSS API?
+    pub fn left() -> Self {
+        let mut this = Self::default();
+        this.static_css_props.insert("align-self", "flex-start".into());
+        this
+    }
+
+    // @TODO make it work in other elements (not only Row) / rename / more typed CSS API?
+    pub fn right() -> Self {
+        let mut this = Self::default();
+        this.static_css_props.insert("align-self", "flex-end".into());
+        this
     }
 }
 

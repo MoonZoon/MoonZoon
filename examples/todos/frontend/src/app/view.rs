@@ -28,7 +28,7 @@ fn content() -> impl Element {
     Column::new()
         // region::header(),
         .s(Width::fill().min(230).max(550))
-        .s(Align::new().center_x())
+        .s(Align::center_x())
         .item(header())
         .item(
             Column::new()
@@ -43,7 +43,7 @@ fn header() -> impl Element {
     El::new()
         // region::h1(),
         .s(Padding::new().top(10))
-        .s(Align::new().center_x())
+        .s(Align::center_x())
         .s(Height::new(130))
         .s(Font::new()
             .size(100)
@@ -234,22 +234,25 @@ fn editing_todo_title(todo: Arc<Todo>) -> impl Element {
 }
 
 fn panel_footer() -> impl Element {
+    // region::footer
+    let item_container = || El::new().s(Width::fill());
     Row::new()
-        .item(active_items_count())
-        .item(filters())
-        .item_signal(super::completed_exist().map_true(clear_completed_button))
+        .s(Padding::new().x(15).y(10))
+        .s(Font::new().color(hsl(0, 0, 50)))
+        .s(Borders::new().top(
+            Border::new().width(1).solid().color(hsl(0, 0, 91.3))
+        ))
+        .item(item_container().child(active_items_count()))
+        .item(item_container().child(filters()))
+        .item(item_container().child_signal(
+            super::completed_exist().map_true(clear_completed_button)
+        ))
 }
 
 fn active_items_count() -> impl Element {
-    Paragraph::new()
-        .content(
-            El::new()
-                .s(Font::new().weight(NamedWeight::Bold))
-                .child(Text::with_signal(super::active_count()))
-        )
-        .content(Text::with_signal(super::active_count().map(|count| {
-            format!(" item{} left", if count == 1 { "" } else { "s" })
-        })))
+    Text::with_signal(super::active_count().map(|count| {
+        format!("{} item{} left", count, if count == 1 { "" } else { "s" })
+    }))
 }
 
 fn filters() -> impl Element {
@@ -283,6 +286,7 @@ fn filter(filter: Filter) -> impl Element {
 fn clear_completed_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
+        .s(Align::right())
         .s(Font::new().underline_signal(hovered_signal))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(super::remove_completed_todos)
