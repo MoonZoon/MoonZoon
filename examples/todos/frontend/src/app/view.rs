@@ -97,12 +97,10 @@ fn new_todo_title() -> impl Element {
 }
 
 fn todos() -> impl Element {
-    // [ width fill
-    //     , transparent <| List.isEmpty entries
-    //     , Border.widthEach { edges | top = 1 }
-    //     , Border.solid
-    //     , Border.color <| rgb255 230 230 230
     Column::new()
+        .s(Borders::new().top(
+            Border::new().width(1).solid().color(hsl(0, 0, 91.3))
+        ))
         .s(Background::new().color(hsl(0, 0, 93.7)))
         .s(Spacing::new(1))
         .items_signal_vec(super::filtered_todos().map(todo))
