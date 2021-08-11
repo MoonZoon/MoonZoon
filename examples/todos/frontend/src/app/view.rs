@@ -57,8 +57,8 @@ fn panel() -> impl Element {
     Column::new()
         // region::section(),
         .s(Shadows::new(vec![
-            Shadow::new().x(0).y(2).spread(0).blur(4).color(hsla(0, 0, 0, 20)),
-            Shadow::new().x(0).y(25).spread(0).blur(50).color(hsla(0, 0, 0, 10)),
+            Shadow::new().y(2).blur(4).color(hsla(0, 0, 0, 20)),
+            Shadow::new().y(25).blur(50).color(hsla(0, 0, 0, 10)),
         ]))
         .s(Width::fill())
         .s(Background::new().color(hsl(0, 0, 100)))
@@ -70,8 +70,11 @@ fn panel() -> impl Element {
 fn new_todo_title() -> impl Element {
     TextInput::new()
         .s(Padding::new().y(20).left(60).right(16))
-        .s(Font::new().size(24))
+        .s(Font::new().size(24).color(hsl(0, 0, 32.7)))
         .s(Background::new().color(hsla(0, 0, 0, 0.3)))
+        .s(Shadows::new(vec![
+            Shadow::new().inner().y(-2).blur(1).color(hsla(0, 0, 0, 3))
+        ]))
         .focused()
         .on_change(super::set_new_todo_title)
         .label_hidden("What needs to be done?")
@@ -91,7 +94,7 @@ fn new_todo_title() -> impl Element {
 fn todos() -> impl Element {
     Column::new()
         .s(Borders::new().top(
-            Border::new().width(1).solid().color(hsl(0, 0, 91.3))
+            Border::new().color(hsl(0, 0, 91.3))
         ))
         .s(Background::new().color(hsl(0, 0, 93.7)))
         .s(Spacing::new(1))
@@ -128,6 +131,7 @@ fn todo(todo: Arc<Todo>) -> impl Element {
         .s(Width::fill())
         .s(Background::new().color(hsl(0, 0, 100)))
         .s(Spacing::new(5))
+        .s(Font::new().size(24))
         .items_signal_vec(super::is_todo_selected(todo.id).map(move |selected| {
             if selected {
                 vec![editing_todo_title(todo.clone()).into_raw_element()]
@@ -202,17 +206,14 @@ fn remove_todo_button(todo: &Todo) -> impl Element {
 fn editing_todo_title(todo: Arc<Todo>) -> impl Element {
     let text_signal = todo.edited_title.signal_cloned().map(Option::unwrap_throw);
     TextInput::new()
-        .s(Padding::new().x(16).y(12))
-        // width!(fill()),
-        // border::solid(),
-        // border::width!(1),
-        // border::color(hsl(0, 0, 63.2)),
-        // border::shadow!(
-        //     shadow::inner(),
-        //     shadow::offsetXY(-1, 5),
-        //     shadow::size(0),
-        //     shadow::color(hsla(0, 0, 0, 20)),
-        // ),
+        .s(Width::new(506))
+        .s(Padding::new().all(17).bottom(16))
+        .s(Align::right())
+        .s(Borders::new().all(Border::new().color(hsl(0, 0, 63.2))))
+        .s(Shadows::new(vec![
+            Shadow::new().inner().y(-1).blur(5).color(hsla(0, 0, 0, 20))
+        ]))
+        .s(Font::new().color(hsl(0, 0, 32.7)))
         .label_hidden("selected todo title")
         .focused()
         .on_blur(super::save_selected_todo)
@@ -232,8 +233,15 @@ fn panel_footer() -> impl Element {
         .s(Padding::new().x(15).y(10))
         .s(Font::new().color(hsl(0, 0, 50)))
         .s(Borders::new().top(
-            Border::new().width(1).solid().color(hsl(0, 0, 91.3))
+            Border::new().color(hsl(0, 0, 91.3))
         ))
+        .s(Shadows::new(vec![
+            Shadow::new().y(1).blur(1).color(hsla(0, 0, 0, 20)),
+            Shadow::new().y(8).spread(-3).color(hsl(0, 0, 96.9)),
+            Shadow::new().y(9).blur(1).spread(-3).color(hsla(0, 0, 0, 20)),
+            Shadow::new().y(16).spread(-6).color(hsl(0, 0, 96.9)),
+            Shadow::new().y(17).blur(2).spread(-6).color(hsla(0, 0, 0, 20)),
+        ]))
         .item(item_container().child(active_items_count()))
         .item(item_container().child(filters()))
         .item(item_container().child_signal(
@@ -269,7 +277,7 @@ fn filter(filter: Filter) -> impl Element {
         .s(Padding::new().x(7).y(3))
         .s(Borders::new().all_signal(is_hovered_selected.map(|(hovered, selected)| {
             let border_alpha = if selected { 20 } else if hovered { 10 } else { 0 };
-            Border::new().width(1).solid().color(hsla(12.2, 72.8, 40.2, border_alpha))
+            Border::new().color(hsla(12.2, 72.8, 40.2, border_alpha))
         })))
         .s(RoundedCorners::new().all(3))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
