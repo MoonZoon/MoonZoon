@@ -56,18 +56,10 @@ fn header() -> impl Element {
 fn panel() -> impl Element {
     Column::new()
         // region::section(),
-        // border::shadow!(
-        //     shadow::offsetXY(0, 2),
-        //     shadow::size(0),
-        //     shadow::blur(4),
-        //     shadow::color(hsla(0, 0, 0, 20)),
-        // ),
-        // border::shadow!(
-        //     shadow::offsetXY(0, 25),
-        //     shadow::size(0),
-        //     shadow::blur(50),
-        //     shadow::color(hsla(0, 0, 0, 10)),
-        // ),
+        .s(Shadows::new(vec![
+            Shadow::new().x(0).y(2).spread(0).blur(4).color(hsla(0, 0, 0, 20)),
+            Shadow::new().x(0).y(25).spread(0).blur(50).color(hsla(0, 0, 0, 10)),
+        ]))
         .s(Width::fill())
         .s(Background::new().color(hsl(0, 0, 100)))
         .item(new_todo_title())

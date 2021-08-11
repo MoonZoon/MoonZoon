@@ -1,7 +1,7 @@
 use crate::*;
 use std::{borrow::{Cow, Borrow}, sync::Arc};
 
-// ------ Borders -----
+// ------ Borders ------
 
 #[derive(Default)]
 pub struct Borders<'a> {
