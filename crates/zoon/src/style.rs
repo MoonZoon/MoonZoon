@@ -1,4 +1,4 @@
-use crate::{format, *};
+use crate::*;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
@@ -29,6 +29,9 @@ pub use rounded_corners::RoundedCorners;
 mod scrollbars;
 pub use scrollbars::Scrollbars;
 
+mod shadows;
+pub use shadows::{Shadows, Shadow};
+
 mod spacing;
 pub use spacing::Spacing;
 
@@ -51,8 +54,8 @@ pub fn box_css_signal(
     Box::new(signal.map(|value| Box::new(value) as Box<dyn IntoOptionCowStr<'static>>))
 }
 
-pub fn px<'a>(px: u32) -> Cow<'a, str> {
-    format!("{}px", px).into()
+pub fn px<'a>(px: impl IntoCowStr<'a>) -> Cow<'a, str> {
+    [&px.into_cow_str(), "px"].concat().into()
 }
 
 // ------ Style ------
