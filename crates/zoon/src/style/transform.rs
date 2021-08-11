@@ -1,13 +1,11 @@
 use crate::*;
 
 #[derive(Default)]
-pub struct Transform<'a> {
+pub struct Transform {
     transformations: Vec<String>,
-    static_css_props: StaticCSSProps<'a>,
-    dynamic_css_props: DynamicCSSProps,
 }
 
-impl<'a> Transform<'a> {
+impl Transform {
     pub fn move_up(mut self, distance: impl Into<f64>) -> Self {
         self.transformations.push(crate::format!("translateY(-{}px)", distance.into()));
         self
@@ -39,8 +37,9 @@ impl<'a> Transform<'a> {
     }
 }
 
-impl<'a> Style<'a> for Transform<'a> {
-    fn into_css_props(mut self) -> (StaticCSSProps<'a>, DynamicCSSProps) {
+impl<'a> Style<'a> for Transform {
+    fn into_css_props_container(self) -> CssPropsContainer<'a> {
+        let mut static_css_props = StaticCSSProps::default();
         if not(self.transformations.is_empty()) {
             let transform_value = self
                 .transformations
@@ -48,8 +47,12 @@ impl<'a> Style<'a> for Transform<'a> {
                 .rev()
                 .collect::<Vec<_>>()
                 .join(" ");
-            self.static_css_props.insert("transform", transform_value.into());
+            static_css_props.insert("transform", transform_value.into());
         }
-        (self.static_css_props, self.dynamic_css_props)
+        CssPropsContainer {
+            static_css_props,
+            dynamic_css_props: DynamicCSSProps::default(),
+            task_handles: Vec::new()
+        }
     }
 }
