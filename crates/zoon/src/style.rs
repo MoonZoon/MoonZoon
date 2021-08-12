@@ -14,6 +14,9 @@ pub use borders::{Borders, Border};
 mod color;
 pub use color::{Color, NamedColor, HSLuv, hsl, hsla};
 
+mod clip;
+pub use clip::Clip;
+
 mod font;
 pub use font::{Font, NamedWeight, FontWeight, FontFamily};
 

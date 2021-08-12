@@ -175,6 +175,7 @@ fn todo_title(todo: Arc<Todo>) -> impl Element {
             .size(24)
         )
         .s(Padding::new().y(17).left(15).right(60))
+        .s(Clip::x())
         .for_input(todo.id.to_string())
         .label_signal(todo.title.signal_cloned())
         .on_double_click(clone!((todo )move || super::select_todo(Some(todo))))
