@@ -108,12 +108,9 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
     where
         PlaceholderFlag: FlagNotSet,
     {
-        let task_handles = placeholder.css_props_container.task_handles;
-        if not(task_handles.is_empty()) {
-            self.raw_el = self.raw_el.after_remove(move |_| drop(task_handles))
-        }
-        self.raw_el = self.raw_el.attr("placeholder", &placeholder.text);
-        // @TODO apply css
+        self.raw_el = self.raw_el
+            .attr("placeholder", &placeholder.text)
+            .style_group(placeholder.style_group);
         self.into_type()
     }
 
@@ -178,19 +175,23 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
 
 pub struct Placeholder<'a> {
     text: Cow<'a, str>,
-    css_props_container: CssPropsContainer<'a>,
+    style_group: StyleGroup<'a>,
 }
 
 impl<'a> Placeholder<'a> {
     pub fn new(text: impl IntoCowStr<'a>) -> Self {
         Placeholder {
             text: text.into_cow_str(),
-            css_props_container: CssPropsContainer::default(),
+            style_group: StyleGroup::new("::placeholder"),
         }
     }
 
     pub fn s(mut self, style: impl Style<'a>) -> Self {
-        self.css_props_container = style.into_css_props_container();
+        let new_container = style.into_css_props_container();
+        let old_container = &mut self.style_group.css_props_container;
+        old_container.static_css_props.extend(new_container.static_css_props.into_iter());
+        old_container.dynamic_css_props.extend(new_container.dynamic_css_props.into_iter());
+        old_container.task_handles.extend(new_container.task_handles.into_iter());
         self
     }
 }
