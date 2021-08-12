@@ -11,19 +11,19 @@ pub struct Borders<'a> {
 }
 
 impl<'a> Borders<'a> {
-    pub fn all(self, border: impl Borrow<Border<'a>>) -> Self {
+    pub fn all(border: impl Borrow<Border<'a>>) -> Self {
         let border = border.borrow();
-        self.x(border).y(border)
+        Self::default().x(border).y(border)
     }
 
-    pub fn all_signal(mut self, border: impl Signal<Item = Border<'static>> + Unpin + 'static) -> Self {
+    pub fn all_signal(border: impl Signal<Item = Border<'static>> + Unpin + 'static) -> Self {
         let mutable = Mutable::new(Border::new());
-        self = self.x_signal(mutable.signal_cloned()).y_signal(mutable.signal_cloned());
-        self.task_handles.push(Task::start_droppable(border.for_each(move |new_border| {
+        let mut this = Self::default().x_signal(mutable.signal_cloned()).y_signal(mutable.signal_cloned());
+        this.task_handles.push(Task::start_droppable(border.for_each(move |new_border| {
             mutable.set(new_border);
             async {}
         })));
-        self
+        this
     }
 
     pub fn x(self, border: impl Borrow<Border<'a>>) -> Self {

@@ -64,6 +64,8 @@ pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
 
 fn element_above_container() -> RawHtmlEl {
     RawHtmlEl::new("div")
+        .style("display", "flex")
+        .style("flex-direction", "column")
         .style("position", "absolute")
         .style("bottom", "100%")
         .style("left", "0")
@@ -74,6 +76,8 @@ fn element_above_container() -> RawHtmlEl {
 
 fn element_below_container() -> RawHtmlEl {
     RawHtmlEl::new("div")
+        .style("display", "flex")
+        .style("flex-direction", "column")
         .style("position", "absolute")
         .style("top", "100%")
         .style("left", "0")
@@ -84,6 +88,8 @@ fn element_below_container() -> RawHtmlEl {
 
 fn element_on_left_container() -> RawHtmlEl {
     RawHtmlEl::new("div")
+        .style("display", "flex")
+        .style("flex-direction", "column")
         .style("position", "absolute")
         .style("right", "100%")
         .style("top", "0")
@@ -94,6 +100,8 @@ fn element_on_left_container() -> RawHtmlEl {
 
 fn element_on_right_container() -> RawHtmlEl {
     RawHtmlEl::new("div")
+        .style("display", "flex")
+        .style("flex-direction", "column")
         .style("position", "absolute")
         .style("left", "100%")
         .style("top", "0")

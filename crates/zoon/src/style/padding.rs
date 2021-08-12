@@ -7,8 +7,8 @@ pub struct Padding<'a> {
 }
 
 impl<'a> Padding<'a> {
-    pub fn all(self, padding: u32) -> Self {
-        self.x(padding).y(padding)
+    pub fn all(padding: u32) -> Self {
+        Self::default().x(padding).y(padding)
     }
 
     pub fn x(self, x: u32) -> Self {

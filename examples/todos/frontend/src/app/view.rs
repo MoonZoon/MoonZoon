@@ -207,9 +207,9 @@ fn editing_todo_title(todo: Arc<Todo>) -> impl Element {
     let text_signal = todo.edited_title.signal_cloned().map(Option::unwrap_throw);
     TextInput::new()
         .s(Width::new(506))
-        .s(Padding::new().all(17).bottom(16))
+        .s(Padding::all(17).bottom(16))
         .s(Align::right())
-        .s(Borders::new().all(Border::new().color(hsl(0, 0, 63.2))))
+        .s(Borders::all(Border::new().color(hsl(0, 0, 63.2))))
         .s(Shadows::new(vec![
             Shadow::new().inner().y(-1).blur(5).color(hsla(0, 0, 0, 20))
         ]))
@@ -275,11 +275,11 @@ fn filter(filter: Filter) -> impl Element {
     };
     Button::new()
         .s(Padding::new().x(7).y(3))
-        .s(Borders::new().all_signal(is_hovered_selected.map(|(hovered, selected)| {
+        .s(Borders::all_signal(is_hovered_selected.map(|(hovered, selected)| {
             let border_alpha = if selected { 20 } else if hovered { 10 } else { 0 };
             Border::new().color(hsla(12.2, 72.8, 40.2, border_alpha))
         })))
-        .s(RoundedCorners::new().all(3))
+        .s(RoundedCorners::all(3))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(move || router().go(route))
         .label(label)
