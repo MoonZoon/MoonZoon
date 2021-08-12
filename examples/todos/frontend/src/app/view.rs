@@ -80,12 +80,12 @@ fn new_todo_title() -> impl Element {
         .label_hidden("What needs to be done?")
         .placeholder(
             Placeholder::new("What needs to be done?")
-                // .s(
-                //     Font::new()
-                //         .weight(FontWeight::Bold)
-                //         .italic(true)
-                //         .color(hsla(0, 0, 0, 40))
-                // )
+                .s(
+                    Font::new()
+                        .weight(NamedWeight::Bold)
+                        .italic()
+                        .color(hsla(0, 0, 0, 40))
+                )
         )
         .on_key_down(|event| event.if_key(Key::Enter, super::add_todo))
         .text_signal(super::new_todo_title().signal_cloned())
