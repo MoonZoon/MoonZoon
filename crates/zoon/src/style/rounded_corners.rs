@@ -7,8 +7,8 @@ pub struct RoundedCorners<'a> {
 }
 
 impl<'a> RoundedCorners<'a> {
-    pub fn all(self, radius: u32) -> Self {
-        self.top_left(radius).top_right(radius).bottom_left(radius).bottom_right(radius)
+    pub fn all(radius: u32) -> Self {
+        Self::default().top_left(radius).top_right(radius).bottom_left(radius).bottom_right(radius)
     }
 
     pub fn top_left(mut self, radius: u32) -> Self {
