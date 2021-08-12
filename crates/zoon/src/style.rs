@@ -1,6 +1,5 @@
 use crate::*;
-use std::borrow::Cow;
-use std::collections::BTreeMap;
+use std::{borrow::Cow, collections::BTreeMap};
 
 mod align;
 pub use align::Align;
@@ -97,4 +96,37 @@ pub struct CssPropsContainer<'a> {
     pub static_css_props: StaticCSSProps<'a>,
     pub dynamic_css_props: DynamicCSSProps,
     pub task_handles: Vec<TaskHandle>,
+}
+
+// ------ StyleGroup ------
+
+pub struct StyleGroup<'a> {
+    pub selector: Cow<'a, str>,
+    pub css_props_container: CssPropsContainer<'a>,
+}
+
+impl<'a> StyleGroup<'a> {
+    pub fn new(selector: impl IntoCowStr<'a>) -> Self {
+        Self {
+            selector: selector.into_cow_str(),
+            css_props_container: CssPropsContainer::default()
+        }
+    }
+
+    pub fn style(mut self, name: &'a str, value: &'a str) -> Self {
+        self.css_props_container.static_css_props.insert(name, value.into());
+        self
+    }
+
+    pub fn style_signal(
+        mut self,
+        name: impl IntoCowStr<'static>,
+        value: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static,
+    ) -> Self {
+        self.css_props_container.dynamic_css_props.insert(
+            name.into_cow_str(), 
+            box_css_signal(value),
+        );
+        self
+    }
 }

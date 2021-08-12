@@ -1,5 +1,7 @@
 use crate::*;
 use web_sys::{EventTarget, Node};
+use dominator::StylesheetBuilder;
+
 
 mod raw_html_el;
 mod raw_svg_el;
@@ -115,11 +117,22 @@ pub trait RawEl: Sized {
         value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
     ) -> Self;
 
+    fn style_group(self, group: StyleGroup) -> Self {
+        let entire_selector = [self.class_id(), &group.selector].concat();
+        self
+    }
+
     fn after_insert(self, handler: impl FnOnce(Self::WSElement) + 'static) -> Self {
         self.update_dom_builder(|dom_builder| dom_builder.after_inserted(handler))
     }
 
     fn after_remove(self, handler: impl FnOnce(Self::WSElement) + 'static) -> Self {
         self.update_dom_builder(|dom_builder| dom_builder.after_removed(handler))
+    }
+
+    // --
+
+    fn class_id(&self) -> &str {
+        "abcd"
     }
 }
