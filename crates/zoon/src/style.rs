@@ -92,6 +92,7 @@ pub trait Style<'a>: Default {
 
 // ------ CssPropsContainer ------
 
+#[derive(Default)]
 pub struct CssPropsContainer<'a> {
     pub static_css_props: StaticCSSProps<'a>,
     pub dynamic_css_props: DynamicCSSProps,

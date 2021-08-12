@@ -108,7 +108,12 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
     where
         PlaceholderFlag: FlagNotSet,
     {
+        let task_handles = placeholder.css_props_container.task_handles;
+        if not(task_handles.is_empty()) {
+            self.raw_el = self.raw_el.after_remove(move |_| drop(task_handles))
+        }
         self.raw_el = self.raw_el.attr("placeholder", &placeholder.text);
+        // @TODO apply css
         self.into_type()
     }
 
@@ -173,12 +178,19 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
 
 pub struct Placeholder<'a> {
     text: Cow<'a, str>,
+    css_props_container: CssPropsContainer<'a>,
 }
 
 impl<'a> Placeholder<'a> {
     pub fn new(text: impl IntoCowStr<'a>) -> Self {
         Placeholder {
             text: text.into_cow_str(),
+            css_props_container: CssPropsContainer::default(),
         }
+    }
+
+    pub fn s(mut self, style: impl Style<'a>) -> Self {
+        self.css_props_container = style.into_css_props_container();
+        self
     }
 }

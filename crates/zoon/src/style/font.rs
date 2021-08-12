@@ -38,6 +38,12 @@ impl<'a> Font<'a> {
         self
     }
 
+    pub fn italic(mut self) -> Self {
+        self.static_css_props
+            .insert("font-style", "italic".into());
+        self
+    }
+
     pub fn underline(mut self) -> Self {
         self.static_css_props
             .insert("text-decoration", "underline".into());
