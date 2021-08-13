@@ -1,5 +1,10 @@
 use crate::*;
-use std::{borrow::Cow, collections::BTreeMap, sync::atomic::{AtomicU32, Ordering}, sync::Arc};
+use std::{
+    borrow::Cow, 
+    collections::{BTreeMap, BTreeSet}, 
+    sync::atomic::{AtomicU32, Ordering}, sync::{Arc, RwLock, Mutex},
+    convert::TryFrom,
+};
 use web_sys::{CssStyleSheet, HtmlStyleElement, CssStyleRule};
 use once_cell::race::OnceBox;
 
@@ -136,23 +141,56 @@ impl<'a> StyleGroup<'a> {
 // ------ StyleGroupHandle ------
 
 pub struct StyleGroupHandle {
-    task_handles: Vec<TaskHandle>,
+    rule_id: u32,
+    _task_handles: Vec<TaskHandle>,
+}
+
+impl Drop for StyleGroupHandle {
+    fn drop(&mut self) {
+        global_styles().remove_rule(self.rule_id);
+    }
+}
+
+// ------ index_generator ------
+
+// fn index_generator() -> &'static IndexGenerator {
+//     static INDEX_GENERATOR: OnceBox<IndexGenerator> = OnceBox::new();
+//     INDEX_GENERATOR.get_or_init(|| Box::new(IndexGenerator::default()))
+// }
+
+#[derive(Default)]
+struct IndexGenerator {
+    index: AtomicU32,
+    deleted: Arc<RwLock<BTreeSet<u32>>>,
+}
+
+impl IndexGenerator {
+    fn next_index(&self) -> u32 {
+        // https://github.com/rust-lang/rust/issues/62924
+        let lowest_deleted = self.deleted.read().unwrap_throw().iter().next().copied();
+        if let Some(lowest_deleted) = lowest_deleted {
+            self.deleted.write().unwrap_throw().remove(&lowest_deleted);
+            return lowest_deleted
+        }
+        self.index.fetch_add(1, Ordering::SeqCst)
+    }
+
+    fn remove_index(&self, index: u32) {
+        self.deleted.write().unwrap_throw().insert(index);
+    }
 }
 
 // ------ global_styles ------
 
 pub fn global_styles() -> &'static GlobalStyles {
     static GLOBAL_STYLES: OnceBox<GlobalStyles> = OnceBox::new();
-    GLOBAL_STYLES.get_or_init(move || Box::new(GlobalStyles::new()))
+    GLOBAL_STYLES.get_or_init(|| Box::new(GlobalStyles::new()))
 }
 
 pub struct GlobalStyles {
-    sheet: SendWrapper<CssStyleSheet>
-}
-
-fn next_rule_id() -> u32 {
-    static RULE_ID: AtomicU32 = AtomicU32::new(0);
-    RULE_ID.fetch_add(1, Ordering::SeqCst)
+    sheet: SendWrapper<CssStyleSheet>,
+    rule_ids: Arc<Mutex<Vec<u32>>>,
+    rule_id_generator: IndexGenerator,
 }
 
 impl GlobalStyles {
@@ -161,7 +199,9 @@ impl GlobalStyles {
         document().head().unwrap_throw().append_child(&style_element).unwrap_throw();
         let sheet = style_element.sheet().unwrap_throw().unchecked_into();
         Self {
-            sheet: SendWrapper::new(sheet)
+            sheet: SendWrapper::new(sheet),
+            rule_ids: Arc::new(Mutex::new(Vec::new())),
+            rule_id_generator: IndexGenerator::default(),
         }
     }
 
@@ -171,21 +211,26 @@ impl GlobalStyles {
 
     #[must_use]
     pub fn push_style_group_droppable(&self, group: StyleGroup) -> StyleGroupHandle {
+        let mut rule_ids = self.rule_ids.lock().unwrap_throw();
+        let rule_id = self.rule_id_generator.next_index();
+        rule_ids.insert(usize::try_from(rule_id).unwrap_throw(), rule_id);
+
         let empty_rule = {
             let mut rule = group.selector.to_string();
             rule.push_str("{}");
             rule
         };
-        // let rule_index = self.sheet.insert_rule_with_index(&empty_rule, 0).unwrap_throw();
-        let rule_index = self.sheet.insert_rule(&empty_rule).unwrap_throw();
+        self.sheet.insert_rule_with_index(&empty_rule, rule_id).unwrap_throw();
         let declaration = self
             .sheet
             .css_rules()
             .unwrap_throw()
-            .item(rule_index)
+            .item(rule_id)
             .unwrap_throw()
             .unchecked_into::<CssStyleRule>()
             .style();
+
+        drop(rule_ids);
 
         for (name, value) in group.css_props_container.static_css_props {
             declaration.set_property(name, &value).unwrap_throw();
@@ -206,7 +251,16 @@ impl GlobalStyles {
         }
 
         StyleGroupHandle {
-            task_handles
+            rule_id,
+            _task_handles: task_handles,
         }
+    }
+
+    fn remove_rule(&self, id: u32) {
+        let mut rule_ids = self.rule_ids.lock().unwrap_throw();
+        self.rule_id_generator.remove_index(id);
+        let rule_index = rule_ids.binary_search(&id).unwrap_throw();
+        rule_ids.remove(rule_index);
+        self.sheet.delete_rule(u32::try_from(rule_index).unwrap_throw()).unwrap_throw();
     }
 }
