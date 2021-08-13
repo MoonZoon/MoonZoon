@@ -51,6 +51,7 @@ use wasm_bindgen_futures::spawn_local;
 pub use wasm_bindgen_futures::JsFuture;
 pub use web_sys;
 pub use once_cell;
+pub use css_property_name::VENDOR_PREFIXES;
 
 #[cfg(feature = "connection")]
 pub use connection::{Connection, SendUpMsgError};

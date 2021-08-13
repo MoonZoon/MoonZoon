@@ -5,7 +5,7 @@ use std::{
     sync::Arc,
     convert::TryFrom,
 };
-use web_sys::{CssStyleSheet, HtmlStyleElement, CssStyleRule};
+use web_sys::{CssStyleSheet, HtmlStyleElement, CssStyleRule, CssStyleDeclaration};
 use once_cell::race::OnceBox;
 
 mod align;
@@ -200,7 +200,7 @@ impl GlobalStyles {
         drop(ids_lock);
 
         for (name, value) in group.css_props_container.static_css_props {
-            declaration.set_property(name, &value).unwrap_throw();
+            set_css_property(&declaration, name, &value);
         }
 
         let declaration = Arc::new(SendWrapper::new(declaration));
@@ -209,7 +209,7 @@ impl GlobalStyles {
             let declaration = Arc::clone(&declaration);
             task_handles.push(Task::start_droppable(value_signal.for_each(move |value| {
                 if let Some(value) = value.into_option_cow_str() {
-                    declaration.set_property(&name, &value).unwrap_throw();
+                    set_css_property(&declaration, &name, &value);
                 } else {
                     declaration.remove_property(&name).unwrap_throw();
                 }
@@ -227,4 +227,19 @@ impl GlobalStyles {
         let (rule_index, _ids_lock) = self.rule_ids.remove_id(id);
         self.sheet.delete_rule(u32::try_from(rule_index).unwrap_throw()).unwrap_throw();
     }
+}
+
+fn set_css_property(declaration: &CssStyleDeclaration, name: &str, value: &str) {
+    declaration.set_property(name, &value).unwrap_throw();
+    if not(declaration.get_property_value(name).unwrap_throw().is_empty()) {
+        return;
+    }
+    for prefix in VENDOR_PREFIXES {
+        let prefixed_name = &[prefix, name].concat();
+        declaration.set_property(&prefixed_name, &value).unwrap_throw();
+        if not(declaration.get_property_value(name).unwrap_throw().is_empty()) {
+            return;
+        }
+    }
+    panic!("invalid CSS property: `{}: {};`", name, value);
 }

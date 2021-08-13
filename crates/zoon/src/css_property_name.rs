@@ -1,7 +1,7 @@
 use crate::dominator::traits::MultiStr;
 use std::borrow::Cow;
 
-static VENDOR_PREFIXES: [&'static str; 4] = ["-webkit-", "-moz-", "-o-", "-ms-"];
+pub static VENDOR_PREFIXES: [&'static str; 4] = ["-webkit-", "-moz-", "-o-", "-ms-"];
 
 pub struct CssPropertyName<'a>(Cow<'a, str>);
 
