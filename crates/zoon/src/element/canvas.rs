@@ -15,7 +15,7 @@ pub struct Canvas<WidthFlag, HeightFlag> {
 impl Canvas<WidthFlagNotSet, HeightFlagNotSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("canvas").attr("class", "canvas"),
+            raw_el: RawHtmlEl::new("canvas").class("canvas"),
             flags: PhantomData,
         }
     }

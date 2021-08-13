@@ -16,7 +16,7 @@ impl Column<EmptyFlagSet> {
     pub fn new() -> Self {
         Self {
             raw_el: RawHtmlEl::new("div")
-                .attr("class", "column")
+                .class("column")
                 .style("display", "inline-flex")
                 .style("flex-direction", "column"),
             flags: PhantomData,

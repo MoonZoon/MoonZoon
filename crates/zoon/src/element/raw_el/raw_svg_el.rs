@@ -1,17 +1,24 @@
 use crate::*;
+use super::class_id_generator;
+use std::rc::Rc;
 
 // ------ ------
 //   Element
 // ------ ------
 
 pub struct RawSvgEl {
+    class_id: Rc<String>,
     dom_builder: DomBuilder<web_sys::SvgElement>,
 }
 
 impl RawSvgEl {
     pub fn new(tag: &str) -> Self {
+        let class_id = Rc::new(class_id_generator().next_class_id());
         Self {
-            dom_builder: DomBuilder::new_svg(tag),
+            class_id: Rc::clone(&class_id),
+            dom_builder: DomBuilder::new_svg(tag)
+                .class(class_id.as_str())
+                .after_removed(move |_| class_id_generator().remove_class_id(&class_id)),
         }
     }
 }
@@ -63,5 +70,9 @@ impl RawEl for RawSvgEl {
         self.update_dom_builder(|_dom_builder| {
             todo!("implement `style_signal` body in `raw_el.rs` once it's implemented for Element in Dominator or write `DomBuilderExt");
         })
+    }
+
+    fn class_id(&self) -> &str {
+        &self.class_id
     }
 }

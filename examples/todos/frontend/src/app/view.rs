@@ -88,7 +88,6 @@ fn new_todo_title() -> impl Element {
         )
         .on_key_down(|event| event.if_key(Key::Enter, super::add_todo))
         .text_signal(super::new_todo_title().signal_cloned())
-        .update_raw_el(|raw| raw.attr("class", "text_input abcd"))
 }
 
 fn todos() -> impl Element {
@@ -142,9 +141,6 @@ fn todo(todo: Arc<Todo>) -> impl Element {
                 ]
             }
         }).to_signal_vec())
-        .update_raw_el(|raw| {
-            raw.style_group(StyleGroup::new(":hover").style("font-style", "italic"))
-        })
 }
 
 fn todo_checkbox(todo: Arc<Todo>) -> impl Element {

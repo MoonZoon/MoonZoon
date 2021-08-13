@@ -15,7 +15,7 @@ pub struct Label<LabelFlag, ForInputFlag> {
 impl Label<LabelFlagNotSet, ForInputFlagNotSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("label").attr("class", "label"),
+            raw_el: RawHtmlEl::new("label").class("label"),
             flags: PhantomData,
         }
     }

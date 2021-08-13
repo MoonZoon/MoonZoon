@@ -15,8 +15,7 @@ pub struct Paragraph<EmptyFlag> {
 impl Paragraph<EmptyFlagSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("p")
-                .attr("class", "paragraph"),
+            raw_el: RawHtmlEl::new("p").class("paragraph"),
             flags: PhantomData,
         }
     }

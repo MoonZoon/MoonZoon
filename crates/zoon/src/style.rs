@@ -147,7 +147,6 @@ pub struct StyleGroupHandle {
 
 impl Drop for StyleGroupHandle {
     fn drop(&mut self) {
-        crate::println!("StyleGroupHandle dropped");
         global_styles().remove_rule(self.rule_id);
     }
 }

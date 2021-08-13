@@ -24,7 +24,7 @@ impl
 {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("input").attr("class", "text_input"),
+            raw_el: RawHtmlEl::new("input").class("text_input"),
             flags: PhantomData,
         }
     }

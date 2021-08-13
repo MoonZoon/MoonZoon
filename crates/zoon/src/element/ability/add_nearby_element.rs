@@ -71,7 +71,7 @@ fn element_above_container() -> RawHtmlEl {
         .style("left", "0")
         .style("width", "100%")
         .style("pointer-events", "none")
-        .attr("class", "above")
+        .class("above")
 }
 
 fn element_below_container() -> RawHtmlEl {
@@ -83,7 +83,7 @@ fn element_below_container() -> RawHtmlEl {
         .style("left", "0")
         .style("width", "100%")
         .style("pointer-events", "none")
-        .attr("class", "below")
+        .class("below")
 }
 
 fn element_on_left_container() -> RawHtmlEl {
@@ -95,7 +95,7 @@ fn element_on_left_container() -> RawHtmlEl {
         .style("top", "0")
         .style("height", "100%")
         .style("pointer-events", "none")
-        .attr("class", "on_left")
+        .class("on_left")
 }
 
 fn element_on_right_container() -> RawHtmlEl {
@@ -107,5 +107,5 @@ fn element_on_right_container() -> RawHtmlEl {
         .style("top", "0")
         .style("height", "100%")
         .style("pointer-events", "none")
-        .attr("class", "on_right")
+        .class("on_right")
 }
