@@ -27,7 +27,7 @@ impl
         Self {
             checked: checked.clone(),
             raw_el: RawHtmlEl::new("div")
-                .attr("class", "checkbox")
+                .class("checkbox")
                 .attr("role", "checkbox")
                 .attr("aria-live", "polite")
                 .attr("tabindex", "0")

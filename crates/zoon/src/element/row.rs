@@ -16,7 +16,7 @@ impl Row<EmptyFlagSet> {
     pub fn new() -> Self {
         Self {
             raw_el: RawHtmlEl::new("div")
-                .attr("class", "row")
+                .class("row")
                 .style("display", "inline-flex")
                 .style("align-items", "center"),
             flags: PhantomData,

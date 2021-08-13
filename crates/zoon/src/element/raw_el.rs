@@ -26,7 +26,9 @@ impl ClassIdGenerator {
         ["_", &self.index_generator.next_index().to_string()].concat()
     }
 
-    // fn remove_class_id(&self, class_id)
+    fn remove_class_id(&self, class_id: &str) {
+        self.index_generator.remove_index(class_id[1..].parse().unwrap_throw());
+    }
 }
 
 // ------ UpdateRawEl ------
@@ -178,7 +180,5 @@ pub trait RawEl: Sized {
 
     // --
 
-    fn class_id(&self) -> &str {
-        "fake"
-    }
+    fn class_id(&self) -> &str;
 }

@@ -16,7 +16,7 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
     pub fn new() -> Self {
         Self {
             raw_el: RawHtmlEl::new("div")
-                .attr("class", "button")
+                .class("button")
                 .attr("role", "button")
                 .attr("tabindex", "0")
                 .style("cursor", "pointer")

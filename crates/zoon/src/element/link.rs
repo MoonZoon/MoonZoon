@@ -16,7 +16,7 @@ impl Link<LabelFlagNotSet, ToFlagNotSet> {
     pub fn new() -> Self {
         Self {
             raw_el: RawHtmlEl::new("a")
-                .attr("class", "link")
+                .class("link")
                 .style("text-decoration", "none")
                 .style("color", "inherit"),
             flags: PhantomData,
