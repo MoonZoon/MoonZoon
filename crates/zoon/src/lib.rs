@@ -46,6 +46,7 @@ pub use wasm_bindgen::{self, prelude::*, JsCast};
 use wasm_bindgen_futures::spawn_local;
 pub use wasm_bindgen_futures::JsFuture;
 pub use web_sys;
+pub use once_cell;
 
 #[cfg(feature = "connection")]
 pub use connection::{Connection, SendUpMsgError};
@@ -61,8 +62,6 @@ pub use moonlight::{self, AuthToken, CorId};
 #[cfg(feature = "panic_hook")]
 pub use console_error_panic_hook;
 
-#[cfg(feature = "static_ref")]
-pub use once_cell;
 #[cfg(feature = "static_ref")]
 pub use static_ref_macro::static_ref;
 

@@ -68,7 +68,7 @@ impl<'a> Borders<'a> {
         let border = border.map(|border| {
             border.to_cow_str()
         });
-        self.dynamic_css_props.insert("border-top", box_css_signal(border));
+        self.dynamic_css_props.insert("border-top".into(), box_css_signal(border));
         self
     }
 
@@ -84,7 +84,7 @@ impl<'a> Borders<'a> {
         let border = border.map(|border| {
             border.to_cow_str()
         });
-        self.dynamic_css_props.insert("border-bottom", box_css_signal(border));
+        self.dynamic_css_props.insert("border-bottom".into(), box_css_signal(border));
         self
     }
 
@@ -100,7 +100,7 @@ impl<'a> Borders<'a> {
         let border = border.map(|border| {
             border.to_cow_str()
         });
-        self.dynamic_css_props.insert("border-right", box_css_signal(border));
+        self.dynamic_css_props.insert("border-right".into(), box_css_signal(border));
         self
     }
 
@@ -116,7 +116,7 @@ impl<'a> Borders<'a> {
         let border = border.map(|border| {
             border.to_cow_str()
         });
-        self.dynamic_css_props.insert("border-left", box_css_signal(border));
+        self.dynamic_css_props.insert("border-left".into(), box_css_signal(border));
         self
     }
 }

@@ -15,11 +15,11 @@ paste = { version = "1.0.5", default-features = false }
 send_wrapper = { version = "0.5.0", default-features = false }
 pin-project = { version = "1.0.7", default-features = false }
 rust-hsluv = { version = "0.1.4", default-features = false }
+once_cell = { version = "1.8.0", features = ["alloc"], default-features = false }
 
 route_macro = { path = "../route_macro", default-features = false, optional = true }
 static_ref_macro = { path = "../static_ref_macro", default-features = false, optional = true }
 moonlight = { path = "../moonlight", features = ["frontend"], optional = true }
-once_cell = { version = "1.8.0", features = ["alloc"], default-features = false, optional = true }
 
 console_error_panic_hook = { version = "0.1.6", default-features = false, optional = true }
 wee_alloc = { version = "0.4.5", default-features = false, optional = true }
@@ -33,6 +33,11 @@ lexical = { git = "https://github.com/Alexhuszagh/rust-lexical", rev = "7010efd"
 [dependencies.web-sys]
 version = "0.3.51"
 features = [
+  'CssRule',
+  'CssRuleList',
+  'CssStyleDeclaration',
+  'CssStyleRule',
+  'CssStyleSheet',
   'Element',
   'Event',
   'Headers',
@@ -55,7 +60,7 @@ default-features = false
 default = ["static_ref", "panic_hook", "small_alloc", "clone", "apply", "connection", "routing"]
 routing = ["route_macro"]
 connection = ["moonlight"]
-static_ref = ["static_ref_macro", "once_cell"]
+static_ref = ["static_ref_macro"]
 panic_hook = ["console_error_panic_hook"]
 small_alloc = ["wee_alloc"]
 fast_alloc = []
