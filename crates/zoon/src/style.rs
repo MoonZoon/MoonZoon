@@ -1,8 +1,8 @@
 use crate::*;
 use std::{
     borrow::Cow, 
-    collections::{BTreeMap, BTreeSet}, 
-    sync::atomic::{AtomicU32, Ordering}, sync::{Arc, RwLock, Mutex, MutexGuard},
+    collections::BTreeMap, 
+    sync::Arc,
     convert::TryFrom,
 };
 use web_sys::{CssStyleSheet, HtmlStyleElement, CssStyleRule};
@@ -149,55 +149,6 @@ impl Drop for StyleGroupHandle {
     fn drop(&mut self) {
         crate::println!("StyleGroupHandle dropped");
         global_styles().remove_rule(self.rule_id);
-    }
-}
-
-// ------ index_generator ------
-
-#[derive(Default)]
-struct IndexGenerator {
-    index: AtomicU32,
-    deleted: Arc<RwLock<BTreeSet<u32>>>,
-}
-
-impl IndexGenerator {
-    fn next_index(&self) -> u32 {
-        // https://github.com/rust-lang/rust/issues/62924
-        let lowest_deleted = self.deleted.read().unwrap_throw().iter().next().copied();
-        if let Some(lowest_deleted) = lowest_deleted {
-            self.deleted.write().unwrap_throw().remove(&lowest_deleted);
-            return lowest_deleted
-        }
-        self.index.fetch_add(1, Ordering::SeqCst)
-    }
-
-    fn remove_index(&self, index: u32) {
-        self.deleted.write().unwrap_throw().insert(index);
-    }
-}
-
-#[derive(Default)]
-struct MonotonicIds {
-    ids: Arc<Mutex<Vec<u32>>>,
-    generator: IndexGenerator,
-}
-
-impl MonotonicIds {
-    /// u32 is both id and index
-    fn add_new_id(&self) -> (u32, MutexGuard<Vec<u32>>) {
-        let mut ids = self.ids.lock().unwrap_throw();
-        let id = self.generator.next_index();
-        ids.insert(usize::try_from(id).unwrap_throw(), id);
-        (id, ids)
-    }
-
-    /// usize is index
-    fn remove_id(&self, id: u32) -> (usize, MutexGuard<Vec<u32>>)  {
-        let mut ids = self.ids.lock().unwrap_throw();
-        self.generator.remove_index(id);
-        let index = ids.binary_search(&id).unwrap_throw();
-        ids.remove(index);
-        (index, ids)
     }
 }
 

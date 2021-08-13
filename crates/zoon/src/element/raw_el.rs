@@ -1,6 +1,7 @@
 use crate::*;
 use web_sys::{EventTarget, Node};
 use std::mem::ManuallyDrop;
+use once_cell::race::OnceBox;
 
 mod raw_html_el;
 mod raw_svg_el;
@@ -8,9 +9,33 @@ mod raw_svg_el;
 pub use raw_html_el::RawHtmlEl;
 pub use raw_svg_el::RawSvgEl;
 
+// ------ class_ids ------
+
+fn class_id_generator() -> &'static ClassIdGenerator {
+    static GLOBAL_STYLES: OnceBox<ClassIdGenerator> = OnceBox::new();
+    GLOBAL_STYLES.get_or_init(|| Box::new(ClassIdGenerator::default()))
+}
+
+#[derive(Default)]
+struct ClassIdGenerator {
+    index_generator: IndexGenerator
+}
+
+impl ClassIdGenerator {
+    fn next_class_id(&self) -> String {
+        ["_", &self.index_generator.next_index().to_string()].concat()
+    }
+
+    // fn remove_class_id(&self, class_id)
+}
+
+// ------ UpdateRawEl ------
+
 pub trait UpdateRawEl<T: RawEl> {
     fn update_raw_el(self, updater: impl FnOnce(T) -> T) -> Self;
 }
+
+// ------ RawEl ------
 
 pub trait RawEl: Sized {
     type WSElement: AsRef<Node>
@@ -134,9 +159,26 @@ pub trait RawEl: Sized {
         self.update_dom_builder(|dom_builder| dom_builder.after_removed(handler))
     }
 
+    fn class(self, class: &str) -> Self {
+        self.update_dom_builder(|dom_builder| dom_builder.class(class))
+    }
+
+    fn class_signal<'a>(
+        self,
+        class: impl IntoCowStr<'static>,
+        enabled: impl Signal<Item = bool> + Unpin + 'static,
+    ) -> Self {
+        self.update_dom_builder(|dom_builder| {
+            dom_builder.class_signal(
+                class.into_cow_str_wrapper(),
+                enabled,
+            )
+        })
+    }
+
     // --
 
     fn class_id(&self) -> &str {
-        "abcd"
+        "fake"
     }
 }

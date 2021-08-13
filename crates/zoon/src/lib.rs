@@ -12,6 +12,8 @@ mod dom;
 mod either;
 mod element;
 mod futures_signals_ext;
+mod index_generator;
+mod monotonic_ids;
 mod not;
 mod style;
 mod task;
@@ -31,6 +33,8 @@ pub use futures_signals::{
     signal_vec::{MutableVec, SignalVec, SignalVecExt, MutableSignalVec},
 };
 pub use futures_signals_ext::{MutableExt, MutableVecExt, SignalExtBool};
+pub use index_generator::IndexGenerator;
+pub use monotonic_ids::MonotonicIds;
 pub use js_sys::{self, Reflect};
 pub use not::not;
 pub use paste;
