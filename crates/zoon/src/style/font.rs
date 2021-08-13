@@ -29,7 +29,7 @@ impl<'a> Font<'a> {
         color: impl Signal<Item = impl Color<'static> + 'static> + Unpin + 'static,
     ) -> Self {
         self.dynamic_css_props
-            .insert("color", box_css_signal(color));
+            .insert("color".into(), box_css_signal(color));
         self
     }
 
@@ -56,7 +56,7 @@ impl<'a> Font<'a> {
     ) -> Self {
         let underline = underline.map_bool(|| "underline", || "none");
         self.dynamic_css_props
-            .insert("text-decoration", box_css_signal(underline));
+            .insert("text-decoration".into(), box_css_signal(underline));
         self
     }
 
@@ -72,7 +72,7 @@ impl<'a> Font<'a> {
     ) -> Self {
         let strike = strike.map_bool(|| "line-through", || "none");
         self.dynamic_css_props
-            .insert("text-decoration", box_css_signal(strike));
+            .insert("text-decoration".into(), box_css_signal(strike));
         self
     }
 

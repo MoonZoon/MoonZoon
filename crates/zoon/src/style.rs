@@ -1,5 +1,7 @@
 use crate::*;
-use std::{borrow::Cow, collections::BTreeMap};
+use std::{borrow::Cow, collections::BTreeMap, sync::atomic::{AtomicU32, Ordering}, sync::Arc};
+use web_sys::{CssStyleSheet, HtmlStyleElement, CssStyleRule};
+use once_cell::race::OnceBox;
 
 mod align;
 pub use align::Align;
@@ -46,7 +48,7 @@ pub use width::Width;
 // --
 
 pub type StaticCSSProps<'a> = BTreeMap<&'a str, Cow<'a, str>>;
-pub type DynamicCSSProps = BTreeMap<&'static str, BoxedCssSignal>;
+pub type DynamicCSSProps = BTreeMap<Cow<'static, str>, BoxedCssSignal>;
 
 pub type BoxedCssSignal = Box<dyn Signal<Item = Box<dyn IntoOptionCowStr<'static>>> + Unpin>;
 
@@ -128,5 +130,83 @@ impl<'a> StyleGroup<'a> {
             box_css_signal(value),
         );
         self
+    }
+}
+
+// ------ StyleGroupHandle ------
+
+pub struct StyleGroupHandle {
+    task_handles: Vec<TaskHandle>,
+}
+
+// ------ global_styles ------
+
+pub fn global_styles() -> &'static GlobalStyles {
+    static GLOBAL_STYLES: OnceBox<GlobalStyles> = OnceBox::new();
+    GLOBAL_STYLES.get_or_init(move || Box::new(GlobalStyles::new()))
+}
+
+pub struct GlobalStyles {
+    sheet: SendWrapper<CssStyleSheet>
+}
+
+fn next_rule_id() -> u32 {
+    static RULE_ID: AtomicU32 = AtomicU32::new(0);
+    RULE_ID.fetch_add(1, Ordering::SeqCst)
+}
+
+impl GlobalStyles {
+    fn new() -> Self {
+        let style_element: HtmlStyleElement = document().create_element("style").unwrap_throw().unchecked_into();
+        document().head().unwrap_throw().append_child(&style_element).unwrap_throw();
+        let sheet = style_element.sheet().unwrap_throw().unchecked_into();
+        Self {
+            sheet: SendWrapper::new(sheet)
+        }
+    }
+
+    pub fn push_style_group(&self, group: StyleGroup) {
+
+    }
+
+    #[must_use]
+    pub fn push_style_group_droppable(&self, group: StyleGroup) -> StyleGroupHandle {
+        let empty_rule = {
+            let mut rule = group.selector.to_string();
+            rule.push_str("{}");
+            rule
+        };
+        // let rule_index = self.sheet.insert_rule_with_index(&empty_rule, 0).unwrap_throw();
+        let rule_index = self.sheet.insert_rule(&empty_rule).unwrap_throw();
+        let declaration = self
+            .sheet
+            .css_rules()
+            .unwrap_throw()
+            .item(rule_index)
+            .unwrap_throw()
+            .unchecked_into::<CssStyleRule>()
+            .style();
+
+        for (name, value) in group.css_props_container.static_css_props {
+            declaration.set_property(name, &value).unwrap_throw();
+        }
+
+        let declaration = Arc::new(SendWrapper::new(declaration));
+        let mut task_handles = group.css_props_container.task_handles;
+        for (name, value_signal) in group.css_props_container.dynamic_css_props {
+            let declaration = Arc::clone(&declaration);
+            task_handles.push(Task::start_droppable(value_signal.for_each(move |value| {
+                if let Some(value) = value.into_option_cow_str() {
+                    declaration.set_property(&name, &value).unwrap_throw();
+                } else {
+                    declaration.remove_property(&name).unwrap_throw();
+                }
+                async {}
+            })));
+        }
+
+        StyleGroupHandle {
+            task_handles
+        }
     }
 }

@@ -82,13 +82,13 @@ fn new_todo_title() -> impl Element {
             Placeholder::new("What needs to be done?")
                 .s(
                     Font::new()
-                        .weight(NamedWeight::Bold)
                         .italic()
-                        .color(hsla(0, 0, 0, 40))
+                        .color(hsl(0, 0, 91.3))
                 )
         )
         .on_key_down(|event| event.if_key(Key::Enter, super::add_todo))
         .text_signal(super::new_todo_title().signal_cloned())
+        .update_raw_el(|raw| raw.attr("class", "text_input abcd"))
 }
 
 fn todos() -> impl Element {

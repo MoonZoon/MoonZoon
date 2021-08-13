@@ -1,6 +1,5 @@
 use crate::*;
 use web_sys::{EventTarget, Node};
-use dominator::StylesheetBuilder;
 
 
 mod raw_html_el;
@@ -117,9 +116,10 @@ pub trait RawEl: Sized {
         value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
     ) -> Self;
 
-    fn style_group(self, group: StyleGroup) -> Self {
-        let entire_selector = [self.class_id(), &group.selector].concat();
-        self
+    fn style_group(self, mut group: StyleGroup) -> Self {
+        group.selector = [".", self.class_id(), &group.selector].concat().into();
+        let group_handle = global_styles().push_style_group_droppable(group);
+        self.after_remove(move |_| drop(group_handle))
     }
 
     fn after_insert(self, handler: impl FnOnce(Self::WSElement) + 'static) -> Self {

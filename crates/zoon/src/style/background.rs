@@ -18,7 +18,7 @@ impl<'a> Background<'a> {
         color: impl Signal<Item = impl Color<'static> + 'static> + Unpin + 'static,
     ) -> Self {
         self.dynamic_css_props
-            .insert("background-color", box_css_signal(color));
+            .insert("background-color".into(), box_css_signal(color));
         self
     }
 
@@ -36,7 +36,7 @@ impl<'a> Background<'a> {
             ["url(", &url.into_cow_str(), ")"].concat()
         });
         self.dynamic_css_props
-            .insert("background-image", box_css_signal(url));
+            .insert("background-image".into(), box_css_signal(url));
         self
     }
 }
