@@ -142,6 +142,9 @@ fn todo(todo: Arc<Todo>) -> impl Element {
                 ]
             }
         }).to_signal_vec())
+        .update_raw_el(|raw| {
+            raw.style_group(StyleGroup::new(":hover").style("font-style", "italic"))
+        })
 }
 
 fn todo_checkbox(todo: Arc<Todo>) -> impl Element {
