@@ -1,4 +1,5 @@
 use crate::*;
+use std::sync::Once;
 
 pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
     fn element_above(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
@@ -63,7 +64,12 @@ pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
 }
 
 fn element_above_container() -> RawHtmlEl {
+    static INIT: Once = Once::new();
+    INIT.call_once(|| global_styles()
+        .push_style_group(StyleGroup::new(".above > *").style("pointer-events", "auto"))
+    );
     RawHtmlEl::new("div")
+        .class("above")
         .style("display", "flex")
         .style("flex-direction", "column")
         .style("position", "absolute")
@@ -71,11 +77,15 @@ fn element_above_container() -> RawHtmlEl {
         .style("left", "0")
         .style("width", "100%")
         .style("pointer-events", "none")
-        .class("above")
 }
 
 fn element_below_container() -> RawHtmlEl {
+    static INIT: Once = Once::new();
+    INIT.call_once(|| global_styles()
+        .push_style_group(StyleGroup::new(".below > *").style("pointer-events", "auto"))
+    );
     RawHtmlEl::new("div")
+        .class("below")
         .style("display", "flex")
         .style("flex-direction", "column")
         .style("position", "absolute")
@@ -83,11 +93,15 @@ fn element_below_container() -> RawHtmlEl {
         .style("left", "0")
         .style("width", "100%")
         .style("pointer-events", "none")
-        .class("below")
 }
 
 fn element_on_left_container() -> RawHtmlEl {
+    static INIT: Once = Once::new();
+    INIT.call_once(|| global_styles()
+        .push_style_group(StyleGroup::new(".on_left > *").style("pointer-events", "auto"))
+    );
     RawHtmlEl::new("div")
+        .class("on_left")
         .style("display", "flex")
         .style("flex-direction", "column")
         .style("position", "absolute")
@@ -95,11 +109,15 @@ fn element_on_left_container() -> RawHtmlEl {
         .style("top", "0")
         .style("height", "100%")
         .style("pointer-events", "none")
-        .class("on_left")
 }
 
 fn element_on_right_container() -> RawHtmlEl {
+    static INIT: Once = Once::new();
+    INIT.call_once(|| global_styles()
+        .push_style_group(StyleGroup::new(".on_right > *").style("pointer-events", "auto"))
+    );
     RawHtmlEl::new("div")
+        .class("on_right")
         .style("display", "flex")
         .style("flex-direction", "column")
         .style("position", "absolute")
@@ -107,5 +125,4 @@ fn element_on_right_container() -> RawHtmlEl {
         .style("top", "0")
         .style("height", "100%")
         .style("pointer-events", "none")
-        .class("on_right")
 }
