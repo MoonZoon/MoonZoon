@@ -11,11 +11,3 @@ html {
 *:focus-visible {
     outline: none;
 }
-
-.paragraph > * {
-    display: inline;
-}
-
-.above > *, .below > *, .on_left > *, .on_right > * {
-    pointer-events: auto;
-}

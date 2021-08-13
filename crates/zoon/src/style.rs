@@ -4,6 +4,7 @@ use std::{
     collections::BTreeMap, 
     sync::Arc,
     convert::TryFrom,
+    mem,
 };
 use web_sys::{CssStyleSheet, HtmlStyleElement, CssStyleRule, CssStyleDeclaration};
 use once_cell::race::OnceBox;
@@ -175,11 +176,22 @@ impl GlobalStyles {
     }
 
     pub fn push_style_group(&self, group: StyleGroup) {
-
+        let (_, task_handles) = self.push_style_group_inner(group, false);
+        mem::forget(task_handles);
     }
 
     #[must_use]
     pub fn push_style_group_droppable(&self, group: StyleGroup) -> StyleGroupHandle {
+        let (rule_id, _task_handles) = self.push_style_group_inner(group, true);
+        StyleGroupHandle {
+            rule_id,
+            _task_handles,
+        }
+    }
+
+    // --
+
+    fn push_style_group_inner(&self, group: StyleGroup, droppable: bool) -> (u32, Vec<TaskHandle>) {
         let (rule_id_and_index, ids_lock) = self.rule_ids.add_new_id();
 
         let empty_rule = {
@@ -207,20 +219,21 @@ impl GlobalStyles {
         let mut task_handles = group.css_props_container.task_handles;
         for (name, value_signal) in group.css_props_container.dynamic_css_props {
             let declaration = Arc::clone(&declaration);
-            task_handles.push(Task::start_droppable(value_signal.for_each(move |value| {
+            let task = value_signal.for_each(move |value| {
                 if let Some(value) = value.into_option_cow_str() {
                     set_css_property(&declaration, &name, &value);
                 } else {
                     declaration.remove_property(&name).unwrap_throw();
                 }
                 async {}
-            })));
+            });
+            if droppable {
+                task_handles.push(Task::start_droppable(task));
+            } else {
+                Task::start(task);
+            }
         }
-
-        StyleGroupHandle {
-            rule_id: rule_id_and_index,
-            _task_handles: task_handles,
-        }
+        (rule_id_and_index, task_handles)
     }
 
     fn remove_rule(&self, id: u32) {
