@@ -1,6 +1,6 @@
 use crate::*;
 use web_sys::{EventTarget, Node};
-
+use std::mem::ManuallyDrop;
 
 mod raw_html_el;
 mod raw_svg_el;
@@ -119,14 +119,18 @@ pub trait RawEl: Sized {
     fn style_group(self, mut group: StyleGroup) -> Self {
         group.selector = [".", self.class_id(), &group.selector].concat().into();
         let group_handle = global_styles().push_style_group_droppable(group);
-        self.after_remove(move |_| drop(group_handle))
+        self.after_remove(|_| drop(group_handle))
     }
 
     fn after_insert(self, handler: impl FnOnce(Self::WSElement) + 'static) -> Self {
+        let handler = ManuallyDrop::new(handler);
+        let handler = |ws_element| ManuallyDrop::into_inner(handler)(ws_element);
         self.update_dom_builder(|dom_builder| dom_builder.after_inserted(handler))
     }
 
     fn after_remove(self, handler: impl FnOnce(Self::WSElement) + 'static) -> Self {
+        let handler = ManuallyDrop::new(handler);
+        let handler = |ws_element| ManuallyDrop::into_inner(handler)(ws_element);
         self.update_dom_builder(|dom_builder| dom_builder.after_removed(handler))
     }
 
