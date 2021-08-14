@@ -1,4 +1,4 @@
-use crate::{web_sys::HtmlDivElement, *};
+use crate::{web_sys::HtmlElement, *};
 use std::marker::PhantomData;
 
 // ------ ------
@@ -61,7 +61,7 @@ impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Row<EmptyFlag> {}
 impl<EmptyFlag> MouseEventAware<RawHtmlEl> for Row<EmptyFlag> {}
 impl<EmptyFlag> MutableViewport<RawHtmlEl> for Row<EmptyFlag> {}
 impl<EmptyFlag> Hookable<RawHtmlEl> for Row<EmptyFlag> {
-    type WSElement = HtmlDivElement;
+    type WSElement = HtmlElement;
 }
 impl<EmptyFlag> AddNearbyElement<'_> for Row<EmptyFlag> {}
 

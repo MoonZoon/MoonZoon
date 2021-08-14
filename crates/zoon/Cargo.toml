@@ -47,6 +47,7 @@ features = [
   'HtmlButtonElement',
   'HtmlCanvasElement',
   'HtmlDivElement',
+  'HtmlElement',
   'HtmlInputElement',
   'HtmlLabelElement',
   'HtmlParagraphElement',
