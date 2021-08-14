@@ -1,6 +1,8 @@
 use crate::*;
 use std::borrow::Borrow;
 
+// ------ KeyboardEventAware ------
+
 pub trait KeyboardEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
     fn on_key_down(self, handler: impl FnOnce(KeyboardEvent) + Clone + 'static) -> Self {
         self.update_raw_el(|raw_el| {
@@ -13,6 +15,8 @@ pub trait KeyboardEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
         })
     }
 }
+
+// ------ KeyboardEvent ------
 
 pub struct KeyboardEvent {
     key: Key,
@@ -29,6 +33,8 @@ impl KeyboardEvent {
         }
     }
 }
+
+// ------ Key ------
 
 #[derive(PartialEq, Eq)]
 pub enum Key {

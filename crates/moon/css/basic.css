@@ -6,6 +6,8 @@ html {
     margin: 0;
     position: relative;
     border: none;
+    font-weight: inherit;
+    font-size: inherit;
 }
 
 *:focus-visible {

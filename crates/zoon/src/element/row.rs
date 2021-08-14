@@ -14,23 +14,7 @@ pub struct Row<EmptyFlag> {
 
 impl Row<EmptyFlagSet> {
     pub fn new() -> Self {
-        run_once!(|| {
-            global_styles()
-                .style_group(StyleGroup::new(".row > .center_x")
-                    .style("margin-left", "auto")
-                    .style("margin-right", "auto")
-                )
-                .style_group(StyleGroup::new(".row > .align_top").style("align-self", "flex-start"))
-                .style_group(StyleGroup::new(".row > .align_bottom").style("align-self", "flex-end"))
-                .style_group(StyleGroup::new(".row > .align_right").style("margin-left", "auto"));
-        });
-        Self {
-            raw_el: RawHtmlEl::new("div")
-                .class("row")
-                .style("display", "inline-flex")
-                .style("align-items", "center"),
-            flags: PhantomData,
-        }
+        Self::with_tag(Tag::Custom("div"))
     }
 }
 
@@ -51,6 +35,27 @@ impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Row<EmptyFlag> {
 //   Abilities
 // ------ ------
 
+impl ChoosableTag for Row<EmptyFlagSet> {
+    fn with_tag(tag: Tag) -> Self {
+        run_once!(|| {
+            global_styles()
+                .style_group(StyleGroup::new(".row > .center_x")
+                    .style("margin-left", "auto")
+                    .style("margin-right", "auto")
+                )
+                .style_group(StyleGroup::new(".row > .align_top").style("align-self", "flex-start"))
+                .style_group(StyleGroup::new(".row > .align_bottom").style("align-self", "flex-end"))
+                .style_group(StyleGroup::new(".row > .align_right").style("margin-left", "auto"));
+        });
+        Self {
+            raw_el: RawHtmlEl::new(tag.as_str())
+                .class("row")
+                .style("display", "inline-flex")
+                .style("align-items", "center"),
+            flags: PhantomData,
+        }
+    }
+}
 impl<EmptyFlag> Styleable<'_, RawHtmlEl> for Row<EmptyFlag> {}
 impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Row<EmptyFlag> {}
 impl<EmptyFlag> MouseEventAware<RawHtmlEl> for Row<EmptyFlag> {}

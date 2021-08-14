@@ -14,24 +14,7 @@ pub struct El<ChildFlag> {
 
 impl El<ChildFlagNotSet> {
     pub fn new() -> Self {
-        run_once!(|| {
-            global_styles()
-                .style_group(StyleGroup::new(".el > .center_x").style("align-self", "center"))
-                .style_group(StyleGroup::new(".el > .center_y")
-                    .style("margin-top", "auto")
-                    .style("margin-bottom", "auto")
-                )
-                .style_group(StyleGroup::new(".el > .align_bottom").style("margin-top", "auto"))
-                .style_group(StyleGroup::new(".el > .align_left").style("align-self", "flex-start"))
-                .style_group(StyleGroup::new(".el > .align_right").style("align-self", "flex-end"));
-        });
-        Self {
-            raw_el: RawHtmlEl::new("div")
-                .class("el")
-                .style("display", "flex")
-                .style("flex-direction", "column"),
-            flags: PhantomData,
-        }
+        Self::with_tag(Tag::Custom("div"))
     }
 }
 
@@ -52,6 +35,28 @@ impl<ChildFlag> UpdateRawEl<RawHtmlEl> for El<ChildFlag> {
 //   Abilities
 // ------ ------
 
+impl ChoosableTag for El<ChildFlagNotSet> {
+    fn with_tag(tag: Tag) -> Self {
+        run_once!(|| {
+            global_styles()
+                .style_group(StyleGroup::new(".el > .center_x").style("align-self", "center"))
+                .style_group(StyleGroup::new(".el > .center_y")
+                    .style("margin-top", "auto")
+                    .style("margin-bottom", "auto")
+                )
+                .style_group(StyleGroup::new(".el > .align_bottom").style("margin-top", "auto"))
+                .style_group(StyleGroup::new(".el > .align_left").style("align-self", "flex-start"))
+                .style_group(StyleGroup::new(".el > .align_right").style("align-self", "flex-end"));
+        });
+        Self {
+            raw_el: RawHtmlEl::new(tag.as_str())
+                .class("el")
+                .style("display", "flex")
+                .style("flex-direction", "column"),
+            flags: PhantomData,
+        }
+    }
+}
 impl<ChildFlag> Styleable<'_, RawHtmlEl> for El<ChildFlag> {}
 impl<ChildFlag> KeyboardEventAware<RawHtmlEl> for El<ChildFlag> {}
 impl<ChildFlag> MouseEventAware<RawHtmlEl> for El<ChildFlag> {}
