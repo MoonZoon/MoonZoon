@@ -26,7 +26,6 @@ pub fn root() -> impl Element {
 
 fn content() -> impl Element {
     Column::new()
-        // region::header(),
         .s(Width::fill().min(230).max(550))
         .s(Align::new().center_x())
         .item(header())
@@ -40,8 +39,7 @@ fn content() -> impl Element {
 }
 
 fn header() -> impl Element {
-    El::new()
-        // region::h1(),
+    El::with_tag(Tag::Header)
         .s(Padding::new().top(10))
         .s(Align::new().center_x())
         .s(Height::new(130))
@@ -50,12 +48,11 @@ fn header() -> impl Element {
             .color(hsla(10.5, 62.8, 44.5, 15))
             .weight(NamedWeight::Hairline)
         )
-        .child("todos")
+        .child(El::with_tag(Tag::H1).child("todos"))
 }
 
 fn panel() -> impl Element {
-    Column::new()
-        // region::section(),
+    Column::with_tag(Tag::Section)
         .s(Shadows::new(vec![
             Shadow::new().y(2).blur(4).color(hsla(0, 0, 0, 20)),
             Shadow::new().y(25).blur(50).color(hsla(0, 0, 0, 10)),
@@ -227,9 +224,8 @@ fn editing_todo_title(todo: Arc<Todo>) -> impl Element {
 }
 
 fn panel_footer() -> impl Element {
-    // region::footer
     let item_container = || El::new().s(Width::fill());
-    Row::new()
+    Row::with_tag(Tag::Footer)
         .s(Padding::new().x(15).y(10))
         .s(Font::new().color(hsl(0, 0, 50)))
         .s(Borders::new().top(
@@ -296,8 +292,7 @@ fn clear_completed_button() -> impl Element {
 }
 
 fn footer() -> impl Element {
-    Column::new()
-        // region::footer
+    Column::with_tag(Tag::Footer)
         .s(Spacing::new(9))
         .s(
             Font::new()
