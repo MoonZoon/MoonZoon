@@ -37,7 +37,7 @@ pub use index_generator::IndexGenerator;
 pub use monotonic_ids::MonotonicIds;
 pub use js_sys::{self, Reflect};
 pub use not::not;
-pub use paste;
+pub use paste::paste;
 pub use pin_project::pin_project;
 pub use hsluv;
 pub use send_wrapper::SendWrapper;
@@ -52,6 +52,7 @@ pub use wasm_bindgen_futures::JsFuture;
 pub use web_sys;
 pub use once_cell;
 pub use css_property_name::VENDOR_PREFIXES;
+pub use gensym::gensym;
 
 #[cfg(feature = "connection")]
 pub use connection::{Connection, SendUpMsgError};
@@ -87,6 +88,8 @@ compile_error!("Do you know a fast allocator working in Wasm?");
 // #[global_allocator]
 // static GLOBAL_ALLOCATOR: wasm_tracing_allocator::WasmTracingAllocator<std::alloc::System> = wasm_tracing_allocator::WasmTracingAllocator(std::alloc::System);
 
+// ------ format! ------
+
 #[cfg(feature = "fmt")]
 pub use lexical::{self, NumberFormat, WriteFloatOptions, WriteIntegerOptions};
 #[cfg(feature = "fmt")]
@@ -105,13 +108,14 @@ macro_rules! format {
     }}
 }
 
+// ------ make_flags! ------
 pub trait FlagSet {}
 pub trait FlagNotSet {}
 
 #[macro_export]
 macro_rules! make_flags {
     ($($flag:ident),*) => {
-        $(paste::paste!{
+        $($crate::paste!{
             #[derive(Default)]
             pub struct [<$flag FlagSet>];
             #[derive(Default)]
@@ -121,6 +125,23 @@ macro_rules! make_flags {
         })*
     }
 }
+
+// ------ run_once! ------
+
+#[macro_export]
+macro_rules! run_once {
+    ($f:expr) => {
+        $crate::gensym!{ $crate::run_once!($f) }
+    };
+    ($random_ident:ident, $f:expr) => {
+        $crate::paste!{
+            static [<RUN_ONCE $random_ident:snake:upper>]: std::sync::Once = std::sync::Once::new();
+            [<RUN_ONCE $random_ident:snake:upper>].call_once($f);
+        }
+    };
+}
+
+// ------ start_app ------
 
 pub fn start_app<'a, E: Element>(
     browser_element_id: impl Into<Option<&'a str>>,

@@ -1,5 +1,4 @@
 use crate::*;
-use std::sync::Once;
 
 pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
     fn element_above(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
@@ -64,9 +63,8 @@ pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
 }
 
 fn element_above_container() -> RawHtmlEl {
-    static INIT: Once = Once::new();
-    INIT.call_once(|| global_styles()
-        .push_style_group(StyleGroup::new(".above > *").style("pointer-events", "auto"))
+    run_once!(||
+        global_styles().push_style_group(StyleGroup::new(".above > *").style("pointer-events", "auto"))
     );
     RawHtmlEl::new("div")
         .class("above")
@@ -80,8 +78,7 @@ fn element_above_container() -> RawHtmlEl {
 }
 
 fn element_below_container() -> RawHtmlEl {
-    static INIT: Once = Once::new();
-    INIT.call_once(|| global_styles()
+    run_once!(|| global_styles()
         .push_style_group(StyleGroup::new(".below > *").style("pointer-events", "auto"))
     );
     RawHtmlEl::new("div")
@@ -96,8 +93,7 @@ fn element_below_container() -> RawHtmlEl {
 }
 
 fn element_on_left_container() -> RawHtmlEl {
-    static INIT: Once = Once::new();
-    INIT.call_once(|| global_styles()
+    run_once!(|| global_styles()
         .push_style_group(StyleGroup::new(".on_left > *").style("pointer-events", "auto"))
     );
     RawHtmlEl::new("div")
@@ -112,10 +108,10 @@ fn element_on_left_container() -> RawHtmlEl {
 }
 
 fn element_on_right_container() -> RawHtmlEl {
-    static INIT: Once = Once::new();
-    INIT.call_once(|| global_styles()
+    run_once!(|| {
+        global_styles()
         .push_style_group(StyleGroup::new(".on_right > *").style("pointer-events", "auto"))
-    );
+    });
     RawHtmlEl::new("div")
         .class("on_right")
         .style("display", "flex")

@@ -1,6 +1,5 @@
 use crate::{web_sys::HtmlParagraphElement , *};
 use std::marker::PhantomData;
-use std::sync::Once;
 
 // ------ ------
 //   Element
@@ -15,8 +14,7 @@ pub struct Paragraph<EmptyFlag> {
 
 impl Paragraph<EmptyFlagSet> {
     pub fn new() -> Self {
-        static INIT: Once = Once::new();
-        INIT.call_once(|| global_styles()
+        run_once!(|| global_styles()
             .push_style_group(StyleGroup::new(".paragraph > *").style("display", "inline"))
         );
         Self {
