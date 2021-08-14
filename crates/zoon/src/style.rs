@@ -193,13 +193,12 @@ impl GlobalStyles {
 
     fn push_style_group_inner(&self, group: StyleGroup, droppable: bool) -> (u32, Vec<TaskHandle>) {
         let (rule_id_and_index, ids_lock) = self.rule_ids.add_new_id();
+        let empty_rule = [&group.selector, "{}"].concat();
 
-        let empty_rule = {
-            let mut rule = group.selector.to_string();
-            rule.push_str("{}");
-            rule
-        };
-        self.sheet.insert_rule_with_index(&empty_rule, rule_id_and_index).unwrap_throw();
+        self.sheet.insert_rule_with_index(&empty_rule, rule_id_and_index).unwrap_or_else(|_| {
+            panic!("invalid CSS selector: `{}`", &group.selector);
+        });
+
         let declaration = self
             .sheet
             .css_rules()
