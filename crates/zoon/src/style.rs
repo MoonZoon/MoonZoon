@@ -271,14 +271,14 @@ impl GlobalStyles {
 }
 
 fn set_css_property(declaration: &CssStyleDeclaration, name: &str, value: &str) {
-    declaration.set_property(name, &value).unwrap_throw();
+    declaration.set_property(name, value).unwrap_throw();
     if not(declaration.get_property_value(name).unwrap_throw().is_empty()) {
         return;
     }
     for prefix in VENDOR_PREFIXES {
-        let prefixed_name = &[prefix, name].concat();
-        declaration.set_property(&prefixed_name, &value).unwrap_throw();
-        if not(declaration.get_property_value(name).unwrap_throw().is_empty()) {
+        let prefixed_name = [prefix, name].concat();
+        declaration.set_property(&prefixed_name, value).unwrap_throw();
+        if not(declaration.get_property_value(&prefixed_name).unwrap_throw().is_empty()) {
             return;
         }
     }
