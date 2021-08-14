@@ -14,9 +14,11 @@ pub struct Paragraph<EmptyFlag> {
 
 impl Paragraph<EmptyFlagSet> {
     pub fn new() -> Self {
-        run_once!(|| global_styles()
-            .push_style_group(StyleGroup::new(".paragraph > *").style("display", "inline"))
-        );
+        run_once!(|| { global_styles()
+            .style_group(StyleGroup::new(".paragraph > *").style("display", "inline"))
+            .style_group(StyleGroup::new(".paragraph > .align_left").style("float", "left"))
+            .style_group(StyleGroup::new(".paragraph > .align_right").style("float", "right"));
+        });
         Self {
             raw_el: RawHtmlEl::new("p").class("paragraph"),
             flags: PhantomData,

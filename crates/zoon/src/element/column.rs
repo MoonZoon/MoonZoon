@@ -14,6 +14,17 @@ pub struct Column<EmptyFlag> {
 
 impl Column<EmptyFlagSet> {
     pub fn new() -> Self {
+        run_once!(|| {
+            global_styles()
+                .style_group(StyleGroup::new(".column > .center_x").style("align-self", "center"))
+                .style_group(StyleGroup::new(".column > .center_y")
+                    .style("margin-top", "auto")
+                    .style("margin-bottom", "auto")
+                )
+                .style_group(StyleGroup::new(".column > .align_bottom").style("margin-top", "auto"))
+                .style_group(StyleGroup::new(".column > .align_left").style("align-self", "flex-start"))
+                .style_group(StyleGroup::new(".column > .align_right").style("align-self", "flex-end"));
+        });
         Self {
             raw_el: RawHtmlEl::new("div")
                 .class("column")

@@ -28,7 +28,7 @@ fn content() -> impl Element {
     Column::new()
         // region::header(),
         .s(Width::fill().min(230).max(550))
-        .s(Align::center_x())
+        .s(Align::new().center_x())
         .item(header())
         .item(
             Column::new()
@@ -43,7 +43,7 @@ fn header() -> impl Element {
     El::new()
         // region::h1(),
         .s(Padding::new().top(10))
-        .s(Align::center_x())
+        .s(Align::new().center_x())
         .s(Height::new(130))
         .s(Font::new()
             .size(100)
@@ -208,7 +208,7 @@ fn editing_todo_title(todo: Arc<Todo>) -> impl Element {
     TextInput::new()
         .s(Width::new(506))
         .s(Padding::all(17).bottom(16))
-        .s(Align::right())
+        .s(Align::new().right())
         .s(Borders::all(Border::new().color(hsl(0, 0, 63.2))))
         .s(Shadows::new(vec![
             Shadow::new().inner().y(-1).blur(5).color(hsla(0, 0, 0, 20))
@@ -288,7 +288,7 @@ fn filter(filter: Filter) -> impl Element {
 fn clear_completed_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .s(Align::right())
+        .s(Align::new().right())
         .s(Font::new().underline_signal(hovered_signal))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(super::remove_completed_todos)

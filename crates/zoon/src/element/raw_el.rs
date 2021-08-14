@@ -145,7 +145,7 @@ pub trait RawEl: Sized {
 
     fn style_group(self, mut group: StyleGroup) -> Self {
         group.selector = [".", self.class_id(), &group.selector].concat().into();
-        let group_handle = global_styles().push_style_group_droppable(group);
+        let group_handle = global_styles().style_group_droppable(group);
         self.after_remove(|_| drop(group_handle))
     }
 
