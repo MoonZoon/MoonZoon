@@ -6,7 +6,6 @@ use std::{array, borrow::Cow};
 #[derive(Default)]
 pub struct Shadows<'a> {
     static_css_props: StaticCSSProps<'a>,
-    dynamic_css_props: DynamicCSSProps,
 }
 
 impl<'a> Shadows<'a> {
@@ -24,15 +23,7 @@ impl<'a> Shadows<'a> {
 
 impl<'a> Style<'a> for Shadows<'a> {
     fn into_css_props_container(self) -> CssPropsContainer<'a> {
-        let Self { 
-            static_css_props, 
-            dynamic_css_props,
-        } = self;
-        CssPropsContainer {
-            static_css_props,
-            dynamic_css_props,
-            task_handles: vec![],
-        }
+        CssPropsContainer::default().static_css_props(self.static_css_props)
     }
 }
 

@@ -1,44 +1,39 @@
 use crate::*;
+use std::borrow::Cow;
 
 #[derive(Default)]
 pub struct Align<'a> {
-    static_css_props: StaticCSSProps<'a>,
-    dynamic_css_props: DynamicCSSProps,
+    static_classes: Vec<Cow<'a, str>>,
 }
 
 impl<'a> Align<'a> {
-    // @TODO make it work in other elements (not only El, Column) / rename / more typed CSS API?
     pub fn center_x() -> Self {
         let mut this = Self::default();
-        this.static_css_props.insert("align-self", "center".into());
+        this.static_classes.push("center_x".into());
         this
     }
 
-    // @TODO make it work in other elements (not only Row) / rename / more typed CSS API?
+    pub fn center_y() -> Self {
+        let mut this = Self::default();
+        this.static_classes.push("center_y".into());
+        this
+    }
+
     pub fn left() -> Self {
         let mut this = Self::default();
-        this.static_css_props.insert("align-self", "flex-start".into());
+        this.static_classes.push("align_left".into());
         this
     }
 
-    // @TODO make it work in other elements (not only Row) / rename / more typed CSS API?
     pub fn right() -> Self {
         let mut this = Self::default();
-        this.static_css_props.insert("align-self", "flex-end".into());
+        this.static_classes.push("align_right".into());
         this
     }
 }
 
 impl<'a> Style<'a> for Align<'a> {
     fn into_css_props_container(self) -> CssPropsContainer<'a> {
-        let Self { 
-            static_css_props, 
-            dynamic_css_props 
-        } = self;
-        CssPropsContainer {
-            static_css_props,
-            dynamic_css_props,
-            task_handles: Vec::new()
-        }
+        CssPropsContainer::default().static_classes(self.static_classes)
     }
 }

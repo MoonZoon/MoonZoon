@@ -123,16 +123,10 @@ impl<'a> Borders<'a> {
 
 impl<'a> Style<'a> for Borders<'a> {
     fn into_css_props_container(self) -> CssPropsContainer<'a> {
-        let Self { 
-            static_css_props, 
-            dynamic_css_props,
-            task_handles,
-        } = self;
-        CssPropsContainer {
-            static_css_props,
-            dynamic_css_props,
-            task_handles,
-        }
+        CssPropsContainer::default()
+            .static_css_props(self.static_css_props)
+            .dynamic_css_props(self.dynamic_css_props)
+            .task_handles(self.task_handles)
     }
 }
 

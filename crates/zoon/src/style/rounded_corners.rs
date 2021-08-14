@@ -3,7 +3,6 @@ use crate::*;
 #[derive(Default)]
 pub struct RoundedCorners<'a> {
     static_css_props: StaticCSSProps<'a>,
-    dynamic_css_props: DynamicCSSProps,
 }
 
 impl<'a> RoundedCorners<'a> {
@@ -34,14 +33,6 @@ impl<'a> RoundedCorners<'a> {
 
 impl<'a> Style<'a> for RoundedCorners<'a> {
     fn into_css_props_container(self) -> CssPropsContainer<'a> {
-        let Self { 
-            static_css_props, 
-            dynamic_css_props 
-        } = self;
-        CssPropsContainer {
-            static_css_props,
-            dynamic_css_props,
-            task_handles: Vec::new()
-        }
+        CssPropsContainer::default().static_css_props(self.static_css_props)
     }
 }
