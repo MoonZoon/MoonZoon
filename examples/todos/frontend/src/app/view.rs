@@ -66,7 +66,7 @@ fn panel() -> impl Element {
 
 fn new_todo_title() -> impl Element {
     TextInput::new()
-        .s(Padding::new().y(20).left(60).right(16))
+        .s(Padding::all(16).y(19).left(60).right(16))
         .s(Font::new().size(24).color(hsl(0, 0, 32.7)))
         .s(Background::new().color(hsla(0, 0, 0, 0.3)))
         .s(Shadows::new(vec![
@@ -117,7 +117,7 @@ fn toggle_all_checkbox() -> impl Element {
                 )
                 .s(Transform::new().rotate(90).move_up(18))
                 .s(Height::new(34))
-                .s(Padding::new().x(27).y(10))
+                .s(Padding::new().x(27).y(6))
                 .child("❯")
         })
 }
@@ -170,7 +170,7 @@ fn todo_title(todo: Arc<Todo>) -> impl Element {
             .strike_signal(todo.completed.signal())
             .size(24)
         )
-        .s(Padding::new().y(17).left(15).right(60))
+        .s(Padding::all(15).right(60))
         .s(Clip::x())
         .for_input(todo.id.to_string())
         .label_signal(todo.title.signal_cloned())
@@ -226,7 +226,7 @@ fn editing_todo_title(todo: Arc<Todo>) -> impl Element {
 fn panel_footer() -> impl Element {
     let item_container = || El::new().s(Width::fill());
     Row::with_tag(Tag::Footer)
-        .s(Padding::new().x(15).y(10))
+        .s(Padding::new().x(15).y(8))
         .s(Font::new().color(hsl(0, 0, 50)))
         .s(Borders::new().top(
             Border::new().color(hsl(0, 0, 91.3))
@@ -303,7 +303,7 @@ fn footer() -> impl Element {
         .item(Paragraph::new().content("Double-click to edit a todo"))
         .item(
             Paragraph::new()
-                .content("Written by ")
+                .content("Created by ")
                 .content(author_link())
         )
         .item(
