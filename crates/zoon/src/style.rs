@@ -1,7 +1,7 @@
 use crate::*;
 use std::{
     borrow::Cow, 
-    collections::BTreeMap, 
+    collections::{BTreeMap, BTreeSet}, 
     sync::Arc,
     convert::TryFrom,
     mem,
@@ -55,6 +55,7 @@ pub use width::Width;
 
 pub type StaticCSSProps<'a> = BTreeMap<&'a str, Cow<'a, str>>;
 pub type DynamicCSSProps = BTreeMap<Cow<'static, str>, BoxedCssSignal>;
+pub type StaticCssClasses<'a> = BTreeSet<Cow<'a, str>>;
 
 pub type BoxedCssSignal = Box<dyn Signal<Item = Box<dyn IntoOptionCowStr<'static>>> + Unpin>;
 
@@ -82,7 +83,7 @@ pub trait Style<'a>: Default {
             static_css_props,
             dynamic_css_props,
             task_handles,
-            static_classes,
+            static_css_classes,
          } = self.into_css_props_container();
 
         for (name, value) in static_css_props {
@@ -94,7 +95,7 @@ pub trait Style<'a>: Default {
         if not(task_handles.is_empty()) {
             raw_el = raw_el.after_remove(move |_| drop(task_handles))
         }
-        for class in static_classes {
+        for class in static_css_classes {
             raw_el = raw_el.class(&class);
         }
         raw_el
@@ -107,8 +108,8 @@ pub trait Style<'a>: Default {
 pub struct CssPropsContainer<'a> {
     pub static_css_props: StaticCSSProps<'a>,
     pub dynamic_css_props: DynamicCSSProps,
+    pub static_css_classes: StaticCssClasses<'a>,
     pub task_handles: Vec<TaskHandle>,
-    pub static_classes: Vec<Cow<'a, str>>,
 }
 
 impl<'a> CssPropsContainer<'a> {
@@ -122,13 +123,13 @@ impl<'a> CssPropsContainer<'a> {
         self
     }
 
-    pub fn task_handles(mut self, task_handles: Vec<TaskHandle>) -> Self {
-        self.task_handles = task_handles;
+    pub fn static_css_classes(mut self, static_css_classes: StaticCssClasses<'a>) -> Self {
+        self.static_css_classes = static_css_classes;
         self
     }
 
-    pub fn static_classes(mut self, static_classes: Vec<Cow<'a, str>>) -> Self {
-        self.static_classes = static_classes;
+    pub fn task_handles(mut self, task_handles: Vec<TaskHandle>) -> Self {
+        self.task_handles = task_handles;
         self
     }
 }
@@ -202,14 +203,15 @@ impl GlobalStyles {
         }
     }
 
-    pub fn push_style_group(&self, group: StyleGroup) {
-        let (_, task_handles) = self.push_style_group_inner(group, false);
+    pub fn style_group(&self, group: StyleGroup) -> &Self {
+        let (_, task_handles) = self.style_group_inner(group, false);
         mem::forget(task_handles);
+        self
     }
 
     #[must_use]
-    pub fn push_style_group_droppable(&self, group: StyleGroup) -> StyleGroupHandle {
-        let (rule_id, _task_handles) = self.push_style_group_inner(group, true);
+    pub fn style_group_droppable(&self, group: StyleGroup) -> StyleGroupHandle {
+        let (rule_id, _task_handles) = self.style_group_inner(group, true);
         StyleGroupHandle {
             rule_id,
             _task_handles,
@@ -218,7 +220,7 @@ impl GlobalStyles {
 
     // --
 
-    fn push_style_group_inner(&self, group: StyleGroup, droppable: bool) -> (u32, Vec<TaskHandle>) {
+    fn style_group_inner(&self, group: StyleGroup, droppable: bool) -> (u32, Vec<TaskHandle>) {
         let (rule_id_and_index, ids_lock) = self.rule_ids.add_new_id();
         let empty_rule = [&group.selector, "{}"].concat();
 

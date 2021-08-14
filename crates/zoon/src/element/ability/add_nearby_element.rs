@@ -63,9 +63,9 @@ pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
 }
 
 fn element_above_container() -> RawHtmlEl {
-    run_once!(||
-        global_styles().push_style_group(StyleGroup::new(".above > *").style("pointer-events", "auto"))
-    );
+    run_once!(|| {
+        global_styles().style_group(StyleGroup::new(".above > *").style("pointer-events", "auto"));
+    });
     RawHtmlEl::new("div")
         .class("above")
         .style("display", "flex")
@@ -78,9 +78,9 @@ fn element_above_container() -> RawHtmlEl {
 }
 
 fn element_below_container() -> RawHtmlEl {
-    run_once!(|| global_styles()
-        .push_style_group(StyleGroup::new(".below > *").style("pointer-events", "auto"))
-    );
+    run_once!(|| { global_styles()
+        .style_group(StyleGroup::new(".below > *").style("pointer-events", "auto"));
+    });
     RawHtmlEl::new("div")
         .class("below")
         .style("display", "flex")
@@ -93,9 +93,9 @@ fn element_below_container() -> RawHtmlEl {
 }
 
 fn element_on_left_container() -> RawHtmlEl {
-    run_once!(|| global_styles()
-        .push_style_group(StyleGroup::new(".on_left > *").style("pointer-events", "auto"))
-    );
+    run_once!(|| { global_styles()
+        .style_group(StyleGroup::new(".on_left > *").style("pointer-events", "auto"));
+    });
     RawHtmlEl::new("div")
         .class("on_left")
         .style("display", "flex")
@@ -110,7 +110,7 @@ fn element_on_left_container() -> RawHtmlEl {
 fn element_on_right_container() -> RawHtmlEl {
     run_once!(|| {
         global_styles()
-        .push_style_group(StyleGroup::new(".on_right > *").style("pointer-events", "auto"))
+        .style_group(StyleGroup::new(".on_right > *").style("pointer-events", "auto"));
     });
     RawHtmlEl::new("div")
         .class("on_right")
