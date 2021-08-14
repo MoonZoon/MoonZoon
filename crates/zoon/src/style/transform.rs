@@ -49,10 +49,6 @@ impl<'a> Style<'a> for Transform {
                 .join(" ");
             static_css_props.insert("transform", transform_value.into());
         }
-        CssPropsContainer {
-            static_css_props,
-            dynamic_css_props: DynamicCSSProps::default(),
-            task_handles: Vec::new()
-        }
+        CssPropsContainer::default().static_css_props(static_css_props)
     }
 }

@@ -82,6 +82,7 @@ pub trait Style<'a>: Default {
             static_css_props,
             dynamic_css_props,
             task_handles,
+            static_classes,
          } = self.into_css_props_container();
 
         for (name, value) in static_css_props {
@@ -92,6 +93,9 @@ pub trait Style<'a>: Default {
         }
         if not(task_handles.is_empty()) {
             raw_el = raw_el.after_remove(move |_| drop(task_handles))
+        }
+        for class in static_classes {
+            raw_el = raw_el.class(&class);
         }
         raw_el
     }
@@ -104,6 +108,29 @@ pub struct CssPropsContainer<'a> {
     pub static_css_props: StaticCSSProps<'a>,
     pub dynamic_css_props: DynamicCSSProps,
     pub task_handles: Vec<TaskHandle>,
+    pub static_classes: Vec<Cow<'a, str>>,
+}
+
+impl<'a> CssPropsContainer<'a> {
+    pub fn static_css_props(mut self, static_css_props: StaticCSSProps<'a>) -> Self {
+        self.static_css_props = static_css_props;
+        self
+    }
+
+    pub fn dynamic_css_props(mut self, dynamic_css_props: DynamicCSSProps) -> Self {
+        self.dynamic_css_props = dynamic_css_props;
+        self
+    }
+
+    pub fn task_handles(mut self, task_handles: Vec<TaskHandle>) -> Self {
+        self.task_handles = task_handles;
+        self
+    }
+
+    pub fn static_classes(mut self, static_classes: Vec<Cow<'a, str>>) -> Self {
+        self.static_classes = static_classes;
+        self
+    }
 }
 
 // ------ StyleGroup ------
