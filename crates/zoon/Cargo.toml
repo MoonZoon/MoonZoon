@@ -55,6 +55,7 @@ features = [
   'Response',
   'Request',
   'RequestInit',
+  'Storage',
 ]
 default-features = false
 
