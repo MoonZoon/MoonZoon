@@ -1,7 +1,7 @@
 use crate::*;
 use futures_signals::signal::{Mutable as FSMutable, MutableLockRef, MutableSignalCloned};
-use std::ops::Deref;
 use std::mem;
+use std::ops::Deref;
 
 #[derive(Clone, Debug, Default)]
 pub struct Mutable<T>(FSMutable<T>);
@@ -58,7 +58,7 @@ impl<T> Mutable<T> {
         let signal = this.signal_cloned();
         (this, signal)
     }
-} 
+}
 
 impl<T> Deref for Mutable<T> {
     type Target = FSMutable<T>;

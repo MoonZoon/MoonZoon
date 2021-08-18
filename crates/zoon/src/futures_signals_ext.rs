@@ -36,10 +36,7 @@ impl<T: Signal<Item = bool>> SignalExtBool for T {
     where
         Self: Sized,
     {
-        MapTrue {
-            signal: self,
-            f,
-        }
+        MapTrue { signal: self, f }
     }
 
     #[inline]
@@ -47,10 +44,7 @@ impl<T: Signal<Item = bool>> SignalExtBool for T {
     where
         Self: Sized,
     {
-        MapFalse {
-            signal: self,
-            f,
-        }
+        MapFalse { signal: self, f }
     }
 }
 
@@ -99,10 +93,7 @@ impl<I, S: Signal<Item = bool>, F: FnMut() -> I> Signal for MapTrue<S, F> {
 
     #[inline]
     fn poll_change(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
-        let MapTrueProj {
-            signal,
-            f,
-        } = self.project();
+        let MapTrueProj { signal, f } = self.project();
 
         signal
             .poll_change(cx)
@@ -126,10 +117,7 @@ impl<I, S: Signal<Item = bool>, F: FnMut() -> I> Signal for MapFalse<S, F> {
 
     #[inline]
     fn poll_change(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
-        let MapFalseProj {
-            signal,
-            f,
-        } = self.project();
+        let MapFalseProj { signal, f } = self.project();
 
         signal
             .poll_change(cx)

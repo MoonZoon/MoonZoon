@@ -7,26 +7,34 @@ pub struct RoundedCorners<'a> {
 
 impl<'a> RoundedCorners<'a> {
     pub fn all(radius: u32) -> Self {
-        Self::default().top_left(radius).top_right(radius).bottom_left(radius).bottom_right(radius)
+        Self::default()
+            .top_left(radius)
+            .top_right(radius)
+            .bottom_left(radius)
+            .bottom_right(radius)
     }
 
     pub fn top_left(mut self, radius: u32) -> Self {
-        self.static_css_props.insert("border-top-left-radius", px(radius));
+        self.static_css_props
+            .insert("border-top-left-radius", px(radius));
         self
     }
 
     pub fn top_right(mut self, radius: u32) -> Self {
-        self.static_css_props.insert("border-top-right-radius", px(radius));
+        self.static_css_props
+            .insert("border-top-right-radius", px(radius));
         self
     }
 
     pub fn bottom_left(mut self, radius: u32) -> Self {
-        self.static_css_props.insert("border-bottom-left-radius", px(radius));
+        self.static_css_props
+            .insert("border-bottom-left-radius", px(radius));
         self
     }
 
     pub fn bottom_right(mut self, radius: u32) -> Self {
-        self.static_css_props.insert("border-bottom-right-radius", px(radius));
+        self.static_css_props
+            .insert("border-bottom-right-radius", px(radius));
         self
     }
 }

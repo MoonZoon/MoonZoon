@@ -1,7 +1,7 @@
 use crate::*;
-use web_sys::{EventTarget, Node};
-use std::mem::ManuallyDrop;
 use once_cell::race::OnceBox;
+use std::mem::ManuallyDrop;
+use web_sys::{EventTarget, Node};
 
 mod raw_html_el;
 mod raw_svg_el;
@@ -18,7 +18,7 @@ fn class_id_generator() -> &'static ClassIdGenerator {
 
 #[derive(Default)]
 struct ClassIdGenerator {
-    index_generator: IndexGenerator
+    index_generator: IndexGenerator,
 }
 
 impl ClassIdGenerator {
@@ -27,7 +27,8 @@ impl ClassIdGenerator {
     }
 
     fn remove_class_id(&self, class_id: &str) {
-        self.index_generator.remove_index(class_id[1..].parse().unwrap_throw());
+        self.index_generator
+            .remove_index(class_id[1..].parse().unwrap_throw());
     }
 }
 
@@ -171,10 +172,7 @@ pub trait RawEl: Sized {
         enabled: impl Signal<Item = bool> + Unpin + 'static,
     ) -> Self {
         self.update_dom_builder(|dom_builder| {
-            dom_builder.class_signal(
-                class.into_cow_str_wrapper(),
-                enabled,
-            )
+            dom_builder.class_signal(class.into_cow_str_wrapper(), enabled)
         })
     }
 

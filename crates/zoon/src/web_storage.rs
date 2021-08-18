@@ -1,6 +1,6 @@
 use crate::*;
-use web_sys::Storage;
 use once_cell::race::OnceBox;
+use web_sys::Storage;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -174,16 +174,18 @@ pub trait WebStorage: Sized {
     /// The function `web_sys::Storage::set_item` is used under the hood.
     /// A related warning from MDN docs:
     ///
-    /// "setItem() may throw an exception if the storage is full. 
+    /// "setItem() may throw an exception if the storage is full.
     /// Particularly, in Mobile Safari (since iOS 5) it always throws when the user enters private mode.
-    /// (Safari sets the quota to 0 bytes in private mode, unlike other browsers, 
-    /// which allow storage in private mode using separate data containers.) 
-    /// Hence developers should make sure to always catch possible exceptions from setItem()." 
-    /// 
+    /// (Safari sets the quota to 0 bytes in private mode, unlike other browsers,
+    /// which allow storage in private mode using separate data containers.)
+    /// Hence developers should make sure to always catch possible exceptions from setItem()."
+    ///
     /// [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Storage/setItem)
     fn insert<T: Serialize + ?Sized>(&self, key: &str, value: &T) -> Result<()> {
         let value = T::serialize(value).map_err(Error::SerdeError)?;
         let value = serde_json::to_string(&value).map_err(Error::SerdeJsonError)?;
-        self.storage().set_item(&key, &value).map_err(Error::InsertError)
+        self.storage()
+            .set_item(&key, &value)
+            .map_err(Error::InsertError)
     }
 }

@@ -1,7 +1,8 @@
 use crate::*;
 use std::{
-    collections::BTreeSet, 
-    sync::atomic::{AtomicU32, Ordering}, sync::{Arc, RwLock},
+    collections::BTreeSet,
+    sync::atomic::{AtomicU32, Ordering},
+    sync::{Arc, RwLock},
 };
 
 #[derive(Default)]
@@ -20,7 +21,7 @@ impl IndexGenerator {
         let lowest_deleted = self.deleted.read().unwrap_throw().iter().next().copied();
         if let Some(lowest_deleted) = lowest_deleted {
             self.deleted.write().unwrap_throw().remove(&lowest_deleted);
-            return lowest_deleted
+            return lowest_deleted;
         }
         self.index.fetch_add(1, Ordering::SeqCst)
     }

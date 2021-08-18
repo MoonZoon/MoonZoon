@@ -1,5 +1,5 @@
-use zoon::*;
 use crate::app;
+use zoon::*;
 
 // ------ router -------
 
@@ -10,7 +10,7 @@ pub fn router() -> &'static Router<Route> {
         Some(Route::Completed) => app::select_filter(app::Filter::Completed),
         Some(Route::Root) | None => app::select_filter(app::Filter::All),
     })
-} 
+}
 
 // ------ Route -------
 

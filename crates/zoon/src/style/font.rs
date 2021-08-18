@@ -15,7 +15,8 @@ pub struct Font<'a> {
 
 impl<'a> Font<'a> {
     pub fn weight(mut self, weight: impl FontWeight<'a>) -> Self {
-        self.static_css_props.insert("font-weight", weight.into_cow_str());
+        self.static_css_props
+            .insert("font-weight", weight.into_cow_str());
         self
     }
 
@@ -39,8 +40,7 @@ impl<'a> Font<'a> {
     }
 
     pub fn italic(mut self) -> Self {
-        self.static_css_props
-            .insert("font-style", "italic".into());
+        self.static_css_props.insert("font-style", "italic".into());
         self
     }
 
@@ -66,10 +66,7 @@ impl<'a> Font<'a> {
         self
     }
 
-    pub fn strike_signal(
-        mut self,
-        strike: impl Signal<Item = bool> + Unpin + 'static,
-    ) -> Self {
+    pub fn strike_signal(mut self, strike: impl Signal<Item = bool> + Unpin + 'static) -> Self {
         let strike = strike.map_bool(|| "line-through", || "none");
         self.dynamic_css_props
             .insert("text-decoration".into(), box_css_signal(strike));
@@ -77,8 +74,7 @@ impl<'a> Font<'a> {
     }
 
     pub fn center(mut self) -> Self {
-        self.static_css_props
-            .insert("text-align", "center".into());
+        self.static_css_props.insert("text-align", "center".into());
         self
     }
 
@@ -88,7 +84,8 @@ impl<'a> Font<'a> {
             .map(|family| family.into_cow_str())
             .collect::<Cow<_>>()
             .join(", ");
-        self.static_css_props.insert("font-family", font_family.into());
+        self.static_css_props
+            .insert("font-family", font_family.into());
         self
     }
 }

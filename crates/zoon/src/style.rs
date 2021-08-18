@@ -1,13 +1,13 @@
 use crate::*;
+use once_cell::race::OnceBox;
 use std::{
-    borrow::Cow, 
-    collections::{BTreeMap, BTreeSet}, 
-    sync::Arc,
+    borrow::Cow,
+    collections::{BTreeMap, BTreeSet},
     convert::TryFrom,
     mem,
+    sync::Arc,
 };
-use web_sys::{CssStyleSheet, HtmlStyleElement, CssStyleRule, CssStyleDeclaration};
-use once_cell::race::OnceBox;
+use web_sys::{CssStyleDeclaration, CssStyleRule, CssStyleSheet, HtmlStyleElement};
 
 mod align;
 pub use align::Align;
@@ -16,16 +16,16 @@ mod background;
 pub use background::Background;
 
 mod borders;
-pub use borders::{Borders, Border};
+pub use borders::{Border, Borders};
 
 mod color;
-pub use color::{Color, NamedColor, HSLuv, hsl, hsla};
+pub use color::{hsl, hsla, Color, HSLuv, NamedColor};
 
 mod clip;
 pub use clip::Clip;
 
 mod font;
-pub use font::{Font, NamedWeight, FontWeight, FontFamily};
+pub use font::{Font, FontFamily, FontWeight, NamedWeight};
 
 mod height;
 pub use height::Height;
@@ -40,7 +40,7 @@ mod scrollbars;
 pub use scrollbars::Scrollbars;
 
 mod shadows;
-pub use shadows::{Shadows, Shadow};
+pub use shadows::{Shadow, Shadows};
 
 mod spacing;
 pub use spacing::Spacing;
@@ -79,12 +79,12 @@ pub trait Style<'a>: Default {
     fn into_css_props_container(self) -> CssPropsContainer<'a>;
 
     fn update_raw_el_styles<T: RawEl>(self, mut raw_el: T) -> T {
-        let CssPropsContainer { 
+        let CssPropsContainer {
             static_css_props,
             dynamic_css_props,
             task_handles,
             static_css_classes,
-         } = self.into_css_props_container();
+        } = self.into_css_props_container();
 
         for (name, value) in static_css_props {
             raw_el = raw_el.style(name, &value);
@@ -145,12 +145,14 @@ impl<'a> StyleGroup<'a> {
     pub fn new(selector: impl IntoCowStr<'a>) -> Self {
         Self {
             selector: selector.into_cow_str(),
-            css_props_container: CssPropsContainer::default()
+            css_props_container: CssPropsContainer::default(),
         }
     }
 
     pub fn style(mut self, name: &'a str, value: &'a str) -> Self {
-        self.css_props_container.static_css_props.insert(name, value.into());
+        self.css_props_container
+            .static_css_props
+            .insert(name, value.into());
         self
     }
 
@@ -159,10 +161,9 @@ impl<'a> StyleGroup<'a> {
         name: impl IntoCowStr<'static>,
         value: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static,
     ) -> Self {
-        self.css_props_container.dynamic_css_props.insert(
-            name.into_cow_str(), 
-            box_css_signal(value),
-        );
+        self.css_props_container
+            .dynamic_css_props
+            .insert(name.into_cow_str(), box_css_signal(value));
         self
     }
 }
@@ -194,8 +195,15 @@ pub struct GlobalStyles {
 
 impl GlobalStyles {
     fn new() -> Self {
-        let style_element: HtmlStyleElement = document().create_element("style").unwrap_throw().unchecked_into();
-        document().head().unwrap_throw().append_child(&style_element).unwrap_throw();
+        let style_element: HtmlStyleElement = document()
+            .create_element("style")
+            .unwrap_throw()
+            .unchecked_into();
+        document()
+            .head()
+            .unwrap_throw()
+            .append_child(&style_element)
+            .unwrap_throw();
         let sheet = style_element.sheet().unwrap_throw().unchecked_into();
         Self {
             sheet: SendWrapper::new(sheet),
@@ -224,9 +232,11 @@ impl GlobalStyles {
         let (rule_id_and_index, ids_lock) = self.rule_ids.add_new_id();
         let empty_rule = [&group.selector, "{}"].concat();
 
-        self.sheet.insert_rule_with_index(&empty_rule, rule_id_and_index).unwrap_or_else(|_| {
-            panic!("invalid CSS selector: `{}`", &group.selector);
-        });
+        self.sheet
+            .insert_rule_with_index(&empty_rule, rule_id_and_index)
+            .unwrap_or_else(|_| {
+                panic!("invalid CSS selector: `{}`", &group.selector);
+            });
 
         let declaration = self
             .sheet
@@ -266,19 +276,31 @@ impl GlobalStyles {
 
     fn remove_rule(&self, id: u32) {
         let (rule_index, _ids_lock) = self.rule_ids.remove_id(id);
-        self.sheet.delete_rule(u32::try_from(rule_index).unwrap_throw()).unwrap_throw();
+        self.sheet
+            .delete_rule(u32::try_from(rule_index).unwrap_throw())
+            .unwrap_throw();
     }
 }
 
 fn set_css_property(declaration: &CssStyleDeclaration, name: &str, value: &str) {
     declaration.set_property(name, value).unwrap_throw();
-    if not(declaration.get_property_value(name).unwrap_throw().is_empty()) {
+    if not(declaration
+        .get_property_value(name)
+        .unwrap_throw()
+        .is_empty())
+    {
         return;
     }
     for prefix in VENDOR_PREFIXES {
         let prefixed_name = [prefix, name].concat();
-        declaration.set_property(&prefixed_name, value).unwrap_throw();
-        if not(declaration.get_property_value(&prefixed_name).unwrap_throw().is_empty()) {
+        declaration
+            .set_property(&prefixed_name, value)
+            .unwrap_throw();
+        if not(declaration
+            .get_property_value(&prefixed_name)
+            .unwrap_throw()
+            .is_empty())
+        {
             return;
         }
     }

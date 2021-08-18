@@ -11,7 +11,7 @@ pub enum FontFamily<'a> {
     Custom(Cow<'a, str>),
 }
 
-impl <'a> FontFamily<'a> {
+impl<'a> FontFamily<'a> {
     pub fn new(family: impl IntoCowStr<'a>) -> Self {
         FontFamily::Custom(family.into_cow_str())
     }

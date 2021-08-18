@@ -1,6 +1,6 @@
 use crate::*;
-use web_sys::EventTarget;
 use dominator::events::MouseButton;
+use web_sys::EventTarget;
 
 // copied from Dominator
 macro_rules! make_event {
@@ -22,12 +22,21 @@ macro_rules! make_event {
         }
 
         impl $name {
-            #[inline] pub fn prevent_default(&self) { self.event.prevent_default(); }
-
-            #[inline] pub fn target(&self) -> Option<EventTarget> { self.event.target() }
+            #[inline]
+            pub fn prevent_default(&self) {
+                self.event.prevent_default();
+            }
 
             #[inline]
-            pub fn dyn_target<A>(&self) -> Option<A> where A: JsCast {
+            pub fn target(&self) -> Option<EventTarget> {
+                self.event.target()
+            }
+
+            #[inline]
+            pub fn dyn_target<A>(&self) -> Option<A>
+            where
+                A: JsCast,
+            {
                 self.target()?.dyn_into().ok()
             }
         }
