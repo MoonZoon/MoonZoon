@@ -33,6 +33,7 @@ lexical = { git = "https://github.com/Alexhuszagh/rust-lexical", rev = "7010efd"
 
 serde-lite = { version = "0.1.1", features = ["derive"], default-features = false, optional = true }
 serde_json = { version = "1.0.64", features = ['std'], default-features = false, optional = true }
+thiserror = { version = "1.0.26", default-features = false, optional = true }
 
 [dependencies.web-sys]
 version = "0.3.51"
@@ -73,4 +74,4 @@ fast_alloc = []
 # tracing_alloc = ["wasm-tracing-allocator"]
 clone = ["enclose"]
 fmt = ["ufmt", "lexical"]
-web_storage = ["serde-lite", "serde_json"]
+web_storage = ["serde-lite", "serde_json", "thiserror"]

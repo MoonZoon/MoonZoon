@@ -96,6 +96,8 @@ pub use web_storage::{local_storage, LocalStorage, session_storage, SessionStora
 #[cfg(feature = "web_storage")]
 pub use serde_json;
 #[cfg(feature = "web_storage")]
+pub use thiserror;
+#[cfg(feature = "web_storage")]
 pub use serde_lite::{self, Deserialize, Serialize};
 
 // ------ format! ------
