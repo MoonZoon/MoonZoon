@@ -22,6 +22,7 @@ mod style;
 mod task;
 mod timer;
 mod viewport;
+mod mutable;
 
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use dom::{document, history, window};
@@ -31,11 +32,12 @@ pub use element::*;
 pub use futures_util;
 pub use futures_signals::{
     self, map_mut, map_ref,
-    signal::{Mutable, Signal, SignalExt, MutableSignal, ReadOnlyMutable},
+    signal::{Signal, SignalExt, MutableSignal, ReadOnlyMutable},
     signal_map::{MutableBTreeMap, SignalMap, SignalMapExt, MutableSignalMap},
     signal_vec::{MutableVec, SignalVec, SignalVecExt, MutableSignalVec},
 };
-pub use futures_signals_ext::{MutableExt, MutableVecExt, SignalExtBool};
+pub use mutable::Mutable;
+pub use futures_signals_ext::{MutableVecExt, SignalExtBool};
 pub use index_generator::IndexGenerator;
 pub use monotonic_ids::MonotonicIds;
 pub use js_sys::{self, Reflect};
@@ -92,13 +94,16 @@ compile_error!("Do you know a fast allocator working in Wasm?");
 // static GLOBAL_ALLOCATOR: wasm_tracing_allocator::WasmTracingAllocator<std::alloc::System> = wasm_tracing_allocator::WasmTracingAllocator(std::alloc::System);
 
 #[cfg(feature = "web_storage")]
-pub use web_storage::{local_storage, LocalStorage, session_storage, SessionStorage};
-#[cfg(feature = "web_storage")]
+pub use web_storage::{local_storage, LocalStorage, session_storage, SessionStorage, WebStorage};
+
+#[cfg(feature = "serde_json")]
 pub use serde_json;
-#[cfg(feature = "web_storage")]
-pub use thiserror;
-#[cfg(feature = "web_storage")]
+
+#[cfg(feature = "serde-lite")]
 pub use serde_lite::{self, Deserialize, Serialize};
+
+#[cfg(feature = "thiserror")]
+pub use thiserror;
 
 // ------ format! ------
 

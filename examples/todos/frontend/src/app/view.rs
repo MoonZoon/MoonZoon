@@ -147,7 +147,7 @@ fn todo_checkbox(todo: Arc<Todo>) -> impl Element {
     Checkbox::new()
         .id(todo.id.to_string())
         .checked_signal(todo.completed.signal())
-        .on_change(move |checked| todo.completed.set_neq(checked))
+        .on_change(move |checked| super::set_todo_completed(&todo, checked))
         .icon(|checked_signal| {
             El::new()
                 .s(Width::new(40))
