@@ -26,14 +26,17 @@ pub fn session_storage() -> &'static SessionStorage {
 
 // ------ Error ------
 
-// @TODO thiserror / impl std::Error?
-
-#[derive(Debug)]
+#[derive(thiserror::Error, Debug)]
 pub enum Error {
+    #[error("the platform does not support the required WebStorage")]
     StorageNotFoundError,
+    #[error("cannot get access to the required WebStorage")]
     GetStorageError(JsValue),
+    #[error("cannot insert or update the given key-value pair (error: `{0:?}`)")]
     InsertError(JsValue),
+    #[error("(de)serialization failed (error: `{0}`)")]
     SerdeError(serde_lite::Error),
+    #[error("(de)serialization to JSON failed (error: `{0}`)")]
     SerdeJsonError(serde_json::Error),
 }
 
