@@ -1,29 +1,6 @@
 use crate::*;
-use futures_signals::{
-    signal_vec::{MutableVec, MutableVecLockMut, MutableVecLockRef},
-};
 use std::pin::Pin;
 use std::task::{Context, Poll};
-
-// ------ MutableVecExt ------
-
-pub trait MutableVecExt<A> {
-    fn update_mut(&self, f: impl FnOnce(&mut MutableVecLockMut<A>));
-
-    fn use_ref(&self, f: impl FnOnce(&MutableVecLockRef<A>));
-}
-
-impl<A> MutableVecExt<A> for MutableVec<A> {
-    #[inline]
-    fn update_mut(&self, f: impl FnOnce(&mut MutableVecLockMut<A>)) {
-        f(&mut self.lock_mut())
-    }
-
-    #[inline]
-    fn use_ref(&self, f: impl FnOnce(&MutableVecLockRef<A>)) {
-        f(&self.lock_ref())
-    }
-}
 
 // ------ SignalExtBool ------
 

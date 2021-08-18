@@ -146,25 +146,23 @@ fn is_filter_selected(filter: Filter) -> impl Signal<Item = bool> {
 // ------ ------
 
 pub fn load_todos() {
-    if let Some(Ok(loaded_todos)) = local_storage().get::<Vec<Arc<Todo>>>(STORAGE_KEY) {
-        todos().update_mut(move |todos| {
-            todos.clear();
-            todos.extend(loaded_todos);
-        });
+    if let Some(Ok(todos)) = local_storage().get(STORAGE_KEY) {
+        replace_todos(todos);
         println!("Todos loaded");
     }
 }
 
 fn save_todos() {
-    let todos = todos().lock_ref();
-    let todos: Vec<&Todo> = todos
-        .iter()
-        .map(|todo| todo.as_ref())
-        .collect::<Vec<_>>();
-
-    if let Err(error) = local_storage().insert(STORAGE_KEY, &todos) {
-        eprintln!("Save todos failed: {:?}", error);
+    if let Err(error) = local_storage().insert(STORAGE_KEY, todos()) {
+        eprintln!("Saving todos failed: {:?}", error);
     }
+}
+
+fn replace_todos(new_todos: Vec<Arc<Todo>>) {
+    todos().update_mut(|todos| {
+        todos.clear();
+        todos.extend(new_todos);
+    });
 }
 
 pub fn select_filter(filter: Filter) {
