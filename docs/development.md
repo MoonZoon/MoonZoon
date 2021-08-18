@@ -43,6 +43,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
     ],
     "rust-analyzer.diagnostics.disabled": [
         "missing-unsafe",
+        "add-reference-here",
     ],
     "rust-analyzer.procMacro.enable": true,
     "rust-analyzer.cargo.allFeatures": true,

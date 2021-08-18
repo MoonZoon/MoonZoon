@@ -153,8 +153,8 @@ pub trait WebStorage: Sized {
     /// Returns error when deserialization fails.
     ///
     /// [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Storage/getItem)
-    fn get<T: Deserialize>(&self, key: impl AsRef<str>) -> Option<Result<T>> {
-        let value = self.storage().get_item(key.as_ref()).unwrap_throw()?;
+    fn get<T: Deserialize>(&self, key: &str) -> Option<Result<T>> {
+        let value = self.storage().get_item(key).unwrap_throw()?;
 
         fn deserialize<T: Deserialize>(value: &str) -> Result<T> {
             let value = serde_json::from_str(&value).map_err(Error::SerdeJsonError)?;
@@ -181,9 +181,9 @@ pub trait WebStorage: Sized {
     /// Hence developers should make sure to always catch possible exceptions from setItem()." 
     /// 
     /// [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Storage/setItem)
-    fn insert<T: Serialize + ?Sized>(&self, key: impl AsRef<str>, value: &T) -> Result<()> {
+    fn insert<T: Serialize + ?Sized>(&self, key: &str, value: &T) -> Result<()> {
         let value = T::serialize(value).map_err(Error::SerdeError)?;
         let value = serde_json::to_string(&value).map_err(Error::SerdeJsonError)?;
-        self.storage().set_item(key.as_ref(), &value).map_err(Error::InsertError)
+        self.storage().set_item(&key, &value).map_err(Error::InsertError)
     }
 }

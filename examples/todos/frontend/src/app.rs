@@ -1,10 +1,11 @@
-use zoon::*;
-// use serde::{Deserialize, Serialize};
+use zoon::{*, eprintln, println};
 use strum::EnumIter;
-use uuid::Uuid;
-use std::{sync::Arc, ops::Deref};
+use std::sync::Arc;
 
 pub mod view;
+
+mod todo_id;
+use todo_id::TodoId;
 
 const STORAGE_KEY: &str = "todos-zoon";
 
@@ -14,7 +15,7 @@ const STORAGE_KEY: &str = "todos-zoon";
 
 // ------ Filter -------
 
-#[derive(Copy, Clone, Eq, PartialEq, EnumIter)]
+#[derive(Copy, Clone, Eq, PartialEq, EnumIter, Deserialize, Serialize)]
 pub enum Filter {
     All,
     Active,
@@ -23,27 +24,13 @@ pub enum Filter {
 
 // ------ Todo -------
 
-// #[derive(Deserialize, Serialize)]
-#[derive(Debug)]
+#[derive(Deserialize, Serialize)]
 struct Todo {
     id: TodoId,
     title: Mutable<String>,
     completed: Mutable<bool>,
-    // #[serde(skip)]
+    #[serde(skip)]
     edited_title: Mutable<Option<String>>,
-}
-
-// ------ TodoId -------
-
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-struct TodoId(Uuid);
-
-impl Deref for TodoId {
-    type Target = Uuid;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
 }
 
 // ------ ------
@@ -158,6 +145,28 @@ fn is_filter_selected(filter: Filter) -> impl Signal<Item = bool> {
 //   Commands
 // ------ ------
 
+pub fn load_todos() {
+    if let Some(Ok(loaded_todos)) = local_storage().get::<Vec<Arc<Todo>>>(STORAGE_KEY) {
+        todos().update_mut(move |todos| {
+            todos.clear();
+            todos.extend(loaded_todos);
+        });
+        println!("Todos loaded");
+    }
+}
+
+fn save_todos() {
+    let todos = todos().lock_ref();
+    let todos: Vec<&Todo> = todos
+        .iter()
+        .map(|todo| todo.as_ref())
+        .collect::<Vec<_>>();
+
+    if let Err(error) = local_storage().insert(STORAGE_KEY, &todos) {
+        eprintln!("Save todos failed: {:?}", error);
+    }
+}
+
 pub fn select_filter(filter: Filter) {
     selected_filter().set_neq(filter);
 }
@@ -179,6 +188,7 @@ fn save_selected_todo() {
     let todo = selected_todo().take().unwrap_throw();
     let new_title = todo.edited_title.take().unwrap_throw();
     todo.title.set(new_title);
+    save_todos();
 }
 
 fn add_todo() {
@@ -188,21 +198,31 @@ fn add_todo() {
         return;
     }
     let todo = Todo {
-        id: TodoId(Uuid::new_v4()),
+        id: TodoId::new(),
         title: Mutable::new(title.to_owned()),
         completed: Mutable::new(false),
         edited_title: Mutable::new(None),
     };
     todos().lock_mut().push_cloned(Arc::new(todo));
+    save_todos();
     new_todo_title.clear();
+}
+
+fn set_todo_completed(todo: &Todo, completed: bool) {
+    if todo.completed.get() != completed {
+        todo.completed.set(completed);
+        save_todos();
+    }
 }
 
 fn remove_todo(id: TodoId) {
     todos().lock_mut().retain(|todo| todo.id != id);
+    save_todos();
 }
 
 fn remove_completed_todos() {
     todos().lock_mut().retain(|todo| not(todo.completed.get()));
+    save_todos();
 }
 
 fn check_or_uncheck_all_todos() {
@@ -210,4 +230,5 @@ fn check_or_uncheck_all_todos() {
     for todo in todos().lock_ref().iter() {
         todo.completed.set_neq(!completed);
     }
+    save_todos();
 }

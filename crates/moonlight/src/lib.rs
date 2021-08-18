@@ -60,8 +60,8 @@ impl Serialize for CorId {
 }
 
 impl Deserialize for CorId {
-    fn deserialize(itermediate: &Intermediate) -> Result<Self, serde_lite::Error> {
-        itermediate
+    fn deserialize(intermediate: &Intermediate) -> Result<Self, serde_lite::Error> {
+        intermediate
             .as_str()
             .ok_or_else(|| {
                 serde_lite::Error::invalid_value("CorId can be deserialized only from String")
