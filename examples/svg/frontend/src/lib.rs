@@ -16,7 +16,7 @@ enum LightState {
 }
 
 // ------ ------
-//   Statics
+//   States
 // ------ ------
 
 #[static_ref]

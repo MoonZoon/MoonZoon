@@ -2,7 +2,7 @@ use crate::app;
 use zoon::*;
 
 // ------ ------
-//    Statics
+//    States
 // ------ ------
 
 #[static_ref]

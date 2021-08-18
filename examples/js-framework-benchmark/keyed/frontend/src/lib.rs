@@ -7,7 +7,7 @@ use std::{array, iter::repeat_with, ops::Not};
 use zoon::{format, *};
 
 // ------ ------
-//    Statics
+//    States
 // ------ ------
 
 static ADJECTIVES: &[&'static str] = &[

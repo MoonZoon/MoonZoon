@@ -39,7 +39,7 @@ impl RouteSegment for Frequency {
 }
 
 // ------ ------
-//    Statics
+//    States
 // ------ ------
 
 #[static_ref]

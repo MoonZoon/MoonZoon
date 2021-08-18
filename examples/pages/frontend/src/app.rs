@@ -20,7 +20,7 @@ pub enum PageId {
 }
 
 // ------ ------
-//    Statics
+//    States
 // ------ ------
 
 #[static_ref]

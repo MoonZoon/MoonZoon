@@ -4,7 +4,7 @@ use zoon::{
 };
 
 // ------ ------
-//    Statics
+//    States
 // ------ ------
 
 #[derive(Copy, Clone)]

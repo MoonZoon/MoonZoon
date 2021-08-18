@@ -48,7 +48,7 @@ impl fmt::Display for Expression {
 }
 
 // ------ ------
-//    Statics
+//    States
 // ------ ------
 
 #[static_ref]

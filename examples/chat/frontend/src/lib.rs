@@ -2,7 +2,7 @@ use shared::{DownMsg, Message, UpMsg};
 use zoon::{eprintln, *};
 
 // ------ ------
-//    Statics
+//    States
 // ------ ------
 
 #[static_ref]
