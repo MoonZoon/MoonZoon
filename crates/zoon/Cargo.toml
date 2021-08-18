@@ -31,6 +31,9 @@ apply = { version = "0.3.0", default-features = false, optional = true }
 ufmt = { version = "0.1.0", features = ["std"], default-features = false, optional = true }
 lexical = { git = "https://github.com/Alexhuszagh/rust-lexical", rev = "7010efd", features = ["std"], default-features = false, optional = true }
 
+serde-lite = { version = "0.1.1", features = ["derive"], default-features = false, optional = true }
+serde_json = { version = "1.0.64", features = ['std'], default-features = false, optional = true }
+
 [dependencies.web-sys]
 version = "0.3.51"
 features = [
@@ -60,7 +63,7 @@ features = [
 default-features = false
 
 [features]
-default = ["static_ref", "panic_hook", "small_alloc", "clone", "apply", "connection", "routing"]
+default = ["static_ref", "panic_hook", "small_alloc", "clone", "apply", "connection", "routing", "web_storage"]
 routing = ["route_macro"]
 connection = ["moonlight"]
 static_ref = ["static_ref_macro"]
@@ -70,3 +73,4 @@ fast_alloc = []
 # tracing_alloc = ["wasm-tracing-allocator"]
 clone = ["enclose"]
 fmt = ["ufmt", "lexical"]
+web_storage = ["serde-lite", "serde_json"]

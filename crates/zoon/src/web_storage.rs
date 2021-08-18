@@ -1,36 +1,40 @@
-// @TODO hide under the feature 'web_storage',
 use crate::*;
-// @TODO serde-lite + serde_json?
-use serde::{de::DeserializeOwned, Serialize};
 use web_sys::Storage;
 use once_cell::race::OnceBox;
 
-pub type Result<T> = std::result::Result<T, WebStorageError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
 // ------ local_storage ------
 
 pub fn local_storage() -> &'static LocalStorage {
-    static LOCAL_STORAGE: OnceBox<LocalStorage> = OnceBox::new();
-    LOCAL_STORAGE.get_or_init(|| Box::new(LocalStorage::try_new().unwrap_throw()))
+    static LOCAL_STORAGE: OnceBox<SendWrapper<LocalStorage>> = OnceBox::new();
+    LOCAL_STORAGE.get_or_init(|| {
+        let storage = LocalStorage::try_new().unwrap_throw();
+        Box::new(SendWrapper::new(storage))
+    })
 }
 
 // ------ session_storage ------
 
 pub fn session_storage() -> &'static SessionStorage {
-    static SESSION_STORAGE: OnceBox<SessionStorage> = OnceBox::new();
-    SESSION_STORAGE.get_or_init(|| Box::new(SessionStorage::try_new().unwrap_throw()))
+    static SESSION_STORAGE: OnceBox<SendWrapper<SessionStorage>> = OnceBox::new();
+    SESSION_STORAGE.get_or_init(|| {
+        let storage = SessionStorage::try_new().unwrap_throw();
+        Box::new(SendWrapper::new(storage))
+    })
 }
 
-// ------ WebStorageError ------
+// ------ Error ------
 
 // @TODO thiserror / impl std::Error?
 
 #[derive(Debug)]
-pub enum WebStorageError {
-    GetStorageError(JsValue),
+pub enum Error {
     StorageNotFoundError,
+    GetStorageError(JsValue),
     InsertError(JsValue),
-    SerdeError(serde_json::Error),
+    SerdeError(serde_lite::Error),
+    SerdeJsonError(serde_json::Error),
 }
 
 // ------ LocalStorage ------
@@ -45,9 +49,9 @@ impl WebStorage for LocalStorage {
     fn try_new() -> Result<Self> {
         let storage = window()
             .local_storage()
-            .map_err(WebStorageError::GetStorageError)?
-            .ok_or(WebStorageError::StorageNotFoundError);
-        Ok(Self(storage))
+            .map_err(Error::GetStorageError)?
+            .ok_or(Error::StorageNotFoundError);
+        Ok(Self(storage?))
     }
 
     fn storage(&self) -> &Storage {
@@ -75,9 +79,9 @@ impl WebStorage for SessionStorage {
     fn try_new() -> Result<Self> {
         let storage = window()
             .local_storage()
-            .map_err(WebStorageError::GetStorageError)?
-            .ok_or(WebStorageError::StorageNotFoundError);
-        Ok(Self(storage))
+            .map_err(Error::GetStorageError)?
+            .ok_or(Error::StorageNotFoundError);
+        Ok(Self(storage?))
     }
 
     fn storage(&self) -> &Storage {
@@ -92,7 +96,7 @@ impl WebStorage for SessionStorage {
 /// `LocalStorage` and `SessionStorage` implement this trait.
 ///
 /// [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API)
-pub trait WebStorage {
+pub trait WebStorage: Sized {
     /// Creates a new instance.
     ///
     /// # Errors
@@ -146,12 +150,14 @@ pub trait WebStorage {
     /// Returns error when deserialization fails.
     ///
     /// [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Storage/getItem)
-    fn get<T: DeserializeOwned>(&self, key: impl AsRef<str>) -> Option<Result<T>> {
-        self.storage()
-            .get_item(key.as_ref())
-            .unwrap_throw()?
-            .map(|value| serde_json::from_str(&value))?
-            .map_err(WebStorageError::SerdeError)
+    fn get<T: Deserialize>(&self, key: impl AsRef<str>) -> Option<Result<T>> {
+        let value = self.storage().get_item(key.as_ref()).unwrap_throw()?;
+
+        fn deserialize<T: Deserialize>(value: &str) -> Result<T> {
+            let value = serde_json::from_str(&value).map_err(Error::SerdeJsonError)?;
+            T::deserialize(&value).map_err(Error::SerdeError)
+        }
+        Some(deserialize(&value))
     }
 
     /// Insert a key-value pair. The value will be serialized.
@@ -171,10 +177,10 @@ pub trait WebStorage {
     /// which allow storage in private mode using separate data containers.) 
     /// Hence developers should make sure to always catch possible exceptions from setItem()." 
     /// 
-    ///
     /// [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Storage/setItem)
     fn insert<T: Serialize + ?Sized>(&self, key: impl AsRef<str>, value: &T) -> Result<()> {
-        let value = serde_json::to_string(value).map_err(WebStorageError::SerdeError)?;
-        self.storage().set_item(key.as_ref(), &value).map_err(WebStorageError::InsertError)
+        let value = T::serialize(value).map_err(Error::SerdeError)?;
+        let value = serde_json::to_string(&value).map_err(Error::SerdeJsonError)?;
+        self.storage().set_item(key.as_ref(), &value).map_err(Error::InsertError)
     }
 }

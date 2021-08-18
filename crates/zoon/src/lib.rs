@@ -4,6 +4,9 @@ mod connection;
 #[cfg(feature = "routing")]
 pub mod routing;
 
+#[cfg(feature = "web_storage")]
+pub mod web_storage;
+
 pub mod console;
 pub mod events_extra;
 mod cow_str;
@@ -87,6 +90,13 @@ compile_error!("Do you know a fast allocator working in Wasm?");
 // #[cfg(feature = "tracing_alloc")]
 // #[global_allocator]
 // static GLOBAL_ALLOCATOR: wasm_tracing_allocator::WasmTracingAllocator<std::alloc::System> = wasm_tracing_allocator::WasmTracingAllocator(std::alloc::System);
+
+#[cfg(feature = "web_storage")]
+pub use web_storage::{local_storage, LocalStorage, session_storage, SessionStorage};
+#[cfg(feature = "web_storage")]
+pub use serde_json;
+#[cfg(feature = "web_storage")]
+pub use serde_lite::{self, Deserialize, Serialize};
 
 // ------ format! ------
 

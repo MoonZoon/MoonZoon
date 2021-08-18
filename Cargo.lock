@@ -2897,6 +2897,8 @@ dependencies = [
  "route_macro",
  "rust-hsluv",
  "send_wrapper",
+ "serde-lite",
+ "serde_json",
  "static_ref_macro",
  "ufmt",
  "wasm-bindgen",
