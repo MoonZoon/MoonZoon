@@ -207,10 +207,8 @@ fn add_todo() {
 }
 
 fn set_todo_completed(todo: &Todo, completed: bool) {
-    if todo.completed.get() != completed {
-        todo.completed.set(completed);
-        save_todos();
-    }
+    todo.completed.set_neq(completed);
+    save_todos();
 }
 
 fn remove_todo(id: TodoId) {
