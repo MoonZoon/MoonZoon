@@ -22,7 +22,7 @@ pub enum Tag<'a> {
     Main,
     Nav,
     Section,
-    Custom(&'a str)
+    Custom(&'a str),
 }
 
 impl<'a> Tag<'a> {
@@ -42,7 +42,7 @@ impl<'a> Tag<'a> {
             Self::Main => "main",
             Self::Nav => "nav",
             Self::Section => "section",
-            Self::Custom(tag) => tag
+            Self::Custom(tag) => tag,
         }
     }
 }

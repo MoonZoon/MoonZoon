@@ -1,6 +1,6 @@
-use zoon::{*, eprintln, println};
-use strum::EnumIter;
 use std::sync::Arc;
+use strum::EnumIter;
+use zoon::{eprintln, println, *};
 
 pub mod view;
 
@@ -65,12 +65,13 @@ fn new_todo_title() -> &'static Mutable<String> {
 fn are_all_completed() -> &'static ReadOnlyMutable<bool> {
     let mutable = Mutable::new(false);
     let read_only = mutable.read_only();
-    Task::start(all_and_completed()
-        .map(|(all, completed)| all == completed)
-        .for_each(move |all_completed| {
-            mutable.set_neq(all_completed);
-            async {}
-        })
+    Task::start(
+        all_and_completed()
+            .map(|(all, completed)| all == completed)
+            .for_each(move |all_completed| {
+                mutable.set_neq(all_completed);
+                async {}
+            }),
     );
     read_only
 }
@@ -93,7 +94,7 @@ fn completed_count() -> impl Signal<Item = usize> {
         .map_signal(|todo| todo.completed.signal().dedupe())
         .filter(|completed| *completed)
         .len()
-}      
+}
 
 fn completed_exist() -> impl Signal<Item = bool> {
     completed_count().map(|count| count != 0).dedupe()
@@ -108,8 +109,10 @@ fn all_and_completed() -> impl Signal<Item = (usize, usize)> {
 }
 
 fn active_count() -> impl Signal<Item = usize> {
-    all_and_completed().map(|(all, completed)| all - completed).dedupe()
-}    
+    all_and_completed()
+        .map(|(all, completed)| all - completed)
+        .dedupe()
+}
 
 fn filtered_todos() -> impl SignalVec<Item = Arc<Todo>> {
     todos()
@@ -117,28 +120,34 @@ fn filtered_todos() -> impl SignalVec<Item = Arc<Todo>> {
         .map_signal(|todo| todo.completed.signal().dedupe().map(move |_| todo.clone()))
         .filter_signal_cloned(|todo| {
             let completed = todo.completed.get();
-            selected_filter().signal().dedupe().map(move |filter| match filter {
-                Filter::All => true,
-                Filter::Active => not(completed),
-                Filter::Completed => completed,
-            })
+            selected_filter()
+                .signal()
+                .dedupe()
+                .map(move |filter| match filter {
+                    Filter::All => true,
+                    Filter::Active => not(completed),
+                    Filter::Completed => completed,
+                })
         })
 }
 
 fn is_todo_selected(id: TodoId) -> impl Signal<Item = bool> {
-    selected_todo().signal_ref(move |todo| {
-        if let Some(todo) = todo {
-            todo.id == id
-        } else {
-            false
-        }
-    }).dedupe()
+    selected_todo()
+        .signal_ref(move |todo| {
+            if let Some(todo) = todo {
+                todo.id == id
+            } else {
+                false
+            }
+        })
+        .dedupe()
 }
 
 fn is_filter_selected(filter: Filter) -> impl Signal<Item = bool> {
-    selected_filter().signal().map(move |selected_filter| {
-        selected_filter == filter
-    }).dedupe()
+    selected_filter()
+        .signal()
+        .map(move |selected_filter| selected_filter == filter)
+        .dedupe()
 }
 
 // ------ ------

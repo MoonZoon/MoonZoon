@@ -5,7 +5,7 @@ mod styleable;
 pub use styleable::Styleable;
 
 mod keyboard_event_aware;
-pub use keyboard_event_aware::{KeyboardEventAware, Key, KeyboardEvent};
+pub use keyboard_event_aware::{Key, KeyboardEvent, KeyboardEventAware};
 
 mod mouse_event_aware;
 pub use mouse_event_aware::MouseEventAware;
@@ -21,4 +21,3 @@ pub use add_nearby_element::AddNearbyElement;
 
 mod choosable_tag;
 pub use choosable_tag::{ChoosableTag, Tag};
-

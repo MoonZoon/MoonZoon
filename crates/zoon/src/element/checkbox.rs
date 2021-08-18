@@ -21,13 +21,7 @@ pub struct Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> {
 }
 
 impl
-    Checkbox<
-        IdFlagNotSet,
-        OnChangeFlagNotSet,
-        LabelFlagNotSet,
-        IconFlagNotSet,
-        CheckedFlagNotSet,
-    >
+    Checkbox<IdFlagNotSet, OnChangeFlagNotSet, LabelFlagNotSet, IconFlagNotSet, CheckedFlagNotSet>
 {
     pub fn new() -> Self {
         let check_state = Mutable::new(CheckState::NotSet);
@@ -38,19 +32,24 @@ impl
                 .attr("role", "checkbox")
                 .attr("aria-live", "polite")
                 .attr("tabindex", "0")
-                .attr_signal("aria-checked", check_state.signal().map(|check_state| {
-                    match check_state {
+                .attr_signal(
+                    "aria-checked",
+                    check_state.signal().map(|check_state| match check_state {
                         CheckState::NotSet => None,
-                        CheckState::FirstValue(checked) | CheckState::Value(checked) => Some(checked.to_string())
-                    }
-                }))
+                        CheckState::FirstValue(checked) | CheckState::Value(checked) => {
+                            Some(checked.to_string())
+                        }
+                    }),
+                )
                 .style("cursor", "pointer")
-                .event_handler(move |_: events::Click| check_state.update(|check_state| {
-                    match check_state {
+                .event_handler(move |_: events::Click| {
+                    check_state.update(|check_state| match check_state {
                         CheckState::NotSet => CheckState::FirstValue(true),
-                        CheckState::FirstValue(checked) | CheckState::Value(checked) => CheckState::Value(!checked)
-                    }
-                })),
+                        CheckState::FirstValue(checked) | CheckState::Value(checked) => {
+                            CheckState::Value(!checked)
+                        }
+                    })
+                }),
             flags: PhantomData,
         }
     }
@@ -106,8 +105,10 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> Hookable<RawHtmlEl>
 {
     type WSElement = HtmlDivElement;
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> AddNearbyElement<'_> 
-    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> {}
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> AddNearbyElement<'_>
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+{
+}
 
 // ------ ------
 //  Attributes
@@ -134,11 +135,9 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
     where
         CheckedFlag: FlagNotSet,
     {
-        self.check_state.update(|check_state| {
-            match check_state {
-                CheckState::NotSet => CheckState::FirstValue(checked),
-                CheckState::FirstValue(_) | CheckState::Value(_) => CheckState::Value(checked)
-            }
+        self.check_state.update(|check_state| match check_state {
+            CheckState::NotSet => CheckState::FirstValue(checked),
+            CheckState::FirstValue(_) | CheckState::Value(_) => CheckState::Value(checked),
         });
         self.into_type()
     }
@@ -154,7 +153,7 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
         let checked_changer = checked.for_each(move |checked| {
             let new_state = match check_state.get() {
                 CheckState::NotSet => CheckState::FirstValue(checked),
-                CheckState::FirstValue(_) | CheckState::Value(_) => CheckState::Value(checked)
+                CheckState::FirstValue(_) | CheckState::Value(_) => CheckState::Value(checked),
             };
             check_state.set_neq(new_state);
             async {}
@@ -172,7 +171,7 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
         OnChangeFlag: FlagNotSet,
     {
         let on_change = move |checked| on_change.clone()(checked);
-        let on_change_invoker = self.check_state.signal().for_each(move |check_state| { 
+        let on_change_invoker = self.check_state.signal().for_each(move |check_state| {
             if let CheckState::Value(checked) = check_state {
                 on_change(checked);
             }
@@ -196,15 +195,15 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 
     pub fn icon<IE: IntoElement<'a> + 'a>(
         mut self,
-        icon: impl FnOnce(Mutable<bool>) -> IE
+        icon: impl FnOnce(Mutable<bool>) -> IE,
     ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlagSet, CheckedFlag>
     where
-        IconFlag: FlagNotSet
+        IconFlag: FlagNotSet,
     {
         fn is_checked(check_state: CheckState) -> bool {
             match check_state {
                 CheckState::NotSet => false,
-                CheckState::FirstValue(checked) | CheckState::Value(checked) => checked
+                CheckState::FirstValue(checked) | CheckState::Value(checked) => checked,
             }
         }
 
@@ -212,14 +211,13 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
         let icon = icon(checked.clone());
 
         let check_state = self.check_state.clone();
-        let task_handle = Task::start_droppable(check_state.signal().for_each(move |check_state| {
-            checked.set_neq(is_checked(check_state));
-            async {}
-        }));
-        
-        self.raw_el = self.raw_el
-            .child(icon)
-            .after_remove(|_| drop(task_handle));
+        let task_handle =
+            Task::start_droppable(check_state.signal().for_each(move |check_state| {
+                checked.set_neq(is_checked(check_state));
+                async {}
+            }));
+
+        self.raw_el = self.raw_el.child(icon).after_remove(|_| drop(task_handle));
         self.into_type()
     }
 
@@ -243,11 +241,8 @@ pub fn default_icon(checked_signal: MutableSignal<bool>) -> impl Element {
     // Icons from https://github.com/tastejs/todomvc
     static ACTIVE_ICON: &str = "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%22-10%20-18%20100%20135%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22none%22%20stroke%3D%22%23ededed%22%20stroke-width%3D%223%22/%3E%3C/svg%3E";
     static COMPLETED_ICON: &str = "data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20width%3D%2240%22%20height%3D%2240%22%20viewBox%3D%22-10%20-18%20100%20135%22%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2250%22%20fill%3D%22none%22%20stroke%3D%22%23bddad5%22%20stroke-width%3D%223%22/%3E%3Cpath%20fill%3D%22%235dc2af%22%20d%3D%22M72%2025L42%2071%2027%2056l-4%204%2020%2020%2034-52z%22/%3E%3C/svg%3E";
- 
-    El::new()
-        .s(Width::new(40))
-        .s(Height::new(40))
-        .s(Background::new().url_signal(checked_signal.map_bool(
-            || COMPLETED_ICON, || ACTIVE_ICON
-        )))
+
+    El::new().s(Width::new(40)).s(Height::new(40)).s(
+        Background::new().url_signal(checked_signal.map_bool(|| COMPLETED_ICON, || ACTIVE_ICON))
+    )
 }

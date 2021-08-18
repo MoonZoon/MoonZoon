@@ -1,4 +1,4 @@
-use crate::{web_sys::HtmlParagraphElement , *};
+use crate::{web_sys::HtmlParagraphElement, *};
 use std::marker::PhantomData;
 
 // ------ ------
@@ -14,10 +14,11 @@ pub struct Paragraph<EmptyFlag> {
 
 impl Paragraph<EmptyFlagSet> {
     pub fn new() -> Self {
-        run_once!(|| { global_styles()
-            .style_group(StyleGroup::new(".paragraph > *").style("display", "inline"))
-            .style_group(StyleGroup::new(".paragraph > .align_left").style("float", "left"))
-            .style_group(StyleGroup::new(".paragraph > .align_right").style("float", "right"));
+        run_once!(|| {
+            global_styles()
+                .style_group(StyleGroup::new(".paragraph > *").style("display", "inline"))
+                .style_group(StyleGroup::new(".paragraph > .align_left").style("float", "left"))
+                .style_group(StyleGroup::new(".paragraph > .align_right").style("float", "right"));
         });
         Self {
             raw_el: RawHtmlEl::new("p").class("paragraph"),
@@ -57,7 +58,10 @@ impl<EmptyFlag> AddNearbyElement<'_> for Paragraph<EmptyFlag> {}
 // ------ ------
 
 impl<'a, EmptyFlag> Paragraph<EmptyFlag> {
-    pub fn content(mut self, content: impl IntoOptionElement<'a> + 'a) -> Paragraph<EmptyFlagNotSet> {
+    pub fn content(
+        mut self,
+        content: impl IntoOptionElement<'a> + 'a,
+    ) -> Paragraph<EmptyFlagNotSet> {
         self.raw_el = self.raw_el.child(content);
         self.into_type()
     }

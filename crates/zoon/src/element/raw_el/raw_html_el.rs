@@ -1,6 +1,6 @@
+use super::class_id_generator;
 use crate::css_property_name::CssPropertyName;
 use crate::*;
-use super::class_id_generator;
 use std::rc::Rc;
 
 // ------ ------

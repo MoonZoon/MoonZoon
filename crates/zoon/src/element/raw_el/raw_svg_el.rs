@@ -1,5 +1,5 @@
-use crate::*;
 use super::class_id_generator;
+use crate::*;
 use std::rc::Rc;
 
 // ------ ------

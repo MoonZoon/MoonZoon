@@ -2,59 +2,45 @@ use crate::*;
 
 pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
     fn element_above(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
-        self.update_raw_el(|raw_el| {
-            raw_el.child(element_above_container().child(element))
-        })
+        self.update_raw_el(|raw_el| raw_el.child(element_above_container().child(element)))
     }
 
     fn element_above_signal(
-        self, 
-        element: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static
+        self,
+        element: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> Self {
-        self.update_raw_el(|raw_el| {
-            raw_el.child(element_above_container().child_signal(element))
-        })
+        self.update_raw_el(|raw_el| raw_el.child(element_above_container().child_signal(element)))
     }
 
     fn element_below(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
-        self.update_raw_el(|raw_el| {
-            raw_el.child(element_below_container().child(element))
-        })
+        self.update_raw_el(|raw_el| raw_el.child(element_below_container().child(element)))
     }
 
     fn element_on_below_signal(
-        self, 
-        element: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static
+        self,
+        element: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> Self {
-        self.update_raw_el(|raw_el| {
-            raw_el.child(element_below_container().child_signal(element))
-        })
+        self.update_raw_el(|raw_el| raw_el.child(element_below_container().child_signal(element)))
     }
 
     fn element_on_left(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
-        self.update_raw_el(|raw_el| {
-            raw_el.child(element_on_left_container().child(element))
-        })
+        self.update_raw_el(|raw_el| raw_el.child(element_on_left_container().child(element)))
     }
 
     fn element_on_left_signal(
-        self, 
-        element: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static
+        self,
+        element: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> Self {
-        self.update_raw_el(|raw_el| {
-            raw_el.child(element_on_left_container().child_signal(element))
-        })
+        self.update_raw_el(|raw_el| raw_el.child(element_on_left_container().child_signal(element)))
     }
 
     fn element_on_right(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
-        self.update_raw_el(|raw_el| {
-            raw_el.child(element_on_right_container().child(element))
-        })
+        self.update_raw_el(|raw_el| raw_el.child(element_on_right_container().child(element)))
     }
 
     fn element_on_right_signal(
-        self, 
-        element: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static
+        self,
+        element: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el.child(element_on_right_container().child_signal(element))
@@ -78,8 +64,8 @@ fn element_above_container() -> RawHtmlEl {
 }
 
 fn element_below_container() -> RawHtmlEl {
-    run_once!(|| { global_styles()
-        .style_group(StyleGroup::new(".below > *").style("pointer-events", "auto"));
+    run_once!(|| {
+        global_styles().style_group(StyleGroup::new(".below > *").style("pointer-events", "auto"));
     });
     RawHtmlEl::new("div")
         .class("below")
@@ -93,8 +79,9 @@ fn element_below_container() -> RawHtmlEl {
 }
 
 fn element_on_left_container() -> RawHtmlEl {
-    run_once!(|| { global_styles()
-        .style_group(StyleGroup::new(".on_left > *").style("pointer-events", "auto"));
+    run_once!(|| {
+        global_styles()
+            .style_group(StyleGroup::new(".on_left > *").style("pointer-events", "auto"));
     });
     RawHtmlEl::new("div")
         .class("on_left")
@@ -110,7 +97,7 @@ fn element_on_left_container() -> RawHtmlEl {
 fn element_on_right_container() -> RawHtmlEl {
     run_once!(|| {
         global_styles()
-        .style_group(StyleGroup::new(".on_right > *").style("pointer-events", "auto"));
+            .style_group(StyleGroup::new(".on_right > *").style("pointer-events", "auto"));
     });
     RawHtmlEl::new("div")
         .class("on_right")

@@ -1,5 +1,7 @@
 use crate::*;
-use futures_signals::signal_vec::{MutableVec as FSMutableVec, MutableVecLockMut, MutableVecLockRef};
+use futures_signals::signal_vec::{
+    MutableVec as FSMutableVec, MutableVecLockMut, MutableVecLockRef,
+};
 use std::ops::Deref;
 
 #[derive(Debug, Default)]
@@ -25,7 +27,7 @@ impl<T> MutableVec<T> {
     pub fn use_ref(&self, f: impl FnOnce(&MutableVecLockRef<T>)) {
         f(&self.lock_ref())
     }
-} 
+}
 
 impl<T> Deref for MutableVec<T> {
     type Target = FSMutableVec<T>;

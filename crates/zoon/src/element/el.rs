@@ -40,9 +40,10 @@ impl ChoosableTag for El<ChildFlagNotSet> {
         run_once!(|| {
             global_styles()
                 .style_group(StyleGroup::new(".el > .center_x").style("align-self", "center"))
-                .style_group(StyleGroup::new(".el > .center_y")
-                    .style("margin-top", "auto")
-                    .style("margin-bottom", "auto")
+                .style_group(
+                    StyleGroup::new(".el > .center_y")
+                        .style("margin-top", "auto")
+                        .style("margin-bottom", "auto"),
                 )
                 .style_group(StyleGroup::new(".el > .align_bottom").style("margin-top", "auto"))
                 .style_group(StyleGroup::new(".el > .align_left").style("align-self", "flex-start"))

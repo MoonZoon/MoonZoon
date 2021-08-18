@@ -7,32 +7,38 @@ pub struct Transform {
 
 impl Transform {
     pub fn move_up(mut self, distance: impl Into<f64>) -> Self {
-        self.transformations.push(crate::format!("translateY(-{}px)", distance.into()));
+        self.transformations
+            .push(crate::format!("translateY(-{}px)", distance.into()));
         self
     }
 
     pub fn move_down(mut self, distance: impl Into<f64>) -> Self {
-        self.transformations.push(crate::format!("translateY({}px)", distance.into()));
+        self.transformations
+            .push(crate::format!("translateY({}px)", distance.into()));
         self
     }
 
     pub fn move_left(mut self, distance: impl Into<f64>) -> Self {
-        self.transformations.push(crate::format!("translateX(-{}px)", distance.into()));
+        self.transformations
+            .push(crate::format!("translateX(-{}px)", distance.into()));
         self
     }
 
     pub fn move_right(mut self, distance: impl Into<f64>) -> Self {
-        self.transformations.push(crate::format!("translateX({}px)", distance.into()));
+        self.transformations
+            .push(crate::format!("translateX({}px)", distance.into()));
         self
     }
 
     pub fn rotate(mut self, degrees: impl Into<f64>) -> Self {
-        self.transformations.push(crate::format!("rotateZ({}deg)", degrees.into()));
+        self.transformations
+            .push(crate::format!("rotateZ({}deg)", degrees.into()));
         self
     }
 
     pub fn scale(mut self, percent: impl Into<f64>) -> Self {
-        self.transformations.push(crate::format!("scale({}%)", percent.into()));
+        self.transformations
+            .push(crate::format!("scale({}%)", percent.into()));
         self
     }
 }

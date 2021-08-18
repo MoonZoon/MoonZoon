@@ -8,45 +8,48 @@ pub mod routing;
 pub mod web_storage;
 
 pub mod console;
-pub mod events_extra;
 mod cow_str;
 mod css_property_name;
 mod dom;
 mod either;
 mod element;
+pub mod events_extra;
 mod futures_signals_ext;
 mod index_generator;
 mod monotonic_ids;
+mod mutable;
+mod mutable_vec;
 mod not;
 mod style;
 mod task;
 mod timer;
 mod viewport;
-mod mutable;
-mod mutable_vec;
 
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
+pub use css_property_name::VENDOR_PREFIXES;
 pub use dom::{document, history, window};
 pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};
 pub use either::{Either, IntoEither};
 pub use element::*;
-pub use futures_util;
 pub use futures_signals::{
     self, map_mut, map_ref,
-    signal::{Signal, SignalExt, MutableSignal, ReadOnlyMutable},
-    signal_map::{MutableBTreeMap, SignalMap, SignalMapExt, MutableSignalMap},
-    signal_vec::{SignalVec, SignalVecExt, MutableSignalVec},
+    signal::{MutableSignal, ReadOnlyMutable, Signal, SignalExt},
+    signal_map::{MutableBTreeMap, MutableSignalMap, SignalMap, SignalMapExt},
+    signal_vec::{MutableSignalVec, SignalVec, SignalVecExt},
 };
+pub use futures_signals_ext::SignalExtBool;
+pub use futures_util;
+pub use gensym::gensym;
+pub use hsluv;
+pub use index_generator::IndexGenerator;
+pub use js_sys::{self, Reflect};
+pub use monotonic_ids::MonotonicIds;
 pub use mutable::Mutable;
 pub use mutable_vec::MutableVec;
-pub use futures_signals_ext::SignalExtBool;
-pub use index_generator::IndexGenerator;
-pub use monotonic_ids::MonotonicIds;
-pub use js_sys::{self, Reflect};
 pub use not::not;
+pub use once_cell;
 pub use paste::paste;
 pub use pin_project::pin_project;
-pub use hsluv;
 pub use send_wrapper::SendWrapper;
 pub use std::future::Future;
 pub use style::*;
@@ -57,9 +60,6 @@ pub use wasm_bindgen::{self, prelude::*, JsCast};
 use wasm_bindgen_futures::spawn_local;
 pub use wasm_bindgen_futures::JsFuture;
 pub use web_sys;
-pub use once_cell;
-pub use css_property_name::VENDOR_PREFIXES;
-pub use gensym::gensym;
 
 #[cfg(feature = "connection")]
 pub use connection::{Connection, SendUpMsgError};
@@ -96,7 +96,7 @@ compile_error!("Do you know a fast allocator working in Wasm?");
 // static GLOBAL_ALLOCATOR: wasm_tracing_allocator::WasmTracingAllocator<std::alloc::System> = wasm_tracing_allocator::WasmTracingAllocator(std::alloc::System);
 
 #[cfg(feature = "web_storage")]
-pub use web_storage::{local_storage, LocalStorage, session_storage, SessionStorage, WebStorage};
+pub use web_storage::{local_storage, session_storage, LocalStorage, SessionStorage, WebStorage};
 
 #[cfg(feature = "serde_json")]
 pub use serde_json;
@@ -150,12 +150,27 @@ macro_rules! make_flags {
 #[macro_export]
 macro_rules! run_once {
     ($f:expr) => {
-        $crate::gensym!{ $crate::run_once!($f) }
+        $crate::gensym! { $crate::run_once!($f) }
     };
     ($random_ident:ident, $f:expr) => {
-        $crate::paste!{
+        $crate::paste! {
             static [<RUN_ONCE $random_ident:snake:upper>]: std::sync::Once = std::sync::Once::new();
             [<RUN_ONCE $random_ident:snake:upper>].call_once($f);
+        }
+    };
+}
+
+// ------ element_vec! ------
+
+#[macro_export]
+macro_rules! element_vec {
+    (  $($element:expr $(,)?)* ) => {
+        {
+            let mut elements = Vec::new();
+            $(
+                elements.push($element.into_raw_element());
+            )*
+            elements
         }
     };
 }

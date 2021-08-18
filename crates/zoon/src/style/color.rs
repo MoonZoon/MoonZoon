@@ -34,7 +34,14 @@ impl Color<'_> for HSLuv {}
 impl<'a> IntoCowStr<'a> for HSLuv {
     fn into_cow_str(self) -> Cow<'a, str> {
         let (r, g, b) = hsluv::hsluv_to_rgb((self.h, self.s, self.l));
-        crate::format!("rgba({r}% {g}% {b}% / {a}%)", r=r*100., g=g*100., b=b*100., a=self.a).into()
+        crate::format!(
+            "rgba({r}% {g}% {b}% / {a}%)",
+            r = r * 100.,
+            g = g * 100.,
+            b = b * 100.,
+            a = self.a
+        )
+        .into()
     }
 
     fn take_into_cow_str(&mut self) -> Cow<'a, str> {

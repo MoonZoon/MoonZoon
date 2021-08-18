@@ -29,7 +29,8 @@ impl Serialize for TodoId {
 
 impl Deserialize for TodoId {
     fn deserialize(intermediate: &serde_lite::Intermediate) -> Result<Self, serde_lite::Error> {
-        intermediate.as_str()
+        intermediate
+            .as_str()
             .ok_or_else(|| {
                 serde_lite::Error::invalid_value("TodoId can be deserialized only from String")
             })?

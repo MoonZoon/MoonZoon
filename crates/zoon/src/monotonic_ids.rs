@@ -1,7 +1,7 @@
 use crate::*;
 use std::{
-    sync::{Arc, Mutex, MutexGuard},
     convert::TryFrom,
+    sync::{Arc, Mutex, MutexGuard},
 };
 
 #[derive(Default)]
@@ -20,7 +20,7 @@ impl MonotonicIds {
     }
 
     /// usize is index
-    pub fn remove_id(&self, id: u32) -> (usize, MutexGuard<Vec<u32>>)  {
+    pub fn remove_id(&self, id: u32) -> (usize, MutexGuard<Vec<u32>>) {
         let mut ids = self.ids.lock().unwrap_throw();
         self.generator.remove_index(id);
         let index = ids.binary_search(&id).unwrap_throw();
