@@ -4,7 +4,7 @@ use zoon::*;
 pub mod view;
 
 // ------ ------
-//    Statics
+//    States
 // ------ ------
 
 #[static_ref]

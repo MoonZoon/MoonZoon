@@ -2,7 +2,7 @@ use std::iter;
 use zoon::*;
 
 // ------ ------
-//   Statics
+//   States
 // ------ ------
 
 #[static_ref]
