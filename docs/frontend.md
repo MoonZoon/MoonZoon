@@ -337,8 +337,8 @@ impl<WidthFlag, HeightFlag> Hookable<RawHtmlEl> for Canvas<WidthFlag, HeightFlag
 
 ## Styles
 
-The **Todos** example part:
-   - _Note:_ The code below may differ from the current Todos implementation.
+The **TodoMVC** example part:
+   - _Note:_ The code below may differ from the current TodoMVC implementation.
 
 ```rust
 fn todo(todo: Arc<super::Todo>) -> impl Element {

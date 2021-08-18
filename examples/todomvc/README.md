@@ -1,2 +1,2 @@
-# Todos
+# TodoMVC
 > MoonZoon example
