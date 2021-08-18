@@ -23,6 +23,7 @@ mod task;
 mod timer;
 mod viewport;
 mod mutable;
+mod mutable_vec;
 
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use dom::{document, history, window};
@@ -34,10 +35,11 @@ pub use futures_signals::{
     self, map_mut, map_ref,
     signal::{Signal, SignalExt, MutableSignal, ReadOnlyMutable},
     signal_map::{MutableBTreeMap, SignalMap, SignalMapExt, MutableSignalMap},
-    signal_vec::{MutableVec, SignalVec, SignalVecExt, MutableSignalVec},
+    signal_vec::{SignalVec, SignalVecExt, MutableSignalVec},
 };
 pub use mutable::Mutable;
-pub use futures_signals_ext::{MutableVecExt, SignalExtBool};
+pub use mutable_vec::MutableVec;
+pub use futures_signals_ext::SignalExtBool;
 pub use index_generator::IndexGenerator;
 pub use monotonic_ids::MonotonicIds;
 pub use js_sys::{self, Reflect};

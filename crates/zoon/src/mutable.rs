@@ -90,6 +90,6 @@ impl<T: Serialize> Serialize for Mutable<T> {
 #[cfg(feature = "serde-lite")]
 impl<T: Deserialize> Deserialize for Mutable<T> {
     fn deserialize(itermediate: &serde_lite::Intermediate) -> Result<Self, serde_lite::Error> {
-        T::deserialize(itermediate).map(Mutable::new)
+        T::deserialize(itermediate).map(Self::new)
     }
 }
