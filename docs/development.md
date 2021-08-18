@@ -39,7 +39,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         "examples/svg/Cargo.toml",
         "examples/viewport/Cargo.toml",
         "examples/timer/Cargo.toml",
-        "examples/todos/Cargo.toml",
+        "examples/todomvc/Cargo.toml",
     ],
     "rust-analyzer.diagnostics.disabled": [
         "missing-unsafe",
@@ -66,7 +66,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   - `svg`
   - `viewport`
   - `timer`
-  - `todos`
+  - `todomvc`
 
 ```sh
 cd examples
