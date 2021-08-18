@@ -5,10 +5,17 @@ use std::marker::PhantomData;
 //    Element
 // ------ ------
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum CheckState {
+    NotSet,
+    Value(bool),
+    FirstValue(bool),
+}
+
 make_flags!(Id, OnChange, Label, Icon, Checked);
 
 pub struct Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> {
-    checked: Mutable<bool>,
+    check_state: Mutable<CheckState>,
     raw_el: RawHtmlEl,
     flags: PhantomData<(IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag)>,
 }
@@ -23,17 +30,27 @@ impl
     >
 {
     pub fn new() -> Self {
-        let checked = Mutable::new(false);
+        let check_state = Mutable::new(CheckState::NotSet);
         Self {
-            checked: checked.clone(),
+            check_state: check_state.clone(),
             raw_el: RawHtmlEl::new("div")
                 .class("checkbox")
                 .attr("role", "checkbox")
                 .attr("aria-live", "polite")
                 .attr("tabindex", "0")
-                .attr_signal("aria-checked", checked.signal().map(|checked| checked.to_string()))
+                .attr_signal("aria-checked", check_state.signal().map(|check_state| {
+                    match check_state {
+                        CheckState::NotSet => None,
+                        CheckState::FirstValue(checked) | CheckState::Value(checked) => Some(checked.to_string())
+                    }
+                }))
                 .style("cursor", "pointer")
-                .event_handler(move |_: events::Click| checked.update(|checked| !checked)),
+                .event_handler(move |_: events::Click| check_state.update(|check_state| {
+                    match check_state {
+                        CheckState::NotSet => CheckState::FirstValue(true),
+                        CheckState::FirstValue(checked) | CheckState::Value(checked) => CheckState::Value(!checked)
+                    }
+                })),
             flags: PhantomData,
         }
     }
@@ -117,20 +134,29 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
     where
         CheckedFlag: FlagNotSet,
     {
-        self.checked.set_neq(checked);
+        self.check_state.update(|check_state| {
+            match check_state {
+                CheckState::NotSet => CheckState::FirstValue(checked),
+                CheckState::FirstValue(_) | CheckState::Value(_) => CheckState::Value(checked)
+            }
+        });
         self.into_type()
     }
 
     pub fn checked_signal(
         mut self,
         checked: impl Signal<Item = bool> + Unpin + 'static,
-    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlagSet>
     where
         CheckedFlag: FlagNotSet,
     {
-        let checked_mutable = self.checked.clone();
+        let check_state = self.check_state.clone();
         let checked_changer = checked.for_each(move |checked| {
-            checked_mutable.set_neq(checked);
+            let new_state = match check_state.get() {
+                CheckState::NotSet => CheckState::FirstValue(checked),
+                CheckState::FirstValue(_) | CheckState::Value(_) => CheckState::Value(checked)
+            };
+            check_state.set_neq(new_state);
             async {}
         });
         let task_handle = Task::start_droppable(checked_changer);
@@ -146,8 +172,10 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
         OnChangeFlag: FlagNotSet,
     {
         let on_change = move |checked| on_change.clone()(checked);
-        let on_change_invoker = self.checked.signal().for_each(move |checked| { 
-            on_change(checked);
+        let on_change_invoker = self.check_state.signal().for_each(move |check_state| { 
+            if let CheckState::Value(checked) = check_state {
+                on_change(checked);
+            }
             async {}
         });
         let task_handle = Task::start_droppable(on_change_invoker);
@@ -168,13 +196,30 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 
     pub fn icon<IE: IntoElement<'a> + 'a>(
         mut self,
-        icon: impl FnOnce(MutableSignal<bool>) -> IE
+        icon: impl FnOnce(Mutable<bool>) -> IE
     ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlagSet, CheckedFlag>
     where
         IconFlag: FlagNotSet
     {
-        let icon = icon(self.checked.signal());
-        self.raw_el = self.raw_el.child(icon);
+        fn is_checked(check_state: CheckState) -> bool {
+            match check_state {
+                CheckState::NotSet => false,
+                CheckState::FirstValue(checked) | CheckState::Value(checked) => checked
+            }
+        }
+
+        let checked = Mutable::new(is_checked(self.check_state.get()));
+        let icon = icon(checked.clone());
+
+        let check_state = self.check_state.clone();
+        let task_handle = Task::start_droppable(check_state.signal().for_each(move |check_state| {
+            checked.set_neq(is_checked(check_state));
+            async {}
+        }));
+        
+        self.raw_el = self.raw_el
+            .child(icon)
+            .after_remove(|_| drop(task_handle));
         self.into_type()
     }
 
@@ -182,7 +227,7 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
         self,
     ) -> Checkbox<NewIdFlag, NewOnChangeFlag, NewLabelFlag, NewIconFlag, NewCheckedFlag> {
         Checkbox {
-            checked: self.checked,
+            check_state: self.check_state,
             raw_el: self.raw_el,
             flags: PhantomData,
         }

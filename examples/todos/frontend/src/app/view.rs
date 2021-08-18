@@ -105,12 +105,12 @@ fn toggle_all_checkbox() -> impl Element {
         .checked_signal(super::are_all_completed().signal())
         .on_click(super::check_or_uncheck_all_todos)
         .label_hidden("Toggle all")
-        .icon(|checked_signal| {
+        .icon(|checked| {
             El::new()
                 .s(
                     Font::new()
                     .size(22)
-                    .color_signal(checked_signal.map_bool(
+                    .color_signal(checked.signal().map_bool(
                         || hsl(0, 0, 48.4), 
                         || hsl(0, 0, 91.3)
                     ))
@@ -148,11 +148,11 @@ fn todo_checkbox(todo: Arc<Todo>) -> impl Element {
         .id(todo.id.to_string())
         .checked_signal(todo.completed.signal())
         .on_change(move |checked| super::set_todo_completed(&todo, checked))
-        .icon(|checked_signal| {
+        .icon(|checked| {
             El::new()
                 .s(Width::new(40))
                 .s(Height::new(40))
-                .s(Background::new().url_signal(checked_signal.map_bool(
+                .s(Background::new().url_signal(checked.signal().map_bool(
                     || COMPLETED_ICON, || ACTIVE_ICON
                 )))
         })
