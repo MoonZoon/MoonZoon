@@ -7,7 +7,7 @@ pub mod view;
 mod todo_id;
 use todo_id::TodoId;
 
-const STORAGE_KEY: &str = "todomvc-zoon";
+static STORAGE_KEY: &str = "todomvc-zoon";
 
 // ------ ------
 //     Types

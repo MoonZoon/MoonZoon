@@ -13,10 +13,10 @@ pub fn hsl(h: impl Into<f64>, s: impl Into<f64>, l: impl Into<f64>) -> HSLuv {
 
 pub fn hsla(h: impl Into<f64>, s: impl Into<f64>, l: impl Into<f64>, a: impl Into<f64>) -> HSLuv {
     HSLuv {
-        h: h.into().min(360.),
-        s: s.into().min(100.),
-        l: l.into().min(100.),
-        a: a.into().min(100.),
+        h: h.into().clamp(0., 360.),
+        s: s.into().clamp(0., 100.),
+        l: l.into().clamp(0., 100.),
+        a: a.into().clamp(0., 100.),
     }
 }
 
