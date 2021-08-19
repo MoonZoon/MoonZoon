@@ -3,7 +3,7 @@ use crate::{
     calc_page, report_page,
 };
 use std::collections::VecDeque;
-use zoon::{*, println};
+use zoon::{println, *};
 
 // ------ route_history ------
 
@@ -28,14 +28,14 @@ pub fn previous_route() -> Option<Route> {
 
 #[static_ref]
 pub fn router() -> &'static Router<Route> {
-    Router::new(|route: Option<Route>| { 
+    Router::new(|route: Option<Route>| {
         println!("{}", routing::current_url());
 
         let route = match route {
             Some(route) => {
                 push_to_route_history(route.clone());
                 route
-            },
+            }
             None => {
                 return app::set_page_id(PageId::Unknown);
             }
@@ -73,7 +73,9 @@ pub fn router() -> &'static Router<Route> {
                 operand_b,
             } => {
                 app::set_page_id(PageId::Calc);
-                calc_page::set_expression(calc_page::Expression::new(operand_a, operator, operand_b));
+                calc_page::set_expression(calc_page::Expression::new(
+                    operand_a, operator, operand_b,
+                ));
             }
             Route::Root => {
                 app::set_page_id(PageId::Home);

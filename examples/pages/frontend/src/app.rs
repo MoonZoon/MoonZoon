@@ -65,7 +65,7 @@ pub fn log_out() {
 
 pub fn root() -> impl Element {
     Column::new()
-        .s(Padding::new().all(20))
+        .s(Padding::all(20))
         .s(Spacing::new(20))
         .item(header())
         .item(page())
