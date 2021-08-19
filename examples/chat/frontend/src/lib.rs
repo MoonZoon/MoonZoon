@@ -24,7 +24,13 @@ fn new_message_text() -> &'static Mutable<String> {
 fn connection() -> &'static Connection<UpMsg, DownMsg> {
     Connection::new(|DownMsg::MessageReceived(message), _| {
         messages().lock_mut().push_cloned(message);
+        jump_to_bottom();
     })
+}
+
+#[static_ref]
+fn viewport_y() -> &'static Mutable<i32> {
+    Mutable::new(0)
 }
 
 // ------ ------
@@ -51,13 +57,27 @@ fn send_message() {
     });
 }
 
+fn jump_to_bottom() {
+    viewport_y().set(i32::MAX);
+}
+
 // ------ ------
 //     View
 // ------ ------
 
 fn root() -> impl Element {
+    El::new()
+        .s(Padding::new().y(20))
+        .s(Scrollbars::y_and_clip_x())
+        .s(Height::screen())
+        .viewport_y_signal(viewport_y().signal())
+        .child(content())
+}
+
+fn content() -> impl Element {
     Column::new()
-        .s(Padding::new().all(30))
+        .s(Width::new(300))
+        .s(Align::new().center_x())
         .s(Spacing::new(20))
         .item(received_messages())
         .item(new_message_panel())
@@ -72,11 +92,14 @@ fn received_messages() -> impl Element {
 
 fn received_message(message: Message) -> impl Element {
     Column::new()
-        .s(Padding::new().all(10))
+        .s(Padding::all(10))
         .s(Spacing::new(6))
         .item(
             El::new()
-                .s(Font::new().bold().color(NamedColor::Gray10).size(17))
+                .s(Font::new()
+                    .weight(NamedWeight::Bold)
+                    .color(NamedColor::Gray10)
+                    .size(17))
                 .child(message.username),
         )
         .item(
@@ -94,7 +117,9 @@ fn new_message_panel() -> impl Element {
 
 fn new_message_input() -> impl Element {
     TextInput::new()
-        .s(Padding::new().x(10))
+        .s(Padding::all(10))
+        .s(RoundedCorners::new().left(5))
+        .s(Width::fill())
         .s(Font::new().size(17))
         .focused()
         .on_change(set_new_message_text)
@@ -107,10 +132,11 @@ fn new_message_input() -> impl Element {
 fn send_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .s(Padding::new().all(10))
+        .s(Padding::all(10))
+        .s(RoundedCorners::new().right(5))
         .s(Background::new()
             .color_signal(hovered_signal.map_bool(|| NamedColor::Green5, || NamedColor::Green2)))
-        .s(Font::new().color(NamedColor::Gray10).size(20))
+        .s(Font::new().color(NamedColor::Gray10).size(17))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .on_press(send_message)
         .label("Send")
@@ -121,6 +147,7 @@ fn send_button() -> impl Element {
 fn username_panel() -> impl Element {
     let id = "username_input";
     Row::new()
+        .s(Spacing::new(15))
         .item(username_input_label(id))
         .item(username_input(id))
 }
@@ -128,14 +155,15 @@ fn username_panel() -> impl Element {
 fn username_input_label(id: &str) -> impl Element {
     Label::new()
         .s(Font::new().color(NamedColor::Gray10))
-        .s(Padding::new().all(10))
         .for_input(id)
         .label("Username:")
 }
 
 fn username_input(id: &str) -> impl Element {
     TextInput::new()
-        .s(Padding::new().x(10))
+        .s(Width::fill())
+        .s(Padding::new().x(10).y(6))
+        .s(RoundedCorners::all(5))
         .id(id)
         .on_change(set_username)
         .placeholder(Placeholder::new("Joe"))

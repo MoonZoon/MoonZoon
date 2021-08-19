@@ -18,6 +18,12 @@ impl<'a> Height<'a> {
         this
     }
 
+    pub fn screen() -> Self {
+        let mut this = Self::default();
+        this.static_css_props.insert("height", "100vh".into());
+        this
+    }
+
     pub fn min_screen(mut self) -> Self {
         self.static_css_props.insert("min-height", "100vh".into());
         self

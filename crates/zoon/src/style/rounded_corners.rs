@@ -14,6 +14,22 @@ impl<'a> RoundedCorners<'a> {
             .bottom_right(radius)
     }
 
+    pub fn top(self, radius: u32) -> Self {
+        self.top_left(radius).top_right(radius)
+    }
+
+    pub fn bottom(self, radius: u32) -> Self {
+        self.bottom_left(radius).bottom_right(radius)
+    }
+
+    pub fn left(self, radius: u32) -> Self {
+        self.top_left(radius).bottom_left(radius)
+    }
+
+    pub fn right(self, radius: u32) -> Self {
+        self.top_right(radius).bottom_right(radius)
+    }
+
     pub fn top_left(mut self, radius: u32) -> Self {
         self.static_css_props
             .insert("border-top-left-radius", px(radius));
