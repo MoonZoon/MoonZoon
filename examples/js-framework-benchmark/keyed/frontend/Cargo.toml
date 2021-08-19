@@ -13,7 +13,8 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dependencies]
-zoon = { path = "../../../../crates/zoon", features = ["static_ref", "fmt"], default-features = false }
+ # @TODO add "fmt" feature back in the future
+zoon = { path = "../../../../crates/zoon", features = ["static_ref"], default-features = false }
 rand = { version = "0.8.3", features = ["small_rng", "getrandom"], default-features = false }
 getrandom = { version = "0.2", features = ["js"], default-features = false }
 
