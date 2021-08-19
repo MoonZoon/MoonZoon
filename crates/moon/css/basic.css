@@ -8,8 +8,36 @@ html {
     border: none;
     font-weight: inherit;
     font-size: inherit;
+    border-radius: 0;
 }
 
-*:focus-visible {
+*:focus-visible, *:focus {
     outline: none;
+}
+
+#app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#app > .center_x {
+    align-self: center;
+}
+
+#app > .center_y {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+#app > .align_bottom {
+    margin-top: auto;
+}
+
+#app > .align_left {
+    align-self: flex-start;
+}
+
+#app > .align_right {
+    align-self: flex-end;
 }

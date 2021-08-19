@@ -80,7 +80,10 @@ fn paint_canvas() {
 
 fn root() -> impl Element {
     Column::new()
-        .s(Width::new(300))
+        .s(Align::center())
+        .s(Borders::all(Border::new().color(hsl(0, 0, 20))))
+        .s(RoundedCorners::all(30))
+        .s(Clip::both())
         .item(canvas())
         .item(change_color_button())
 }
@@ -96,7 +99,8 @@ fn canvas() -> impl Element {
 fn change_color_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .s(Padding::new().all(10))
+        .s(Padding::all(10))
+        .s(RoundedCorners::new().bottom(30)) // because of iOS
         .s(Background::new()
             .color_signal(hovered_signal.map_bool(|| NamedColor::Green5, || NamedColor::Green2)))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
