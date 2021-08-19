@@ -41,3 +41,7 @@ html {
 #app > .align_right {
     align-self: flex-end;
 }
+
+#app > .exact_height {
+    flex-shrink: 0;
+}

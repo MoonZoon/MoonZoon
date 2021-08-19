@@ -51,7 +51,8 @@ impl ChoosableTag for Column<EmptyFlagSet> {
                 )
                 .style_group(
                     StyleGroup::new(".column > .align_right").style("align-self", "flex-end"),
-                );
+                )
+                .style_group(StyleGroup::new(".column > .exact_height").style("flex-shrink", "0"));
         });
         Self {
             raw_el: RawHtmlEl::new(tag.as_str())

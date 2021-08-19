@@ -48,7 +48,8 @@ impl ChoosableTag for Row<EmptyFlagSet> {
                 .style_group(
                     StyleGroup::new(".row > .align_bottom").style("align-self", "flex-end"),
                 )
-                .style_group(StyleGroup::new(".row > .align_right").style("margin-left", "auto"));
+                .style_group(StyleGroup::new(".row > .align_right").style("margin-left", "auto"))
+                .style_group(StyleGroup::new(".row > .exact_width").style("flex-shrink", "0"));
         });
         Self {
             raw_el: RawHtmlEl::new(tag.as_str())
