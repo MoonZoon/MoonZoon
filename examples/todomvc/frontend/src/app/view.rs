@@ -63,7 +63,7 @@ fn panel() -> impl Element {
 
 fn new_todo_title() -> impl Element {
     TextInput::new()
-        .s(Padding::all(16).y(19).left(60).right(16))
+        .s(Padding::new().y(19).left(60).right(16))
         .s(Font::new().size(24).color(hsl(0, 0, 32.7)))
         .s(Background::new().color(hsla(0, 0, 0, 0.3)))
         .s(Shadows::new(vec![Shadow::new()

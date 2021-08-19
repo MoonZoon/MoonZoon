@@ -4,7 +4,7 @@
 
 ## Basics
 
-The **Counter** example:
+A **Counter** example:
 
 ```rust
 use zoon::*;
@@ -94,7 +94,7 @@ _Notes:_
 
 ## Elements
 
-The **Counter** example part:
+A **Counter** example part:
 
 ```rust
 Button::new().label("-").on_press(decrement)
@@ -123,11 +123,12 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
     pub fn new() -> Self {
         Self {
             raw_el: RawHtmlEl::new("div")
-                .attr("class", "button")
+                .class("button")
                 .attr("role", "button")
                 .attr("tabindex", "0")
                 .style("cursor", "pointer")
-                .style("user-select", "none"),
+                .style("user-select", "none")
+                .style("text-align", "center"),
             flags: PhantomData,
         }
     }
@@ -159,10 +160,11 @@ impl<LabelFlag, OnPressFlag> UpdateRawEl<RawHtmlEl> for Button<LabelFlag, OnPres
 impl<LabelFlag, OnPressFlag> Styleable<'_, RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
 impl<LabelFlag, OnPressFlag> KeyboardEventAware<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
 impl<LabelFlag, OnPressFlag> Focusable for Button<LabelFlag, OnPressFlag> {}
-impl<LabelFlag, OnPressFlag> Hoverable<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
+impl<LabelFlag, OnPressFlag> MouseEventAware<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
 impl<LabelFlag, OnPressFlag> Hookable<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {
     type WSElement = HtmlDivElement;
 }
+impl<LabelFlag, OnPressFlag> AddNearbyElement<'_> for Button<LabelFlag, OnPressFlag> {}
 ```
 Abilities are basically simple traits. For example when you implement `Styleable` then users can call the `.s(...)` method on your element:
 
@@ -170,12 +172,12 @@ Abilities are basically simple traits. For example when you implement `Styleable
 MyElement::new().s(Padding::new().all(6))
 ``` 
 
-You can find all built-in abilities in `crates/zoon/src/element/ability.rs`. The `Styleable` ability:
+You can find all built-in abilities in `crates/zoon/src/element/ability/styleable.rs`. The `Styleable` ability:
 
 ```rust
 pub trait Styleable<'a, T: RawEl>: UpdateRawEl<T> + Sized {
     fn s(self, style: impl Style<'a>) -> Self {
-        self.update_raw_el(|raw_el| style.update_raw_el_style(raw_el))
+        self.update_raw_el(|raw_el| style.update_raw_el_styles(raw_el))
     }
 }
 ```
@@ -268,7 +270,7 @@ error[E0277]: the trait bound `LabelFlagSet: FlagNotSet` is not satisfied
 
 ## Lifecycle Hooks
 
-The **Canvas** example parts:
+**Canvas** example parts:
 
 ```rust
 use zoon::{*, web_sys::{CanvasRenderingContext2d, HtmlCanvasElement}};
@@ -337,58 +339,93 @@ impl<WidthFlag, HeightFlag> Hookable<RawHtmlEl> for Canvas<WidthFlag, HeightFlag
 
 ## Styles
 
-The **TodoMVC** example part:
-   - _Note:_ The code below may differ from the current TodoMVC implementation.
+A **TodoMVC** example part:
 
 ```rust
-fn todo(todo: Arc<super::Todo>) -> impl Element {
-    let checkbox_id = ElementId::new();
-    let (row_hovered, row_hovered_signal) = Mutable::new_and_signal(false);
-    let selected = {
-        let todo_id = todo.id;
-        super::selected_todo().signal(|selected_id| selected_id == Some(todo_id));
-    };
-    Row::new()
-        .s(Font::new().size(24))
-        .s(Padding::new().all(15))
-        .s(Spacing::new(10))
-        .on_hovered_change(move |hovered| row_hovered.set(hovered))
-        .item(
-            todo_checkbox(checkbox_id, &todo)
+fn new_todo_title() -> impl Element {
+    TextInput::new()
+        .s(Padding::new().y(19).left(60).right(16))
+        .s(Font::new().size(24).color(hsl(0, 0, 32.7)))
+        .s(Background::new().color(hsla(0, 0, 0, 0.3)))
+        .s(Shadows::new(vec![
+            Shadow::new().inner().y(-2).blur(1).color(hsla(0, 0, 0, 3))
+        ]))
+        .focused()
+        .on_change(super::set_new_todo_title)
+        .label_hidden("What needs to be done?")
+        .placeholder(
+            Placeholder::new("What needs to be done?")
+                .s(Font::new().italic().color(hsl(0, 0, 91.3))),
         )
-        .item_signal(
-            selected.map(clone!((todo) move |selected| {
-                if selected { selected_todo_title().left_element() } 
-                else { todo_label(checkbox_id, &todo).right_element() }
-            }))
-        )
-        .item_signal(
-            row_hovered_signal.map(|hovered| {
-                hovered.then(move || remove_todo_button(&todo))
-            })
-        )
+        .on_key_down(|event| event.if_key(Key::Enter, super::add_todo))
+        .text_signal(super::new_todo_title().signal_cloned())
 }
 ```
 
 - CSS concepts / events like _focus_, _hover_ and _breakpoints_ are handled directly by Rust / Zoon _elements_.
 
-- There is no such thing as CSS _margins_ or _selectors_. Padding and element nesting are more natural alternatives.
+- There is no such thing as CSS _margins_ or _selectors_ in built-in element APIs. Padding and declarative layout (columns, rows, nearby elements, spacing, etc.) are more natural alternatives.
+
+### Global styles
+
+A **Paragraph** element part:
+
+```rust
+pub fn new() -> Self {
+    run_once!(|| {
+        global_styles()
+            .style_group(StyleGroup::new(".paragraph > *").style("display", "inline"))
+            .style_group(StyleGroup::new(".paragraph > .align_left").style("float", "left"))
+            .style_group(StyleGroup::new(".paragraph > .align_right").style("float", "right"));
+    });
+    Self {
+        raw_el: RawHtmlEl::new("p").class("paragraph"),
+        flags: PhantomData,
+    }
+}
+```
+- `run_once!` is a Zoon's macro leveraging [std::sync::Once](https://doc.rust-lang.org/std/sync/struct.Once.html).
+- `global_styles()` returns `&'static GlobalStyles` with two public methods: `style_group` and `style_group_droppable`.
+- `StyleGroup` has 3 methods: `new`, `style` and `style_signal`.
+- Global styles are stored in one dedicated `<style>` element appended to the `<head>`.
+- `StyleGroup` selector and styles are validated in the runtime - invalid ones trigger `panic!`.
+- Vendor prefixes are automatically attached to CSS property names when needed.
+
+### Raw styles
+
+```rust
+fn element_with_raw_styles() -> impl Element {
+    El::new().update_raw_el(|raw_el| {
+        raw_el
+            .style("cursor", "pointer")
+            .style_group(
+                StyleGroup::new(":hover .icon")
+                    .style("display", "block")
+            )
+    })
+}
+```
+- `raw_el` is either `RawHtmlEl` or `RawSvgEl` with many useful methods, including `style` and `style_group`.
+- `StyleGroup` selector is prefixed by a unique element _class id_ - e.g. `._13:hover .icon`.
+- `StyleGroup`s are stored among the global styles and dropped when the associated element is removed from the DOM.
 
 ---
 ## Color
 
 ```rust
-.s(Background::new().color(hsl(0, 0, 100)))
-.s(
-    BorderShadow::new()
-        .offset_xy(0, 2)
-        .size(0)
-        .blur(4)
-        .color(hsla(0, 0, 0, 20))
-)
-.s(Font::new().color_signal(hovered.map(|hovered| {
-    if hovered { hsl(12, 35, 60) } else { hsl(10, 30, 50) }
-})))
+.s(Font::new().size(24).color(hsl(0, 0, 32.7)))
+
+.s(Font::new().size(30).center().color_signal(
+    hovered_signal.map_bool(|| hsl(10.5, 37.7, 48.8), || hsl(12.2, 34.7, 68.2)),
+))
+
+.s(Background::new().color(hsla(0, 0, 0, 0.3)))
+
+.s(Shadows::new(vec![
+    Shadow::new().inner().y(-2).blur(1).color(hsla(0, 0, 0, 3))
+]))
+
+.s(Borders::new().top(Border::new().color(hsl(0, 0, 91.3))))
 ```
 
 The most commonly used color code systems are:
@@ -422,6 +459,8 @@ That's why Zoon uses only HSLuv, represented in the code as `hsl(h, s, l)` or `h
 - `s` ;  _saturation_  ; 0 - 100
 - `l` ;  _lightness_  ; 0 - 100
 - `a` ;  _alpha channel / opacity_ ; 0 (transparent) - 100 (opaque)
+
+All `hsl(a)` arguments have type `impl Into<f64>` and are clamped to their valid intervals.
 
 <details>
 <summary>Other examples why color theory and design in general are difficult</summary>
@@ -533,7 +572,6 @@ The concept of `Scene` + `Viewport` has been "stolen" from the Elm world. Just l
 ---
 
 ## Built-in libraries / API
-- They will be probably written as standalone crates or they'll need to be activated by feature flags.
 
 ### Timer
  
@@ -564,15 +602,15 @@ fn stop_timeout() {
 - `UpMsg` are sent from Zoon to Moon. `DownMsg` in the opposite direction.
 - `UpMsg` could be buffered when the Moon server is offline. And `DownMsg` when the Zoon client is automatically reconnecting.
 - `UpMsg` are sent in a short-lived _fetch_ request, `DownMsg` are sent in a _server-sent event_ to provide real-time communication.
-- A _correlation id_ is automatically generated and sent to the Moon with each request. Moon can send it back with the next `DownMsg`. You can also send an auth token together with the `UpMsg`.
+- A _correlation id_ is automatically generated and sent to the Moon with each request. Moon can send it back with the next `DownMsg` or send a new `CorId`. You can also send an auth token together with the `UpMsg`.
 - A _session id_ is automatically generated when the `Connection` is created. Then it's sent with each `UpMsg`. You can use it to simulate standard request-response mechanism.
-- `Task::start` spawn the given `Future`. (_Note:_ Multithreading isn't supported yet.) 
+- `Task::start` or `Task::start_droppable` spawn the given `Future`. (_Note:_ Multithreading isn't supported yet.) 
 - See `examples/chat` for the entire code.
 
 ```rust
 #[static_ref]
 fn connection() -> &'static Connection<UpMsg, DownMsg> {
-    Connection::new(|DownMsg::MessageReceived(message), _| {
+    Connection::new(|DownMsg::MessageReceived(message), _cor_id| {
         messages().lock_mut().push_cloned(message);
     })
     // .auth_token_getter(|| AuthToken::new("my_auth_token"))
@@ -693,6 +731,37 @@ Exceptions when the link click isn't intercepted even if its `href` starts with 
 - The link has the `target` attribute with the value `_blank`.
 - The user holds the key `ctrl`, `meta` or `shift` while clicking.
 - The user hasn't clicked by the primary button (left button for right-handed).
+
+### LocalStorage & SessionStorage
+
+```rust
+static STORAGE_KEY: &str = "todomvc-zoon";
+
+#[derive(Deserialize, Serialize)]
+struct Todo {
+    id: TodoId,
+    title: Mutable<String>,
+    completed: Mutable<bool>,
+    #[serde(skip)]
+    edited_title: Mutable<Option<String>>,
+}
+
+pub fn load_todos() {
+    if let Some(Ok(todos)) = local_storage().get(STORAGE_KEY) {
+        replace_todos(todos);
+        println!("Todos loaded");
+    }
+}
+
+fn save_todos() {
+    if let Err(error) = local_storage().insert(STORAGE_KEY, todos()) {
+        eprintln!("Saving todos failed: {:?}", error);
+    }
+}
+```
+
+- All items implementing [serde-lite](https://crates.io/crates/serde-lite)'s `Deserialize` and `Serialize` can be stored in the local or session storage.
+- See `examples/todomvc` or `crates/zoon/src/web_storage.rs` for more info.
 
 ---
 
