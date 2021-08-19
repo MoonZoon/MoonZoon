@@ -3,6 +3,7 @@ use moon::*;
 async fn frontend() -> Frontend {
     Frontend::new()
         .title("Benchmark example")
+        .default_styles(false)
         .append_to_head(r#"<link href="/_api/public/css/currentStyle.css" rel="stylesheet"/>"#)
         .body_content(r#"<div id="main"></div>"#)
 }
