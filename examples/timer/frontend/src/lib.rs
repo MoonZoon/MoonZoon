@@ -54,6 +54,7 @@ fn stop_timeout() {
 
 fn root() -> impl Element {
     Column::new()
+        .s(Align::center())
         .s(Spacing::new(30))
         .item(stopwatch_panel())
         .item(timeout_panel())
@@ -96,7 +97,7 @@ fn button(
 ) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .s(Padding::new().all(6))
+        .s(Padding::all(6))
         .s(Background::new()
             .color_signal(hovered_signal.map_bool(move || bg_color_hovered, move || bg_color)))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))

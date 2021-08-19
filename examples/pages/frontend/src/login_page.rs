@@ -32,7 +32,7 @@ pub fn page() -> impl Element {
 
 fn name_input() -> impl Element {
     TextInput::new()
-        .s(Padding::new().all(7))
+        .s(Padding::all(7))
         .label_hidden("Name")
         .placeholder(Placeholder::new("John"))
         .text(name().get_cloned())
@@ -44,7 +44,7 @@ fn log_in_button() -> impl Element {
     Button::new()
         .s(Background::new()
             .color_signal(hovered_signal.map_bool(|| NamedColor::Green5, || NamedColor::Green2)))
-        .s(Padding::new().all(7))
+        .s(Padding::all(7))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .label("Log in")
         .on_press(log_in)

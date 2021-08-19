@@ -43,7 +43,7 @@ fn on_viewport_change(_scene: Scene, viewport: Viewport) {
 fn root() -> impl Element {
     Column::new()
         .s(Spacing::new(20))
-        .s(Padding::new().all(20))
+        .s(Padding::all(20))
         .item(rectangles())
         .item(viewport_info())
         .item(jump_to_top_button())
@@ -57,7 +57,7 @@ fn rectangles() -> impl Element {
         .s(Width::new(150))
         .s(Height::new(200))
         .s(Spacing::new(20))
-        .s(Padding::new().all(15))
+        .s(Padding::all(15))
         .s(Background::new().color(NamedColor::Gray5))
         .s(Scrollbars::both())
         .on_viewport_location_change(on_viewport_change)
@@ -104,7 +104,7 @@ fn jump_to_bottom_button() -> impl Element {
 fn jump_button(label: &str, on_press: fn()) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .s(Padding::new().all(5))
+        .s(Padding::all(5))
         .s(Background::new()
             .color_signal(hovered_signal.map_bool(|| NamedColor::Green5, || NamedColor::Green2)))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
