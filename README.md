@@ -62,6 +62,12 @@
 - Repo: [github.com/MoonZoon/demo](https://github.com/MoonZoon/demo)
    - You can use the repo as a template for your new project for now.
 
+## TodoMVC
+
+- Live demo: [moonzoon-todomvc.herokuapp.com](https://moonzoon-todomvc.herokuapp.com/)
+   - Heroku dyno slow cold starts may occur.
+- Repo: [github.com/MoonZoon/todomvc](https://github.com/MoonZoon/todomvc)
+
 ## Chat
 
  - Live demo: [mz-chat-example.mzoon.app](https://mz-chat-example.mzoon.app/)
@@ -131,7 +137,7 @@
 
 1. _"Is it production-ready?"_
    - No, it's in the early development phase now, but you can subscribe to `#news` channel on our [Discord server](https://discord.gg/eGduTxK2Es) to don't miss the announcement. 
-   - MoonZoon will be battle-tested during the MoonZoon Cloud, [OpenHope](http://openhope.net) and other projects development.
+   - MoonZoon will be battle-tested during the [MoonZoon Cloud](docs/cloud.md), [OpenHope](http://openhope.net) and other projects development.
    - [Sponsor](https://github.com/sponsors/MartinKavik) me if you want to speed up the development and get some other benefits.
 
 1. _"Why another framework? Are you mad??"_
