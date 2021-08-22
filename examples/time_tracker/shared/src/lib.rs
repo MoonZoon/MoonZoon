@@ -1,40 +1,36 @@
 use moonlight::{
     serde_lite::{self, Deserialize, Serialize},
-    rusty_ulid::Ulid;
     chrono::{prelude::*, Duration},
+    AuthToken,
 };
-use std::borrow::Cow;
 
-mod clients_and_projects;
-mod time_blocks;
-mod time_tracker;
+mod entity_id;
+pub use entity_id::EntityId;
 
-pub type ClientId = Ulid;
-pub type ProjectId = Ulid;
-pub type TimeBlockId = Ulid;
-pub type InvoiceId = Ulid;
-pub type TimeEntryId = Ulid;
-pub type UserId = Ulid;
+// mod clients_and_projects;
+// mod time_blocks;
+// mod time_tracker;
 
-pub type AccessToken = Ulid;
+pub type ClientId = EntityId;
+pub type ProjectId = EntityId;
+pub type TimeBlockId = EntityId;
+pub type InvoiceId = EntityId;
+pub type TimeEntryId = EntityId;
+pub type UserId = EntityId;
 
+#[derive(Serialize, Deserialize)]
 pub struct User {
     id: UserId,
     name: String,
-    access_token: AccessToken,
+    auth_token: AuthToken,
 }
 
 // ------ UpMsg ------
 
-#[derive(Serialize, Deserialize, Debug)]
-pub enum UpMsg {
-    SendMessage(Message),
-}
-
 #[derive(Serialize, Deserialize)]
-pub enum UpMsg<'a> {
+pub enum UpMsg {
     // ------ Auth ------
-    Login(Cow<'a, str>),
+    Login(String),
     Logout,
     // ------ Page data ------
     GetClientsAndProjectsClients,
@@ -43,28 +39,28 @@ pub enum UpMsg<'a> {
     // ------ Client ------
     AddClient(ClientId),
     RemoveClient(ClientId),
-    RenameClient(ClientId, Cow<'a, str>),
+    RenameClient(ClientId, String),
     // ------ Project ------
     AddProject(ClientId, ProjectId),
     RemoveProject(ProjectId),
-    RenameProject(ProjectId, Cow<'a, str>),
+    RenameProject(ProjectId, String),
     // ------ TimeBlock ------
-    AddTimeBlock(ClientId, TimeBlockId, Duration),
+    // AddTimeBlock(ClientId, TimeBlockId, Duration),
     RemoveTimeBlock(TimeBlockId),
-    RenameTimeBlock(TimeBlockId, Cow<'a, str>),
-    SetTimeBlockStatus(TimeBlockId, time_blocks::TimeBlockStatus),
-    SetTimeBlockDuration(TimeBlockId, Duration),
+    RenameTimeBlock(TimeBlockId, String),
+    // SetTimeBlockStatus(TimeBlockId, time_blocks::TimeBlockStatus),
+    // SetTimeBlockDuration(TimeBlockId, Duration),
     // ------ Invoice ------
     AddInvoice(TimeBlockId, InvoiceId),
     RemoveInvoice(InvoiceId),
-    SetInvoiceCustomId(InvoiceId, Cow<'a, str>),
-    SetInvoiceUrl(InvoiceId, Cow<'a, str>),
+    SetInvoiceCustomId(InvoiceId, String),
+    SetInvoiceUrl(InvoiceId, String),
     // ------ TimeEntry ------
-    AddTimeEntry(ProjectId, time_tracker::TimeEntry),
+    // AddTimeEntry(ProjectId, time_tracker::TimeEntry),
     RemoveTimeEntry(TimeEntryId),
-    RenameTimeEntry(TimeEntryId, Cow<'a, str>),
-    SetTimeEntryStarted(TimeEntryId, DateTime<Local>),
-    SetTimeEntryStopped(TimeEntryId, DateTime<Local>),
+    RenameTimeEntry(TimeEntryId, String),
+    // SetTimeEntryStarted(TimeEntryId, DateTime<Local>),
+    // SetTimeEntryStopped(TimeEntryId, DateTime<Local>),
 }
 
 // ------ DownMsg ------
@@ -77,9 +73,9 @@ pub enum DownMsg {
     LoggedOut,
     AccessDenied,
     // ------ Page data ------
-    ClientsAndProjectsClients(Vec<clients_and_projects::Client>),
-    TimeBlocksClients(Vec<time_blocks::Client>),
-    TimeTrackerClients(Vec<time_tracker::Client>),
+    // ClientsAndProjectsClients(Vec<clients_and_projects::Client>),
+    // TimeBlocksClients(Vec<time_blocks::Client>),
+    // TimeTrackerClients(Vec<time_tracker::Client>),
     // ------ Client ------
     ClientAdded,
     ClientRemoved,

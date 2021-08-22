@@ -1,6 +1,7 @@
 pub use rusty_ulid::{self, DecodingError, Ulid};
 pub use serde_json;
 pub use serde_lite::{self, Deserialize, Intermediate, Serialize};
+pub use chrono;
 use std::{fmt, str::FromStr};
 
 // ------ SessionId ------
@@ -73,7 +74,7 @@ impl Deserialize for CorId {
 
 // ------ AuthToken ------
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AuthToken(String);
 
 impl AuthToken {
