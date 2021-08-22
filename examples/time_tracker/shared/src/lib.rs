@@ -1,6 +1,8 @@
-use serde::{Deserialize, Serialize};
-use ulid::Ulid;
-use chrono::{prelude::*, Duration};
+use moonlight::{
+    serde_lite::{self, Deserialize, Serialize},
+    rusty_ulid::Ulid;
+    chrono::{prelude::*, Duration},
+};
 use std::borrow::Cow;
 
 mod clients_and_projects;
@@ -20,6 +22,13 @@ pub struct User {
     id: UserId,
     name: String,
     access_token: AccessToken,
+}
+
+// ------ UpMsg ------
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum UpMsg {
+    SendMessage(Message),
 }
 
 #[derive(Serialize, Deserialize)]
@@ -57,6 +66,8 @@ pub enum UpMsg<'a> {
     SetTimeEntryStarted(TimeEntryId, DateTime<Local>),
     SetTimeEntryStopped(TimeEntryId, DateTime<Local>),
 }
+
+// ------ DownMsg ------
 
 #[derive(Serialize, Deserialize)]
 pub enum DownMsg {

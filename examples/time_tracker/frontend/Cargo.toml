@@ -16,12 +16,8 @@ crate-type = ["cdylib"]
 wasm-bindgen-test = "0.3.19"
 
 [dependencies]
-zoon = { path = "../../../zoon" }
-
-[profile.release]
-lto = true
-opt-level = 'z'
-codegen-units = 1
+zoon = { path = "../../../crates/zoon" }
+shared = { path = "../shared", features = ["frontend"] }
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ['-Os']

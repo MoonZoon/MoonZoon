@@ -10,8 +10,5 @@ readme = "../README.md"
 edition = "2018"
 
 [dependencies]
-moon = { path = "../../../moon" }
-
-[profile.release]
-lto = true
-codegen-units = 1
+moon = { path = "../../../crates/moon" }
+shared = { path = "../shared", features = ["backend"] }

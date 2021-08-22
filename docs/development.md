@@ -37,9 +37,10 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         "examples/js-framework-benchmark/keyed/Cargo.toml",
         "examples/pages/Cargo.toml",
         "examples/svg/Cargo.toml",
-        "examples/viewport/Cargo.toml",
+        "examples/time_tracker/Cargo.toml",
         "examples/timer/Cargo.toml",
         "examples/todomvc/Cargo.toml",
+        "examples/viewport/Cargo.toml",
     ],
     "rust-analyzer.diagnostics.disabled": [
         "missing-unsafe",
@@ -64,9 +65,10 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   - `js-framework-benchmark/keyed`
   - `pages`
   - `svg`
-  - `viewport`
+  - `time_tracker`
   - `timer`
   - `todomvc`
+  - `viewport`
 
 ```sh
 cd examples

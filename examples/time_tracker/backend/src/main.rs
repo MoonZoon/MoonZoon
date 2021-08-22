@@ -25,12 +25,12 @@ async fn frontend() -> Frontend {
     Frontend::new().title("Time Tracker example")
 }
 
-async fn check_access(access_token: Option<AccessToken>) -> bool {
+async fn check_access(auth_token: Option<AuthToken>) -> bool {
     if let Some(access_token) = access_token {
         user::by_id()
             .first_actor()
             .unwrap()
-            .logged_in(req.access_token)
+            .logged_in(auth_token)
             .await
     }
     false
@@ -38,14 +38,15 @@ async fn check_access(access_token: Option<AccessToken>) -> bool {
 
 macro_rules! check_access {
     ($req:ident) => {
-        if !check_access($req.access_token).await {
+        if !check_access(access_token).await {
             return DownMsg::AccessDenied
         }
     };
 }
 
-async fn up_msg_handler(req: UpMsgRequest) {
-    let down_msg = match req.up_msg {
+async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
+    let UpMsgRequest { up_msg, cor_id, session_id, auth_token } = req;
+    let down_msg = match up_msg {
 
         // ------ Auth ------
         UpMsg::Login(password) => {
@@ -62,7 +63,7 @@ async fn up_msg_handler(req: UpMsgRequest) {
             user::by_id()
                 .first_actor()
                 .unwrap()
-                .logout(req.access_token.unwrap())
+                .logout(auth_token.unwrap())
                 .await;
             DownMsg::LoggedOut
         }
@@ -293,21 +294,15 @@ async fn up_msg_handler(req: UpMsgRequest) {
             DownMsg::TimeEntryStoppedSet
         },
     };
-    connected_client::by_id()
-        .actors(req.client_id)
-        .first()
+    sessions::by_session_id()
+        .get(session_id)
         .unwrap()
-        .send_down_msg(down_msg, req.cor_id)
+        .send_down_msg(down_msg, cor_id)
         .await
 }
 
-fn main() {
-    start!(init, frontend, up_msg_handler, actors![
-        client, 
-        invoice, 
-        project, 
-        time_block, 
-        time_entry,
-        user,
-    ]);
+#[moon::main]
+async fn main() -> std::io::Result<()> {
+    init().await;
+    start(frontend, up_msg_handler, |_| {}).await
 }
