@@ -1,6 +1,4 @@
-use serde::{Deserialize, Serialize};
-use chrono::prelude::*;
-use super::{ClientId, ProjectId, TimeEntryId};
+use crate::*;
 
 #[derive(Serialize, Deserialize)]
 pub struct Client {
@@ -20,6 +18,6 @@ pub struct Project {
 pub struct TimeEntry {
     pub id: TimeEntryId,
     pub name: String,
-    pub started: DateTime<Local>,
-    pub stopped: Option<DateTime<Local>>,
+    // pub started: DateTime<Local>,
+    // pub stopped: Option<DateTime<Local>>,
 }

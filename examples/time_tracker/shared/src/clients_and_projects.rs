@@ -1,5 +1,4 @@
-use serde::{Deserialize, Serialize};
-use super::{ClientId, ProjectId};
+use crate::*;
 
 #[derive(Serialize, Deserialize)]
 pub struct Client {
