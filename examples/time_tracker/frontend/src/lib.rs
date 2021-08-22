@@ -1,5 +1,3 @@
-#![no_std]
-
 use zoon::*;
 
 mod app;
@@ -11,5 +9,6 @@ mod home;
 
 #[wasm_bindgen(start)]
 pub fn start() {
-    start!(app)
+    start_app("app", root);
+    connection();
 }

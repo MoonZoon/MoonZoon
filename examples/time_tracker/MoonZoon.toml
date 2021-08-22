@@ -1,0 +1,34 @@
+port = 8080
+# port = 8443
+https = false
+cache_busting = true
+backend_log_level = "warn" # "error" / "warn" / "info" / "debug" / "trace"
+
+[redirect]
+port = 8081
+enabled = false
+
+[watch]
+frontend = [
+    "public",
+    "frontend/Cargo.toml",
+    "frontend/src",
+    "shared/Cargo.toml",
+    "shared/src",
+    "../../crates/zoon/Cargo.toml",
+    "../../crates/zoon/src",
+    "../../crates/static_ref_macro/Cargo.toml",
+    "../../crates/static_ref_macro/src",
+    "../../crates/moonlight/Cargo.toml",
+    "../../crates/moonlight/src",
+]
+backend = [
+    "backend/Cargo.toml",
+    "backend/src",
+    "shared/Cargo.toml",
+    "shared/src",
+    "../../crates/moon/Cargo.toml",
+    "../../crates/moon/src",
+    "../../crates/moonlight/Cargo.toml",
+    "../../crates/moonlight/src",
+]
