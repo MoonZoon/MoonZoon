@@ -2,105 +2,20 @@ pub use rusty_ulid::{self, DecodingError, Ulid};
 pub use serde_json;
 pub use serde_lite::{self, Deserialize, Intermediate, Serialize};
 pub use chrono;
-use std::{fmt, str::FromStr};
 
-// ------ SessionId ------
+mod auth_token;
+pub use auth_token::AuthToken;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct SessionId(Ulid);
+mod cor_id;
+pub use cor_id::CorId;
 
-impl SessionId {
-    pub fn new() -> Self {
-        SessionId(Ulid::generate())
-    }
-}
+mod down_msg_transporter;
+pub use down_msg_transporter::{DownMsgTransporterForDe, DownMsgTransporterForSer};
 
-impl fmt::Display for SessionId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
+mod entity_id;
+pub use entity_id::EntityId;
 
-impl FromStr for SessionId {
-    type Err = DecodingError;
+mod session_id;
+pub use session_id::SessionId;
 
-    fn from_str(session_id: &str) -> Result<Self, Self::Err> {
-        Ok(SessionId(session_id.parse()?))
-    }
-}
 
-// ------ CorId ------
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct CorId(Ulid);
-
-impl CorId {
-    pub fn new() -> Self {
-        CorId(Ulid::generate())
-    }
-}
-
-impl fmt::Display for CorId {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl FromStr for CorId {
-    type Err = DecodingError;
-
-    fn from_str(cor_id: &str) -> Result<Self, Self::Err> {
-        Ok(CorId(cor_id.parse()?))
-    }
-}
-
-impl Serialize for CorId {
-    fn serialize(&self) -> Result<Intermediate, serde_lite::Error> {
-        Ok(Intermediate::String(self.to_string()))
-    }
-}
-
-impl Deserialize for CorId {
-    fn deserialize(intermediate: &Intermediate) -> Result<Self, serde_lite::Error> {
-        intermediate
-            .as_str()
-            .ok_or_else(|| {
-                serde_lite::Error::invalid_value("CorId can be deserialized only from String")
-            })?
-            .parse()
-            .map_err(|error| serde_lite::Error::invalid_value(error))
-    }
-}
-
-// ------ AuthToken ------
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AuthToken(String);
-
-impl AuthToken {
-    pub fn new(token: impl ToString) -> Self {
-        AuthToken(token.to_string())
-    }
-
-    pub fn into_string(self) -> String {
-        self.0
-    }
-
-    pub fn as_str(&self) -> &str {
-        &self.0
-    }
-}
-
-// ------ DownMsgTransporter ------
-
-#[derive(Serialize)]
-pub struct DownMsgTransporterForSer<'a, DMsg: Serialize> {
-    pub down_msg: &'a DMsg,
-    pub cor_id: CorId,
-}
-
-#[derive(Deserialize)]
-pub struct DownMsgTransporterForDe<DMsg: Deserialize> {
-    pub down_msg: DMsg,
-    pub cor_id: CorId,
-}

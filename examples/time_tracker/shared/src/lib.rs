@@ -1,15 +1,8 @@
-use moonlight::{
-    serde_lite::{self, Deserialize, Serialize},
-    chrono::{prelude::*, Duration},
-    AuthToken,
-};
+use moonlight::*;
 
-mod entity_id;
-pub use entity_id::EntityId;
-
-// mod clients_and_projects;
-// mod time_blocks;
-// mod time_tracker;
+mod clients_and_projects;
+mod time_blocks;
+mod time_tracker;
 
 pub type ClientId = EntityId;
 pub type ProjectId = EntityId;
@@ -48,7 +41,7 @@ pub enum UpMsg {
     // AddTimeBlock(ClientId, TimeBlockId, Duration),
     RemoveTimeBlock(TimeBlockId),
     RenameTimeBlock(TimeBlockId, String),
-    // SetTimeBlockStatus(TimeBlockId, time_blocks::TimeBlockStatus),
+    SetTimeBlockStatus(TimeBlockId, time_blocks::TimeBlockStatus),
     // SetTimeBlockDuration(TimeBlockId, Duration),
     // ------ Invoice ------
     AddInvoice(TimeBlockId, InvoiceId),
@@ -56,7 +49,7 @@ pub enum UpMsg {
     SetInvoiceCustomId(InvoiceId, String),
     SetInvoiceUrl(InvoiceId, String),
     // ------ TimeEntry ------
-    // AddTimeEntry(ProjectId, time_tracker::TimeEntry),
+    AddTimeEntry(ProjectId, time_tracker::TimeEntry),
     RemoveTimeEntry(TimeEntryId),
     RenameTimeEntry(TimeEntryId, String),
     // SetTimeEntryStarted(TimeEntryId, DateTime<Local>),
@@ -73,9 +66,9 @@ pub enum DownMsg {
     LoggedOut,
     AccessDenied,
     // ------ Page data ------
-    // ClientsAndProjectsClients(Vec<clients_and_projects::Client>),
-    // TimeBlocksClients(Vec<time_blocks::Client>),
-    // TimeTrackerClients(Vec<time_tracker::Client>),
+    ClientsAndProjectsClients(Vec<clients_and_projects::Client>),
+    TimeBlocksClients(Vec<time_blocks::Client>),
+    TimeTrackerClients(Vec<time_tracker::Client>),
     // ------ Client ------
     ClientAdded,
     ClientRemoved,

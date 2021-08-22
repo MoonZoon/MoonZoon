@@ -1,5 +1,5 @@
-use std::ops::Deref;
-use moonlight::{Ulid, serde_lite::{self, Serialize, Deserialize}};
+use crate::*;
+use std::{fmt, str::FromStr};
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct EntityId(Ulid);
@@ -10,11 +10,17 @@ impl EntityId {
     }
 }
 
-impl Deref for EntityId {
-    type Target = Ulid;
+impl fmt::Display for EntityId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
+impl FromStr for EntityId {
+    type Err = DecodingError;
+
+    fn from_str(entity_id: &str) -> Result<Self, Self::Err> {
+        Ok(EntityId(entity_id.parse()?))
     }
 }
 
