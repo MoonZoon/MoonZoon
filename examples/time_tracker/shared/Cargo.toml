@@ -10,7 +10,7 @@ readme = "../README.md"
 edition = "2018"
 
 [dependencies]
-moonlight = { path = "../../../crates/moonlight" }
+moonlight = { path = "../../../crates/moonlight", features = ["chrono"] }
 
 [features]
 frontend = ["moonlight/frontend"]
