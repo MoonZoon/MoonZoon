@@ -9,6 +9,8 @@ use crate::{
 pub mod view;
 
 const USER_STORAGE_KEY: &str = "moonzoon-time_tracker-user";
+const MENU_BREAKPOINT: u32 = 700;
+
 
 // ------ ------
 //     Types
@@ -38,6 +40,21 @@ fn page_id() -> &'static Mutable<PageId> {
     Mutable::new(PageId::Unknown)
 }
 
+#[static_ref]
+fn menu_opened() -> &'static Mutable<bool> {
+    Mutable::new(false)
+}
+
+#[static_ref]
+fn saving() -> &'static Mutable<bool> {
+    Mutable::new(false)
+}
+
+#[static_ref]
+fn viewport_width() -> &'static Mutable<u32> {
+    Mutable::new(0)
+}
+
 // ------ ------
 //    Helpers
 // ------ ------
@@ -63,6 +80,38 @@ pub fn log_out() {
     logged_user().take();
     router().go(Route::Root);
 }
+
+fn toggle_menu() {
+    menu_opened().update(|opened| !opened);
+}
+
+fn set_viewport_width(width: u32) {
+    viewport_width().set(width)
+}
+
+// ------ ------
+//    Signals
+// ------ ------
+
+
+fn show_links_and_controls() -> impl Signal<Item = bool> {
+    viewport_width().signal().map(|width| width > MENU_BREAKPOINT)
+}
+
+fn show_menu_panel() -> impl Signal<Item = bool> {
+    map_ref! {
+        let show_links_and_controls = show_links_and_controls(),
+        let menu_opened = menu_opened().signal() =>
+        not(show_links_and_controls) && *menu_opened
+    }
+}
+
+fn is_user_logged_signal() -> impl Signal<Item = bool> {
+    logged_user().signal_ref(Option::is_some)
+}
+
+
+
 
 // blocks!{
 //     append_blocks![

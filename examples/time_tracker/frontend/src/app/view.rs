@@ -1,120 +1,85 @@
 use zoon::*;
-
-const MENU_BREAKPOINT: f64 = 700.;
+use crate::router::Route;
+// use crate::{login_page, }
 
 pub fn root() -> impl Element {
-    // view![
-    //     viewport::on_width_change(super::update_viewport_width),
-    //     on_click(super::view_clicked),
-    //     column![
-    //         header(),
-    //         menu_panel(),
-    //         page(),
-    //     ]
-    // ]
-    Text::new("Time tracker!")
+    El::new()
+        // .on_viewport_size_change(super::set_viewport_width)
+        // .on_click(super::view_clicked)
+        .child(
+            Column::new()
+                .item(header())
+                .item_signal(super::show_menu_panel().map_true(menu_panel))
+                // .item(page())
+        )
 }
 
-// #[el]
-// fn header() -> Row {
-//     let show_links_and_controls = super::viewport_width().inner() > MENU_BREAKPOINT;
-//     let show_hamburger = !show_links;
-//     let saving = super::saving();
-//     row![
-//         el![
-//             font::bold(),
-//             "TT",
-//         ],
-//         show_link_and_controls.then(|| row![menu_links()]),
-//         saving.then(|| el!["Saving..."]),
-//         show_link_and_controls.then(auth_controls),
-//         show_hamburger.then(hamburger),
-//     ]
-// }
+fn header() -> impl Element {
+    Row::new()
+        .item(
+            El::new()
+                .s(Font::new().weight(NamedWeight::Bold))
+                .child("TT")
+        )
+        .item_signal(super::show_links_and_controls().map_true(|| {
+            Row::new().items(menu_links())
+        }))
+        .item_signal(super::saving().signal().map_true(|| "Saving..."))
+        .item_signal(super::show_links_and_controls().map_true(auth_controls))
+        .item_signal(super::show_links_and_controls().map_false(hamburger))
+}
 
-// #[el]
-// fn hamburger() -> Button {
-//     let menu_opened = super::menu_opened().inner();
-//     button![
-//         button::on_press(super::toggle_menu),
-//         on_click(super::menu_part_clicked),
-//         if menu_opened { "X" } else { "☰" }
-//     ]
-// }
+fn hamburger() -> impl Element {
+    Button::new()
+        .on_press(super::toggle_menu)
+        // .on_click(super::menu_part_clicked)
+        .label_signal(super::menu_opened().signal().map_bool(|| "X", || "☰"))
+}
 
-// #[el]
-// fn menu_panel() -> Option<Column> {
-//     if !super::menu_opened().inner() {
-//         return None
-//     }
-//     if super::viewport_width().inner() > MENU_BREAKPOINT {
-//         return None
-//     }
-//     Some(column![
-//         menu_links(),
-//         auth_controls(),
-//         on_click(super::menu_part_clicked),
-//     ])
-// }
+fn menu_panel() -> impl Element {
+    Column::new()
+        // .on_click(super::menu_part_clicked)
+        .items(menu_links())
+        .item(auth_controls())
+}
 
-// #[el]
-// fn menu_links() -> Vec<Link> {
-//     vec![
-//         link![
-//             link::url(super::Route::time_tracker()),
-//             "Time Tracker",
-//         ],
-//         link![
-//             link::url(super::Route::clients_and_projects()),
-//             "Clients & Projects",
-//         ],
-//         link![
-//             link::url(super::Route::time_blocks()),
-//             "Time Blocks",
-//         ],
-//     ]
-// }
+fn menu_links() -> Vec<impl Element> {
+    vec![
+        Link::new().to(Route::TimeTracker).label("Timer Tracker"),
+        Link::new().to(Route::ClientsAndProjects).label("Clients & Projects"),
+        Link::new().to(Route::TimeBlocks).label("Timer Blocks"),
+    ]
+}
 
-// #[el]
-// fn auth_controls() -> Row {
-//     row![
-//         username_or_login_button(),
-//         logout_button(),
-//     ]
-// }
+fn auth_controls() -> impl Element {
+    Row::new()
+        .item_signal(super::logged_user().signal_cloned())
+        .item_signal(super::is_user_logged_signal().map_false(login_button))
+        .item_signal(super::is_user_logged_signal().map_true(logout_button))
+}
 
-// #[el]
-// fn username_or_login_button() -> Element {
-//     if let Some(user) = super::user().inner() {
-//         return user.name.into_element(),
-//     } 
-//     link![
-//         link::url(super::Route::login()),
-//         "Log in",
-//     ].into_element()
-// }
+fn login_button() -> impl Element {
+    Link::new()
+        .to(Route::Login)
+        .label("Log in")
+}
 
-// #[el]
-// fn logout_button() -> Option<Button> {
-//     let logged_in = super::user().map(Option::is_some);
-//     logged_in.then({
-//         button![
-//             button::on_press(super::logout),
-//             "Log out",
-//         ]
-//     })
-// }
+fn logout_button() -> impl Element {
+    Button::new()
+        .on_press(super::log_out)
+        .label("Log out")
+}
 
 // fn page() -> impl Element {
 //     El::new()
 //         .s(Width::fill())
 //         .s(Height::fill())
-//         .child_signal(page_id().signal().map(|page_id| match page_id {
-//             super::Route::Login => login_page::view::page(),
-//             super::Route::ClientsAndProjects => clients_and_projects_page::view::page().into_raw_element(),
-//             super::Route::TimeTracker => time_tracker_page::view::page().into_raw_element(),
-//             super::Route::TimeBlocks => time_blocks_page::view::page().into_raw_element(),
-//             super::Route::Home => home_page::view::page().into_raw_element(),
-//             super::Route::Unknown => El::new().child(404).into_raw_element(),
+//         .child_signal(super::page_id().signal().map(|page_id| match page_id {
+//             super::PageId::Login => login_page::view::page(),
+//             super::PageId::ClientsAndProjects => clients_and_projects_page::view::page().into_raw_element(),
+//             super::PageId::TimeTracker => time_tracker_page::view::page().into_raw_element(),
+//             super::PageId::TimeBlocks => time_blocks_page::view::page().into_raw_element(),
+//             super::PageId::Home => home_page::view::page().into_raw_element(),
+//             super::PageId::Unknown => El::new().child(404).into_raw_element(),
 //         }))
 // }
