@@ -4,7 +4,7 @@ use crate::router::Route;
 
 pub fn root() -> impl Element {
     El::new()
-        // .on_viewport_size_change(super::set_viewport_width)
+        .on_viewport_size_change(super::on_viewport_size_change)
         // .on_click(super::view_clicked)
         .child(
             Column::new()
