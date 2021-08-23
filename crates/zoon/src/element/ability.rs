@@ -16,6 +16,9 @@ pub use hookable::Hookable;
 mod mutable_viewport;
 pub use mutable_viewport::MutableViewport;
 
+mod resizable_viewport;
+pub use resizable_viewport::ResizableViewport;
+
 mod add_nearby_element;
 pub use add_nearby_element::AddNearbyElement;
 
