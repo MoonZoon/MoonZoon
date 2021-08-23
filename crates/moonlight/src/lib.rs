@@ -3,7 +3,7 @@ pub use serde_json;
 pub use serde_lite::{self, Deserialize, Intermediate, Serialize};
 
 #[cfg(feature = "chrono")]
-pub use chrono::{self, prelude::*};
+pub use chrono::{self, prelude::*, Duration};
 
 mod auth_token;
 pub use auth_token::AuthToken;
@@ -20,14 +20,7 @@ pub use entity_id::EntityId;
 mod session_id;
 pub use session_id::SessionId;
 
-#[cfg(feature = "chrono")]
-mod duration;
-#[cfg(feature = "chrono")]
-pub use duration::Duration;
-
-#[cfg(feature = "chrono")]
-mod date_time;
-#[cfg(feature = "chrono")]
-pub use date_time::DateTime;
+mod wrapper;
+pub use wrapper::Wrapper;
 
 

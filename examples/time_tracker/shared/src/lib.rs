@@ -38,11 +38,11 @@ pub enum UpMsg {
     RemoveProject(ProjectId),
     RenameProject(ProjectId, String),
     // ------ TimeBlock ------
-    AddTimeBlock(ClientId, TimeBlockId, Duration),
+    AddTimeBlock(ClientId, TimeBlockId, Wrapper<Duration>),
     RemoveTimeBlock(TimeBlockId),
     RenameTimeBlock(TimeBlockId, String),
     SetTimeBlockStatus(TimeBlockId, time_blocks::TimeBlockStatus),
-    SetTimeBlockDuration(TimeBlockId, Duration),
+    SetTimeBlockDuration(TimeBlockId, Wrapper<Duration>),
     // ------ Invoice ------
     AddInvoice(TimeBlockId, InvoiceId),
     RemoveInvoice(InvoiceId),
@@ -52,8 +52,8 @@ pub enum UpMsg {
     AddTimeEntry(ProjectId, time_tracker::TimeEntry),
     RemoveTimeEntry(TimeEntryId),
     RenameTimeEntry(TimeEntryId, String),
-    SetTimeEntryStarted(TimeEntryId, DateTime<Local>),
-    SetTimeEntryStopped(TimeEntryId, DateTime<Local>),
+    SetTimeEntryStarted(TimeEntryId, Wrapper<DateTime<Local>>),
+    SetTimeEntryStopped(TimeEntryId, Wrapper<DateTime<Local>>),
 }
 
 // ------ DownMsg ------
