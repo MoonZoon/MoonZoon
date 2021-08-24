@@ -10,8 +10,7 @@ pub fn root() -> impl Element {
             Column::new()
                 .item(header())
                 .item_signal(super::show_menu_panel().map_true(menu_panel))
-                .item_signal(super::viewport_width().signal())
-                // .item(page())
+                .item(page())
         )
 }
 
@@ -22,12 +21,12 @@ fn header() -> impl Element {
                 .s(Font::new().weight(NamedWeight::Bold))
                 .child("TT")
         )
-        .item_signal(super::show_links_and_controls().map_true(|| {
+        .item_signal(super::wide_screen().map_true(|| {
             Row::new().items(menu_links())
         }))
         .item_signal(super::saving().signal().map_true(|| "Saving..."))
-        .item_signal(super::show_links_and_controls().map_true(auth_controls))
-        .item_signal(super::show_links_and_controls().map_false(hamburger))
+        .item_signal(super::wide_screen().map_true(auth_controls))
+        .item_signal(super::wide_screen().map_false(hamburger))
 }
 
 fn hamburger() -> impl Element {
@@ -71,16 +70,16 @@ fn logout_button() -> impl Element {
         .label("Log out")
 }
 
-// fn page() -> impl Element {
-//     El::new()
-//         .s(Width::fill())
-//         .s(Height::fill())
-//         .child_signal(super::page_id().signal().map(|page_id| match page_id {
-//             super::PageId::Login => login_page::view::page(),
-//             super::PageId::ClientsAndProjects => clients_and_projects_page::view::page().into_raw_element(),
-//             super::PageId::TimeTracker => time_tracker_page::view::page().into_raw_element(),
-//             super::PageId::TimeBlocks => time_blocks_page::view::page().into_raw_element(),
-//             super::PageId::Home => home_page::view::page().into_raw_element(),
-//             super::PageId::Unknown => El::new().child(404).into_raw_element(),
-//         }))
-// }
+fn page() -> impl Element {
+    El::new()
+        .s(Width::fill())
+        .s(Height::fill())
+        .child_signal(super::page_id().signal().map(|page_id| match page_id {
+            super::PageId::Login => crate::login_page::view::page().into_raw_element(),
+            super::PageId::ClientsAndProjects => crate::clients_and_projects_page::view::page().into_raw_element(),
+            super::PageId::TimeTracker => crate::time_tracker_page::view::page().into_raw_element(),
+            super::PageId::TimeBlocks => crate::time_blocks_page::view::page().into_raw_element(),
+            super::PageId::Home => crate::home_page::view::page().into_raw_element(),
+            super::PageId::Unknown => El::new().child(404).into_raw_element(),
+        }))
+}

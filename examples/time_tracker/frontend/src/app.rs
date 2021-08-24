@@ -93,24 +93,20 @@ fn toggle_menu() {
     menu_opened().update(|opened| !opened);
 }
 
-fn set_viewport_width(width: u32) {
-    viewport_width().set(width)
-}
-
 // ------ ------
 //    Signals
 // ------ ------
 
 
-fn show_links_and_controls() -> impl Signal<Item = bool> {
-    viewport_width().signal().map(|width| width > MENU_BREAKPOINT)
+fn wide_screen() -> impl Signal<Item = bool> {
+    viewport_width().signal().map(|width| width > MENU_BREAKPOINT).dedupe()
 }
 
 fn show_menu_panel() -> impl Signal<Item = bool> {
     map_ref! {
-        let show_links_and_controls = show_links_and_controls(),
+        let wide_screen = wide_screen(),
         let menu_opened = menu_opened().signal() =>
-        not(show_links_and_controls) && *menu_opened
+        not(wide_screen) && *menu_opened
     }
 }
 
