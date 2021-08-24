@@ -74,8 +74,8 @@ impl RawEl for RawHtmlEl {
         })
     }
 
-    fn class_id(&self) -> &str {
-        &self.class_id
+    fn class_id(&self) -> Rc<String> {
+        Rc::clone(&self.class_id)
     }
 }
 

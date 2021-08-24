@@ -1,6 +1,6 @@
 use crate::*;
 use once_cell::race::OnceBox;
-use std::mem::ManuallyDrop;
+use std::{mem::ManuallyDrop, rc::Rc};
 use web_sys::{EventTarget, Node};
 
 mod raw_html_el;
@@ -93,6 +93,11 @@ pub trait RawEl: Sized {
         self.update_dom_builder(|dom_builder| dom_builder.event(handler))
     }
 
+    fn global_event_handler<E: StaticEvent>(self, handler: impl FnOnce(E) + Clone + 'static) -> Self {
+        let handler = move |event: E| handler.clone()(event);
+        self.update_dom_builder(|dom_builder| dom_builder.global_event(handler))
+    }
+
     fn child<'a>(self, child: impl IntoOptionElement<'a> + 'a) -> Self {
         if let Some(child) = child.into_option_element() {
             return self.update_dom_builder(|dom_builder| {
@@ -145,7 +150,7 @@ pub trait RawEl: Sized {
     ) -> Self;
 
     fn style_group(self, mut group: StyleGroup) -> Self {
-        group.selector = [".", self.class_id(), &group.selector].concat().into();
+        group.selector = [".", &self.class_id(), &group.selector].concat().into();
         let group_handle = global_styles().style_group_droppable(group);
         self.after_remove(|_| drop(group_handle))
     }
@@ -178,5 +183,5 @@ pub trait RawEl: Sized {
 
     // --
 
-    fn class_id(&self) -> &str;
+    fn class_id(&self) -> Rc<String>;
 }

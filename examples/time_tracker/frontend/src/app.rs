@@ -94,7 +94,13 @@ pub fn log_out() {
 }
 
 fn toggle_menu() {
+    zoon::println!("toggle menu");
     menu_opened().update(|opened| !opened);
+}
+
+pub fn close_menu() {
+    zoon::println!("close_menu menu");
+    menu_opened().set_neq(false);
 }
 
 // ------ ------
