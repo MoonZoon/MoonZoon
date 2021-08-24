@@ -28,6 +28,8 @@ pub fn router() -> &'static Router<Route> {
     Router::new(|route: Option<Route>| {
         println!("{}", routing::current_url());
 
+        app::close_menu();
+
         let route = match route {
             Some(route) => {
                 push_to_route_history(route.clone());

@@ -45,6 +45,7 @@ features = [
   'DomRectReadOnly',
   'Element',
   'Event',
+  'EventTarget',
   'Headers',
   'History',
   'HtmlAnchorElement',

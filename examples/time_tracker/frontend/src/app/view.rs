@@ -3,8 +3,8 @@ use crate::{router::Route, theme::Theme};
 
 pub fn root() -> impl Element {
     El::new()
+        .s(Height::fill().min_screen())
         .on_viewport_size_change(super::on_viewport_size_change)
-        // .on_click(super::view_clicked)
         .child(
             Column::new()
                 .item(header())
@@ -50,7 +50,6 @@ fn hamburger() -> impl Element {
         .s(Width::new(64))
         .on_press(super::toggle_menu)
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
-        // .on_click(super::menu_part_clicked)
         .label(
             Row::new()
                 .s(Height::fill())
@@ -69,7 +68,7 @@ fn menu_panel() -> impl Element {
             Shadow::new().y(8).blur(16).color(Theme::Shadow)
         ]))
         .s(RoundedCorners::new().bottom(10))
-        // .on_click(super::menu_part_clicked)
+        .on_click_outside(super::close_menu)
         .items(menu_links(true))
         .item(El::new().s(Height::new(10)))
         .item(auth_controls())
