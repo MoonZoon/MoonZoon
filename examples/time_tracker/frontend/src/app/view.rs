@@ -75,11 +75,11 @@ fn page() -> impl Element {
         .s(Width::fill())
         .s(Height::fill())
         .child_signal(super::page_id().signal().map(|page_id| match page_id {
-            super::PageId::Login => crate::login_page::view::page().into_raw_element(),
-            super::PageId::ClientsAndProjects => crate::clients_and_projects_page::view::page().into_raw_element(),
-            super::PageId::TimeTracker => crate::time_tracker_page::view::page().into_raw_element(),
-            super::PageId::TimeBlocks => crate::time_blocks_page::view::page().into_raw_element(),
-            super::PageId::Home => crate::home_page::view::page().into_raw_element(),
+            super::PageId::Login => crate::login_page::view(),
+            super::PageId::ClientsAndProjects => crate::clients_and_projects_page::view(),
+            super::PageId::TimeTracker => crate::time_tracker_page::view(),
+            super::PageId::TimeBlocks => crate::time_blocks_page::view(),
+            super::PageId::Home => crate::home_page::view(),
             super::PageId::Unknown => El::new().child(404).into_raw_element(),
         }))
 }

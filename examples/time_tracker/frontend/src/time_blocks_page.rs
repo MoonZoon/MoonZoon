@@ -1,4 +1,4 @@
-// use zoon::*;
+use zoon::*;
 // use ulid::Ulid;
 // use std::borrow::Cow;
 // use std::collections::HashSet;
@@ -6,7 +6,11 @@
 // use crate::app;
 // pub use shared::{ClientId, TimeBlockId, InvoiceId, TimeBlockStatus, DownMsg};
 
-pub mod view;
+mod view;
+
+pub fn view() -> RawElement {
+    view::page().into_raw_element()
+}
 
 // blocks!{
 //     append_blocks![els]

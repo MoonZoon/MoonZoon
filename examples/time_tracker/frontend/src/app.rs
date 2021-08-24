@@ -6,7 +6,11 @@ use crate::{
     router::{previous_route, router, Route},
 };
 
-pub mod view;
+mod view;
+
+pub fn root() -> impl Element {
+    view::root()
+}
 
 const USER_STORAGE_KEY: &str = "moonzoon-time_tracker-user";
 const MENU_BREAKPOINT: u32 = 700;
