@@ -59,6 +59,11 @@ fn viewport_width() -> &'static Mutable<u32> {
     Mutable::new(0)
 }
 
+#[static_ref]
+fn hamburger_class_id() -> &'static Mutable<Option<ClassId>> {
+    Mutable::new(None)
+}
+
 // ------ ------
 //    Helpers
 // ------ ------
@@ -99,8 +104,12 @@ fn toggle_menu() {
 }
 
 pub fn close_menu() {
-    zoon::println!("close_menu menu");
+    zoon::println!("close_menu");
     menu_opened().set_neq(false);
+}
+
+fn set_hamburger_class_id(class_id: ClassId) {
+    hamburger_class_id().set(Some(class_id));
 }
 
 // ------ ------

@@ -1,24 +1,23 @@
 use super::class_id_generator;
 use crate::*;
-use std::rc::Rc;
 
 // ------ ------
 //   Element
 // ------ ------
 
 pub struct RawSvgEl {
-    class_id: Rc<String>,
+    class_id: ClassId,
     dom_builder: DomBuilder<web_sys::SvgElement>,
 }
 
 impl RawSvgEl {
     pub fn new(tag: &str) -> Self {
-        let class_id = Rc::new(class_id_generator().next_class_id());
+        let class_id = class_id_generator().next_class_id();
         Self {
-            class_id: Rc::clone(&class_id),
+            class_id: class_id.clone(),
             dom_builder: DomBuilder::new_svg(tag)
                 .class(class_id.as_str())
-                .after_removed(move |_| class_id_generator().remove_class_id(&class_id)),
+                .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
         }
     }
 }
@@ -72,7 +71,7 @@ impl RawEl for RawSvgEl {
         })
     }
 
-    fn class_id(&self) -> Rc<String> {
-        Rc::clone(&self.class_id)
+    fn class_id(&self) -> ClassId {
+        self.class_id.clone()
     }
 }
