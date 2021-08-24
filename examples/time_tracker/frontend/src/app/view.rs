@@ -8,7 +8,6 @@ pub fn root() -> impl Element {
         .child(
             Column::new()
                 .item(header())
-                .item_signal(super::show_menu_panel().map_true(menu_panel))
                 .item(page())
         )
 }
@@ -20,11 +19,12 @@ fn header() -> impl Element {
         .s(Font::new().color(Theme::Font1))
         .item(logo())
         .item_signal(super::wide_screen().map_true(|| {
-            Row::new().s(Height::fill()).items(menu_links())
+            Row::new().s(Height::fill()).items(menu_links(false))
         }))
         .item_signal(super::saving().signal().map_true(|| "Saving..."))
         .item_signal(super::wide_screen().map_true(auth_controls))
         .item_signal(super::wide_screen().map_false(hamburger))
+        .element_below(El::new().child_signal(super::show_menu_panel().map_true(menu_panel)))
 }
 
 fn logo() -> impl Element {
@@ -60,26 +60,36 @@ fn hamburger() -> impl Element {
 
 fn menu_panel() -> impl Element {
     Column::new()
+        .s(Background::new().color(Theme::Background0))
+        .s(Font::new().color(Theme::Font0))
+        .s(Height::new(250))
+        .s(Align::new().right())
+        .s(Padding::all(15))
+        .s(Shadows::new(vec![
+            Shadow::new().y(8).blur(16).color(Theme::Shadow)
+        ]))
+        .s(RoundedCorners::new().bottom(10))
         // .on_click(super::menu_part_clicked)
-        .items(menu_links())
+        .items(menu_links(true))
+        .item(El::new().s(Height::new(10)))
         .item(auth_controls())
 }
 
-fn menu_links() -> Vec<impl Element> {
+fn menu_links(in_menu_panel: bool) -> Vec<impl Element> {
     vec![
-        menu_link(Route::TimeTracker, "Time Tracker"),
-        menu_link(Route::ClientsAndProjects, "Clients & Projects"),
-        menu_link(Route::TimeBlocks, "Time Blocks"),
+        menu_link(Route::TimeTracker, "Time Tracker", in_menu_panel),
+        menu_link(Route::ClientsAndProjects, "Clients & Projects", in_menu_panel),
+        menu_link(Route::TimeBlocks, "Time Blocks", in_menu_panel),
     ]
 }
 
-fn menu_link(route: Route, label: &str) -> impl Element {
+fn menu_link(route: Route, label: &str, in_menu_panel: bool) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Link::new()
         .s(Height::fill())
         .s(Padding::new().x(12))
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || Theme::Background1Highlighted,
+            move || if in_menu_panel { Theme::Background2Highlighted } else { Theme::Background1Highlighted },
             || Theme::Transparent,
         )))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))

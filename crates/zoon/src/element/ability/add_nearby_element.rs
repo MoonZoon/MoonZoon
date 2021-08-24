@@ -16,7 +16,7 @@ pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
         self.update_raw_el(|raw_el| raw_el.child(element_below_container().child(element)))
     }
 
-    fn element_on_below_signal(
+    fn element_below_signal(
         self,
         element: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> Self {
@@ -61,6 +61,7 @@ fn element_above_container() -> RawHtmlEl {
         .style("left", "0")
         .style("width", "100%")
         .style("pointer-events", "none")
+        .style("z-index", "20")
 }
 
 fn element_below_container() -> RawHtmlEl {
@@ -76,6 +77,7 @@ fn element_below_container() -> RawHtmlEl {
         .style("left", "0")
         .style("width", "100%")
         .style("pointer-events", "none")
+        .style("z-index", "20")
 }
 
 fn element_on_left_container() -> RawHtmlEl {
@@ -92,6 +94,7 @@ fn element_on_left_container() -> RawHtmlEl {
         .style("top", "0")
         .style("height", "100%")
         .style("pointer-events", "none")
+        .style("z-index", "20")
 }
 
 fn element_on_right_container() -> RawHtmlEl {
@@ -108,4 +111,5 @@ fn element_on_right_container() -> RawHtmlEl {
         .style("top", "0")
         .style("height", "100%")
         .style("pointer-events", "none")
+        .style("z-index", "20")
 }
