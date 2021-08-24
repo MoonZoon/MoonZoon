@@ -14,9 +14,9 @@ impl ResizeObserver {
 
         let callback = move |entries: Vec<native::ResizeObserverEntry>| {
             let entry = &entries[0];
-            let size = entry.border_box_size();
-            let width = size.inline_size();
-            let height = size.block_size();
+            let size = entry_size(&entry);
+            let width = size.inline_size().unwrap_throw();
+            let height = size.block_size().unwrap_throw();
             on_resize(width, height);
         };
 
@@ -38,6 +38,19 @@ impl Drop for ResizeObserver {
     fn drop(&mut self) {
         self.observer.disconnect();
     }
+}
+
+fn entry_size(entry: &native::ResizeObserverEntry) -> native::ResizeObserverSize {
+    let size = entry.border_box_size();
+    // Firefox and maybe others
+    if size.is_instance_of::<native::ResizeObserverSize>() {
+        return size.unchecked_into();
+    }
+    // Chrome and maybe others
+    if size.is_instance_of::<js_sys::Array>() {
+        return size.unchecked_into::<js_sys::Array>().get(0).unchecked_into();
+    }
+    panic!("cannot get ResizeObserverSize from ResizeObserverEntry")
 }
 
 // ----- Native ------
@@ -67,17 +80,17 @@ mod native {
         pub type ResizeObserverEntry;
 
         #[wasm_bindgen(method, getter, js_name = "borderBoxSize")]
-        pub fn border_box_size(this: &ResizeObserverEntry) -> ResizeObserverSize;
+        pub fn border_box_size(this: &ResizeObserverEntry) -> JsValue;
 
         // ------ ResizeObserverSize ------
 
         pub type ResizeObserverSize;
 
-        #[wasm_bindgen(method, getter, js_name = "blockSize")]
-        pub fn block_size(this: &ResizeObserverSize) -> u32;
+        #[wasm_bindgen(catch, method, getter, js_name = "blockSize")]
+        pub fn block_size(this: &ResizeObserverSize) -> Result<u32, JsValue>;
 
-        #[wasm_bindgen(method, getter, js_name = "inlineSize")]
-        pub fn inline_size(this: &ResizeObserverSize) -> u32;
+        #[wasm_bindgen(catch, method, getter, js_name = "inlineSize")]
+        pub fn inline_size(this: &ResizeObserverSize) -> Result<u32, JsValue>;
     }
 
 }
