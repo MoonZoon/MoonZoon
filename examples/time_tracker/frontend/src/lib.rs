@@ -7,6 +7,7 @@ mod time_tracker_page;
 mod time_blocks_page;
 mod home_page;
 mod router;
+mod theme;
 
 #[wasm_bindgen(start)]
 pub fn start() {
