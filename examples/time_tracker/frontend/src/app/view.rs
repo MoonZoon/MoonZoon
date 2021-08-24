@@ -10,6 +10,7 @@ pub fn root() -> impl Element {
             Column::new()
                 .item(header())
                 .item_signal(super::show_menu_panel().map_true(menu_panel))
+                .item_signal(super::viewport_width().signal())
                 // .item(page())
         )
 }
