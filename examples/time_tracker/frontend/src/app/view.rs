@@ -1,6 +1,5 @@
 use zoon::*;
-use crate::router::Route;
-// use crate::{login_page, }
+use crate::{router::Route, theme::Theme};
 
 pub fn root() -> impl Element {
     El::new()
@@ -15,25 +14,33 @@ pub fn root() -> impl Element {
 }
 
 fn header() -> impl Element {
-    Row::new()
-        .item(
-            El::new()
-                .s(Font::new().weight(NamedWeight::Bold))
-                .child("TT")
-        )
+    Row::with_tag(Tag::Nav)
+        .s(Height::new(64))
+        .s(Background::new().color(Theme::Background1))
+        .s(Font::new().color(Theme::Font1))
+        .item(logo())
         .item_signal(super::wide_screen().map_true(|| {
-            Row::new().items(menu_links())
+            Row::new().s(Height::fill()).items(menu_links())
         }))
         .item_signal(super::saving().signal().map_true(|| "Saving..."))
         .item_signal(super::wide_screen().map_true(auth_controls))
         .item_signal(super::wide_screen().map_false(hamburger))
 }
 
+fn logo() -> impl Element {
+    Link::new()
+        .s(Height::fill())
+        .s(Font::new().weight(NamedWeight::Bold).size(32))
+        .s(Padding::new().x(12))
+        .to(Route::Root)
+        .label(Row::new().s(Height::fill()).item("TT"))
+}
+
 fn hamburger() -> impl Element {
     Button::new()
         .on_press(super::toggle_menu)
         // .on_click(super::menu_part_clicked)
-        .label_signal(super::menu_opened().signal().map_bool(|| "X", || "☰"))
+        .label_signal(super::menu_opened().signal().map_bool(|| "✕", || "☰"))
 }
 
 fn menu_panel() -> impl Element {
@@ -45,27 +52,61 @@ fn menu_panel() -> impl Element {
 
 fn menu_links() -> Vec<impl Element> {
     vec![
-        Link::new().to(Route::TimeTracker).label("Timer Tracker"),
-        Link::new().to(Route::ClientsAndProjects).label("Clients & Projects"),
-        Link::new().to(Route::TimeBlocks).label("Timer Blocks"),
+        menu_link(Route::TimeTracker, "Time Tracker"),
+        menu_link(Route::ClientsAndProjects, "Clients & Projects"),
+        menu_link(Route::TimeBlocks, "Time Blocks"),
     ]
+}
+
+fn menu_link(route: Route, label: &str) -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Link::new()
+        .s(Height::fill())
+        .s(Padding::new().x(12))
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || Theme::Background1Highlighted,
+            || Theme::Transparent,
+        )))
+        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .to(route)
+        .label(Row::new().s(Height::fill()).item(label))
 }
 
 fn auth_controls() -> impl Element {
     Row::new()
+        .s(Align::new().right())
+        .s(Padding::new().x(12))
         .item_signal(super::logged_user().signal_cloned())
         .item_signal(super::is_user_logged_signal().map_false(login_button))
         .item_signal(super::is_user_logged_signal().map_true(logout_button))
 }
 
 fn login_button() -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Link::new()
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || Theme::Background3Highlighted,
+            || Theme::Background3,
+        )))
+        .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
+        .s(Padding::new().x(15).y(10))
+        .s(RoundedCorners::all(4))
+        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .to(Route::Login)
         .label("Log in")
 }
 
 fn logout_button() -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || Theme::Background2Highlighted,
+            || Theme::Background2,
+        )))
+        .s(Font::new().color(Theme::Font2))
+        .s(Padding::new().x(15).y(10))
+        .s(RoundedCorners::all(4))
+        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .on_press(super::log_out)
         .label("Log out")
 }
