@@ -64,6 +64,7 @@ impl<EmptyFlag> Styleable<'_, RawHtmlEl> for Row<EmptyFlag> {}
 impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Row<EmptyFlag> {}
 impl<EmptyFlag> MouseEventAware<RawHtmlEl> for Row<EmptyFlag> {}
 impl<EmptyFlag> MutableViewport<RawHtmlEl> for Row<EmptyFlag> {}
+impl<EmptyFlag> ResizableViewport<RawHtmlEl> for Row<EmptyFlag> {}
 impl<EmptyFlag> Hookable<RawHtmlEl> for Row<EmptyFlag> {
     type WSElement = HtmlElement;
 }

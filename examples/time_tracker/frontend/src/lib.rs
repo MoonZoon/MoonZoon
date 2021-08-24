@@ -1,11 +1,11 @@
 use zoon::*;
 
 mod app;
-// mod login;
-// mod clients_and_projects;
-// mod time_tracker;
-// mod time_blocks;
-// mod home;
+mod login_page;
+mod clients_and_projects_page;
+mod time_tracker_page;
+mod time_blocks_page;
+mod home_page;
 mod router;
 
 #[wasm_bindgen(start)]
