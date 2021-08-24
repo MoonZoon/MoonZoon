@@ -61,7 +61,7 @@ pub use wasm_bindgen::{self, prelude::*, JsCast};
 use wasm_bindgen_futures::spawn_local;
 pub use wasm_bindgen_futures::JsFuture;
 pub use web_sys;
-pub use resize_observer::{ResizeObserver, ResizeObserverEntry};
+pub use resize_observer::ResizeObserver;
 
 #[cfg(feature = "connection")]
 pub use connection::{Connection, SendUpMsgError};

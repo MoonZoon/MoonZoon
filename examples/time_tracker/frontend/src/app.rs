@@ -51,7 +51,7 @@ fn saving() -> &'static Mutable<bool> {
 }
 
 #[static_ref]
-fn scene_width() -> &'static Mutable<u32> {
+fn viewport_width() -> &'static Mutable<u32> {
     Mutable::new(0)
 }
 
@@ -67,9 +67,8 @@ pub fn is_user_logged() -> bool {
 //   Handlers
 // ------ ------
 
-fn on_viewport_size_change(scene: Scene, _viewport: Viewport) {
-    zoon::println!("on_viewport_size_change: {}", scene.width());
-    scene_width().set(scene.width())
+fn on_viewport_size_change(width: u32, _height: u32) {
+    viewport_width().set(width)
 }
 
 // ------ ------
@@ -95,7 +94,7 @@ fn toggle_menu() {
 }
 
 fn set_viewport_width(width: u32) {
-    scene_width().set(width)
+    viewport_width().set(width)
 }
 
 // ------ ------
@@ -104,7 +103,7 @@ fn set_viewport_width(width: u32) {
 
 
 fn show_links_and_controls() -> impl Signal<Item = bool> {
-    scene_width().signal().map(|width| width > MENU_BREAKPOINT)
+    viewport_width().signal().map(|width| width > MENU_BREAKPOINT)
 }
 
 fn show_menu_panel() -> impl Signal<Item = bool> {
