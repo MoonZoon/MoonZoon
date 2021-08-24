@@ -1,10 +1,14 @@
-// use zoon::*;
+use zoon::*;
 // use ulid::Ulid;
 // use std::borrow::Cow;
 // use crate::app;
 // use shared::{ClientId, ProjectId, DownMsg};
 
-pub mod view;
+mod view;
+
+pub fn view() -> RawElement {
+    view::page().into_raw_element()
+}
 
 // blocks!{
 //     append_blocks![els]
