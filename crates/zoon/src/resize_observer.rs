@@ -14,19 +14,15 @@ impl ResizeObserver {
 
         let callback = move |entries: Vec<native::ResizeObserverEntry>| {
             let entry = &entries[0];
-            let size = entry_size(&entry);
-            let width = size.inline_size().unwrap_throw();
-            let height = size.block_size().unwrap_throw();
+            let (width, height) = entry_size(&entry);
             on_resize(width, height);
         };
-
         let callback = Closure::wrap(
             Box::new(callback) as Box<dyn Fn(Vec<native::ResizeObserverEntry>)>
         );
 
         let observer = native::ResizeObserver::new(callback.as_ref().unchecked_ref());
         observer.observe(ws_element);
-
         Self {
             observer,
             _callback: callback,
@@ -40,17 +36,27 @@ impl Drop for ResizeObserver {
     }
 }
 
-fn entry_size(entry: &native::ResizeObserverEntry) -> native::ResizeObserverSize {
+fn entry_size(entry: &native::ResizeObserverEntry) -> (u32, u32) {
+    if not(js_sys::Reflect::has(entry, &"borderBoxSize".into()).unwrap_throw()) {
+        // Safari, browsers on iOS and maybe others
+        let dom_rect = entry.content_rect();
+        return (dom_rect.width() as u32, dom_rect.height() as u32)
+    }
+
     let size = entry.border_box_size();
-    // Firefox and maybe others
-    if size.is_instance_of::<native::ResizeObserverSize>() {
-        return size.unchecked_into();
-    }
-    // Chrome and maybe others
-    if size.is_instance_of::<js_sys::Array>() {
-        return size.unchecked_into::<js_sys::Array>().get(0).unchecked_into();
-    }
-    panic!("cannot get ResizeObserverSize from ResizeObserverEntry")
+    let size: native::ResizeObserverSize = if size.is_instance_of::<native::ResizeObserverSize>() {
+        // Firefox and maybe others
+        size.unchecked_into()
+    } else if size.is_instance_of::<js_sys::Array>() {
+        // Chrome and maybe others
+        size.unchecked_into::<js_sys::Array>().get(0).unchecked_into()
+    } else {
+        panic!("cannot get size from ResizeObserverEntry")
+    };
+    
+    let width = size.inline_size();
+    let height = size.block_size();
+    (width, height)
 }
 
 // ----- Native ------
@@ -58,7 +64,7 @@ fn entry_size(entry: &native::ResizeObserverEntry) -> native::ResizeObserverSize
 mod native {
     use crate::*;
     use js_sys::Function;
-    use web_sys::Element;
+    use web_sys::{Element, DomRectReadOnly};
 
     #[wasm_bindgen]
     extern "C" {
@@ -82,15 +88,18 @@ mod native {
         #[wasm_bindgen(method, getter, js_name = "borderBoxSize")]
         pub fn border_box_size(this: &ResizeObserverEntry) -> JsValue;
 
+        #[wasm_bindgen(method, getter, js_name = "contentRect")]
+        pub fn content_rect(this: &ResizeObserverEntry) -> DomRectReadOnly;
+
         // ------ ResizeObserverSize ------
 
         pub type ResizeObserverSize;
 
-        #[wasm_bindgen(catch, method, getter, js_name = "blockSize")]
-        pub fn block_size(this: &ResizeObserverSize) -> Result<u32, JsValue>;
+        #[wasm_bindgen(method, getter, js_name = "blockSize")]
+        pub fn block_size(this: &ResizeObserverSize) -> u32;
 
-        #[wasm_bindgen(catch, method, getter, js_name = "inlineSize")]
-        pub fn inline_size(this: &ResizeObserverSize) -> Result<u32, JsValue>;
+        #[wasm_bindgen(method, getter, js_name = "inlineSize")]
+        pub fn inline_size(this: &ResizeObserverSize) -> u32;
     }
 
 }

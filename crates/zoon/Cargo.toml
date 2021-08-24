@@ -42,6 +42,7 @@ features = [
   'CssStyleDeclaration',
   'CssStyleRule',
   'CssStyleSheet',
+  'DomRectReadOnly',
   'Element',
   'Event',
   'Headers',
