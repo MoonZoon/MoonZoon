@@ -37,10 +37,25 @@ fn logo() -> impl Element {
 }
 
 fn hamburger() -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
+        .s(Height::fill())
+        .s(Align::new().right())
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || Theme::Background1Highlighted,
+            || Theme::Transparent,
+        )))
+        .s(Font::new().size(25))
+        .s(Padding::new().bottom(4))
+        .s(Width::new(64))
         .on_press(super::toggle_menu)
+        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         // .on_click(super::menu_part_clicked)
-        .label_signal(super::menu_opened().signal().map_bool(|| "✕", || "☰"))
+        .label(
+            Row::new()
+                .s(Height::fill())
+                .item_signal(super::menu_opened().signal().map_bool(|| "✕", || "☰"))
+        )
 }
 
 fn menu_panel() -> impl Element {
