@@ -22,11 +22,11 @@ struct ClassIdGenerator {
 }
 
 impl ClassIdGenerator {
-    fn next_class_id(&self) -> String {
-        ["_", &self.index_generator.next_index().to_string()].concat()
+    fn next_class_id(&self) -> ClassId {
+        ClassId::new(["_", &self.index_generator.next_index().to_string()].concat())
     }
 
-    fn remove_class_id(&self, class_id: &str) {
+    fn remove_class_id(&self, class_id: ClassId) {
         self.index_generator
             .remove_index(class_id[1..].parse().unwrap_throw());
     }
@@ -183,5 +183,5 @@ pub trait RawEl: Sized {
 
     // --
 
-    fn class_id(&self) -> Rc<String>;
+    fn class_id(&self) -> ClassId;
 }

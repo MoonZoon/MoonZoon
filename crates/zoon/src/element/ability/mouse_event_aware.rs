@@ -22,7 +22,11 @@ pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
         self.update_raw_el(|raw_el| raw_el.event_handler(move |_: events::DoubleClick| handler()))
     }
 
-    fn on_click_outside(self, handler: impl FnOnce() + Clone + 'static) -> Self {
+    fn on_click_outside(
+        self, 
+        handler: impl FnOnce() + Clone + 'static, 
+        ignored_class_ids: impl IntoIterator<Item = ClassId>,
+    ) -> Self {
         let handler = move || handler.clone()();
         self.update_raw_el(|raw_el| {
             let class_id_selector = Rc::new([".", &raw_el.class_id()].concat());
