@@ -59,6 +59,7 @@ features = [
   'Request',
   'RequestInit',
   'Storage',
+  'WheelEvent',
 ]
 default-features = false
 
