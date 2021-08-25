@@ -24,3 +24,6 @@ pub use add_nearby_element::AddNearbyElement;
 
 mod choosable_tag;
 pub use choosable_tag::{ChoosableTag, Tag};
+
+mod has_class_id;
+pub use has_class_id::HasClassId;
