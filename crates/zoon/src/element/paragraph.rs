@@ -52,6 +52,7 @@ impl<EmptyFlag> Hookable<RawHtmlEl> for Paragraph<EmptyFlag> {
     type WSElement = HtmlParagraphElement;
 }
 impl<EmptyFlag> AddNearbyElement<'_> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> HasClassId<RawHtmlEl> for Paragraph<EmptyFlag> {}
 
 // ------ ------
 //  Attributes

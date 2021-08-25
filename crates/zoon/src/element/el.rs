@@ -68,6 +68,7 @@ impl<ChildFlag> Hookable<RawHtmlEl> for El<ChildFlag> {
     type WSElement = HtmlElement;
 }
 impl<ChildFlag> AddNearbyElement<'_> for El<ChildFlag> {}
+impl<ChildFlag> HasClassId<RawHtmlEl> for El<ChildFlag> {}
 
 // ------ ------
 //  Attributes

@@ -45,6 +45,7 @@ impl<WidthFlag, HeightFlag> Hookable<RawHtmlEl> for Canvas<WidthFlag, HeightFlag
     type WSElement = HtmlCanvasElement;
 }
 impl<WidthFlag, HeightFlag> AddNearbyElement<'_> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> HasClassId<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
 
 // ------ ------
 //  Attributes

@@ -1,5 +1,4 @@
 use crate::*;
-use std::rc::Rc;
 
 pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
     fn on_hovered_change(self, handler: impl FnOnce(bool) + Clone + 'static) -> Self {
@@ -28,12 +27,23 @@ pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
         ignored_class_ids: impl IntoIterator<Item = ClassId>,
     ) -> Self {
         let handler = move || handler.clone()();
-        self.update_raw_el(|raw_el| {
-            let class_id_selector = raw_el.class_id().map(|class_id| {
-                [".", class_id.unwrap_throw()].concat()
-            });
+        let mut ignored_class_ids = ignored_class_ids.into_iter().collect::<Vec<_>>();
+
+        self.update_raw_el(move |raw_el| {
+            ignored_class_ids.push(raw_el.class_id());
+
             raw_el.global_event_handler(move |event: events::Click| {
-                if closest(event.target(), &class_id_selector).is_none() {
+                let selector = ignored_class_ids
+                    .iter()
+                    .filter_map(|class_id| {
+                        class_id.map(|option_class_id| {
+                            Some([".", &option_class_id?].concat())
+                        })
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                if closest(event.target(), &selector).is_none() {
                     handler()
                 }
             })

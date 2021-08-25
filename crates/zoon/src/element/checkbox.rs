@@ -109,6 +109,10 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> AddNearbyElement<'_
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
 }
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> HasClassId<RawHtmlEl>
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+{
+}
 
 // ------ ------
 //  Attributes
