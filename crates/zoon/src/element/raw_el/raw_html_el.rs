@@ -14,11 +14,13 @@ pub struct RawHtmlEl {
 impl RawHtmlEl {
     pub fn new(tag: &str) -> Self {
         let class_id = class_id_generator().next_class_id();
+
+        let mut dom_builder = DomBuilder::new_html(tag);
+        dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
+
         Self {
             class_id: class_id.clone(),
-            dom_builder: DomBuilder::new_html(tag)
-                .class(class_id.as_str())
-                .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
+            dom_builder: dom_builder.after_removed(move |_| class_id_generator().remove_class_id(class_id)),
         }
     }
 }
