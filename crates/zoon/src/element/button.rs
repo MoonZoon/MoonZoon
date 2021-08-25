@@ -52,6 +52,7 @@ impl<LabelFlag, OnPressFlag> Hookable<RawHtmlEl> for Button<LabelFlag, OnPressFl
     type WSElement = HtmlDivElement;
 }
 impl<LabelFlag, OnPressFlag> AddNearbyElement<'_> for Button<LabelFlag, OnPressFlag> {}
+impl<LabelFlag, OnPressFlag> HasClassId<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
 
 // ------ ------
 //  Attributes

@@ -55,7 +55,7 @@ fn hamburger() -> impl Element {
                 .s(Height::fill())
                 .item_signal(super::menu_opened().signal().map_bool(|| "✕", || "☰"))
         )
-        // .class_id(super::set_hamburger_class_id)
+        .class_id(super::set_hamburger_class_id)
 }
 
 fn menu_panel() -> impl Element {
@@ -69,7 +69,10 @@ fn menu_panel() -> impl Element {
             Shadow::new().y(8).blur(16).color(Theme::Shadow)
         ]))
         .s(RoundedCorners::new().bottom(10))
-        .on_click_outside(super::close_menu, Some(super::hamburger_class_id().get_cloned()))
+        .on_click_outside(
+            super::close_menu, 
+            Some(super::hamburger_class_id().get_cloned())
+        )
         .after_remove(|_| super::close_menu())
         .items(menu_links(true))
         .item(El::new().s(Height::new(10)))
