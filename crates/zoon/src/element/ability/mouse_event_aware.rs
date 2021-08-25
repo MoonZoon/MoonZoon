@@ -29,7 +29,9 @@ pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
     ) -> Self {
         let handler = move || handler.clone()();
         self.update_raw_el(|raw_el| {
-            let class_id_selector = Rc::new([".", &raw_el.class_id()].concat());
+            let class_id_selector = raw_el.class_id().map(|class_id| {
+                [".", class_id.unwrap_throw()].concat()
+            });
             raw_el.global_event_handler(move |event: events::Click| {
                 if closest(event.target(), &class_id_selector).is_none() {
                     handler()

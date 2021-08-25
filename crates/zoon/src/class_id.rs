@@ -1,18 +1,19 @@
-use std::{sync::Arc, ops::Deref};
+use crate::*;
+use std::sync::{Arc, RwLock, RwLockReadGuard};
 
-#[derive(Clone)]
-pub struct ClassId(Arc<String>);
+#[derive(Clone, Default)]
+pub struct ClassId(Arc<RwLock<Option<String>>>);
 
 impl ClassId {
     pub(crate) fn new(class_id: String) -> Self {
-        Self(Arc::new(class_id))
+        Self(Arc::new(RwLock::new(Some(class_id))))
     }
-}
 
-impl Deref for ClassId {
-    type Target = String;
+    pub (crate) fn take(&self) -> Option<String> {
+        self.0.write().expect_throw("cannot write to ClassId").take()
+    }
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
+    pub fn map<T>(&self, f: impl FnOnce(Option<&String>) -> T) -> T {
+        f(self.0.read().expect_throw("cannot read ClassId").as_ref())
     }
 }

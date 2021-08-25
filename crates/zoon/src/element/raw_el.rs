@@ -1,6 +1,6 @@
 use crate::*;
 use once_cell::race::OnceBox;
-use std::{mem::ManuallyDrop, rc::Rc};
+use std::mem::ManuallyDrop;
 use web_sys::{EventTarget, Node};
 
 mod raw_html_el;
@@ -27,6 +27,7 @@ impl ClassIdGenerator {
     }
 
     fn remove_class_id(&self, class_id: ClassId) {
+        let class_id = class_id.take().unwrap_throw();
         self.index_generator
             .remove_index(class_id[1..].parse().unwrap_throw());
     }
@@ -150,7 +151,9 @@ pub trait RawEl: Sized {
     ) -> Self;
 
     fn style_group(self, mut group: StyleGroup) -> Self {
-        group.selector = [".", &self.class_id(), &group.selector].concat().into();
+        group.selector = self.class_id().map(|class_id| {
+            [".", class_id.unwrap_throw(), &group.selector].concat().into()
+        });
         let group_handle = global_styles().style_group_droppable(group);
         self.after_remove(|_| drop(group_handle))
     }
