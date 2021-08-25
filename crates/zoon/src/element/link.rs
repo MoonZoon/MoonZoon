@@ -49,6 +49,7 @@ impl<LabelFlag, ToFlag> Hookable<RawHtmlEl> for Link<LabelFlag, ToFlag> {
     type WSElement = HtmlAnchorElement;
 }
 impl<LabelFlag, ToFlag> AddNearbyElement<'_> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> HasClassId<RawHtmlEl> for Link<LabelFlag, ToFlag> {}
 
 // ------ ------
 //  Attributes

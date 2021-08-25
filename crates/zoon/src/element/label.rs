@@ -45,6 +45,7 @@ impl<LabelFlag, ForInputFlag> Hookable<RawHtmlEl> for Label<LabelFlag, ForInputF
     type WSElement = HtmlLabelElement;
 }
 impl<LabelFlag, ForInputFlag> AddNearbyElement<'_> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> HasClassId<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
 
 // ------ ------
 //  Attributes

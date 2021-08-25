@@ -72,6 +72,7 @@ impl<EmptyFlag> Hookable<RawHtmlEl> for Column<EmptyFlag> {
     type WSElement = HtmlElement;
 }
 impl<EmptyFlag> AddNearbyElement<'_> for Column<EmptyFlag> {}
+impl<EmptyFlag> HasClassId<RawHtmlEl> for Column<EmptyFlag> {}
 
 // ------ ------
 //  Attributes

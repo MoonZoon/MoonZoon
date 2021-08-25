@@ -84,6 +84,10 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> AddNearbyElemen
     for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
 {
 }
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag> HasClassId<RawHtmlEl>
+    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag>
+{
+}
 
 // ------ ------
 //  Attributes

@@ -1,5 +1,5 @@
 use crate::*;
-use std::sync::{Arc, RwLock, RwLockReadGuard};
+use std::sync::{Arc, RwLock};
 
 #[derive(Clone, Default)]
 pub struct ClassId(Arc<RwLock<Option<String>>>);
