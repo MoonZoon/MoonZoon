@@ -49,7 +49,7 @@ fn hamburger() -> impl Element {
         .s(Padding::new().bottom(4))
         .s(Width::new(64))
         .on_press(super::toggle_menu)
-        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .label(
             Row::new()
                 .s(Height::fill())
@@ -96,7 +96,7 @@ fn menu_link(route: Route, label: &str, in_menu_panel: bool) -> impl Element {
             move || if in_menu_panel { Theme::Background2Highlighted } else { Theme::Background1Highlighted },
             || Theme::Transparent,
         )))
-        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .to(route)
         .label(Row::new().s(Height::fill()).item(label))
 }
@@ -120,7 +120,7 @@ fn login_button() -> impl Element {
         .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))
-        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .to(Route::Login)
         .label("Log in")
 }
@@ -135,7 +135,7 @@ fn logout_button() -> impl Element {
         .s(Font::new().color(Theme::Font2))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))
-        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(super::log_out)
         .label("Log out")
 }
