@@ -45,6 +45,8 @@ async fn frontend() -> Frontend {
 // }
 
 async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
+    println!("{:?}", req);
+
     let UpMsgRequest { up_msg, cor_id, session_id, auth_token } = req;
     // let down_msg = match up_msg {
 

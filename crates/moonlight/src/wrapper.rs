@@ -5,6 +5,7 @@ mod duration;
 #[cfg(feature = "chrono")]
 mod datetime;
 
+#[derive(Debug)]
 pub struct Wrapper<T> {
     pub inner: T
 }

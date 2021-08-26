@@ -1,14 +1,15 @@
-use zoon::*;
-use shared::{UpMsg, DownMsg, User};
+use zoon::{*, eprintln};
 use crate::{
-    router::{previous_route, router, Route},
+    router::{router, Route},
+    connection::connection,
 };
+use std::collections::BTreeSet;
+use shared::{User, UpMsg};
 
 mod view;
 
-const USER_STORAGE_KEY: &str = "moonzoon-time_tracker-user";
+pub static USER_STORAGE_KEY: &str = "moonzoon-time_tracker-user";
 const MENU_BREAKPOINT: u32 = 700;
-
 
 // ------ ------
 //     Types
@@ -29,7 +30,7 @@ pub enum PageId {
 // ------ ------
 
 #[static_ref]
-pub fn logged_user() -> &'static Mutable<Option<String>> {
+pub fn logged_user() -> &'static Mutable<Option<User>> {
     Mutable::new(None)
 }
 
@@ -58,12 +59,25 @@ fn hamburger_class_id() -> &'static Mutable<ClassId> {
     Mutable::new(ClassId::default())
 }
 
+#[static_ref]
+pub fn unfinished_mutations() -> &'static Mutable<BTreeSet<CorId>> {
+    Mutable::new(BTreeSet::new())
+}
+
 // ------ ------
 //    Helpers
 // ------ ------
 
 pub fn is_user_logged() -> bool {
     logged_user().map(Option::is_some)
+}
+
+fn logged_user_name() -> Option<String> {
+    Some(logged_user().lock_ref().as_ref()?.name.clone())
+}
+
+pub fn auth_token() -> Option<AuthToken> {
+    Some(logged_user().lock_ref().as_ref()?.auth_token.clone())
 }
 
 // ------ ------
@@ -74,17 +88,36 @@ fn on_viewport_size_change(width: u32, _height: u32) {
     viewport_width().set(width)
 }
 
+pub fn on_logged_out_msg() {
+    logged_user().take();
+    local_storage().remove(USER_STORAGE_KEY);
+    router().go(Route::Root);
+}
+
 // ------ ------
 //   Commands
 // ------ ------
+
+pub fn set_logged_user(user: User) {
+    logged_user().set(Some(user));
+}
+
+pub fn load_logged_user() {
+    if let Some(Ok(user)) = local_storage().get(USER_STORAGE_KEY) {
+        set_logged_user(user);
+    }
+}
 
 pub fn set_page_id(new_page_id: PageId) {
     page_id().set_neq(new_page_id);
 }
 
 pub fn log_out() {
-    logged_user().take();
-    router().go(Route::Root);
+    Task::start(async {
+        if let Err(error) = connection().send_up_msg(UpMsg::Logout).await {
+            eprintln!("logout request failed: {}", error)
+        }
+    });
 }
 
 fn toggle_menu() {

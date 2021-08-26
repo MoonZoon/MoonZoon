@@ -1,7 +1,7 @@
 use crate::*;
 use std::{fmt, str::FromStr};
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash, PartialOrd, Ord)]
 pub struct EntityId(Ulid);
 
 impl EntityId {
