@@ -11,12 +11,14 @@ impl<'a> Height<'a> {
         let mut this = Self::default();
         this.static_css_props.insert("height", px(height));
         this.static_css_classes.insert("exact_height".into());
+        this.static_css_classes.remove("fill_height".into());
         this
     }
 
     pub fn fill() -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("height", "100%".into());
+        this.static_css_classes.insert("fill_height".into());
         this.static_css_classes.remove("exact_height".into());
         this
     }
@@ -25,11 +27,17 @@ impl<'a> Height<'a> {
         let mut this = Self::default();
         this.static_css_props.insert("height", "100vh".into());
         this.static_css_classes.insert("exact_height".into());
+        this.static_css_classes.remove("fill_height".into());
         this
     }
 
     pub fn min_screen(mut self) -> Self {
         self.static_css_props.insert("min-height", "100vh".into());
+        self
+    }
+
+    pub fn max(mut self, height: u32) -> Self {
+        self.static_css_props.insert("max-height", px(height));
         self
     }
 }

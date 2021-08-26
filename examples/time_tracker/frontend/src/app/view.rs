@@ -2,14 +2,11 @@ use zoon::*;
 use crate::{router::Route, theme::Theme};
 
 pub fn root() -> impl Element {
-    El::new()
+    Column::new()
         .s(Height::fill().min_screen())
         .on_viewport_size_change(super::on_viewport_size_change)
-        .child(
-            Column::new()
-                .item(header())
-                .item(page())
-        )
+        .item(header())
+        .item_signal(super::page_id().signal().map(page))
 }
 
 fn header() -> impl Element {
@@ -140,16 +137,13 @@ fn logout_button() -> impl Element {
         .label("Log out")
 }
 
-fn page() -> impl Element {
-    El::new()
-        .s(Width::fill())
-        .s(Height::fill())
-        .child_signal(super::page_id().signal().map(|page_id| match page_id {
-            super::PageId::Login => crate::login_page::view(),
-            super::PageId::ClientsAndProjects => crate::clients_and_projects_page::view(),
-            super::PageId::TimeTracker => crate::time_tracker_page::view(),
-            super::PageId::TimeBlocks => crate::time_blocks_page::view(),
-            super::PageId::Home => crate::home_page::view(),
-            super::PageId::Unknown => El::new().child(404).into_raw_element(),
-        }))
+fn page(page_id: super::PageId) -> impl Element {
+    match page_id {
+        super::PageId::Login => crate::login_page::view(),
+        super::PageId::ClientsAndProjects => crate::clients_and_projects_page::view(),
+        super::PageId::TimeTracker => crate::time_tracker_page::view(),
+        super::PageId::TimeBlocks => crate::time_blocks_page::view(),
+        super::PageId::Home => crate::home_page::view(),
+        super::PageId::Unknown => El::new().child(404).into_raw_element(),
+    }
 }
