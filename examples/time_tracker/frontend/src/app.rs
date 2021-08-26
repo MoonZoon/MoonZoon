@@ -8,10 +8,6 @@ use crate::{
 
 mod view;
 
-pub fn root() -> impl Element {
-    view::root()
-}
-
 const USER_STORAGE_KEY: &str = "moonzoon-time_tracker-user";
 const MENU_BREAKPOINT: u32 = 700;
 
@@ -88,11 +84,6 @@ pub fn set_page_id(new_page_id: PageId) {
     page_id().set_neq(new_page_id);
 }
 
-pub fn log_in(name: String) {
-    logged_user().set(Some(name));
-    router().go(previous_route().unwrap_or(Route::Root));
-}
-
 pub fn log_out() {
     logged_user().take();
     router().go(Route::Root);
@@ -131,7 +122,13 @@ fn is_user_logged_signal() -> impl Signal<Item = bool> {
     logged_user().signal_ref(Option::is_some)
 }
 
+// ------ ------
+//     View
+// ------ ------
 
+pub fn root() -> impl Element {
+    view::root()
+}
 
 
 // blocks!{

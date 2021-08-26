@@ -33,7 +33,7 @@ pub mod text;
 pub use text::Text;
 
 pub mod text_input;
-pub use text_input::{Placeholder, TextInput};
+pub use text_input::{Placeholder, TextInput, InputType};
 
 // --
 
