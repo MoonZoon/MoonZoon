@@ -11,19 +11,22 @@ pub type InvoiceId = EntityId;
 pub type TimeEntryId = EntityId;
 pub type UserId = EntityId;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct User {
-    id: UserId,
-    name: String,
-    auth_token: AuthToken,
+    pub id: UserId,
+    pub name: String,
+    pub auth_token: AuthToken,
 }
 
 // ------ UpMsg ------
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum UpMsg {
     // ------ Auth ------
-    Login(String),
+    Login {
+        name: String,
+        password: String,
+    },
     Logout,
     // ------ Page data ------
     GetClientsAndProjectsClients,
@@ -58,10 +61,10 @@ pub enum UpMsg {
 
 // ------ DownMsg ------
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum DownMsg {
     // ------ Auth ------
-    InvalidPassword,
+    LoginError(String),
     LoggedIn(User),
     LoggedOut,
     AccessDenied,

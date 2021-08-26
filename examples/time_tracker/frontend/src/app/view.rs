@@ -136,7 +136,7 @@ fn logout_button() -> impl Element {
         .label(
             Row::new()
                 .item(El::new().s(Font::new().weight(NamedWeight::SemiBold)).child("Log out "))
-                .item(super::logged_user().get_cloned())
+                .item(super::logged_user_name())
         )
 }
 
