@@ -45,3 +45,7 @@ html {
 #app > .exact_height {
     flex-shrink: 0;
 }
+
+#app > .fill_height {
+    flex-grow: 1;
+}

@@ -11,12 +11,14 @@ impl<'a> Width<'a> {
         let mut this = Self::default();
         this.static_css_props.insert("width", px(width));
         this.static_css_classes.insert("exact_width".into());
+        this.static_css_classes.remove("fill_width".into());
         this
     }
 
     pub fn fill() -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("width", "100%".into());
+        this.static_css_classes.insert("fill_width".into());
         this.static_css_classes.remove("exact_width".into());
         this
     }
