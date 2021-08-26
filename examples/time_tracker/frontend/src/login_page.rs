@@ -1,4 +1,5 @@
 use zoon::*;
+use std::borrow::Cow;
 use crate::{app, router::{router, previous_route, Route}};
 
 mod view;
@@ -8,7 +9,7 @@ mod view;
 // ------ ------
 
 #[static_ref]
-fn login_error() -> &'static Mutable<Option<String>> {
+fn login_error() -> &'static Mutable<Option<Cow<'static, str>>> {
     Mutable::new(None)
 }
 
@@ -29,7 +30,7 @@ fn password() -> &'static Mutable<String> {
 fn log_in() {
     login_error().take();
     if name().map(String::is_empty) || password().map(String::is_empty) {
-        login_error().set(Some("Sorry, invalid name or password.".to_owned()));
+        login_error().set(Some(Cow::from("Sorry, invalid name or password.")));
         return;
     }
 

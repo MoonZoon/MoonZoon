@@ -1,7 +1,5 @@
 use zoon::*;
 use shared::{UpMsg, DownMsg, User};
-use std::mem;
-use std::collections::HashSet;
 use crate::{
     router::{previous_route, router, Route},
 };

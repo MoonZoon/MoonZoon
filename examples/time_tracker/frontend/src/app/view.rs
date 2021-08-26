@@ -102,7 +102,6 @@ fn auth_controls() -> impl Element {
     Row::new()
         .s(Align::new().right())
         .s(Padding::new().x(12))
-        .item_signal(super::logged_user().signal_cloned())
         .item_signal(super::is_user_logged_signal().map_false(login_button))
         .item_signal(super::is_user_logged_signal().map_true(logout_button))
 }
@@ -134,7 +133,11 @@ fn logout_button() -> impl Element {
         .s(RoundedCorners::all(4))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(super::log_out)
-        .label("Log out")
+        .label(
+            Row::new()
+                .item(El::new().s(Font::new().weight(NamedWeight::SemiBold)).child("Log out "))
+                .item(super::logged_user().get_cloned())
+        )
 }
 
 fn page(page_id: super::PageId) -> impl Element {

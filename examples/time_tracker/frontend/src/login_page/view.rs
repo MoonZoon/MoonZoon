@@ -53,9 +53,10 @@ fn name_input() -> impl Element {
         .id("name")
         .s(Padding::all(5))
         .s(RoundedCorners::all(4))
+        .focused()
         .on_change(super::set_name)
         .text_signal(super::name().signal_cloned())
-        .focused()
+        .on_key_down(|event| event.if_key(Key::Enter, super::log_in))
         .placeholder(Placeholder::new("john@example.com"))
 }
 
@@ -79,15 +80,14 @@ fn password_input() -> impl Element {
         .s(RoundedCorners::all(4))
         .on_change(super::set_password)
         .text_signal(super::password().signal_cloned())
+        .on_key_down(|event| event.if_key(Key::Enter, super::log_in))
         .placeholder(Placeholder::new("Password1"))
         .input_type(InputType::password())
 }
 
 fn error() -> impl Element {
     El::new()
-        .child_signal(super::login_error().signal_ref(|error| {
-            error.as_ref().map(Text::new)
-        }))
+        .child_signal(super::login_error().signal_cloned())
 }
 
 fn login_button() -> impl Element {
@@ -104,54 +104,3 @@ fn login_button() -> impl Element {
         .on_press(super::log_in)
         .label("Log in")
 }
-
-// blocks!{
-
-//     #[el]
-//     fn page() -> Column {
-//         column![
-//             el![
-//                 region::h1(),
-//                 "Login",
-//             ],
-//             login_form(),
-//             error(),
-//         ]
-//     }
-
-//     #[el]
-//     fn login_form() -> Row {
-//         row![
-//             password_input(),
-//             button![
-//                 button::on_press(super::login),
-//                 "Log in",
-//             ]
-//         ]
-//     }
-
-//     #[el]
-//     fn password_input() -> TextInput {
-//         let password = super::password().inner();
-//         text_input![
-//             do_once(focus),
-//             text_input::on_change(super::set_password),
-//             on_key_down(|event| {
-//                 if let Key::Enter = event.key {
-//                     super::login()
-//                 }
-//             }),
-//             password,
-//         ]
-//     }
-
-//     #[el]
-//     fn error() -> Option<El> {
-//         super::invalid_password().inner().then(|| {
-//             el![
-//                 "Sorry, this isn't a valid password."
-//             ]
-//         })
-//     }
-    
-// }
