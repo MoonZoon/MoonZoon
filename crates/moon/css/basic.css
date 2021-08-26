@@ -2,6 +2,10 @@ html {
     line-height: normal;
 }
 
+body * {
+    white-space: pre-wrap;
+}
+
 * {
     margin: 0;
     position: relative;
