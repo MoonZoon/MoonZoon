@@ -1,5 +1,5 @@
 use moon::*;
-use shared::{UpMsg, DownMsg, ClientId, ProjectId};
+use shared::{UpMsg, DownMsg, ClientId, ProjectId, UserId, User};
 
 // mod client;
 // mod invoice;
@@ -48,6 +48,32 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
     println!("{:?}", req);
 
     let UpMsgRequest { up_msg, cor_id, session_id, auth_token } = req;
+
+    let down_msg = match up_msg {
+            // ------ Auth ------
+            UpMsg::Login {name, password } => {
+                if name != "john@example.com" || password != "Password1" {
+                    DownMsg::LoginError("Sorry, invalid name or password.".to_owned())
+                } else {
+                    let user = User {
+                        id: UserId::new(),
+                        name,
+                        auth_token: AuthToken::new("i'm auth token"),
+                    };
+                    DownMsg::LoggedIn(user)
+                }
+
+            },
+            UpMsg::Logout => DownMsg::LoggedOut,
+            _ => return,
+    };
+
+    sessions::by_session_id()
+        .get(session_id)
+        .unwrap()
+        .send_down_msg(&down_msg, cor_id).await;
+
+
     // let down_msg = match up_msg {
 
     //     // ------ Auth ------
