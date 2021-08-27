@@ -78,18 +78,24 @@ fn menu_panel() -> impl Element {
 
 fn menu_links(in_menu_panel: bool) -> Vec<impl Element> {
     vec![
-        menu_link(Route::TimeTracker, "Time Tracker", in_menu_panel),
-        menu_link(Route::ClientsAndProjects, "Clients & Projects", in_menu_panel),
-        menu_link(Route::TimeBlocks, "Time Blocks", in_menu_panel),
+        menu_link(Route::TimeTracker, "Time Tracker", super::PageId::TimeTracker, in_menu_panel),
+        menu_link(Route::ClientsAndProjects, "Clients & Projects", super::PageId::ClientsAndProjects, in_menu_panel),
+        menu_link(Route::TimeBlocks, "Time Blocks", super::PageId::TimeBlocks, in_menu_panel),
     ]
 }
 
-fn menu_link(route: Route, label: &str, in_menu_panel: bool) -> impl Element {
+fn menu_link(route: Route, label: &str, page_id: super::PageId, in_menu_panel: bool) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    let hovered_or_selected = map_ref! {
+        let hovered = hovered_signal,
+        let current_page_id = super::page_id().signal() => move {
+            *hovered || *current_page_id == page_id
+        }
+    };
     Link::new()
         .s(Height::fill())
         .s(Padding::new().x(12))
-        .s(Background::new().color_signal(hovered_signal.map_bool(
+        .s(Background::new().color_signal(hovered_or_selected.map_bool(
             move || if in_menu_panel { Theme::Background2Highlighted } else { Theme::Background1Highlighted },
             || Theme::Transparent,
         )))
