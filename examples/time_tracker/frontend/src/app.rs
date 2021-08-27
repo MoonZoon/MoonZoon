@@ -136,7 +136,6 @@ fn set_hamburger_class_id(class_id: ClassId) {
 //    Signals
 // ------ ------
 
-
 fn wide_screen() -> impl Signal<Item = bool> {
     viewport_width().signal().map(|width| width > MENU_BREAKPOINT).dedupe()
 }
