@@ -9,8 +9,8 @@ serde-lite = { version = "0.1.1", features = ["derive"], default-features = fals
 serde_json = { version = "1.0.64", features = ['std'], default-features = false }
 rusty_ulid = { version = "0.10.1", features = ["ulid-generation"], default-features = false }
 getrandom = { version = "0.2", features = ["js"], default-features = false, optional = true }
-chrono = { version = "0.4", features = ["wasmbind"], default-features = false, optional = true }
+chrono = { version = "0.4", default-features = false, optional = true }
 
 [features]
-frontend = ["getrandom", "chrono"]
-backend = []
+frontend = ["getrandom", "chrono/wasmbind"]
+backend = ["chrono/std"]

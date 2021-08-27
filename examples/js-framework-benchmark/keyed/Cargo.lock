@@ -902,6 +902,7 @@ dependencies = [
 name = "moonlight"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "rusty_ulid",
  "serde-lite",
  "serde_json",
