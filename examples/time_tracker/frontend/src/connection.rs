@@ -1,10 +1,12 @@
-use zoon::*;
+use zoon::{*, println};
 use shared::{UpMsg, DownMsg};
 use crate::{app, login_page};
 
 #[static_ref]
 pub fn connection() -> &'static Connection<UpMsg, DownMsg> {
     Connection::new(|down_msg, cor_id| {
+        println!("DownMsg received: {:?}", down_msg);
+
         app::unfinished_mutations().update_mut(|cor_ids| {
             cor_ids.remove(&cor_id);
         });
