@@ -1,8 +1,8 @@
 use moonlight::*;
 
-mod clients_and_projects;
-mod time_blocks;
-mod time_tracker;
+pub mod clients_and_projects;
+pub mod time_blocks;
+pub mod time_tracker;
 
 pub type ClientId = EntityId;
 pub type ProjectId = EntityId;
