@@ -1,7 +1,42 @@
-use zoon::*;
-// use shared::DownMsg;
+use zoon::{*, eprintln};
+use crate::connection::connection;
+use shared::{UpMsg, time_tracker::Client};
 
 mod view;
+
+// ------ ------
+//    States
+// ------ ------
+
+#[static_ref]
+fn clients() -> &'static Mutable<Option<Vec<Client>>> {
+    Mutable::new(None)
+}
+
+// ------ ------
+//   Commands
+// ------ ------
+
+pub fn load_clients() {
+    if clients().map(Option::is_some) {
+        return;
+    }
+    Task::start(async {
+        let msg = UpMsg::GetTimeTrackerClients;
+        if let Err(error) = connection().send_up_msg(msg).await {
+            let error = error.to_string();
+            eprintln!("get TimeTracker clients request failed: {}", error);
+        }
+    });
+}
+
+pub fn set_clients(new_clients: Vec<Client>) {
+    clients().set(Some(new_clients));
+}
+
+// ------ ------
+//     View
+// ------ ------
 
 pub fn view() -> RawElement {
     view::page().into_raw_element()
