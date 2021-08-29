@@ -1,6 +1,6 @@
 use zoon::{*, println};
 use shared::{UpMsg, DownMsg};
-use crate::{app, login_page};
+use crate::*;
 
 #[static_ref]
 pub fn connection() -> &'static Connection<UpMsg, DownMsg> {
@@ -16,6 +16,10 @@ pub fn connection() -> &'static Connection<UpMsg, DownMsg> {
             DownMsg::LoggedIn(user) => login_page::set_and_store_logged_user(user),
             DownMsg::LoggedOut => app::on_logged_out_msg(),
             DownMsg::AccessDenied => (),
+            // ------ Page data ------
+            DownMsg::ClientsAndProjectsClients(clients) => clients_and_projects_page::set_clients(clients),
+            DownMsg::TimeBlocksClients(clients) => time_blocks_page::set_clients(clients),
+            DownMsg::TimeTrackerClients(clients) => time_tracker_page::set_clients(clients),
             _ => ()
         }
     }).auth_token_getter(app::auth_token)

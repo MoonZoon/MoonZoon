@@ -1,10 +1,42 @@
-use zoon::*;
-// use ulid::Ulid;
-// use std::borrow::Cow;
-// use crate::app;
-// use shared::{ClientId, ProjectId, DownMsg};
+use zoon::{*, eprintln};
+use crate::connection::connection;
+use shared::{UpMsg, clients_and_projects::Client};
 
 mod view;
+
+// ------ ------
+//    States
+// ------ ------
+
+#[static_ref]
+fn clients() -> &'static Mutable<Option<Vec<Client>>> {
+    Mutable::new(None)
+}
+
+// ------ ------
+//   Commands
+// ------ ------
+
+pub fn load_clients() {
+    if clients().map(Option::is_some) {
+        return;
+    }
+    Task::start(async {
+        let msg = UpMsg::GetClientsAndProjectsClients;
+        if let Err(error) = connection().send_up_msg(msg).await {
+            let error = error.to_string();
+            eprintln!("get ClientsAndProjects clients request failed: {}", error);
+        }
+    });
+}
+
+pub fn set_clients(new_clients: Vec<Client>) {
+    clients().set(Some(new_clients));
+}
+
+// ------ ------
+//     View
+// ------ ------
 
 pub fn view() -> RawElement {
     view::page().into_raw_element()
