@@ -4,7 +4,7 @@ pub use serde_json;
 #[cfg(feature = "serde-lite")]
 pub use serde_lite::{self, Deserialize, Intermediate, Serialize};
 
-// #[cfg(feature = "serde")]
+#[cfg(feature = "serde")]
 pub use serde::{self, Deserialize, Serialize, Serializer, Deserializer, de::{self, DeserializeOwned}, ser};
 
 #[cfg(feature = "chrono")]

@@ -7,7 +7,7 @@ impl From<Wrapper<Self>> for Duration {
     }
 }
 
-// #[cfg(feature = "serde")]
+#[cfg(feature = "serde")]
 impl Serialize for Wrapper<Duration> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         if let Some(nanoseconds) = self.inner.num_nanoseconds() {
@@ -18,7 +18,7 @@ impl Serialize for Wrapper<Duration> {
     }
 }
 
-// #[cfg(feature = "serde")]
+#[cfg(feature = "serde")]
 impl<'de> Deserialize<'de> for Wrapper<Duration> {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct I64NanosecondsVisitor;
@@ -49,30 +49,6 @@ impl<'de> Deserialize<'de> for Wrapper<Duration> {
         Ok(Wrapper::new(Duration::nanoseconds(nanoseconds)))
     }
 }
-
-// // #[cfg(feature = "serde")]
-// struct WrappedDurationVisitor;
-
-// // #[cfg(feature = "serde")]
-// impl<'de> Visitor<'de> for WrappedDurationVisitor {
-//     type Value =  Wrapper<Duration>;
-
-//     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-//         formatter.write_str("i64 representing nanoseconds")
-//     }
-
-//     fn visit_i8<E: de::Error>(self, value: i8) -> Result<Self::Value, E> {
-//         Ok(Wrapper::new(Duration::nanoseconds(value as i64)))
-//     }
-
-//     fn visit_i32<E: de::Error>(self, value: i32) -> Result<Self::Value, E> {
-//         Ok(Wrapper::new(Duration::nanoseconds(value as i64)))
-//     }
-
-//     fn visit_i64<E: de::Error>(self, value: i64) -> Result<Self::Value, E> {
-//         Ok(Wrapper::new(Duration::nanoseconds(value as i64)))
-//     }
-// }
 
 #[cfg(feature = "serde-lite")]
 impl Serialize for Wrapper<Duration> {
