@@ -34,8 +34,9 @@ pub enum Error {
     GetStorageError(JsValue),
     #[error("cannot insert or update the given key-value pair (error: `{0:?}`)")]
     InsertError(JsValue),
-    #[error("(de)serialization failed (error: `{0}`)")]
-    SerdeError(serde_lite::Error),
+    // #[error("(de)serialization failed (error: `{0}`)")]
+    // SerdeError(serde_lite::Error),  // for serde_lite
+    // SerdeError(serde::Error),
     #[error("(de)serialization to JSON failed (error: `{0}`)")]
     SerdeJsonError(serde_json::Error),
 }
@@ -153,15 +154,25 @@ pub trait WebStorage: Sized {
     /// Returns error when deserialization fails.
     ///
     /// [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Storage/getItem)
-    fn get<T: Deserialize>(&self, key: &str) -> Option<Result<T>> {
+    fn get<T: DeserializeOwned>(&self, key: &str) -> Option<Result<T>> {
         let value = self.storage().get_item(key).unwrap_throw()?;
 
-        fn deserialize<T: Deserialize>(value: &str) -> Result<T> {
-            let value = serde_json::from_str(&value).map_err(Error::SerdeJsonError)?;
-            T::deserialize(&value).map_err(Error::SerdeError)
+        fn deserialize<T: DeserializeOwned>(value: &str) -> Result<T> {
+            Ok(serde_json::from_str(&value).map_err(Error::SerdeJsonError)?)
         }
         Some(deserialize(&value))
     }
+
+    // serde_lite
+    // fn get<T: Deserialize>(&self, key: &str) -> Option<Result<T>> {
+    //     let value = self.storage().get_item(key).unwrap_throw()?;
+
+    //     fn deserialize<T: Deserialize>(value: &str) -> Result<T> {
+    //         let value = serde_json::from_str(&value).map_err(Error::SerdeJsonError)?;
+    //         T::deserialize(&value).map_err(Error::SerdeError)
+    //     }
+    //     Some(deserialize(&value))
+    // }
 
     /// Insert a key-value pair. The value will be serialized.
     ///
@@ -182,7 +193,7 @@ pub trait WebStorage: Sized {
     ///
     /// [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Storage/setItem)
     fn insert<T: Serialize + ?Sized>(&self, key: &str, value: &T) -> Result<()> {
-        let value = T::serialize(value).map_err(Error::SerdeError)?;
+        // let value = T::serialize(value).map_err(Error::SerdeError)?; -- for serde-lite
         let value = serde_json::to_string(&value).map_err(Error::SerdeJsonError)?;
         self.storage()
             .set_item(&key, &value)

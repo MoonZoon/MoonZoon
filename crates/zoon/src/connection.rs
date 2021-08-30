@@ -1,13 +1,15 @@
 use crate::*;
 use moonlight::{
     serde_json,
-    serde_lite::{Deserialize, Serialize},
     AuthToken, CorId, SessionId,
 };
+use moonlight::{serde::{Serialize, de::DeserializeOwned}};
 use std::error::Error;
 use std::fmt;
 use std::marker::PhantomData;
 use web_sys::{Request, RequestInit, Response};
+
+
 
 mod sse;
 use sse::SSE;
@@ -21,7 +23,7 @@ pub struct Connection<UMsg, DMsg> {
     msg_types: PhantomData<(UMsg, DMsg)>,
 }
 
-impl<UMsg: Serialize, DMsg: Deserialize> Connection<UMsg, DMsg> {
+impl<UMsg: Serialize, DMsg: DeserializeOwned> Connection<UMsg, DMsg> {
     pub fn new(down_msg_handler: impl FnOnce(DMsg, CorId) + Clone + Send + Sync + 'static) -> Self {
         let session_id = SessionId::new();
         Self {
@@ -46,7 +48,9 @@ impl<UMsg: Serialize, DMsg: Deserialize> Connection<UMsg, DMsg> {
 
     pub async fn send_up_msg(&self, up_msg: UMsg) -> Result<(), SendUpMsgError> {
         // ---- RequestInit ----
-        let body = serde_json::to_string(&up_msg.serialize().unwrap_throw()).unwrap_throw();
+        // for serde-lite
+        // let body = serde_json::to_string(&up_msg.serialize().unwrap_throw()).unwrap_throw();
+        let body = serde_json::to_string(&up_msg).unwrap_throw();
 
         let mut request_init = RequestInit::new();
         request_init.method("POST").body(Some(&JsValue::from(body)));

@@ -104,7 +104,7 @@ trait_set! {
 //     Start
 // ------ ------
 
-pub async fn start<'de, FRB, FRBO, UPH, UPHO, UMsg>(
+pub async fn start<FRB, FRBO, UPH, UPHO, UMsg>(
     frontend: FRB,
     up_msg_handler: UPH,
     service_config: impl FnOnce(&mut web::ServiceConfig) + Clone + Send + 'static,
@@ -114,7 +114,7 @@ where
     FRBO: FrontBuilderOutput,
     UPH: UpHandler<UPHO, UMsg>,
     UPHO: UpHandlerOutput,
-    UMsg: 'static + Deserialize,
+    UMsg: 'static + DeserializeOwned,
 {
     // ------ Init ------
 
@@ -257,7 +257,7 @@ async fn up_msg_handler_responder<UPH, UPHO, UMsg>(
 where
     UPH: UpHandler<UPHO, UMsg>,
     UPHO: UpHandlerOutput,
-    UMsg: Deserialize,
+    UMsg: DeserializeOwned,
 {
     let headers = req.headers();
 
@@ -271,7 +271,7 @@ where
     Ok(HttpResponse::Ok().finish())
 }
 
-async fn parse_up_msg<UMsg: Deserialize>(mut payload: web::Payload) -> Result<UMsg, Error> {
+async fn parse_up_msg<UMsg: DeserializeOwned>(mut payload: web::Payload) -> Result<UMsg, Error> {
     let mut body = web::BytesMut::new();
     while let Some(chunk) = payload.next().await {
         let chunk = chunk?;
@@ -282,8 +282,10 @@ async fn parse_up_msg<UMsg: Deserialize>(mut payload: web::Payload) -> Result<UM
         }
         body.extend_from_slice(&chunk);
     }
-    UMsg::deserialize(&serde_json::from_slice(&body).map_err(error::JsonPayloadError::Deserialize)?)
-        .map_err(error::ErrorBadRequest)
+    // for serde-lite
+    // UMsg::deserialize(&serde_json::from_slice(&body).map_err(error::JsonPayloadError::Deserialize)?)
+    //     .map_err(error::ErrorBadRequest)
+    Ok(serde_json::from_slice(&body).map_err(error::JsonPayloadError::Deserialize)?)
 }
 
 fn parse_session_id(headers: &HeaderMap) -> Result<SessionId, Error> {

@@ -462,6 +462,7 @@ dependencies = [
  "libc",
  "num-integer",
  "num-traits",
+ "serde",
  "wasm-bindgen",
  "winapi",
 ]
@@ -1275,6 +1276,7 @@ dependencies = [
  "chrono",
  "getrandom",
  "rusty_ulid",
+ "serde",
  "serde-lite",
  "serde_json",
 ]
@@ -1958,6 +1960,7 @@ checksum = "1f20752f9e92feede73bccf88845bb4004b28fac9fdcb2e0c8731d939df67b2d"
 dependencies = [
  "chrono",
  "rand 0.8.3",
+ "serde",
 ]
 
 [[package]]
@@ -2066,9 +2069,9 @@ checksum = "930c0acf610d3fdb5e2ab6213019aaa04e227ebe9547b0649ba599b16d788bd7"
 
 [[package]]
 name = "serde"
-version = "1.0.125"
+version = "1.0.130"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "558dc50e1a5a5fa7112ca2ce4effcb321b0300c0d4ccf0776a9f60cd89031171"
+checksum = "f12d06de37cf59146fbdecab66aa99f9fe4f78722e3607577a5375d66bd0c913"
 dependencies = [
  "serde_derive",
 ]
@@ -2096,9 +2099,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.125"
+version = "1.0.130"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b093b7a2bb58203b5da3056c05b4ec1fed827dcfdb37347a8841695263b3d06d"
+checksum = "d7bc1a1ab1961464eae040d96713baa5a724a8152c1222492465b54322ec508b"
 dependencies = [
  "proc-macro2 1.0.26",
  "quote 1.0.9",
@@ -2917,7 +2920,7 @@ dependencies = [
  "route_macro",
  "rust-hsluv",
  "send_wrapper",
- "serde-lite",
+ "serde",
  "serde_json",
  "static_ref_macro",
  "thiserror",

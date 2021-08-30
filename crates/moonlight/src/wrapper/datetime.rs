@@ -1,5 +1,4 @@
 use crate::*;
-use std::fmt;
 
 impl<Tz: TimeZone> From<Wrapper<Self>> for DateTime<Tz> {
     fn from(wrapper: Wrapper<Self>) -> Self {
@@ -7,12 +6,14 @@ impl<Tz: TimeZone> From<Wrapper<Self>> for DateTime<Tz> {
     }
 }
 
-impl<Tz: TimeZone> Serialize for Wrapper<DateTime<Tz>> where Tz::Offset: fmt::Display {
+#[cfg(feature = "serde-lite")]
+impl<Tz: TimeZone> Serialize for Wrapper<DateTime<Tz>> where Tz::Offset: std::fmt::Display {
     fn serialize(&self) -> Result<Intermediate, serde_lite::Error> {
         self.inner.to_rfc3339().serialize()
     }
 }
 
+#[cfg(feature = "serde-lite")]
 impl Deserialize for Wrapper<DateTime<Local>> {
     fn deserialize(intermediate: &Intermediate) -> Result<Self, serde_lite::Error> {
         let date_time = intermediate

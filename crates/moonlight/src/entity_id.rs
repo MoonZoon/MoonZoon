@@ -1,7 +1,9 @@
 use crate::*;
 use std::{fmt, str::FromStr};
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash, PartialOrd, Ord)]
+// #[derive(PartialEq, Eq, Clone, Copy, Debug, Hash, PartialOrd, Ord)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+// #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct EntityId(Ulid);
 
 impl EntityId {
@@ -24,12 +26,14 @@ impl FromStr for EntityId {
     }
 }
 
+#[cfg(feature = "serde-lite")]
 impl Serialize for EntityId {
     fn serialize(&self) -> Result<serde_lite::Intermediate, serde_lite::Error> {
         self.0.to_string().serialize()
     }
 }
 
+#[cfg(feature = "serde-lite")]
 impl Deserialize for EntityId {
     fn deserialize(intermediate: &serde_lite::Intermediate) -> Result<Self, serde_lite::Error> {
         intermediate

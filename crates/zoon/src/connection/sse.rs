@@ -1,10 +1,9 @@
-use crate::moonlight::{CorId, DownMsgTransporterForDe, SessionId};
+use crate::moonlight::{serde_json, CorId, DownMsgTransporterForDe, SessionId, DeserializeOwned};
 use crate::{format, *};
-use moonlight::{
-    serde_json,
-    serde_lite::{self, Deserialize},
-};
 use std::{error::Error, fmt};
+
+#[cfg(feature = "moonlight/serde_with_serde")]
+use moonlight::{serde::{self, Deserialize}};
 
 // ------ SSE ------
 
@@ -20,7 +19,7 @@ impl Drop for SSE {
 }
 
 impl SSE {
-    pub fn new<DMsg: Deserialize>(
+    pub fn new<DMsg: DeserializeOwned>(
         session_id: SessionId,
         down_msg_handler: impl FnOnce(DMsg, CorId) + Clone + 'static,
     ) -> Self {
@@ -37,7 +36,7 @@ impl SSE {
     }
 }
 
-fn down_msg_handler_closure<DMsg: Deserialize>(
+fn down_msg_handler_closure<DMsg: DeserializeOwned>(
     down_msg_handler: impl FnOnce(DMsg, CorId) + Clone + 'static,
 ) -> Closure<dyn Fn(JsValue)> {
     let down_msg_handler = move |down_msg, cor_id| (down_msg_handler.clone())(down_msg, cor_id);
@@ -49,7 +48,7 @@ fn down_msg_handler_closure<DMsg: Deserialize>(
     ) as Box<dyn Fn(JsValue)>)
 }
 
-fn down_msg_transporter_from_event<DMsg: Deserialize>(
+fn down_msg_transporter_from_event<DMsg: DeserializeOwned>(
     event: JsValue,
 ) -> Result<DownMsgTransporterForDe<DMsg>, DownMsgError> {
     let down_msg_transporter = Reflect::get(&event, &JsValue::from("data"))
@@ -57,11 +56,14 @@ fn down_msg_transporter_from_event<DMsg: Deserialize>(
         .as_string()
         .ok_or(DownMsgError::InvalidDataValue)?;
 
-    DownMsgTransporterForDe::deserialize(
-        &serde_json::from_str(&down_msg_transporter)
-            .map_err(DownMsgError::JsonDeserializationFailed)?,
-    )
-    .map_err(DownMsgError::DeserializationFailed)
+    // for serde-lite
+    // DownMsgTransporterForDe::deserialize(
+    //     &serde_json::from_str(&down_msg_transporter)
+    //         .map_err(DownMsgError::JsonDeserializationFailed)?,
+    // )
+    // .map_err(DownMsgError::DeserializationFailed)
+
+    serde_json::from_str(&down_msg_transporter).map_err(DownMsgError::JsonDeserializationFailed)
 }
 
 fn connect(session_id: SessionId) -> ReconnectingEventSource {
@@ -80,7 +82,7 @@ fn connect(session_id: SessionId) -> ReconnectingEventSource {
 enum DownMsgError {
     InvalidDataValue,
     JsonDeserializationFailed(serde_json::Error),
-    DeserializationFailed(serde_lite::Error),
+    // DeserializationFailed(serde_lite::Error), -- for serde-lite
 }
 
 impl fmt::Display for DownMsgError {
@@ -96,9 +98,10 @@ impl fmt::Display for DownMsgError {
                     error
                 )
             }
-            DownMsgError::DeserializationFailed(error) => {
-                write!(f, "failed to deserialize DownMsgTransporter: {:?}", error)
-            }
+            // for serde-lite
+            // DownMsgError::DeserializationFailed(error) => {
+            //     write!(f, "failed to deserialize DownMsgTransporter: {:?}", error)
+            // }
         }
     }
 }

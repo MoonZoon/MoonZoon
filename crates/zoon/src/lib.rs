@@ -108,6 +108,9 @@ pub use serde_json;
 #[cfg(feature = "serde-lite")]
 pub use serde_lite::{self, Deserialize, Serialize};
 
+#[cfg(feature = "serde")]
+pub use serde::{self, Deserialize, Serialize, de::DeserializeOwned};
+
 #[cfg(feature = "thiserror")]
 pub use thiserror;
 

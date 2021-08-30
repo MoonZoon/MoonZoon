@@ -55,8 +55,8 @@ pub enum UpMsg {
     AddTimeEntry(ProjectId, time_tracker::TimeEntry),
     RemoveTimeEntry(TimeEntryId),
     RenameTimeEntry(TimeEntryId, String),
-    SetTimeEntryStarted(TimeEntryId, Wrapper<DateTime<Local>>),
-    SetTimeEntryStopped(TimeEntryId, Wrapper<DateTime<Local>>),
+    SetTimeEntryStarted(TimeEntryId, DateTime<Local>),
+    SetTimeEntryStopped(TimeEntryId, DateTime<Local>),
 }
 
 // ------ DownMsg ------

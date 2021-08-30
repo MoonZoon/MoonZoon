@@ -379,6 +379,7 @@ dependencies = [
  "libc",
  "num-integer",
  "num-traits",
+ "serde",
  "wasm-bindgen",
  "winapi",
 ]
@@ -931,7 +932,7 @@ dependencies = [
  "chrono",
  "getrandom",
  "rusty_ulid",
- "serde-lite",
+ "serde",
  "serde_json",
 ]
 
@@ -1411,6 +1412,7 @@ checksum = "1f20752f9e92feede73bccf88845bb4004b28fac9fdcb2e0c8731d939df67b2d"
 dependencies = [
  "chrono",
  "rand 0.8.4",
+ "serde",
 ]
 
 [[package]]
@@ -1482,39 +1484,18 @@ checksum = "930c0acf610d3fdb5e2ab6213019aaa04e227ebe9547b0649ba599b16d788bd7"
 
 [[package]]
 name = "serde"
-version = "1.0.128"
+version = "1.0.130"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1056a0db1978e9dbf0f6e4fca677f6f9143dc1c19de346f22cac23e422196834"
+checksum = "f12d06de37cf59146fbdecab66aa99f9fe4f78722e3607577a5375d66bd0c913"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
-name = "serde-lite"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d109b25e9a75d8229a2f0054195d57da82c42f878c8f4db8e87524a282c6ffe"
-dependencies = [
- "serde",
- "serde-lite-derive",
-]
-
-[[package]]
-name = "serde-lite-derive"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd09aa97e31ca53b74d57ccd40029aa612818133e963ae096ed2f664b1ba0d55"
-dependencies = [
- "proc-macro2 1.0.28",
- "quote 1.0.9",
- "syn 1.0.75",
-]
-
-[[package]]
 name = "serde_derive"
-version = "1.0.128"
+version = "1.0.130"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "13af2fbb8b60a8950d6c72a56d2095c28870367cc8e10c55e9745bac4995a2c4"
+checksum = "d7bc1a1ab1961464eae040d96713baa5a724a8152c1222492465b54322ec508b"
 dependencies = [
  "proc-macro2 1.0.28",
  "quote 1.0.9",
@@ -1568,6 +1549,7 @@ name = "shared"
 version = "0.1.0"
 dependencies = [
  "moonlight",
+ "serde",
 ]
 
 [[package]]
@@ -2156,7 +2138,7 @@ dependencies = [
  "route_macro",
  "rust-hsluv",
  "send_wrapper",
- "serde-lite",
+ "serde",
  "serde_json",
  "static_ref_macro",
  "thiserror",

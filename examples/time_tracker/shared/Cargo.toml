@@ -10,7 +10,8 @@ readme = "../README.md"
 edition = "2018"
 
 [dependencies]
-moonlight = { path = "../../../crates/moonlight", features = ["chrono"] }
+moonlight = { path = "../../../crates/moonlight" }
+serde = { version = "1.0.130", features = ["derive"] }
 
 [features]
 frontend = ["moonlight/frontend"]
