@@ -13,7 +13,7 @@ pub struct DownMsgTransporterForDe<DMsg: Deserialize> {
     pub cor_id: CorId,
 }
 
-// #[cfg(feature = "serde")]
+#[cfg(feature = "serde")]
 #[derive(Deserialize)]
 pub struct DownMsgTransporterForDe<DMsg> {
     pub down_msg: DMsg,

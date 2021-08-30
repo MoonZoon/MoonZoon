@@ -1,9 +1,8 @@
 use crate::*;
 use std::{fmt, str::FromStr};
 
-// #[derive(PartialEq, Eq, Clone, Copy, Debug, Hash, PartialOrd, Ord)]
-#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-// #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash, PartialOrd, Ord)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct EntityId(Ulid);
 
 impl EntityId {
