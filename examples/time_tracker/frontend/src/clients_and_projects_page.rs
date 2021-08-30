@@ -1,6 +1,7 @@
 use zoon::{*, eprintln};
 use crate::connection::connection;
 use shared::{UpMsg, ClientId, ProjectId, clients_and_projects};
+use std::sync::Arc;
 
 mod view;
 
@@ -11,7 +12,7 @@ mod view;
 struct Client {
     id: ClientId,
     name: Mutable<String>,
-    projects: MutableVec<Project>
+    projects: MutableVec<Arc<Project>>
 }
 
 struct Project {
@@ -24,8 +25,8 @@ struct Project {
 // ------ ------
 
 #[static_ref]
-fn clients() -> &'static Mutable<Option<Vec<Client>>> {
-    Mutable::new(None)
+fn clients() -> &'static MutableVec<Arc<Client>> {
+    MutableVec::new()
 }
 
 // ------ ------
@@ -42,24 +43,28 @@ pub fn request_clients() {
 }
 
 pub fn convert_and_set_clients(new_clients: Vec<clients_and_projects::Client>) {
-    fn convert_clients(clients: Vec<clients_and_projects::Client>) -> Vec<Client> {
+    fn convert_clients(clients: Vec<clients_and_projects::Client>) -> Vec<Arc<Client>> {
         clients.into_iter().map(|client| {
-            Client {
+            Arc::new(Client {
                 id: client.id,
                 name: Mutable::new(client.name),
                 projects: MutableVec::new_with_values(convert_projects(client.projects)),
-            }
+            })
         }).collect()
     }
-    fn convert_projects(projects: Vec<clients_and_projects::Project>) -> Vec<Project> {
+    fn convert_projects(projects: Vec<clients_and_projects::Project>) -> Vec<Arc<Project>> {
         projects.into_iter().map(|project| {
-            Project {
+            Arc::new(Project {
                 id: project.id,
                 name: Mutable::new(project.name),
-            }
+            })
         }).collect()
     }
-    clients().set(Some(convert_clients(new_clients)));
+    clients().lock_mut().replace_cloned(convert_clients(new_clients));
+}
+
+fn add_client() {
+    zoon::println!("add_client not implemented yet");
 }
 
 // ------ ------

@@ -51,21 +51,21 @@ pub fn router() -> &'static Router<Route> {
                 if not(app::is_user_logged()) {
                     return router().replace(Route::Login);
                 }
-                run_once!(clients_and_projects_page::request_clients);
+                clients_and_projects_page::request_clients();
                 app::set_page_id(PageId::ClientsAndProjects);
             }
             Route::TimeTracker => {
                 if not(app::is_user_logged()) {
                     return router().replace(Route::Login);
                 }
-                run_once!(time_tracker_page::request_clients);
+                time_tracker_page::request_clients();
                 app::set_page_id(PageId::TimeTracker);
             }
             Route::TimeBlocks => {
                 if not(app::is_user_logged()) {
                     return router().replace(Route::Login);
                 }
-                run_once!(time_blocks_page::request_clients);
+                time_blocks_page::request_clients();
                 app::set_page_id(PageId::TimeBlocks);
             }
             Route::Root => {
