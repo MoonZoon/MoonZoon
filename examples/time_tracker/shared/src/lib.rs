@@ -12,6 +12,7 @@ pub type TimeEntryId = EntityId;
 pub type UserId = EntityId;
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(crate = "serde")]
 pub struct User {
     pub id: UserId,
     pub name: String,
@@ -21,6 +22,7 @@ pub struct User {
 // ------ UpMsg ------
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(crate = "serde")]
 pub enum UpMsg {
     // ------ Auth ------
     Login {
@@ -62,6 +64,7 @@ pub enum UpMsg {
 // ------ DownMsg ------
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(crate = "serde")]
 pub enum DownMsg {
     // ------ Auth ------
     LoginError(String),
