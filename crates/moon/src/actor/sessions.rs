@@ -177,8 +177,12 @@ impl SessionActorInstance {
         let session_id = self.session_id.read().unwrap();
 
         let down_msg_transporter = DownMsgTransporterForSer { down_msg, cor_id };
+        
+        // for serde-lite
+        // let down_msg_transporter =
+        //     serde_json::to_string(&down_msg_transporter.serialize().unwrap()).unwrap();
         let down_msg_transporter =
-            serde_json::to_string(&down_msg_transporter.serialize().unwrap()).unwrap();
+            serde_json::to_string(&down_msg_transporter).unwrap();
 
         self.message_sse
             .send(&session_id, "down_msg", &down_msg_transporter);

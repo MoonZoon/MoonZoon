@@ -18,6 +18,6 @@ pub struct Project {
 pub struct TimeEntry {
     pub id: TimeEntryId,
     pub name: String,
-    pub started: Wrapper<DateTime<Local>>,
-    pub stopped: Option<Wrapper<DateTime<Local>>>,
+    pub started: DateTime<Local>,
+    pub stopped: Option<DateTime<Local>>,
 }
