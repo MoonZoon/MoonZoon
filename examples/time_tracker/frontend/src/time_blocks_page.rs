@@ -17,20 +17,16 @@ fn clients() -> &'static Mutable<Option<Vec<Client>>> {
 //   Commands
 // ------ ------
 
-pub fn load_clients() {
-    if clients().map(Option::is_some) {
-        return;
-    }
+pub fn request_clients() {
     Task::start(async {
         let msg = UpMsg::GetTimeBlocksClients;
         if let Err(error) = connection().send_up_msg(msg).await {
-            let error = error.to_string();
             eprintln!("get TimeBlocks clients request failed: {}", error);
         }
     });
 }
 
-pub fn set_clients(new_clients: Vec<Client>) {
+pub fn convert_and_set_clients(new_clients: Vec<Client>) {
     clients().set(Some(new_clients));
 }
 

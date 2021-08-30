@@ -1,8 +1,23 @@
 use zoon::{*, eprintln};
 use crate::connection::connection;
-use shared::{UpMsg, clients_and_projects::Client};
+use shared::{UpMsg, ClientId, ProjectId, clients_and_projects};
 
 mod view;
+
+// ------ ------
+//     Types
+// ------ ------
+
+struct Client {
+    id: ClientId,
+    name: Mutable<String>,
+    projects: MutableVec<Project>
+}
+
+struct Project {
+    id: ProjectId,
+    name: Mutable<String>,
+}
 
 // ------ ------
 //    States
@@ -17,21 +32,34 @@ fn clients() -> &'static Mutable<Option<Vec<Client>>> {
 //   Commands
 // ------ ------
 
-pub fn load_clients() {
-    if clients().map(Option::is_some) {
-        return;
-    }
+pub fn request_clients() {
     Task::start(async {
         let msg = UpMsg::GetClientsAndProjectsClients;
         if let Err(error) = connection().send_up_msg(msg).await {
-            let error = error.to_string();
             eprintln!("get ClientsAndProjects clients request failed: {}", error);
         }
     });
 }
 
-pub fn set_clients(new_clients: Vec<Client>) {
-    clients().set(Some(new_clients));
+pub fn convert_and_set_clients(new_clients: Vec<clients_and_projects::Client>) {
+    fn convert_clients(clients: Vec<clients_and_projects::Client>) -> Vec<Client> {
+        clients.into_iter().map(|client| {
+            Client {
+                id: client.id,
+                name: Mutable::new(client.name),
+                projects: MutableVec::new_with_values(convert_projects(client.projects)),
+            }
+        }).collect()
+    }
+    fn convert_projects(projects: Vec<clients_and_projects::Project>) -> Vec<Project> {
+        projects.into_iter().map(|project| {
+            Project {
+                id: project.id,
+                name: Mutable::new(project.name),
+            }
+        }).collect()
+    }
+    clients().set(Some(convert_clients(new_clients)));
 }
 
 // ------ ------
