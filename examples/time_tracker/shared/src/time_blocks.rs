@@ -1,6 +1,7 @@
 use crate::*;
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(crate = "serde")]
 pub struct Client {
     pub id: ClientId,
     pub name: String,
@@ -9,6 +10,7 @@ pub struct Client {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(crate = "serde")]
 pub struct TimeBlock {
     pub id: TimeBlockId,
     pub name: String,
@@ -18,6 +20,7 @@ pub struct TimeBlock {
 }
 
 #[derive(Debug, Serialize, Deserialize, Copy, Clone)]
+#[serde(crate = "serde")]
 pub enum TimeBlockStatus {
     NonBillable,
     Unpaid,
@@ -25,6 +28,7 @@ pub enum TimeBlockStatus {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(crate = "serde")]
 pub struct Invoice {
     pub id: InvoiceId,
     pub custom_id: String,
