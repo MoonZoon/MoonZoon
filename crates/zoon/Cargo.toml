@@ -27,7 +27,7 @@ wee_alloc = { version = "0.4.5", default-features = false, optional = true }
 # wasm-tracing-allocator = { version = "0.1.1", default-features = false, optional = true }
 enclose = { version = "1.1.8", default-features = false, optional = true }
 apply = { version = "0.3.0", default-features = false, optional = true }
-# serde-lite = { version = "0.1.1", features = ["derive"], default-features = false, optional = true }
+serde-lite = { version = "0.1.1", features = ["derive"], default-features = false, optional = true }
 serde = { version = "1.0.130", features = ["derive", "std"], default-features = false, optional = true  }
 serde_json = { version = "1.0.64", features = ['std'], default-features = false, optional = true }
 thiserror = { version = "1.0.26", default-features = false, optional = true }

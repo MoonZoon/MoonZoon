@@ -2921,6 +2921,7 @@ dependencies = [
  "rust-hsluv",
  "send_wrapper",
  "serde",
+ "serde-lite",
  "serde_json",
  "static_ref_macro",
  "thiserror",
