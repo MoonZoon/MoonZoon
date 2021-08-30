@@ -1,8 +1,58 @@
 use zoon::*;
-// use crate::app;
+use crate::theme::Theme;
+use std::sync::Arc;
 
 pub fn page() -> impl Element {
-    Text::new("client are projects page")
+    Column::new()
+        .item(title())
+        .item(content())
+}
+
+fn title() -> impl Element {
+    El::new()
+        .s(Width::fill().max(600))
+        .s(Padding::new().y(35))
+        .child(
+            El::with_tag(Tag::H1)
+                .s(Align::center())
+                .s(Font::new().size(30).weight(NamedWeight::SemiBold))
+                .child("Clients & Projects")
+        )
+}
+
+fn content() -> impl Element {
+    Column::new()
+        .item(add_client_button())
+        .item(clients())
+}
+
+fn add_client_button() -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    El::new()
+        .child(
+            Button::new()
+                .s(Align::center())
+                .s(Background::new().color_signal(hovered_signal.map_bool(
+                    || Theme::Background3Highlighted,
+                    || Theme::Background3,
+                )))
+                .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
+                .s(Padding::new().x(15).y(10))
+                .s(RoundedCorners::all_fully())
+                .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+                .on_press(super::add_client)
+                .label("Add Client")
+        )
+}
+
+fn clients() -> impl Element {
+    Column::new()
+        .items_signal_vec(super::clients().signal_vec_cloned().map(client))
+}
+
+fn client(client: Arc<super::Client>) -> impl Element {
+    El::new()
+        .child("Client")
 }
 
 // blocks!{
