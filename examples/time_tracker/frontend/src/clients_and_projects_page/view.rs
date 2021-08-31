@@ -22,11 +22,12 @@ fn title() -> impl Element {
 
 fn content() -> impl Element {
     Column::new()
-        .item(add_client_button())
+        .s(Spacing::new(35))
+        .item(add_entity_button("Add Client", super::add_client))
         .item(clients())
 }
 
-fn add_client_button() -> impl Element {
+fn add_entity_button(title: &str, on_press: impl Fn() + Copy + 'static) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     El::new()
         .child(
@@ -37,17 +38,17 @@ fn add_client_button() -> impl Element {
                     || Theme::Background3,
                 )))
                 .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
-                .s(Padding::all(10))
+                .s(Padding::all(8))
                 .s(RoundedCorners::all_fully())
                 .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-                .on_press(super::add_client)
+                .on_press(on_press)
                 .label(
                     Row::new()
                         .item(app::icon_add())
                         .item(
                             El::new()
                                 .s(Padding::new().right(8).bottom(1))
-                                .child("Add Client")
+                                .child(title)
                         )
                 )
         )
@@ -55,12 +56,56 @@ fn add_client_button() -> impl Element {
 
 fn clients() -> impl Element {
     Column::new()
+        .s(Width::fill().max(600))
+        .s(Spacing::new(35))
+        .s(Align::new().center_x())
+        .s(Padding::new().x(10))
         .items_signal_vec(super::clients().signal_vec_cloned().map(client))
 }
 
 fn client(client: Arc<super::Client>) -> impl Element {
+    let id = client.id;
+    Column::new()
+        .s(Background::new().color(Theme::Background1))
+        .s(RoundedCorners::all(5))
+        .item(client_name_and_delete_button())
+        .item(add_entity_button("Add Project", move || super::add_project(id)))
+        .item(projects())
+}
+
+fn client_name_and_delete_button() -> impl Element {
+    Row::new()
+        .item(client_name())
+        .item(delete_client_button())
+}
+
+fn client_name() -> impl Element {
+    TextInput::new()
+        .label_hidden("client name")
+}
+
+fn delete_client_button() -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     El::new()
-        .child("Client")
+        .child(
+            Button::new()
+                .s(Width::new(45))
+                .s(Height::new(45))
+                .s(Align::center())
+                .s(Background::new().color_signal(hovered_signal.map_bool(
+                    || Theme::Background3Highlighted,
+                    || Theme::Background3,
+                )))
+                .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
+                .s(RoundedCorners::all_fully())
+                .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+                // .on_press(on_press)
+                .label(app::icon_delete_forever())
+        )
+}
+
+fn projects() -> impl Element {
+    Text::new("Projects")
 }
 
 // blocks!{

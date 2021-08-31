@@ -67,6 +67,10 @@ fn add_client() {
     zoon::println!("add_client not implemented yet");
 }
 
+fn add_project(client_id: ClientId) {
+    zoon::println!("add_project not implemented yet");
+}
+
 // ------ ------
 //     View
 // ------ ------
