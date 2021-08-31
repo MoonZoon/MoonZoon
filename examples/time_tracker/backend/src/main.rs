@@ -22,7 +22,9 @@ async fn init() {
 }
 
 async fn frontend() -> Frontend {
-    Frontend::new().title("Time Tracker example")
+    Frontend::new()
+        .title("Time Tracker example")
+        .append_to_head(r#"<link rel="stylesheet" type="text/css" href="/_api/public/icons/css/eos-icons.css">"#)
 }
 
 // async fn check_access(auth_token: Option<AuthToken>) -> bool {

@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>eos-icons demo page</title>
+  <link href="https://fonts.googleapis.com/css?family=Lato:300,400" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="css/index.css">
+  <link rel="stylesheet" type="text/css" href="css/eos-icons.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+</head>
+<body>
+  <header class='eos-logo-color-gradients'>
+    <img src='images/logo.png'/>
+  </header>
+  <div class='container icons-container'>
+    <div class="extended-version-wrap">
+      <input class="searchbar" onkeyup="searchIcon()" type="text" name="search" placeholder="Search Icons...">
+    </div>
+    <div id="icons">
+      
+      <div class="icons__item" data-name="delete_forever">
+        <i class="eos-icons">delete_forever</i>
+        <br>
+        delete_forever
+      </div>
+      
+      <div class="icons__item" data-name="add">
+        <i class="eos-icons">add</i>
+        <br>
+        add
+      </div>
+      
+    </div>
+
+
+    <div class="container">
+      <h3>Need new icons?</h3>
+      <p>
+        We want to continue growing EOS icons.
+        <a href="https://gitlab.com/SUSE-UIUX/eos-icons/issues/" target="_blank">Open an issue</a>
+        in our repository, or simply get in touch with us on
+        <a href="http://slack.eosdesignsystem.com/" target="_blank">slack</a>. We don't charge, we are open source 😎.
+      </p>
+    </div>
+    <footer>
+      <div class='container'>
+        Download from gitlab at <a href="https://gitlab.com/SUSE-UIUX/eos-icons">EOS icons</a>.
+      </div>
+    </footer>
+
+    <script>
+      function searchIcon(){
+        input=document.getElementsByClassName('searchbar')[0].value;
+        var x=document.getElementsByClassName('icons__item');
+        for (i = 0; i < x.length; i++) {
+          if (!(x[i].getElementsByClassName('eos-icons')[0].innerHTML.includes(input))) {
+            x[i].style.display="none";
+
+          }
+
+          else{
+            x[i].style.display="inline-block";
+          }
+        }
+      }
+    </script>
+</body>
+</html>

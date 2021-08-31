@@ -160,6 +160,18 @@ pub fn root() -> impl Element {
     view::root()
 }
 
+pub fn icon_add() -> impl Element {
+    RawHtmlEl::new("i")
+        .class("eos-icons")
+        .child("add")
+}
+
+pub fn icon_delete_forever() -> impl Element {
+    RawHtmlEl::new("i")
+        .class("eos-icons")
+        .child("delete_forever")
+}
+
 
 // blocks!{
 //     append_blocks![

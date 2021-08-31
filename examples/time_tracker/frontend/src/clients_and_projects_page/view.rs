@@ -1,5 +1,5 @@
 use zoon::*;
-use crate::theme::Theme;
+use crate::{theme::Theme, app};
 use std::sync::Arc;
 
 pub fn page() -> impl Element {
@@ -37,11 +37,19 @@ fn add_client_button() -> impl Element {
                     || Theme::Background3,
                 )))
                 .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
-                .s(Padding::new().x(15).y(10))
+                .s(Padding::all(10))
                 .s(RoundedCorners::all_fully())
                 .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
                 .on_press(super::add_client)
-                .label("Add Client")
+                .label(
+                    Row::new()
+                        .item(app::icon_add())
+                        .item(
+                            El::new()
+                                .s(Padding::new().right(8).bottom(1))
+                                .child("Add Client")
+                        )
+                )
         )
 }
 
