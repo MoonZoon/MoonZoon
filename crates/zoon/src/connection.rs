@@ -48,8 +48,9 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned> Connection<UMsg, DMsg> {
 
     pub async fn send_up_msg(&self, up_msg: UMsg) -> Result<(), SendUpMsgError> {
         // ---- RequestInit ----
-        // for serde-lite
-        // let body = serde_json::to_string(&up_msg.serialize().unwrap_throw()).unwrap_throw();
+        #[cfg(feature = "serde-lite")]
+        let body = serde_json::to_string(&up_msg.serialize().unwrap_throw()).unwrap_throw();
+        #[cfg(feature = "serde")]
         let body = serde_json::to_string(&up_msg).unwrap_throw();
 
         let mut request_init = RequestInit::new();

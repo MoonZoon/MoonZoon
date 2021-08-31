@@ -104,6 +104,8 @@ trait_set! {
 //     Start
 // ------ ------
 
+// @TODO finish conditional compilation if/when serde-lite works
+
 pub async fn start<FRB, FRBO, UPH, UPHO, UMsg>(
     frontend: FRB,
     up_msg_handler: UPH,
@@ -271,6 +273,7 @@ where
     Ok(HttpResponse::Ok().finish())
 }
 
+#[cfg(feature = "serde")]
 async fn parse_up_msg<UMsg: DeserializeOwned>(mut payload: web::Payload) -> Result<UMsg, Error> {
     let mut body = web::BytesMut::new();
     while let Some(chunk) = payload.next().await {
@@ -282,10 +285,23 @@ async fn parse_up_msg<UMsg: DeserializeOwned>(mut payload: web::Payload) -> Resu
         }
         body.extend_from_slice(&chunk);
     }
-    // for serde-lite
-    // UMsg::deserialize(&serde_json::from_slice(&body).map_err(error::JsonPayloadError::Deserialize)?)
-    //     .map_err(error::ErrorBadRequest)
     Ok(serde_json::from_slice(&body).map_err(error::JsonPayloadError::Deserialize)?)
+}
+
+#[cfg(feature = "serde-lite")]
+async fn parse_up_msg<UMsg: Deserialize>(mut payload: web::Payload) -> Result<UMsg, Error> {
+    let mut body = web::BytesMut::new();
+    while let Some(chunk) = payload.next().await {
+        let chunk = chunk?;
+        if (body.len() + chunk.len()) > MAX_UP_MSG_BYTES {
+            Err(error::JsonPayloadError::Overflow {
+                limit: MAX_UP_MSG_BYTES,
+            })?
+        }
+        body.extend_from_slice(&chunk);
+    }
+    UMsg::deserialize(&serde_json::from_slice(&body).map_err(error::JsonPayloadError::Deserialize)?)
+        .map_err(error::ErrorBadRequest)
 }
 
 fn parse_session_id(headers: &HeaderMap) -> Result<SessionId, Error> {
