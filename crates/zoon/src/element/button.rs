@@ -14,6 +14,19 @@ pub struct Button<LabelFlag, OnPressFlag> {
 
 impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
     pub fn new() -> Self {
+        run_once!(|| {
+            global_styles()
+                .style_group(
+                    StyleGroup::new(".button > *")
+                        .style("margin-top", "auto")
+                        .style("margin-bottom", "auto"),
+                )
+                .style_group(StyleGroup::new(".button > .align_bottom").style("margin-top", "auto"))
+                .style_group(StyleGroup::new(".button > .align_left").style("align-self", "flex-start"))
+                .style_group(StyleGroup::new(".button > .align_right").style("align-self", "flex-end"))
+                .style_group(StyleGroup::new(".button > .exact_height").style("flex-shrink", "0"))
+                .style_group(StyleGroup::new(".button > .fill_height").style("flex-grow", "1"));
+        });
         Self {
             raw_el: RawHtmlEl::new("div")
                 .class("button")
@@ -21,7 +34,10 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
                 .attr("tabindex", "0")
                 .style("cursor", "pointer")
                 .style("user-select", "none")
-                .style("text-align", "center"),
+                .style("text-align", "center")
+                .style("display", "flex")
+                .style("flex-direction", "column")
+                .style("align-items", "center"),
             flags: PhantomData,
         }
     }
