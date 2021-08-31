@@ -1,5 +1,6 @@
 use zoon::*;
 use crate::{theme::Theme, app};
+use shared::{ClientId, ProjectId};
 use std::sync::Arc;
 
 pub fn page() -> impl Element {
@@ -23,6 +24,7 @@ fn title() -> impl Element {
 fn content() -> impl Element {
     Column::new()
         .s(Spacing::new(35))
+        .s(Padding::new().x(10).bottom(10))
         .item(add_entity_button("Add Client", super::add_client))
         .item(clients())
 }
@@ -37,8 +39,8 @@ fn add_entity_button(title: &str, on_press: impl Fn() + Copy + 'static) -> impl 
                     || Theme::Background3Highlighted,
                     || Theme::Background3,
                 )))
-                .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
-                .s(Padding::all(8))
+                .s(Font::new().color(Theme::Font3).weight(NamedWeight::SemiBold))
+                .s(Padding::all(5))
                 .s(RoundedCorners::all_fully())
                 .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
                 .on_press(on_press)
@@ -56,10 +58,8 @@ fn add_entity_button(title: &str, on_press: impl Fn() + Copy + 'static) -> impl 
 
 fn clients() -> impl Element {
     Column::new()
-        .s(Width::fill().max(600))
         .s(Spacing::new(35))
         .s(Align::new().center_x())
-        .s(Padding::new().x(10))
         .items_signal_vec(super::clients().signal_vec_cloned().map(client))
 }
 
@@ -67,30 +67,29 @@ fn client(client: Arc<super::Client>) -> impl Element {
     let id = client.id;
     Column::new()
         .s(Background::new().color(Theme::Background1))
-        .s(RoundedCorners::all(5))
-        .item(client_name_and_delete_button())
+        .s(RoundedCorners::all(10))
+        .s(Padding::all(15))
+        .s(Spacing::new(20))
+        .item(client_name_and_delete_button(client.clone()))
         .item(add_entity_button("Add Project", move || super::add_project(id)))
-        .item(projects())
+        .item(projects(client))
 }
 
-fn client_name_and_delete_button() -> impl Element {
+fn client_name_and_delete_button(client: Arc<super::Client>) -> impl Element {
+    let id = client.id;
     Row::new()
-        .item(client_name())
-        .item(delete_client_button())
+        .s(Spacing::new(10))
+        .item(client_name(client.clone()))
+        .item(delete_entity_button(move || super::delete_client(id)))
 }
 
-fn client_name() -> impl Element {
-    TextInput::new()
-        .label_hidden("client name")
-}
-
-fn delete_client_button() -> impl Element {
+fn delete_entity_button(on_press: impl Fn() + Copy + 'static) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     El::new()
         .child(
             Button::new()
-                .s(Width::new(45))
-                .s(Height::new(45))
+                .s(Width::new(40))
+                .s(Height::new(40))
                 .s(Align::center())
                 .s(Background::new().color_signal(hovered_signal.map_bool(
                     || Theme::Background3Highlighted,
@@ -99,13 +98,55 @@ fn delete_client_button() -> impl Element {
                 .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
                 .s(RoundedCorners::all_fully())
                 .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-                // .on_press(on_press)
+                .on_press(on_press)
                 .label(app::icon_delete_forever())
         )
 }
 
-fn projects() -> impl Element {
-    Text::new("Projects")
+fn client_name(client: Arc<super::Client>) -> impl Element {
+    TextInput::new()
+        .s(Width::fill())
+        .s(Font::new().color(Theme::Font1).size(20))
+        .s(Background::new().color(Theme::Transparent))
+        .s(Borders::new().bottom(
+            Border::new().color(Theme::Background3)
+        ))
+        .s(Padding::all(8))
+        .label_hidden("client name")
+        .text_signal(client.name.signal_cloned())
+}
+
+fn projects(client: Arc<super::Client>) -> impl Element {
+    let client_id = client.id;
+    Column::new()
+        .s(Spacing::new(20))
+        .items_signal_vec(client.projects.signal_vec_cloned().map(move |p| {
+            project(client_id, p)
+        }))
+}
+
+fn project(client_id: ClientId, project: Arc<super::Project>) -> impl Element {
+    let id = project.id;
+    Row::new()
+        .s(Background::new().color(Theme::Background0))
+        .s(RoundedCorners::new().left(10).right_fully())
+        .s(Spacing::new(10))
+        .s(Padding::new().left(8))
+        .item(project_name(project.clone()))
+        .item(delete_entity_button(move || super::delete_project(client_id, id)))
+}
+
+fn project_name(project: Arc<super::Project>) -> impl Element {
+    TextInput::new()
+        .s(Width::fill())
+        .s(Font::new().color(Theme::Font0))
+        .s(Background::new().color(Theme::Transparent))
+        .s(Borders::new().bottom(
+            Border::new().color(Theme::Background3)
+        ))
+        .s(Padding::all(5))
+        .label_hidden("project name")
+        .text_signal(project.name.signal_cloned())
 }
 
 // blocks!{

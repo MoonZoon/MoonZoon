@@ -167,10 +167,9 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
         _ => return,
     };
 
-    sessions::by_session_id()
-        .get(session_id)
-        .unwrap()
-        .send_down_msg(&down_msg, cor_id).await;
+    if let Some(session) = sessions::by_session_id().get(session_id) {
+        session.send_down_msg(&down_msg, cor_id).await;
+    }
 
 
     // let down_msg = match up_msg {
