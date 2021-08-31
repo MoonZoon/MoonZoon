@@ -1,0 +1,125 @@
+body {
+	background: #fff;
+	color: #5f5f5f;
+	font-size: 16px;
+	font-family: 'Lato', sans-serif;
+	font-weight: 400;
+	margin: 0;
+	margin-bottom: 5rem;
+	max-width: 100%;
+	overflow-x: hidden;
+}
+
+.container {
+	padding: 16px;
+}
+
+header {
+	background: #fe673a;
+  margin-bottom: 2em;
+	padding: 15px;
+	position: fixed;
+	top: 0px;
+	width: 100%;
+}
+
+.icons-container {
+	margin-top: 120px;
+}
+
+h1 {
+	font-size: 32px;
+	margin: 0px;
+	color: white;
+}
+
+.two-columns {
+	-webkit-column-count: 2;
+	   -moz-column-count: 2;
+	        column-count: 2;
+}
+
+.icons__item,
+.icons__item i {
+	cursor: pointer;
+	text-align: center;
+	user-select: none;
+}
+
+.icons__item:hover {
+	color: #fe673a;
+}
+.icons__item__selected {
+	color: #fe673a;
+}
+.icons__item {
+	display: inline-block;
+	margin-bottom: 3em;
+	width: 200px;
+}
+
+.icons__item i {
+	font-size: 48px;
+}
+
+footer {
+	background: #ededed;
+	bottom: 0px;
+	color: #999;
+	font-size: 14px;
+	position: fixed;
+	width: 100%;
+}
+
+#close-code-snippet {
+	cursor: pointer;
+}
+
+.eos-logo-color-gradients {
+  /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#ff890a+0,ff420a+50,bc0289+100 */
+  background: #ff890a;
+  background: -moz-linear-gradient(-45deg, #ff890a 0%, #ff420a 50%, #bc0289 100%);
+  background: -webkit-linear-gradient(-45deg, #ff890a 0%, #ff420a 50%, #bc0289 100%);
+  background: linear-gradient(135deg, #ff890a 0%, #ff420a 50%, #bc0289 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff890a', endColorstr='#bc0289', GradientType=1 );
+}
+
+.toolbar {
+	padding: 10px;
+}
+
+.version {
+	font-size: 12px;
+}
+
+.extended-version-wrap {
+	margin-bottom: 10px;
+	display: flex;
+  margin: 0 0 30px 60px;
+}
+
+.extended-version-wrap a {
+	padding: 10px 14px;
+	background: #e6e6e6;
+	border-radius: 5px;
+	color: #1f1f1f;
+	text-decoration: none;
+	border: 1px solid #d0d0d0;
+}
+
+.searchbar{
+	margin-left: auto;
+	padding-left: 8px;
+}
+
+input[type=text] {
+width: 130px;
+-webkit-transition: width 0.15s ease-in-out;
+transition: width 0.15s ease-in-out;
+}
+
+/* When the input field gets focus, change its width to 100% */
+input[type=text]:focus {
+width: 200px;
+max-width: 200px;
+}
