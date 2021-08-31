@@ -71,6 +71,14 @@ fn add_project(client_id: ClientId) {
     zoon::println!("add_project not implemented yet");
 }
 
+fn delete_client(client_id: ClientId) {
+    zoon::println!("delete_client not implemented yet");
+}
+
+fn delete_project(client_id: ClientId, project_id: ProjectId) {
+    zoon::println!("delete_project not implemented yet");
+}
+
 // ------ ------
 //     View
 // ------ ------
