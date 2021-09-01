@@ -4,6 +4,7 @@ use std::mem;
 use std::ops::Deref;
 
 #[derive(Clone, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Mutable<T>(FSMutable<T>);
 
 impl<T> Mutable<T> {

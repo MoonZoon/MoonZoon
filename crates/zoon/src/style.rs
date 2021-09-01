@@ -76,30 +76,11 @@ pub trait Style<'a>: Default {
         Self::default()
     }
 
-    fn apply_to_raw_el<T: RawEl>(self, raw_el: T) -> T;
+    fn apply_to_raw_el<E: RawEl>(self, raw_el: E) -> E;
 
-    // fn update_raw_el_styles<T: RawEl>(self, mut raw_el: T) -> T {
-    //     let CssPropsContainer {
-    //         static_css_props,
-    //         dynamic_css_props,
-    //         task_handles,
-    //         static_css_classes,
-    //     } = self.into_css_props_container();
-
-    //     for (name, value) in static_css_props {
-    //         raw_el = raw_el.style(name, &value);
-    //     }
-    //     for (name, value) in dynamic_css_props {
-    //         raw_el = raw_el.style_signal(name, value);
-    //     }
-    //     if not(task_handles.is_empty()) {
-    //         raw_el = raw_el.after_remove(move |_| drop(task_handles))
-    //     }
-    //     for class in static_css_classes {
-    //         raw_el = raw_el.class(&class);
-    //     }
-    //     raw_el
-    // }
+    fn apply_to_style_group<E: RawEl>(self, raw_el: E, style_group: StyleGroup<'a>) -> (E, StyleGroup<'a>) {
+        (raw_el, style_group)
+    }
 }
 
 // ------ CssPropsContainer ------
@@ -149,7 +130,7 @@ impl<'a> StyleGroup<'a> {
         }
     }
 
-    pub fn style(mut self, name: &'a str, value: &'a str) -> Self {
+    pub fn style(mut self, name: &'a str, value: impl Into<Cow<'a, str>>) -> Self {
         self.css_props_container
             .static_css_props
             .insert(name, value.into());

@@ -4,7 +4,8 @@ use uuid::Uuid;
 
 // ------ TodoId -------
 
-#[derive(PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
+#[serde(crate = "serde")]
 pub struct TodoId(Uuid);
 
 impl TodoId {
@@ -18,24 +19,5 @@ impl Deref for TodoId {
 
     fn deref(&self) -> &Self::Target {
         &self.0
-    }
-}
-
-impl Serialize for TodoId {
-    fn serialize(&self) -> Result<serde_lite::Intermediate, serde_lite::Error> {
-        self.0.to_string().serialize()
-    }
-}
-
-impl Deserialize for TodoId {
-    fn deserialize(intermediate: &serde_lite::Intermediate) -> Result<Self, serde_lite::Error> {
-        intermediate
-            .as_str()
-            .ok_or_else(|| {
-                serde_lite::Error::invalid_value("TodoId can be deserialized only from String")
-            })?
-            .parse()
-            .map_err(|error| serde_lite::Error::invalid_value(error))
-            .map(Self)
     }
 }
