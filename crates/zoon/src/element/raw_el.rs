@@ -2,12 +2,16 @@ use crate::*;
 use once_cell::race::OnceBox;
 use std::mem::ManuallyDrop;
 use web_sys::{EventTarget, Node};
+use std::{rc::Rc, cell::Cell};
 
 mod raw_html_el;
 mod raw_svg_el;
 
 pub use raw_html_el::RawHtmlEl;
 pub use raw_svg_el::RawSvgEl;
+
+type U32Width = u32;
+type U32Height = u32;
 
 // ------ class_ids ------
 
@@ -181,6 +185,25 @@ pub trait RawEl: Sized {
     ) -> Self {
         self.update_dom_builder(|dom_builder| {
             dom_builder.class_signal(class.into_cow_str_wrapper(), enabled)
+        })
+    }
+
+    fn on_resize(
+        mut self,
+        handler: impl FnOnce(U32Width, U32Height) + Clone + 'static,
+    ) -> Self {
+        // @TODO should we create one global ResizeObserver to improve performance?
+
+        let resize_observer = Rc::new(Cell::new(None));
+        let resize_observer_for_insert = Rc::clone(&resize_observer);
+
+        self = self.after_insert(move |ws_element| {
+            let observer = ResizeObserver::new(ws_element.as_ref(), handler);
+            resize_observer_for_insert.set(Some(observer));
+        });
+
+        self.after_remove(move |_| {
+            drop(resize_observer);
         })
     }
 
