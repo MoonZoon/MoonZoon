@@ -16,6 +16,7 @@ static STORAGE_KEY: &str = "todomvc-zoon";
 // ------ Filter -------
 
 #[derive(Copy, Clone, Eq, PartialEq, EnumIter, Deserialize, Serialize)]
+#[serde(crate = "serde")]
 pub enum Filter {
     All,
     Active,
@@ -25,6 +26,7 @@ pub enum Filter {
 // ------ Todo -------
 
 #[derive(Deserialize, Serialize)]
+#[serde(crate = "serde")]
 struct Todo {
     id: TodoId,
     title: Mutable<String>,

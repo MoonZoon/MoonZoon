@@ -115,10 +115,13 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFl
     where
         PlaceholderFlag: FlagNotSet,
     {
-        self.raw_el = self
-            .raw_el
+        let mut el_and_group  = (self.raw_el, StyleGroup::new("::placeholder"));
+        for style_applicator in placeholder.style_applicators {
+            el_and_group = style_applicator(el_and_group);
+        }
+        self.raw_el = el_and_group.0
             .attr("placeholder", &placeholder.text)
-            .style_group(placeholder.style_group);
+            .style_group(el_and_group.1);
         self.into_type()
     }
 
@@ -196,29 +199,21 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFl
 
 pub struct Placeholder<'a> {
     text: Cow<'a, str>,
-    style_group: StyleGroup<'a>,
+    style_applicators: Vec<Box<dyn FnOnce((RawHtmlEl, StyleGroup<'a>)) -> (RawHtmlEl, StyleGroup<'a>) + 'a>>,
 }
 
 impl<'a> Placeholder<'a> {
     pub fn new(text: impl IntoCowStr<'a>) -> Self {
         Placeholder {
             text: text.into_cow_str(),
-            style_group: StyleGroup::new("::placeholder"),
+            style_applicators: Vec::new(),
         }
     }
 
-    pub fn s(mut self, style: impl Style<'a>) -> Self {
-        // let new_container = style.into_css_props_container();
-        // let old_container = &mut self.style_group.css_props_container;
-        // old_container
-        //     .static_css_props
-        //     .extend(new_container.static_css_props.into_iter());
-        // old_container
-        //     .dynamic_css_props
-        //     .extend(new_container.dynamic_css_props.into_iter());
-        // old_container
-        //     .task_handles
-        //     .extend(new_container.task_handles.into_iter());
+    pub fn s(mut self, style: impl Style<'a> + 'a) -> Self {
+        self.style_applicators.push(Box::new(|(raw_html_el, style_group): (RawHtmlEl, StyleGroup<'a>)| {
+            style.apply_to_style_group(raw_html_el, style_group)
+        }));
         self
     }
 }

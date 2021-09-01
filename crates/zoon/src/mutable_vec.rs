@@ -5,6 +5,7 @@ use futures_signals::signal_vec::{
 use std::ops::Deref;
 
 #[derive(Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MutableVec<T>(FSMutableVec<T>);
 
 impl<T> MutableVec<T> {
