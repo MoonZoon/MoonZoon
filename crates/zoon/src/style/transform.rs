@@ -44,7 +44,7 @@ impl Transform {
 }
 
 impl<'a> Style<'a> for Transform {
-    fn into_css_props_container(self) -> CssPropsContainer<'a> {
+    fn apply_to_raw_el<T: RawEl>(self, mut raw_el: T) -> T {
         let mut static_css_props = StaticCSSProps::default();
         if not(self.transformations.is_empty()) {
             let transform_value = self
@@ -55,6 +55,9 @@ impl<'a> Style<'a> for Transform {
                 .join(" ");
             static_css_props.insert("transform", transform_value.into());
         }
-        CssPropsContainer::default().static_css_props(static_css_props)
+        for (name, value) in static_css_props {
+            raw_el = raw_el.style(name, &value);
+        }
+        raw_el
     }
 }

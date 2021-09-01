@@ -110,19 +110,23 @@ impl RoundedCorners {
 }
 
 impl<'a> Style<'a> for RoundedCorners {
-    fn into_css_props_container(self) -> CssPropsContainer<'a> {
-
-        // static_css_props: StaticCSSProps<'a>,
-        // self.static_css_props
-        //     .insert("border-top-left-radius", px(radius));
-        // self.static_css_props
-        //     .insert("border-top-right-radius", px(radius));
-        // self.static_css_props
-        //     .insert("border-bottom-left-radius", px(radius));
-        // self.static_css_props
-        //     .insert("border-bottom-right-radius", px(radius));
-
-        // CssPropsContainer::default().static_css_props(self.static_css_props)
-        CssPropsContainer::default()
+    fn apply_to_raw_el<T: RawEl>(self, mut raw_el: T) -> T {
+        raw_el
     }
+
+    // fn into_css_props_container(self) -> CssPropsContainer<'a> {
+
+    //     // static_css_props: StaticCSSProps<'a>,
+    //     // self.static_css_props
+    //     //     .insert("border-top-left-radius", px(radius));
+    //     // self.static_css_props
+    //     //     .insert("border-top-right-radius", px(radius));
+    //     // self.static_css_props
+    //     //     .insert("border-bottom-left-radius", px(radius));
+    //     // self.static_css_props
+    //     //     .insert("border-bottom-right-radius", px(radius));
+
+    //     // CssPropsContainer::default().static_css_props(self.static_css_props)
+    //     CssPropsContainer::default()
+    // }
 }

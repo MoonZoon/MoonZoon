@@ -208,17 +208,17 @@ impl<'a> Placeholder<'a> {
     }
 
     pub fn s(mut self, style: impl Style<'a>) -> Self {
-        let new_container = style.into_css_props_container();
-        let old_container = &mut self.style_group.css_props_container;
-        old_container
-            .static_css_props
-            .extend(new_container.static_css_props.into_iter());
-        old_container
-            .dynamic_css_props
-            .extend(new_container.dynamic_css_props.into_iter());
-        old_container
-            .task_handles
-            .extend(new_container.task_handles.into_iter());
+        // let new_container = style.into_css_props_container();
+        // let old_container = &mut self.style_group.css_props_container;
+        // old_container
+        //     .static_css_props
+        //     .extend(new_container.static_css_props.into_iter());
+        // old_container
+        //     .dynamic_css_props
+        //     .extend(new_container.dynamic_css_props.into_iter());
+        // old_container
+        //     .task_handles
+        //     .extend(new_container.task_handles.into_iter());
         self
     }
 }

@@ -40,9 +40,13 @@ impl<'a> Background<'a> {
 }
 
 impl<'a> Style<'a> for Background<'a> {
-    fn into_css_props_container(self) -> CssPropsContainer<'a> {
-        CssPropsContainer::default()
-            .static_css_props(self.static_css_props)
-            .dynamic_css_props(self.dynamic_css_props)
+    fn apply_to_raw_el<T: RawEl>(self, mut raw_el: T) -> T {
+        for (name, value) in self.static_css_props {
+            raw_el = raw_el.style(name, &value);
+        }
+        for (name, value) in self.dynamic_css_props {
+            raw_el = raw_el.style_signal(name, value);
+        }
+        raw_el
     }
 }
