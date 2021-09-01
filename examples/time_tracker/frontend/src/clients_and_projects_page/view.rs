@@ -41,7 +41,7 @@ fn add_entity_button(title: &str, on_press: impl Fn() + Copy + 'static) -> impl 
                 )))
                 .s(Font::new().color(Theme::Font3).weight(NamedWeight::SemiBold))
                 .s(Padding::all(5))
-                .s(RoundedCorners::all_fully())
+                .s(RoundedCorners::all_max())
                 .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
                 .on_press(on_press)
                 .label(
@@ -96,7 +96,7 @@ fn delete_entity_button(on_press: impl Fn() + Copy + 'static) -> impl Element {
                     || Theme::Background3,
                 )))
                 .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
-                .s(RoundedCorners::all_fully())
+                .s(RoundedCorners::all_max())
                 .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
                 .on_press(on_press)
                 .label(app::icon_delete_forever())
@@ -129,7 +129,7 @@ fn project(client_id: ClientId, project: Arc<super::Project>) -> impl Element {
     let id = project.id;
     Row::new()
         .s(Background::new().color(Theme::Background0))
-        .s(RoundedCorners::new().left(10).right_fully())
+        .s(RoundedCorners::new().left(10).right_max())
         .s(Spacing::new(10))
         .s(Padding::new().left(8))
         .item(project_name(project.clone()))
