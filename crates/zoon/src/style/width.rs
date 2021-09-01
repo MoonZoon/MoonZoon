@@ -35,9 +35,13 @@ impl<'a> Width<'a> {
 }
 
 impl<'a> Style<'a> for Width<'a> {
-    fn into_css_props_container(self) -> CssPropsContainer<'a> {
-        CssPropsContainer::default()
-            .static_css_props(self.static_css_props)
-            .static_css_classes(self.static_css_classes)
+    fn apply_to_raw_el<T: RawEl>(self, mut raw_el: T) -> T {
+        for (name, value) in self.static_css_props {
+            raw_el = raw_el.style(name, &value);
+        }
+        for class in self.static_css_classes {
+            raw_el = raw_el.class(&class);
+        }
+        raw_el
     }
 }
