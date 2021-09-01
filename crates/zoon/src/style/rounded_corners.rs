@@ -110,8 +110,11 @@ impl RoundedCorners {
 }
 
 impl<'a> Style<'a> for RoundedCorners {
-    fn apply_to_raw_el<T: RawEl>(self, mut raw_el: T) -> T {
-        raw_el
+    fn apply_to_raw_el<E: RawEl>(self, raw_el: E, style_group: Option<StyleGroup<'a>>) -> (E, Option<StyleGroup<'a>>) {
+        if let Some(mut style_group) = style_group {
+            return (raw_el, Some(style_group))
+        }
+        (raw_el, None)
     }
 
     // fn into_css_props_container(self) -> CssPropsContainer<'a> {

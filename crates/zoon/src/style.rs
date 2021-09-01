@@ -76,11 +76,7 @@ pub trait Style<'a>: Default {
         Self::default()
     }
 
-    fn apply_to_raw_el<E: RawEl>(self, raw_el: E) -> E;
-
-    fn apply_to_style_group<E: RawEl>(self, raw_el: E, style_group: StyleGroup<'a>) -> (E, StyleGroup<'a>) {
-        (raw_el, style_group)
-    }
+    fn apply_to_raw_el<E: RawEl>(self, raw_el: E, style_group: Option<StyleGroup<'a>>) -> (E, Option<StyleGroup<'a>>);
 }
 
 // ------ CssPropsContainer ------

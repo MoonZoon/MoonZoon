@@ -40,13 +40,22 @@ impl<'a> Background<'a> {
 }
 
 impl<'a> Style<'a> for Background<'a> {
-    fn apply_to_raw_el<T: RawEl>(self, mut raw_el: T) -> T {
+    fn apply_to_raw_el<E: RawEl>(self, mut raw_el: E, style_group: Option<StyleGroup<'a>>) -> (E, Option<StyleGroup<'a>>) {
+        if let Some(mut style_group) = style_group {
+            for (name, value) in self.static_css_props {
+                style_group = style_group.style(name, value);
+            }
+            for (name, value) in self.dynamic_css_props {
+                style_group = style_group.style_signal(name, value);
+            }
+            return (raw_el, Some(style_group))
+        }
         for (name, value) in self.static_css_props {
             raw_el = raw_el.style(name, &value);
         }
         for (name, value) in self.dynamic_css_props {
             raw_el = raw_el.style_signal(name, value);
         }
-        raw_el
+        (raw_el, None)
     }
 }

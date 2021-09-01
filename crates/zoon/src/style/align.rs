@@ -54,10 +54,10 @@ impl<'a> Align<'a> {
 }
 
 impl<'a> Style<'a> for Align<'a> {
-    fn apply_to_raw_el<T: RawEl>(self, mut raw_el: T) -> T {
+    fn apply_to_raw_el<E: RawEl>(self, mut raw_el: E, style_group: Option<StyleGroup<'a>>) -> (E, Option<StyleGroup<'a>>) {
         for class in self.static_css_classes {
             raw_el = raw_el.class(&class);
         }
-        raw_el
+        (raw_el, style_group)
     }
 }
