@@ -79,57 +79,25 @@ pub trait Style<'a>: Default {
     fn apply_to_raw_el<E: RawEl>(self, raw_el: E, style_group: Option<StyleGroup<'a>>) -> (E, Option<StyleGroup<'a>>);
 }
 
-// ------ CssPropsContainer ------
-
-#[derive(Default)]
-pub struct CssPropsContainer<'a> {
-    pub static_css_props: StaticCSSProps<'a>,
-    pub dynamic_css_props: DynamicCSSProps,
-    pub static_css_classes: StaticCssClasses<'a>,
-    pub task_handles: Vec<TaskHandle>,
-}
-
-impl<'a> CssPropsContainer<'a> {
-    pub fn static_css_props(mut self, static_css_props: StaticCSSProps<'a>) -> Self {
-        self.static_css_props = static_css_props;
-        self
-    }
-
-    pub fn dynamic_css_props(mut self, dynamic_css_props: DynamicCSSProps) -> Self {
-        self.dynamic_css_props = dynamic_css_props;
-        self
-    }
-
-    pub fn static_css_classes(mut self, static_css_classes: StaticCssClasses<'a>) -> Self {
-        self.static_css_classes = static_css_classes;
-        self
-    }
-
-    pub fn task_handles(mut self, task_handles: Vec<TaskHandle>) -> Self {
-        self.task_handles = task_handles;
-        self
-    }
-}
-
 // ------ StyleGroup ------
 
 pub struct StyleGroup<'a> {
     pub selector: Cow<'a, str>,
-    pub css_props_container: CssPropsContainer<'a>,
+    static_css_props: StaticCSSProps<'a>,
+    dynamic_css_props: DynamicCSSProps,
 }
 
 impl<'a> StyleGroup<'a> {
     pub fn new(selector: impl IntoCowStr<'a>) -> Self {
         Self {
             selector: selector.into_cow_str(),
-            css_props_container: CssPropsContainer::default(),
+            static_css_props: StaticCSSProps::default(),
+            dynamic_css_props: DynamicCSSProps::default(),
         }
     }
 
     pub fn style(mut self, name: &'a str, value: impl Into<Cow<'a, str>>) -> Self {
-        self.css_props_container
-            .static_css_props
-            .insert(name, value.into());
+        self.static_css_props.insert(name, value.into());
         self
     }
 
@@ -138,9 +106,7 @@ impl<'a> StyleGroup<'a> {
         name: impl IntoCowStr<'static>,
         value: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static,
     ) -> Self {
-        self.css_props_container
-            .dynamic_css_props
-            .insert(name.into_cow_str(), box_css_signal(value));
+        self.dynamic_css_props.insert(name.into_cow_str(), box_css_signal(value));
         self
     }
 }
@@ -226,13 +192,13 @@ impl GlobalStyles {
 
         drop(ids_lock);
 
-        for (name, value) in group.css_props_container.static_css_props {
+        for (name, value) in group.static_css_props {
             set_css_property(&declaration, name, &value);
         }
 
         let declaration = Arc::new(SendWrapper::new(declaration));
-        let mut task_handles = group.css_props_container.task_handles;
-        for (name, value_signal) in group.css_props_container.dynamic_css_props {
+        let mut task_handles = Vec::new();
+        for (name, value_signal) in group.dynamic_css_props {
             let declaration = Arc::clone(&declaration);
             let task = value_signal.for_each(move |value| {
                 if let Some(value) = value.into_option_cow_str() {

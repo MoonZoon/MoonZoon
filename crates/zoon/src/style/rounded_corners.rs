@@ -1,7 +1,9 @@
 use crate::*;
+use futures_signals::signal::{channel, Sender};
 
 // ------ Radius ------
 
+#[derive(Clone, Copy)]
 enum Radius {
     Px(u32),
     Max,
@@ -15,7 +17,7 @@ impl Default for Radius {
 
 // ------ RoundedCorners ------
 
-#[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct RoundedCorners {
     top_left: Radius,
     top_right: Radius,
@@ -110,26 +112,27 @@ impl RoundedCorners {
 }
 
 impl<'a> Style<'a> for RoundedCorners {
-    fn apply_to_raw_el<E: RawEl>(self, raw_el: E, style_group: Option<StyleGroup<'a>>) -> (E, Option<StyleGroup<'a>>) {
+    fn apply_to_raw_el<E: RawEl>(self, mut raw_el: E, style_group: Option<StyleGroup<'a>>) -> (E, Option<StyleGroup<'a>>) {
+        let (size_sender, size_receiver) = channel((0, 0));
+        
+        raw_el = raw_el.on_resize(move |width, height| {
+            size_sender.send((width, height)).unwrap_throw();
+        });
+
+        let border_radius_signal = size_receiver.map(move |(width, height)| {
+            compute_radii(self, width, height)
+        });
+
         if let Some(mut style_group) = style_group {
+            style_group = style_group.style_signal("border-radius", border_radius_signal);
             return (raw_el, Some(style_group))
         }
+        raw_el = raw_el.style_signal("border-radius", border_radius_signal);
         (raw_el, None)
     }
+}
 
-    // fn into_css_props_container(self) -> CssPropsContainer<'a> {
-
-    //     // static_css_props: StaticCSSProps<'a>,
-    //     // self.static_css_props
-    //     //     .insert("border-top-left-radius", px(radius));
-    //     // self.static_css_props
-    //     //     .insert("border-top-right-radius", px(radius));
-    //     // self.static_css_props
-    //     //     .insert("border-bottom-left-radius", px(radius));
-    //     // self.static_css_props
-    //     //     .insert("border-bottom-right-radius", px(radius));
-
-    //     // CssPropsContainer::default().static_css_props(self.static_css_props)
-    //     CssPropsContainer::default()
-    // }
+fn compute_radii(corners: RoundedCorners, width: u32, height: u32) -> String {
+    crate::println!("xx");
+    "0px 0px 0px 0px".to_owned()
 }
