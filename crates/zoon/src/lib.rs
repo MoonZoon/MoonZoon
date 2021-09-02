@@ -114,6 +114,9 @@ pub use serde::{self, Deserialize, Serialize, de::DeserializeOwned};
 #[cfg(feature = "thiserror")]
 pub use thiserror;
 
+#[cfg(feature = "chrono")]
+pub use chrono::{self, prelude::*, Duration};
+
 // ------ format! ------
 
 #[cfg(feature = "fmt")]

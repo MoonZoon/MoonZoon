@@ -31,6 +31,7 @@ serde-lite = { version = "0.1.1", features = ["derive"], default-features = fals
 serde = { version = "1.0.130", features = ["derive", "std", "rc"], default-features = false, optional = true  }
 serde_json = { version = "1.0.64", features = ['std'], default-features = false, optional = true }
 thiserror = { version = "1.0.26", default-features = false, optional = true }
+chrono = { version = "0.4", default-features = false, optional = true }
 
 ufmt = { version = "0.1.0", features = ["std"], default-features = false, optional = true }
 lexical = { git = "https://github.com/Alexhuszagh/rust-lexical", rev = "7010efd", features = ["std"], default-features = false, optional = true }
@@ -67,7 +68,7 @@ features = [
 default-features = false
 
 [features]
-default = ["static_ref", "panic_hook", "small_alloc", "clone", "apply", "connection", "routing", "web_storage"]
+default = ["static_ref", "panic_hook", "small_alloc", "clone", "apply", "connection", "routing", "web_storage", "chrono"]
 routing = ["route_macro"]
 connection = ["moonlight"]
 static_ref = ["static_ref_macro"]

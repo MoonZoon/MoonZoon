@@ -27,6 +27,12 @@ pub enum TimeBlockStatus {
     Paid,
 }
 
+impl Default for TimeBlockStatus {
+    fn default() -> Self {
+        Self::Unpaid
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(crate = "serde")]
 pub struct Invoice {
