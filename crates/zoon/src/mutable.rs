@@ -3,9 +3,15 @@ use futures_signals::signal::{Mutable as FSMutable, MutableLockRef, MutableSigna
 use std::mem;
 use std::ops::Deref;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Mutable<T>(FSMutable<T>);
+
+impl<T> Clone for Mutable<T> {
+    fn clone(&self) -> Self {
+        Mutable(self.0.clone())
+    }
+}
 
 impl<T> Mutable<T> {
     pub fn new(value: T) -> Self {

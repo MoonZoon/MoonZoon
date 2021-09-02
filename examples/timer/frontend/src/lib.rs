@@ -41,7 +41,7 @@ fn timeout_enabled() -> impl Signal<Item = bool> {
 }
 
 fn start_timeout() {
-    timeout().set(Some(Timer::new(2_000, stop_timeout)));
+    timeout().set(Some(Timer::once(2_000, stop_timeout)));
 }
 
 fn stop_timeout() {
