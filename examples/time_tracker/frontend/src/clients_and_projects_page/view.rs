@@ -85,22 +85,19 @@ fn client_name_and_delete_button(client: Arc<super::Client>) -> impl Element {
 
 fn delete_entity_button(on_press: impl Fn() + Copy + 'static) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
-    El::new()
-        .child(
-            Button::new()
-                .s(Width::new(40))
-                .s(Height::new(40))
-                .s(Align::center())
-                .s(Background::new().color_signal(hovered_signal.map_bool(
-                    || Theme::Background3Highlighted,
-                    || Theme::Background3,
-                )))
-                .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
-                .s(RoundedCorners::all_max())
-                .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-                .on_press(on_press)
-                .label(app::icon_delete_forever())
-        )
+    Button::new()
+        .s(Width::new(40))
+        .s(Height::new(40))
+        .s(Align::center())
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || Theme::Background3Highlighted,
+            || Theme::Background3,
+        )))
+        .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
+        .s(RoundedCorners::all_max())
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .on_press(on_press)
+        .label(app::icon_delete_forever())
 }
 
 fn client_name(client: Arc<super::Client>) -> impl Element {
@@ -137,6 +134,7 @@ fn project(client_id: ClientId, project: Arc<super::Project>) -> impl Element {
 }
 
 fn project_name(project: Arc<super::Project>) -> impl Element {
+    let debounced_rename = Mutable::new(None);
     TextInput::new()
         .s(Width::fill())
         .s(Font::new().color(Theme::Font0))
@@ -147,6 +145,12 @@ fn project_name(project: Arc<super::Project>) -> impl Element {
         .s(Padding::all(5))
         .label_hidden("project name")
         .text_signal(project.name.signal_cloned())
+        .on_change(move |text| {
+            project.name.set_neq(text);
+            debounced_rename.set(Some(Timer::once(1000, || {
+                zoon::println!("Debounced!");
+            })))
+        })
 }
 
 // blocks!{
