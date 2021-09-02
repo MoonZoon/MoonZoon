@@ -7,9 +7,16 @@ pub struct EntityId(Ulid);
 
 impl EntityId {
     pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for EntityId {
+    fn default() -> Self {
         Self(Ulid::generate())
     }
 }
+
 
 impl fmt::Display for EntityId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

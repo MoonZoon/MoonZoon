@@ -53,7 +53,7 @@ fn name_input() -> impl Element {
         .id("name")
         .s(Padding::all(5))
         .s(RoundedCorners::all(4))
-        .focused()
+        .focus(true)
         .on_change(super::set_name)
         .text_signal(super::name().signal_cloned())
         .on_key_down(|event| event.if_key(Key::Enter, super::log_in))

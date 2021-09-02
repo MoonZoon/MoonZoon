@@ -9,15 +9,19 @@ mod view;
 //     Types
 // ------ ------
 
+#[derive(Default)]
 struct Client {
     id: ClientId,
     name: Mutable<String>,
-    projects: MutableVec<Arc<Project>>
+    projects: MutableVec<Arc<Project>>,
+    is_old: bool,
 }
 
+#[derive(Default)]
 struct Project {
     id: ProjectId,
     name: Mutable<String>,
+    is_old: bool,
 }
 
 // ------ ------
@@ -49,6 +53,7 @@ pub fn convert_and_set_clients(new_clients: Vec<clients_and_projects::Client>) {
                 id: client.id,
                 name: Mutable::new(client.name),
                 projects: MutableVec::new_with_values(convert_projects(client.projects)),
+                is_old: true,
             })
         }).collect()
     }
@@ -57,6 +62,7 @@ pub fn convert_and_set_clients(new_clients: Vec<clients_and_projects::Client>) {
             Arc::new(Project {
                 id: project.id,
                 name: Mutable::new(project.name),
+                is_old: true,
             })
         }).collect()
     }
@@ -64,19 +70,33 @@ pub fn convert_and_set_clients(new_clients: Vec<clients_and_projects::Client>) {
 }
 
 fn add_client() {
-    zoon::println!("add_client not implemented yet");
-}
-
-fn add_project(client_id: ClientId) {
-    zoon::println!("add_project not implemented yet");
+    // @TODO send up_msg
+    clients().lock_mut().insert_cloned(0, Arc::new(Client::default()))
 }
 
 fn delete_client(client_id: ClientId) {
-    zoon::println!("delete_client not implemented yet");
+    // @TODO send up_msg + confirm dialog
+    clients().lock_mut().retain(|client| client.id != client_id);
 }
 
-fn delete_project(client_id: ClientId, project_id: ProjectId) {
-    zoon::println!("delete_project not implemented yet");
+fn rename_client(client_id: ClientId, name: &str) {
+    // @TODO send up_msg
+    zoon::println!("rename_client not implemented yet");
+}
+
+fn add_project(client: &Client) {
+    // @TODO send up_msg
+    client.projects.lock_mut().insert_cloned(0, Arc::new(Project::default()))
+}
+
+fn delete_project(client: &Client, project_id: ProjectId) {
+    // @TODO send up_msg + confirm dialog
+    client.projects.lock_mut().retain(|project| project.id != project_id);
+}
+
+fn rename_project(project_id: ProjectId, name: &str) {
+    // @TODO send up_msg
+    zoon::println!("rename_project not implemented yet");
 }
 
 // ------ ------
