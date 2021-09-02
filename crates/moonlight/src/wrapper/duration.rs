@@ -7,6 +7,12 @@ impl From<Wrapper<Self>> for Duration {
     }
 }
 
+impl Default for Wrapper<Duration> {
+    fn default() -> Self {
+        Wrapper::new(Duration::zero())
+    }
+}
+
 #[cfg(feature = "serde")]
 impl Serialize for Wrapper<Duration> {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
