@@ -121,7 +121,7 @@ fn new_message_input() -> impl Element {
         .s(RoundedCorners::new().left(5))
         .s(Width::fill())
         .s(Font::new().size(17))
-        .focused()
+        .focus(true)
         .on_change(set_new_message_text)
         .label_hidden("New message text")
         .placeholder(Placeholder::new("Message"))

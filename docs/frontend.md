@@ -350,7 +350,7 @@ fn new_todo_title() -> impl Element {
         .s(Shadows::new(vec![
             Shadow::new().inner().y(-2).blur(1).color(hsla(0, 0, 0, 3))
         ]))
-        .focused()
+        .focus(true)
         .on_change(super::set_new_todo_title)
         .label_hidden("What needs to be done?")
         .placeholder(

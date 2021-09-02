@@ -71,7 +71,7 @@ fn new_todo_title() -> impl Element {
             .y(-2)
             .blur(1)
             .color(hsla(0, 0, 0, 3))]))
-        .focused()
+        .focus(true)
         .on_change(super::set_new_todo_title)
         .label_hidden("What needs to be done?")
         .placeholder(
@@ -199,7 +199,7 @@ fn editing_todo_title(todo: Arc<Todo>) -> impl Element {
             .color(hsla(0, 0, 0, 20))]))
         .s(Font::new().color(hsl(0, 0, 32.7)))
         .label_hidden("selected todo title")
-        .focused()
+        .focus(true)
         .on_blur(super::save_selected_todo)
         .on_change(move |text| todo.edited_title.set_neq(Some(text)))
         .on_key_down(|event| match event.key() {
