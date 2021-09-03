@@ -12,7 +12,7 @@ mod view;
 #[derive(Default)]
 struct Client {
     id: ClientId,
-    name:String,
+    name: String,
     time_blocks: MutableVec<Arc<TimeBlock>>,
     tracked: Wrapper<Duration>,
 }
