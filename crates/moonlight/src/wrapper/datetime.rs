@@ -6,6 +6,12 @@ impl<Tz: TimeZone> From<Wrapper<Self>> for DateTime<Tz> {
     }
 }
 
+impl Default for Wrapper<DateTime<Local>> {
+    fn default() -> Self {
+        Wrapper::new(Local::now())
+    }
+}
+
 #[cfg(feature = "serde-lite")]
 impl<Tz: TimeZone> Serialize for Wrapper<DateTime<Tz>> where Tz::Offset: std::fmt::Display {
     fn serialize(&self) -> Result<Intermediate, serde_lite::Error> {
