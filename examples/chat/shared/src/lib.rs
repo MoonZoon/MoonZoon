@@ -1,8 +1,9 @@
-use moonlight::serde_lite::{self, Deserialize, Serialize};
+use moonlight::*;
 
 // ------ UpMsg ------
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(crate = "serde")]
 pub enum UpMsg {
     SendMessage(Message),
 }
@@ -10,6 +11,7 @@ pub enum UpMsg {
 // ------ DownMsg ------
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(crate = "serde")]
 pub enum DownMsg {
     MessageReceived(Message),
 }
@@ -17,6 +19,7 @@ pub enum DownMsg {
 // ------ Message ------
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(crate = "serde")]
 pub struct Message {
     pub username: String,
     pub text: String,
