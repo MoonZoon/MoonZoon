@@ -87,6 +87,12 @@ pub fn convert_and_set_clients(new_clients: Vec<time_tracker::Client>) {
     clients().lock_mut().replace_cloned(convert_clients(new_clients));
 }
 
+// -- project --
+
+fn toggle_tracker(project: &Project) {
+    zoon::println!("toggle_tracker not implemented yet");
+}
+
 // -- time_entry --
 
 fn add_time_entry(project: &Project) {
