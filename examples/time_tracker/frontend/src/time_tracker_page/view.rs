@@ -2,10 +2,16 @@ use zoon::*;
 use crate::{theme::Theme, app};
 use std::sync::Arc;
 
+// @TODO try rewrite some clone()s to references (applies to all pages)
+// @TODO refactor some parts to shared views in app.rs (applies to all pages)
+// @TODO const DELETE_ENTITY_BUTTON_RADIUS in app.rs? + replace 40 / 2 with it
+// @TODO dark/light theme (applies to all pages)
+// @TODO fixed header? (applies to all pages)
+
 pub fn page() -> impl Element {
     Column::new()
         .item(title())
-        // .item(content())
+        .item(content())
 }
 
 fn title() -> impl Element {
@@ -20,147 +26,303 @@ fn title() -> impl Element {
         )
 }
 
-// fn content() -> impl Element {
-//     Column::new()
-//         .s(Spacing::new(35))
-//         .s(Padding::new().x(10).bottom(10))
-//         .item(add_entity_button("Add Client", super::add_client))
-//         .item(clients())
-// }
+fn content() -> impl Element {
+    Column::new()
+        .s(Spacing::new(35))
+        .s(Padding::new().x(10).bottom(10))
+        .item(clients())
+}
 
-// fn add_entity_button(title: &str, on_press: impl FnOnce() + Clone + 'static) -> impl Element {
-//     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
-//     El::new()
-//         .child(
-//             Button::new()
-//                 .s(Align::center())
-//                 .s(Background::new().color_signal(hovered_signal.map_bool(
-//                     || Theme::Background3Highlighted,
-//                     || Theme::Background3,
-//                 )))
-//                 .s(Font::new().color(Theme::Font3).weight(NamedWeight::SemiBold))
-//                 .s(Padding::all(5))
-//                 .s(RoundedCorners::all_max())
-//                 .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-//                 .on_press(on_press)
-//                 .label(add_entity_button_label(title))
-//         )
-// }
+// -- clients --
 
-// fn add_entity_button_label(title: &str) -> impl Element {
-//     Row::new()
-//     .item(app::icon_add())
-//     .item(
-//         El::new()
-//             .s(Padding::new().right(8).bottom(1))
-//             .child(title)
-//     )
-// }
+fn clients() -> impl Element {
+    Column::new()
+        .s(Spacing::new(35))
+        .s(Align::new().center_x())
+        .items_signal_vec(super::clients().signal_vec_cloned().map(client))
+}
 
-// fn clients() -> impl Element {
-//     Column::new()
-//         .s(Spacing::new(35))
-//         .s(Align::new().center_x())
-//         .items_signal_vec(super::clients().signal_vec_cloned().map(client))
-// }
+fn client(client: Arc<super::Client>) -> impl Element {
+    Column::new()
+        .s(Background::new().color(Theme::Background1))
+        .s(RoundedCorners::all(10))
+        .s(Padding::all(15))
+        .s(Spacing::new(20))
+        .item(client_name(client.clone()))
+        .item(projects(client))
+}
 
-// fn client(client: Arc<super::Client>) -> impl Element {
-//     Column::new()
-//         .s(Background::new().color(Theme::Background1))
-//         .s(RoundedCorners::all(10))
-//         .s(Padding::all(15))
-//         .s(Spacing::new(20))
-//         .item(client_name_and_delete_button(client.clone()))
-//         .item(add_entity_button("Add Project", clone!((client) move || super::add_project(&client))))
-//         .item(projects(client))
-// }
+fn client_name(client: Arc<super::Client>) -> impl Element {
+    El::new()
+        .s(Width::fill())
+        .s(Font::new().color(Theme::Font1).size(20))
+        .s(Background::new().color(Theme::Transparent))
+        .s(Padding::all(8))
+        .child(&client.name)
+}
 
-// fn client_name_and_delete_button(client: Arc<super::Client>) -> impl Element {
-//     let id = client.id;
-//     Row::new()
-//         .s(Spacing::new(10))
-//         .item(client_name(client.clone()))
-//         .item(delete_entity_button(move || super::delete_client(id)))
-// }
+// -- projects --
 
-// fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
-//     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
-//     Button::new()
-//         .s(Width::new(40))
-//         .s(Height::new(40))
-//         .s(Align::center())
-//         .s(Background::new().color_signal(hovered_signal.map_bool(
-//             || Theme::Background3Highlighted,
-//             || Theme::Background3,
-//         )))
-//         .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
-//         .s(RoundedCorners::all_max())
-//         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-//         .on_press(on_press)
-//         .label(app::icon_delete_forever())
-// }
+fn projects(client: Arc<super::Client>) -> impl Element {
+    Column::new()
+        .s(Spacing::new(20))
+        .items(client.projects.iter().map(|p| {
+            project(p.clone())
+        }))
+}
 
-// fn client_name(client: Arc<super::Client>) -> impl Element {
-//     let debounced_rename = Mutable::new(None);
-//     TextInput::new()
-//         .s(Width::fill())
-//         .s(Font::new().color(Theme::Font1).size(20))
-//         .s(Background::new().color(Theme::Transparent))
-//         .s(Borders::new().bottom(
-//             Border::new().color(Theme::Background3)
-//         ))
-//         .s(Padding::all(8))
-//         .focus(not(client.is_old))
-//         .label_hidden("client name")
-//         .text_signal(client.name.signal_cloned())
-//         .on_change(move |text| {
-//             client.name.set_neq(text);
-//             debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
-//                 super::rename_client(client.id, &client.name.lock_ref())
-//             })))
-//         })
-// }
+fn project(project: Arc<super::Project>) -> impl Element {
+    Column::new()
+        .s(Background::new().color(Theme::Background0))
+        .s(RoundedCorners::all(10))
+        .s(Spacing::new(10))
+        .s(Padding::all(15))
+        .item(project_name_and_start_stop_button(project.clone()))
+        .item(time_entries(project))
+}
 
-// fn projects(client: Arc<super::Client>) -> impl Element {
-//     Column::new()
-//         .s(Spacing::new(20))
-//         .items_signal_vec(client.projects.signal_vec_cloned().map(move |p| {
-//             project(client.clone(), p)
-//         }))
-// }
+fn project_name_and_start_stop_button(project: Arc<super::Project>) -> impl Element {
+    Row::new()
+        .item(project_name(project.clone()))
+        .item(start_stop_button(project))
+}
 
-// fn project(client: Arc<super::Client>, project: Arc<super::Project>) -> impl Element {
-//     let id = project.id;
-//     Row::new()
-//         .s(Background::new().color(Theme::Background0))
-//         .s(RoundedCorners::new().left(10).right_max())
-//         .s(Spacing::new(10))
-//         .s(Padding::new().left(8))
-//         .item(project_name(project.clone()))
-//         .item(delete_entity_button(move || super::delete_project(&client, id)))
-// }
+fn project_name(project: Arc<super::Project>) -> impl Element {
+    El::new()
+        .s(Width::fill())
+        .s(Font::new().color(Theme::Font0).size(18))
+        .s(Background::new().color(Theme::Transparent))
+        .s(Padding::all(8))
+        .child(&project.name)
+}
 
-// fn project_name(project: Arc<super::Project>) -> impl Element {
-//     let debounced_rename = Mutable::new(None);
-//     TextInput::new()
-//         .s(Width::fill())
-//         .s(Font::new().color(Theme::Font0))
-//         .s(Background::new().color(Theme::Transparent))
-//         .s(Borders::new().bottom(
-//             Border::new().color(Theme::Background3)
-//         ))
-//         .s(Padding::all(5))
-//         .focus(not(project.is_old))
-//         .label_hidden("project name")
-//         .text_signal(project.name.signal_cloned())
-//         .on_change(move |text| {
-//             project.name.set_neq(text);
-//             debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
-//                 super::rename_project(project.id, &project.name.lock_ref())
-//             })))
-//         })
-// }
+fn start_stop_button(project: Arc<super::Project>) -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Button::new()
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || Theme::Background3Highlighted,
+            || Theme::Background3,
+        )))
+        .s(Font::new().color(Theme::Font3).weight(NamedWeight::SemiBold))
+        .s(RoundedCorners::all_max())
+        .s(Padding::new().x(12).y(10))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .on_press(move || super::toggle_tracker(&project))
+        .label("Start")
+}
 
+// -- time_entries --
+
+fn time_entries(project: Arc<super::Project>) -> impl Element {
+    Column::new()
+        .s(Spacing::new(20))
+        .items_signal_vec(project.time_entries.signal_vec_cloned().map(move |t| {
+            time_entry(project.clone(), t.clone())
+        }))
+}
+
+fn time_entry(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -> impl Element {
+    Column::new()
+        .s(Background::new().color(Theme::Background1))
+        .s(RoundedCorners::all(10).top_right(40 / 2))
+        .s(Spacing::new(10))
+        .s(Padding::new().left(8))
+        .item(time_entry_name_and_delete_button(project, time_entry.clone()))
+        .item(time_entry_times(time_entry))
+}
+
+fn time_entry_name_and_delete_button(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -> impl Element {
+    let id = time_entry.id;
+    Row::new()
+        .item(time_entry_name(time_entry.clone()))
+        .item(delete_entity_button(move || super::delete_time_entry(&project, id)))
+}
+
+fn time_entry_name(time_entry: Arc<super::TimeEntry>) -> impl Element {
+    let debounced_rename = Mutable::new(None);
+    TextInput::new()
+        .s(Width::fill())
+        .s(Font::new().color(Theme::Font1))
+        .s(Background::new().color(Theme::Transparent))
+        .s(Borders::new().bottom(
+            Border::new().color(Theme::Background3)
+        ))
+        .s(Padding::all(5))
+        .focus(not(time_entry.is_old))
+        .label_hidden("time_entry name")
+        .text_signal(time_entry.name.signal_cloned())
+        .on_change(move |text| {
+            time_entry.name.set_neq(text);
+            debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+                super::rename_time_entry(time_entry.id, &time_entry.name.lock_ref())
+            })))
+        })
+}
+
+fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Button::new()
+        .s(Width::new(40))
+        .s(Height::new(40))
+        .s(Align::center())
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || Theme::Background3Highlighted,
+            || Theme::Background3,
+        )))
+        .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
+        .s(RoundedCorners::all_max())
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .on_press(on_press)
+        .label(app::icon_delete_forever())
+}
+
+fn time_entry_times(time_entry: Arc<super::TimeEntry>) -> impl Element {
+    Row::new()
+        .item(time_entry_started(time_entry.clone()))
+        .item(time_entry_duration(time_entry.clone()))
+        .item(time_entry_stopped(time_entry))
+}
+
+fn time_entry_started(time_entry: Arc<super::TimeEntry>) -> impl Element {
+    Column::new()
+        .s(Width::fill().max(150))
+        .s(Height::fill())
+        .item(time_entry_started_date(time_entry.clone()))
+        .item(time_entry_started_time(time_entry.clone()))
+}
+
+fn number_input() -> impl Element {
+    TextInput::new()
+        .s(Width::fill())
+        .s(Font::new().color(Theme::Font1).center())
+        .s(Background::new().color(Theme::Transparent))
+        .s(Borders::new().bottom(
+            Border::new().color(Theme::Background3)
+        ))
+        .s(Padding::all(5))
+        .label_hidden("time entry started date")
+        .text("2021-08-22")
+        .input_type(InputType::number())
+}
+
+fn time_entry_started_date(time_entry: Arc<super::TimeEntry>) -> impl Element {
+    // let debounced_rename = Mutable::new(None);
+    TextInput::new()
+        .s(Width::fill())
+        .s(Font::new().color(Theme::Font1).center())
+        .s(Background::new().color(Theme::Transparent))
+        .s(Borders::new().bottom(
+            Border::new().color(Theme::Background3)
+        ))
+        .s(Padding::all(5))
+        .label_hidden("time entry started date")
+        .text("2021-08-22")
+        // .text_signal(project.name.signal_cloned())
+        // .on_change(move |text| {
+        //     project.name.set_neq(text);
+        //     debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+        //         super::rename_project(project.id, &project.name.lock_ref())
+        //     })))
+        // })
+}
+
+fn time_entry_started_time(time_entry: Arc<super::TimeEntry>) -> impl Element {
+        // let debounced_rename = Mutable::new(None);
+        TextInput::new()
+            .s(Width::fill())
+            .s(Font::new().color(Theme::Font1).center())
+            .s(Background::new().color(Theme::Transparent))
+            .s(Borders::new().bottom(
+                Border::new().color(Theme::Background3)
+            ))
+            .s(Padding::all(5))
+            .label_hidden("time entry started time")
+            .text("19:41:41")
+            // .text_signal(project.name.signal_cloned())
+            // .on_change(move |text| {
+            //     project.name.set_neq(text);
+            //     debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+            //         super::rename_project(project.id, &project.name.lock_ref())
+            //     })))
+            // })
+}
+
+fn time_entry_duration(time_entry: Arc<super::TimeEntry>) -> impl Element {
+    // let debounced_rename = Mutable::new(None);
+    El::new()
+        .s(Width::fill().max(150))
+        .s(Height::fill())
+        .s(Align::center())
+        .child(
+            TextInput::new()
+                .s(Width::fill())
+                .s(Font::new().color(Theme::Font1).size(20).center())
+                .s(Background::new().color(Theme::Transparent))
+                .s(Borders::new().bottom(
+                    Border::new().color(Theme::Background3)
+                ))
+                .s(Padding::all(5))
+                .label_hidden("time entry duration")
+                .text("0:01:27")
+                // .text_signal(project.name.signal_cloned())
+                // .on_change(move |text| {
+                //     project.name.set_neq(text);
+                //     debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+                //         super::rename_project(project.id, &project.name.lock_ref())
+                //     })))
+                // })
+        )
+}
+
+fn time_entry_stopped(time_entry: Arc<super::TimeEntry>) -> impl Element {
+    Column::new()
+        .s(Width::fill().max(150))
+        .s(Height::fill())
+        .item(time_entry_stopped_date(time_entry.clone()))
+        .item(time_entry_stopped_time(time_entry.clone()))
+}
+
+fn time_entry_stopped_date(time_entry: Arc<super::TimeEntry>) -> impl Element {
+        // let debounced_rename = Mutable::new(None);
+        TextInput::new()
+            .s(Width::fill())
+            .s(Font::new().color(Theme::Font1).center())
+            .s(Background::new().color(Theme::Transparent))
+            .s(Borders::new().bottom(
+                Border::new().color(Theme::Background3)
+            ))
+            .s(Padding::all(5))
+            .label_hidden("time entry stopped date")
+            .text("2021-08-22")
+            // .text_signal(project.name.signal_cloned())
+            // .on_change(move |text| {
+            //     project.name.set_neq(text);
+            //     debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+            //         super::rename_project(project.id, &project.name.lock_ref())
+            //     })))
+            // })
+}
+
+fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>) -> impl Element {
+    // let debounced_rename = Mutable::new(None);
+    TextInput::new()
+        .s(Width::fill())
+        .s(Font::new().color(Theme::Font1).center())
+        .s(Background::new().color(Theme::Transparent))
+        .s(Borders::new().bottom(
+            Border::new().color(Theme::Background3)
+        ))
+        .s(Padding::all(5))
+        .label_hidden("time entry stopped time")
+        .text("19:43:08")
+        // .text_signal(project.name.signal_cloned())
+        // .on_change(move |text| {
+        //     project.name.set_neq(text);
+        //     debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+        //         super::rename_project(project.id, &project.name.lock_ref())
+        //     })))
+        // })
+}
 
 
 

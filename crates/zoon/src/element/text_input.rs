@@ -238,4 +238,10 @@ impl InputType {
         this.type_ = "password";
         this
     }
+
+    pub fn number() -> Self {
+        let mut this = Self::default();
+        this.type_ = "number";
+        this
+    }
 }

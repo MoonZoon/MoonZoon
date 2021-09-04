@@ -76,6 +76,6 @@ panic_hook = ["console_error_panic_hook"]
 small_alloc = ["wee_alloc"]
 fast_alloc = []
 # tracing_alloc = ["wasm-tracing-allocator"]
-clone = ["enclose"]
+clone = ["enclose"]  # @TODO use Dominator's clone! instead?
 fmt = ["ufmt", "lexical"]
 web_storage = ["serde", "serde_json", "thiserror"]
