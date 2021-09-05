@@ -178,7 +178,9 @@ macro_rules! element_vec {
         {
             let mut elements = Vec::new();
             $(
-                elements.push($element.into_raw_element());
+                if let Some(element) = $element.into_option_element() {
+                    elements.push(element.into_raw_element());
+                }
             )*
             elements
         }
