@@ -17,6 +17,9 @@ pub use column::Column;
 pub mod el;
 pub use el::El;
 
+pub mod image;
+pub use image::Image;
+
 pub mod label;
 pub use label::Label;
 

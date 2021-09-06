@@ -18,6 +18,8 @@ wasm-bindgen-test = "0.3.19"
 [dependencies]
 zoon = { path = "../../../crates/zoon" }
 shared = { path = "../shared", features = ["frontend"] }
+pest = { version = "2.1.3", default-features = false }
+pest_derive = { version = "2.1.0", default-features = false }
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ['-Os']

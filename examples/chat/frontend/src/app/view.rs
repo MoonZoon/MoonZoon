@@ -1,4 +1,7 @@
 use zoon::*;
+use crate::markup;
+
+const MESSAGE_LINE_HEIGHT: u32 = 27;
 
 // ------ ------
 //     View
@@ -27,7 +30,7 @@ fn content() -> impl Element {
 fn received_messages() -> impl Element {
     El::new()
         .s(Height::fill())
-        .s(Scrollbars::y_and_clip_x())
+        .s(Scrollbars::both())
         .viewport_y_signal(super::received_messages_viewport_y().signal())
         .child(
             Column::new()
@@ -49,10 +52,32 @@ fn received_message(message: super::Message) -> impl Element {
                 .child(message.username),
         )
         .item(
-            El::new()
-                .s(Font::new().color(NamedColor::Gray8).size(17))
-                .child(message.text),
+            Paragraph::new()
+                .s(
+                    Font::new()
+                        .color(NamedColor::Gray8)
+                        .size(17)
+                        .line_height(MESSAGE_LINE_HEIGHT)
+                )
+                .contents(message_text_to_contents(&message.text)),
         )
+}
+
+fn message_text_to_contents(text: &str) -> impl Iterator<Item = RawElement> + '_ {
+    markup::parse_markup_objects(text).map(|object| {
+        match object {
+            markup::Object::Text(text) => Text::new(text).into_raw_element(),
+            markup::Object::Smile => emoji("smile").into_raw_element(),
+            markup::Object::SlightSmile => emoji("slight_smile").into_raw_element(),
+        }
+    })
+}
+
+fn emoji(name: &str) -> impl Element {
+    Image::new()
+        .s(Height::new(MESSAGE_LINE_HEIGHT))
+        .url([PUBLIC_URL, "emoji/", name, ".png"].concat())
+        .description(name)
 }
 
 // ------ new_message_panel ------
