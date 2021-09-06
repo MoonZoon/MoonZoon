@@ -13,6 +13,7 @@ body * {
     font-weight: inherit;
     font-size: inherit;
     border-radius: 0;
+    padding-inline: 0;
 }
 
 *:focus-visible, *:focus {

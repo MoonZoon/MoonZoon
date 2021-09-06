@@ -1,6 +1,8 @@
 use crate::{web_sys::HtmlInputElement, *};
-use std::borrow::Cow;
-use std::marker::PhantomData;
+use std::{borrow::Cow, marker::PhantomData};
+
+mod input_type;
+pub use input_type::*;
 
 // ------ ------
 //    Element
@@ -125,16 +127,17 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFl
         self.into_type()
     }
 
-    pub fn input_type(
+    pub fn input_type<T: InputTypeTrait>(
         mut self,
-        input_type: InputType,
+        input_type: T,
     ) -> TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlagSet>
     where
         InputTypeFlag: FlagNotSet,
     {
         self.raw_el = self
             .raw_el
-            .attr("type", input_type.type_);
+            .attr("type", T::TYPE);
+        self.raw_el = input_type.apply_to_raw_el(self.raw_el);
         self.into_type()
     }
 
@@ -215,33 +218,5 @@ impl<'a> Placeholder<'a> {
             style.apply_to_raw_el(raw_html_el, style_group)
         }));
         self
-    }
-}
-
-// ------ InputType ------
-
-pub struct InputType {
-    type_: &'static str,
-}
-
-impl Default for InputType {
-    fn default() -> Self {
-        Self {
-            type_: "text",
-        }
-    }
-}
-
-impl InputType {
-    pub fn password() -> Self {
-        let mut this = Self::default();
-        this.type_ = "password";
-        this
-    }
-
-    pub fn number() -> Self {
-        let mut this = Self::default();
-        this.type_ = "number";
-        this
     }
 }

@@ -75,8 +75,8 @@ fn project(project: Arc<super::Project>) -> impl Element {
     Column::new()
         .s(Background::new().color(Theme::Background0))
         .s(RoundedCorners::all(10))
-        .s(Spacing::new(10))
-        .s(Padding::all(15))
+        .s(Spacing::new(20))
+        .s(Padding::all(10))
         .item(project_name_and_start_stop_button(project.clone()))
         .item(time_entries(project))
 }
@@ -125,8 +125,7 @@ fn time_entry(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -
     Column::new()
         .s(Background::new().color(Theme::Background1))
         .s(RoundedCorners::all(10).top_right(40 / 2))
-        .s(Spacing::new(10))
-        .s(Padding::new().left(8))
+        .s(Padding::new().bottom(15))
         .item(time_entry_name_and_delete_button(project, time_entry.clone()))
         .item(time_entry_times(time_entry))
 }
@@ -140,23 +139,27 @@ fn time_entry_name_and_delete_button(project: Arc<super::Project>, time_entry: A
 
 fn time_entry_name(time_entry: Arc<super::TimeEntry>) -> impl Element {
     let debounced_rename = Mutable::new(None);
-    TextInput::new()
-        .s(Width::fill())
-        .s(Font::new().color(Theme::Font1))
-        .s(Background::new().color(Theme::Transparent))
-        .s(Borders::new().bottom(
-            Border::new().color(Theme::Background3)
-        ))
-        .s(Padding::all(5))
-        .focus(not(time_entry.is_old))
-        .label_hidden("time_entry name")
-        .text_signal(time_entry.name.signal_cloned())
-        .on_change(move |text| {
-            time_entry.name.set_neq(text);
-            debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
-                super::rename_time_entry(time_entry.id, &time_entry.name.lock_ref())
-            })))
-        })
+    El::new()
+        .s(Padding::all(10))
+        .child(
+            TextInput::new()
+            .s(Width::fill())
+            .s(Font::new().color(Theme::Font1))
+            .s(Background::new().color(Theme::Transparent))
+            .s(Borders::new().bottom(
+                Border::new().color(Theme::Background3)
+            ))
+            .s(Padding::all(5))
+            .focus(not(time_entry.is_old))
+            .label_hidden("time_entry name")
+            .text_signal(time_entry.name.signal_cloned())
+            .on_change(move |text| {
+                time_entry.name.set_neq(text);
+                debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+                    super::rename_time_entry(time_entry.id, &time_entry.name.lock_ref())
+                })))
+            })
+        )
 }
 
 fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
@@ -164,7 +167,7 @@ fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Eleme
     Button::new()
         .s(Width::new(40))
         .s(Height::new(40))
-        .s(Align::center())
+        .s(Align::new().top())
         .s(Background::new().color_signal(hovered_signal.map_bool(
             || Theme::Background3Highlighted,
             || Theme::Background3,
@@ -177,153 +180,112 @@ fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Eleme
 }
 
 fn time_entry_times(time_entry: Arc<super::TimeEntry>) -> impl Element {
-    Row::new()
+    Column::new()
+        .s(Font::new().color(Theme::Font1))
         .item(time_entry_started(time_entry.clone()))
         .item(time_entry_duration(time_entry.clone()))
         .item(time_entry_stopped(time_entry))
 }
 
 fn time_entry_started(time_entry: Arc<super::TimeEntry>) -> impl Element {
-    Column::new()
-        .s(Width::fill().max(150))
-        .s(Height::fill())
+    Row::new()
+        .s(Padding::all(5))
         .item(time_entry_started_date(time_entry.clone()))
         .item(time_entry_started_time(time_entry.clone()))
 }
 
-fn number_input() -> impl Element {
-    TextInput::new()
-        .s(Width::fill())
-        .s(Font::new().color(Theme::Font1).center())
-        .s(Background::new().color(Theme::Transparent))
-        .s(Borders::new().bottom(
-            Border::new().color(Theme::Background3)
-        ))
-        .s(Padding::all(5))
-        .label_hidden("time entry started date")
-        .text("2021-08-22")
-        .input_type(InputType::number())
-}
-
 fn time_entry_started_date(time_entry: Arc<super::TimeEntry>) -> impl Element {
-    // let debounced_rename = Mutable::new(None);
-    TextInput::new()
-        .s(Width::fill())
-        .s(Font::new().color(Theme::Font1).center())
-        .s(Background::new().color(Theme::Transparent))
-        .s(Borders::new().bottom(
-            Border::new().color(Theme::Background3)
-        ))
-        .s(Padding::all(5))
-        .label_hidden("time entry started date")
-        .text("2021-08-22")
-        // .text_signal(project.name.signal_cloned())
-        // .on_change(move |text| {
-        //     project.name.set_neq(text);
-        //     debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
-        //         super::rename_project(project.id, &project.name.lock_ref())
-        //     })))
-        // })
+    Row::new()
+        .s(Align::new().center_x())
+        .s(Spacing::new(2))
+        .item(number_input(2021, 4, false))
+        .item("-")
+        .item(number_input(8, 2, false))
+        .item("-")
+        .item(number_input(22, 2, false))
 }
 
 fn time_entry_started_time(time_entry: Arc<super::TimeEntry>) -> impl Element {
-        // let debounced_rename = Mutable::new(None);
-        TextInput::new()
-            .s(Width::fill())
-            .s(Font::new().color(Theme::Font1).center())
-            .s(Background::new().color(Theme::Transparent))
-            .s(Borders::new().bottom(
-                Border::new().color(Theme::Background3)
-            ))
-            .s(Padding::all(5))
-            .label_hidden("time entry started time")
-            .text("19:41:41")
-            // .text_signal(project.name.signal_cloned())
-            // .on_change(move |text| {
-            //     project.name.set_neq(text);
-            //     debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
-            //         super::rename_project(project.id, &project.name.lock_ref())
-            //     })))
-            // })
+    Row::new()
+        .s(Align::new().center_x())
+        .s(Spacing::new(2))
+        .item(number_input(19, 2, false))
+        .item(":")
+        .item(number_input(41, 2, false))
+        .item(":")
+        .item(number_input(42, 2, false))
 }
 
 fn time_entry_duration(time_entry: Arc<super::TimeEntry>) -> impl Element {
-    // let debounced_rename = Mutable::new(None);
-    El::new()
-        .s(Width::fill().max(150))
-        .s(Height::fill())
-        .s(Align::center())
-        .child(
-            TextInput::new()
-                .s(Width::fill())
-                .s(Font::new().color(Theme::Font1).size(20).center())
-                .s(Background::new().color(Theme::Transparent))
-                .s(Borders::new().bottom(
-                    Border::new().color(Theme::Background3)
-                ))
-                .s(Padding::all(5))
-                .label_hidden("time entry duration")
-                .text("0:01:27")
-                // .text_signal(project.name.signal_cloned())
-                // .on_change(move |text| {
-                //     project.name.set_neq(text);
-                //     debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
-                //         super::rename_project(project.id, &project.name.lock_ref())
-                //     })))
-                // })
-        )
+    Row::new()
+        .s(Align::new().center_x())
+        .s(Padding::all(5))
+        .s(Spacing::new(10))
+        .item(
+            Row::new()
+                .s(Spacing::new(2))
+                .item(number_input(0, None, true))
+                .item("h"))
+        .item(
+            Row::new()
+                .s(Spacing::new(2))
+                .item(number_input(1, 2, true))
+                .item("m"))
+        .item(
+            Row::new()
+                .s(Spacing::new(2))
+                .item(number_input(27, 2, true))
+                .item("s"))
 }
 
 fn time_entry_stopped(time_entry: Arc<super::TimeEntry>) -> impl Element {
-    Column::new()
-        .s(Width::fill().max(150))
-        .s(Height::fill())
+    Row::new()
+        .s(Padding::all(5))
+        .s(Spacing::new(2))
         .item(time_entry_stopped_date(time_entry.clone()))
         .item(time_entry_stopped_time(time_entry.clone()))
 }
 
 fn time_entry_stopped_date(time_entry: Arc<super::TimeEntry>) -> impl Element {
-        // let debounced_rename = Mutable::new(None);
-        TextInput::new()
-            .s(Width::fill())
-            .s(Font::new().color(Theme::Font1).center())
-            .s(Background::new().color(Theme::Transparent))
-            .s(Borders::new().bottom(
-                Border::new().color(Theme::Background3)
-            ))
-            .s(Padding::all(5))
-            .label_hidden("time entry stopped date")
-            .text("2021-08-22")
-            // .text_signal(project.name.signal_cloned())
-            // .on_change(move |text| {
-            //     project.name.set_neq(text);
-            //     debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
-            //         super::rename_project(project.id, &project.name.lock_ref())
-            //     })))
-            // })
+    Row::new()
+        .s(Align::new().center_x())
+        .s(Spacing::new(2))
+        .item(number_input(2021, 4, false))
+        .item("-")
+        .item(number_input(8, 2, false))
+        .item("-")
+        .item(number_input(22, 2, false))
 }
 
 fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>) -> impl Element {
-    // let debounced_rename = Mutable::new(None);
+    Row::new()
+        .s(Align::new().center_x())
+        .s(Spacing::new(2))
+        .item(number_input(19, 2, false))
+        .item(":")
+        .item(number_input(43, 2, false))
+        .item(":")
+        .item(number_input(7, 2, false))
+}
+
+fn number_input(number: i32, max_chars: impl Into<Option<u32>>, bold: bool) -> impl Element {
+    let max_chars = max_chars.into();
     TextInput::new()
-        .s(Width::fill())
-        .s(Font::new().color(Theme::Font1).center())
+        .s(Width::zeros(max_chars.unwrap_or(4)))
+        .s(
+            Font::new()
+                .color(Theme::Font1)
+                .center()
+                .weight(if bold { NamedWeight::Bold } else { NamedWeight::Regular } )
+        )
         .s(Background::new().color(Theme::Transparent))
         .s(Borders::new().bottom(
             Border::new().color(Theme::Background3)
         ))
-        .s(Padding::all(5))
-        .label_hidden("time entry stopped time")
-        .text("19:43:08")
-        // .text_signal(project.name.signal_cloned())
-        // .on_change(move |text| {
-        //     project.name.set_neq(text);
-        //     debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
-        //         super::rename_project(project.id, &project.name.lock_ref())
-        //     })))
-        // })
+        .label_hidden("time entry started date")
+        .text(number)
+        .input_type(InputType::text().max_chars(max_chars))
 }
-
 
 
 

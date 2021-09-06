@@ -69,6 +69,10 @@ pub fn px<'a>(px: impl IntoCowStr<'a>) -> Cow<'a, str> {
     [&px.into_cow_str(), "px"].concat().into()
 }
 
+pub fn ch<'a>(ch: impl IntoCowStr<'a>) -> Cow<'a, str> {
+    [&ch.into_cow_str(), "ch"].concat().into()
+}
+
 // ------ Style ------
 
 pub trait Style<'a>: Default {
