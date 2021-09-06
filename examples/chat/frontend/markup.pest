@@ -1,0 +1,9 @@
+// https://pest.rs/#editor
+
+slight_smile = { ":)" }
+smile = { ":D" }
+
+emoji = _{ slight_smile | smile }
+text = { (!emoji ~ ANY)+ }
+
+objects = _{ SOI ~ (text | emoji)* ~ EOI }

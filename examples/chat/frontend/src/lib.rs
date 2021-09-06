@@ -1,6 +1,7 @@
 use zoon::*;
 
 mod app;
+mod markup;
 
 // ------ ------
 //     Start

@@ -1,0 +1,1 @@
+https://openmoji.org/

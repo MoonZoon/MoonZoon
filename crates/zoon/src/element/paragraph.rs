@@ -16,12 +16,17 @@ impl Paragraph<EmptyFlagSet> {
     pub fn new() -> Self {
         run_once!(|| {
             global_styles()
-                .style_group(StyleGroup::new(".paragraph > *").style("display", "inline"))
+                .style_group(
+                    StyleGroup::new(".paragraph > *")
+                        .style("display", "inline")
+                        .style("vertical-align", "middle")
+                )
                 .style_group(StyleGroup::new(".paragraph > .align_left").style("float", "left"))
                 .style_group(StyleGroup::new(".paragraph > .align_right").style("float", "right"));
         });
         Self {
-            raw_el: RawHtmlEl::new("p").class("paragraph"),
+            raw_el: RawHtmlEl::new("p")
+                .class("paragraph"),
             flags: PhantomData,
         }
     }

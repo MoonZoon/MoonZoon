@@ -117,6 +117,10 @@ pub use thiserror;
 #[cfg(feature = "chrono")]
 pub use chrono::{self, prelude::*, Duration};
 
+// -- statics --
+
+pub static PUBLIC_URL: &str = "/_api/public/";
+
 // ------ format! ------
 
 #[cfg(feature = "fmt")]

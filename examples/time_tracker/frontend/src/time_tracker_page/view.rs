@@ -7,6 +7,7 @@ use std::sync::Arc;
 // @TODO const DELETE_ENTITY_BUTTON_RADIUS in app.rs? + replace 40 / 2 with it
 // @TODO dark/light theme (applies to all pages)
 // @TODO fixed header? (applies to all pages)
+// @TODO CorId SessionId custom Debug impl?
 
 pub fn page() -> impl Element {
     Column::new()

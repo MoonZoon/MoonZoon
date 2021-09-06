@@ -39,6 +39,11 @@ impl<'a> Font<'a> {
         self
     }
 
+    pub fn line_height(mut self, line_height: u32) -> Self {
+        self.static_css_props.insert("line-height", px(line_height));
+        self
+    }
+
     pub fn italic(mut self) -> Self {
         self.static_css_props.insert("font-style", "italic".into());
         self
