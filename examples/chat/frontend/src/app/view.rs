@@ -1,8 +1,6 @@
 use zoon::*;
 use crate::markup;
 
-const MESSAGE_LINE_HEIGHT: u32 = 27;
-
 // ------ ------
 //     View
 // ------ ------
@@ -57,7 +55,7 @@ fn received_message(message: super::Message) -> impl Element {
                     Font::new()
                         .color(NamedColor::Gray8)
                         .size(17)
-                        .line_height(MESSAGE_LINE_HEIGHT)
+                        .line_height(27)
                 )
                 .contents(message_text_to_contents(&message.text)),
         )
@@ -75,7 +73,9 @@ fn message_text_to_contents(text: &str) -> impl Iterator<Item = RawElement> + '_
 
 fn emoji(name: &str) -> impl Element {
     Image::new()
-        .s(Height::new(MESSAGE_LINE_HEIGHT))
+        .s(Height::new(17))
+        .s(Transform::new().scale(230).move_up(2))
+        .s(Padding::new().x(5))
         .url([PUBLIC_URL, "emoji/", name, ".png"].concat())
         .description(name)
 }
