@@ -38,7 +38,7 @@ impl Transform {
 
     pub fn scale(mut self, percent: impl Into<f64>) -> Self {
         self.transformations
-            .push(crate::format!("scale({}%)", percent.into()));
+            .push(crate::format!("scale({})", percent.into() / 100.));
         self
     }
 }

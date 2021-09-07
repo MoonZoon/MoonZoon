@@ -54,7 +54,7 @@ impl ChoosableTag for El<ChildFlagNotSet> {
         Self {
             raw_el: RawHtmlEl::new(tag.as_str())
                 .class("el")
-                .style("display", "flex")
+                .style("display", "inline-flex")
                 .style("flex-direction", "column"),
             flags: PhantomData,
         }
