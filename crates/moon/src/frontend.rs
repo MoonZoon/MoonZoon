@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use crate::CONFIG;
 use tokio::fs;
 
 pub struct Frontend {
@@ -52,8 +53,8 @@ impl Frontend {
         self
     }
 
-    pub(crate) async fn render(self, cache_busting: bool) -> String {
-        let cache_busting_string = if cache_busting {
+    pub async fn into_html(self) -> String {
+        let cache_busting_string = if CONFIG.cache_busting {
             Cow::from(format!("_{}", Self::build_id().await))
         } else {
             Cow::from("")
