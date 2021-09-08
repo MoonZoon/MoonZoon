@@ -35,9 +35,10 @@ pub use tokio;
 pub use tokio_stream;
 pub use trait_set::trait_set;
 pub use uuid;
+pub use once_cell::{self, sync::Lazy};
 
 mod actor;
-mod config;
+pub mod config;
 mod from_env_vars;
 mod frontend;
 mod lazy_message_writer;
@@ -45,7 +46,7 @@ mod redirect;
 mod sse;
 mod up_msg_request;
 
-use config::Config;
+use config::CONFIG;
 use lazy_message_writer::LazyMessageWriter;
 use sse::{ShareableSSE, ShareableSSEMethods, SSE};
 
@@ -120,28 +121,27 @@ where
 {
     // ------ Init ------
 
-    let config = Config::from_env_vars();
-    println!("Moon config: {:?}", config);
+    println!("Moon config: {:?}", *CONFIG);
 
     env_logger::builder()
-        .filter_level(config.backend_log_level)
+        .filter_level(CONFIG.backend_log_level)
         .init();
 
     let shared_data = SharedData {
         backend_build_id: backend_build_id().await,
         frontend_build_id: Frontend::build_id().await,
-        cache_busting: config.cache_busting,
-        compressed_pkg: config.compressed_pkg,
+        cache_busting: CONFIG.cache_busting,
+        compressed_pkg: CONFIG.compressed_pkg,
         pkg_path: "frontend/pkg",
     };
     let reload_sse = ReloadSSE(SSE::start());
     let message_sse = MessageSSE(SSE::start());
-    let address = SocketAddr::from(([0, 0, 0, 0], config.port));
+    let address = SocketAddr::from(([0, 0, 0, 0], CONFIG.port));
 
-    let redirect_enabled = config.redirect.enabled;
+    let redirect_enabled = CONFIG.redirect.enabled;
     let redirect = Redirect::new()
-        .http_to_https(config.https)
-        .port(config.redirect.port, config.port);
+        .http_to_https(CONFIG.https)
+        .port(CONFIG.redirect.port, CONFIG.port);
 
     let mut lazy_message_writer = LazyMessageWriter::new();
 
@@ -165,7 +165,6 @@ where
             .app_data(web::Data::new(up_msg_handler.clone()))
             .app_data(web::Data::new(reload_sse.clone()))
             .app_data(web::Data::new(message_sse.clone()))
-            .configure(service_config.clone())
             .service(Files::new("_api/public", "public"))
             .service(
                 web::scope("_api")
@@ -182,21 +181,22 @@ where
                     .route("reload_sse", web::get().to(reload_sse_responder))
                     .route("ping", web::to(|| async { "pong" })),
             )
+            .configure(service_config.clone())
             .route("*", web::get().to(frontend_responder::<FRB, FRBO>))
     });
 
     // ------ Bind ------
 
-    server = if config.https {
+    server = if CONFIG.https {
         server.bind_rustls(address, rustls_server_config()?)?
     } else {
         server.bind(address)?
     };
-    lazy_message_writer.server_is_running(&address, &config)?;
+    lazy_message_writer.server_is_running(&address, &CONFIG)?;
 
-    server = if config.redirect.enabled {
-        let address = SocketAddr::from(([0, 0, 0, 0], config.redirect.port));
-        lazy_message_writer.redirect_from(&address, &config)?;
+    server = if CONFIG.redirect.enabled {
+        let address = SocketAddr::from(([0, 0, 0, 0], CONFIG.redirect.port));
+        lazy_message_writer.redirect_from(&address, &CONFIG)?;
         server.bind(address)?
     } else {
         server
@@ -445,7 +445,6 @@ async fn message_sse_responder(
 
 async fn frontend_responder<FRB, FRBO>(
     frontend: web::Data<FRB>,
-    shared_data: web::Data<SharedData>,
 ) -> impl Responder
 where
     FRB: FrontBuilder<FRBO>,
@@ -454,7 +453,7 @@ where
     HttpResponse::Ok().content_type(ContentType::html()).body(
         frontend.get_ref().clone()()
             .await
-            .render(shared_data.cache_busting)
+            .into_html()
             .await,
     )
 }
