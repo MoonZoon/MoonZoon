@@ -1,6 +1,6 @@
 use zoon::*;
 use crate::{theme::Theme, app};
-use std::sync::Arc;
+use std::{sync::Arc, convert::TryFrom};
 
 // @TODO try rewrite some clone()s to references (applies to all pages)
 // @TODO refactor some parts to shared views in app.rs (applies to all pages)
@@ -128,7 +128,7 @@ fn time_entry(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -
         .s(RoundedCorners::all(10).top_right(40 / 2))
         .s(Padding::new().bottom(15))
         .item(time_entry_name_and_delete_button(project, time_entry.clone()))
-        .item(time_entry_times(time_entry))
+        .item_signal(time_entry_times(time_entry))
 }
 
 fn time_entry_name_and_delete_button(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -> impl Element {
@@ -168,7 +168,7 @@ fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Eleme
     Button::new()
         .s(Width::new(40))
         .s(Height::new(40))
-        .s(Align::new().top())
+        .s(Align::new().top().right())
         .s(Background::new().color_signal(hovered_signal.map_bool(
             || Theme::Background3Highlighted,
             || Theme::Background3,
@@ -180,96 +180,207 @@ fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Eleme
         .label(app::icon_delete_forever())
 }
 
-fn time_entry_times(time_entry: Arc<super::TimeEntry>) -> impl Element {
+fn time_entry_times(time_entry: Arc<super::TimeEntry>) -> impl Signal<Item = RawElement> {
+    super::show_wide_time_entry().map(move |show_wide| {
+        let items = element_vec![
+            time_entry_started(time_entry.clone()),
+            time_entry_duration(time_entry.clone()),
+            time_entry_stopped(time_entry.clone()),
+        ];
+        if show_wide {
+            time_entry_times_wide(items).into_raw_element()
+        } else {
+            time_entry_times_narrow(items).into_raw_element()
+        }
+    })
+}
+
+fn time_entry_times_narrow(items: Vec<RawElement>) -> impl Element {
     Column::new()
         .s(Font::new().color(Theme::Font1))
-        .item(time_entry_started(time_entry.clone()))
-        .item(time_entry_duration(time_entry.clone()))
-        .item(time_entry_stopped(time_entry))
+        .items(items)
+}
+
+fn time_entry_times_wide(items: Vec<RawElement>) -> impl Element {
+    Row::new()
+        .s(Font::new().color(Theme::Font1))
+        .s(Padding::new().x(10))
+        .s(Spacing::new(20))
+        .items(items)
+}
+
+fn time_entry_date(
+    year: impl Signal<Item = i32> + Unpin + 'static, 
+    month: impl Signal<Item = u32> + Unpin + 'static, 
+    day: impl Signal<Item = u32> + Unpin + 'static,
+) -> impl Element {
+    Row::new()
+        .s(Align::new().center_x())
+        .s(Spacing::new(2))
+        .item(number_input(year, 4, false))
+        .item("-")
+        .item(number_input(month.map(|month| i32::try_from(month).unwrap_throw()), 2, false))
+        .item("-")
+        .item(number_input(day.map(|day| i32::try_from(day).unwrap_throw()), 2, false))
+}
+
+fn time_entry_time(
+    hour: impl Signal<Item = u32> + Unpin + 'static, 
+    minute: impl Signal<Item = u32> + Unpin + 'static, 
+    second: impl Signal<Item = u32> + Unpin + 'static,
+) -> impl Element {
+    Row::new()
+        .s(Align::new().center_x())
+        .s(Spacing::new(2))
+        .item(number_input(hour.map(|hour| i32::try_from(hour).unwrap_throw()), 2, false))
+        .item(":")
+        .item(number_input(minute.map(|minute| i32::try_from(minute).unwrap_throw()), 2, false))
+        .item(":")
+        .item(number_input(second.map(|second| i32::try_from(second).unwrap_throw()), 2, false))
 }
 
 fn time_entry_started(time_entry: Arc<super::TimeEntry>) -> impl Element {
     Row::new()
         .s(Padding::all(5))
+        .s(Spacing::new(15))
         .item(time_entry_started_date(time_entry.clone()))
         .item(time_entry_started_time(time_entry.clone()))
 }
 
 fn time_entry_started_date(time_entry: Arc<super::TimeEntry>) -> impl Element {
-    Row::new()
-        .s(Align::new().center_x())
-        .s(Spacing::new(2))
-        .item(number_input(2021, 4, false))
-        .item("-")
-        .item(number_input(8, 2, false))
-        .item("-")
-        .item(number_input(22, 2, false))
+    let year = time_entry.started.signal().map(|date| date.year());
+    let month = time_entry.started.signal().map(|date| date.month());
+    let day = time_entry.started.signal().map(|date| date.day());
+    time_entry_date(year, month, day)
 }
 
 fn time_entry_started_time(time_entry: Arc<super::TimeEntry>) -> impl Element {
-    Row::new()
-        .s(Align::new().center_x())
-        .s(Spacing::new(2))
-        .item(number_input(19, 2, false))
-        .item(":")
-        .item(number_input(41, 2, false))
-        .item(":")
-        .item(number_input(42, 2, false))
+    let hour = time_entry.started.signal().map(|time| time.hour());
+    let minute = time_entry.started.signal().map(|time| time.minute());
+    let second = time_entry.started.signal().map(|time| time.second());
+    time_entry_time(hour, minute, second)
 }
 
 fn time_entry_duration(time_entry: Arc<super::TimeEntry>) -> impl Element {
+    let mutable_duration = Mutable::new((0, 0, 0));
+    let duration = mutable_duration.read_only();
+    let duration_signal = map_ref! {
+        let current = super::current_time().signal(),
+        let started = time_entry.started.signal(),
+        let stopped = time_entry.stopped.signal() =>
+        if let Some(stopped) = stopped {
+            **stopped - **started
+        } else {
+            *current - **started
+        }
+    }.dedupe();
+    let duration_updater = Task::start_droppable(
+        duration_signal.for_each(move |duration| {
+            let num_seconds = duration.num_seconds();
+            let seconds = i32::try_from(num_seconds % 60).unwrap_throw();
+            let minutes = i32::try_from((num_seconds / 60) % 60).unwrap_throw();
+            let hours = i32::try_from((num_seconds / 60) / 60).unwrap_throw();
+            mutable_duration.set((hours, minutes, seconds));
+            async {} 
+        })
+    );
+    let hours = duration.signal().map(|(hours, _, _)| hours);
+    let minutes = duration.signal().map(|(_, minutes, _)| minutes);
+    let seconds = duration.signal().map(|(_, _, seconds)| seconds);
+
     Row::new()
         .s(Align::new().center_x())
         .s(Padding::all(5))
         .s(Spacing::new(10))
+        .after_remove(move |_| drop(duration_updater))
         .item(
             Row::new()
                 .s(Spacing::new(2))
-                .item(number_input(0, None, true))
+                .item(number_input(hours, None, true))
                 .item("h"))
         .item(
             Row::new()
                 .s(Spacing::new(2))
-                .item(number_input(1, 2, true))
+                .item(number_input(minutes, 2, true))
                 .item("m"))
         .item(
             Row::new()
                 .s(Spacing::new(2))
-                .item(number_input(27, 2, true))
+                .item(number_input(seconds, 2, true))
                 .item("s"))
 }
 
 fn time_entry_stopped(time_entry: Arc<super::TimeEntry>) -> impl Element {
     Row::new()
         .s(Padding::all(5))
-        .s(Spacing::new(2))
+        .s(Spacing::new(15))
         .item(time_entry_stopped_date(time_entry.clone()))
         .item(time_entry_stopped_time(time_entry.clone()))
 }
 
 fn time_entry_stopped_date(time_entry: Arc<super::TimeEntry>) -> impl Element {
-    Row::new()
-        .s(Align::new().center_x())
-        .s(Spacing::new(2))
-        .item(number_input(2021, 4, false))
-        .item("-")
-        .item(number_input(8, 2, false))
-        .item("-")
-        .item(number_input(22, 2, false))
+    let year = map_ref! {
+        let current_date = super::current_time().signal(),
+        let stopped_date = time_entry.stopped.signal() =>
+        if let Some(stopped_date) = stopped_date {
+            stopped_date.year()
+        } else {
+            current_date.year()
+        }
+    }.dedupe();
+    let month = map_ref! {
+        let current_date = super::current_time().signal(),
+        let stopped_date = time_entry.stopped.signal() =>
+        if let Some(stopped_date) = stopped_date {
+            stopped_date.month()
+        } else {
+            current_date.month()
+        }
+    }.dedupe();
+    let day = map_ref! {
+        let current_date = super::current_time().signal(),
+        let stopped_date = time_entry.stopped.signal() =>
+        if let Some(stopped_date) = stopped_date {
+            stopped_date.day()
+        } else {
+            current_date.day()
+        }
+    }.dedupe();
+    time_entry_date(year, month, day)
 }
 
 fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>) -> impl Element {
-    Row::new()
-        .s(Align::new().center_x())
-        .s(Spacing::new(2))
-        .item(number_input(19, 2, false))
-        .item(":")
-        .item(number_input(43, 2, false))
-        .item(":")
-        .item(number_input(7, 2, false))
+    let hour = map_ref! {
+        let current_time = super::current_time().signal(),
+        let stopped_time = time_entry.stopped.signal() =>
+        if let Some(stopped_time) = stopped_time {
+            stopped_time.hour()
+        } else {
+            current_time.hour()
+        }
+    }.dedupe();
+    let minute = map_ref! {
+        let current_time = super::current_time().signal(),
+        let stopped_time = time_entry.stopped.signal() =>
+        if let Some(stopped_time) = stopped_time {
+            stopped_time.minute()
+        } else {
+            current_time.minute()
+        }
+    }.dedupe();
+    let second = map_ref! {
+        let current_time = super::current_time().signal(),
+        let stopped_time = time_entry.stopped.signal() =>
+        if let Some(stopped_time) = stopped_time {
+            stopped_time.second()
+        } else {
+            current_time.second()
+        }
+    }.dedupe();
+    time_entry_time(hour, minute, second)
 }
 
-fn number_input(number: i32, max_chars: impl Into<Option<u32>>, bold: bool) -> impl Element {
+fn number_input(number: impl Signal<Item = i32> + Unpin + 'static, max_chars: impl Into<Option<u32>>, bold: bool) -> impl Element {
     let max_chars = max_chars.into();
     TextInput::new()
         .s(Width::zeros(max_chars.unwrap_or(4)))
@@ -284,7 +395,13 @@ fn number_input(number: i32, max_chars: impl Into<Option<u32>>, bold: bool) -> i
             Border::new().color(Theme::Background3)
         ))
         .label_hidden("time entry started date")
-        .text(number)
+        .text_signal(number.map(move |number| {
+            if max_chars == Some(2) {
+                format!("{:02}", number)
+            } else {
+                number.to_string()
+            }
+        }))
         .input_type(InputType::text().max_chars(max_chars))
 }
 

@@ -1,9 +1,11 @@
 use zoon::{*, eprintln};
-use crate::connection::connection;
+use crate::{connection::connection, app};
 use shared::{UpMsg, ClientId, ProjectId, TimeEntryId, InvoiceId, time_tracker};
 use std::sync::Arc;
 
 mod view;
+
+const TIME_ENTRY_BREAKPOINT: u32 = 630;
 
 // ------ ------
 //     Types
@@ -39,6 +41,17 @@ struct TimeEntry {
 #[static_ref]
 fn clients() -> &'static MutableVec<Arc<Client>> {
     MutableVec::new()
+}
+
+#[static_ref]
+fn current_time() -> &'static Mutable<DateTime<Local>> {
+    current_time_updater();
+    Mutable::new(Local::now())
+}
+
+#[static_ref]
+fn current_time_updater() -> &'static Mutable<Timer> {
+    Mutable::new(Timer::new(1_000, || current_time().set_neq(Local::now())))
 }
 
 // ------ ------
@@ -118,6 +131,14 @@ fn set_time_entry_started(time_entry: &TimeEntry, started: DateTime<Local>) {
 fn set_time_entry_stopped(time_entry: &TimeEntry, stopped: DateTime<Local>) {
     // @TODO send up_msg
     time_entry.stopped.set(Some(Wrapper::new(stopped)));
+}
+
+// ------ ------
+//    Signals
+// ------ ------
+
+fn show_wide_time_entry() -> impl Signal<Item = bool> {
+    app::viewport_width().signal().map(|width| width > TIME_ENTRY_BREAKPOINT).dedupe()
 }
 
 // ------ ------

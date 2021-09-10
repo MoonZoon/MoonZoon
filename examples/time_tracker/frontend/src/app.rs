@@ -52,7 +52,7 @@ fn saving() -> &'static Mutable<bool> {
 }
 
 #[static_ref]
-fn viewport_width() -> &'static Mutable<u32> {
+pub fn viewport_width() -> &'static Mutable<u32> {
     Mutable::new(0)
 }
 
