@@ -35,7 +35,7 @@ pub use either::{Either, IntoEither};
 pub use element::*;
 pub use futures_signals::{
     self, map_mut, map_ref,
-    signal::{MutableSignal, ReadOnlyMutable, Signal, SignalExt},
+    signal::{self, MutableSignal, ReadOnlyMutable, Signal, SignalExt},
     signal_map::{MutableBTreeMap, MutableSignalMap, SignalMap, SignalMapExt},
     signal_vec::{MutableSignalVec, SignalVec, SignalVecExt},
 };

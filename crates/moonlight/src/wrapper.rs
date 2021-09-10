@@ -35,3 +35,11 @@ impl<T> From<T> for Wrapper<T> {
         Self { inner }
     }
 }
+
+impl<T: Clone> Clone for Wrapper<T> {
+    fn clone(&self) -> Self {
+        Wrapper::new(self.inner.clone())
+    }
+}
+
+impl<T: Copy> Copy for Wrapper<T> {}
