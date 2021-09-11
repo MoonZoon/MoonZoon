@@ -19,6 +19,7 @@ pub enum Theme {
     Background4Highlighted,
     Font4,
     Border4,
+    BackgroundInvalid,
     Shadow,
     Transparent,
 }
@@ -49,6 +50,8 @@ impl<'a> IntoCowStr<'a> for Theme {
             Theme::Background4Highlighted => hsl(69, 100, 87),
             Theme::Font4 => hsla(0, 0, 0, 70),
             Theme::Border4 => hsl(256.1, 87.8, 49.6),
+            // background of an invalid input
+            Theme::BackgroundInvalid => hsla(12.2, 100, 53.2, 40),
             // shadow
             Theme::Shadow => hsla(0, 0, 2.7, 10),
             // transparent
