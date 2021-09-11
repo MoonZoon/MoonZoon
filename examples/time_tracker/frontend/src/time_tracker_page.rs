@@ -103,14 +103,33 @@ pub fn convert_and_set_clients(new_clients: Vec<time_tracker::Client>) {
 // -- project --
 
 fn toggle_tracker(project: &Project) {
-    zoon::println!("toggle_tracker not implemented yet");
+    let active_time_entry = project
+        .time_entries
+        .lock_ref()
+        .iter()
+        .find(|time_entry| time_entry.stopped.get().is_none())
+        .cloned(); 
+
+    if let Some(active_time_entry) = active_time_entry {
+        return set_time_entry_stopped(&active_time_entry, Local::now());
+    } 
+    add_time_entry(project);
 }
 
 // -- time_entry --
 
 fn add_time_entry(project: &Project) {
+    let mut time_entries = project.time_entries.lock_mut();
+
+    let name = time_entries
+        .first()
+        .map(|time_entry| time_entry.name.get_cloned())
+        .unwrap_or_default();
+
+    let time_entry = TimeEntry::default();
+    time_entry.name.set(name);
     // @TODO send up_msg
-    project.time_entries.lock_mut().insert_cloned(0, Arc::new(TimeEntry::default()));
+    time_entries.insert_cloned(0, Arc::new(time_entry));
 }
 
 fn delete_time_entry(project: &Project, time_entry_id: TimeEntryId) {

@@ -107,7 +107,7 @@ fn client_name(client: Arc<super::Client>) -> impl Element {
         .s(Font::new().color(Theme::Font1).size(20))
         .s(Background::new().color(Theme::Transparent))
         .s(Borders::new().bottom(
-            Border::new().color(Theme::Background3)
+            Border::new().color(Theme::Border1)
         ))
         .s(Padding::all(8))
         .focus(not(client.is_old))
@@ -147,7 +147,7 @@ fn project_name(project: Arc<super::Project>) -> impl Element {
         .s(Font::new().color(Theme::Font0))
         .s(Background::new().color(Theme::Transparent))
         .s(Borders::new().bottom(
-            Border::new().color(Theme::Background3)
+            Border::new().color(Theme::Border1)
         ))
         .s(Padding::all(5))
         .focus(not(project.is_old))
