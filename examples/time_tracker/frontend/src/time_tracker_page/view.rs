@@ -281,34 +281,38 @@ fn time_entry_date(
     month: impl Signal<Item = u32> + Unpin + 'static, 
     day: impl Signal<Item = u32> + Unpin + 'static,
     is_active: ReadOnlyMutable<bool>,
+    read_only_when_active: bool,
 ) -> impl Element {
     Row::new()
         .s(Align::new().center_x())
         .s(Spacing::new(2))
         .item(
-            number_input(
+            date_time_part_input(
                 year, 
                 4, 
                 false,
                 is_active.clone(),
+                read_only_when_active,
             )
         )
         .item("-")
         .item(
-            number_input(
+            date_time_part_input(
                 month.map(|month| i32::try_from(month).unwrap_throw()), 
                 2, 
                 false,
                 is_active.clone(),
+                read_only_when_active,
             )
         )
         .item("-")
         .item(
-            number_input(
+            date_time_part_input(
                 day.map(|day| i32::try_from(day).unwrap_throw()), 
                 2, 
                 false,
                 is_active,
+                read_only_when_active,
             )
         )
 }
@@ -318,34 +322,38 @@ fn time_entry_time(
     minute: impl Signal<Item = u32> + Unpin + 'static, 
     second: impl Signal<Item = u32> + Unpin + 'static,
     is_active: ReadOnlyMutable<bool>,
+    read_only_when_active: bool,
 ) -> impl Element {
     Row::new()
         .s(Align::new().center_x())
         .s(Spacing::new(2))
         .item(
-            number_input(
+            date_time_part_input(
                 hour.map(|hour| i32::try_from(hour).unwrap_throw()), 
                 2, 
                 false, 
-                is_active.clone()
+                is_active.clone(),
+                read_only_when_active,
             ),
         )
         .item(":")
         .item(
-            number_input(
+            date_time_part_input(
                 minute.map(|minute| i32::try_from(minute).unwrap_throw()), 
                 2, 
                 false,
                 is_active.clone(),
+                read_only_when_active,
             )
         )
         .item(":")
         .item(
-            number_input(
+            date_time_part_input(
                 second.map(|second| i32::try_from(second).unwrap_throw()), 
                 2, 
                 false,
                 is_active,
+                read_only_when_active,
             )
         )
 }
@@ -362,14 +370,14 @@ fn time_entry_started_date(time_entry: Arc<super::TimeEntry>, is_active: ReadOnl
     let year = time_entry.started.signal().map(|date| date.year());
     let month = time_entry.started.signal().map(|date| date.month());
     let day = time_entry.started.signal().map(|date| date.day());
-    time_entry_date(year, month, day, is_active)
+    time_entry_date(year, month, day, is_active, false)
 }
 
 fn time_entry_started_time(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
     let hour = time_entry.started.signal().map(|time| time.hour());
     let minute = time_entry.started.signal().map(|time| time.minute());
     let second = time_entry.started.signal().map(|time| time.second());
-    time_entry_time(hour, minute, second, is_active)
+    time_entry_time(hour, minute, second, is_active, false)
 }
 
 fn time_entry_duration(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
@@ -407,17 +415,17 @@ fn time_entry_duration(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMut
         .item(
             Row::new()
                 .s(Spacing::new(2))
-                .item(number_input(hours, None, true, is_active.clone()))
+                .item(date_time_part_input(hours, None, true, is_active.clone(), true))
                 .item("h"))
         .item(
             Row::new()
                 .s(Spacing::new(2))
-                .item(number_input(minutes, 2, true, is_active.clone()))
+                .item(date_time_part_input(minutes, 2, true, is_active.clone(), true))
                 .item("m"))
         .item(
             Row::new()
                 .s(Spacing::new(2))
-                .item(number_input(seconds, 2, true, is_active))
+                .item(date_time_part_input(seconds, 2, true, is_active, true))
                 .item("s"))
 }
 
@@ -457,7 +465,7 @@ fn time_entry_stopped_date(time_entry: Arc<super::TimeEntry>, is_active: ReadOnl
             current_date.day()
         }
     }.dedupe();
-    time_entry_date(year, month, day, is_active)
+    time_entry_date(year, month, day, is_active, true)
 }
 
 fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
@@ -488,14 +496,15 @@ fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>, is_active: ReadOnl
             current_time.second()
         }
     }.dedupe();
-    time_entry_time(hour, minute, second, is_active)
+    time_entry_time(hour, minute, second, is_active, true)
 }
 
-fn number_input(
+fn date_time_part_input(
     number: impl Signal<Item = i32> + Unpin + 'static, 
     max_chars: impl Into<Option<u32>>, 
     bold: bool,
     is_active: ReadOnlyMutable<bool>,
+    read_only_when_active: bool, 
 ) -> impl Element {
     let max_chars = max_chars.into();
     TextInput::new()
@@ -512,8 +521,8 @@ fn number_input(
         ))
         .s(Borders::new().bottom_signal(
             is_active.signal().map_bool(
-                || Border::new().color(Theme::Border4), 
-                || Border::new().color(Theme::Border1)
+                move || Border::new().color(if read_only_when_active { Theme::Transparent } else { Theme::Border4 }), 
+                || Border::new().color(Theme::Border1),
             )
         ))
         .label_hidden("time entry started date")
@@ -525,6 +534,7 @@ fn number_input(
             }
         }))
         .input_type(InputType::text().max_chars(max_chars))
+        .read_only_signal(is_active.signal().map_bool(move || read_only_when_active, || false))
 }
 
 
