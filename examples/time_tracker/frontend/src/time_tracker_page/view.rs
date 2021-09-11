@@ -98,18 +98,47 @@ fn project_name(project: Arc<super::Project>) -> impl Element {
 }
 
 fn start_stop_button(project: Arc<super::Project>) -> impl Element {
+    let mutable_has_active_entry = Mutable::new(false);
+    let has_active_entry = mutable_has_active_entry.read_only();
+    let has_active_entry_updater = Task::start_droppable(
+        project
+            .time_entries
+            .signal_vec_cloned()
+            .filter_signal_cloned(|time_entry| {
+                time_entry.stopped.signal().map(|stopped| stopped.is_none())
+            })
+            .len()
+            .map(|active_entries_count| active_entries_count > 0)
+            .for_each(move |has_active_entry| {
+                mutable_has_active_entry.set_neq(has_active_entry);
+                // @TODO for_each_sync?
+                async {}
+            })
+    );
+
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    let background_color = map_ref! {
+        let hovered = hovered_signal,
+        let has_active_entry = has_active_entry.signal() =>
+        match (has_active_entry, hovered) {
+            (true, false) => Theme::Background4,
+            (true, true) => Theme::Background4Highlighted,
+            (false, false) => Theme::Background3,
+            (false, true) => Theme::Background3Highlighted,
+        }
+    };
+
     Button::new()
-        .s(Background::new().color_signal(hovered_signal.map_bool(
-            || Theme::Background3Highlighted,
-            || Theme::Background3,
-        )))
-        .s(Font::new().color(Theme::Font3).weight(NamedWeight::SemiBold))
+        .s(Background::new().color_signal(background_color))
+        .s(Font::new()
+            .color_signal(has_active_entry.signal().map_bool(|| Theme::Font4, || Theme::Font3))
+        )
         .s(RoundedCorners::all_max())
-        .s(Padding::new().x(12).y(10))
+        .s(Padding::new().x(20).y(10))
+        .after_remove(move |_| drop(has_active_entry_updater))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(move || super::toggle_tracker(&project))
-        .label("Start")
+        .label_signal(has_active_entry.signal().map_bool(|| "Stop", || "Start"))
 }
 
 // -- time_entries --
@@ -123,87 +152,125 @@ fn time_entries(project: Arc<super::Project>) -> impl Element {
 }
 
 fn time_entry(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -> impl Element {
+    let is_active_mutable = Mutable::new(false);
+    let is_active = is_active_mutable.read_only();
+    let is_active_updater = Task::start_droppable(time_entry
+        .stopped
+        .signal()
+        .for_each(move |stopped| {
+            is_active_mutable.set_neq(stopped.is_none());
+            async { }
+        })
+    );
     Column::new()
-        .s(Background::new().color(Theme::Background1))
+        .s(Background::new()
+            .color_signal(is_active.signal().map_bool(|| Theme::Background4, || Theme::Background1))
+        )
         .s(RoundedCorners::all(10).top_right(40 / 2))
         .s(Padding::new().bottom(15))
-        .item(time_entry_name_and_delete_button(project, time_entry.clone()))
-        .item_signal(time_entry_times(time_entry))
+        .after_remove(move |_| drop(is_active_updater))
+        .item(time_entry_name_and_delete_button(project, time_entry.clone(), is_active.clone()))
+        .item_signal(time_entry_times(time_entry, is_active))
 }
 
-fn time_entry_name_and_delete_button(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -> impl Element {
+fn time_entry_name_and_delete_button(
+    project: Arc<super::Project>, 
+    time_entry: Arc<super::TimeEntry>,
+    is_active: ReadOnlyMutable<bool>,
+) -> impl Element {
     let id = time_entry.id;
     Row::new()
-        .item(time_entry_name(time_entry.clone()))
-        .item(delete_entity_button(move || super::delete_time_entry(&project, id)))
+        .item(time_entry_name(time_entry.clone(), is_active.clone()))
+        .item(delete_entity_button(move || super::delete_time_entry(&project, id), is_active))
 }
 
-fn time_entry_name(time_entry: Arc<super::TimeEntry>) -> impl Element {
+fn time_entry_name(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
     let debounced_rename = Mutable::new(None);
     El::new()
         .s(Padding::all(10))
         .child(
             TextInput::new()
-            .s(Width::fill())
-            .s(Font::new().color(Theme::Font1))
-            .s(Background::new().color(Theme::Transparent))
-            .s(Borders::new().bottom(
-                Border::new().color(Theme::Background3)
-            ))
-            .s(Padding::all(5))
-            .focus(not(time_entry.is_old))
-            .label_hidden("time_entry name")
-            .text_signal(time_entry.name.signal_cloned())
-            .on_change(move |text| {
-                time_entry.name.set_neq(text);
-                debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
-                    super::rename_time_entry(time_entry.id, &time_entry.name.lock_ref())
-                })))
-            })
+                .s(Width::fill())
+                .s(Font::new()
+                    .color_signal(is_active.signal().map_bool(|| Theme::Font4, || Theme::Font1))
+                )
+                .s(Background::new().color(Theme::Transparent))
+                .s(Borders::new().bottom_signal(
+                    is_active.signal().map_bool(
+                        || Border::new().color(Theme::Border4), 
+                        || Border::new().color(Theme::Border1)
+                    )
+                ))
+                .s(Padding::all(5))
+                .focus(not(time_entry.is_old))
+                .label_hidden("time_entry name")
+                .text_signal(time_entry.name.signal_cloned())
+                .on_change(move |text| {
+                    time_entry.name.set_neq(text);
+                    debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+                        super::rename_time_entry(time_entry.id, &time_entry.name.lock_ref())
+                    })))
+                })
         )
 }
 
-fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
+fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static, is_active: ReadOnlyMutable<bool>) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    let background_color = map_ref! {
+        let hovered = hovered_signal,
+        let is_active = is_active.signal() =>
+        match (is_active, hovered) {
+            (true, false) => Theme::Background1,
+            (true, true) => Theme::Background1Highlighted,
+            (false, false) => Theme::Background3,
+            (false, true) => Theme::Background3Highlighted,
+        }
+    };
     Button::new()
         .s(Width::new(40))
         .s(Height::new(40))
         .s(Align::new().top().right())
-        .s(Background::new().color_signal(hovered_signal.map_bool(
-            || Theme::Background3Highlighted,
-            || Theme::Background3,
-        )))
-        .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
+        .s(Background::new().color_signal(background_color))
+        .s(Font::new()
+            .color_signal(is_active.signal().map_bool(|| Theme::Font1, || Theme::Font3))
+            .weight(NamedWeight::Bold)
+        )
         .s(RoundedCorners::all_max())
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(on_press)
         .label(app::icon_delete_forever())
 }
 
-fn time_entry_times(time_entry: Arc<super::TimeEntry>) -> impl Signal<Item = RawElement> {
+fn time_entry_times(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Signal<Item = RawElement> {
     super::show_wide_time_entry().map(move |show_wide| {
         let items = element_vec![
-            time_entry_started(time_entry.clone()),
-            time_entry_duration(time_entry.clone()),
-            time_entry_stopped(time_entry.clone()),
+            time_entry_started(time_entry.clone(), is_active.clone()),
+            time_entry_duration(time_entry.clone(), is_active.clone()),
+            time_entry_stopped(time_entry.clone(), is_active.clone()),
         ];
         if show_wide {
-            time_entry_times_wide(items).into_raw_element()
+            time_entry_times_wide(items, is_active.clone()).into_raw_element()
         } else {
-            time_entry_times_narrow(items).into_raw_element()
+            time_entry_times_narrow(items, is_active.clone()).into_raw_element()
         }
     })
 }
 
-fn time_entry_times_narrow(items: Vec<RawElement>) -> impl Element {
+fn time_entry_times_narrow(items: Vec<RawElement>, is_active: ReadOnlyMutable<bool>) -> impl Element {
     Column::new()
-        .s(Font::new().color(Theme::Font1))
+        .s(
+            Font::new()
+                .color_signal(is_active.signal().map_bool(|| Theme::Font4, || Theme::Font1))
+        )
         .items(items)
 }
 
-fn time_entry_times_wide(items: Vec<RawElement>) -> impl Element {
+fn time_entry_times_wide(items: Vec<RawElement>, is_active: ReadOnlyMutable<bool>) -> impl Element {
     Row::new()
-        .s(Font::new().color(Theme::Font1))
+        .s(
+            Font::new()
+                .color_signal(is_active.signal().map_bool(|| Theme::Font4, || Theme::Font1))
+        )
         .s(Padding::new().x(10))
         .s(Spacing::new(20))
         .items(items)
@@ -213,55 +280,99 @@ fn time_entry_date(
     year: impl Signal<Item = i32> + Unpin + 'static, 
     month: impl Signal<Item = u32> + Unpin + 'static, 
     day: impl Signal<Item = u32> + Unpin + 'static,
+    is_active: ReadOnlyMutable<bool>,
 ) -> impl Element {
     Row::new()
         .s(Align::new().center_x())
         .s(Spacing::new(2))
-        .item(number_input(year, 4, false))
+        .item(
+            number_input(
+                year, 
+                4, 
+                false,
+                is_active.clone(),
+            )
+        )
         .item("-")
-        .item(number_input(month.map(|month| i32::try_from(month).unwrap_throw()), 2, false))
+        .item(
+            number_input(
+                month.map(|month| i32::try_from(month).unwrap_throw()), 
+                2, 
+                false,
+                is_active.clone(),
+            )
+        )
         .item("-")
-        .item(number_input(day.map(|day| i32::try_from(day).unwrap_throw()), 2, false))
+        .item(
+            number_input(
+                day.map(|day| i32::try_from(day).unwrap_throw()), 
+                2, 
+                false,
+                is_active,
+            )
+        )
 }
 
 fn time_entry_time(
     hour: impl Signal<Item = u32> + Unpin + 'static, 
     minute: impl Signal<Item = u32> + Unpin + 'static, 
     second: impl Signal<Item = u32> + Unpin + 'static,
+    is_active: ReadOnlyMutable<bool>,
 ) -> impl Element {
     Row::new()
         .s(Align::new().center_x())
         .s(Spacing::new(2))
-        .item(number_input(hour.map(|hour| i32::try_from(hour).unwrap_throw()), 2, false))
+        .item(
+            number_input(
+                hour.map(|hour| i32::try_from(hour).unwrap_throw()), 
+                2, 
+                false, 
+                is_active.clone()
+            ),
+        )
         .item(":")
-        .item(number_input(minute.map(|minute| i32::try_from(minute).unwrap_throw()), 2, false))
+        .item(
+            number_input(
+                minute.map(|minute| i32::try_from(minute).unwrap_throw()), 
+                2, 
+                false,
+                is_active.clone(),
+            )
+        )
         .item(":")
-        .item(number_input(second.map(|second| i32::try_from(second).unwrap_throw()), 2, false))
+        .item(
+            number_input(
+                second.map(|second| i32::try_from(second).unwrap_throw()), 
+                2, 
+                false,
+                is_active,
+            )
+        )
 }
 
-fn time_entry_started(time_entry: Arc<super::TimeEntry>) -> impl Element {
+fn time_entry_started(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
     Row::new()
         .s(Padding::all(5))
         .s(Spacing::new(15))
-        .item(time_entry_started_date(time_entry.clone()))
-        .item(time_entry_started_time(time_entry.clone()))
+        .item(time_entry_started_date(time_entry.clone(), is_active.clone()))
+        .item(time_entry_started_time(time_entry.clone(), is_active))
 }
 
-fn time_entry_started_date(time_entry: Arc<super::TimeEntry>) -> impl Element {
+fn time_entry_started_date(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
     let year = time_entry.started.signal().map(|date| date.year());
     let month = time_entry.started.signal().map(|date| date.month());
     let day = time_entry.started.signal().map(|date| date.day());
-    time_entry_date(year, month, day)
+    time_entry_date(year, month, day, is_active)
 }
 
-fn time_entry_started_time(time_entry: Arc<super::TimeEntry>) -> impl Element {
+fn time_entry_started_time(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
     let hour = time_entry.started.signal().map(|time| time.hour());
     let minute = time_entry.started.signal().map(|time| time.minute());
     let second = time_entry.started.signal().map(|time| time.second());
-    time_entry_time(hour, minute, second)
+    time_entry_time(hour, minute, second, is_active)
 }
 
-fn time_entry_duration(time_entry: Arc<super::TimeEntry>) -> impl Element {
+fn time_entry_duration(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
     let mutable_duration = Mutable::new((0, 0, 0));
     let duration = mutable_duration.read_only();
     let duration_signal = map_ref! {
@@ -296,29 +407,29 @@ fn time_entry_duration(time_entry: Arc<super::TimeEntry>) -> impl Element {
         .item(
             Row::new()
                 .s(Spacing::new(2))
-                .item(number_input(hours, None, true))
+                .item(number_input(hours, None, true, is_active.clone()))
                 .item("h"))
         .item(
             Row::new()
                 .s(Spacing::new(2))
-                .item(number_input(minutes, 2, true))
+                .item(number_input(minutes, 2, true, is_active.clone()))
                 .item("m"))
         .item(
             Row::new()
                 .s(Spacing::new(2))
-                .item(number_input(seconds, 2, true))
+                .item(number_input(seconds, 2, true, is_active))
                 .item("s"))
 }
 
-fn time_entry_stopped(time_entry: Arc<super::TimeEntry>) -> impl Element {
+fn time_entry_stopped(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
     Row::new()
         .s(Padding::all(5))
         .s(Spacing::new(15))
-        .item(time_entry_stopped_date(time_entry.clone()))
-        .item(time_entry_stopped_time(time_entry.clone()))
+        .item(time_entry_stopped_date(time_entry.clone(), is_active.clone()))
+        .item(time_entry_stopped_time(time_entry.clone(), is_active))
 }
 
-fn time_entry_stopped_date(time_entry: Arc<super::TimeEntry>) -> impl Element {
+fn time_entry_stopped_date(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
     let year = map_ref! {
         let current_date = super::current_time().signal(),
         let stopped_date = time_entry.stopped.signal() =>
@@ -346,10 +457,10 @@ fn time_entry_stopped_date(time_entry: Arc<super::TimeEntry>) -> impl Element {
             current_date.day()
         }
     }.dedupe();
-    time_entry_date(year, month, day)
+    time_entry_date(year, month, day, is_active)
 }
 
-fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>) -> impl Element {
+fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
     let hour = map_ref! {
         let current_time = super::current_time().signal(),
         let stopped_time = time_entry.stopped.signal() =>
@@ -377,22 +488,33 @@ fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>) -> impl Element {
             current_time.second()
         }
     }.dedupe();
-    time_entry_time(hour, minute, second)
+    time_entry_time(hour, minute, second, is_active)
 }
 
-fn number_input(number: impl Signal<Item = i32> + Unpin + 'static, max_chars: impl Into<Option<u32>>, bold: bool) -> impl Element {
+fn number_input(
+    number: impl Signal<Item = i32> + Unpin + 'static, 
+    max_chars: impl Into<Option<u32>>, 
+    bold: bool,
+    is_active: ReadOnlyMutable<bool>,
+) -> impl Element {
     let max_chars = max_chars.into();
     TextInput::new()
         .s(Width::zeros(max_chars.unwrap_or(4)))
         .s(
             Font::new()
-                .color(Theme::Font1)
+                .color_signal(is_active.signal().map_bool(|| Theme::Font4, || Theme::Font1))
                 .center()
                 .weight(if bold { NamedWeight::Bold } else { NamedWeight::Regular } )
         )
         .s(Background::new().color(Theme::Transparent))
         .s(Borders::new().bottom(
-            Border::new().color(Theme::Background3)
+            Border::new().color(Theme::Border1)
+        ))
+        .s(Borders::new().bottom_signal(
+            is_active.signal().map_bool(
+                || Border::new().color(Theme::Border4), 
+                || Border::new().color(Theme::Border1)
+            )
         ))
         .label_hidden("time entry started date")
         .text_signal(number.map(move |number| {
