@@ -414,25 +414,33 @@ fn time_entry_started_time(time_entry: Arc<super::TimeEntry>, is_active: ReadOnl
 }
 
 fn time_entry_duration(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
+    let started = time_entry.started.clone();
+    let stopped = time_entry.stopped.clone();
+
     let mutable_duration = Mutable::new((0, 0, 0));
     let duration = mutable_duration.read_only();
+
     let duration_signal = map_ref! {
         let current = super::current_time().signal(),
-        let started = time_entry.started.signal(),
-        let stopped = time_entry.stopped.signal() =>
+        let started = started.signal(),
+        let stopped = stopped.signal() =>
         if let Some(stopped) = stopped {
             **stopped - **started
         } else {
             *current - **started
         }
-    }.dedupe();
+    };
     let duration_updater = Task::start_droppable(
         duration_signal.for_each(move |duration| {
             let num_seconds = duration.num_seconds();
-            let seconds = i32::try_from(num_seconds % 60).unwrap_throw();
-            let minutes = i32::try_from((num_seconds / 60) % 60).unwrap_throw();
-            let hours = i32::try_from((num_seconds / 60) / 60).unwrap_throw();
-            mutable_duration.set((hours, minutes, seconds));
+            let seconds = num_seconds % 60;
+            let minutes = (num_seconds / 60) % 60;
+            let hours = (num_seconds / 60) / 60;
+            mutable_duration.set((
+                i32::try_from(hours).unwrap_throw(), 
+                i32::try_from(minutes).unwrap_throw(), 
+                i32::try_from(seconds).unwrap_throw(),
+            ));
             async {} 
         })
     );
@@ -455,7 +463,13 @@ fn time_entry_duration(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMut
                         true, 
                         is_active.clone(), 
                         true,
-                        |_| None,
+                        clone!((started, stopped, duration) move |hours| {
+                            let hours = hours.parse::<i32>().ok()?;
+                            let (_, minutes, seconds) = duration.get();
+                            let new_duration = Duration::seconds(i64::from(hours * 3600 + minutes * 60 + seconds));
+                            let new_stopped = *started.get() + new_duration;
+                            Some(stopped.set(Some(new_stopped.into())))
+                        }),
                     )
                 )
                 .item("h"))
@@ -469,7 +483,16 @@ fn time_entry_duration(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMut
                         true, 
                         is_active.clone(), 
                         true,
-                        |_| None,
+                        clone!((started, stopped, duration) move |minutes| {
+                            let minutes = minutes.parse::<i32>().ok()?;
+                            if minutes < 0 || minutes >= 60 {
+                                None?
+                            }
+                            let (hours, _, seconds) = duration.get();
+                            let new_duration = Duration::seconds(i64::from(hours * 3600 + minutes * 60 + seconds));
+                            let new_stopped = *started.get() + new_duration;
+                            Some(stopped.set(Some(new_stopped.into())))
+                        }),
                     )
                 )
                 .item("m"))
@@ -483,7 +506,16 @@ fn time_entry_duration(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMut
                         true, 
                         is_active, 
                         true,
-                        |_| None,
+                        move |seconds| {
+                            let seconds = seconds.parse::<i32>().ok()?;
+                            if seconds < 0 || seconds >= 60 {
+                                None?
+                            }
+                            let (hours, minutes, _) = duration.get();
+                            let new_duration = Duration::seconds(i64::from(hours * 3600 + minutes * 60 + seconds));
+                            let new_stopped = *started.get() + new_duration;
+                            Some(stopped.set(Some(new_stopped.into())))
+                        },
                     )
                 )
                 .item("s"))
@@ -551,9 +583,10 @@ fn time_entry_stopped_date(time_entry: Arc<super::TimeEntry>, is_active: ReadOnl
 }
 
 fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
+    let stopped = time_entry.stopped.clone();
     let hour = map_ref! {
         let current_time = super::current_time().signal(),
-        let stopped_time = time_entry.stopped.signal() =>
+        let stopped_time = stopped.signal() =>
         if let Some(stopped_time) = stopped_time {
             stopped_time.hour()
         } else {
@@ -562,7 +595,7 @@ fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>, is_active: ReadOnl
     };
     let minute = map_ref! {
         let current_time = super::current_time().signal(),
-        let stopped_time = time_entry.stopped.signal() =>
+        let stopped_time = stopped.signal() =>
         if let Some(stopped_time) = stopped_time {
             stopped_time.minute()
         } else {
@@ -571,7 +604,7 @@ fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>, is_active: ReadOnl
     };
     let second = map_ref! {
         let current_time = super::current_time().signal(),
-        let stopped_time = time_entry.stopped.signal() =>
+        let stopped_time = stopped.signal() =>
         if let Some(stopped_time) = stopped_time {
             stopped_time.second()
         } else {
@@ -580,11 +613,23 @@ fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>, is_active: ReadOnl
     };
     time_entry_time(
         hour, 
-        |_| None,
+        clone!((stopped) move |hour| Some(
+            stopped.set(
+                Some(stopped.get().unwrap_throw().with_hour(hour.parse().ok()?)?.into())
+            )
+        )),
         minute, 
-        |_| None,
+        clone!((stopped) move |minute| Some(
+            stopped.set(
+                Some(stopped.get().unwrap_throw().with_minute(minute.parse().ok()?)?.into())
+            )
+        )),
         second, 
-        |_| None,
+        move |second| Some(
+            stopped.set(
+                Some(stopped.get().unwrap_throw().with_second(second.parse().ok()?)?.into())
+            )
+        ),
         is_active, 
         true,
     )
