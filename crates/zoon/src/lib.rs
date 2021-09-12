@@ -35,12 +35,12 @@ pub use either::{Either, IntoEither};
 pub use element::*;
 pub use futures_signals::{
     self, map_mut, map_ref,
-    signal::{self, MutableSignal, ReadOnlyMutable, Signal, SignalExt},
+    signal::{self, MutableSignal, ReadOnlyMutable, Signal, SignalExt, SignalStream},
     signal_map::{MutableBTreeMap, MutableSignalMap, SignalMap, SignalMapExt},
     signal_vec::{MutableSignalVec, SignalVec, SignalVecExt},
 };
-pub use futures_signals_ext::SignalExtBool;
-pub use futures_util;
+pub use futures_signals_ext::{SignalExtBool, SignalExtExt};
+pub use futures_util::{self, future, Stream, StreamExt, FutureExt};
 pub use gensym::gensym;
 pub use hsluv;
 pub use index_generator::IndexGenerator;

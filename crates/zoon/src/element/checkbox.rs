@@ -154,13 +154,12 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
         CheckedFlag: FlagNotSet,
     {
         let check_state = self.check_state.clone();
-        let checked_changer = checked.for_each(move |checked| {
+        let checked_changer = checked.for_each_sync(move |checked| {
             let new_state = match check_state.get() {
                 CheckState::NotSet => CheckState::FirstValue(checked),
                 CheckState::FirstValue(_) | CheckState::Value(_) => CheckState::Value(checked),
             };
             check_state.set_neq(new_state);
-            async {}
         });
         let task_handle = Task::start_droppable(checked_changer);
         self.raw_el = self.raw_el.after_remove(move |_| drop(task_handle));
@@ -175,11 +174,10 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
         OnChangeFlag: FlagNotSet,
     {
         let on_change = move |checked| on_change.clone()(checked);
-        let on_change_invoker = self.check_state.signal().for_each(move |check_state| {
+        let on_change_invoker = self.check_state.signal().for_each_sync(move |check_state| {
             if let CheckState::Value(checked) = check_state {
                 on_change(checked);
             }
-            async {}
         });
         let task_handle = Task::start_droppable(on_change_invoker);
         self.raw_el = self.raw_el.after_remove(move |_| drop(task_handle));
@@ -216,9 +214,8 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 
         let check_state = self.check_state.clone();
         let task_handle =
-            Task::start_droppable(check_state.signal().for_each(move |check_state| {
+            Task::start_droppable(check_state.signal().for_each_sync(move |check_state| {
                 checked.set_neq(is_checked(check_state));
-                async {}
             }));
 
         self.raw_el = self.raw_el.child(icon).after_remove(|_| drop(task_handle));

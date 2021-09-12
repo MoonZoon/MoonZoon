@@ -70,9 +70,8 @@ fn are_all_completed() -> &'static ReadOnlyMutable<bool> {
     Task::start(
         all_and_completed()
             .map(|(all, completed)| all == completed)
-            .for_each(move |all_completed| {
+            .for_each_sync(move |all_completed| {
                 mutable.set_neq(all_completed);
-                async {}
             }),
     );
     read_only

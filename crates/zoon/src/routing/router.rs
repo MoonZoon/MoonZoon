@@ -60,10 +60,9 @@ fn setup_url_change_handler<R: FromRouteSegments>(
     let on_route_change = move |route: Option<R>| on_route_change.clone()(route);
 
     let (url_change_sender, url_change_receiver) = channel(current_url_segments());
-    let url_change_handler = url_change_receiver.for_each(move |segments| {
+    let url_change_handler = url_change_receiver.for_each_sync(move |segments| {
         let route = segments.and_then(R::from_route_segments);
         on_route_change(route);
-        async {}
     });
     let url_change_handle = Task::start_droppable(url_change_handler);
     (url_change_sender, url_change_handle)
