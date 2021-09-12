@@ -43,3 +43,11 @@ impl<T: Clone> Clone for Wrapper<T> {
 }
 
 impl<T: Copy> Copy for Wrapper<T> {}
+
+impl<T: PartialEq> PartialEq for Wrapper<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner == other.inner
+    }
+}
+
+impl<T: Eq> Eq for Wrapper<T> {}
