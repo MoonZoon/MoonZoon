@@ -109,10 +109,8 @@ fn start_stop_button(project: Arc<super::Project>) -> impl Element {
             })
             .len()
             .map(|active_entries_count| active_entries_count > 0)
-            .for_each(move |has_active_entry| {
+            .for_each_sync(move |has_active_entry| {
                 mutable_has_active_entry.set_neq(has_active_entry);
-                // @TODO for_each_sync?
-                async {}
             })
     );
 
@@ -158,7 +156,7 @@ fn time_entry(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -
         .started
         .signal()
         .dedupe()
-        .for_each(clone!((time_entry) move |started| {
+        .for_each_sync(clone!((time_entry) move |started| {
             if debounced_started_first_value.get() {
                 debounced_started_first_value.set(false);
             } else {
@@ -166,7 +164,6 @@ fn time_entry(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -
                     super::set_time_entry_started(&time_entry, started.into())
                 }))));
             }
-            async { }
         }))
     );
 
@@ -176,7 +173,7 @@ fn time_entry(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -
         .stopped
         .signal()
         .dedupe()
-        .for_each(clone!((time_entry) move |stopped| {
+        .for_each_sync(clone!((time_entry) move |stopped| {
             if debounced_stopped_first_value.get() {
                 debounced_stopped_first_value.set(false);
             } else {
@@ -184,7 +181,6 @@ fn time_entry(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -
                     super::set_time_entry_stopped(&time_entry, stopped.unwrap_throw().into())
                 }))));
             }
-            async { }
         }))
     );
 
@@ -193,9 +189,8 @@ fn time_entry(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -
     let is_active_updater = Task::start_droppable(time_entry
         .stopped
         .signal()
-        .for_each(move |stopped| {
+        .for_each_sync(move |stopped| {
             is_active_mutable.set_neq(stopped.is_none());
-            async { }
         })
     );
     Column::new()
@@ -471,7 +466,7 @@ fn time_entry_duration(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMut
         }
     };
     let duration_updater = Task::start_droppable(
-        duration_signal.for_each(move |duration| {
+        duration_signal.for_each_sync(move |duration| {
             let num_seconds = duration.num_seconds();
             let seconds = num_seconds % 60;
             let minutes = (num_seconds / 60) % 60;
@@ -481,7 +476,6 @@ fn time_entry_duration(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMut
                 i32::try_from(minutes).unwrap_throw(), 
                 i32::try_from(seconds).unwrap_throw(),
             ));
-            async {} 
         })
     );
     let hours = duration.signal().map(|(hours, _, _)| hours);
@@ -689,7 +683,7 @@ fn date_time_part_input(
     let focused = Mutable::new(false);
 
     let text_updater = Task::start_droppable(
-        number.for_each(clone!((valid, focused) move |number| {
+        number.for_each_sync(clone!((valid, focused) move |number| {
             if not(focused.get()) {
                 valid.set_neq(true);
                 if max_chars == Some(2) {
@@ -698,7 +692,6 @@ fn date_time_part_input(
                     text.set_neq(number.to_string());
                 }
             }
-            async {}
         }))
     );
 

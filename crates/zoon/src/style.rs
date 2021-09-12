@@ -204,13 +204,12 @@ impl GlobalStyles {
         let mut task_handles = Vec::new();
         for (name, value_signal) in group.dynamic_css_props {
             let declaration = Arc::clone(&declaration);
-            let task = value_signal.for_each(move |value| {
+            let task = value_signal.for_each_sync(move |value| {
                 if let Some(value) = value.into_option_cow_str() {
                     set_css_property(&declaration, &name, &value);
                 } else {
                     declaration.remove_property(&name).unwrap_throw();
                 }
-                async {}
             });
             if droppable {
                 task_handles.push(Task::start_droppable(task));

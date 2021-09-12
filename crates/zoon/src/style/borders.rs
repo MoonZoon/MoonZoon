@@ -25,9 +25,8 @@ impl<'a> Borders<'a> {
             .x_signal(mutable.signal_cloned())
             .y_signal(mutable.signal_cloned());
         this.task_handles
-            .push(Task::start_droppable(border.for_each(move |new_border| {
+            .push(Task::start_droppable(border.for_each_sync(move |new_border| {
                 mutable.set(new_border);
-                async {}
             })));
         this
     }
@@ -46,9 +45,8 @@ impl<'a> Borders<'a> {
             .left_signal(mutable.signal_cloned())
             .right_signal(mutable.signal_cloned());
         self.task_handles
-            .push(Task::start_droppable(border.for_each(move |new_border| {
+            .push(Task::start_droppable(border.for_each_sync(move |new_border| {
                 mutable.set(new_border);
-                async {}
             })));
         self
     }
@@ -67,9 +65,8 @@ impl<'a> Borders<'a> {
             .top_signal(mutable.signal_cloned())
             .bottom_signal(mutable.signal_cloned());
         self.task_handles
-            .push(Task::start_droppable(border.for_each(move |new_border| {
+            .push(Task::start_droppable(border.for_each_sync(move |new_border| {
                 mutable.set(new_border);
-                async {}
             })));
         self
     }
