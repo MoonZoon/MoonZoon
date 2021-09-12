@@ -152,6 +152,42 @@ fn time_entries(project: Arc<super::Project>) -> impl Element {
 }
 
 fn time_entry(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -> impl Element {
+    let debounced_started = Mutable::new(None);
+    let debounced_started_first_value = Mutable::new(true);
+    let debounced_started_updater = Task::start_droppable(time_entry
+        .started
+        .signal()
+        .dedupe()
+        .for_each(clone!((time_entry) move |started| {
+            if debounced_started_first_value.get() {
+                debounced_started_first_value.set(false);
+            } else {
+                debounced_started.set(Some(Timer::once(app::DEBOUNCE_MS, clone!((time_entry) move || {
+                    super::set_time_entry_started(&time_entry, started.into())
+                }))));
+            }
+            async { }
+        }))
+    );
+
+    let debounced_stopped = Mutable::new(None);
+    let debounced_stopped_first_value = Mutable::new(true);
+    let debounced_stopped_updater = Task::start_droppable(time_entry
+        .stopped
+        .signal()
+        .dedupe()
+        .for_each(clone!((time_entry) move |stopped| {
+            if debounced_stopped_first_value.get() {
+                debounced_stopped_first_value.set(false);
+            } else {
+                debounced_stopped.set(Some(Timer::once(app::DEBOUNCE_MS, clone!((time_entry) move || {
+                    super::set_time_entry_stopped(&time_entry, stopped.unwrap_throw().into())
+                }))));
+            }
+            async { }
+        }))
+    );
+
     let is_active_mutable = Mutable::new(false);
     let is_active = is_active_mutable.read_only();
     let is_active_updater = Task::start_droppable(time_entry
@@ -168,7 +204,11 @@ fn time_entry(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -
         )
         .s(RoundedCorners::all(10).top_right(40 / 2))
         .s(Padding::new().bottom(15))
-        .after_remove(move |_| drop(is_active_updater))
+        .after_remove(move |_| {
+            drop(debounced_started_updater);
+            drop(debounced_stopped_updater);
+            drop(is_active_updater);
+        })
         .item(time_entry_name_and_delete_button(project, time_entry.clone(), is_active.clone()))
         .item_signal(time_entry_times(time_entry, is_active))
 }
