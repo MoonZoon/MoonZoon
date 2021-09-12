@@ -278,11 +278,11 @@ fn time_entry_times_wide(items: Vec<RawElement>, is_active: ReadOnlyMutable<bool
 
 fn time_entry_date(
     year: impl Signal<Item = i32> + Unpin + 'static, 
-    on_year_change: impl FnOnce(String) -> bool + Clone + 'static,
+    on_year_change: impl FnOnce(String) -> Option<()> + Clone + 'static,
     month: impl Signal<Item = u32> + Unpin + 'static, 
-    on_month_change: impl FnOnce(String) -> bool + Clone + 'static,
+    on_month_change: impl FnOnce(String) -> Option<()> + Clone + 'static,
     day: impl Signal<Item = u32> + Unpin + 'static,
-    on_day_change: impl FnOnce(String) -> bool + Clone + 'static,
+    on_day_change: impl FnOnce(String) -> Option<()> + Clone + 'static,
     is_active: ReadOnlyMutable<bool>,
     read_only_when_active: bool,
 ) -> impl Element {
@@ -325,11 +325,11 @@ fn time_entry_date(
 
 fn time_entry_time(
     hour: impl Signal<Item = u32> + Unpin + 'static, 
-    on_hour_change: impl FnOnce(String) -> bool + Clone + 'static,
+    on_hour_change: impl FnOnce(String) -> Option<()> + Clone + 'static,
     minute: impl Signal<Item = u32> + Unpin + 'static, 
-    on_minute_change: impl FnOnce(String) -> bool + Clone + 'static,
+    on_minute_change: impl FnOnce(String) -> Option<()> + Clone + 'static,
     second: impl Signal<Item = u32> + Unpin + 'static,
-    on_second_change: impl FnOnce(String) -> bool + Clone + 'static,
+    on_second_change: impl FnOnce(String) -> Option<()> + Clone + 'static,
     is_active: ReadOnlyMutable<bool>,
     read_only_when_active: bool,
 ) -> impl Element {
@@ -339,6 +339,7 @@ fn time_entry_time(
         .item(
             date_time_part_input(
                 hour.map(|hour| i32::try_from(hour).unwrap_throw()), 
+                
                 2, 
                 false, 
                 is_active.clone(),
@@ -379,34 +380,36 @@ fn time_entry_started(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMuta
 }
 
 fn time_entry_started_date(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
-    let year = time_entry.started.signal().map(|date| date.year());
-    let month = time_entry.started.signal().map(|date| date.month());
-    let day = time_entry.started.signal().map(|date| date.day());
+    let started = time_entry.started.clone();
+    let year = started.signal().map(|date| date.year());
+    let month = started.signal().map(|date| date.month());
+    let day = started.signal().map(|date| date.day());
     time_entry_date(
-        year, 
-        |_| true,
+        year,
+        clone!((started) move |year| Some(started.set(started.get().with_year(year.parse().ok()?)?.into()))),
         month, 
-        |_| true,
+        clone!((started) move |month| Some(started.set(started.get().with_month(month.parse().ok()?)?.into()))),
         day, 
-        |_| true,
+        move |day| Some(started.set(started.get().with_day(day.parse().ok()?)?.into())),
         is_active, 
-        false
+        false,
     )
 }
 
 fn time_entry_started_time(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
-    let hour = time_entry.started.signal().map(|time| time.hour());
-    let minute = time_entry.started.signal().map(|time| time.minute());
-    let second = time_entry.started.signal().map(|time| time.second());
+    let started = time_entry.started.clone();
+    let hour = started.signal().map(|time| time.hour());
+    let minute = started.signal().map(|time| time.minute());
+    let second = started.signal().map(|time| time.second());
     time_entry_time(
         hour, 
-        |_| true,
+        clone!((started) move |hour| Some(started.set(started.get().with_hour(hour.parse().ok()?)?.into()))),
         minute, 
-        |_| true,
+        clone!((started) move |minute| Some(started.set(started.get().with_minute(minute.parse().ok()?)?.into()))),
         second, 
-        |_| true,
+        move |second| Some(started.set(started.get().with_second(second.parse().ok()?)?.into())),
         is_active, 
-        false
+        false,
     )
 }
 
@@ -452,7 +455,7 @@ fn time_entry_duration(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMut
                         true, 
                         is_active.clone(), 
                         true,
-                        |_| true,
+                        |_| None,
                     )
                 )
                 .item("h"))
@@ -462,11 +465,11 @@ fn time_entry_duration(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMut
                 .item(
                     date_time_part_input(
                         minutes, 
-                        2, 
+                        3, 
                         true, 
                         is_active.clone(), 
                         true,
-                        |_| true,
+                        |_| None,
                     )
                 )
                 .item("m"))
@@ -476,11 +479,11 @@ fn time_entry_duration(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMut
                 .item(
                     date_time_part_input(
                         seconds, 
-                        2, 
+                        3, 
                         true, 
                         is_active, 
                         true,
-                        |_| true,
+                        |_| None,
                     )
                 )
                 .item("s"))
@@ -495,40 +498,53 @@ fn time_entry_stopped(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMuta
 }
 
 fn time_entry_stopped_date(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable<bool>) -> impl Element {
+    let stopped = time_entry.stopped.clone();
     let year = map_ref! {
         let current_date = super::current_time().signal(),
-        let stopped_date = time_entry.stopped.signal() =>
+        let stopped_date = stopped.signal() =>
         if let Some(stopped_date) = stopped_date {
             stopped_date.year()
         } else {
             current_date.year()
         }
-    }.dedupe();
+    };
     let month = map_ref! {
         let current_date = super::current_time().signal(),
-        let stopped_date = time_entry.stopped.signal() =>
+        let stopped_date = stopped.signal() =>
         if let Some(stopped_date) = stopped_date {
             stopped_date.month()
         } else {
             current_date.month()
         }
-    }.dedupe();
+    };
     let day = map_ref! {
         let current_date = super::current_time().signal(),
-        let stopped_date = time_entry.stopped.signal() =>
+        let stopped_date = stopped.signal() =>
         if let Some(stopped_date) = stopped_date {
             stopped_date.day()
         } else {
             current_date.day()
         }
-    }.dedupe();
+    };
     time_entry_date(
         year, 
-        |_| true,
+        clone!((stopped) move |year| Some(
+            stopped.set(
+                Some(stopped.get().unwrap_throw().with_year(year.parse().ok()?)?.into())
+            )
+        )),
         month, 
-        |_| true,
+        clone!((stopped) move |month| Some(
+            stopped.set(
+                Some(stopped.get().unwrap_throw().with_month(month.parse().ok()?)?.into())
+            )
+        )),
         day, 
-        |_| true,
+        move |day| Some(
+            stopped.set(
+                Some(stopped.get().unwrap_throw().with_day(day.parse().ok()?)?.into())
+            )
+        ),
         is_active, 
         true,
     )
@@ -543,7 +559,7 @@ fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>, is_active: ReadOnl
         } else {
             current_time.hour()
         }
-    }.dedupe();
+    };
     let minute = map_ref! {
         let current_time = super::current_time().signal(),
         let stopped_time = time_entry.stopped.signal() =>
@@ -552,7 +568,7 @@ fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>, is_active: ReadOnl
         } else {
             current_time.minute()
         }
-    }.dedupe();
+    };
     let second = map_ref! {
         let current_time = super::current_time().signal(),
         let stopped_time = time_entry.stopped.signal() =>
@@ -561,29 +577,46 @@ fn time_entry_stopped_time(time_entry: Arc<super::TimeEntry>, is_active: ReadOnl
         } else {
             current_time.second()
         }
-    }.dedupe();
+    };
     time_entry_time(
         hour, 
-        |_| true,
+        |_| None,
         minute, 
-        |_| true,
+        |_| None,
         second, 
-        |_| true,
+        |_| None,
         is_active, 
-        true
+        true,
     )
 }
 
 fn date_time_part_input(
-    number: impl Signal<Item = i32> + Unpin + 'static, 
+    number: impl Signal<Item = i32> + Unpin + 'static,
     max_chars: impl Into<Option<u32>>, 
     bold: bool,
     is_active: ReadOnlyMutable<bool>,
     read_only_when_active: bool,
-    on_change: impl FnOnce(String) -> bool + Clone + 'static,
+    on_change: impl FnOnce(String) -> Option<()> + Clone + 'static,
 ) -> impl Element {
     let max_chars = max_chars.into();
     let (valid, valid_signal) = Mutable::new_and_signal(true);
+    let (text, text_signal) = Mutable::new_and_signal_cloned(String::new());
+    let focused = Mutable::new(false);
+
+    let text_updater = Task::start_droppable(
+        number.for_each(clone!((valid, focused) move |number| {
+            if not(focused.get()) {
+                valid.set_neq(true);
+                if max_chars == Some(2) {
+                    text.set_neq(format!("{:02}", number));
+                } else {
+                    text.set_neq(number.to_string());
+                }
+            }
+            async {}
+        }))
+    );
+
     TextInput::new()
         .s(RoundedCorners::all(3))
         .s(Width::zeros(max_chars.unwrap_or(4)))
@@ -603,303 +636,13 @@ fn date_time_part_input(
                 || Border::new().color(Theme::Border1),
             )
         ))
-        .label_hidden("time entry started date")
-        .text_signal(number.map(move |number| {
-            if max_chars == Some(2) {
-                format!("{:02}", number)
-            } else {
-                number.to_string()
-            }
-        }))
+        .after_remove(move |_| drop(text_updater))
+        .on_focused_change(move |is_focused| focused.set(is_focused))
+        .label_hidden("date_time_part_input")
+        .text_signal(text_signal)
         .input_type(InputType::text().max_chars(max_chars))
         .read_only_signal(is_active.signal().map_bool(move || read_only_when_active, || false))
         .on_change(move |text| {
-            valid.set_neq(on_change(text))
+            valid.set_neq(on_change(text).is_some())
         })
 }
-
-
-
-
-
-// blocks!{
-
-//     #[el]
-//     fn page() -> Column {
-//         column![
-//             el![
-//                 region::h1(),
-//                 "Time Tracker",
-//             ],
-//             client_panels();
-//         ]
-//     }
-
-//     // ------ Client ------
-
-//     #[el]
-//     fn client_panels() -> Column {
-//         let clients = super::clients().map(|clients| {
-//             clients.map(|clients| clients.iter_vars().rev().map(client_panel))
-//         });
-//         column![
-//             spacing(30),
-//             clients,
-//         ]
-//     }
-
-//     #[el]
-//     fn client_panel(client: Var<super::Client>) -> Column {
-//         column![
-//             el![client.map(|client| client.name.clone())],
-//             project_panels(client),
-//         ]
-//     }
-
-//     // ------ Project ------
-
-//     #[el]
-//     fn project_panels(client: Var<super::Client>) -> Column {
-//         let projects = client.map(|client| {
-//             client.projects.iter_vars().rev().map(project_panel)
-//         });
-//         column![
-//             spacing(20),
-//             projects,
-//         ]
-//     }
-
-//     #[el]
-//     fn project_panel(project: Var<super::Project>) -> Column {
-//         column![
-//             row![
-//                 el![project.map(|project| project.name.clone())],
-//                 start_stop_button(project),
-//             ],
-//             time_entry_panels(project),
-//         ]
-//     }
-
-//     #[el]
-//     fn start_stop_button(project: Var<super::Project>) -> Button {
-//         if let Some(time_entry) = project.map(|project| project.active_time_entry) {
-//             button![
-//                 background::color(color::yellow()),
-//                 button::on_press(|| super::set_time_entry_stopped(time_entry, Local::now())),
-//                 "Stop",
-//             ]
-//         } else {
-//             button![
-//                 background::color(color::green()),
-//                 button::on_press(|| super::add_time_entry(project)),
-//                 "Start",
-//             ]
-//         }
-//     }
-
-//     // ------ TimeEntry ------
-
-//     #[el]
-//     fn time_entry_panels(project: Var<super::Project>) -> Column {
-//         let time_entries = project.map(|project| {
-//             project.time_entries.iter_vars().rev().map(time_entry_panel)
-//         });
-//         column![
-//             spacing(20),
-//             time_entries,
-//         ]
-//     }
-
-//     #[el]
-//     fn time_entry_panel(time_entry: Var<super::TimeEntry>) -> Column {
-//         let show_duration_row = app::viewport_width().inner() < DURATION_BREAKPOINT;
-//         let active = time_entry.map(|time_entry| time_entry.stopped.is_none());
-
-//         if active {
-//             el_var(|| Timer::new(1_000, || {
-//                 notify(RecomputeDuration);
-//                 notify(RecomputeStopped);
-//             }))
-//         }
-
-//         column![
-//             row![
-//                 time_entry_name(time_entry),
-//                 button![
-//                     button::on_press(|| super::remove_time_entry(time_entry)),
-//                     "D",
-//                 ],
-//             ],
-//             show_duration_row.then(|| {
-//                 row![
-//                     duration_input(time_entry)
-//                 ]
-//             }),
-//             row![
-//                 started_inputs(time_entry),
-//                 show_duration_row.not().then(|| {
-//                     column![
-//                         duration_input(time_entry)
-//                     ]
-//                 }),
-//                 stopped_inputs(time_entry),
-//             ]
-//         ]
-//     }
-
-//     #[el]
-//     fn time_entry_name(time_entry: Var<super::TimeEntry>) -> TextInput {
-//         let name = el_var(|| {
-//             time_entry.map(|time_entry| time_entry.name.clone())
-//         });
-//         text_input![
-//             text_input::on_change(|new_name| name.set(new_name)),
-//             on_blur(|| name.use_ref(|name| {
-//                 super::rename_time_entry(time_entry, name);
-//             })),
-//             name.inner(),
-//         ]
-//     }
-
-//     #[el]
-//     fn duration_input(time_entry: Var<super::TimeEntry>) -> TextInput {
-//         let (active, started, stopped) = time_entry.map(|time_entry| (
-//             time_entry.stopped.is_none(),
-//             time_entry.started,
-//             time_entry.stopped.unwrap_or_else(Local::now)
-//         ));
-//         let recompute = listen_ref(|RecomputeDuration| ()).is_some();
-//         let duration = el_var_reset(recompute, || (stopped - started).hhmmss());
-//         // 3:40:20
-//         text_input![
-//             active.not().then(|| text_input::on_change(|new_duration| duration.set(new_duration))),
-//             active.not().then(|| on_blur(|| {
-//                 let new_duration = (|| {
-//                     let duration = duration.inner();
-//                     let negative = duration.chars().next()? == '-';
-//                     if negative {
-//                         duration.remove(0);
-//                     }
-//                     let mut duration_parts = duration.split(':');
-//                     let hours: i64 = duration_parts.next()?.parse().ok()?;
-//                     let minutes: i64 = duration_parts.next()?.parse().ok()?;
-//                     let seconds: i64 = duration_parts.next()?.parse().ok()?;
-
-//                     let mut total_seconds = hours * 3600 + minutes * 60 + seconds;
-//                     if negative {
-//                         total_seconds = -total_seconds;
-//                     }
-//                     Some(Duration::seconds(total_seconds))
-//                 })();
-//                 if let Some(new_duration) = new_duration {
-//                     notify(RecomputeStopped);
-//                     return super::set_time_entry_stopped(time_entry, started + duration)
-//                 }
-//                 duration.remove()
-//             })),
-//             duration.inner()
-//         ]
-//     }
-
-//     #[el]
-//     fn started_inputs(time_entry: Var<super::TimeEntry>) -> Column {
-//         let (active, started) = time_entry.map(|time_entry| (
-//             time_entry.stopped.is_none(),
-//             time_entry.started,
-//         ));
-//         let started_date = el_var(|| started.format("%F").to_string());
-//         let started_time = el_var(|| started.format("%X").to_string());
-//         column![
-//             // 2020-11-03
-//             text_input![
-//                 active.not().then(|| text_input::on_change(|date| started_date.set(date))),
-//                 active.not().then(|| on_blur(|| {
-//                     let new_started = (|| {
-//                         let date = started_date.map(|date| {
-//                             NaiveDate::parse_from_str(&date, "%F").ok() 
-//                         })?;
-//                         let time = started.time();
-//                         Local.from_local_date(&date).and_time(time).single()
-//                     })();
-//                     if Some(new_started) = new_started {
-//                         notify(RecomputeDuration);
-//                         return super::set_time_entry_started(time_entry, started);
-//                     }
-//                     started_date.remove();
-//                 })),
-//                 started_date.inner(),
-//             ],
-//             // 14:17:34
-//             text_input![
-//                 active.not().then(|| text_input::on_change(|time| started_time.set(time))),
-//                 active.not().then(|| on_blur(|| {
-//                     let new_started = (|| {
-//                         let time = started_time.map(|time| {
-//                             NaiveTime::parse_from_str(&time, "%X").ok() 
-//                         })?;
-//                         let date = started.naive_local().date();
-//                         Local.from_local_date(&date).and_time(time).single()
-//                     })();
-//                     if Some(new_started) = new_started {
-//                         notify(RecomputeDuration);
-//                         return super::set_time_entry_started(time_entry, started);
-//                     }
-//                     started_time.remove();
-//                 })),
-//                 started_time.inner(),
-//             ],
-//         ]
-//     }
-
-//     #[el]
-//     fn stopped_inputs(time_entry: Var<super::TimeEntry>) -> Column {
-//         let (active, stopped) = time_entry.map(|time_entry| (
-//             time_entry.stopped.is_none(),
-//             time_entry.stopped.unwrap_or_else(Local::now),
-//         ));
-//         let recompute = listen_ref(|RecomputeStopped| ()).is_some();
-//         let stopped_date = el_var_reset(recompute, || stopped.format("%F").to_string());
-//         let stopped_time = el_var_reset(recompute, || stopped.format("%X").to_string());
-//         column![
-//             // 2020-11-03
-//             text_input![
-//                 active.not().then(|| text_input::on_change(|date| stopped_date.set(date))),
-//                 active.not().then(|| on_blur(|| {
-//                     let new_stopped = (|| {
-//                         let date = stopped_date.map(|date| {
-//                             NaiveDate::parse_from_str(&date, "%F").ok() 
-//                         })?;
-//                         let time = stopped.time();
-//                         Local.from_local_date(&date).and_time(time).single()
-//                     })();
-//                     if Some(new_stopped) = new_stopped {
-//                         notify(RecomputeDuration);
-//                         return super::set_time_entry_stopped(time_entry, stopped);
-//                     }
-//                     stopped_date.remove();
-//                 })),
-//                 stopped_date.inner(),
-//             ],
-//             // 14:17:34
-//             text_input![
-//                 active.not().then(|| text_input::on_change(|time| stopped_time.set(time))),
-//                 active.not().then(|| on_blur(|| {
-//                     let new_stopped = (|| {
-//                         let time = stopped_time.map(|time| {
-//                             NaiveTime::parse_from_str(&time, "%X").ok() 
-//                         })?;
-//                         let date = stopped.naive_local().date();
-//                         Local.from_local_date(&date).and_time(time).single()
-//                     })();
-//                     if Some(new_stopped) = new_stopped {
-//                         notify(RecomputeDuration);
-//                         return super::set_time_entry_stopped(time_entry, stopped);
-//                     }
-//                     stopped_time.remove();
-//                 })),
-//                 stopped_time.inner(),
-//             ],
-//         ]
-//     }
-    
-// }
