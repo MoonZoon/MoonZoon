@@ -10,7 +10,7 @@ use std::path::PathBuf;
 use tar::Archive;
 use tokio::process::Command;
 
-const VERSION: &str = "0.9.1";
+const VERSION: &str = "0.10.1";
 
 // -- public --
 
