@@ -9,7 +9,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 - [Rust](https://www.rust-lang.org/)
   ```bash
   rustup update
-  rustc -V # rustc 1.54.0 (a178d0322 2021-07-26)
+  rustc -V # rustc 1.55.0 (c8dfcfe04 2021-09-06)
   ```
 
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
