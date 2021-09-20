@@ -59,6 +59,7 @@ pub type StaticCssClasses<'a> = BTreeSet<Cow<'a, str>>;
 
 pub type BoxedCssSignal = Box<dyn Signal<Item = Box<dyn IntoOptionCowStr<'static>>> + Unpin>;
 
+// @TODO replace with a new function? https://github.com/Pauan/rust-signals/blob/master/CHANGELOG.md#0322---2021-06-13
 pub fn box_css_signal(
     signal: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static,
 ) -> BoxedCssSignal {

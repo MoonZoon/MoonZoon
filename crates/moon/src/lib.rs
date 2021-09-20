@@ -45,6 +45,7 @@ mod lazy_message_writer;
 mod redirect;
 mod sse;
 mod up_msg_request;
+mod not;
 
 use config::CONFIG;
 use lazy_message_writer::LazyMessageWriter;
@@ -58,6 +59,7 @@ pub use from_env_vars::FromEnvVars;
 pub use frontend::Frontend;
 pub use redirect::Redirect;
 pub use up_msg_request::UpMsgRequest;
+pub use not::not;
 
 const MAX_UP_MSG_BYTES: usize = 2 * 1_048_576;
 

@@ -14,6 +14,11 @@ impl Timer {
         this
     }
 
+    pub fn new_immediate(ms: u32, on_tick: impl FnOnce() + Clone + 'static) -> Self {
+        on_tick.clone()();
+        Self::new(ms, on_tick)
+    }
+
     pub fn once(ms: u32, on_tick: impl FnOnce() + Clone + 'static) -> Self {
         let mut this = Self::without_handle(on_tick);
         this.handle = Some(JsHandle::Timeout(set_timeout(&this.on_tick, ms)));
