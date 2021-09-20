@@ -1252,6 +1252,7 @@ dependencies = [
  "actix-web",
  "actix-web-codegen",
  "apply",
+ "async-trait",
  "bool_ext",
  "chashmap",
  "const_format",
