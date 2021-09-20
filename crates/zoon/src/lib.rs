@@ -39,7 +39,7 @@ pub use futures_signals::{
     signal_map::{MutableBTreeMap, MutableSignalMap, SignalMap, SignalMapExt},
     signal_vec::{MutableSignalVec, SignalVec, SignalVecExt},
 };
-pub use futures_signals_ext::{SignalExtBool, SignalExtExt};
+pub use futures_signals_ext::{SignalExtBool, SignalExtExt, SignalExtOption};
 pub use futures_util::{self, future, Stream, StreamExt, FutureExt};
 pub use gensym::gensym;
 pub use hsluv;
