@@ -107,7 +107,7 @@ impl fmt::Display for SendUpMsgError {
                 write!(f, "request failed: {:?}", error)
             }
             SendUpMsgError::ResponseIsNot2xx => {
-                write!(f, "response status is not 2xxx")
+                write!(f, "response status is not 2xx")
             }
         }
     }
