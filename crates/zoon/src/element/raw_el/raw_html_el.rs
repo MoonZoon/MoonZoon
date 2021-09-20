@@ -20,7 +20,8 @@ impl RawHtmlEl {
 
         Self {
             class_id: class_id.clone(),
-            dom_builder: dom_builder.after_removed(move |_| class_id_generator().remove_class_id(class_id)),
+            dom_builder: dom_builder
+                .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
         }
     }
 }

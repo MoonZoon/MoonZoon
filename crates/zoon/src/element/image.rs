@@ -71,7 +71,10 @@ impl<'a, UrlFlag, DescriptionFlag> Image<UrlFlag, DescriptionFlag> {
         self.into_type()
     }
 
-    pub fn description(mut self, description: impl IntoCowStr<'a> + 'a) -> Image<UrlFlag, DescriptionFlagSet>
+    pub fn description(
+        mut self,
+        description: impl IntoCowStr<'a> + 'a,
+    ) -> Image<UrlFlag, DescriptionFlagSet>
     where
         DescriptionFlag: FlagNotSet,
     {

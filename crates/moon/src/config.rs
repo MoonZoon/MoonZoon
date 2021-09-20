@@ -1,7 +1,7 @@
 use crate::from_env_vars::FromEnvVars;
 use log::LevelFilter;
-use serde::Deserialize;
 pub use once_cell::sync::Lazy;
+use serde::Deserialize;
 
 pub static CONFIG: Lazy<Config> = Lazy::new(Config::from_env_vars);
 

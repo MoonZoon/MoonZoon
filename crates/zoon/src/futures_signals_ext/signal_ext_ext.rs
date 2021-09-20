@@ -1,16 +1,20 @@
 use crate::*;
-use std::{pin::Pin, task::{Context, Poll}, marker::PhantomData};
+use std::{
+    marker::PhantomData,
+    pin::Pin,
+    task::{Context, Poll},
+};
 
 // ------ SignalExtExt ------
 
 pub trait SignalExtExt: SignalExt {
     #[inline]
     fn for_each_sync<F>(self, mut callback: F) -> ForEachSync<Self, F>
-        where 
-            F: FnMut(Self::Item) + 'static,
-            Self: 'static + Sized
+    where
+        F: FnMut(Self::Item) + 'static,
+        Self: 'static + Sized,
     {
-        ForEachSync { 
+        ForEachSync {
             future: self
                 .for_each(move |item| {
                     callback(item);

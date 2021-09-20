@@ -25,9 +25,11 @@ impl<'a> Borders<'a> {
             .x_signal(mutable.signal_cloned())
             .y_signal(mutable.signal_cloned());
         this.task_handles
-            .push(Task::start_droppable(border.for_each_sync(move |new_border| {
-                mutable.set(new_border);
-            })));
+            .push(Task::start_droppable(border.for_each_sync(
+                move |new_border| {
+                    mutable.set(new_border);
+                },
+            )));
         this
     }
 
@@ -45,9 +47,11 @@ impl<'a> Borders<'a> {
             .left_signal(mutable.signal_cloned())
             .right_signal(mutable.signal_cloned());
         self.task_handles
-            .push(Task::start_droppable(border.for_each_sync(move |new_border| {
-                mutable.set(new_border);
-            })));
+            .push(Task::start_droppable(border.for_each_sync(
+                move |new_border| {
+                    mutable.set(new_border);
+                },
+            )));
         self
     }
 
@@ -65,9 +69,11 @@ impl<'a> Borders<'a> {
             .top_signal(mutable.signal_cloned())
             .bottom_signal(mutable.signal_cloned());
         self.task_handles
-            .push(Task::start_droppable(border.for_each_sync(move |new_border| {
-                mutable.set(new_border);
-            })));
+            .push(Task::start_droppable(border.for_each_sync(
+                move |new_border| {
+                    mutable.set(new_border);
+                },
+            )));
         self
     }
 
@@ -137,7 +143,11 @@ impl<'a> Borders<'a> {
 }
 
 impl<'a> Style<'a> for Borders<'a> {
-    fn apply_to_raw_el<E: RawEl>(self, mut raw_el: E, style_group: Option<StyleGroup<'a>>) -> (E, Option<StyleGroup<'a>>) {
+    fn apply_to_raw_el<E: RawEl>(
+        self,
+        mut raw_el: E,
+        style_group: Option<StyleGroup<'a>>,
+    ) -> (E, Option<StyleGroup<'a>>) {
         let task_handles = self.task_handles;
         if not(task_handles.is_empty()) {
             raw_el = raw_el.after_remove(move |_| drop(task_handles))
@@ -149,7 +159,7 @@ impl<'a> Style<'a> for Borders<'a> {
             for (name, value) in self.dynamic_css_props {
                 style_group = style_group.style_signal(name, value);
             }
-            return (raw_el, Some(style_group))
+            return (raw_el, Some(style_group));
         }
         for (name, value) in self.static_css_props {
             raw_el = raw_el.style(name, &value);

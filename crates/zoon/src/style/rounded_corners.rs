@@ -46,15 +46,11 @@ pub struct RoundedCorners {
 
 impl RoundedCorners {
     pub fn all(radius: u32) -> Self {
-        Self::default()
-            .top(radius)
-            .bottom(radius)
+        Self::default().top(radius).bottom(radius)
     }
 
     pub fn all_max() -> Self {
-        Self::default()
-            .top_max()
-            .bottom_max()
+        Self::default().top_max().bottom_max()
     }
 
     pub fn top(self, radius: u32) -> Self {
@@ -131,20 +127,23 @@ impl RoundedCorners {
 }
 
 impl<'a> Style<'a> for RoundedCorners {
-    fn apply_to_raw_el<E: RawEl>(self, mut raw_el: E, style_group: Option<StyleGroup<'a>>) -> (E, Option<StyleGroup<'a>>) {
+    fn apply_to_raw_el<E: RawEl>(
+        self,
+        mut raw_el: E,
+        style_group: Option<StyleGroup<'a>>,
+    ) -> (E, Option<StyleGroup<'a>>) {
         let (size_sender, size_receiver) = channel((0, 0));
-        
+
         raw_el = raw_el.on_resize(move |width, height| {
             size_sender.send((width, height)).unwrap_throw();
         });
 
-        let border_radius_signal = size_receiver.map(move |(width, height)| {
-            compute_radii(self, f64::from(width), f64::from(height))
-        });
+        let border_radius_signal = size_receiver
+            .map(move |(width, height)| compute_radii(self, f64::from(width), f64::from(height)));
 
         if let Some(mut style_group) = style_group {
             style_group = style_group.style_signal("border-radius", border_radius_signal);
-            return (raw_el, Some(style_group))
+            return (raw_el, Some(style_group));
         }
         raw_el = raw_el.style_signal("border-radius", border_radius_signal);
         (raw_el, None)
@@ -193,15 +192,15 @@ fn compute_radii(corners: RoundedCorners, width: f64, height: f64) -> String {
             f64::min(height - radii[3], width - radii[1])
         }),
         corners.top_right.map_max_or_zero(|| {
-            // top & right sides 
+            // top & right sides
             f64::min(width - radii[0], height - radii[2])
         }),
         corners.bottom_right.map_max_or_zero(|| {
-            // right & bottom sides 
+            // right & bottom sides
             f64::min(height - radii[1], width - radii[3])
         }),
         corners.bottom_left.map_max_or_zero(|| {
-            // bottom & left sides 
+            // bottom & left sides
             f64::min(width - radii[2], height - radii[0])
         }),
     ];
@@ -225,15 +224,20 @@ fn compute_radii(corners: RoundedCorners, width: f64, height: f64) -> String {
             max_radii[3] * max_smallest_ratio,
         ];
     }
-    
+
     for (index, max_radius) in array::IntoIter::new(max_radii).enumerate() {
         if max_radius != 0. {
             radii[index] = max_radius;
         }
     }
-    crate::format!("{}px {}px {}px {}px", radii[0], radii[1], radii[2], radii[3])
+    crate::format!(
+        "{}px {}px {}px {}px",
+        radii[0],
+        radii[1],
+        radii[2],
+        radii[3]
+    )
 }
-
 
 //         .item(test_a())
 //         .item(test_a2())

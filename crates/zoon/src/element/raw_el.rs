@@ -1,8 +1,8 @@
 use crate::*;
 use once_cell::race::OnceBox;
 use std::mem::ManuallyDrop;
+use std::{cell::Cell, rc::Rc};
 use web_sys::{EventTarget, Node};
-use std::{rc::Rc, cell::Cell};
 
 mod raw_html_el;
 mod raw_svg_el;
@@ -98,7 +98,10 @@ pub trait RawEl: Sized {
         self.update_dom_builder(|dom_builder| dom_builder.event(handler))
     }
 
-    fn global_event_handler<E: StaticEvent>(self, handler: impl FnOnce(E) + Clone + 'static) -> Self {
+    fn global_event_handler<E: StaticEvent>(
+        self,
+        handler: impl FnOnce(E) + Clone + 'static,
+    ) -> Self {
         let handler = move |event: E| handler.clone()(event);
         self.update_dom_builder(|dom_builder| dom_builder.global_event(handler))
     }
@@ -156,7 +159,9 @@ pub trait RawEl: Sized {
 
     fn style_group(self, mut group: StyleGroup) -> Self {
         group.selector = self.class_id().map(|class_id| {
-            [".", class_id.unwrap_throw(), &group.selector].concat().into()
+            [".", class_id.unwrap_throw(), &group.selector]
+                .concat()
+                .into()
         });
         let group_handle = global_styles().style_group_droppable(group);
         self.after_remove(|_| drop(group_handle))
@@ -188,10 +193,7 @@ pub trait RawEl: Sized {
         })
     }
 
-    fn on_resize(
-        mut self,
-        handler: impl FnOnce(U32Width, U32Height) + Clone + 'static,
-    ) -> Self {
+    fn on_resize(mut self, handler: impl FnOnce(U32Width, U32Height) + Clone + 'static) -> Self {
         // @TODO should we create one global ResizeObserver to improve performance?
 
         let resize_observer = Rc::new(Cell::new(None));

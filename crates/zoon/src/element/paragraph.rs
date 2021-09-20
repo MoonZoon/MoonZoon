@@ -19,14 +19,13 @@ impl Paragraph<EmptyFlagSet> {
                 .style_group(
                     StyleGroup::new(".paragraph > *")
                         .style("display", "inline-flex")
-                        .style("vertical-align", "middle")
+                        .style("vertical-align", "middle"),
                 )
                 .style_group(StyleGroup::new(".paragraph > .align_left").style("float", "left"))
                 .style_group(StyleGroup::new(".paragraph > .align_right").style("float", "right"));
         });
         Self {
-            raw_el: RawHtmlEl::new("p")
-                .class("paragraph"),
+            raw_el: RawHtmlEl::new("p").class("paragraph"),
             flags: PhantomData,
         }
     }

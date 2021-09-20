@@ -1,6 +1,6 @@
 use crate::actor::{ActorId, PVar};
-use std::borrow::Borrow;
 use async_trait::async_trait;
+use std::borrow::Borrow;
 
 #[async_trait(?Send)]
 pub trait Index {
@@ -19,13 +19,16 @@ pub trait Index {
         todo!()
     }
 
-    async fn wait_for(&self, key: impl Borrow<<Self::PVar as PVar>::Value> + 'static) -> Option<Self::Actor> {
+    async fn wait_for(
+        &self,
+        key: impl Borrow<<Self::PVar as PVar>::Value> + 'static,
+    ) -> Option<Self::Actor> {
         // @TODO backoff + jitter + queue or something else?
         let key = key.borrow();
         for i in 0..10 {
             let session = self.get(key);
             if session.is_some() {
-                return session
+                return session;
             }
             tokio::time::sleep(tokio::time::Duration::from_millis(i * 200)).await;
         }

@@ -1,15 +1,10 @@
 use crate::*;
-use moonlight::{
-    serde_json,
-    AuthToken, CorId, SessionId,
-};
-use moonlight::{serde::{Serialize, de::DeserializeOwned}};
+use moonlight::serde::{de::DeserializeOwned, Serialize};
+use moonlight::{serde_json, AuthToken, CorId, SessionId};
 use std::error::Error;
 use std::fmt;
 use std::marker::PhantomData;
 use web_sys::{Request, RequestInit, Response};
-
-
 
 mod sse;
 use sse::SSE;

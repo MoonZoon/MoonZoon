@@ -96,7 +96,11 @@ impl<'a> Font<'a> {
 }
 
 impl<'a> Style<'a> for Font<'a> {
-    fn apply_to_raw_el<E: RawEl>(self, mut raw_el: E, style_group: Option<StyleGroup<'a>>) -> (E, Option<StyleGroup<'a>>) {
+    fn apply_to_raw_el<E: RawEl>(
+        self,
+        mut raw_el: E,
+        style_group: Option<StyleGroup<'a>>,
+    ) -> (E, Option<StyleGroup<'a>>) {
         if let Some(mut style_group) = style_group {
             for (name, value) in self.static_css_props {
                 style_group = style_group.style(name, value);
@@ -104,7 +108,7 @@ impl<'a> Style<'a> for Font<'a> {
             for (name, value) in self.dynamic_css_props {
                 style_group = style_group.style_signal(name, value);
             }
-            return (raw_el, Some(style_group))
+            return (raw_el, Some(style_group));
         }
         for (name, value) in self.static_css_props {
             raw_el = raw_el.style(name, &value);

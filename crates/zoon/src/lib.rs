@@ -7,6 +7,7 @@ pub mod routing;
 #[cfg(feature = "web_storage")]
 pub mod web_storage;
 
+mod class_id;
 pub mod console;
 mod cow_str;
 mod css_property_name;
@@ -20,13 +21,13 @@ mod monotonic_ids;
 mod mutable;
 mod mutable_vec;
 mod not;
+mod resize_observer;
 mod style;
 mod task;
 mod timer;
 mod viewport;
-mod resize_observer;
-mod class_id;
 
+pub use class_id::ClassId;
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use css_property_name::VENDOR_PREFIXES;
 pub use dom::{document, history, window};
@@ -40,7 +41,7 @@ pub use futures_signals::{
     signal_vec::{MutableSignalVec, SignalVec, SignalVecExt},
 };
 pub use futures_signals_ext::{SignalExtBool, SignalExtExt, SignalExtOption};
-pub use futures_util::{self, future, Stream, StreamExt, FutureExt};
+pub use futures_util::{self, future, FutureExt, Stream, StreamExt};
 pub use gensym::gensym;
 pub use hsluv;
 pub use index_generator::IndexGenerator;
@@ -52,6 +53,7 @@ pub use not::not;
 pub use once_cell;
 pub use paste::paste;
 pub use pin_project::pin_project;
+pub use resize_observer::ResizeObserver;
 pub use send_wrapper::SendWrapper;
 pub use std::future::Future;
 pub use style::*;
@@ -62,8 +64,6 @@ pub use wasm_bindgen::{self, prelude::*, JsCast};
 use wasm_bindgen_futures::spawn_local;
 pub use wasm_bindgen_futures::JsFuture;
 pub use web_sys;
-pub use resize_observer::ResizeObserver;
-pub use class_id::ClassId;
 
 #[cfg(feature = "connection")]
 pub use connection::{Connection, SendUpMsgError};
@@ -109,7 +109,7 @@ pub use serde_json;
 pub use serde_lite::{self, Deserialize, Serialize};
 
 #[cfg(feature = "serde")]
-pub use serde::{self, Deserialize, Serialize, de::DeserializeOwned};
+pub use serde::{self, de::DeserializeOwned, Deserialize, Serialize};
 
 #[cfg(feature = "thiserror")]
 pub use thiserror;

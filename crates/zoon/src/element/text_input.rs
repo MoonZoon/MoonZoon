@@ -10,9 +10,25 @@ pub use input_type::*;
 
 make_flags!(Id, OnChange, Placeholder, Text, Label, InputType, ReadOnly);
 
-pub struct TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag> {
+pub struct TextInput<
+    IdFlag,
+    OnChangeFlag,
+    PlaceholderFlag,
+    TextFlag,
+    LabelFlag,
+    InputTypeFlag,
+    ReadOnlyFlag,
+> {
     raw_el: RawHtmlEl,
-    flags: PhantomData<(IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag)>,
+    flags: PhantomData<(
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    )>,
 }
 
 impl
@@ -35,7 +51,15 @@ impl
 }
 
 impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag> Element
-    for TextInput<IdFlagSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagNotSet, InputTypeFlag, ReadOnlyFlag>
+    for TextInput<
+        IdFlagSet,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlagNotSet,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
 {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
@@ -43,15 +67,32 @@ impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag> Eleme
 }
 
 impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag> Element
-    for TextInput<IdFlagNotSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagSet, InputTypeFlag, ReadOnlyFlag>
+    for TextInput<
+        IdFlagNotSet,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlagSet,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
 {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag> UpdateRawEl<RawHtmlEl>
-    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    UpdateRawEl<RawHtmlEl>
+    for TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
 {
     fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
         self.raw_el = updater(self.raw_el);
@@ -63,33 +104,96 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 //   Abilities
 // ------ ------
 
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, ReadOnlyFlag> Styleable<'_, RawHtmlEl>
-    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    Styleable<'_, RawHtmlEl>
+    for TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, ReadOnlyFlag> KeyboardEventAware<RawHtmlEl>
-    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    KeyboardEventAware<RawHtmlEl>
+    for TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, ReadOnlyFlag> Focusable
-    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    Focusable
+    for TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, ReadOnlyFlag> MouseEventAware<RawHtmlEl>
-    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    MouseEventAware<RawHtmlEl>
+    for TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, ReadOnlyFlag> Hookable<RawHtmlEl>
-    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    Hookable<RawHtmlEl>
+    for TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
 {
     type WSElement = HtmlInputElement;
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, ReadOnlyFlag> AddNearbyElement<'_>
-    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    AddNearbyElement<'_>
+    for TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, ReadOnlyFlag> HasClassId<RawHtmlEl>
-    for TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    HasClassId<RawHtmlEl>
+    for TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
 {
 }
 
@@ -97,13 +201,38 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag,InputTypeFlag, R
 //  Attributes
 // ------ ------
 
-impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
-    TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+impl<
+        'a,
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
+    TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
 {
     pub fn id(
         mut self,
         id: impl IntoCowStr<'a>,
-    ) -> TextInput<IdFlagSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    ) -> TextInput<
+        IdFlagSet,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
     where
         IdFlag: FlagNotSet,
     {
@@ -114,15 +243,24 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFl
     pub fn placeholder(
         mut self,
         placeholder: Placeholder<'a>,
-    ) -> TextInput<IdFlag, OnChangeFlag, PlaceholderFlagSet, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    ) -> TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlagSet,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
     where
         PlaceholderFlag: FlagNotSet,
     {
-        let mut el_and_group  = (self.raw_el, Some(StyleGroup::new("::placeholder")));
+        let mut el_and_group = (self.raw_el, Some(StyleGroup::new("::placeholder")));
         for style_applicator in placeholder.style_applicators {
             el_and_group = style_applicator(el_and_group);
         }
-        self.raw_el = el_and_group.0
+        self.raw_el = el_and_group
+            .0
             .attr("placeholder", &placeholder.text)
             .style_group(el_and_group.1.unwrap_throw());
         self.into_type()
@@ -131,13 +269,19 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFl
     pub fn input_type<T: InputTypeTrait>(
         mut self,
         input_type: T,
-    ) -> TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlagSet, ReadOnlyFlag>
+    ) -> TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlagSet,
+        ReadOnlyFlag,
+    >
     where
         InputTypeFlag: FlagNotSet,
     {
-        self.raw_el = self
-            .raw_el
-            .attr("type", T::TYPE);
+        self.raw_el = self.raw_el.attr("type", T::TYPE);
         self.raw_el = input_type.apply_to_raw_el(self.raw_el);
         self.into_type()
     }
@@ -145,7 +289,15 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFl
     pub fn text(
         mut self,
         text: impl IntoCowStr<'a>,
-    ) -> TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlagSet, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    ) -> TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlagSet,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
     where
         TextFlag: FlagNotSet,
     {
@@ -156,7 +308,15 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFl
     pub fn text_signal(
         mut self,
         text: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static,
-    ) -> TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlagSet, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    ) -> TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlagSet,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
     where
         TextFlag: FlagNotSet,
     {
@@ -167,7 +327,15 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFl
     pub fn read_only(
         mut self,
         read_only: bool,
-    ) -> TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlagSet>
+    ) -> TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlagSet,
+    >
     where
         ReadOnlyFlag: FlagNotSet,
     {
@@ -180,18 +348,36 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFl
     pub fn read_only_signal(
         mut self,
         read_only: impl Signal<Item = bool> + Unpin + 'static,
-    ) -> TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlagSet>
+    ) -> TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlagSet,
+    >
     where
         ReadOnlyFlag: FlagNotSet,
     {
-        self.raw_el = self.raw_el.attr_signal("readonly", read_only.map_true(|| ""));
+        self.raw_el = self
+            .raw_el
+            .attr_signal("readonly", read_only.map_true(|| ""));
         self.into_type()
     }
 
     pub fn on_change(
         mut self,
         on_change: impl FnOnce(String) + Clone + 'static,
-    ) -> TextInput<IdFlag, OnChangeFlagSet, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    ) -> TextInput<
+        IdFlag,
+        OnChangeFlagSet,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
     where
         OnChangeFlag: FlagNotSet,
     {
@@ -205,7 +391,15 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFl
     pub fn label_hidden(
         mut self,
         label: impl IntoCowStr<'a>,
-    ) -> TextInput<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagSet, InputTypeFlag, ReadOnlyFlag>
+    ) -> TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlagSet,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
     where
         LabelFlag: FlagNotSet,
     {
@@ -213,9 +407,25 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFl
         self.into_type()
     }
 
-    fn into_type<NewIdFlag, NewOnChangeFlag, NewPlaceholderFlag, NewTextFlag, NewLabelFlag, NewInputTypeFlag, NewReadOnlyFlag>(
+    fn into_type<
+        NewIdFlag,
+        NewOnChangeFlag,
+        NewPlaceholderFlag,
+        NewTextFlag,
+        NewLabelFlag,
+        NewInputTypeFlag,
+        NewReadOnlyFlag,
+    >(
         self,
-    ) -> TextInput<NewIdFlag, NewOnChangeFlag, NewPlaceholderFlag, NewTextFlag, NewLabelFlag, NewInputTypeFlag, NewReadOnlyFlag> {
+    ) -> TextInput<
+        NewIdFlag,
+        NewOnChangeFlag,
+        NewPlaceholderFlag,
+        NewTextFlag,
+        NewLabelFlag,
+        NewInputTypeFlag,
+        NewReadOnlyFlag,
+    > {
         TextInput {
             raw_el: self.raw_el,
             flags: PhantomData,
@@ -227,7 +437,12 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFl
 
 pub struct Placeholder<'a> {
     text: Cow<'a, str>,
-    style_applicators: Vec<Box<dyn FnOnce((RawHtmlEl, Option<StyleGroup<'a>>)) -> (RawHtmlEl, Option<StyleGroup<'a>>) + 'a>>,
+    style_applicators: Vec<
+        Box<
+            dyn FnOnce((RawHtmlEl, Option<StyleGroup<'a>>)) -> (RawHtmlEl, Option<StyleGroup<'a>>)
+                + 'a,
+        >,
+    >,
 }
 
 impl<'a> Placeholder<'a> {
@@ -239,9 +454,11 @@ impl<'a> Placeholder<'a> {
     }
 
     pub fn s(mut self, style: impl Style<'a> + 'a) -> Self {
-        self.style_applicators.push(Box::new(|(raw_html_el, style_group): (RawHtmlEl, Option<StyleGroup<'a>>)| {
-            style.apply_to_raw_el(raw_html_el, style_group)
-        }));
+        self.style_applicators.push(Box::new(
+            |(raw_html_el, style_group): (RawHtmlEl, Option<StyleGroup<'a>>)| {
+                style.apply_to_raw_el(raw_html_el, style_group)
+            },
+        ));
         self
     }
 }

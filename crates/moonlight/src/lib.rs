@@ -5,7 +5,11 @@ pub use serde_json;
 pub use serde_lite::{self, Deserialize, Intermediate, Serialize};
 
 #[cfg(feature = "serde")]
-pub use serde::{self, Deserialize, Serialize, Serializer, Deserializer, de::{self, DeserializeOwned}, ser};
+pub use serde::{
+    self,
+    de::{self, DeserializeOwned},
+    ser, Deserialize, Deserializer, Serialize, Serializer,
+};
 
 #[cfg(feature = "chrono")]
 pub use chrono::{self, prelude::*, Duration};
@@ -27,5 +31,3 @@ pub use session_id::SessionId;
 
 mod wrapper;
 pub use wrapper::Wrapper;
-
-

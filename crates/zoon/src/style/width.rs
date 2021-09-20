@@ -43,7 +43,11 @@ impl<'a> Width<'a> {
 }
 
 impl<'a> Style<'a> for Width<'a> {
-    fn apply_to_raw_el<E: RawEl>(self, mut raw_el: E, style_group: Option<StyleGroup<'a>>) -> (E, Option<StyleGroup<'a>>) {
+    fn apply_to_raw_el<E: RawEl>(
+        self,
+        mut raw_el: E,
+        style_group: Option<StyleGroup<'a>>,
+    ) -> (E, Option<StyleGroup<'a>>) {
         if let Some(mut style_group) = style_group {
             for (name, value) in self.static_css_props {
                 style_group = style_group.style(name, value);
@@ -51,7 +55,7 @@ impl<'a> Style<'a> for Width<'a> {
             for class in self.static_css_classes {
                 raw_el = raw_el.class(&class);
             }
-            return (raw_el, Some(style_group))
+            return (raw_el, Some(style_group));
         }
         for (name, value) in self.static_css_props {
             raw_el = raw_el.style(name, &value);
