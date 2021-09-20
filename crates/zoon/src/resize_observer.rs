@@ -9,17 +9,19 @@ pub struct ResizeObserver {
 
 impl ResizeObserver {
     #[must_use]
-    pub fn new(ws_element: &web_sys::Element, on_resize: impl FnOnce(u32, u32) + Clone + 'static) -> Self {
-        let on_resize = move |width, height| on_resize.clone()(width, height); 
+    pub fn new(
+        ws_element: &web_sys::Element,
+        on_resize: impl FnOnce(u32, u32) + Clone + 'static,
+    ) -> Self {
+        let on_resize = move |width, height| on_resize.clone()(width, height);
 
         let callback = move |entries: Vec<native::ResizeObserverEntry>| {
             let entry = &entries[0];
             let (width, height) = entry_size(&entry);
             on_resize(width, height);
         };
-        let callback = Closure::wrap(
-            Box::new(callback) as Box<dyn Fn(Vec<native::ResizeObserverEntry>)>
-        );
+        let callback =
+            Closure::wrap(Box::new(callback) as Box<dyn Fn(Vec<native::ResizeObserverEntry>)>);
 
         let observer = native::ResizeObserver::new(callback.as_ref().unchecked_ref());
         observer.observe(ws_element);
@@ -40,7 +42,7 @@ fn entry_size(entry: &native::ResizeObserverEntry) -> (u32, u32) {
     if not(js_sys::Reflect::has(entry, &"borderBoxSize".into()).unwrap_throw()) {
         // Safari, browsers on iOS and maybe others
         let dom_rect = entry.content_rect();
-        return (dom_rect.width() as u32, dom_rect.height() as u32)
+        return (dom_rect.width() as u32, dom_rect.height() as u32);
     }
 
     let size = entry.border_box_size();
@@ -49,11 +51,13 @@ fn entry_size(entry: &native::ResizeObserverEntry) -> (u32, u32) {
         size.unchecked_into()
     } else if size.is_instance_of::<js_sys::Array>() {
         // Chrome and maybe others
-        size.unchecked_into::<js_sys::Array>().get(0).unchecked_into()
+        size.unchecked_into::<js_sys::Array>()
+            .get(0)
+            .unchecked_into()
     } else {
         panic!("cannot get size from ResizeObserverEntry")
     };
-    
+
     let width = size.inline_size();
     let height = size.block_size();
     (width, height)
@@ -64,7 +68,7 @@ fn entry_size(entry: &native::ResizeObserverEntry) -> (u32, u32) {
 mod native {
     use crate::*;
     use js_sys::Function;
-    use web_sys::{Element, DomRectReadOnly};
+    use web_sys::{DomRectReadOnly, Element};
 
     #[wasm_bindgen]
     extern "C" {
@@ -101,5 +105,4 @@ mod native {
         #[wasm_bindgen(method, getter, js_name = "inlineSize")]
         pub fn inline_size(this: &ResizeObserverSize) -> u32;
     }
-
 }

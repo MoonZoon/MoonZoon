@@ -1,10 +1,17 @@
 use crate::*;
-use std::{pin::Pin, task::{Context, Poll}};
+use std::{
+    pin::Pin,
+    task::{Context, Poll},
+};
 
 // ------ SignalExtOption ------
 
 pub trait SignalExtOption<T> {
-    fn map_option<B, SM: FnMut(T) -> B, NM: FnMut() -> B>(self, s: SM, n: NM) -> MapOption<Self, SM, NM>
+    fn map_option<B, SM: FnMut(T) -> B, NM: FnMut() -> B>(
+        self,
+        s: SM,
+        n: NM,
+    ) -> MapOption<Self, SM, NM>
     where
         Self: Sized;
 
@@ -19,7 +26,11 @@ pub trait SignalExtOption<T> {
 
 impl<T, S: Signal<Item = Option<T>>> SignalExtOption<T> for S {
     #[inline]
-    fn map_option<B, SM: FnMut(T) -> B, NM: FnMut() -> B>(self, s: SM, n: NM) -> MapOption<Self, SM, NM>
+    fn map_option<B, SM: FnMut(T) -> B, NM: FnMut() -> B>(
+        self,
+        s: SM,
+        n: NM,
+    ) -> MapOption<Self, SM, NM>
     where
         Self: Sized,
     {
@@ -59,7 +70,9 @@ pub struct MapOption<S, SM, NM> {
     none_mapper: NM,
 }
 
-impl<T, I, S: Signal<Item = Option<T>>, SM: FnMut(T) -> I, NM: FnMut() -> I> Signal for MapOption<S, SM, NM> {
+impl<T, I, S: Signal<Item = Option<T>>, SM: FnMut(T) -> I, NM: FnMut() -> I> Signal
+    for MapOption<S, SM, NM>
+{
     type Item = I;
 
     #[inline]
@@ -120,12 +133,6 @@ impl<T, I, S: Signal<Item = Option<T>>, F: FnMut() -> I> Signal for MapNone<S, F
 
         signal
             .poll_change(cx)
-            .map(|opt| opt.map(|value| {
-                if value.is_some() {
-                    None
-                } else {
-                    Some(f())
-                }
-            }))
+            .map(|opt| opt.map(|value| if value.is_some() { None } else { Some(f()) }))
     }
 }

@@ -1,5 +1,5 @@
-use std::borrow::Cow;
 use crate::CONFIG;
+use std::borrow::Cow;
 use tokio::fs;
 
 pub struct Frontend {

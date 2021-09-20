@@ -1,13 +1,13 @@
 use std::ops::{Deref, DerefMut};
 
 #[cfg(feature = "chrono")]
-mod duration;
-#[cfg(feature = "chrono")]
 mod datetime;
+#[cfg(feature = "chrono")]
+mod duration;
 
 #[derive(Debug)]
 pub struct Wrapper<T> {
-    pub inner: T
+    pub inner: T,
 }
 
 impl<T> Wrapper<T> {

@@ -81,7 +81,11 @@ pub trait Style<'a>: Default {
         Self::default()
     }
 
-    fn apply_to_raw_el<E: RawEl>(self, raw_el: E, style_group: Option<StyleGroup<'a>>) -> (E, Option<StyleGroup<'a>>);
+    fn apply_to_raw_el<E: RawEl>(
+        self,
+        raw_el: E,
+        style_group: Option<StyleGroup<'a>>,
+    ) -> (E, Option<StyleGroup<'a>>);
 }
 
 // ------ StyleGroup ------
@@ -111,7 +115,8 @@ impl<'a> StyleGroup<'a> {
         name: impl IntoCowStr<'static>,
         value: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static,
     ) -> Self {
-        self.dynamic_css_props.insert(name.into_cow_str(), box_css_signal(value));
+        self.dynamic_css_props
+            .insert(name.into_cow_str(), box_css_signal(value));
         self
     }
 }

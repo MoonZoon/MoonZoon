@@ -503,8 +503,7 @@ So I suggest to make the _font size_ an alias for the [_cap height_](https://en.
 
 ```rust
 Paragraph::new()
-    .s(Font::new().size(40))
-    .s(Spacing::new(30))
+    .s(Font::new().size(40).line_height(40 + 30))
     .content("Moon")
     .content("Zoon")
 ```

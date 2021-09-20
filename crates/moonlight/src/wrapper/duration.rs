@@ -30,7 +30,7 @@ impl<'de> Deserialize<'de> for Wrapper<Duration> {
         struct I64NanosecondsVisitor;
 
         impl<'de> de::Visitor<'de> for I64NanosecondsVisitor {
-            type Value =  i64;
+            type Value = i64;
 
             fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
                 formatter.write_str("nanoseconds representable as i64")
@@ -41,9 +41,7 @@ impl<'de> Deserialize<'de> for Wrapper<Duration> {
             }
 
             fn visit_u64<E: de::Error>(self, value: u64) -> Result<Self::Value, E> {
-                value
-                    .try_into()
-                    .map_err(de::Error::custom)
+                value.try_into().map_err(de::Error::custom)
             }
 
             fn visit_f64<E: de::Error>(self, value: f64) -> Result<Self::Value, E> {
@@ -51,7 +49,7 @@ impl<'de> Deserialize<'de> for Wrapper<Duration> {
             }
         }
 
-        let nanoseconds= deserializer.deserialize_i64(I64NanosecondsVisitor)?;
+        let nanoseconds = deserializer.deserialize_i64(I64NanosecondsVisitor)?;
         Ok(Wrapper::new(Duration::nanoseconds(nanoseconds)))
     }
 }

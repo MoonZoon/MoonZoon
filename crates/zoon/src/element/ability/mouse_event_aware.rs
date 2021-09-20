@@ -22,8 +22,8 @@ pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
     }
 
     fn on_click_outside(
-        self, 
-        handler: impl FnOnce() + Clone + 'static, 
+        self,
+        handler: impl FnOnce() + Clone + 'static,
         ignored_class_ids: impl IntoIterator<Item = ClassId>,
     ) -> Self {
         let handler = move || handler.clone()();
@@ -36,9 +36,7 @@ pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
                 let selector = ignored_class_ids
                     .iter()
                     .filter_map(|class_id| {
-                        class_id.map(|option_class_id| {
-                            Some([".", &option_class_id?].concat())
-                        })
+                        class_id.map(|option_class_id| Some([".", &option_class_id?].concat()))
                     })
                     .collect::<Vec<_>>()
                     .join(", ");
@@ -52,5 +50,8 @@ pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
 }
 
 fn closest(target: Option<web_sys::EventTarget>, selector: &str) -> Option<web_sys::Element> {
-    target?.dyn_ref::<web_sys::Element>()?.closest(selector).ok()?
+    target?
+        .dyn_ref::<web_sys::Element>()?
+        .closest(selector)
+        .ok()?
 }

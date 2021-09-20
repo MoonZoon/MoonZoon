@@ -23,30 +23,30 @@ pub use actix_http;
 pub use actix_web;
 pub use actix_web_codegen::main;
 pub use apply::{Also, Apply};
+pub use async_trait::async_trait;
 pub use chashmap;
 pub use enclose::enc as clone;
 pub use futures;
 pub use mime;
 pub use mime_guess;
 pub use moonlight::{self, *};
+pub use once_cell::{self, sync::Lazy};
 pub use parking_lot;
 pub use serde;
 pub use tokio;
 pub use tokio_stream;
 pub use trait_set::trait_set;
 pub use uuid;
-pub use once_cell::{self, sync::Lazy};
-pub use async_trait::async_trait;
 
 mod actor;
 pub mod config;
 mod from_env_vars;
 mod frontend;
 mod lazy_message_writer;
+mod not;
 mod redirect;
 mod sse;
 mod up_msg_request;
-mod not;
 
 use config::CONFIG;
 use lazy_message_writer::LazyMessageWriter;
@@ -58,9 +58,9 @@ pub use actor::{
 };
 pub use from_env_vars::FromEnvVars;
 pub use frontend::Frontend;
+pub use not::not;
 pub use redirect::Redirect;
 pub use up_msg_request::UpMsgRequest;
-pub use not::not;
 
 const MAX_UP_MSG_BYTES: usize = 2 * 1_048_576;
 
@@ -446,19 +446,14 @@ async fn message_sse_responder(
 
 // ------ frontend_responder ------
 
-async fn frontend_responder<FRB, FRBO>(
-    frontend: web::Data<FRB>,
-) -> impl Responder
+async fn frontend_responder<FRB, FRBO>(frontend: web::Data<FRB>) -> impl Responder
 where
     FRB: FrontBuilder<FRBO>,
     FRBO: FrontBuilderOutput,
 {
-    HttpResponse::Ok().content_type(ContentType::html()).body(
-        frontend.get_ref().clone()()
-            .await
-            .into_html()
-            .await,
-    )
+    HttpResponse::Ok()
+        .content_type(ContentType::html())
+        .body(frontend.get_ref().clone()().await.into_html().await)
 }
 
 // ====== ====== TESTS ====== ======

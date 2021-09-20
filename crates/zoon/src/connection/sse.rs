@@ -1,9 +1,9 @@
-use crate::moonlight::{serde_json, CorId, DownMsgTransporterForDe, SessionId, DeserializeOwned};
+use crate::moonlight::{serde_json, CorId, DeserializeOwned, DownMsgTransporterForDe, SessionId};
 use crate::{format, *};
 use std::{error::Error, fmt};
 
 #[cfg(feature = "moonlight/serde_with_serde")]
-use moonlight::{serde::{self, Deserialize}};
+use moonlight::serde::{self, Deserialize};
 
 // ------ SSE ------
 
@@ -122,7 +122,7 @@ enum DownMsgError {
     InvalidDataValue,
     JsonDeserializationFailed(serde_json::Error),
     #[cfg(feature = "serde-lite")]
-    DeserializationFailed(serde_lite::Error)
+    DeserializationFailed(serde_lite::Error),
 }
 
 impl fmt::Display for DownMsgError {

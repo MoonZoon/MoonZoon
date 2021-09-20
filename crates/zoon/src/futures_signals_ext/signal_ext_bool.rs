@@ -1,5 +1,8 @@
 use crate::*;
-use std::{pin::Pin, task::{Context, Poll}};
+use std::{
+    pin::Pin,
+    task::{Context, Poll},
+};
 
 // ------ SignalExtBool ------
 
