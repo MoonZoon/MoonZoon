@@ -167,21 +167,11 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
         _ => return,
     };
 
-    // @TODO backoff + jitter + queue or something else?
-    let mut down_msg_sent = false;
-    for i in 0..10 {
-        if let Some(session) = sessions::by_session_id().get(session_id) {
-            session.send_down_msg(&down_msg, cor_id).await;
-            down_msg_sent = true;
-            break;
-        }
-        tokio::time::sleep(tokio::time::Duration::from_millis(i * 200)).await;
-    }
-    // @TODO not(..) helper
-    if !down_msg_sent {
+    if let Some(session) = sessions::by_session_id().wait_for(session_id).await {
+        session.send_down_msg(&down_msg, cor_id).await;
+    } else {
         eprintln!("cannot find the session with id `{}`", session_id);
     }
-
 
     // let down_msg = match up_msg {
 

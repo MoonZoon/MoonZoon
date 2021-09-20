@@ -36,6 +36,7 @@ pub use tokio_stream;
 pub use trait_set::trait_set;
 pub use uuid;
 pub use once_cell::{self, sync::Lazy};
+pub use async_trait::async_trait;
 
 mod actor;
 pub mod config;
