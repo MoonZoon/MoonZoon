@@ -41,7 +41,7 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned> Connection<UMsg, DMsg> {
         self
     }
 
-    pub async fn send_up_msg(&self, up_msg: UMsg) -> Result<(), SendUpMsgError> {
+    pub async fn send_up_msg(&self, up_msg: UMsg) -> Result<CorId, SendUpMsgError> {
         // ---- RequestInit ----
         #[cfg(feature = "serde-lite")]
         let body = serde_json::to_string(&up_msg.serialize().unwrap_throw()).unwrap_throw();
@@ -56,9 +56,10 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned> Connection<UMsg, DMsg> {
             Request::new_with_str_and_init("_api/up_msg_handler", &request_init).unwrap_throw();
 
         // ---- Headers ----
+        let cor_id = CorId::new();
         let headers = request.headers();
         headers
-            .set("X-Correlation-ID", &CorId::new().to_string())
+            .set("X-Correlation-ID", &cor_id.to_string())
             .unwrap_throw();
         headers
             .set("X-Session-ID", &self.session_id.to_string())
@@ -81,7 +82,7 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned> Connection<UMsg, DMsg> {
             .unchecked_into::<Response>();
 
         if response.ok() {
-            return Ok(());
+            return Ok(cor_id);
         }
         Err(SendUpMsgError::ResponseIsNot2xx)
     }
