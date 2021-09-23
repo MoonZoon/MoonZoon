@@ -617,13 +617,16 @@ fn connection() -> &'static Connection<UpMsg, DownMsg> {
 
 fn send_message() {
     Task::start(async {
-        connection()
+        let result = connection()
             .send_up_msg(UpMsg::SendMessage(Message {
                 username: username().get_cloned(),
                 text: new_message_text().take(),
             }))
-            .await
-            .unwrap_or_else(|error| eprintln!("Failed to send message: {:?}", error))
+            .await;
+        match result {
+            Ok(cor_id) => println!("Correlation id: {}", cor_id),
+            Err(error) => eprintln!("Failed to send message: {:?}", error),
+        }
     });
 }
 ```

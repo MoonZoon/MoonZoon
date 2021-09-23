@@ -49,13 +49,15 @@ fn set_new_message_text(text: String) {
 
 fn send_message() {
     Task::start(async {
-        connection()
+        let result = connection()
             .send_up_msg(UpMsg::SendMessage(Message {
                 username: username().get_cloned(),
                 text: new_message_text().take(),
             }))
-            .await
-            .unwrap_or_else(|error| eprintln!("Failed to send message: {:?}", error))
+            .await;
+        if let Err(error) = result {
+            eprintln!("Failed to send message: {:?}", error);
+        }
     });
 }
 
