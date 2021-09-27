@@ -461,9 +461,8 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use actix_web::{rt as actix_rt, test};
+    use actix_web::{rt as actix_rt, test, web::Data, body};
     use const_format::concatcp;
-    use futures::StreamExt;
 
     const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
     const FIXTURES_DIR: &str = concatcp!(MANIFEST_DIR, "/tests/fixtures");
@@ -482,7 +481,7 @@ mod tests {
         };
         let app = test::init_service(
             App::new()
-                .data(shared_data)
+                .app_data(Data::new(shared_data))
                 .route("_api/pkg/{file:.*}", web::get().to(pkg_responder)),
         )
         .await;
@@ -491,7 +490,7 @@ mod tests {
             .to_request();
 
         // ------ ACT ------
-        let mut resp = test::call_service(&app, req).await;
+        let resp = test::call_service(&app, req).await;
 
         // ------ ASSERT ------
         assert_eq!(resp.status(), StatusCode::OK);
@@ -504,8 +503,8 @@ mod tests {
             mime::TEXT_CSS_UTF_8.to_string()
         );
         assert_eq!(
-            resp.take_body().into_future().await.0.unwrap().unwrap(),
-            css_content
+            body::to_bytes(resp.into_body()).await.unwrap(),
+            css_content.as_bytes()
         );
     }
 
@@ -523,7 +522,7 @@ mod tests {
         };
         let app = test::init_service(
             App::new()
-                .data(shared_data)
+                .app_data(Data::new(shared_data))
                 .route("_api/pkg/{file:.*}", web::get().to(pkg_responder)),
         )
         .await;
@@ -533,7 +532,7 @@ mod tests {
             .to_request();
 
         // ------ ACT ------
-        let mut resp = test::call_service(&app, req).await;
+        let resp = test::call_service(&app, req).await;
 
         // ------ ASSERT ------
         assert_eq!(resp.status(), StatusCode::OK);
@@ -554,8 +553,8 @@ mod tests {
             ContentEncoding::Br.as_str()
         );
         assert_eq!(
-            resp.take_body().into_future().await.0.unwrap().unwrap(),
-            css_content
+            body::to_bytes(resp.into_body()).await.unwrap(),
+            css_content,
         );
     }
 
@@ -573,7 +572,7 @@ mod tests {
         };
         let app = test::init_service(
             App::new()
-                .data(shared_data)
+                .app_data(Data::new(shared_data))
                 .route("_api/pkg/{file:.*}", web::get().to(pkg_responder)),
         )
         .await;
@@ -583,7 +582,7 @@ mod tests {
             .to_request();
 
         // ------ ACT ------
-        let mut resp = test::call_service(&app, req).await;
+        let resp = test::call_service(&app, req).await;
 
         // ------ ASSERT ------
         assert_eq!(resp.status(), StatusCode::OK);
@@ -604,8 +603,8 @@ mod tests {
             ContentEncoding::Gzip.as_str()
         );
         assert_eq!(
-            resp.take_body().into_future().await.0.unwrap().unwrap(),
-            css_content
+            body::to_bytes(resp.into_body()).await.unwrap(),
+            css_content,
         );
     }
 }
