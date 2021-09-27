@@ -368,6 +368,22 @@ Also there are some passwordless auth methods:
 
 _
 
+Or can we use something from the crypto/blockchain world?
+
+![Discord wallet-connect metamask](./images/discord_wallet-connect_metamask.png)
+
+- https://digibyte.org/en-us/#digi-id
+- https://walletconnect.org/
+- https://metamask.io/
+- lnurl-auth
+   - https://xn--57h.bigsun.xyz/lnurl-auth.html
+   - https://github.com/fiatjaf/lnurl-rfc/blob/master/lnurl-auth.md
+   - https://crates.io/crates/lnurl
+   - https://github.com/fiatjaf/awesome-lnurl
+   - https://lnurl.fiatjaf.com/
+
+_
+
 So let's wait a bit until we see clear requirements and how technologies like _WebAuthn_ work in practice before we try to design special auth libraries and finalize MoonZoon API.
 
 MoonZoon already allows you to send a token in the request's header so you have at least a basic foundation to integrate, for instance, _JWT_ auth.

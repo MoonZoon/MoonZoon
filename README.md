@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://discord.gg/eGduTxK2Es">
-  <img src="https://invidget.switchblade.xyz/eGduTxK2Es" width="430" title="MoonZoon Discord">
+  <img src="https://discordapp.com/api/guilds/797429007683158046/widget.png?style=banner2" title="MoonZoon Discord">
   </a>
 </p>
 
@@ -55,13 +55,6 @@
 
 # Demos
 
-## GUI Benchmark
-
-- Live demo: [moonzoon-demo.herokuapp.com](https://moonzoon-demo.herokuapp.com/)
-   - Heroku dyno slow cold starts may occur.
-- Repo: [github.com/MoonZoon/demo](https://github.com/MoonZoon/demo)
-   - You can use the repo as a template for your new project for now.
-
 ## TodoMVC
 
 - Live demo: [moonzoon-todomvc.herokuapp.com](https://moonzoon-todomvc.herokuapp.com/)
@@ -72,10 +65,30 @@
 
  - Live demo: [mz-chat-example.mzoon.app](https://mz-chat-example.mzoon.app/)
  - Repo will be available when [MoonZoon Cloud](docs/cloud.md) is stable enough.
-    - It's based on [examples/chat](examples/chat).
+    - It's based on the older version of [examples/chat](examples/chat).
     - Related blog post: _"Chat example, MoonZoon Cloud [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-5-chat-example-moonzoon-cloud-5de4) / [MD](docs/articles/dev_news_5.md)]_.
 
 ![Chat example](docs/images/chat_example.gif)
+
+## GUI Benchmark
+
+- Live demo: [moonzoon-demo.herokuapp.com](https://moonzoon-demo.herokuapp.com/)
+   - Heroku dyno slow cold starts may occur.
+- Repo: [github.com/MoonZoon/demo](https://github.com/MoonZoon/demo)
+   - You can use the repo as a template for your new project for now.
+
+---
+
+# Examples
+
+- [Examples](examples) in the repo. 
+   - See [development.md](docs/development.md) for instructions how to run them.
+
+- [Raytracer on MoonZoon](https://github.com/MartinKavik/ray_tracer)
+
+- [Voting system](https://github.com/MartinKavik/voting-solana-moonzoon) on the [Solana](https://solana.com/) blockchain.
+
+   ![Voting system example](docs/images/voting_system_example.png)
 
 ---
 
@@ -122,14 +135,6 @@
 [![Benchmark example speed](docs/images/frontend_frameworks_benchmark_1.png)](https://raw.githubusercontent.com/MoonZoon/MoonZoon/main/docs/images/frontend_frameworks_benchmark_screen.png)
 
 - [MartinKavik/js-framework-benchmark](https://github.com/MartinKavik/js-framework-benchmark/tree/framework/moonzoon)
-
----
-
-# Examples
-
-- [Examples](examples) in the repo. 
-   - See [development.md](docs/development.md) for instructions how to run them.
-- [Raytracer on MoonZoon](https://github.com/MartinKavik/ray_tracer)
 
 ---
 
