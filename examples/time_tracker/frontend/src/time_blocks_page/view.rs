@@ -5,7 +5,7 @@ use std::sync::Arc;
 pub fn page() -> impl Element {
     Column::new()
         .item(title())
-        // .item(content())
+        .item(content())
 }
 
 fn title() -> impl Element {
@@ -20,151 +20,253 @@ fn title() -> impl Element {
         )
 }
 
-// fn content() -> impl Element {
-//     Column::new()
-//         .s(Spacing::new(35))
-//         .s(Padding::new().x(10).bottom(10))
-//         .item(add_entity_button("Add Client", super::add_client))
-//         .item(clients())
-// }
+fn content() -> impl Element {
+    Column::new()
+        .s(Spacing::new(35))
+        .s(Padding::new().x(10).bottom(10))
+        .item(clients())
+}
 
-// fn add_entity_button(title: &str, on_press: impl FnOnce() + Clone + 'static) -> impl Element {
-//     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
-//     El::new()
-//         .child(
-//             Button::new()
-//                 .s(Align::center())
-//                 .s(Background::new().color_signal(hovered_signal.map_bool(
-//                     || Theme::Background3Highlighted,
-//                     || Theme::Background3,
-//                 )))
-//                 .s(Font::new().color(Theme::Font3).weight(NamedWeight::SemiBold))
-//                 .s(Padding::all(5))
-//                 .s(RoundedCorners::all_max())
-//                 .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-//                 .on_press(on_press)
-//                 .label(add_entity_button_label(title))
-//         )
-// }
+// -- clients --
 
-// fn add_entity_button_label(title: &str) -> impl Element {
-//     Row::new()
-//     .item(app::icon_add())
-//     .item(
-//         El::new()
-//             .s(Padding::new().right(8).bottom(1))
-//             .child(title)
-//     )
-// }
+fn clients() -> impl Element {
+    Column::new()
+        .s(Spacing::new(35))
+        .s(Align::new().center_x())
+        .items_signal_vec(super::clients().signal_vec_cloned().map(client))
+}
 
-// fn clients() -> impl Element {
-//     Column::new()
-//         .s(Spacing::new(35))
-//         .s(Align::new().center_x())
-//         .items_signal_vec(super::clients().signal_vec_cloned().map(client))
-// }
+fn client(client: Arc<super::Client>) -> impl Element {
+    Column::new()
+        .s(Background::new().color(Theme::Background1))
+        .s(RoundedCorners::all(10))
+        .s(Padding::all(15))
+        .s(Spacing::new(20))
+        .item(client_name_and_stats(client.clone()))
+        .item(time_blocks(client))
+}
 
-// fn client(client: Arc<super::Client>) -> impl Element {
-//     Column::new()
-//         .s(Background::new().color(Theme::Background1))
-//         .s(RoundedCorners::all(10))
-//         .s(Padding::all(15))
-//         .s(Spacing::new(20))
-//         .item(client_name_and_delete_button(client.clone()))
-//         .item(add_entity_button("Add Project", clone!((client) move || super::add_project(&client))))
-//         .item(projects(client))
-// }
+fn client_name_and_stats(client: Arc<super::Client>) -> impl Element {
+    let id = client.id;
+    Row::new()
+        .s(Spacing::new(10))
+        .item(client_name(client.clone()))
+        .item(stats())
+}
 
-// fn client_name_and_delete_button(client: Arc<super::Client>) -> impl Element {
-//     let id = client.id;
-//     Row::new()
-//         .s(Spacing::new(10))
-//         .item(client_name(client.clone()))
-//         .item(delete_entity_button(move || super::delete_client(id)))
-// }
+fn client_name(client: Arc<super::Client>) -> impl Element {
+    El::new()
+        .s(Width::fill())
+        .s(Font::new().color(Theme::Font1).size(20))
+        .s(Background::new().color(Theme::Transparent))
+        .s(Padding::all(8))
+        .child(&client.name)
+}
 
-// fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
-//     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
-//     Button::new()
-//         .s(Width::new(40))
-//         .s(Height::new(40))
-//         .s(Align::center())
-//         .s(Background::new().color_signal(hovered_signal.map_bool(
-//             || Theme::Background3Highlighted,
-//             || Theme::Background3,
-//         )))
-//         .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
-//         .s(RoundedCorners::all_max())
-//         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-//         .on_press(on_press)
-//         .label(app::icon_delete_forever())
-// }
+fn stats() -> impl Element {
+    Text::new("I'm stats")
+}
 
-// fn client_name(client: Arc<super::Client>) -> impl Element {
-//     let debounced_rename = Mutable::new(None);
-//     TextInput::new()
-//         .s(Width::fill())
-//         .s(Font::new().color(Theme::Font1).size(20))
-//         .s(Background::new().color(Theme::Transparent))
-//         .s(Borders::new().bottom(
-//             Border::new().color(Theme::Background3)
-//         ))
-//         .s(Padding::all(8))
-//         .focus(not(client.is_old))
-//         .label_hidden("client name")
-//         .text_signal(client.name.signal_cloned())
-//         .on_change(move |text| {
-//             client.name.set_neq(text);
-//             debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
-//                 super::rename_client(client.id, &client.name.lock_ref())
-//             })))
-//         })
-// }
+// -- time blocks --
 
-// fn projects(client: Arc<super::Client>) -> impl Element {
-//     Column::new()
-//         .s(Spacing::new(20))
-//         .items_signal_vec(client.projects.signal_vec_cloned().map(move |p| {
-//             project(client.clone(), p)
-//         }))
-// }
+fn time_blocks(client: Arc<super::Client>) -> impl Element {
+    Column::new()
+        .s(Spacing::new(20))
+        .items_signal_vec(client.time_blocks.signal_vec_cloned().map(move |tb| {
+            time_block(client.clone(), tb)
+        }))
+}
 
-// fn project(client: Arc<super::Client>, project: Arc<super::Project>) -> impl Element {
-//     let id = project.id;
-//     Row::new()
-//         .s(Background::new().color(Theme::Background0))
-//         .s(RoundedCorners::new().left(10).right_max())
-//         .s(Spacing::new(10))
-//         .s(Padding::new().left(8))
-//         .item(project_name(project.clone()))
-//         .item(delete_entity_button(move || super::delete_project(&client, id)))
-// }
+fn time_block(client: Arc<super::Client>, time_block: Arc<super::TimeBlock>) -> impl Element {
+    Column::new()
+        .s(Background::new().color(Theme::Background0))
+        .s(RoundedCorners::new().left(10).right(40 / 2))
+        .item(timeblock_name_time_and_delete_button(client, time_block.clone()))
+        .item_signal(time_block.invoice.signal_cloned().map_some(move |i| {
+            invoice(time_block.clone(), i.clone())
+        })) 
+}
 
-// fn project_name(project: Arc<super::Project>) -> impl Element {
-//     let debounced_rename = Mutable::new(None);
-//     TextInput::new()
-//         .s(Width::fill())
-//         .s(Font::new().color(Theme::Font0))
-//         .s(Background::new().color(Theme::Transparent))
-//         .s(Borders::new().bottom(
-//             Border::new().color(Theme::Background3)
-//         ))
-//         .s(Padding::all(5))
-//         .focus(not(project.is_old))
-//         .label_hidden("project name")
-//         .text_signal(project.name.signal_cloned())
-//         .on_change(move |text| {
-//             project.name.set_neq(text);
-//             debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
-//                 super::rename_project(project.id, &project.name.lock_ref())
-//             })))
-//         })
-// }
+fn timeblock_name_time_and_delete_button(client: Arc<super::Client>, time_block: Arc<super::TimeBlock>) -> impl Element {
+    let id = time_block.id;
+    Row::new()
+        .s(Spacing::new(10))
+        .s(Padding::new().left(8))
+        .item(time_block_name(time_block.clone()))
+        .item(time_block_time(time_block.clone()))
+        .item(delete_entity_button(move || super::delete_time_block(&client, id)))
+}
 
+fn time_block_name(time_block: Arc<super::TimeBlock>) -> impl Element {
+    let debounced_rename = Mutable::new(None);
+    TextInput::new()
+        .s(Width::fill())
+        .s(Font::new().color(Theme::Font0))
+        .s(Background::new().color(Theme::Transparent))
+        .s(Borders::new().bottom(
+            Border::new().color(Theme::Border1)
+        ))
+        .s(Padding::all(5))
+        .focus(not(time_block.is_old))
+        .label_hidden("time_block name")
+        .text_signal(time_block.name.signal_cloned())
+        .on_change(move |text| {
+            time_block.name.set_neq(text);
+            debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+                super::rename_time_block(time_block.id, &time_block.name.lock_ref())
+            })))
+        })
+}
 
+fn time_block_time(time_block: Arc<super::TimeBlock>) -> impl Element {
+    Text::new("Time")
+    // let debounced_rename = Mutable::new(None);
+    // TextInput::new()
+    //     .s(Width::fill())
+    //     .s(Font::new().color(Theme::Font0))
+    //     .s(Background::new().color(Theme::Transparent))
+    //     .s(Borders::new().bottom(
+    //         Border::new().color(Theme::Border1)
+    //     ))
+    //     .s(Padding::all(5))
+    //     .focus(not(time_block.is_old))
+    //     .label_hidden("time_block name")
+    //     .text_signal(time_block.name.signal_cloned())
+    //     .on_change(move |text| {
+    //         time_block.name.set_neq(text);
+    //         debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+    //             super::rename_time_block(time_block.id, &time_block.name.lock_ref())
+    //         })))
+    //     })
+}
 
+// -- invoice --
 
+fn invoice(time_block: Arc<super::TimeBlock>, invoice: Arc<super::Invoice>) -> impl Element {
+    El::new()
+        .s(Padding::all(10))
+        .child(
+            Column::new()
+                .s(Padding::new().left(10))
+                .s(Background::new().color(Theme::Background1))
+                .s(RoundedCorners::all(40 / 2))
+                .item(invoice_custom_id_and_delete_button(time_block.clone(), invoice.clone()))
+                .item(invoice_url_and_link_button(time_block, invoice.clone()))
+        )
+}
 
+fn invoice_custom_id_and_delete_button(time_block: Arc<super::TimeBlock>, invoice: Arc<super::Invoice>) -> impl Element {
+    Row::new()
+        .item(invoice_custom_id(invoice))
+        .item(
+            El::new()
+                .s(Align::new().right())
+                .s(Padding::new().bottom(5))
+                .child(delete_entity_button(move || super::delete_invoice(&time_block)))
+        )
+}
+
+fn invoice_custom_id(invoice: Arc<super::Invoice>) -> impl Element {
+    let debounced_rename = Mutable::new(None);
+    El::new()
+        .child(
+            TextInput::new()
+                .s(Width::fill())
+                .s(Font::new().color(Theme::Font1))
+                .s(Background::new().color(Theme::Transparent))
+                .s(Borders::new().bottom(Border::new().color(Theme::Border1)))
+                .s(Padding::all(5))
+                .focus(not(invoice.is_old))
+                .label_hidden("invoice custom id")
+                .text_signal(invoice.custom_id.signal_cloned())
+                .on_change(move |text| {
+                    invoice.custom_id.set_neq(text);
+                    debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+                        super::set_invoice_custom_id(invoice.id, &invoice.custom_id.lock_ref())
+                    })))
+                })
+        )
+}
+
+fn invoice_url_and_link_button(time_block: Arc<super::TimeBlock>, invoice: Arc<super::Invoice>) -> impl Element {
+    Row::new()
+        .item(invoice_url(invoice))
+        .item(
+            El::new()
+                .s(Align::new().right())
+                .s(Padding::new().top(5))
+                .child(delete_entity_button(move || super::delete_invoice(&time_block)))
+        )
+}
+
+fn invoice_url(invoice: Arc<super::Invoice>) -> impl Element {
+    let debounced_rename = Mutable::new(None);
+    El::new()
+        .child(
+            TextInput::new()
+                .s(Width::fill())
+                .s(Font::new().color(Theme::Font1))
+                .s(Background::new().color(Theme::Transparent))
+                .s(Borders::new().bottom(Border::new().color(Theme::Border1)))
+                .s(Padding::all(5))
+                .label_hidden("invoice url")
+                .text_signal(invoice.url.signal_cloned())
+                .on_change(move |text| {
+                    invoice.url.set_neq(text);
+                    debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+                        super::set_invoice_url(invoice.id, &invoice.url.lock_ref())
+                    })))
+                })
+        )
+}
+
+// --
+
+fn add_entity_button(title: &str, on_press: impl FnOnce() + Clone + 'static) -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    El::new()
+        .child(
+            Button::new()
+                .s(Align::center())
+                .s(Background::new().color_signal(hovered_signal.map_bool(
+                    || Theme::Background3Highlighted,
+                    || Theme::Background3,
+                )))
+                .s(Font::new().color(Theme::Font3).weight(NamedWeight::SemiBold))
+                .s(Padding::all(5))
+                .s(RoundedCorners::all_max())
+                .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+                .on_press(on_press)
+                .label(add_entity_button_label(title))
+        )
+}
+
+fn add_entity_button_label(title: &str) -> impl Element {
+    Row::new()
+    .item(app::icon_add())
+    .item(
+        El::new()
+            .s(Padding::new().right(8).bottom(1))
+            .child(title)
+    )
+}
+
+fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Button::new()
+        .s(Width::new(40))
+        .s(Height::new(40))
+        .s(Align::center())
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || Theme::Background3Highlighted,
+            || Theme::Background3,
+        )))
+        .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
+        .s(RoundedCorners::all_max())
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .on_press(on_press)
+        .label(app::icon_delete_forever())
+}
 
 // blocks!{
 
