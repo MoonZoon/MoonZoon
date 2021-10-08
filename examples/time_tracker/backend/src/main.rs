@@ -112,7 +112,7 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
                         },
                         shared::time_blocks::TimeBlock {
                             id: TimeBlockId::new(),
-                            name: "TimeBlock 1".to_owned(),
+                            name: "TimeBlock 2".to_owned(),
                             status: shared::time_blocks::TimeBlockStatus::Paid,
                             duration: Duration::hours(21).into(),
                             invoice: Some(shared::time_blocks::Invoice {

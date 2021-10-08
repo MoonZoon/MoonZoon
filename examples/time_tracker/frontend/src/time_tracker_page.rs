@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 mod view;
 
-const TIME_ENTRY_BREAKPOINT: u32 = 630;
+const TIME_ENTRY_BREAKPOINT: u32 = 660;
 
 // ------ ------
 //     Types
