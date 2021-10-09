@@ -49,6 +49,11 @@ impl<'a> Font<'a> {
         self
     }
 
+    pub fn no_wrap(mut self) -> Self {
+        self.static_css_props.insert("white-space", "nowrap".into());
+        self
+    }
+
     pub fn underline(mut self) -> Self {
         self.static_css_props
             .insert("text-decoration", "underline".into());
