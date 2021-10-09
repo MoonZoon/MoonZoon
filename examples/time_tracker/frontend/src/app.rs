@@ -174,6 +174,12 @@ pub fn icon_delete_forever() -> impl Element {
         .child("delete_forever")
 }
 
+pub fn icon_open_in_new() -> impl Element {
+    RawHtmlEl::new("i")
+        .class("eos-icons")
+        .child("open_in_new")
+}
+
 
 // blocks!{
 //     append_blocks![

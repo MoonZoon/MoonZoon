@@ -43,6 +43,7 @@ fn client(client: Arc<super::Client>) -> impl Element {
         .s(Padding::all(15))
         .s(Spacing::new(20))
         .item(client_name_and_stats(client.clone()))
+        .item(add_entity_button("Add Time Block", clone!((client) move || super::add_time_block(&client))))
         .item(time_blocks(client))
 }
 
@@ -51,7 +52,7 @@ fn client_name_and_stats(client: Arc<super::Client>) -> impl Element {
     Row::new()
         .s(Spacing::new(10))
         .item(client_name(client.clone()))
-        .item(stats())
+        .item(stats(client))
 }
 
 fn client_name(client: Arc<super::Client>) -> impl Element {
@@ -63,7 +64,7 @@ fn client_name(client: Arc<super::Client>) -> impl Element {
         .child(&client.name)
 }
 
-fn stats() -> impl Element {
+fn stats(client: Arc<super::Client>) -> impl Element {
     Text::new("I'm stats")
 }
 
@@ -81,19 +82,20 @@ fn time_block(client: Arc<super::Client>, time_block: Arc<super::TimeBlock>) -> 
     Column::new()
         .s(Background::new().color(Theme::Background0))
         .s(RoundedCorners::new().left(10).right(40 / 2))
-        .item(timeblock_name_time_and_delete_button(client, time_block.clone()))
-        .item_signal(time_block.invoice.signal_cloned().map_some(move |i| {
-            invoice(time_block.clone(), i.clone())
-        })) 
+        .item(timeblock_name_duration_and_delete_button(client, time_block.clone()))
+        .item_signal(time_block.invoice.signal_cloned().map_option(
+            clone!((time_block) move |i: Arc<super::Invoice>| invoice(time_block.clone(), i.clone()).into_raw_element()),
+            move || add_entity_button("Add Invoice", clone!((time_block) move || super::add_invoice(&time_block))).into_raw_element()
+        ))
 }
 
-fn timeblock_name_time_and_delete_button(client: Arc<super::Client>, time_block: Arc<super::TimeBlock>) -> impl Element {
+fn timeblock_name_duration_and_delete_button(client: Arc<super::Client>, time_block: Arc<super::TimeBlock>) -> impl Element {
     let id = time_block.id;
     Row::new()
         .s(Spacing::new(10))
         .s(Padding::new().left(8))
         .item(time_block_name(time_block.clone()))
-        .item(time_block_time(time_block.clone()))
+        .item(time_block_duration(time_block.clone()))
         .item(delete_entity_button(move || super::delete_time_block(&client, id)))
 }
 
@@ -118,26 +120,38 @@ fn time_block_name(time_block: Arc<super::TimeBlock>) -> impl Element {
         })
 }
 
-fn time_block_time(time_block: Arc<super::TimeBlock>) -> impl Element {
-    Text::new("Time")
-    // let debounced_rename = Mutable::new(None);
-    // TextInput::new()
-    //     .s(Width::fill())
-    //     .s(Font::new().color(Theme::Font0))
-    //     .s(Background::new().color(Theme::Transparent))
-    //     .s(Borders::new().bottom(
-    //         Border::new().color(Theme::Border1)
-    //     ))
-    //     .s(Padding::all(5))
-    //     .focus(not(time_block.is_old))
-    //     .label_hidden("time_block name")
-    //     .text_signal(time_block.name.signal_cloned())
-    //     .on_change(move |text| {
-    //         time_block.name.set_neq(text);
-    //         debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
-    //             super::rename_time_block(time_block.id, &time_block.name.lock_ref())
-    //         })))
-    //     })
+fn time_block_duration(time_block: Arc<super::TimeBlock>) -> impl Element {
+    Row::new()
+        .s(Font::new().color(Theme::Font0))
+        .item(time_block_duration_input(time_block))
+        .item("h")
+}
+
+fn time_block_duration_input(time_block: Arc<super::TimeBlock>) -> impl Element {
+    let debounced_set_duration = Mutable::new(None);
+    let (text_duration, text_duration_signal) = Mutable::new_and_signal_cloned(time_block.duration.get().num_hours().to_string());
+    let (is_valid, is_valid_signal) = Mutable::new_and_signal(true);
+    TextInput::new()
+        .s(Width::zeros(4))
+        .s(Font::new().color(Theme::Font0))
+        .s(Background::new().color_signal(is_valid_signal.map_bool(|| Theme::Transparent, || Theme::BackgroundInvalid)))
+        .s(Borders::new().bottom(
+            Border::new().color(Theme::Border1)
+        ))
+        .s(Padding::all(5))
+        .label_hidden("time_block duration")
+        .text_signal(text_duration_signal)
+        .on_change(move |text| {
+            let hours = text.parse();
+            is_valid.set_neq(hours.is_ok());
+            text_duration.set_neq(text);
+            if let Ok(hours) = hours {
+                time_block.duration.set_neq(Duration::hours(hours).into());
+                debounced_set_duration.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+                    super::set_time_block_duration(&time_block, time_block.duration.get())
+                })))
+            }
+        })
 }
 
 // -- invoice --
@@ -151,7 +165,7 @@ fn invoice(time_block: Arc<super::TimeBlock>, invoice: Arc<super::Invoice>) -> i
                 .s(Background::new().color(Theme::Background1))
                 .s(RoundedCorners::all(40 / 2))
                 .item(invoice_custom_id_and_delete_button(time_block.clone(), invoice.clone()))
-                .item(invoice_url_and_link_button(time_block, invoice.clone()))
+                .item(invoice_url_and_link_button(invoice))
         )
 }
 
@@ -176,6 +190,7 @@ fn invoice_custom_id(invoice: Arc<super::Invoice>) -> impl Element {
                 .s(Background::new().color(Theme::Transparent))
                 .s(Borders::new().bottom(Border::new().color(Theme::Border1)))
                 .s(Padding::all(5))
+                .placeholder(Placeholder::new("Invoice custom ID"))
                 .focus(not(invoice.is_old))
                 .label_hidden("invoice custom id")
                 .text_signal(invoice.custom_id.signal_cloned())
@@ -188,14 +203,14 @@ fn invoice_custom_id(invoice: Arc<super::Invoice>) -> impl Element {
         )
 }
 
-fn invoice_url_and_link_button(time_block: Arc<super::TimeBlock>, invoice: Arc<super::Invoice>) -> impl Element {
+fn invoice_url_and_link_button(invoice: Arc<super::Invoice>) -> impl Element {
     Row::new()
-        .item(invoice_url(invoice))
+        .item(invoice_url(invoice.clone()))
         .item(
             El::new()
                 .s(Align::new().right())
                 .s(Padding::new().top(5))
-                .child(delete_entity_button(move || super::delete_invoice(&time_block)))
+                .child(link_button(invoice))
         )
 }
 
@@ -209,6 +224,7 @@ fn invoice_url(invoice: Arc<super::Invoice>) -> impl Element {
                 .s(Background::new().color(Theme::Transparent))
                 .s(Borders::new().bottom(Border::new().color(Theme::Border1)))
                 .s(Padding::all(5))
+                .placeholder(Placeholder::new("Invoice URL"))
                 .label_hidden("invoice url")
                 .text_signal(invoice.url.signal_cloned())
                 .on_change(move |text| {
@@ -266,6 +282,24 @@ fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Eleme
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(on_press)
         .label(app::icon_delete_forever())
+}
+
+fn link_button(invoice: Arc<super::Invoice>) -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Link::new()
+        .s(Width::new(40))
+        .s(Height::new(40))
+        .s(Align::center())
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || Theme::Background3Highlighted,
+            || Theme::Background3,
+        )))
+        .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
+        .s(RoundedCorners::all_max())
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .to_signal(invoice.url.signal_cloned())
+        .new_tab()
+        .label(app::icon_open_in_new())
 }
 
 // blocks!{

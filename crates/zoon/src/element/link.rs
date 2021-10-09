@@ -14,11 +14,31 @@ pub struct Link<LabelFlag, ToFlag> {
 
 impl Link<LabelFlagNotSet, ToFlagNotSet> {
     pub fn new() -> Self {
+        run_once!(|| {
+            global_styles()
+                .style_group(
+                    StyleGroup::new(".link > *")
+                        .style("margin-top", "auto")
+                        .style("margin-bottom", "auto"),
+                )
+                .style_group(StyleGroup::new(".link > .align_bottom").style("margin-top", "auto"))
+                .style_group(
+                    StyleGroup::new(".link > .align_left").style("align-self", "flex-start"),
+                )
+                .style_group(
+                    StyleGroup::new(".link > .align_right").style("align-self", "flex-end"),
+                )
+                .style_group(StyleGroup::new(".link > .exact_height").style("flex-shrink", "0"))
+                .style_group(StyleGroup::new(".link > .fill_height").style("flex-grow", "1"));
+        });
         Self {
             raw_el: RawHtmlEl::new("a")
                 .class("link")
                 .style("text-decoration", "none")
-                .style("color", "inherit"),
+                .style("color", "inherit")
+                .style("display", "flex")
+                .style("flex-direction", "column")
+                .style("align-items", "center"),
             flags: PhantomData,
         }
     }
