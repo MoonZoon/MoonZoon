@@ -12,17 +12,19 @@
     panose-1="2 0 5 9 0 0 0 0 0 0"
     ascent="448"
     descent="-64"
-    bbox="17 0 405 384"
+    bbox="17 0 448 384"
     underline-thickness="25"
     underline-position="-76"
-    unicode-range="U+005F-F102"
+    unicode-range="U+005F-F103"
   />
 <missing-glyph 
 d="M17 0v341h136v-341h-136zM34 17h102v307h-102v-307z" />
-    <glyph glyph-name="delete_forever" unicode="delete_forever" 
-d="M128 43v256h256v-256q0 -18 -12.5 -30.5t-30.5 -12.5h-170q-18 0 -30.5 12.5t-12.5 30.5zM180 195l46 -46l-45 -45l30 -30l45 45l45 -45l30 30l-45 45l45 46l-30 30l-45 -46l-45 46zM331 363h74v-43h-298v43h74l22 21h106z" />
     <glyph glyph-name="add" unicode="add" 
 d="M405 171h-128v-128h-42v128h-128v42h128v128h42v-128h128v-42z" />
+    <glyph glyph-name="delete_forever" unicode="delete_forever" 
+d="M128 43v256h256v-256q0 -18 -12.5 -30.5t-30.5 -12.5h-170q-18 0 -30.5 12.5t-12.5 30.5zM180 195l46 -46l-45 -45l30 -30l45 45l45 -45l30 30l-45 45l45 46l-30 30l-45 -46l-45 46zM331 363h74v-43h-298v43h74l22 21h106z" />
+    <glyph glyph-name="open_in_new" unicode="open_in_new" 
+d="M405 43v149h43v-149q0 -18 -12.5 -30.5t-30.5 -12.5h-298q-18 0 -30.5 12.5t-12.5 30.5v298q0 18 12.5 30.5t30.5 12.5h149v-43h-149v-298h298zM299 384h149v-149h-43v76l-209 -209l-30 30l209 209h-76v43z" />
     <glyph glyph-name=".notdef" 
 d="M17 0v341h136v-341h-136zM34 17h102v307h-102v-307z" />
     <glyph glyph-name=".null" horiz-adv-x="0" 
@@ -39,15 +41,23 @@ d="M0 0z" />
 d="M0 0z" />
     <glyph glyph-name="f" unicode="f" 
 d="M0 0z" />
+    <glyph glyph-name="i" unicode="i" 
+d="M0 0z" />
     <glyph glyph-name="l" unicode="l" 
 d="M0 0z" />
+    <glyph glyph-name="n" unicode="n" 
+d="M0 0z" />
     <glyph glyph-name="o" unicode="o" 
+d="M0 0z" />
+    <glyph glyph-name="p" unicode="p" 
 d="M0 0z" />
     <glyph glyph-name="r" unicode="r" 
 d="M0 0z" />
     <glyph glyph-name="t" unicode="t" 
 d="M0 0z" />
     <glyph glyph-name="v" unicode="v" 
+d="M0 0z" />
+    <glyph glyph-name="w" unicode="w" 
 d="M0 0z" />
   </font>
 </defs></svg>
