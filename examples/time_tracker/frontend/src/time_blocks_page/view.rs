@@ -1,6 +1,7 @@
 use zoon::*;
 use crate::{theme::Theme, app};
 use std::sync::Arc;
+use shared::time_blocks::TimeBlockStatus;
 
 pub fn page() -> impl Element {
     Column::new()
@@ -64,6 +65,9 @@ fn client_name(client: Arc<super::Client>) -> impl Element {
 }
 
 fn stats(client: Arc<super::Client>) -> impl Element {
+    let tracked = client.tracked;
+
+
     let format = |value: f64| format!("{:.1}", value);
     Row::new()
         .s(Font::new().color(Theme::Font1))
@@ -137,6 +141,7 @@ fn time_block(client: Arc<super::Client>, time_block: Arc<super::TimeBlock>) -> 
         .s(Background::new().color(Theme::Background0))
         .s(RoundedCorners::new().left(10).right(40 / 2))
         .item(timeblock_name_duration_and_delete_button(client, time_block.clone()))
+        .item(status_buttons(time_block.clone()))
         .item_signal(time_block.invoice.signal_cloned().map_option(
             clone!((time_block) move |i: Arc<super::Invoice>| invoice(time_block.clone(), i.clone()).into_raw_element()),
             move || add_entity_button("Add Invoice", clone!((time_block) move || super::add_invoice(&time_block))).into_raw_element()
@@ -206,6 +211,34 @@ fn time_block_duration_input(time_block: Arc<super::TimeBlock>) -> impl Element 
                 })))
             }
         })
+}
+
+fn status_buttons(time_block: Arc<super::TimeBlock>) -> impl Element {
+    Row::new()
+        .s(Align::new().center_x())
+        .s(Font::new().color(Theme::Font0))
+        .s(RoundedCorners::all_max())
+        .s(Borders::all(Border::new().color(Theme::Border1)))
+        .s(Clip::both())
+        .item(status_button("Non-billable", TimeBlockStatus::NonBillable, time_block.clone()))
+        .item(status_button("Unpaid", TimeBlockStatus::Unpaid, time_block.clone()))
+        .item(status_button("Paid", TimeBlockStatus::Paid, time_block))
+}
+
+fn status_button(label: &str, represent_status: TimeBlockStatus, time_block: Arc<super::TimeBlock>) -> impl Element {
+    let hovered = Mutable::new(false);
+    let hovered_or_active = Broadcaster::new(map_ref! {
+        let hovered = hovered.signal(),
+        let active = time_block.status.signal().map(move |status| status == represent_status) =>
+        *hovered || *active
+    });
+    Button::new()
+        .s(Padding::new().x(13).y(6))
+        .s(Background::new().color_signal(hovered_or_active.signal().map_bool(|| Theme::Background3, || Theme::Transparent)))
+        .s(Font::new().color_signal(hovered_or_active.signal().map_bool(|| Theme::Font3, || Theme::Font0)))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .label(label)
+        .on_press(move || super::set_time_block_status(&time_block, represent_status))
 }
 
 // -- invoice --
