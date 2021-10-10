@@ -9,15 +9,24 @@ mod view;
 //     Types
 // ------ ------
 
-#[derive(Default)]
 struct Client {
     id: ClientId,
     name: String,
     time_blocks: MutableVec<Arc<TimeBlock>>,
-    tracked: Wrapper<Duration>,
+    stats: Stats,
+    change_receiver: TaskHandle,
 }
 
 #[derive(Default)]
+struct Stats {
+    tracked: f64,
+    blocked: Mutable<f64>,
+    paid: Mutable<f64>,
+    unpaid: Mutable<f64>,
+}
+
+// #[derive(Default)]
+// @TODO new(change_sender)
 struct TimeBlock {
     id: TimeBlockId,
     name: Mutable<String>,
@@ -25,6 +34,7 @@ struct TimeBlock {
     duration: Mutable<Wrapper<Duration>>,
     invoice: Mutable<Option<Arc<Invoice>>>,
     is_old: bool,
+    change_sender: Option<TaskHandle>,
 }
 
 #[derive(Default)]
@@ -60,23 +70,43 @@ pub fn request_clients() {
 pub fn convert_and_set_clients(new_clients: Vec<time_blocks::Client>) {
     fn convert_clients(clients: Vec<time_blocks::Client>) -> Vec<Arc<Client>> {
         clients.into_iter().map(|client| {
+            let (change_sender, change_receiver) = channel(());
             Arc::new(Client {
                 id: client.id,
                 name: client.name,
-                time_blocks: MutableVec::new_with_values(convert_time_blocks(client.time_blocks)),
-                tracked: client.tracked,
+                time_blocks: MutableVec::new_with_values(convert_time_blocks(client.time_blocks, change_sender)),
+                stats: Stats {
+                    tracked: client.tracked.num_hours() as f64,
+                    ..Default::default()
+                },
+                change_receiver: Task::start_droppable(change_receiver.for_each_sync(|_| {
+                    zoon::println!("Change!");
+                })),
             })
         }).collect()
     }
-    fn convert_time_blocks(time_blocks: Vec<time_blocks::TimeBlock>) -> Vec<Arc<TimeBlock>> {
+    fn convert_time_blocks(time_blocks: Vec<time_blocks::TimeBlock>, change_sender: Sender<()>) -> Vec<Arc<TimeBlock>> {
         time_blocks.into_iter().map(|time_block| {
+            let status = Mutable::new(time_block.status);
+            let duration = Mutable::new(time_block.duration);
+            let status_duration = map_ref!{
+                let _ = status.signal(),
+                let _ = duration.signal() =>
+                    ()
+            };
+            let change_sender = status_duration.for_each_sync(
+                clone!((change_sender) move |_| { 
+                    change_sender.send(()).expect_throw("send change");
+                }
+            ));
             Arc::new(TimeBlock {
                 id: time_block.id,
                 name: Mutable::new(time_block.name),
-                status: Mutable::new(time_block.status),
-                duration: Mutable::new(time_block.duration),
+                status,
+                duration,
                 invoice: Mutable::new(time_block.invoice.map(convert_invoice)),
                 is_old: true,
+                change_sender: Some(Task::start_droppable(change_sender)),
             })
         }).collect()
     }

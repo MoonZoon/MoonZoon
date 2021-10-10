@@ -64,8 +64,11 @@ fn client_name(client: Arc<super::Client>) -> impl Element {
 }
 
 fn stats(client: Arc<super::Client>) -> impl Element {
-    let tracked = client.tracked;
-
+    let tracked = client.stats.tracked;
+    let blocked = 40.;
+    let unpaid = 0.;
+    let paid = 23.;
+    let to_block = tracked - blocked;
 
     let format = |value: f64| format!("{:.1}", value);
     Row::new()
@@ -94,13 +97,13 @@ fn stats(client: Arc<super::Client>) -> impl Element {
                             Row::new()
                                 .s(Spacing::new(10))
                                 .item("Unpaid")
-                                .item(El::new().s(Align::new().right()).child(format(0.)))
+                                .item(El::new().s(Align::new().right()).child(format(unpaid)))
                         )
                         .item(
                             Row::new()
                                 .s(Spacing::new(10))
                                 .item("Paid")
-                                .item(El::new().s(Align::new().right()).child(format(23.)))
+                                .item(El::new().s(Align::new().right()).child(format(paid)))
                         )
                 )
         )
@@ -117,14 +120,14 @@ fn stats(client: Arc<super::Client>) -> impl Element {
                     Row::new()
                         .s(Spacing::new(10))
                         .item("Tracked")
-                        .item(El::new().s(Align::new().right()).child(format(34.8569)))
+                        .item(El::new().s(Align::new().right()).child(format(tracked)))
                 )
                 .item(
                     Row::new()
                         .s(Spacing::new(10))
                         .s(Font::new().no_wrap())
                         .item("To Block")
-                        .item(El::new().s(Align::new().right()).child(format(-42.16)))
+                        .item(El::new().s(Align::new().right()).child(format(to_block)))
                 )
         )
 }
