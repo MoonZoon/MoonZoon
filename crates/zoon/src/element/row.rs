@@ -5,26 +5,26 @@ use std::marker::PhantomData;
 //   Element
 // ------ ------
 
-make_flags!(Empty);
+make_flags!(Empty, Multiline);
 
-pub struct Row<EmptyFlag> {
+pub struct Row<EmptyFlag, MultilineFlag> {
     raw_el: RawHtmlEl,
-    flags: PhantomData<EmptyFlag>,
+    flags: PhantomData<(EmptyFlag, MultilineFlag)>,
 }
 
-impl Row<EmptyFlagSet> {
+impl Row<EmptyFlagSet, MultilineFlagNotSet> {
     pub fn new() -> Self {
         Self::with_tag(Tag::Custom("div"))
     }
 }
 
-impl Element for Row<EmptyFlagNotSet> {
+impl<MultilineFlag> Element for Row<EmptyFlagNotSet, MultilineFlag> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Row<EmptyFlag> {
+impl<EmptyFlag, MultilineFlag> UpdateRawEl<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {
     fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
@@ -35,7 +35,7 @@ impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Row<EmptyFlag> {
 //   Abilities
 // ------ ------
 
-impl ChoosableTag for Row<EmptyFlagSet> {
+impl ChoosableTag for Row<EmptyFlagSet, MultilineFlagNotSet> {
     fn with_tag(tag: Tag) -> Self {
         run_once!(|| {
             global_styles()
@@ -61,23 +61,23 @@ impl ChoosableTag for Row<EmptyFlagSet> {
         }
     }
 }
-impl<EmptyFlag> Styleable<'_, RawHtmlEl> for Row<EmptyFlag> {}
-impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Row<EmptyFlag> {}
-impl<EmptyFlag> MouseEventAware<RawHtmlEl> for Row<EmptyFlag> {}
-impl<EmptyFlag> MutableViewport<RawHtmlEl> for Row<EmptyFlag> {}
-impl<EmptyFlag> ResizableViewport<RawHtmlEl> for Row<EmptyFlag> {}
-impl<EmptyFlag> Hookable<RawHtmlEl> for Row<EmptyFlag> {
+impl<EmptyFlag, MultilineFlag> Styleable<'_, RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> KeyboardEventAware<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> MouseEventAware<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> MutableViewport<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> ResizableViewport<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> Hookable<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {
     type WSElement = HtmlElement;
 }
-impl<EmptyFlag> AddNearbyElement<'_> for Row<EmptyFlag> {}
-impl<EmptyFlag> HasClassId<RawHtmlEl> for Row<EmptyFlag> {}
+impl<EmptyFlag, MultilineFlag> AddNearbyElement<'_> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> HasClassId<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
 
 // ------ ------
 //  Attributes
 // ------ ------
 
-impl<'a, EmptyFlag> Row<EmptyFlag> {
-    pub fn item(mut self, item: impl IntoOptionElement<'a> + 'a) -> Row<EmptyFlagNotSet> {
+impl<'a, EmptyFlag, MultilineFlag> Row<EmptyFlag, MultilineFlag> {
+    pub fn item(mut self, item: impl IntoOptionElement<'a> + 'a) -> Row<EmptyFlagNotSet, MultilineFlag> {
         self.raw_el = self.raw_el.child(item);
         self.into_type()
     }
@@ -85,7 +85,7 @@ impl<'a, EmptyFlag> Row<EmptyFlag> {
     pub fn item_signal(
         mut self,
         item: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
-    ) -> Row<EmptyFlagNotSet> {
+    ) -> Row<EmptyFlagNotSet, MultilineFlag> {
         self.raw_el = self.raw_el.child_signal(item);
         self.into_type()
     }
@@ -93,7 +93,7 @@ impl<'a, EmptyFlag> Row<EmptyFlag> {
     pub fn items(
         mut self,
         items: impl IntoIterator<Item = impl IntoElement<'a> + 'a>,
-    ) -> Row<EmptyFlagNotSet> {
+    ) -> Row<EmptyFlagNotSet, MultilineFlag> {
         self.raw_el = self.raw_el.children(items);
         self.into_type()
     }
@@ -101,12 +101,19 @@ impl<'a, EmptyFlag> Row<EmptyFlag> {
     pub fn items_signal_vec(
         mut self,
         items: impl SignalVec<Item = impl IntoElement<'a>> + Unpin + 'static,
-    ) -> Row<EmptyFlagNotSet> {
+    ) -> Row<EmptyFlagNotSet, MultilineFlag> {
         self.raw_el = self.raw_el.children_signal_vec(items);
         self.into_type()
     }
 
-    fn into_type<NewEmptyFlag>(self) -> Row<NewEmptyFlag> {
+    pub fn multiline(mut self) -> Row<EmptyFlag, MultilineFlagSet> where MultilineFlag: FlagNotSet {
+        self.raw_el = self.raw_el.style("flex-wrap", "wrap");
+        self.raw_el = self.raw_el.style("flex-basis", "0");
+        self.raw_el = self.raw_el.style("flex-grow", "1");
+        self.into_type()
+    }
+
+    fn into_type<NewEmptyFlag, NewMultilineFlag>(self) -> Row<NewEmptyFlag, NewMultilineFlag> {
         Row {
             raw_el: self.raw_el,
             flags: PhantomData,
