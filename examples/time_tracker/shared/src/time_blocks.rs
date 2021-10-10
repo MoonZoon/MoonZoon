@@ -19,7 +19,7 @@ pub struct TimeBlock {
     pub invoice: Option<Invoice>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Copy, Clone)]
+#[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq, Eq)]
 #[serde(crate = "serde")]
 pub enum TimeBlockStatus {
     NonBillable,
