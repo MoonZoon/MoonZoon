@@ -57,7 +57,6 @@ fn client_name_and_stats(client: Arc<super::Client>) -> impl Element {
 
 fn client_name(client: Arc<super::Client>) -> impl Element {
     El::new()
-        .s(Width::fill())
         .s(Font::new().color(Theme::Font1).size(20))
         .s(Background::new().color(Theme::Transparent))
         .s(Padding::all(8))
@@ -72,6 +71,8 @@ fn stats(client: Arc<super::Client>) -> impl Element {
     Row::new()
         .s(Font::new().color(Theme::Font1))
         .s(Spacing::new(5))
+        .s(Align::new().right())
+        .multiline()
         .item(
             Column::new()
                 .s(Spacing::new(5))
@@ -80,6 +81,7 @@ fn stats(client: Arc<super::Client>) -> impl Element {
                     Shadow::new().y(8).blur(16).color(Theme::Shadow)
                 ]))
                 .s(RoundedCorners::all(10))
+                .s(Align::new().right())
                 .item(
                     Row::new()
                         .s(Spacing::new(10))
@@ -110,6 +112,7 @@ fn stats(client: Arc<super::Client>) -> impl Element {
                     Shadow::new().y(8).blur(16).color(Theme::Shadow)
                 ]))
                 .s(RoundedCorners::all(10))
+                .s(Align::new().right())
                 .item(
                     Row::new()
                         .s(Spacing::new(10))
