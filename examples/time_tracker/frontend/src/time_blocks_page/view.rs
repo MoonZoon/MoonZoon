@@ -64,13 +64,14 @@ fn client_name(client: Arc<super::Client>) -> impl Element {
 }
 
 fn stats(client: Arc<super::Client>) -> impl Element {
-    let tracked = client.stats.tracked;
-    let blocked = 40.;
-    let unpaid = 0.;
-    let paid = 23.;
-    let to_block = tracked - blocked;
+    let format_hours = |value: f64| format!("{:.1}", value);
 
-    let format = |value: f64| format!("{:.1}", value);
+    let blocked = client.stats.blocked.signal().map(format_hours);
+    let unpaid = client.stats.unpaid.signal().map(format_hours);
+    let paid =  client.stats.paid.signal().map(format_hours);
+    let tracked = format_hours(client.stats.tracked);
+    let to_block = client.stats.to_block.signal().map(format_hours);
+
     Row::new()
         .s(Font::new().color(Theme::Font1))
         .s(Spacing::new(5))
@@ -89,7 +90,7 @@ fn stats(client: Arc<super::Client>) -> impl Element {
                     Row::new()
                         .s(Spacing::new(10))
                         .item("Blocked")
-                        .item(El::new().s(Align::new().right()).child(format(40.)))
+                        .item(El::new().s(Align::new().right()).child_signal(blocked))
                 )
                 .item(
                     Column::new()
@@ -97,13 +98,13 @@ fn stats(client: Arc<super::Client>) -> impl Element {
                             Row::new()
                                 .s(Spacing::new(10))
                                 .item("Unpaid")
-                                .item(El::new().s(Align::new().right()).child(format(unpaid)))
+                                .item(El::new().s(Align::new().right()).child_signal(unpaid))
                         )
                         .item(
                             Row::new()
                                 .s(Spacing::new(10))
                                 .item("Paid")
-                                .item(El::new().s(Align::new().right()).child(format(paid)))
+                                .item(El::new().s(Align::new().right()).child_signal(paid))
                         )
                 )
         )
@@ -120,14 +121,14 @@ fn stats(client: Arc<super::Client>) -> impl Element {
                     Row::new()
                         .s(Spacing::new(10))
                         .item("Tracked")
-                        .item(El::new().s(Align::new().right()).child(format(tracked)))
+                        .item(El::new().s(Align::new().right()).child(tracked))
                 )
                 .item(
                     Row::new()
                         .s(Spacing::new(10))
                         .s(Font::new().no_wrap())
                         .item("To Block")
-                        .item(El::new().s(Align::new().right()).child(format(to_block)))
+                        .item(El::new().s(Align::new().right()).child_signal(to_block))
                 )
         )
 }
@@ -197,7 +198,7 @@ fn time_block_duration_input(time_block: Arc<super::TimeBlock>) -> impl Element 
     let (text_duration, text_duration_signal) = Mutable::new_and_signal_cloned(time_block.duration.get().num_hours().to_string());
     let (is_valid, is_valid_signal) = Mutable::new_and_signal(true);
     TextInput::new()
-        .s(Width::zeros(4))
+        .s(Width::zeros(5))
         .s(Font::new().color(Theme::Font0))
         .s(Background::new().color_signal(is_valid_signal.map_bool(|| Theme::Transparent, || Theme::BackgroundInvalid)))
         .s(Borders::new().bottom(
@@ -207,11 +208,11 @@ fn time_block_duration_input(time_block: Arc<super::TimeBlock>) -> impl Element 
         .label_hidden("time_block duration")
         .text_signal(text_duration_signal)
         .on_change(move |text| {
-            let hours = text.parse();
+            let hours = text.parse::<f64>();
             is_valid.set_neq(hours.is_ok());
             text_duration.set_neq(text);
             if let Ok(hours) = hours {
-                time_block.duration.set_neq(Duration::hours(hours).into());
+                time_block.duration.set_neq(Duration::seconds((hours * 3600.) as i64).into());
                 debounced_set_duration.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
                     super::set_time_block_duration(&time_block, time_block.duration.get())
                 })))
