@@ -83,7 +83,9 @@ impl<'a> Shadow<'a> {
     }
 
     pub fn color(mut self, color: impl Color<'a> + 'a) -> Self {
-        self.color = Some(color.into_cow_str());
+        if let Some(color) = color.into_option_cow_str() {
+            self.color = Some(color);
+        }
         self
     }
 }

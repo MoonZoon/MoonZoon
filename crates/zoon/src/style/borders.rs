@@ -195,7 +195,9 @@ impl<'a> Border<'a> {
     }
 
     pub fn color(mut self, color: impl Color<'a> + 'a) -> Self {
-        self.color = Arc::new(color.into_cow_str());
+        if let Some(color) = color.into_option_cow_str() {
+            self.color = Arc::new(color);
+        }
         self
     }
 

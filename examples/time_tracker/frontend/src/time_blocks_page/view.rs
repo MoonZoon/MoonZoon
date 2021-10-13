@@ -200,7 +200,7 @@ fn time_block_duration_input(time_block: Arc<super::TimeBlock>) -> impl Element 
     TextInput::new()
         .s(Width::zeros(5))
         .s(Font::new().color(Theme::Font0))
-        .s(Background::new().color_signal(is_valid_signal.map_bool(|| Theme::Transparent, || Theme::BackgroundInvalid)))
+        .s(Background::new().color_signal(is_valid_signal.map_false(|| Theme::BackgroundInvalid)))
         .s(Borders::new().bottom(
             Border::new().color(Theme::Border1)
         ))
@@ -241,7 +241,7 @@ fn status_button(label: &str, represent_status: TimeBlockStatus, time_block: Arc
     });
     Button::new()
         .s(Padding::new().x(13).y(6))
-        .s(Background::new().color_signal(hovered_or_active.signal().map_bool(|| Theme::Background3, || Theme::Transparent)))
+        .s(Background::new().color_signal(hovered_or_active.signal().map_true(|| Theme::Background3)))
         .s(Font::new().color_signal(hovered_or_active.signal().map_bool(|| Theme::Font3, || Theme::Font0)))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .label(label)

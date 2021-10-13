@@ -21,7 +21,9 @@ impl<'a> Font<'a> {
     }
 
     pub fn color(mut self, color: impl Color<'a>) -> Self {
-        self.static_css_props.insert("color", color.into_cow_str());
+        if let Some(color) = color.into_option_cow_str() {
+            self.static_css_props.insert("color", color);
+        }
         self
     }
 
