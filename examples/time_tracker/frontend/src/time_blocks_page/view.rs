@@ -147,12 +147,19 @@ fn time_block(client: Arc<super::Client>, time_block: Arc<super::TimeBlock>) -> 
     Column::new()
         .s(Background::new().color(Theme::Background0))
         .s(RoundedCorners::new().left(10).right(40 / 2))
+        .s(Spacing::new(5))
         .item(timeblock_name_duration_and_delete_button(client, time_block.clone()))
         .item(status_buttons(time_block.clone()))
         .item_signal(time_block.invoice.signal_cloned().map_option(
-            clone!((time_block) move |i: Arc<super::Invoice>| invoice(time_block.clone(), i.clone()).into_raw_element()),
-            move || add_entity_button("Add Invoice", clone!((time_block) move || super::add_invoice(&time_block))).into_raw_element()
+            clone!((time_block) move |i| invoice(time_block.clone(), i.clone()).into_raw_element()),
+            move || add_invoice_button(time_block.clone()).into_raw_element()
         ))
+}
+
+fn add_invoice_button(time_block: Arc<super::TimeBlock>) -> impl Element {
+    El::new()
+        .s(Padding::new().top(8). bottom(10))
+        .child(add_entity_button("Add Invoice", move || super::add_invoice(&time_block)))
 }
 
 fn timeblock_name_duration_and_delete_button(client: Arc<super::Client>, time_block: Arc<super::TimeBlock>) -> impl Element {
@@ -284,7 +291,7 @@ fn invoice_custom_id(invoice: Arc<super::Invoice>) -> impl Element {
                 .s(Background::new().color(Theme::Transparent))
                 .s(Borders::new().bottom(Border::new().color(Theme::Border1)))
                 .s(Padding::all(5))
-                .placeholder(Placeholder::new("Invoice custom ID"))
+                .placeholder(Placeholder::new("Invoice custom ID").s(Font::new().color(Theme::Font0)))
                 .focus(not(invoice.is_old))
                 .label_hidden("invoice custom id")
                 .text_signal(invoice.custom_id.signal_cloned())
@@ -318,7 +325,7 @@ fn invoice_url(invoice: Arc<super::Invoice>) -> impl Element {
                 .s(Background::new().color(Theme::Transparent))
                 .s(Borders::new().bottom(Border::new().color(Theme::Border1)))
                 .s(Padding::all(5))
-                .placeholder(Placeholder::new("Invoice URL"))
+                .placeholder(Placeholder::new("Invoice URL").s(Font::new().color(Theme::Font0)))
                 .label_hidden("invoice url")
                 .text_signal(invoice.url.signal_cloned())
                 .on_change(move |text| {
