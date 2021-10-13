@@ -3,7 +3,9 @@ use std::borrow::Cow;
 
 // ------ Color ------
 
-pub trait Color<'a>: IntoCowStr<'a> {}
+pub trait Color<'a>: IntoOptionCowStr<'a> {}
+
+impl<'a, T: Color<'a>> Color<'a> for Option<T> where Option<T>: IntoOptionCowStr<'a> {}
 
 // ------ HSLuv ------
 

@@ -95,9 +95,8 @@ fn menu_link(route: Route, label: &str, page_id: super::PageId, in_menu_panel: b
     Link::new()
         .s(Height::fill())
         .s(Padding::new().x(12))
-        .s(Background::new().color_signal(hovered_or_selected.map_bool(
+        .s(Background::new().color_signal(hovered_or_selected.map_true(
             move || if in_menu_panel { Theme::Background2Highlighted } else { Theme::Background1Highlighted },
-            || Theme::Transparent,
         )))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .to(route)

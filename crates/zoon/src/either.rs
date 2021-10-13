@@ -53,4 +53,4 @@ impl<'a, L: IntoCowStr<'a>, R: IntoCowStr<'a>> IntoCowStr<'a> for Either<L, R> {
 
 // -- Color for Either --
 
-impl<'a, L: Color<'a>, R: Color<'a>> Color<'a> for Either<L, R> {}
+impl<'a, L: Color<'a> + IntoCowStr<'a>, R: Color<'a> + IntoCowStr<'a>> Color<'a> for Either<L, R> {}
