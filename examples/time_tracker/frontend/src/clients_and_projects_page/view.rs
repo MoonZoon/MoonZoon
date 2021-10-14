@@ -1,5 +1,5 @@
 use zoon::*;
-use crate::{theme::Theme, app};
+use crate::{theme::ThemeColor, app};
 use std::sync::Arc;
 
 pub fn page() -> impl Element {
@@ -31,10 +31,10 @@ fn add_entity_button(title: &str, on_press: impl FnOnce() + Clone + 'static) -> 
             Button::new()
                 .s(Align::center())
                 .s(Background::new().color_signal(hovered_signal.map_bool(
-                    || Theme::Background3Highlighted,
-                    || Theme::Background3,
+                    || ThemeColor::Background3Highlighted,
+                    || ThemeColor::Background3,
                 )))
-                .s(Font::new().color(Theme::Font3).weight(NamedWeight::SemiBold))
+                .s(Font::new().color(ThemeColor::Font3).weight(NamedWeight::SemiBold))
                 .s(Padding::all(5))
                 .s(RoundedCorners::all_max())
                 .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
@@ -62,7 +62,7 @@ fn clients() -> impl Element {
 
 fn client(client: Arc<super::Client>) -> impl Element {
     Column::new()
-        .s(Background::new().color(Theme::Background1))
+        .s(Background::new().color(ThemeColor::Background1))
         .s(RoundedCorners::all(10))
         .s(Padding::all(15))
         .s(Spacing::new(20))
@@ -86,10 +86,10 @@ fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Eleme
         .s(Height::new(40))
         .s(Align::center())
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || Theme::Background3Highlighted,
-            || Theme::Background3,
+            || ThemeColor::Background3Highlighted,
+            || ThemeColor::Background3,
         )))
-        .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
+        .s(Font::new().color(ThemeColor::Font3).weight(NamedWeight::Bold))
         .s(RoundedCorners::all_max())
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(on_press)
@@ -100,10 +100,10 @@ fn client_name(client: Arc<super::Client>) -> impl Element {
     let debounced_rename = Mutable::new(None);
     TextInput::new()
         .s(Width::fill())
-        .s(Font::new().color(Theme::Font1).size(20))
-        .s(Background::new().color(Theme::Transparent))
+        .s(Font::new().color(ThemeColor::Font1).size(20))
+        .s(Background::new().color(ThemeColor::Transparent))
         .s(Borders::new().bottom(
-            Border::new().color(Theme::Border1)
+            Border::new().color(ThemeColor::Border1)
         ))
         .s(Padding::all(8))
         .focus(not(client.is_old))
@@ -128,7 +128,7 @@ fn projects(client: Arc<super::Client>) -> impl Element {
 fn project(client: Arc<super::Client>, project: Arc<super::Project>) -> impl Element {
     let id = project.id;
     Row::new()
-        .s(Background::new().color(Theme::Background0))
+        .s(Background::new().color(ThemeColor::Background0))
         .s(RoundedCorners::new().left(10).right_max())
         .s(Spacing::new(10))
         .s(Padding::new().left(8))
@@ -140,10 +140,10 @@ fn project_name(project: Arc<super::Project>) -> impl Element {
     let debounced_rename = Mutable::new(None);
     TextInput::new()
         .s(Width::fill())
-        .s(Font::new().color(Theme::Font0))
-        .s(Background::new().color(Theme::Transparent))
+        .s(Font::new().color(ThemeColor::Font0))
+        .s(Background::new().color(ThemeColor::Transparent))
         .s(Borders::new().bottom(
-            Border::new().color(Theme::Border1)
+            Border::new().color(ThemeColor::Border1)
         ))
         .s(Padding::all(5))
         .focus(not(project.is_old))

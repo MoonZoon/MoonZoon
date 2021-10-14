@@ -1,5 +1,5 @@
 use zoon::*;
-use crate::theme::Theme;
+use crate::theme::ThemeColor;
 
 pub fn page() -> impl Element {
     Column::new()
@@ -7,9 +7,9 @@ pub fn page() -> impl Element {
         .s(Padding::new().y(10))
         .item(
             Column::new()
-                .s(Background::new().color(Theme::Background1))
+                .s(Background::new().color(ThemeColor::Background1))
                 .s(Align::center())
-                .s(Font::new().color(Theme::Font1))
+                .s(Font::new().color(ThemeColor::Font1))
                 .s(Spacing::new(10))
                 .s(Padding::all(30))
                 .s(Spacing::new(20))
@@ -94,10 +94,10 @@ fn login_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || Theme::Background3Highlighted,
-            || Theme::Background3,
+            || ThemeColor::Background3Highlighted,
+            || ThemeColor::Background3,
         )))
-        .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
+        .s(Font::new().color(ThemeColor::Font3).weight(NamedWeight::Bold))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))

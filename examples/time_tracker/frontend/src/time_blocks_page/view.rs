@@ -1,5 +1,5 @@
 use zoon::*;
-use crate::{theme::Theme, app};
+use crate::{theme::ThemeColor, app};
 use std::sync::Arc;
 use shared::time_blocks::TimeBlockStatus;
 
@@ -35,7 +35,7 @@ fn clients() -> impl Element {
 
 fn client(client: Arc<super::Client>) -> impl Element {
     Column::new()
-        .s(Background::new().color(Theme::Background1))
+        .s(Background::new().color(ThemeColor::Background1))
         .s(RoundedCorners::all(10))
         .s(Padding::all(15))
         .s(Spacing::new(20))
@@ -53,8 +53,8 @@ fn client_name_and_stats(client: Arc<super::Client>) -> impl Element {
 
 fn client_name(client: Arc<super::Client>) -> impl Element {
     El::new()
-        .s(Font::new().color(Theme::Font1).size(20))
-        .s(Background::new().color(Theme::Transparent))
+        .s(Font::new().color(ThemeColor::Font1).size(20))
+        .s(Background::new().color(ThemeColor::Transparent))
         .s(Padding::all(8))
         .child(&client.name)
 }
@@ -69,7 +69,7 @@ fn stats(client: Arc<super::Client>) -> impl Element {
     let to_block = client.stats.to_block.signal().map(format_hours);
 
     Row::new()
-        .s(Font::new().color(Theme::Font1))
+        .s(Font::new().color(ThemeColor::Font1))
         .s(Spacing::new(5))
         .s(Align::new().right())
         .multiline()
@@ -78,7 +78,7 @@ fn stats(client: Arc<super::Client>) -> impl Element {
                 .s(Spacing::new(5))
                 .s(Padding::all(10))
                 .s(Shadows::new(vec![
-                    Shadow::new().y(8).blur(16).color(Theme::Shadow)
+                    Shadow::new().y(8).blur(16).color(ThemeColor::Shadow)
                 ]))
                 .s(RoundedCorners::all(10))
                 .s(Align::new().right())
@@ -109,7 +109,7 @@ fn stats(client: Arc<super::Client>) -> impl Element {
                 .s(Spacing::new(5))
                 .s(Padding::all(10))
                 .s(Shadows::new(vec![
-                    Shadow::new().y(8).blur(16).color(Theme::Shadow)
+                    Shadow::new().y(8).blur(16).color(ThemeColor::Shadow)
                 ]))
                 .s(RoundedCorners::all(10))
                 .s(Align::new().right())
@@ -141,7 +141,7 @@ fn time_blocks(client: Arc<super::Client>) -> impl Element {
 
 fn time_block(client: Arc<super::Client>, time_block: Arc<super::TimeBlock>) -> impl Element {
     Column::new()
-        .s(Background::new().color(Theme::Background0))
+        .s(Background::new().color(ThemeColor::Background0))
         .s(RoundedCorners::new().left(10).right(40 / 2))
         .s(Spacing::new(5))
         .item(timeblock_name_duration_and_delete_button(client, time_block.clone()))
@@ -172,10 +172,10 @@ fn time_block_name(time_block: Arc<super::TimeBlock>) -> impl Element {
     let debounced_rename = Mutable::new(None);
     TextInput::new()
         .s(Width::fill())
-        .s(Font::new().color(Theme::Font0))
-        .s(Background::new().color(Theme::Transparent))
+        .s(Font::new().color(ThemeColor::Font0))
+        .s(Background::new().color(ThemeColor::Transparent))
         .s(Borders::new().bottom(
-            Border::new().color(Theme::Border1)
+            Border::new().color(ThemeColor::Border1)
         ))
         .s(Padding::all(5))
         .focus(not(time_block.is_old))
@@ -191,7 +191,7 @@ fn time_block_name(time_block: Arc<super::TimeBlock>) -> impl Element {
 
 fn time_block_duration(time_block: Arc<super::TimeBlock>) -> impl Element {
     Row::new()
-        .s(Font::new().color(Theme::Font0))
+        .s(Font::new().color(ThemeColor::Font0))
         .item(time_block_duration_input(time_block))
         .item("h")
 }
@@ -202,10 +202,10 @@ fn time_block_duration_input(time_block: Arc<super::TimeBlock>) -> impl Element 
     let (is_valid, is_valid_signal) = Mutable::new_and_signal(true);
     TextInput::new()
         .s(Width::zeros(5))
-        .s(Font::new().color(Theme::Font0))
-        .s(Background::new().color_signal(is_valid_signal.map_false(|| Theme::BackgroundInvalid)))
+        .s(Font::new().color(ThemeColor::Font0))
+        .s(Background::new().color_signal(is_valid_signal.map_false(|| ThemeColor::BackgroundInvalid)))
         .s(Borders::new().bottom(
-            Border::new().color(Theme::Border1)
+            Border::new().color(ThemeColor::Border1)
         ))
         .s(Padding::all(5))
         .label_hidden("time_block duration")
@@ -226,9 +226,9 @@ fn time_block_duration_input(time_block: Arc<super::TimeBlock>) -> impl Element 
 fn status_buttons(time_block: Arc<super::TimeBlock>) -> impl Element {
     Row::new()
         .s(Align::new().center_x())
-        .s(Font::new().color(Theme::Font0))
+        .s(Font::new().color(ThemeColor::Font0))
         .s(RoundedCorners::all_max())
-        .s(Borders::all(Border::new().color(Theme::Border1)))
+        .s(Borders::all(Border::new().color(ThemeColor::Border1)))
         .s(Clip::both())
         .item(status_button("Non-billable", TimeBlockStatus::NonBillable, time_block.clone()))
         .item(status_button("Unpaid", TimeBlockStatus::Unpaid, time_block.clone()))
@@ -244,8 +244,8 @@ fn status_button(label: &str, represent_status: TimeBlockStatus, time_block: Arc
     });
     Button::new()
         .s(Padding::new().x(13).y(6))
-        .s(Background::new().color_signal(hovered_or_active.signal().map_true(|| Theme::Background3)))
-        .s(Font::new().color_signal(hovered_or_active.signal().map_bool(|| Theme::Font3, || Theme::Font0)))
+        .s(Background::new().color_signal(hovered_or_active.signal().map_true(|| ThemeColor::Background3)))
+        .s(Font::new().color_signal(hovered_or_active.signal().map_bool(|| ThemeColor::Font3, || ThemeColor::Font0)))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .label(label)
         .on_press(move || super::set_time_block_status(&time_block, represent_status))
@@ -259,7 +259,7 @@ fn invoice(time_block: Arc<super::TimeBlock>, invoice: Arc<super::Invoice>) -> i
         .child(
             Column::new()
                 .s(Padding::new().left(10))
-                .s(Background::new().color(Theme::Background1))
+                .s(Background::new().color(ThemeColor::Background1))
                 .s(RoundedCorners::all(40 / 2))
                 .item(invoice_custom_id_and_delete_button(time_block.clone(), invoice.clone()))
                 .item(invoice_url_and_link_button(invoice))
@@ -283,11 +283,11 @@ fn invoice_custom_id(invoice: Arc<super::Invoice>) -> impl Element {
         .child(
             TextInput::new()
                 .s(Width::fill())
-                .s(Font::new().color(Theme::Font1))
-                .s(Background::new().color(Theme::Transparent))
-                .s(Borders::new().bottom(Border::new().color(Theme::Border1)))
+                .s(Font::new().color(ThemeColor::Font1))
+                .s(Background::new().color(ThemeColor::Transparent))
+                .s(Borders::new().bottom(Border::new().color(ThemeColor::Border1)))
                 .s(Padding::all(5))
-                .placeholder(Placeholder::new("Invoice custom ID").s(Font::new().color(Theme::Font0)))
+                .placeholder(Placeholder::new("Invoice custom ID").s(Font::new().color(ThemeColor::Font0)))
                 .focus(not(invoice.is_old))
                 .label_hidden("invoice custom id")
                 .text_signal(invoice.custom_id.signal_cloned())
@@ -317,11 +317,11 @@ fn invoice_url(invoice: Arc<super::Invoice>) -> impl Element {
         .child(
             TextInput::new()
                 .s(Width::fill())
-                .s(Font::new().color(Theme::Font1))
-                .s(Background::new().color(Theme::Transparent))
-                .s(Borders::new().bottom(Border::new().color(Theme::Border1)))
+                .s(Font::new().color(ThemeColor::Font1))
+                .s(Background::new().color(ThemeColor::Transparent))
+                .s(Borders::new().bottom(Border::new().color(ThemeColor::Border1)))
                 .s(Padding::all(5))
-                .placeholder(Placeholder::new("Invoice URL").s(Font::new().color(Theme::Font0)))
+                .placeholder(Placeholder::new("Invoice URL").s(Font::new().color(ThemeColor::Font0)))
                 .label_hidden("invoice url")
                 .text_signal(invoice.url.signal_cloned())
                 .on_change(move |text| {
@@ -342,10 +342,10 @@ fn add_entity_button(title: &str, on_press: impl FnOnce() + Clone + 'static) -> 
             Button::new()
                 .s(Align::center())
                 .s(Background::new().color_signal(hovered_signal.map_bool(
-                    || Theme::Background3Highlighted,
-                    || Theme::Background3,
+                    || ThemeColor::Background3Highlighted,
+                    || ThemeColor::Background3,
                 )))
-                .s(Font::new().color(Theme::Font3).weight(NamedWeight::SemiBold))
+                .s(Font::new().color(ThemeColor::Font3).weight(NamedWeight::SemiBold))
                 .s(Padding::all(5))
                 .s(RoundedCorners::all_max())
                 .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
@@ -371,10 +371,10 @@ fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Eleme
         .s(Height::new(40))
         .s(Align::center())
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || Theme::Background3Highlighted,
-            || Theme::Background3,
+            || ThemeColor::Background3Highlighted,
+            || ThemeColor::Background3,
         )))
-        .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
+        .s(Font::new().color(ThemeColor::Font3).weight(NamedWeight::Bold))
         .s(RoundedCorners::all_max())
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(on_press)
@@ -388,10 +388,10 @@ fn link_button(invoice: Arc<super::Invoice>) -> impl Element {
         .s(Height::new(40))
         .s(Align::center())
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || Theme::Background3Highlighted,
-            || Theme::Background3,
+            || ThemeColor::Background3Highlighted,
+            || ThemeColor::Background3,
         )))
-        .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
+        .s(Font::new().color(ThemeColor::Font3).weight(NamedWeight::Bold))
         .s(RoundedCorners::all_max())
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .to_signal(invoice.url.signal_cloned())
