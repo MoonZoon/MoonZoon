@@ -21,9 +21,9 @@ fn header() -> impl Element {
         .s(Height::new(64))
         .s(Background::new().color_signal(theme::background_1()))
         .s(Font::new().color_signal(theme::font_1()))
-        .s(Shadows::new(vec![
-            Shadow::new().y(8).blur(16).color(theme::shadow_2())
-        ]))
+        .s(Shadows::with_signal(theme::shadow_2().map(|color| vec![
+            Shadow::new().y(8).blur(16).color(color)
+        ])))
         .s(LayerIndex::new(1))
         .item(logo())
         .item_signal(super::wide_screen().map_true(|| {
@@ -93,9 +93,9 @@ fn menu_panel() -> impl Element {
         .s(Height::new(250))
         .s(Align::new().right())
         .s(Padding::all(15))
-        .s(Shadows::new(vec![
-            Shadow::new().y(8).blur(16).color_signal(theme::shadow())
-        ]))
+        .s(Shadows::with_signal(theme::shadow().map(|color| vec![
+            Shadow::new().y(8).blur(16).color(color)
+        ])))
         .s(RoundedCorners::new().bottom(10))
         .on_click_outside(
             super::close_menu, 
