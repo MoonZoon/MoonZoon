@@ -3,9 +3,16 @@ use crate::{router::Route, theme::Theme};
 
 pub fn root() -> impl Element {
     Column::new()
-        .s(Height::fill().min_screen())
-        .on_viewport_size_change(super::on_viewport_size_change)
+        .s(Height::screen())
         .item(header())
+        .item(content())
+}
+
+pub fn content() -> impl Element {
+    Column::new()
+        .s(Height::fill())
+        .s(Scrollbars::y_and_clip_x())
+        .on_viewport_size_change(super::on_viewport_size_change)
         .item_signal(super::page_id().signal().map(page))
 }
 
@@ -14,6 +21,10 @@ fn header() -> impl Element {
         .s(Height::new(64))
         .s(Background::new().color(Theme::Background1))
         .s(Font::new().color(Theme::Font1))
+        .s(Shadows::new(vec![
+            Shadow::new().y(8).blur(16).color(Theme::Shadow2)
+        ]))
+        .s(LayerIndex::new(1))
         .item(logo())
         .item_signal(super::wide_screen().map_true(|| {
             Row::new().s(Height::fill()).items(menu_links(false))
