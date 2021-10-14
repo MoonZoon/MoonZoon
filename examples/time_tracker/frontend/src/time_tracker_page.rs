@@ -1,6 +1,6 @@
 use zoon::{*, eprintln};
 use crate::{connection::connection, app};
-use shared::{UpMsg, ClientId, ProjectId, TimeEntryId, InvoiceId, time_tracker};
+use shared::{UpMsg, ClientId, ProjectId, TimeEntryId, time_tracker};
 use std::sync::Arc;
 
 mod view;
