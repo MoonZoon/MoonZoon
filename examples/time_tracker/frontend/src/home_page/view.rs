@@ -1,5 +1,5 @@
 use zoon::*;
-use crate::{theme::Theme, router::Route};
+use crate::{theme::ThemeColor, router::Route};
 
 pub fn page() -> impl Element {
     El::new()
@@ -7,7 +7,7 @@ pub fn page() -> impl Element {
         .child(
             Column::new()
                 .s(Align::center())
-                .s(Font::new().color(Theme::Font0))
+                .s(Font::new().color(ThemeColor::Font0))
                 .s(Spacing::new(10))
                 .item(title())
                 .item(moonzoon_link())
@@ -32,12 +32,12 @@ fn moonzoon_link() -> impl Element {
 fn time_tracker_link() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Link::new()
-        .s(Font::new().weight(NamedWeight::Bold).color(Theme::Font3).size(20).center())
+        .s(Font::new().weight(NamedWeight::Bold).color(ThemeColor::Font3).size(20).center())
         .s(Padding::all(12).top(10))
         .s(RoundedCorners::all(6))
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || Theme::Background3Highlighted,
-            || Theme::Background3,
+            || ThemeColor::Background3Highlighted,
+            || ThemeColor::Background3,
         )))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .to(Route::TimeTracker)

@@ -1,5 +1,5 @@
 use zoon::*;
-use crate::{theme::Theme, app};
+use crate::{theme::ThemeColor, app};
 use std::{sync::Arc, convert::TryFrom};
 
 // @TODO try rewrite some clone()s to references (applies to all pages)
@@ -40,7 +40,7 @@ fn clients() -> impl Element {
 
 fn client(client: Arc<super::Client>) -> impl Element {
     Column::new()
-        .s(Background::new().color(Theme::Background1))
+        .s(Background::new().color(ThemeColor::Background1))
         .s(RoundedCorners::all(10))
         .s(Padding::all(15))
         .s(Spacing::new(20))
@@ -51,8 +51,8 @@ fn client(client: Arc<super::Client>) -> impl Element {
 fn client_name(client: Arc<super::Client>) -> impl Element {
     El::new()
         .s(Width::fill())
-        .s(Font::new().color(Theme::Font1).size(20))
-        .s(Background::new().color(Theme::Transparent))
+        .s(Font::new().color(ThemeColor::Font1).size(20))
+        .s(Background::new().color(ThemeColor::Transparent))
         .s(Padding::all(8))
         .child(&client.name)
 }
@@ -69,7 +69,7 @@ fn projects(client: Arc<super::Client>) -> impl Element {
 
 fn project(project: Arc<super::Project>) -> impl Element {
     Column::new()
-        .s(Background::new().color(Theme::Background0))
+        .s(Background::new().color(ThemeColor::Background0))
         .s(RoundedCorners::all(10))
         .s(Spacing::new(20))
         .s(Padding::all(10))
@@ -86,8 +86,8 @@ fn project_name_and_start_stop_button(project: Arc<super::Project>) -> impl Elem
 fn project_name(project: Arc<super::Project>) -> impl Element {
     El::new()
         .s(Width::fill())
-        .s(Font::new().color(Theme::Font0).size(18))
-        .s(Background::new().color(Theme::Transparent))
+        .s(Font::new().color(ThemeColor::Font0).size(18))
+        .s(Background::new().color(ThemeColor::Transparent))
         .s(Padding::all(8))
         .child(&project.name)
 }
@@ -114,17 +114,17 @@ fn start_stop_button(project: Arc<super::Project>) -> impl Element {
         let hovered = hovered_signal,
         let has_active_entry = has_active_entry.signal() =>
         match (has_active_entry, hovered) {
-            (true, false) => Theme::Background4,
-            (true, true) => Theme::Background4Highlighted,
-            (false, false) => Theme::Background3,
-            (false, true) => Theme::Background3Highlighted,
+            (true, false) => ThemeColor::Background4,
+            (true, true) => ThemeColor::Background4Highlighted,
+            (false, false) => ThemeColor::Background3,
+            (false, true) => ThemeColor::Background3Highlighted,
         }
     };
 
     Button::new()
         .s(Background::new().color_signal(background_color))
         .s(Font::new()
-            .color_signal(has_active_entry.signal().map_bool(|| Theme::Font4, || Theme::Font3))
+            .color_signal(has_active_entry.signal().map_bool(|| ThemeColor::Font4, || ThemeColor::Font3))
         )
         .s(RoundedCorners::all_max())
         .s(Padding::new().x(20).y(10))
@@ -190,7 +190,7 @@ fn time_entry(project: Arc<super::Project>, time_entry: Arc<super::TimeEntry>) -
     );
     Column::new()
         .s(Background::new()
-            .color_signal(is_active.signal().map_bool(|| Theme::Background4, || Theme::Background1))
+            .color_signal(is_active.signal().map_bool(|| ThemeColor::Background4, || ThemeColor::Background1))
         )
         .s(RoundedCorners::all(10).top_right(40 / 2))
         .s(Padding::new().bottom(15))
@@ -222,13 +222,13 @@ fn time_entry_name(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable
             TextInput::new()
                 .s(Width::fill())
                 .s(Font::new()
-                    .color_signal(is_active.signal().map_bool(|| Theme::Font4, || Theme::Font1))
+                    .color_signal(is_active.signal().map_bool(|| ThemeColor::Font4, || ThemeColor::Font1))
                 )
-                .s(Background::new().color(Theme::Transparent))
+                .s(Background::new().color(ThemeColor::Transparent))
                 .s(Borders::new().bottom_signal(
                     is_active.signal().map_bool(
-                        || Border::new().color(Theme::Border4), 
-                        || Border::new().color(Theme::Border1)
+                        || Border::new().color(ThemeColor::Border4), 
+                        || Border::new().color(ThemeColor::Border1)
                     )
                 ))
                 .s(Padding::all(5))
@@ -250,10 +250,10 @@ fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static, is_active: Re
         let hovered = hovered_signal,
         let is_active = is_active.signal() =>
         match (is_active, hovered) {
-            (true, false) => Theme::Background1,
-            (true, true) => Theme::Background1Highlighted,
-            (false, false) => Theme::Background3,
-            (false, true) => Theme::Background3Highlighted,
+            (true, false) => ThemeColor::Background1,
+            (true, true) => ThemeColor::Background1Highlighted,
+            (false, false) => ThemeColor::Background3,
+            (false, true) => ThemeColor::Background3Highlighted,
         }
     };
     Button::new()
@@ -262,7 +262,7 @@ fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static, is_active: Re
         .s(Align::new().top().right())
         .s(Background::new().color_signal(background_color))
         .s(Font::new()
-            .color_signal(is_active.signal().map_bool(|| Theme::Font1, || Theme::Font3))
+            .color_signal(is_active.signal().map_bool(|| ThemeColor::Font1, || ThemeColor::Font3))
             .weight(NamedWeight::Bold)
         )
         .s(RoundedCorners::all_max())
@@ -290,7 +290,7 @@ fn time_entry_times_narrow(items: Vec<RawElement>, is_active: ReadOnlyMutable<bo
     Column::new()
         .s(
             Font::new()
-                .color_signal(is_active.signal().map_bool(|| Theme::Font4, || Theme::Font1))
+                .color_signal(is_active.signal().map_bool(|| ThemeColor::Font4, || ThemeColor::Font1))
         )
         .items(items)
 }
@@ -299,7 +299,7 @@ fn time_entry_times_wide(items: Vec<RawElement>, is_active: ReadOnlyMutable<bool
     Row::new()
         .s(
             Font::new()
-                .color_signal(is_active.signal().map_bool(|| Theme::Font4, || Theme::Font1))
+                .color_signal(is_active.signal().map_bool(|| ThemeColor::Font4, || ThemeColor::Font1))
         )
         .s(Padding::new().x(10))
         .s(Spacing::new(20))
@@ -695,18 +695,18 @@ fn date_time_part_input(
         .s(Width::zeros(max_chars.unwrap_or(4)))
         .s(
             Font::new()
-                .color_signal(is_active.signal().map_bool(|| Theme::Font4, || Theme::Font1))
+                .color_signal(is_active.signal().map_bool(|| ThemeColor::Font4, || ThemeColor::Font1))
                 .center()
                 .weight(if bold { NamedWeight::Bold } else { NamedWeight::Regular } )
         )
-        .s(Background::new().color_signal(valid_signal.map_bool(|| Theme::Transparent, || Theme::BackgroundInvalid)))
+        .s(Background::new().color_signal(valid_signal.map_bool(|| ThemeColor::Transparent, || ThemeColor::BackgroundInvalid)))
         .s(Borders::new().bottom(
-            Border::new().color(Theme::Border1)
+            Border::new().color(ThemeColor::Border1)
         ))
         .s(Borders::new().bottom_signal(
             is_active.signal().map_bool(
-                move || Border::new().color(if read_only_when_active { Theme::Transparent } else { Theme::Border4 }), 
-                || Border::new().color(Theme::Border1),
+                move || Border::new().color(if read_only_when_active { ThemeColor::Transparent } else { ThemeColor::Border4 }), 
+                || Border::new().color(ThemeColor::Border1),
             )
         ))
         .after_remove(move |_| drop(text_updater))

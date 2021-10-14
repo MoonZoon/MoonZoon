@@ -1,5 +1,5 @@
 use zoon::*;
-use crate::{router::Route, theme::Theme};
+use crate::{router::Route, theme::{ThemeColor, Theme, theme, toggle_theme}};
 
 pub fn root() -> impl Element {
     Column::new()
@@ -19,17 +19,18 @@ pub fn content() -> impl Element {
 fn header() -> impl Element {
     Row::with_tag(Tag::Nav)
         .s(Height::new(64))
-        .s(Background::new().color(Theme::Background1))
-        .s(Font::new().color(Theme::Font1))
+        .s(Background::new().color(ThemeColor::Background1))
+        .s(Font::new().color(ThemeColor::Font1))
         .s(Shadows::new(vec![
-            Shadow::new().y(8).blur(16).color(Theme::Shadow2)
+            Shadow::new().y(8).blur(16).color(ThemeColor::Shadow2)
         ]))
         .s(LayerIndex::new(1))
         .item(logo())
         .item_signal(super::wide_screen().map_true(|| {
-            Row::new().s(Height::fill()).s(Align::new().center_x()).items(menu_links(false))
+            Row::new().s(Height::fill()).items(menu_links(false))
         }))
         .item_signal(super::saving().signal().map_true(|| "Saving..."))
+        .item(theme_button())
         .item_signal(super::wide_screen().map_true(auth_controls))
         .item_signal(super::wide_screen().map_false(hamburger))
         .element_below(El::new().child_signal(super::show_menu_panel().map_true(menu_panel)))
@@ -44,14 +45,33 @@ fn logo() -> impl Element {
         .label(Row::new().s(Height::fill()).item("TT"))
 }
 
+fn theme_button() -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Button::new()
+        .s(Font::new().color(ThemeColor::Font5))
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || ThemeColor::Background5Highlighted,
+            || ThemeColor::Background5,
+        )))
+        .s(Align::new().right())
+        .s(Padding::all(5))
+        .s(RoundedCorners::all_max())
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .on_press(toggle_theme)
+        .label_signal(theme().signal().map(|theme| match theme {
+            Theme::Light => "Dark",
+            Theme::Dark => "Light",
+        }))
+}
+
 fn hamburger() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(Height::fill())
         .s(Align::new().right())
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || Theme::Background1Highlighted,
-            || Theme::Transparent,
+            || ThemeColor::Background1Highlighted,
+            || ThemeColor::Transparent,
         )))
         .s(Font::new().size(25))
         .s(Padding::new().bottom(4))
@@ -68,13 +88,13 @@ fn hamburger() -> impl Element {
 
 fn menu_panel() -> impl Element {
     Column::new()
-        .s(Background::new().color(Theme::Background0))
-        .s(Font::new().color(Theme::Font0))
+        .s(Background::new().color(ThemeColor::Background0))
+        .s(Font::new().color(ThemeColor::Font0))
         .s(Height::new(250))
         .s(Align::new().right())
         .s(Padding::all(15))
         .s(Shadows::new(vec![
-            Shadow::new().y(8).blur(16).color(Theme::Shadow)
+            Shadow::new().y(8).blur(16).color(ThemeColor::Shadow)
         ]))
         .s(RoundedCorners::new().bottom(10))
         .on_click_outside(
@@ -107,7 +127,7 @@ fn menu_link(route: Route, label: &str, page_id: super::PageId, in_menu_panel: b
         .s(Height::fill())
         .s(Padding::new().x(12))
         .s(Background::new().color_signal(hovered_or_selected.map_true(
-            move || if in_menu_panel { Theme::Background2Highlighted } else { Theme::Background1Highlighted },
+            move || if in_menu_panel { ThemeColor::Background2Highlighted } else { ThemeColor::Background1Highlighted },
         )))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .to(route)
@@ -126,10 +146,10 @@ fn login_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Link::new()
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || Theme::Background3Highlighted,
-            || Theme::Background3,
+            || ThemeColor::Background3Highlighted,
+            || ThemeColor::Background3,
         )))
-        .s(Font::new().color(Theme::Font3).weight(NamedWeight::Bold))
+        .s(Font::new().color(ThemeColor::Font3).weight(NamedWeight::Bold))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
@@ -141,10 +161,10 @@ fn logout_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || Theme::Background2Highlighted,
-            || Theme::Background2,
+            || ThemeColor::Background2Highlighted,
+            || ThemeColor::Background2,
         )))
-        .s(Font::new().color(Theme::Font2))
+        .s(Font::new().color(ThemeColor::Font2))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))

@@ -10,7 +10,7 @@ mod view;
 
 pub static USER_STORAGE_KEY: &str = "moonzoon-time_tracker-user";
 pub const DEBOUNCE_MS: u32 = 800;
-const MENU_BREAKPOINT: u32 = 725;
+const MENU_BREAKPOINT: u32 = 760;
 
 
 // ------ ------
