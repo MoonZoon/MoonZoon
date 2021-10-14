@@ -1,5 +1,5 @@
 use zoon::*;
-use crate::{router::Route, theme::{ThemeColor, Theme, theme, toggle_theme}};
+use crate::{router::Route, theme::{self, Theme, theme, toggle_theme}};
 
 pub fn root() -> impl Element {
     Column::new()
@@ -19,10 +19,10 @@ pub fn content() -> impl Element {
 fn header() -> impl Element {
     Row::with_tag(Tag::Nav)
         .s(Height::new(64))
-        .s(Background::new().color(ThemeColor::Background1))
-        .s(Font::new().color(ThemeColor::Font1))
+        .s(Background::new().color_signal(theme::background_1()))
+        .s(Font::new().color_signal(theme::font_1()))
         .s(Shadows::new(vec![
-            Shadow::new().y(8).blur(16).color(ThemeColor::Shadow2)
+            Shadow::new().y(8).blur(16).color(theme::shadow_2())
         ]))
         .s(LayerIndex::new(1))
         .item(logo())
@@ -48,11 +48,11 @@ fn logo() -> impl Element {
 fn theme_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .s(Font::new().color(ThemeColor::Font5))
+        .s(Font::new().color_signal(theme::font_5()))
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || ThemeColor::Background5Highlighted,
-            || ThemeColor::Background5,
-        )))
+            || theme::background_5_highlighted().left_either(),
+            || theme::background_5().right_either(),
+        ).flatten()))
         .s(Align::new().right())
         .s(Padding::all(5))
         .s(RoundedCorners::all_max())
@@ -70,9 +70,9 @@ fn hamburger() -> impl Element {
         .s(Height::fill())
         .s(Align::new().right())
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || ThemeColor::Background1Highlighted,
-            || ThemeColor::Transparent,
-        )))
+            || theme::background_1_highlighted().left_either(),
+            || theme::transparent().right_either(),
+        ).flatten()))
         .s(Font::new().size(25))
         .s(Padding::new().bottom(4))
         .s(Width::new(64))
@@ -88,13 +88,13 @@ fn hamburger() -> impl Element {
 
 fn menu_panel() -> impl Element {
     Column::new()
-        .s(Background::new().color(ThemeColor::Background0))
-        .s(Font::new().color(ThemeColor::Font0))
+        .s(Background::new().color_signal(theme::background_0()))
+        .s(Font::new().color_signal(theme::font_0()))
         .s(Height::new(250))
         .s(Align::new().right())
         .s(Padding::all(15))
         .s(Shadows::new(vec![
-            Shadow::new().y(8).blur(16).color(ThemeColor::Shadow)
+            Shadow::new().y(8).blur(16).color_signal(theme::shadow())
         ]))
         .s(RoundedCorners::new().bottom(10))
         .on_click_outside(
@@ -126,9 +126,25 @@ fn menu_link(route: Route, label: &str, page_id: super::PageId, in_menu_panel: b
     Link::new()
         .s(Height::fill())
         .s(Padding::new().x(12))
-        .s(Background::new().color_signal(hovered_or_selected.map_true(
-            move || if in_menu_panel { ThemeColor::Background2Highlighted } else { ThemeColor::Background1Highlighted },
-        )))
+        // .s(Background::new().color_signal(hovered_or_selected.map_true(
+        //     move || { 
+        //         if in_menu_panel { 
+        //             theme::background_2_highlighted().left_either()
+        //         } else { 
+        //             theme::background_1_highlighted().right_either()
+        //         }
+        //     },
+        // ).flatten()))
+        .s(Background::new().color_signal(hovered_or_selected.map_bool(
+            move || { 
+                if in_menu_panel { 
+                    theme::background_2_highlighted().map(Some).left_either()
+                } else { 
+                    theme::background_1_highlighted().map(Some).right_either()
+                }
+            }.left_either(),
+            || always(None).right_either()
+        ).flatten()))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .to(route)
         .label(Row::new().s(Height::fill()).item(label))
@@ -146,10 +162,10 @@ fn login_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Link::new()
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || ThemeColor::Background3Highlighted,
-            || ThemeColor::Background3,
-        )))
-        .s(Font::new().color(ThemeColor::Font3).weight(NamedWeight::Bold))
+            || theme::background_3_highlighted().left_either(),
+            || theme::background_3().right_either(),
+        ).flatten()))
+        .s(Font::new().color_signal(theme::font_3()).weight(NamedWeight::Bold))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
@@ -161,10 +177,10 @@ fn logout_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || ThemeColor::Background2Highlighted,
-            || ThemeColor::Background2,
-        )))
-        .s(Font::new().color(ThemeColor::Font2))
+            || theme::background_2_highlighted().left_either(),
+            || theme::background_2().right_either(),
+        ).flatten()))
+        .s(Font::new().color_signal(theme::font_2()))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
