@@ -6,6 +6,7 @@ use std::{array, borrow::Cow};
 #[derive(Default)]
 pub struct Shadows<'a> {
     static_css_props: StaticCSSProps<'a>,
+    dynamic_css_props: DynamicCSSProps,
 }
 
 impl<'a> Shadows<'a> {
@@ -17,6 +18,19 @@ impl<'a> Shadows<'a> {
             .join(", ");
         let mut this = Self::default();
         this.static_css_props.insert("box-shadow", shadows.into());
+        this
+    }
+
+    pub fn with_signal(shadows: impl Signal<Item = impl IntoIterator<Item = Shadow<'a>>> + Unpin + 'static) -> Self {
+        let shadows = shadows.map(|shadows| {
+            shadows
+                .into_iter()
+                .map(|shadow| shadow.into_cow_str())
+                .collect::<Cow<_>>()
+                .join(", ")
+        });
+        let mut this = Self::default();
+        this.dynamic_css_props.insert("box-shadow".into(), box_css_signal(shadows));
         this
     }
 }
@@ -31,10 +45,16 @@ impl<'a> Style<'a> for Shadows<'a> {
             for (name, value) in self.static_css_props {
                 style_group = style_group.style(name, value);
             }
+            for (name, value) in self.dynamic_css_props {
+                style_group = style_group.style_signal(name, value);
+            }
             return (raw_el, Some(style_group));
         }
         for (name, value) in self.static_css_props {
             raw_el = raw_el.style(name, &value);
+        }
+        for (name, value) in self.dynamic_css_props {
+            raw_el = raw_el.style_signal(name, value);
         }
         (raw_el, None)
     }

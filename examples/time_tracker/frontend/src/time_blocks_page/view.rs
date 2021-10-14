@@ -77,9 +77,9 @@ fn stats(client: Arc<super::Client>) -> impl Element {
             Column::new()
                 .s(Spacing::new(5))
                 .s(Padding::all(10))
-                .s(Shadows::new(vec![
-                    Shadow::new().y(8).blur(16).color(theme::shadow())
-                ]))
+                .s(Shadows::with_signal(theme::shadow().map(|color| vec![
+                    Shadow::new().y(8).blur(16).color(color)
+                ])))
                 .s(RoundedCorners::all(10))
                 .s(Align::new().right())
                 .item(
@@ -108,9 +108,9 @@ fn stats(client: Arc<super::Client>) -> impl Element {
             Column::new()
                 .s(Spacing::new(5))
                 .s(Padding::all(10))
-                .s(Shadows::new(vec![
-                    Shadow::new().y(8).blur(16).color(theme::shadow())
-                ]))
+                .s(Shadows::with_signal(theme::shadow().map(|color| vec![
+                    Shadow::new().y(8).blur(16).color(color)
+                ])))
                 .s(RoundedCorners::all(10))
                 .s(Align::new().right())
                 .item(
@@ -207,8 +207,8 @@ fn time_block_duration_input(time_block: Arc<super::TimeBlock>) -> impl Element 
             // @TODO map_false_signal, map_true_signal, map_bool_signal, map_signal?
             // is_valid_signal.map_false(|| theme::background_invalid())
             is_valid_signal.map_bool(
-                || theme::background_invalid().map(Some).left_either(),
-                || always(None).right_either(),
+                || always(None).left_either(),
+                || theme::background_invalid().map(Some).right_either(),
             ).flatten()
         ))
         .s(Borders::new().bottom_signal(

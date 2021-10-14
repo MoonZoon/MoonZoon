@@ -24,7 +24,7 @@ pub enum Theme {
 pub fn background_0() -> impl Signal<Item = HSLuv> {
     theme().signal().map(|theme| match theme {
         Theme::Light => hsl(0, 0, 100),
-        Theme::Dark => hsl(0, 0, 100),
+        Theme::Dark => hsl(0, 0, 0),
     })
 }
 pub fn font_0() -> impl Signal<Item = HSLuv> {
