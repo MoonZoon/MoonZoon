@@ -30,6 +30,9 @@ pub use font::{Font, FontFamily, FontWeight, NamedWeight};
 mod height;
 pub use height::Height;
 
+mod layer_index;
+pub use layer_index::LayerIndex;
+
 mod padding;
 pub use padding::Padding;
 

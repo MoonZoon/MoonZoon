@@ -21,6 +21,7 @@ pub enum Theme {
     Border4,
     BackgroundInvalid,
     Shadow,
+    Shadow2,
     Transparent,
 }
 
@@ -54,6 +55,8 @@ impl<'a> IntoCowStr<'a> for Theme {
             Theme::BackgroundInvalid => hsla(12.2, 100, 53.2, 40),
             // shadow
             Theme::Shadow => hsla(0, 0, 2.7, 10),
+            // dark shadow
+            Theme::Shadow2 => hsla(0, 0, 2.7, 30),
             // transparent
             Theme::Transparent => hsla(0, 0, 0, 0),
         }
