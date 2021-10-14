@@ -27,7 +27,7 @@ fn header() -> impl Element {
         .s(LayerIndex::new(1))
         .item(logo())
         .item_signal(super::wide_screen().map_true(|| {
-            Row::new().s(Height::fill()).items(menu_links(false))
+            Row::new().s(Height::fill()).s(Align::new().center_x()).items(menu_links(false))
         }))
         .item_signal(super::saving().signal().map_true(|| "Saving..."))
         .item_signal(super::wide_screen().map_true(auth_controls))

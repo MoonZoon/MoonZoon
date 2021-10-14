@@ -10,15 +10,11 @@ pub fn page() -> impl Element {
 }
 
 fn title() -> impl Element {
-    El::new()
-        .s(Width::fill().max(600))
+    El::with_tag(Tag::H1)
         .s(Padding::new().y(35))
-        .child(
-            El::with_tag(Tag::H1)
-                .s(Align::center())
-                .s(Font::new().size(30).weight(NamedWeight::SemiBold))
-                .child("Time Blocks")
-        )
+        .s(Align::center())
+        .s(Font::new().size(30).weight(NamedWeight::SemiBold))
+        .child("Time Blocks")
 }
 
 fn content() -> impl Element {

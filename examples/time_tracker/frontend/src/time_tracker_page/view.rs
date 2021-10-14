@@ -6,7 +6,6 @@ use std::{sync::Arc, convert::TryFrom};
 // @TODO refactor some parts to shared views in app.rs (applies to all pages)
 // @TODO const DELETE_ENTITY_BUTTON_RADIUS in app.rs? + replace 40 / 2 with it
 // @TODO dark/light theme (applies to all pages)
-// @TODO fixed header? (applies to all pages)
 // @TODO CorId SessionId custom Debug impl?
 
 pub fn page() -> impl Element {
@@ -16,15 +15,11 @@ pub fn page() -> impl Element {
 }
 
 fn title() -> impl Element {
-    El::new()
-        .s(Width::fill().max(600))
+    El::with_tag(Tag::H1)
         .s(Padding::new().y(35))
-        .child(
-            El::with_tag(Tag::H1)
-                .s(Align::center())
-                .s(Font::new().size(30).weight(NamedWeight::SemiBold))
-                .child("Time Tracker")
-        )
+        .s(Align::center())
+        .s(Font::new().size(30).weight(NamedWeight::SemiBold))
+        .child("Time Tracker")
 }
 
 fn content() -> impl Element {
