@@ -13,6 +13,7 @@ mod theme;
 #[wasm_bindgen(start)]
 pub fn start() {
     app::load_logged_user();
+    theme::load_theme();
     start_app("app", app::root);
     connection::connection();
     router::router();

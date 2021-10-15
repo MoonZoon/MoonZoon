@@ -25,6 +25,7 @@ async fn frontend() -> Frontend {
     Frontend::new()
         .title("Time Tracker example")
         .append_to_head(r#"<link rel="stylesheet" type="text/css" href="/_api/public/icons/css/eos-icons.css">"#)
+        .append_to_head(r#"<style> body { background: gray; } </style>"#)
 }
 
 // async fn check_access(auth_token: Option<AuthToken>) -> bool {
