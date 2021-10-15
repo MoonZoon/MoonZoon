@@ -11,6 +11,7 @@ pub fn root() -> impl Element {
 pub fn content() -> impl Element {
     Column::new()
         .s(Height::fill())
+        .s(Background::new().color_signal(theme::background_0()))
         .s(Scrollbars::y_and_clip_x())
         .on_viewport_size_change(super::on_viewport_size_change)
         .item_signal(super::page_id().signal().map(page))
@@ -47,21 +48,24 @@ fn logo() -> impl Element {
 
 fn theme_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
-    Button::new()
-        .s(Font::new().color_signal(theme::font_5()))
-        .s(Background::new().color_signal(hovered_signal.map_bool(
-            || theme::background_5_highlighted().left_either(),
-            || theme::background_5().right_either(),
-        ).flatten()))
-        .s(Align::new().right())
-        .s(Padding::all(5))
-        .s(RoundedCorners::all_max())
-        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-        .on_press(toggle_theme)
-        .label_signal(theme().signal().map(|theme| match theme {
-            Theme::Light => "Dark",
-            Theme::Dark => "Light",
-        }))
+    El::new()
+        .s(Padding::new().x(10))
+        .child(
+            Button::new()
+                .s(Font::new().color_signal(theme::font_5()))
+                .s(Background::new().color_signal(hovered_signal.map_bool(
+                    || theme::background_5_highlighted().left_either(),
+                    || theme::background_5().right_either(),
+                ).flatten()))
+                .s(Padding::all(5))
+                .s(RoundedCorners::all_max())
+                .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+                .on_press(toggle_theme)
+                .label_signal(theme().signal().map(|theme| match theme {
+                    Theme::Light => "Dark",
+                    Theme::Dark => "Light",
+                }))
+    )
 }
 
 fn hamburger() -> impl Element {

@@ -12,7 +12,12 @@ fn title() -> impl Element {
     El::with_tag(Tag::H1)
         .s(Padding::new().y(35))
         .s(Align::center())
-        .s(Font::new().size(30).weight(NamedWeight::SemiBold))
+        .s(
+            Font::new()
+                .size(30)
+                .weight(NamedWeight::SemiBold)
+                .color_signal(theme::font_0())
+        )
         .child("Clients & Projects")
 }
 

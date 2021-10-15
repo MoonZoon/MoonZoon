@@ -13,7 +13,12 @@ fn title() -> impl Element {
     El::with_tag(Tag::H1)
         .s(Padding::new().y(35))
         .s(Align::center())
-        .s(Font::new().size(30).weight(NamedWeight::SemiBold))
+        .s(
+            Font::new()
+                .size(30)
+                .weight(NamedWeight::SemiBold)
+                .color_signal(theme::font_0())
+        )
         .child("Time Blocks")
 }
 
@@ -207,8 +212,8 @@ fn time_block_duration_input(time_block: Arc<super::TimeBlock>) -> impl Element 
             // @TODO map_false_signal, map_true_signal, map_bool_signal, map_signal?
             // is_valid_signal.map_false(|| theme::background_invalid())
             is_valid_signal.map_bool(
-                || always(None).left_either(),
-                || theme::background_invalid().map(Some).right_either(),
+                || theme::background_0().left_either(),
+                || theme::background_invalid().right_either(),
             ).flatten()
         ))
         .s(Borders::new().bottom_signal(
