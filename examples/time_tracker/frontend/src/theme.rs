@@ -1,4 +1,6 @@
-use zoon::*;
+use zoon::{eprintln, *};
+
+pub static THEME_STORAGE_KEY: &str = "moonzoon-time_tracker-theme";
 
 #[static_ref]
 pub fn theme() -> &'static Mutable<Theme> {
@@ -10,9 +12,24 @@ pub fn toggle_theme() {
         Theme::Light => Theme::Dark,
         Theme::Dark => Theme::Light,
     });
+    store_theme(theme().get())
 }
 
-#[derive(Clone, Copy)]
+pub fn load_theme() {
+    if let Some(Ok(stored_theme)) = local_storage().get(THEME_STORAGE_KEY) {
+        theme().set_neq(stored_theme);
+    }
+}
+
+fn store_theme(theme: Theme) {
+    if let Err(error) = local_storage().insert(THEME_STORAGE_KEY, &theme) {
+        eprintln!("Failed to store selected theme: {}", error);
+    }
+}
+
+
+#[derive(Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(crate = "serde")]
 pub enum Theme {
     Light,
     Dark,
