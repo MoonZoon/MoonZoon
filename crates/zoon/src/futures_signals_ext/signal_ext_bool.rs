@@ -19,13 +19,13 @@ pub trait SignalExtBool {
     where
         Self: Sized;
 
-    fn map_bool_signal<I, TS, FS, TM, FM>(self, t: TM, f: FM) -> Pin<Box<dyn Signal<Item = I>>>
+    fn map_bool_signal<I, TS, FS, TM, FM>(self, t: TM, f: FM) -> MapBoolSignal<Self, I, TS, FS>
     where
         TS: Signal<Item = I>,
         FS: Signal<Item = I>,
         TM: FnMut() -> TS + 'static, 
         FM: FnMut() -> FS + 'static,
-        Self: Sized + 'static;
+        Self: Sized + Signal<Item = bool>;
 
     // fn map_true_signal<I, S, F>(self, f: F) -> MapTrueSignal<Self, I, S, F>
     // where
@@ -70,15 +70,20 @@ impl<S: Signal<Item = bool>> SignalExtBool for S {
     }
 
     #[inline]
-    fn map_bool_signal<I, TS, FS, TM, FM>(self, mut t: TM, mut f: FM) -> Pin<Box<dyn Signal<Item = I>>>
+    fn map_bool_signal<I, TS, FS, TM, FM>(self, mut t: TM, mut f: FM) -> MapBoolSignal<Self, I, TS, FS>
     where
         TS: Signal<Item = I>,
         FS: Signal<Item = I>,
         TM: FnMut() -> TS + 'static, 
         FM: FnMut() -> FS + 'static,
-        Self: Sized + 'static
+        Self: Sized
     {
-        Box::pin(self.map_bool(move || t().left_either(), move || f().right_either()).flatten())
+        MapBoolSignal {
+            inner: self.map_bool(
+                Box::new(move || t().left_either()) as Box<dyn FnMut() -> Either<TS, FS>>, 
+                Box::new(move || f().right_either()) as Box<dyn FnMut() -> Either<TS, FS>>
+            ).flatten(),
+        }
     }
 
     // #[inline]
@@ -181,31 +186,31 @@ impl<I, S: Signal<Item = bool>, F: FnMut() -> I> Signal for MapFalse<S, F> {
 
 // -- MapBoolSignal --
 
-// #[pin_project(project = MapBoolSignalProj)]
-// // #[derive(Debug)]
-// #[must_use = "Signals do nothing unless polled"]
-// pub struct MapBoolSignal<I> {
-//     #[pin]
-//     inner: Pin<Box<dyn Signal<Item = I> + Unpin>>
-// }
+#[pin_project(project = MapBoolSignalProj)]
+#[must_use = "Signals do nothing unless polled"]
+pub struct MapBoolSignal<S, I, TS, FS>
+where
+    S: Signal<Item = bool>,
+    TS: Signal<Item = I>,
+    FS: Signal<Item = I>,
+{
+    #[pin]
+    inner: signal::Flatten<MapBool<S, Box<dyn FnMut() -> Either<TS, FS>>, Box<dyn FnMut() -> Either<TS, FS>>>>
+}
 
-// impl<I> Signal for MapBoolSignal<I> {
-//     type Item = I;
+impl<S, I, TS, FS> Signal for MapBoolSignal<S, I, TS, FS>
+    where
+    S: Signal<Item = bool>,
+    TS: Signal<Item = I>,
+    FS: Signal<Item = I>,
+{
+    type Item = I;
 
-//     #[inline]
-//     fn poll_change(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
-//         // let MapBoolSignalProj {
-//         //     signal,
-//         //     true_mapper_signal,
-//         //     false_mapper_signal,
-//         // } = self.project();
-
-//         // crate::println!("Poll!");
-//     //    match signal.poll_change(cx) {
-//         self.project().inner.poll_change(cx)
-//         // }
-//     }
-// }
+    #[inline]
+    fn poll_change(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
+        self.project().inner.poll_change(cx)
+    }
+}
 
 // // -- MapTrueSignal --
 
