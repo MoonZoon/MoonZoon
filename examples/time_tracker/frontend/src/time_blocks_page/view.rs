@@ -208,14 +208,10 @@ fn time_block_duration_input(time_block: Arc<super::TimeBlock>) -> impl Element 
     TextInput::new()
         .s(Width::zeros(5))
         .s(Font::new().color_signal(theme::font_0()))
-        .s(Background::new().color_signal(
-            // @TODO map_false_signal, map_true_signal, map_bool_signal, map_signal?
-            // is_valid_signal.map_false(|| theme::background_invalid())
-            is_valid_signal.map_bool(
-                || theme::background_0().left_either(),
-                || theme::background_invalid().right_either(),
-            ).flatten()
-        ))
+        .s(Background::new().color_signal(is_valid_signal.map_bool_signal(
+                || theme::background_0(),
+                || theme::background_invalid(),
+        )))
         .s(Borders::new().bottom_signal(
             theme::border_1().map(|color| Border::new().color(color))
         ))

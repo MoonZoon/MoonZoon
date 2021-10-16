@@ -2,12 +2,6 @@ use zoon::*;
 use crate::{theme, app};
 use std::{sync::Arc, convert::TryFrom};
 
-// @TODO try rewrite some clone()s to references (applies to all pages)
-// @TODO refactor some parts to shared views in app.rs (applies to all pages)
-// @TODO const DELETE_ENTITY_BUTTON_RADIUS in app.rs? + replace 40 / 2 with it
-// @TODO dark/light theme (applies to all pages)
-// @TODO CorId SessionId custom Debug impl?
-
 pub fn page() -> impl Element {
     Column::new()
         .item(title())
