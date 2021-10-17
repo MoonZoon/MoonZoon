@@ -97,10 +97,10 @@ fn error() -> impl Element {
 fn login_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .s(Background::new().color_signal(hovered_signal.map_bool(
-            || theme::background_3_highlighted().left_either(),
-            || theme::background_3().right_either(),
-        ).flatten()))
+        .s(Background::new().color_signal(hovered_signal.map_bool_signal(
+            || theme::background_3_highlighted(),
+            || theme::background_3(),
+        )))
         .s(Font::new().color_signal(theme::font_3()).weight(NamedWeight::Bold))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))

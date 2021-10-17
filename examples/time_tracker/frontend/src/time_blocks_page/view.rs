@@ -253,16 +253,12 @@ fn status_button(label: &str, represent_status: TimeBlockStatus, time_block: Arc
     Button::new()
         .s(Padding::new().x(13).y(6))
         .s(Background::new().color_signal(
-            // hovered_or_active.signal().map_true(|| theme::background_3()).flatten()
-            hovered_or_active.signal().map_bool(
-                || theme::background_3().map(Some).left_either(),
-                || always(None).right_either(),
-            ).flatten()
+            hovered_or_active.signal().map_true_signal(|| theme::background_3())
         ))
-        .s(Font::new().color_signal(hovered_or_active.signal().map_bool(
-                || theme::font_3().left_either(), 
-                || theme::font_0().right_either(),
-        ).flatten()))
+        .s(Font::new().color_signal(hovered_or_active.signal().map_bool_signal(
+                || theme::font_3(), 
+                || theme::font_0(),
+        )))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .label(label)
         .on_press(move || super::set_time_block_status(&time_block, represent_status))
@@ -358,10 +354,10 @@ fn add_entity_button(title: &str, on_press: impl FnOnce() + Clone + 'static) -> 
         .child(
             Button::new()
                 .s(Align::center())
-                .s(Background::new().color_signal(hovered_signal.map_bool(
-                    || theme::background_3_highlighted().left_either(),
-                    || theme::background_3().right_either(),
-                ).flatten()))
+                .s(Background::new().color_signal(hovered_signal.map_bool_signal(
+                    || theme::background_3_highlighted(),
+                    || theme::background_3(),
+                )))
                 .s(Font::new().color_signal(theme::font_3()).weight(NamedWeight::SemiBold))
                 .s(Padding::all(5))
                 .s(RoundedCorners::all_max())
@@ -387,10 +383,10 @@ fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Eleme
         .s(Width::new(40))
         .s(Height::new(40))
         .s(Align::center())
-        .s(Background::new().color_signal(hovered_signal.map_bool(
-            || theme::background_3_highlighted().left_either(),
-            || theme::background_3().right_either(),
-        ).flatten()))
+        .s(Background::new().color_signal(hovered_signal.map_bool_signal(
+            || theme::background_3_highlighted(),
+            || theme::background_3(),
+        )))
         .s(Font::new().color_signal(theme::font_3()).weight(NamedWeight::Bold))
         .s(RoundedCorners::all_max())
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
@@ -404,10 +400,10 @@ fn link_button(invoice: Arc<super::Invoice>) -> impl Element {
         .s(Width::new(40))
         .s(Height::new(40))
         .s(Align::center())
-        .s(Background::new().color_signal(hovered_signal.map_bool(
-            || theme::background_3_highlighted().left_either(),
-            || theme::background_3().right_either(),
-        ).flatten()))
+        .s(Background::new().color_signal(hovered_signal.map_bool_signal(
+            || theme::background_3_highlighted(),
+            || theme::background_3(),
+        )))
         .s(Font::new().color_signal(theme::font_3()).weight(NamedWeight::Bold))
         .s(RoundedCorners::all_max())
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
