@@ -9,6 +9,8 @@ use syn::{
     Arm, Attribute, ExprIf, FieldValue, Ident, ItemEnum, ItemFn, ItemImpl, LitStr, Token, Variant,
 };
 
+// @TODO rewrite panics/expects/unwraps to `syn::Error`s (see hsluv_macro)?
+
 // ```
 // #[route]
 // pub enum Route {

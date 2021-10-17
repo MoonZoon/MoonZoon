@@ -9,6 +9,8 @@ use std::{
 };
 use web_sys::{CssStyleDeclaration, CssStyleRule, CssStyleSheet, HtmlStyleElement};
 
+pub mod named_color;
+
 mod align;
 pub use align::Align;
 
@@ -17,9 +19,6 @@ pub use background::Background;
 
 mod borders;
 pub use borders::{Border, Borders};
-
-mod hsl_uv;
-pub use hsl_uv::{hsl, hsla, HSLuv};
 
 mod clip;
 pub use clip::Clip;

@@ -45,7 +45,7 @@ pub use futures_signals_ext::{SignalExtBool, SignalExtExt, SignalExtOption};
 pub use dom_builder_ext::DomBuilderExt;
 pub use futures_util::{self, future, FutureExt, Stream, StreamExt};
 pub use gensym::gensym;
-pub use hsluv;
+pub use hsl_uv::{hsl, hsla, HSLuv};
 pub use index_generator::IndexGenerator;
 pub use js_sys::{self, Reflect};
 pub use monotonic_ids::MonotonicIds;
@@ -83,6 +83,9 @@ pub use console_error_panic_hook;
 
 #[cfg(feature = "static_ref")]
 pub use static_ref_macro::static_ref;
+
+#[cfg(feature = "hsl_uv_macro")]
+pub use hsl_uv_macro::hsl;
 
 #[cfg(feature = "clone")]
 pub use enclose::enc as clone;
