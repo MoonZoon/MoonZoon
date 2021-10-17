@@ -52,10 +52,6 @@ impl<'a, L: IntoCowStr<'a>, R: IntoCowStr<'a>> IntoCowStr<'a> for Either<L, R> {
     }
 }
 
-// -- Color for Either --
-
-impl<'a, L: Color<'a> + IntoCowStr<'a>, R: Color<'a> + IntoCowStr<'a>> Color<'a> for Either<L, R> {}
-
 // -- Signal for Either
 
 impl<I, L: Signal<Item = I>, R: Signal<Item = I>> Signal for Either<L, R> {

@@ -10,7 +10,7 @@ pub struct Shadows<'a> {
 }
 
 impl<'a> Shadows<'a> {
-    pub fn new(shadows: impl IntoIterator<Item = Shadow<'a>>) -> Self {
+    pub fn new(shadows: impl IntoIterator<Item = Shadow>) -> Self {
         let shadows = shadows
             .into_iter()
             .map(|shadow| shadow.into_cow_str())
@@ -21,7 +21,7 @@ impl<'a> Shadows<'a> {
         this
     }
 
-    pub fn with_signal(shadows: impl Signal<Item = impl IntoIterator<Item = Shadow<'a>>> + Unpin + 'static) -> Self {
+    pub fn with_signal(shadows: impl Signal<Item = impl IntoIterator<Item = Shadow>> + Unpin + 'static) -> Self {
         let shadows = shadows.map(|shadows| {
             shadows
                 .into_iter()
@@ -63,16 +63,16 @@ impl<'a> Style<'a> for Shadows<'a> {
 // ------ Shadow ------
 
 #[derive(Default)]
-pub struct Shadow<'a> {
+pub struct Shadow {
     inner: bool,
     x: i32,
     y: i32,
     spread: i32,
     blur: u32,
-    color: Option<Cow<'a, str>>,
+    color: Option<HSLuv>,
 }
 
-impl<'a> Shadow<'a> {
+impl Shadow {
     pub fn new() -> Self {
         Self::default()
     }
@@ -102,15 +102,15 @@ impl<'a> Shadow<'a> {
         self
     }
 
-    pub fn color(mut self, color: impl Color<'a> + 'a) -> Self {
-        if let Some(color) = color.into_option_cow_str() {
+    pub fn color(mut self, color: impl Into<Option<HSLuv>>) -> Self {
+        if let Some(color) = color.into() {
             self.color = Some(color);
         }
         self
     }
 }
 
-impl<'a> IntoCowStr<'a> for Shadow<'a> {
+impl<'a> IntoCowStr<'a> for Shadow {
     fn into_cow_str(self) -> Cow<'a, str> {
         let mut shadow_settings = Vec::<Cow<_>>::new();
         if self.inner {
@@ -123,7 +123,7 @@ impl<'a> IntoCowStr<'a> for Shadow<'a> {
             px(self.spread),
         ]));
         if let Some(color) = self.color {
-            shadow_settings.push(color);
+            shadow_settings.push(color.into_cow_str());
         }
         shadow_settings.join(" ").into()
     }
