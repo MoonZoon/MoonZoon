@@ -1,5 +1,5 @@
 use crate::app;
-use zoon::*;
+use zoon::{*, named_color::*};
 
 // ------ ------
 //    States
@@ -43,7 +43,7 @@ fn log_in_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(Background::new()
-            .color_signal(hovered_signal.map_bool(|| NamedColor::Green5, || NamedColor::Green2)))
+            .color_signal(hovered_signal.map_bool(|| GREEN_7, || GREEN_8)))
         .s(Padding::all(7))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .label("Log in")

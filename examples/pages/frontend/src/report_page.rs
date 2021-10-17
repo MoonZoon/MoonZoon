@@ -1,6 +1,6 @@
 use crate::{app, router::Route};
 use std::borrow::Cow;
-use zoon::*;
+use zoon::{*, named_color::*};
 
 const DAILY: &str = "daily";
 const WEEKLY: &str = "weekly";
@@ -93,7 +93,7 @@ fn greeting() -> impl Element {
 
 fn switch_frequency_link() -> impl Element {
     Link::new()
-        .s(Font::new().underline().color(NamedColor::Blue7))
+        .s(Font::new().underline().color(BLUE_4))
         .label_signal(
             frequency_for_link().map(|frequency| format!("Switch to {}", frequency.as_str())),
         )
