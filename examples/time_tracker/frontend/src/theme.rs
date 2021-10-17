@@ -35,8 +35,6 @@ pub enum Theme {
     Dark,
 }
 
-// @TODO macro? impl Color?
-
 // 0) white / black
 pub fn background_0() -> impl Signal<Item = HSLuv> {
     theme().signal().map(|theme| match theme {

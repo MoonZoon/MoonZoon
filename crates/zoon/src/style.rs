@@ -18,8 +18,8 @@ pub use background::Background;
 mod borders;
 pub use borders::{Border, Borders};
 
-mod color;
-pub use color::{hsl, hsla, Color, HSLuv, NamedColor};
+mod hsl_uv;
+pub use hsl_uv::{hsl, hsla, HSLuv};
 
 mod clip;
 pub use clip::Clip;
