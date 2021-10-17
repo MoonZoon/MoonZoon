@@ -7,6 +7,12 @@ pub fn theme() -> &'static Mutable<Theme> {
     Mutable::new(Theme::Light)
 }
 
+pub fn load_theme() {
+    if let Some(Ok(stored_theme)) = local_storage().get(THEME_STORAGE_KEY) {
+        theme().set_neq(stored_theme);
+    }
+}
+
 pub fn toggle_theme() {
     theme().update(|theme| match theme {
         Theme::Light => Theme::Dark,
@@ -15,18 +21,13 @@ pub fn toggle_theme() {
     store_theme(theme().get())
 }
 
-pub fn load_theme() {
-    if let Some(Ok(stored_theme)) = local_storage().get(THEME_STORAGE_KEY) {
-        theme().set_neq(stored_theme);
-    }
-}
-
 fn store_theme(theme: Theme) {
     if let Err(error) = local_storage().insert(THEME_STORAGE_KEY, &theme) {
         eprintln!("Failed to store selected theme: {}", error);
     }
 }
 
+// ------ Theme ------
 
 #[derive(Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(crate = "serde")]
@@ -35,147 +36,59 @@ pub enum Theme {
     Dark,
 }
 
+// ------ colors ------
+
+macro_rules! color {
+    ($color:ident => $light_color:expr, $dark_color:expr) => {
+        pub fn $color() -> impl Signal<Item = HSLuv> {
+            theme().signal().map(|theme| match theme {
+                Theme::Light => $light_color,
+                Theme::Dark => $dark_color,
+            })
+        }
+    }
+}
+
 // 0) white / black
-pub fn background_0() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsl(0, 0, 100),
-        Theme::Dark => hsl(0, 0, 0),
-    })
-}
-pub fn font_0() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsla(0, 0, 0, 70),
-        Theme::Dark => hsla(0, 0, 100, 70),
-    })
-}
+color!(background_0 => hsl(0, 0, 100), hsl(0, 0, 0));
+color!(font_0 => hsla(0, 0, 0, 70), hsla(0, 0, 100, 70));
+
 // 1) blue / white 
-pub fn background_1() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsl(256.1, 87.8, 49.6),
-        Theme::Dark => hsl(256.1, 87.8, 20),
-    })
-}
-pub fn background_1_highlighted() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsl(257, 92.3, 44.9),
-        Theme::Dark => hsl(257, 92.3, 25),
-    })
-}
-pub fn font_1() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsla(0, 0, 100, 95),
-        Theme::Dark => hsla(0, 0, 90, 95),
-    })
-}
-pub fn border_1() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsl(168.3, 100, 75.3),
-        Theme::Dark => hsl(168.3, 100, 24.7),
-    })
-}
+color!(background_1 => hsl(256.1, 87.8, 49.6), hsl(256.1, 87.8, 20));
+color!(background_1_highlighted => hsl(257, 92.3, 44.9), hsl(257, 92.3, 25));
+color!(font_1 => hsla(0, 0, 100, 95), hsla(0, 0, 90, 95));
+color!(border_1 => hsl(168.3, 100, 75.3), hsl(168.3, 100, 24.7));
+
 // 2) light gray / black 
-pub fn background_2() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsl(0, 0, 96.5),
-        Theme::Dark => hsl(0, 0, 3.5),
-    })
-}
-pub fn background_2_highlighted() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsl(0, 0, 94.5),
-        Theme::Dark => hsl(0, 0, 6),
-    })
-}
-pub fn font_2() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsla(0, 0, 0, 70),
-        Theme::Dark => hsla(0, 0, 100, 70),
-    })
-}
+color!(background_2 => hsl(0, 0, 96.5), hsl(0, 0, 3.5));
+color!(background_2_highlighted => hsl(0, 0, 94.5), hsl(0, 0, 6));
+color!(font_2 => hsla(0, 0, 0, 70), hsla(0, 0, 100, 70));
+
 // 3) green / white 
-pub fn background_3() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsl(168.3, 100, 75.3),
-        Theme::Dark => hsl(168.3, 100, 40),
-    })
-}
-pub fn background_3_highlighted() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsl(168.5, 100, 71.1),
-        Theme::Dark => hsl(168.5, 100, 45),
-    })
-}
-pub fn font_3() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsla(0, 0, 100, 95),
-        Theme::Dark => hsla(0, 0, 90, 95),
-    })
-}
+color!(background_3 => hsl(168.3, 100, 75.3), hsl(168.3, 100, 40));
+color!(background_3_highlighted => hsl(168.5, 100, 71.1), hsl(168.5, 100, 45));
+color!(font_3 => hsla(0, 0, 100, 95), hsla(0, 0, 90, 95));
+
 // 4) yellow / black / blue 
-pub fn background_4() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsl(69.9, 100, 88.8),
-        Theme::Dark => hsl(69.9, 100, 30),
-    })
-}
-pub fn background_4_highlighted() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsl(69, 100, 87),
-        Theme::Dark => hsl(69, 100, 13),
-    })
-}
-pub fn font_4() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsla(0, 0, 0, 70),
-        Theme::Dark => hsla(0, 0, 100, 70),
-    })
-}
-pub fn border_4() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsl(256.1, 87.8, 49.6),
-        Theme::Dark => hsl(256.1, 87.8, 20),
-    })
-}
+color!(background_4 => hsl(69.9, 100, 88.8), hsl(69.9, 100, 30));
+color!(background_4_highlighted => hsl(69, 100, 87), hsl(69, 100, 13));
+color!(font_4 => hsla(0, 0, 0, 70), hsla(0, 0, 100, 70));
+color!(border_4 => hsl(256.1, 87.8, 49.6), hsl(256.1, 87.8, 20));
+
 // 5) black / white
-pub fn background_5() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsla(0, 0, 20, 70),
-        Theme::Dark => hsla(0, 0, 80, 70),
-    })
-}
-pub fn background_5_highlighted() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsl(0, 0, 0),
-        Theme::Dark => hsl(0, 0, 100),
-    })
-}
-pub fn font_5() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsla(0, 0, 95, 95),
-        Theme::Dark => hsla(0, 0, 5, 95),
-    })
-}
+color!(background_5 => hsla(0, 0, 20, 70), hsla(0, 0, 80, 70));
+color!(background_5_highlighted => hsl(0, 0, 0), hsl(0, 0, 100));
+color!(font_5 => hsla(0, 0, 95, 95), hsla(0, 0, 5, 95));
+
 // background of an invalid input
-pub fn background_invalid() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsla(12.2, 100, 53.2, 40),
-        Theme::Dark => hsla(12.2, 100, 46.8, 40),
-    })
-}
+color!(background_invalid => hsla(12.2, 100, 53.2, 40), hsla(12.2, 100, 46.8, 40));
+
 // shadow
-pub fn shadow() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsla(0, 0, 2.7, 10),
-        Theme::Dark => hsla(0, 0, 0, 30),
-    })
-}
+color!(shadow => hsla(0, 0, 2.7, 10), hsla(0, 0, 0, 30));
+
 // dark shadow
-pub fn shadow_2() -> impl Signal<Item = HSLuv> {
-    theme().signal().map(|theme| match theme {
-        Theme::Light => hsla(0, 0, 2.7, 30),
-        Theme::Dark => hsla(0, 0, 0, 50),
-    })
-}
+color!(shadow_2 => hsla(0, 0, 2.7, 30), hsla(0, 0, 0, 50));
+
 // transparent
 pub fn transparent() -> impl Signal<Item = HSLuv> {
     always(hsla(0, 0, 0, 0))
