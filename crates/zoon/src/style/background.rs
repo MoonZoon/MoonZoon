@@ -9,7 +9,8 @@ pub struct Background<'a> {
 impl<'a> Background<'a> {
     pub fn color(mut self, color: impl Into<Option<HSLuv>>) -> Self {
         if let Some(color) = color.into() {
-            self.static_css_props.insert("background-color", color.into_cow_str());
+            self.static_css_props
+                .insert("background-color", color.into_cow_str());
         }
         self
     }
@@ -18,9 +19,7 @@ impl<'a> Background<'a> {
         mut self,
         color: impl Signal<Item = impl Into<Option<HSLuv>>> + Unpin + 'static,
     ) -> Self {
-        let color = color.map(|color| {
-            color.into().map(|color| color.into_cow_str())
-        });
+        let color = color.map(|color| color.into().map(|color| color.into_cow_str()));
         self.dynamic_css_props
             .insert("background-color".into(), box_css_signal(color));
         self

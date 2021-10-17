@@ -461,7 +461,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use actix_web::{rt as actix_rt, test, web::Data, body};
+    use actix_web::{body, rt as actix_rt, test, web::Data};
     use const_format::concatcp;
 
     const MANIFEST_DIR: &str = env!("CARGO_MANIFEST_DIR");
@@ -552,10 +552,7 @@ mod tests {
                 .unwrap(),
             ContentEncoding::Br.as_str()
         );
-        assert_eq!(
-            body::to_bytes(resp.into_body()).await.unwrap(),
-            css_content,
-        );
+        assert_eq!(body::to_bytes(resp.into_body()).await.unwrap(), css_content,);
     }
 
     #[actix_rt::test]
@@ -602,9 +599,6 @@ mod tests {
                 .unwrap(),
             ContentEncoding::Gzip.as_str()
         );
-        assert_eq!(
-            body::to_bytes(resp.into_body()).await.unwrap(),
-            css_content,
-        );
+        assert_eq!(body::to_bytes(resp.into_body()).await.unwrap(), css_content,);
     }
 }

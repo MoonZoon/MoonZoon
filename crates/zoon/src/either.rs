@@ -1,5 +1,9 @@
 use crate::*;
-use std::{borrow::Cow, pin::Pin, task::{Context, Poll}};
+use std::{
+    borrow::Cow,
+    pin::Pin,
+    task::{Context, Poll},
+};
 
 // ------ IntoEither ------
 
@@ -19,7 +23,7 @@ impl<T> IntoEither for T {}
 
 #[pin_project(project = EitherProj)]
 pub enum Either<L, R> {
-    Left(#[pin ]L),
+    Left(#[pin] L),
     Right(#[pin] R),
 }
 
@@ -60,12 +64,8 @@ impl<I, L: Signal<Item = I>, R: Signal<Item = I>> Signal for Either<L, R> {
     #[inline]
     fn poll_change(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
         match self.project() {
-            EitherProj::Left(left) => {
-                left.poll_change(cx)
-            }
-            EitherProj::Right(right) => {
-                right.poll_change(cx)
-            }
+            EitherProj::Left(left) => left.poll_change(cx),
+            EitherProj::Right(right) => right.poll_change(cx),
         }
     }
 }

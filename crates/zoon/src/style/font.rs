@@ -31,9 +31,7 @@ impl<'a> Font<'a> {
         mut self,
         color: impl Signal<Item = impl Into<Option<HSLuv>>> + Unpin + 'static,
     ) -> Self {
-        let color = color.map(|color| {
-            color.into().map(|color| color.into_cow_str())
-        });
+        let color = color.map(|color| color.into().map(|color| color.into_cow_str()));
         self.dynamic_css_props
             .insert("color".into(), box_css_signal(color));
         self
