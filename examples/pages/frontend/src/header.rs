@@ -1,5 +1,5 @@
 use crate::{app, router::Route};
-use zoon::*;
+use zoon::{*, named_color::*};
 
 // ------ ------
 //     View
@@ -25,8 +25,8 @@ fn back_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(Background::new()
-            .color_signal(hovered_signal.map_bool(|| NamedColor::Green5, || NamedColor::Green2)))
-        .s(Padding::new().x(7))
+            .color_signal(hovered_signal.map_bool(|| GREEN_7, || GREEN_8)))
+        .s(Padding::new().x(7).y(4))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .label("< Back")
         .on_press(routing::back)
@@ -34,7 +34,7 @@ fn back_button() -> impl Element {
 
 fn link(label: &str, route: Route) -> impl Element {
     Link::new()
-        .s(Font::new().underline().color(NamedColor::Blue7))
+        .s(Font::new().underline().color(BLUE_4))
         .label(label)
         .to(route)
 }
@@ -43,8 +43,8 @@ fn log_out_button(name: &str) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(Background::new()
-            .color_signal(hovered_signal.map_bool(|| NamedColor::Red5, || NamedColor::Red2)))
-        .s(Padding::new().x(7))
+            .color_signal(hovered_signal.map_bool(|| RED_7, || RED_8)))
+        .s(Padding::new().x(7).y(4))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .label(format!("Log out {}", name))
         .on_press(app::log_out)
