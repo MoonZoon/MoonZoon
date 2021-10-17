@@ -1,9 +1,11 @@
 use crate::*;
-use dominator::traits::{MultiStr, OptionStr, AsStr};
+use dominator::{traits::{MultiStr, OptionStr}};
 use wasm_bindgen::intern;
 use web_sys::CssStyleDeclaration;
+use std::mem::ManuallyDrop;
 
 // @TODO remove once .style is callable on SvgElement in Dominator
+// https://github.com/Pauan/rust-dominator/issues/47
 
 pub trait DomBuilderExt {
     fn style_signal<B, C, D, E>(self, name: B, value: E) -> Self
@@ -19,23 +21,51 @@ pub trait DomBuilderExt {
     fn style_important<B, C>(self, name: B, value: C) -> Self
         where B: MultiStr,
               C: MultiStr;
-
-    fn style_unchecked<B, C>(self, name: B, value: C) -> Self
-        where B: AsStr,
-              C: AsStr;
 }
 
 // https://github.com/Pauan/rust-dominator/blob/e9e9e61ed8bff32d2a3aed3c85e27d9256b76bf5/src/dom.rs
-impl<A> DomBuilderExt for DomBuilder<A> where A: AsRef<web_sys::SvgElement> + Clone {
+impl<A> DomBuilderExt for DomBuilder<A> where A: AsRef<web_sys::SvgElement> + Clone + Into<web_sys::Node> + 'static {
     #[inline]
-    fn style_signal<B, C, D, E>(mut self, name: B, value: E) -> Self
+    fn style_signal<B, C, D, E>(self, name: B, value: E) -> Self
         where B: MultiStr + 'static,
               C: MultiStr,
               D: OptionStr<Output = C>,
               E: Signal<Item = D> + 'static {
 
-        set_style_signal(self.__internal_element().as_ref().style(), &mut self.callbacks, name, value, false);
-        self
+        let style = self.__internal_element().as_ref().style();
+        let mut is_set = false;
+    
+        let set_style_task = Task::start_droppable(
+    value.for_each_sync(move |value| {
+                let value = value.into_option();
+
+                if value.is_some() {
+                    is_set = true;
+        
+                } else if is_set {
+                    is_set = false;
+        
+                } else {
+                    return;
+                }
+
+                match value {
+                    Some(value) => {
+                        // TODO should this intern or not ?
+                        set_style(&style, &name, value, false);
+                    },
+                    None => {
+                        name.each(|name| {
+                            // TODO handle browser prefixes ?
+                            bindings::remove_style(&style, intern(name));
+                        });
+                    },
+                }
+            })
+        );
+
+        let set_style_task = ManuallyDrop::new(set_style_task);
+        self.after_removed(move |_| drop(ManuallyDrop::into_inner(set_style_task)))
     }
 
     #[inline]
@@ -51,18 +81,6 @@ impl<A> DomBuilderExt for DomBuilder<A> where A: AsRef<web_sys::SvgElement> + Cl
         where B: MultiStr,
               C: MultiStr {
         set_style(&self.__internal_element().as_ref().style(), &name, value, true);
-        self
-    }
-
-    #[inline]
-    fn style_unchecked<B, C>(self, name: B, value: C) -> Self
-        where B: AsStr,
-              C: AsStr {
-        name.with_str(|name| {
-            value.with_str(|value| {
-                bindings::set_style(&self.__internal_element().as_ref().style(), intern(name), value, false);
-            });
-        });
         self
     }
 }
