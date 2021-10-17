@@ -1,4 +1,4 @@
-use zoon::*;
+use zoon::{*, named_color::*};
 
 // -- stopwatch --
 
@@ -82,17 +82,17 @@ fn timeout_panel() -> impl Element {
 }
 
 fn start_button(on_press: fn()) -> impl Element {
-    button("Start", NamedColor::Green2, NamedColor::Green5, on_press)
+    button("Start", GREEN_7, GREEN_8, on_press)
 }
 
 fn stop_button(on_press: fn()) -> impl Element {
-    button("Stop", NamedColor::Red2, NamedColor::Red5, on_press)
+    button("Stop", RED_7, RED_8, on_press)
 }
 
 fn button(
     label: &str,
-    bg_color: NamedColor,
-    bg_color_hovered: NamedColor,
+    bg_color_hovered: HSLuv,
+    bg_color: HSLuv,
     on_press: fn(),
 ) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);

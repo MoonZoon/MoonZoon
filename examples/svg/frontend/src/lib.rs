@@ -60,23 +60,27 @@ fn root() -> impl Element {
     let width = "100";
     let height = "300";
 
-    RawSvgEl::new("svg")
-        .style("cursor", "pointer")
-        .attr("width", width)
-        .attr("height", height)
-        .event_handler(move |_: events::Click| next_light_state())
+    El::new()
+        .s(Align::center())
         .child(
-            RawSvgEl::new("rect")
-                .attr("width", width)
-                .attr("height", height)
-                .attr("fill", "black"),
-        )
-        .child(
-            RawSvgEl::new("circle")
-                .attr("cx", "50")
-                .attr_signal("cy", cy_attr_signal())
-                .attr("r", "40")
-                .attr_signal("fill", color_attr_signal()),
+            RawSvgEl::new("svg")
+            .style("cursor", "pointer")
+            .attr("width", width)
+            .attr("height", height)
+            .event_handler(move |_: events::Click| next_light_state())
+            .child(
+                RawSvgEl::new("rect")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .attr("fill", "black"),
+            )
+            .child(
+                RawSvgEl::new("circle")
+                    .attr("cx", "50")
+                    .attr_signal("cy", cy_attr_signal())
+                    .attr("r", "40")
+                    .attr_signal("fill", color_attr_signal()),
+            )
         )
 }
 
