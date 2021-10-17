@@ -27,16 +27,16 @@ pub trait SignalExtBool {
         FM: FnMut() -> FS + 'static,
         Self: Sized + Signal<Item = bool>;
 
-    fn map_true_signal<I, TS, TM>(self, t: TM) -> MapTrueSignal<Self, I, TS>
+    fn map_true_signal<I, MS, F>(self, f: F) -> MapTrueSignal<Self, I, MS>
     where
-        TS: Signal<Item = I>,
-        TM: FnMut() -> TS + 'static,
+        MS: Signal<Item = I>,
+        F: FnMut() -> MS + 'static,
         Self: Sized + Signal<Item = bool>;
 
-    fn map_false_signal<I, FS, FM>(self, f: FM) -> MapFalseSignal<Self, I, FS>
+    fn map_false_signal<I, MS, F>(self, f: F) -> MapFalseSignal<Self, I, MS>
     where
-        FS: Signal<Item = I>,
-        FM: FnMut() -> FS + 'static,
+        MS: Signal<Item = I>,
+        F: FnMut() -> MS + 'static,
         Self: Sized + Signal<Item = bool>;
 }
 
@@ -87,25 +87,25 @@ impl<S: Signal<Item = bool>> SignalExtBool for S {
     }
 
     #[inline]
-    fn map_true_signal<I, TS, TM>(self, mut t: TM) -> MapTrueSignal<Self, I, TS>
+    fn map_true_signal<I, MS, F>(self, mut f: F) -> MapTrueSignal<Self, I, MS>
     where
-        TS: Signal<Item = I>,
-        TM: FnMut() -> TS + 'static,
+        MS: Signal<Item = I>,
+        F: FnMut() -> MS + 'static,
         Self: Sized + Signal<Item = bool>
     {
         MapTrueSignal { 
             inner: self.map_bool_signal(
-                move || t().map(Some as fn(_) -> _),
+                move || f().map(Some as fn(_) -> _),
                 || always(None),
             ),
         }
     }
 
     #[inline]
-    fn map_false_signal<I, FS, FM>(self, mut f: FM) -> MapFalseSignal<Self, I, FS>
+    fn map_false_signal<I, MS, F>(self, mut f: F) -> MapFalseSignal<Self, I, MS>
     where
-        FS: Signal<Item = I>,
-        FM: FnMut() -> FS + 'static,
+        MS: Signal<Item = I>,
+        F: FnMut() -> MS + 'static,
         Self: Sized + Signal<Item = bool>
     {
         MapFalseSignal { 
@@ -226,24 +226,24 @@ impl<S, I, TS, FS> Signal for MapBoolSignal<S, I, TS, FS>
 
 #[pin_project(project = MapTrueSignalProj)]
 #[must_use = "Signals do nothing unless polled"]
-pub struct MapTrueSignal<S, I, TS>
+pub struct MapTrueSignal<S, I, MS>
     where
     S: Signal<Item = bool>,
-    TS: Signal<Item = I>,
+    MS: Signal<Item = I>,
 {
     #[pin]
     inner: MapBoolSignal<
         S, 
         Option<I>, 
-        signal::Map<TS, fn(I) -> Option<I>>, 
+        signal::Map<MS, fn(I) -> Option<I>>, 
         signal::Always<Option<I>>,
     >,
 }
 
-impl<S, I, TS> Signal for MapTrueSignal<S, I, TS> 
+impl<S, I, MS> Signal for MapTrueSignal<S, I, MS> 
     where
     S: Signal<Item = bool>,
-    TS: Signal<Item = I>,
+    MS: Signal<Item = I>,
 {
     type Item = Option<I>;
 
@@ -255,24 +255,24 @@ impl<S, I, TS> Signal for MapTrueSignal<S, I, TS>
 
 #[pin_project(project = MapFalseSignalProj)]
 #[must_use = "Signals do nothing unless polled"]
-pub struct MapFalseSignal<S, I, FS>
+pub struct MapFalseSignal<S, I, MS>
     where
     S: Signal<Item = bool>,
-    FS: Signal<Item = I>,
+    MS: Signal<Item = I>,
 {
     #[pin]
     inner: MapBoolSignal<
         S, 
         Option<I>, 
         signal::Always<Option<I>>,
-        signal::Map<FS, fn(I) -> Option<I>>, 
+        signal::Map<MS, fn(I) -> Option<I>>, 
     >,
 }
 
-impl<S, I, FS> Signal for MapFalseSignal<S, I, FS> 
+impl<S, I, MS> Signal for MapFalseSignal<S, I, MS> 
     where
     S: Signal<Item = bool>,
-    FS: Signal<Item = I>,
+    MS: Signal<Item = I>,
 {
     type Item = Option<I>;
 
