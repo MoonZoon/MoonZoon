@@ -130,25 +130,25 @@ fn menu_link(route: Route, label: &str, page_id: super::PageId, in_menu_panel: b
     Link::new()
         .s(Height::fill())
         .s(Padding::new().x(12))
-        // .s(Background::new().color_signal(hovered_or_selected.map_true(
-        //     move || { 
-        //         if in_menu_panel { 
-        //             theme::background_2_highlighted().left_either()
-        //         } else { 
-        //             theme::background_1_highlighted().right_either()
-        //         }
-        //     },
-        // ).flatten()))
-        .s(Background::new().color_signal(hovered_or_selected.map_bool(
+        .s(Background::new().color_signal(hovered_or_selected.map_true_signal(
             move || { 
                 if in_menu_panel { 
-                    theme::background_2_highlighted().map(Some).left_either()
+                    theme::background_2_highlighted().left_either()
                 } else { 
-                    theme::background_1_highlighted().map(Some).right_either()
+                    theme::background_1_highlighted().right_either()
                 }
-            }.left_either(),
-            || always(None).right_either()
-        ).flatten()))
+            },
+        )))
+        // .s(Background::new().color_signal(hovered_or_selected.map_bool(
+        //     move || { 
+        //         if in_menu_panel { 
+        //             theme::background_2_highlighted().map(Some).left_either()
+        //         } else { 
+        //             theme::background_1_highlighted().map(Some).right_either()
+        //         }
+        //     }.left_either(),
+        //     || always(None).right_either()
+        // ).flatten()))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .to(route)
         .label(Row::new().s(Height::fill()).item(label))
