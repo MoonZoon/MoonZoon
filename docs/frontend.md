@@ -413,19 +413,19 @@ fn element_with_raw_styles() -> impl Element {
 ## Color
 
 ```rust
-.s(Font::new().size(24).color(hsl(0, 0, 32.7)))
+.s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
 
 .s(Font::new().size(30).center().color_signal(
-    hovered_signal.map_bool(|| hsl(10.5, 37.7, 48.8), || hsl(12.2, 34.7, 68.2)),
+    hovered_signal.map_bool(|| hsluv!(10.5, 37.7, 48.8), || hsluv!(12.2, 34.7, 68.2)),
 ))
 
-.s(Background::new().color(hsla(0, 0, 0, 0.3)))
+.s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
 
 .s(Shadows::new(vec![
-    Shadow::new().inner().y(-2).blur(1).color(hsla(0, 0, 0, 3))
+    Shadow::new().inner().y(-2).blur(1).color(hsluv!(0, 0, 0, 3))
 ]))
 
-.s(Borders::new().top(Border::new().color(hsl(0, 0, 91.3))))
+.s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
 ```
 
 The most commonly used color code systems are:
@@ -454,13 +454,13 @@ Are we sure they have the same lightness `50%`? I don't think so. The human eye 
 <img src="images/yellow_hsluv.svg" height="30px" alt="Yellow HSLuv">
 <img src="images/blue_hsluv.svg" height="30px" alt="Blue HSLuv">
 
-That's why Zoon uses only HSLuv, represented in the code as `hsl(h, s, l)` or `hsla(h, s, l, a)`, where:
+That's why Zoon uses only HSLuv, represented in the code as `hsluv!(h, s, l)` or `hsluv!(h, s, l, a)`, where:
 - `h` ;  _hue_  ; 0 - 360
 - `s` ;  _saturation_  ; 0 - 100
 - `l` ;  _lightness_  ; 0 - 100
 - `a` ;  _alpha channel / opacity_ ; 0 (transparent) - 100 (opaque)
 
-All `hsl(a)` arguments have type `impl Into<f64>` and are clamped to their valid intervals.
+The macro `hsluv!` creates an `HSLuv` instance and all color components are checked during compilation.
 
 <details>
 <summary>Other examples why color theory and design in general are difficult</summary>
