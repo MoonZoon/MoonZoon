@@ -8,7 +8,8 @@ pub struct LayerIndex<'a> {
 impl<'a> LayerIndex<'a> {
     pub fn new(index: u32) -> Self {
         let mut this = Self::default();
-        this.static_css_props.insert("z-index", index.into_cow_str());
+        this.static_css_props
+            .insert("z-index", index.into_cow_str());
         this
     }
 }

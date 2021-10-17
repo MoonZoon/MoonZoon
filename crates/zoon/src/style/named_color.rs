@@ -3,7 +3,7 @@ use crate::*;
 macro_rules! color {
     ($color:ident => $h:literal, $s:literal, $l:literal) => {
         pub static $color: HSLuv = hsluv!($h, $s, $l);
-    }
+    };
 }
 
 // The palette based on https://tailwindcss.com/docs/customizing-colors

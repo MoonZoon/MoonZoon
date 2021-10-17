@@ -12,11 +12,11 @@ pub mod console;
 mod cow_str;
 mod css_property_name;
 mod dom;
+mod dom_builder_ext;
 mod either;
 mod element;
 pub mod events_extra;
 mod futures_signals_ext;
-mod dom_builder_ext;
 mod index_generator;
 mod monotonic_ids;
 mod mutable;
@@ -32,17 +32,20 @@ pub use class_id::ClassId;
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use css_property_name::VENDOR_PREFIXES;
 pub use dom::{document, history, window};
+pub use dom_builder_ext::DomBuilderExt;
 pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};
 pub use either::{Either, IntoEither};
 pub use element::*;
 pub use futures_signals::{
     self, map_mut, map_ref,
-    signal::{self, MutableSignal, ReadOnlyMutable, Signal, SignalExt, SignalStream, Broadcaster, channel, Sender, Receiver, always},
+    signal::{
+        self, always, channel, Broadcaster, MutableSignal, ReadOnlyMutable, Receiver, Sender,
+        Signal, SignalExt, SignalStream,
+    },
     signal_map::{MutableBTreeMap, MutableSignalMap, SignalMap, SignalMapExt},
     signal_vec::{MutableSignalVec, SignalVec, SignalVecExt},
 };
 pub use futures_signals_ext::{SignalExtBool, SignalExtExt, SignalExtOption};
-pub use dom_builder_ext::DomBuilderExt;
 pub use futures_util::{self, future, FutureExt, Stream, StreamExt};
 pub use gensym::gensym;
 pub use hsluv::{hsluv, HSLuv};

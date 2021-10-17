@@ -21,7 +21,9 @@ impl<'a> Shadows<'a> {
         this
     }
 
-    pub fn with_signal(shadows: impl Signal<Item = impl IntoIterator<Item = Shadow>> + Unpin + 'static) -> Self {
+    pub fn with_signal(
+        shadows: impl Signal<Item = impl IntoIterator<Item = Shadow>> + Unpin + 'static,
+    ) -> Self {
         let shadows = shadows.map(|shadows| {
             shadows
                 .into_iter()
@@ -30,7 +32,8 @@ impl<'a> Shadows<'a> {
                 .join(", ")
         });
         let mut this = Self::default();
-        this.dynamic_css_props.insert("box-shadow".into(), box_css_signal(shadows));
+        this.dynamic_css_props
+            .insert("box-shadow".into(), box_css_signal(shadows));
         this
     }
 }

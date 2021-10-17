@@ -16,9 +16,14 @@ pub struct HSLuv {
 impl HSLuv {
     pub fn hsl(h: impl Into<f64>, s: impl Into<f64>, l: impl Into<f64>) -> Self {
         Self::hsla(h, s, l, 100)
-    } 
+    }
 
-    pub fn hsla(h: impl Into<f64>, s: impl Into<f64>, l: impl Into<f64>, a: impl Into<f64>) -> Self {
+    pub fn hsla(
+        h: impl Into<f64>,
+        s: impl Into<f64>,
+        l: impl Into<f64>,
+        a: impl Into<f64>,
+    ) -> Self {
         Self {
             h: h.into().clamp(0., 360.),
             s: s.into().clamp(0., 100.),
@@ -28,7 +33,7 @@ impl HSLuv {
     }
 
     pub const fn new_unchecked(h: f64, s: f64, l: f64, a: f64) -> Self {
-        HSLuv { h, s, l, a}
+        HSLuv { h, s, l, a }
     }
 
     pub fn to_rgb(&self) -> (f64, f64, f64) {

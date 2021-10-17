@@ -77,7 +77,10 @@ impl<EmptyFlag, MultilineFlag> HasClassId<RawHtmlEl> for Row<EmptyFlag, Multilin
 // ------ ------
 
 impl<'a, EmptyFlag, MultilineFlag> Row<EmptyFlag, MultilineFlag> {
-    pub fn item(mut self, item: impl IntoOptionElement<'a> + 'a) -> Row<EmptyFlagNotSet, MultilineFlag> {
+    pub fn item(
+        mut self,
+        item: impl IntoOptionElement<'a> + 'a,
+    ) -> Row<EmptyFlagNotSet, MultilineFlag> {
         self.raw_el = self.raw_el.child(item);
         self.into_type()
     }
@@ -106,7 +109,10 @@ impl<'a, EmptyFlag, MultilineFlag> Row<EmptyFlag, MultilineFlag> {
         self.into_type()
     }
 
-    pub fn multiline(mut self) -> Row<EmptyFlag, MultilineFlagSet> where MultilineFlag: FlagNotSet {
+    pub fn multiline(mut self) -> Row<EmptyFlag, MultilineFlagSet>
+    where
+        MultilineFlag: FlagNotSet,
+    {
         self.raw_el = self.raw_el.style("flex-wrap", "wrap");
         self.raw_el = self.raw_el.style("flex-basis", "0");
         self.raw_el = self.raw_el.style("flex-grow", "1");
