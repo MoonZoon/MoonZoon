@@ -103,7 +103,7 @@ fn change_color_button() -> impl Element {
         .s(Padding::all(10))
         .s(RoundedCorners::new().bottom(30))
         .s(Background::new()
-            .color_signal(hovered_signal.map_bool(|| GREEN_5, || GREEN_2)))
+            .color_signal(hovered_signal.map_bool(|| GREEN_8, || GREEN_9)))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .label("Change color")
         .on_press(toggle_color)
