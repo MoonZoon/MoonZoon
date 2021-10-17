@@ -35,10 +35,10 @@ fn time_tracker_link() -> impl Element {
         .s(Font::new().weight(NamedWeight::Bold).color_signal(theme::font_3()).size(20).center())
         .s(Padding::all(12).top(10))
         .s(RoundedCorners::all(6))
-        .s(Background::new().color_signal(hovered_signal.map_bool(
-            || theme::background_3_highlighted().left_either(),
-            || theme::background_3().right_either(),
-        ).flatten()))
+        .s(Background::new().color_signal(hovered_signal.map_bool_signal(
+            || theme::background_3_highlighted(),
+            || theme::background_3(),
+        )))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .to(Route::TimeTracker)
         .label("Go to Time Tracker")

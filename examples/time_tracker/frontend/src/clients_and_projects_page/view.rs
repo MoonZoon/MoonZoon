@@ -35,10 +35,10 @@ fn add_entity_button(title: &str, on_press: impl FnOnce() + Clone + 'static) -> 
         .child(
             Button::new()
                 .s(Align::center())
-                .s(Background::new().color_signal(hovered_signal.map_bool(
-                    || theme::background_3_highlighted().left_either(),
-                    || theme::background_3().right_either(),
-                ).flatten()))
+                .s(Background::new().color_signal(hovered_signal.map_bool_signal(
+                    || theme::background_3_highlighted(),
+                    || theme::background_3(),
+                )))
                 .s(Font::new().color_signal(theme::font_3()).weight(NamedWeight::SemiBold))
                 .s(Padding::all(5))
                 .s(RoundedCorners::all_max())
@@ -90,10 +90,10 @@ fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Eleme
         .s(Width::new(40))
         .s(Height::new(40))
         .s(Align::center())
-        .s(Background::new().color_signal(hovered_signal.map_bool(
-            || theme::background_3_highlighted().left_either(),
-            || theme::background_3().right_either(),
-        ).flatten()))
+        .s(Background::new().color_signal(hovered_signal.map_bool_signal(
+            || theme::background_3_highlighted(),
+            || theme::background_3(),
+        )))
         .s(Font::new().color_signal(theme::font_3()).weight(NamedWeight::Bold))
         .s(RoundedCorners::all_max())
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))

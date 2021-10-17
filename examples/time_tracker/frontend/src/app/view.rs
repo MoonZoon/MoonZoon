@@ -53,10 +53,10 @@ fn theme_button() -> impl Element {
         .child(
             Button::new()
                 .s(Font::new().color_signal(theme::font_5()))
-                .s(Background::new().color_signal(hovered_signal.map_bool(
-                    || theme::background_5_highlighted().left_either(),
-                    || theme::background_5().right_either(),
-                ).flatten()))
+                .s(Background::new().color_signal(hovered_signal.map_bool_signal(
+                    || theme::background_5_highlighted(),
+                    || theme::background_5(),
+                )))
                 .s(Padding::all(5))
                 .s(RoundedCorners::all_max())
                 .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
@@ -73,10 +73,10 @@ fn hamburger() -> impl Element {
     Button::new()
         .s(Height::fill())
         .s(Align::new().right())
-        .s(Background::new().color_signal(hovered_signal.map_bool(
-            || theme::background_1_highlighted().left_either(),
-            || theme::transparent().right_either(),
-        ).flatten()))
+        .s(Background::new().color_signal(hovered_signal.map_bool_signal(
+            || theme::background_1_highlighted(),
+            || theme::transparent(),
+        )))
         .s(Font::new().size(25))
         .s(Padding::new().bottom(4))
         .s(Width::new(64))
@@ -139,16 +139,6 @@ fn menu_link(route: Route, label: &str, page_id: super::PageId, in_menu_panel: b
                 }
             },
         )))
-        // .s(Background::new().color_signal(hovered_or_selected.map_bool(
-        //     move || { 
-        //         if in_menu_panel { 
-        //             theme::background_2_highlighted().map(Some).left_either()
-        //         } else { 
-        //             theme::background_1_highlighted().map(Some).right_either()
-        //         }
-        //     }.left_either(),
-        //     || always(None).right_either()
-        // ).flatten()))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .to(route)
         .label(Row::new().s(Height::fill()).item(label))
@@ -165,10 +155,10 @@ fn auth_controls() -> impl Element {
 fn login_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Link::new()
-        .s(Background::new().color_signal(hovered_signal.map_bool(
-            || theme::background_3_highlighted().left_either(),
-            || theme::background_3().right_either(),
-        ).flatten()))
+        .s(Background::new().color_signal(hovered_signal.map_bool_signal(
+            || theme::background_3_highlighted(),
+            || theme::background_3(),
+        )))
         .s(Font::new().color_signal(theme::font_3()).weight(NamedWeight::Bold))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))
@@ -180,10 +170,10 @@ fn login_button() -> impl Element {
 fn logout_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .s(Background::new().color_signal(hovered_signal.map_bool(
-            || theme::background_2_highlighted().left_either(),
-            || theme::background_2().right_either(),
-        ).flatten()))
+        .s(Background::new().color_signal(hovered_signal.map_bool_signal(
+            || theme::background_2_highlighted(),
+            || theme::background_2(),
+        )))
         .s(Font::new().color_signal(theme::font_2()))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))
