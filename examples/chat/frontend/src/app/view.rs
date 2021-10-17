@@ -1,4 +1,4 @@
-use zoon::*;
+use zoon::{*, named_color::*};
 use crate::markup;
 
 // ------ ------
@@ -45,7 +45,7 @@ fn received_message(message: super::Message) -> impl Element {
             El::new()
                 .s(Font::new()
                     .weight(NamedWeight::Bold)
-                    .color(NamedColor::Gray10)
+                    .color(GRAY_0)
                     .size(17))
                 .child(message.username),
         )
@@ -53,7 +53,7 @@ fn received_message(message: super::Message) -> impl Element {
             Paragraph::new()
                 .s(
                     Font::new()
-                        .color(NamedColor::Gray8)
+                        .color(GRAY_2)
                         .size(17)
                         .line_height(27)
                 )
@@ -106,8 +106,8 @@ fn send_button() -> impl Element {
         .s(Padding::all(10))
         .s(RoundedCorners::new().right(5))
         .s(Background::new()
-            .color_signal(hovered_signal.map_bool(|| NamedColor::Green5, || NamedColor::Green2)))
-        .s(Font::new().color(NamedColor::Gray10).size(17))
+            .color_signal(hovered_signal.map_bool(|| GREEN_7, || GREEN_8)))
+        .s(Font::new().color(GRAY_0).size(17))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .on_press(super::send_message)
         .label("Send")
@@ -125,7 +125,7 @@ fn username_panel() -> impl Element {
 
 fn username_input_label(id: &str) -> impl Element {
     Label::new()
-        .s(Font::new().color(NamedColor::Gray10))
+        .s(Font::new().color(GRAY_0))
         .for_input(id)
         .label("Username:")
 }
