@@ -1,6 +1,7 @@
 use zoon::{
     web_sys::{CanvasRenderingContext2d, HtmlCanvasElement},
     *,
+    named_color::*,
 };
 
 // ------ ------
@@ -100,9 +101,9 @@ fn change_color_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(Padding::all(10))
-        .s(RoundedCorners::new().bottom(30)) // because of iOS
+        .s(RoundedCorners::new().bottom(30))
         .s(Background::new()
-            .color_signal(hovered_signal.map_bool(|| NamedColor::Green5, || NamedColor::Green2)))
+            .color_signal(hovered_signal.map_bool(|| GREEN_5, || GREEN_2)))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .label("Change color")
         .on_press(toggle_color)

@@ -1,7 +1,9 @@
 [workspace]
 members = [
+    "crates/hsl_uv_macro",
     "crates/route_macro",
     "crates/static_ref_macro",
+    "crates/hsl_uv",
     "crates/moon",
     "crates/moonlight",
     "crates/mzoon",

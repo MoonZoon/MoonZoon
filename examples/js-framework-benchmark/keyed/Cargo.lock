@@ -697,6 +697,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "hsl_uv"
+version = "0.1.0"
+dependencies = [
+ "rust-hsluv",
+]
+
+[[package]]
 name = "http"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1998,11 +2005,11 @@ dependencies = [
  "futures-signals",
  "futures-util",
  "gensym",
+ "hsl_uv",
  "js-sys",
  "once_cell",
  "paste",
  "pin-project",
- "rust-hsluv",
  "send_wrapper",
  "static_ref_macro",
  "wasm-bindgen",
