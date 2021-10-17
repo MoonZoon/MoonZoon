@@ -20,8 +20,7 @@ gensym = { version = "0.1.0", default-features = false }
 route_macro = { path = "../route_macro", default-features = false, optional = true }
 static_ref_macro = { path = "../static_ref_macro", default-features = false, optional = true }
 moonlight = { path = "../moonlight", features = ["frontend"], optional = true }
-hsl_uv_macro = { path = "../hsl_uv_macro", default-features = false, optional = true }
-hsl_uv = { path = "../hsl_uv", default-features = false }
+hsluv = { path = "../hsluv", features = ["hsluv_macro"], default-features = false }
 
 console_error_panic_hook = { version = "0.1.6", default-features = false, optional = true }
 wee_alloc = { version = "0.4.5", default-features = false, optional = true }
@@ -70,7 +69,7 @@ features = [
 default-features = false
 
 [features]
-default = ["static_ref", "panic_hook", "small_alloc", "clone", "apply", "connection", "routing", "web_storage", "chrono", "hsl_uv_macro"]
+default = ["static_ref", "panic_hook", "small_alloc", "clone", "apply", "connection", "routing", "web_storage", "chrono"]
 routing = ["route_macro"]
 connection = ["moonlight"]
 static_ref = ["static_ref_macro"]

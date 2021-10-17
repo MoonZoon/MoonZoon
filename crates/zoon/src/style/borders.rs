@@ -185,7 +185,7 @@ impl Border {
         Self {
             width: 1,
             style: BorderStyle::Solid,
-            color: Arc::new(hsl(0, 0, 0)),
+            color: Arc::new(hsluv!(0, 0, 0)),
         }
     }
 

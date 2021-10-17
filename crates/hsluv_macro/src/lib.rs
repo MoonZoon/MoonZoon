@@ -3,9 +3,9 @@ use syn::{parse_macro_input, punctuated::Punctuated, Token, Lit, spanned::Spanne
 use quote::quote_spanned;
 
 // ```
-// hsl!(89.5, 100, 90.)
-// hsl!(265, 85.9, 32, 80.2)
-// hsl!(265, 85.9, 32, 20)
+// hsluv!(89.5, 100, 90.)
+// hsluv!(265, 85.9, 32, 80.2)
+// hsluv!(265, 85.9, 32, 20)
 // ```
 //
 // generates:
@@ -17,7 +17,7 @@ use quote::quote_spanned;
 // ```
 
 #[proc_macro]
-pub fn hsl(input: TokenStream) -> TokenStream {
+pub fn hsluv(input: TokenStream) -> TokenStream {
     let args_parser = Punctuated::<Lit, Token![,]>::parse_terminated;
     let args = parse_macro_input!(input with args_parser);
 

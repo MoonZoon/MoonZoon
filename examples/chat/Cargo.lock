@@ -775,14 +775,15 @@ dependencies = [
 ]
 
 [[package]]
-name = "hsl_uv"
+name = "hsluv"
 version = "0.1.0"
 dependencies = [
+ "hsluv_macro",
  "rust-hsluv",
 ]
 
 [[package]]
-name = "hsl_uv_macro"
+name = "hsluv_macro"
 version = "0.1.0"
 dependencies = [
  "quote 1.0.9",
@@ -2249,8 +2250,7 @@ dependencies = [
  "futures-signals",
  "futures-util",
  "gensym",
- "hsl_uv",
- "hsl_uv_macro",
+ "hsluv",
  "js-sys",
  "moonlight",
  "once_cell",

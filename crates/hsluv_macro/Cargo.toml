@@ -1,5 +1,5 @@
 [package]
-name = "hsl_uv_macro"
+name = "hsluv_macro"
 version = "0.1.0"
 authors = ["Martin Kavík <martin@kavik.cz>"]
 edition = "2018"
