@@ -61,6 +61,7 @@ fn root() -> impl Element {
     let height = "300";
 
     RawSvgEl::new("svg")
+        .style("cursor", "pointer")
         .attr("width", width)
         .attr("height", height)
         .event_handler(move |_: events::Click| next_light_state())

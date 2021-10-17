@@ -16,6 +16,7 @@ mod either;
 mod element;
 pub mod events_extra;
 mod futures_signals_ext;
+mod dom_builder_ext;
 mod index_generator;
 mod monotonic_ids;
 mod mutable;
@@ -41,6 +42,7 @@ pub use futures_signals::{
     signal_vec::{MutableSignalVec, SignalVec, SignalVecExt},
 };
 pub use futures_signals_ext::{SignalExtBool, SignalExtExt, SignalExtOption};
+pub use dom_builder_ext::DomBuilderExt;
 pub use futures_util::{self, future, FutureExt, Stream, StreamExt};
 pub use gensym::gensym;
 pub use hsluv;
