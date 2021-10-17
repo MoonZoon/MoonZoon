@@ -10,7 +10,7 @@ pub fn root() -> impl Element {
         .s(Height::fill().min_screen())
         .s(Font::new()
             .size(14)
-            .color(hsl(0, 0, 5.1))
+            .color(hsluv!(0, 0, 5.1))
             .weight(NamedWeight::Light)
             .family(vec![
                 FontFamily::new("Helvetica Neue"),
@@ -18,7 +18,7 @@ pub fn root() -> impl Element {
                 FontFamily::new("Arial"),
                 FontFamily::SansSerif,
             ]))
-        .s(Background::new().color(hsl(0, 0, 96.5)))
+        .s(Background::new().color(hsluv!(0, 0, 96.5)))
         .item(content())
 }
 
@@ -43,7 +43,7 @@ fn header() -> impl Element {
         .s(Height::new(130))
         .s(Font::new()
             .size(100)
-            .color(hsla(10.5, 62.8, 44.5, 15))
+            .color(hsluv!(10.5, 62.8, 44.5, 15))
             .weight(NamedWeight::Hairline))
         .child(El::with_tag(Tag::H1).child("todos"))
 }
@@ -51,11 +51,11 @@ fn header() -> impl Element {
 fn panel() -> impl Element {
     Column::with_tag(Tag::Section)
         .s(Shadows::new(vec![
-            Shadow::new().y(2).blur(4).color(hsla(0, 0, 0, 20)),
-            Shadow::new().y(25).blur(50).color(hsla(0, 0, 0, 10)),
+            Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
+            Shadow::new().y(25).blur(50).color(hsluv!(0, 0, 0, 10)),
         ]))
         .s(Width::fill())
-        .s(Background::new().color(hsl(0, 0, 100)))
+        .s(Background::new().color(hsluv!(0, 0, 100)))
         .item(new_todo_title())
         .item_signal(super::todos_exist().map_true(todos))
         .item_signal(super::todos_exist().map_true(panel_footer))
@@ -64,19 +64,19 @@ fn panel() -> impl Element {
 fn new_todo_title() -> impl Element {
     TextInput::new()
         .s(Padding::new().y(19).left(60).right(16))
-        .s(Font::new().size(24).color(hsl(0, 0, 32.7)))
-        .s(Background::new().color(hsla(0, 0, 0, 0.3)))
+        .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
+        .s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
         .s(Shadows::new(vec![Shadow::new()
             .inner()
             .y(-2)
             .blur(1)
-            .color(hsla(0, 0, 0, 3))]))
+            .color(hsluv!(0, 0, 0, 3))]))
         .focus(true)
         .on_change(super::set_new_todo_title)
         .label_hidden("What needs to be done?")
         .placeholder(
             Placeholder::new("What needs to be done?")
-                .s(Font::new().italic().color(hsl(0, 0, 91.3))),
+                .s(Font::new().italic().color(hsluv!(0, 0, 91.3))),
         )
         .on_key_down(|event| event.if_key(Key::Enter, super::add_todo))
         .text_signal(super::new_todo_title().signal_cloned())
@@ -84,8 +84,8 @@ fn new_todo_title() -> impl Element {
 
 fn todos() -> impl Element {
     Column::new()
-        .s(Borders::new().top(Border::new().color(hsl(0, 0, 91.3))))
-        .s(Background::new().color(hsl(0, 0, 93.7)))
+        .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
+        .s(Background::new().color(hsluv!(0, 0, 93.7)))
         .s(Spacing::new(1))
         .items_signal_vec(super::filtered_todos().map(todo))
         .element_above(toggle_all_checkbox())
@@ -103,7 +103,7 @@ fn toggle_all_checkbox() -> impl Element {
                 .s(Font::new().size(22).color_signal(
                     checked
                         .signal()
-                        .map_bool(|| hsl(0, 0, 48.4), || hsl(0, 0, 91.3)),
+                        .map_bool(|| hsluv!(0, 0, 48.4), || hsluv!(0, 0, 91.3)),
                 ))
                 .s(Transform::new().rotate(90).move_up(18))
                 .s(Height::new(34))
@@ -115,7 +115,7 @@ fn toggle_all_checkbox() -> impl Element {
 fn todo(todo: Arc<Todo>) -> impl Element {
     Row::new()
         .s(Width::fill())
-        .s(Background::new().color(hsl(0, 0, 100)))
+        .s(Background::new().color(hsluv!(0, 0, 100)))
         .s(Spacing::new(5))
         .s(Font::new().size(24))
         .items_signal_vec(
@@ -157,7 +157,7 @@ fn todo_title(todo: Arc<Todo>) -> impl Element {
             .color_signal(
                 todo.completed
                     .signal()
-                    .map_bool(|| hsl(0, 0, 86.7), || hsl(0, 0, 32.7)),
+                    .map_bool(|| hsluv!(0, 0, 86.7), || hsluv!(0, 0, 32.7)),
             )
             .strike_signal(todo.completed.signal())
             .size(24))
@@ -178,7 +178,7 @@ fn remove_todo_button(todo: &Todo) -> impl Element {
         .s(Height::new(40))
         .s(Transform::new().move_left(50).move_down(14))
         .s(Font::new().size(30).center().color_signal(
-            hovered_signal.map_bool(|| hsl(10.5, 37.7, 48.8), || hsl(12.2, 34.7, 68.2)),
+            hovered_signal.map_bool(|| hsluv!(10.5, 37.7, 48.8), || hsluv!(12.2, 34.7, 68.2)),
         ))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(move || super::remove_todo(id))
@@ -191,13 +191,13 @@ fn editing_todo_title(todo: Arc<Todo>) -> impl Element {
         .s(Width::new(506))
         .s(Padding::all(17).bottom(16))
         .s(Align::new().right())
-        .s(Borders::all(Border::new().color(hsl(0, 0, 63.2))))
+        .s(Borders::all(Border::new().color(hsluv!(0, 0, 63.2))))
         .s(Shadows::new(vec![Shadow::new()
             .inner()
             .y(-1)
             .blur(5)
-            .color(hsla(0, 0, 0, 20))]))
-        .s(Font::new().color(hsl(0, 0, 32.7)))
+            .color(hsluv!(0, 0, 0, 20))]))
+        .s(Font::new().color(hsluv!(0, 0, 32.7)))
         .label_hidden("selected todo title")
         .focus(true)
         .on_blur(super::save_selected_todo)
@@ -214,22 +214,22 @@ fn panel_footer() -> impl Element {
     let item_container = || El::new().s(Width::fill());
     Row::with_tag(Tag::Footer)
         .s(Padding::new().x(15).y(8))
-        .s(Font::new().color(hsl(0, 0, 50)))
-        .s(Borders::new().top(Border::new().color(hsl(0, 0, 91.3))))
+        .s(Font::new().color(hsluv!(0, 0, 50)))
+        .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
         .s(Shadows::new(vec![
-            Shadow::new().y(1).blur(1).color(hsla(0, 0, 0, 20)),
-            Shadow::new().y(8).spread(-3).color(hsl(0, 0, 96.9)),
+            Shadow::new().y(1).blur(1).color(hsluv!(0, 0, 0, 20)),
+            Shadow::new().y(8).spread(-3).color(hsluv!(0, 0, 96.9)),
             Shadow::new()
                 .y(9)
                 .blur(1)
                 .spread(-3)
-                .color(hsla(0, 0, 0, 20)),
-            Shadow::new().y(16).spread(-6).color(hsl(0, 0, 96.9)),
+                .color(hsluv!(0, 0, 0, 20)),
+            Shadow::new().y(16).spread(-6).color(hsluv!(0, 0, 96.9)),
             Shadow::new()
                 .y(17)
                 .blur(2)
                 .spread(-6)
-                .color(hsla(0, 0, 0, 20)),
+                .color(hsluv!(0, 0, 0, 20)),
         ]))
         .item(item_container().child(active_items_count()))
         .item(item_container().child(filters()))
@@ -275,7 +275,7 @@ fn filter(filter: Filter) -> impl Element {
                 } else {
                     0
                 };
-                Border::new().color(hsla(12.2, 72.8, 40.2, border_alpha))
+                Border::new().color(hsluv!(12.2, 72.8, 40.2).set_a(border_alpha))
             },
         )))
         .s(RoundedCorners::all(3))
@@ -297,7 +297,7 @@ fn clear_completed_button() -> impl Element {
 fn footer() -> impl Element {
     Column::with_tag(Tag::Footer)
         .s(Spacing::new(9))
-        .s(Font::new().size(10).color(hsl(0, 0, 77.3)).center())
+        .s(Font::new().size(10).color(hsluv!(0, 0, 77.3)).center())
         .item(Paragraph::new().content("Double-click to edit a todo"))
         .item(
             Paragraph::new()

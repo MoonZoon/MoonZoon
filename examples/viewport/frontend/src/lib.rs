@@ -1,5 +1,5 @@
 use std::iter;
-use zoon::*;
+use zoon::{*, named_color::*};
 
 // ------ ------
 //   States
@@ -58,7 +58,7 @@ fn rectangles() -> impl Element {
         .s(Height::new(200))
         .s(Spacing::new(20))
         .s(Padding::all(15))
-        .s(Background::new().color(NamedColor::Gray5))
+        .s(Background::new().color(GRAY_8))
         .s(Scrollbars::both())
         .on_viewport_location_change(on_viewport_change)
         .viewport_x_signal(viewport_x().signal())
@@ -70,7 +70,7 @@ fn rectangle() -> impl Element {
     El::new()
         .s(Width::new(150))
         .s(Height::new(50))
-        .s(Background::new().color(NamedColor::Red2))
+        .s(Background::new().color(RED_8))
 }
 
 // -- viewport_info --
@@ -106,7 +106,7 @@ fn jump_button(label: &str, on_press: fn()) -> impl Element {
     Button::new()
         .s(Padding::all(5))
         .s(Background::new()
-            .color_signal(hovered_signal.map_bool(|| NamedColor::Green5, || NamedColor::Green2)))
+            .color_signal(hovered_signal.map_bool(|| GREEN_7, || GREEN_8)))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .label(label)
         .on_press(on_press)
