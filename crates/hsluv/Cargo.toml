@@ -1,8 +1,12 @@
 [package]
-name = "hsl_uv"
+name = "hsluv"
 version = "0.1.0"
 authors = ["Martin Kavík <martin@kavik.cz>"]
 edition = "2018"
 
 [dependencies]
 rust-hsluv = { version = "0.1.4", default-features = false }
+hsluv_macro = { path = "../hsluv_macro", default-features = false, optional = true }
+
+[features]
+default = ["hsluv_macro"]

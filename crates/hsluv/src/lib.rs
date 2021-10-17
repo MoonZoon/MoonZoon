@@ -1,25 +1,9 @@
-use hsluv;
+use hsluv::hsluv_to_rgb;
+
+#[cfg(feature = "hsluv_macro")]
+pub use hsluv_macro::hsluv;
 
 /// https://www.hsluv.org/
-
-// ------ hsl ------
-
-pub fn hsl(h: impl Into<f64>, s: impl Into<f64>, l: impl Into<f64>) -> HSLuv {
-    hsla(h, s, l, 100)
-}
-
-// ------ hsla ------
-
-pub fn hsla(h: impl Into<f64>, s: impl Into<f64>, l: impl Into<f64>, a: impl Into<f64>) -> HSLuv {
-    HSLuv {
-        h: h.into().clamp(0., 360.),
-        s: s.into().clamp(0., 100.),
-        l: l.into().clamp(0., 100.),
-        a: a.into().clamp(0., 100.),
-    }
-}
-
-// ------ HSLuv ------
 
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
 pub struct HSLuv {
@@ -30,12 +14,25 @@ pub struct HSLuv {
 }
 
 impl HSLuv {
+    pub fn hsl(h: impl Into<f64>, s: impl Into<f64>, l: impl Into<f64>) -> Self {
+        Self::hsla(h, s, l, 100)
+    } 
+
+    pub fn hsla(h: impl Into<f64>, s: impl Into<f64>, l: impl Into<f64>, a: impl Into<f64>) -> Self {
+        Self {
+            h: h.into().clamp(0., 360.),
+            s: s.into().clamp(0., 100.),
+            l: l.into().clamp(0., 100.),
+            a: a.into().clamp(0., 100.),
+        }
+    }
+
     pub const fn new_unchecked(h: f64, s: f64, l: f64, a: f64) -> Self {
         HSLuv { h, s, l, a}
     }
 
     pub fn to_rgb(&self) -> (f64, f64, f64) {
-        hsluv::hsluv_to_rgb((self.h, self.s, self.l))
+        hsluv_to_rgb((self.h, self.s, self.l))
     }
 
     // -- setters --

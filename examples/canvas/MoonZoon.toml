@@ -17,10 +17,10 @@ frontend = [
     "../../crates/zoon/src",
     "../../crates/static_ref_macro/Cargo.toml",
     "../../crates/static_ref_macro/src",
-    "../../crates/hsl_uv_macro/Cargo.toml",
-    "../../crates/hsl_uv_macro/src",
-    "../../crates/hsl_uv/Cargo.toml",
-    "../../crates/hsl_uv/src",
+    "../../crates/hsluv_macro/Cargo.toml",
+    "../../crates/hsluv_macro/src",
+    "../../crates/hsluv/Cargo.toml",
+    "../../crates/hsluv/src",
 ]
 backend = [
     "backend/Cargo.toml",

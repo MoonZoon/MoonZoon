@@ -82,7 +82,7 @@ fn paint_canvas() {
 fn root() -> impl Element {
     Column::new()
         .s(Align::center())
-        .s(Borders::all(Border::new().color(hsl(0, 0, 20))))
+        .s(Borders::all(Border::new().color(GRAY_7)))
         .s(RoundedCorners::all(30))
         .s(Clip::both())
         .item(canvas())
