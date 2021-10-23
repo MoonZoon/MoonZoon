@@ -33,7 +33,7 @@ You fall into the rabbit hole and then analysis-paralysis kicks in. Should you u
 - Javascript or Typescript?
 - Bootstrap or Tailwind?
 - React or Vue?
-- Mongo or Postgre?
+- Mongo or Postgres?
 - Serverless or VPS?
 - Monolith or Micro-services?
 - Webpack or Parcel?
