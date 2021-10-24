@@ -7,4 +7,4 @@ description = "Pages - MoonZoon example"
 categories = ["MoonZoon", "example"]
 license = "MIT"
 readme = "../README.md"
-edition = "2018"
+edition = "2021"

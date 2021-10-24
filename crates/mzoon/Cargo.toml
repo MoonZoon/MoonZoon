@@ -2,7 +2,7 @@
 name = "mzoon"
 version = "0.1.0"
 authors = ["Martin Kavík <martin@kavik.cz>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 structopt = { version = "0.3", default-features = false }

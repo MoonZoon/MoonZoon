@@ -7,7 +7,7 @@ description = "Time Tracker - MoonZoon example"
 categories = ["MoonZoon", "example"]
 license = "MIT"
 readme = "../README.md"
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 moon = { path = "../../../crates/moon" }

@@ -7,7 +7,7 @@ description = "SVG - MoonZoon example"
 categories = ["MoonZoon", "example"]
 license = "MIT"
 readme = "../README.md"
-edition = "2018"
+edition = "2021"
 
 [lib]
 crate-type = ["cdylib"]
