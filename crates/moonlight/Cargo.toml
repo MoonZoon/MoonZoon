@@ -2,7 +2,7 @@
 name = "moonlight"
 version = "0.1.0"
 authors = ["Martin Kavík <martin@kavik.cz>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 serde_json = { version = "1.0.64", features = ['std'], default-features = false }

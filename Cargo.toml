@@ -3,6 +3,7 @@ members = [
     "crates/hsluv_macro",
     "crates/route_macro",
     "crates/static_ref_macro",
+    "crates/moon_entry_macros",
     "crates/hsluv",
     "crates/moon",
     "crates/moonlight",

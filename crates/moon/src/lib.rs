@@ -7,8 +7,8 @@ use actix_web::{
     error::{self, Error},
     web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result,
 };
-use rustls::internal::pemfile::{certs, pkcs8_private_keys};
-use rustls::{NoClientAuth, ServerConfig as RustlsServerConfig};
+use rustls::{Certificate, PrivateKey, ServerConfig as RustlsServerConfig};
+use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::fs::File;
 use std::io::{self, BufReader};
 use std::net::SocketAddr;
@@ -21,7 +21,6 @@ use futures::StreamExt;
 pub use actix_files;
 pub use actix_http;
 pub use actix_web;
-pub use actix_web_codegen::main;
 pub use apply::{Also, Apply};
 pub use async_trait::async_trait;
 pub use chashmap;
@@ -29,6 +28,7 @@ pub use enclose::enc as clone;
 pub use futures;
 pub use mime;
 pub use mime_guess;
+pub use moon_entry_macros::{main, test};
 pub use moonlight::{self, *};
 pub use once_cell::{self, sync::Lazy};
 pub use parking_lot;
@@ -185,7 +185,7 @@ where
                     .route("ping", web::to(|| async { "pong" })),
             )
             .configure(service_config.clone())
-            .route("*", web::get().to(frontend_responder::<FRB, FRBO>))
+            .default_service(web::get().to(frontend_responder::<FRB, FRBO>))
     });
 
     // ------ Bind ------
@@ -223,13 +223,25 @@ async fn backend_build_id() -> u128 {
 }
 
 fn rustls_server_config() -> io::Result<RustlsServerConfig> {
-    let mut config = RustlsServerConfig::new(NoClientAuth::new());
-    let cert_file = &mut BufReader::new(File::open("backend/private/public.pem")?);
     let key_file = &mut BufReader::new(File::open("backend/private/private.pem")?);
-    let cert_chain = certs(cert_file).expect("certificate parsing failed");
-    let mut keys = pkcs8_private_keys(key_file).expect("private key parsing failed");
-    config
-        .set_single_cert(cert_chain, keys.remove(0))
+    let key = pkcs8_private_keys(key_file)
+        .expect("private key parsing failed")
+        .into_iter()
+        .map(PrivateKey)
+        .next()
+        .expect("private key file has to contain at least one key");
+
+    let cert_file = &mut BufReader::new(File::open("backend/private/public.pem")?);
+    let certificates = certs(cert_file)
+        .expect("certificate parsing failed")
+        .into_iter()
+        .map(Certificate)
+        .collect();
+
+    let config = RustlsServerConfig::builder()
+        .with_safe_defaults()
+        .with_no_client_auth()
+        .with_single_cert(certificates, key)
         .expect("private key is invalid");
     Ok(config)
 }

@@ -2,7 +2,7 @@
 name = "moon"
 version = "0.1.0"
 authors = ["Martin Kavík <martin@kavik.cz>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 tokio = { version = "1", features = ["rt-multi-thread", "fs"], default-features = false }
@@ -11,11 +11,11 @@ futures = { version = "0.3.13", default-features = false }
 uuid = { version = "0.8", features = ["v4"], default-features = false }
 mime = { version = "0.3.16", default-features = false }
 mime_guess = { version = "2.0.3", default-features = false }
-actix-web = { version = "4.0.0-beta.8", features = ["rustls"], default-features = false }
-actix-files = { version = "0.6.0-beta.6", default-features = false }
-actix-http = { version = "3.0.0-beta.8", default-features = false }
-actix-web-codegen = { version = "=0.5.0-beta.2", default-features = false }
-rustls = { version = "0.19", default-features = false }
+actix-web = { version = "=4.0.0-beta.10", features = ["rustls"], default-features = false }
+actix-files = { version = "=0.6.0-beta.8", default-features = false }
+actix-http = { version = "=3.0.0-beta.11", default-features = false }
+rustls = { version = "=0.20.0", default-features = false }
+rustls-pemfile = { version = "=0.2.1", default-features = false }
 trait-set = { version = "0.2.0", default-features = false }
 envy = { version = "0.4.2", default-features = false }
 serde = { version = "1.0.130", features = ["std", "derive"], default-features = false, optional = true }
@@ -30,6 +30,7 @@ apply = { version = "0.3.0", default-features = false }
 once_cell = { version = "1.8.0", features = ["std"], default-features = false }
 chashmap = { version = "2.2.2", default-features = false }
 async-trait = { version = "0.1.51", default-features = false }
+moon_entry_macros = { path = "../moon_entry_macros", default_features = false }
 
 [dev-dependencies]
 const_format = { version = "0.2.14", default-features = false }

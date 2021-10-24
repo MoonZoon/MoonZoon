@@ -1,5 +1,5 @@
 [package]
-name = "static_ref_macro"
+name = "moon_entry_macros"
 version = "0.1.0"
 authors = ["Martin Kavík <martin@kavik.cz>"]
 edition = "2021"
@@ -8,6 +8,4 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-syn = { version = "1.0", default-features = false }
 quote = { version = "1.0", default-features = false }
-proc-macro2 = { version = "1.0", default-features = false }

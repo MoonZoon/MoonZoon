@@ -24,6 +24,7 @@ async fn frontend() -> Frontend {
 async fn up_msg_handler(_: UpMsgRequest<()>) {}
 
 #[moon::main]
+// #[actix_web::rt::main(system = "actix_web::rt::System")]
 async fn main() -> std::io::Result<()> {
     start(frontend, up_msg_handler, |_| {}).await
 }
