@@ -15,14 +15,15 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
   ```bash
   cargo install cargo-make
-  makers -V # makers 0.35.4
+  makers -V # makers 0.35.5
   ```
   - _Note_: `cargo-make` is needed only for MoonZoon development and running its examples, you don't need it for your apps.
 
 ## 2. VS Code settings
 
 - Install [Rust Analyzer](https://rust-analyzer.github.io/)
-- My current `.vscode/settings.json`:
+- The current `.vscode/settings.json`: 
+  - (Comment out examples to reduce the amount of operating memory consumed by RA.)
 
 ```json
 {
@@ -35,6 +36,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         "examples/counter/Cargo.toml",
         "examples/counters/Cargo.toml",
         "examples/js-framework-benchmark/keyed/Cargo.toml",
+        "examples/start_with_app/Cargo.toml",
         "examples/pages/Cargo.toml",
         "examples/svg/Cargo.toml",
         "examples/time_tracker/Cargo.toml",
@@ -63,6 +65,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   - `counter`
   - `counters`
   - `js-framework-benchmark/keyed`
+  - `start_with_app`
   - `pages`
   - `svg`
   - `time_tracker`

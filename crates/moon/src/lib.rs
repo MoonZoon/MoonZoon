@@ -1,8 +1,7 @@
 use actix_files::{Files, NamedFile};
 use actix_http::http::{header, ContentEncoding, HeaderMap, StatusCode};
-use actix_web::dev::ServiceResponse;
 use actix_web::http::header::{CacheControl, CacheDirective, ContentType, ETag, EntityTag};
-use actix_web::middleware::{Compat, Condition, ErrorHandlerResponse, ErrorHandlers, Logger};
+use actix_web::middleware::{Compat, Condition, ErrorHandlers, Logger};
 use actix_web::{
     error::{self, Error},
     web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result,
@@ -40,6 +39,7 @@ pub use uuid;
 
 mod actor;
 pub mod config;
+pub mod error_handler;
 mod from_env_vars;
 mod frontend;
 mod lazy_message_writer;
@@ -159,9 +159,9 @@ where
                 ErrorHandlers::new()
                     .handler(
                         StatusCode::INTERNAL_SERVER_ERROR,
-                        internal_server_error_handler,
+                        error_handler::internal_server_error,
                     )
-                    .handler(StatusCode::NOT_FOUND, render_not_found_handler),
+                    .handler(StatusCode::NOT_FOUND, error_handler::not_found),
             )
             .app_data(web::Data::new(shared_data))
             .app_data(web::Data::new(frontend.clone()))
@@ -244,20 +244,6 @@ fn rustls_server_config() -> io::Result<RustlsServerConfig> {
         .with_single_cert(certificates, key)
         .expect("private key is invalid");
     Ok(config)
-}
-
-// ------ ------
-// ErrorHandlers
-// ------ ------
-
-fn internal_server_error_handler<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
-    eprintln!("INTERNAL_SERVER_ERROR: {:?}", res.request().uri());
-    Ok(ErrorHandlerResponse::Response(res))
-}
-
-fn render_not_found_handler<B>(res: ServiceResponse<B>) -> Result<ErrorHandlerResponse<B>> {
-    eprintln!("NOT_FOUND: {:?}", res.request().uri());
-    Ok(ErrorHandlerResponse::Response(res))
 }
 
 // ------ ------
