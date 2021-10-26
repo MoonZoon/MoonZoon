@@ -23,7 +23,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 
 - Install [Rust Analyzer](https://rust-analyzer.github.io/)
 - The current `.vscode/settings.json`: 
-  - (Comment out examples to reduce the amount of operating memory consumed by RA.)
+  - (Most examples are commented out to reduce the amount of operating memory consumed by RA.)
 
 ```json
 {
@@ -31,18 +31,18 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // rust-analyzer ignores `main.rs` when `linkedProjects` are set
         "crates/mzoon/Cargo.toml",
         // examples are ignored because they have own workspaces
-        "examples/canvas/Cargo.toml",
-        "examples/chat/Cargo.toml",
+        // "examples/canvas/Cargo.toml",
+        // "examples/chat/Cargo.toml",
         "examples/counter/Cargo.toml",
-        "examples/counters/Cargo.toml",
-        "examples/js-framework-benchmark/keyed/Cargo.toml",
-        "examples/start_with_app/Cargo.toml",
-        "examples/pages/Cargo.toml",
-        "examples/svg/Cargo.toml",
-        "examples/time_tracker/Cargo.toml",
-        "examples/timer/Cargo.toml",
-        "examples/todomvc/Cargo.toml",
-        "examples/viewport/Cargo.toml",
+        // "examples/counters/Cargo.toml",
+        // "examples/js-framework-benchmark/keyed/Cargo.toml",
+        // "examples/start_with_app/Cargo.toml",
+        // "examples/pages/Cargo.toml",
+        // "examples/svg/Cargo.toml",
+        // "examples/time_tracker/Cargo.toml",
+        // "examples/timer/Cargo.toml",
+        // "examples/todomvc/Cargo.toml",
+        // "examples/viewport/Cargo.toml",
     ],
     "rust-analyzer.diagnostics.disabled": [
         "missing-unsafe",
