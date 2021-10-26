@@ -140,6 +140,8 @@ async fn main() -> std::io::Result<()> {
 
 - `cfg` in the example is [actix_web::web::ServiceConfig](https://docs.rs/actix-web/4.0.0-beta.8/actix_web/web/struct.ServiceConfig.html)
 
+- You can also replace default middlewares and create an Actix `App` instance by yourself. It's often useful when you are migrating your Actix app to MoonZoon. See the example `start_with_app` for more info.
+
 ---
 
 ## Actors

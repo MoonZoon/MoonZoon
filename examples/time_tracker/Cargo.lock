@@ -453,9 +453,9 @@ checksum = "212d0f5754cb6769937f4501cc0e67f4f4483c8d2c3e1e922ee9edbe4ab4c7c0"
 
 [[package]]
 name = "dominator"
-version = "0.5.21"
+version = "0.5.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69c56006dbcd6f330a54310fda5ed9008157dd43c5928775ef43a0e5b6040057"
+checksum = "2ba42804f53bd02055c74ead9464b689a264e668ad4605bd77689b41a2b014f7"
 dependencies = [
  "discard",
  "futures-channel",
@@ -929,6 +929,7 @@ version = "0.1.0"
 dependencies = [
  "actix-files",
  "actix-http",
+ "actix-rt",
  "actix-web",
  "apply",
  "async-trait",
