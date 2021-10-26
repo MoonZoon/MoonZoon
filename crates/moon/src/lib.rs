@@ -2,12 +2,12 @@ use actix_files::{Files, NamedFile};
 use actix_http::http::{header, ContentEncoding, HeaderMap};
 use actix_web::http::header::{CacheControl, CacheDirective, ContentType, ETag, EntityTag};
 use actix_web::{
-    error::{self, Error},
-    web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result,
     body::MessageBody,
-    dev::{ServiceRequest, ServiceFactory, ServiceResponse},
-    middleware::{Logger, Compat, Condition, ErrorHandlers},
-    http::StatusCode
+    dev::{ServiceFactory, ServiceRequest, ServiceResponse},
+    error::{self, Error},
+    http::StatusCode,
+    middleware::{Compat, Condition, ErrorHandlers, Logger},
+    web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result,
 };
 use rustls::{Certificate, PrivateKey, ServerConfig as RustlsServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
@@ -129,9 +129,12 @@ where
         let redirect = Redirect::new()
             .http_to_https(CONFIG.https)
             .port(CONFIG.redirect.port, CONFIG.port);
-        
+
         App::new()
-            .wrap(Condition::new(CONFIG.redirect.enabled, Compat::new(redirect)))
+            .wrap(Condition::new(
+                CONFIG.redirect.enabled,
+                Compat::new(redirect),
+            ))
             // https://docs.rs/actix-web/4.0.0-beta.8/actix_web/middleware/struct.Logger.html
             .wrap(Logger::new(r#""%r" %s %b "%{Referer}i" %T"#))
             .wrap(
@@ -142,7 +145,7 @@ where
                     )
                     .handler(StatusCode::NOT_FOUND, error_handler::not_found),
             )
-        };
+    };
     start_with_app(frontend, up_msg_handler, app, service_config).await
 }
 
@@ -159,14 +162,14 @@ where
     UPHO: UpHandlerOutput,
     UMsg: 'static + DeserializeOwned,
     AT: ServiceFactory<
-        ServiceRequest, 
-        Config = (), 
-        Response = ServiceResponse<AB>, 
-        Error = Error, 
-        InitError = ()
-    > + 'static,
+            ServiceRequest,
+            Config = (),
+            Response = ServiceResponse<AB>,
+            Error = Error,
+            InitError = (),
+        > + 'static,
     AB: MessageBody<Error = ABE> + 'static,
-    ABE: std::error::Error + 'static
+    ABE: std::error::Error + 'static,
 {
     // ------ Init ------
 
