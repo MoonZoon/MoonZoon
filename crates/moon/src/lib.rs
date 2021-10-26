@@ -1,10 +1,13 @@
 use actix_files::{Files, NamedFile};
-use actix_http::http::{header, ContentEncoding, HeaderMap, StatusCode};
+use actix_http::http::{header, ContentEncoding, HeaderMap};
 use actix_web::http::header::{CacheControl, CacheDirective, ContentType, ETag, EntityTag};
-use actix_web::middleware::{Compat, Condition, ErrorHandlers, Logger};
 use actix_web::{
     error::{self, Error},
     web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result,
+    body::MessageBody,
+    dev::{ServiceRequest, ServiceFactory, ServiceResponse},
+    middleware::{Logger, Compat, Condition, ErrorHandlers},
+    http::StatusCode
 };
 use rustls::{Certificate, PrivateKey, ServerConfig as RustlsServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
@@ -122,6 +125,49 @@ where
     UPHO: UpHandlerOutput,
     UMsg: 'static + DeserializeOwned,
 {
+    let app = || {
+        let redirect = Redirect::new()
+            .http_to_https(CONFIG.https)
+            .port(CONFIG.redirect.port, CONFIG.port);
+        
+        App::new()
+            .wrap(Condition::new(CONFIG.redirect.enabled, Compat::new(redirect)))
+            // https://docs.rs/actix-web/4.0.0-beta.8/actix_web/middleware/struct.Logger.html
+            .wrap(Logger::new(r#""%r" %s %b "%{Referer}i" %T"#))
+            .wrap(
+                ErrorHandlers::new()
+                    .handler(
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        error_handler::internal_server_error,
+                    )
+                    .handler(StatusCode::NOT_FOUND, error_handler::not_found),
+            )
+        };
+    start_with_app(frontend, up_msg_handler, app, service_config).await
+}
+
+pub async fn start_with_app<FRB, FRBO, UPH, UPHO, UMsg, AT, AB, ABE>(
+    frontend: FRB,
+    up_msg_handler: UPH,
+    app: impl FnOnce() -> App<AT, AB> + Clone + Send + 'static,
+    service_config: impl FnOnce(&mut web::ServiceConfig) + Clone + Send + 'static,
+) -> io::Result<()>
+where
+    FRB: FrontBuilder<FRBO>,
+    FRBO: FrontBuilderOutput,
+    UPH: UpHandler<UPHO, UMsg>,
+    UPHO: UpHandlerOutput,
+    UMsg: 'static + DeserializeOwned,
+    AT: ServiceFactory<
+        ServiceRequest, 
+        Config = (), 
+        Response = ServiceResponse<AB>, 
+        Error = Error, 
+        InitError = ()
+    > + 'static,
+    AB: MessageBody<Error = ABE> + 'static,
+    ABE: std::error::Error + 'static
+{
     // ------ Init ------
 
     println!("Moon config: {:?}", *CONFIG);
@@ -141,28 +187,12 @@ where
     let message_sse = MessageSSE(SSE::start());
     let address = SocketAddr::from(([0, 0, 0, 0], CONFIG.port));
 
-    let redirect_enabled = CONFIG.redirect.enabled;
-    let redirect = Redirect::new()
-        .http_to_https(CONFIG.https)
-        .port(CONFIG.redirect.port, CONFIG.port);
-
     let mut lazy_message_writer = LazyMessageWriter::new();
 
     // ------ App ------
 
     let mut server = HttpServer::new(move || {
-        App::new()
-            .wrap(Condition::new(redirect_enabled, Compat::new(redirect)))
-            // https://docs.rs/actix-web/4.0.0-beta.8/actix_web/middleware/struct.Logger.html
-            .wrap(Logger::new(r#""%r" %s %b "%{Referer}i" %T"#))
-            .wrap(
-                ErrorHandlers::new()
-                    .handler(
-                        StatusCode::INTERNAL_SERVER_ERROR,
-                        error_handler::internal_server_error,
-                    )
-                    .handler(StatusCode::NOT_FOUND, error_handler::not_found),
-            )
+        app.clone()()
             .app_data(web::Data::new(shared_data))
             .app_data(web::Data::new(frontend.clone()))
             .app_data(web::Data::new(up_msg_handler.clone()))

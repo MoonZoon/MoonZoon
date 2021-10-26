@@ -41,7 +41,7 @@ async fn hello() -> impl Responder {
 
 #[moon::main]
 async fn main() -> std::io::Result<()> {
-    let app_updater = || {
+    let app = || {
         let redirect = Redirect::new()
             .http_to_https(CONFIG.https)
             .port(CONFIG.redirect.port, CONFIG.port);
@@ -59,9 +59,9 @@ async fn main() -> std::io::Result<()> {
             )
     };    
 
-    let service_config_updater = |service_config: &mut ServiceConfig| {
+    let service_config = |service_config: &mut ServiceConfig| {
         service_config.service(hello);
     };
 
-    start(frontend, up_msg_handler, service_config_updater).await
+    start_with_app(frontend, up_msg_handler, app, service_config).await
 }
