@@ -34,6 +34,8 @@ pub use moon_entry_macros::{main, test};
 pub use moonlight::{self, *};
 pub use once_cell::{self, sync::Lazy};
 pub use parking_lot;
+pub use rustls;
+pub use rustls_pemfile;
 pub use serde;
 pub use tokio;
 pub use tokio_stream;
