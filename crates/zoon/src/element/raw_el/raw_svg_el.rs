@@ -63,6 +63,10 @@ impl RawEl for RawSvgEl {
         self.update_dom_builder(|dom_builder| dom_builder.style(CssPropertyName::new(name), value))
     }
 
+    fn style_important(self, name: &str, value: &str) -> Self {
+        self.update_dom_builder(|dom_builder| dom_builder.style_important(CssPropertyName::new(name), value))
+    }
+
     fn style_signal<'a>(
         self,
         name: impl IntoCowStr<'static>,
