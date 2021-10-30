@@ -151,6 +151,8 @@ pub trait RawEl: Sized {
 
     fn style(self, name: &str, value: &str) -> Self;
 
+    fn style_important(self, name: &str, value: &str) -> Self;
+
     fn style_signal<'a>(
         self,
         name: impl IntoCowStr<'static>,

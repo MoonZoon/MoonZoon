@@ -55,9 +55,50 @@ pub use width::Width;
 
 // --
 
-pub type StaticCSSProps<'a> = BTreeMap<&'a str, Cow<'a, str>>;
+pub struct CssPropValue<'a> {
+    value: Cow<'a, str>,
+    important: bool,
+}
+
+// ------ StaticCSSProps ------
+
+#[derive(Default)]
+pub struct StaticCSSProps<'a>(BTreeMap<&'a str, CssPropValue<'a>>);
+
+impl<'a> StaticCSSProps<'a> {
+    pub fn insert(&mut self, name: &'a str, value: impl IntoCowStr<'a>) {
+        self.0.insert(name, CssPropValue {
+            value: value.into_cow_str(),
+            important: false
+        });
+    }
+
+    pub fn insert_important(&mut self, name: &'a str, value: impl IntoCowStr<'a>) {
+        self.0.insert(name, CssPropValue {
+            value: value.into_cow_str(),
+            important: true
+        });
+    }
+}
+
+impl<'a> IntoIterator for StaticCSSProps<'a> {
+    type Item = (&'a str, CssPropValue<'a>);
+    type IntoIter = std::collections::btree_map::IntoIter<&'a str, CssPropValue<'a>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+// ------ DynamicCSSProps ------
+
 pub type DynamicCSSProps = BTreeMap<Cow<'static, str>, BoxedCssSignal>;
+
+// ------ StaticCssClasses ------
+
 pub type StaticCssClasses<'a> = BTreeSet<Cow<'a, str>>;
+
+// ------ BoxedCssSignal ------
 
 pub type BoxedCssSignal = Box<dyn Signal<Item = Box<dyn IntoOptionCowStr<'static>>> + Unpin>;
 
@@ -67,6 +108,8 @@ pub fn box_css_signal(
 ) -> BoxedCssSignal {
     Box::new(signal.map(|value| Box::new(value) as Box<dyn IntoOptionCowStr<'static>>))
 }
+
+// ------ units ------
 
 pub fn px<'a>(px: impl IntoCowStr<'a>) -> Cow<'a, str> {
     [&px.into_cow_str(), "px"].concat().into()
@@ -109,6 +152,11 @@ impl<'a> StyleGroup<'a> {
 
     pub fn style(mut self, name: &'a str, value: impl Into<Cow<'a, str>>) -> Self {
         self.static_css_props.insert(name, value.into());
+        self
+    }
+
+    pub fn style_important(mut self, name: &'a str, value: impl Into<Cow<'a, str>>) -> Self {
+        self.static_css_props.insert_important(name, value.into());
         self
     }
 
@@ -204,8 +252,8 @@ impl GlobalStyles {
 
         drop(ids_lock);
 
-        for (name, value) in group.static_css_props {
-            set_css_property(&declaration, name, &value);
+        for (name, css_prop_value) in group.static_css_props {
+            set_css_property(&declaration, name, &css_prop_value.value, css_prop_value.important);
         }
 
         let declaration = Arc::new(SendWrapper::new(declaration));
@@ -214,7 +262,8 @@ impl GlobalStyles {
             let declaration = Arc::clone(&declaration);
             let task = value_signal.for_each_sync(move |value| {
                 if let Some(value) = value.into_option_cow_str() {
-                    set_css_property(&declaration, &name, &value);
+                    // @TODO allow to set `important ` also in dynamic styles
+                    set_css_property(&declaration, &name, &value, false);
                 } else {
                     declaration.remove_property(&name).unwrap_throw();
                 }
@@ -236,8 +285,9 @@ impl GlobalStyles {
     }
 }
 
-fn set_css_property(declaration: &CssStyleDeclaration, name: &str, value: &str) {
-    declaration.set_property(name, value).unwrap_throw();
+fn set_css_property(declaration: &CssStyleDeclaration, name: &str, value: &str, important: bool) {
+    let priority = if important { "important" } else { "" };
+    declaration.set_property_with_priority(name, value, priority).unwrap_throw();
     if not(declaration
         .get_property_value(name)
         .unwrap_throw()
@@ -248,7 +298,7 @@ fn set_css_property(declaration: &CssStyleDeclaration, name: &str, value: &str) 
     for prefix in VENDOR_PREFIXES {
         let prefixed_name = [prefix, name].concat();
         declaration
-            .set_property(&prefixed_name, value)
+            .set_property_with_priority(&prefixed_name, value, priority)
             .unwrap_throw();
         if not(declaration
             .get_property_value(&prefixed_name)

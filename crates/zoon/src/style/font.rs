@@ -48,18 +48,18 @@ impl<'a> Font<'a> {
     }
 
     pub fn italic(mut self) -> Self {
-        self.static_css_props.insert("font-style", "italic".into());
+        self.static_css_props.insert("font-style", "italic");
         self
     }
 
     pub fn no_wrap(mut self) -> Self {
-        self.static_css_props.insert("white-space", "nowrap".into());
+        self.static_css_props.insert("white-space", "nowrap");
         self
     }
 
     pub fn underline(mut self) -> Self {
         self.static_css_props
-            .insert("text-decoration", "underline".into());
+            .insert("text-decoration", "underline");
         self
     }
 
@@ -75,7 +75,7 @@ impl<'a> Font<'a> {
 
     pub fn strike(mut self) -> Self {
         self.static_css_props
-            .insert("text-decoration", "line-through".into());
+            .insert("text-decoration", "line-through");
         self
     }
 
@@ -87,7 +87,7 @@ impl<'a> Font<'a> {
     }
 
     pub fn center(mut self) -> Self {
-        self.static_css_props.insert("text-align", "center".into());
+        self.static_css_props.insert("text-align", "center");
         self
     }
 
@@ -98,7 +98,7 @@ impl<'a> Font<'a> {
             .collect::<Cow<_>>()
             .join(", ");
         self.static_css_props
-            .insert("font-family", font_family.into());
+            .insert("font-family", font_family);
         self
     }
 }
@@ -110,16 +110,24 @@ impl<'a> Style<'a> for Font<'a> {
         style_group: Option<StyleGroup<'a>>,
     ) -> (E, Option<StyleGroup<'a>>) {
         if let Some(mut style_group) = style_group {
-            for (name, value) in self.static_css_props {
-                style_group = style_group.style(name, value);
+            for (name, css_prop_value) in self.static_css_props {
+                style_group = if css_prop_value.important {
+                    style_group.style(name, css_prop_value.value)
+                } else {
+                    style_group.style_important(name, css_prop_value.value)
+                };
             }
             for (name, value) in self.dynamic_css_props {
                 style_group = style_group.style_signal(name, value);
             }
             return (raw_el, Some(style_group));
         }
-        for (name, value) in self.static_css_props {
-            raw_el = raw_el.style(name, &value);
+        for (name, css_prop_value) in self.static_css_props {
+            raw_el = if css_prop_value.important {
+                raw_el.style_important(name, &css_prop_value.value)
+            } else {
+                raw_el.style(name, &css_prop_value.value)
+            };
         }
         for (name, value) in self.dynamic_css_props {
             raw_el = raw_el.style_signal(name, value);
