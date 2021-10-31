@@ -4,12 +4,24 @@ use crate::*;
 pub struct Width<'a> {
     static_css_props: StaticCSSProps<'a>,
     static_css_classes: StaticCssClasses<'a>,
+    dynamic_css_props: DynamicCSSProps,
 }
 
 impl<'a> Width<'a> {
     pub fn new(width: u32) -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("width", px(width));
+        this.static_css_classes.insert("exact_width".into());
+        this.static_css_classes.remove("fill_width".into());
+        this
+    }
+
+    pub fn with_signal(
+        width: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
+    ) -> Self {
+        let mut this = Self::default();
+        let width = width.map(|width| width.into().map(px));
+        this.dynamic_css_props.insert("width".into(), box_css_signal(width));
         this.static_css_classes.insert("exact_width".into());
         this.static_css_classes.remove("fill_width".into());
         this
@@ -59,6 +71,9 @@ impl<'a> Style<'a> for Width<'a> {
             for class in self.static_css_classes {
                 raw_el = raw_el.class(&class);
             }
+            for (name, value) in self.dynamic_css_props {
+                style_group = style_group.style_signal(name, value);
+            }
             return (raw_el, Some(style_group));
         }
         for (name, css_prop_value) in self.static_css_props {
@@ -70,6 +85,9 @@ impl<'a> Style<'a> for Width<'a> {
         }
         for class in self.static_css_classes {
             raw_el = raw_el.class(&class);
+        }
+        for (name, value) in self.dynamic_css_props {
+            raw_el = raw_el.style_signal(name, value);
         }
         (raw_el, None)
     }

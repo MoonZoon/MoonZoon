@@ -4,12 +4,24 @@ use crate::*;
 pub struct Height<'a> {
     static_css_props: StaticCSSProps<'a>,
     static_css_classes: StaticCssClasses<'a>,
+    dynamic_css_props: DynamicCSSProps,
 }
 
 impl<'a> Height<'a> {
     pub fn new(height: u32) -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("height", px(height));
+        this.static_css_classes.insert("exact_height".into());
+        this.static_css_classes.remove("fill_height".into());
+        this
+    }
+
+    pub fn with_signal(
+        height: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
+    ) -> Self {
+        let mut this = Self::default();
+        let height = height.map(|height| height.into().map(px));
+        this.dynamic_css_props.insert("height".into(), box_css_signal(height));
         this.static_css_classes.insert("exact_height".into());
         this.static_css_classes.remove("fill_height".into());
         this
@@ -59,6 +71,9 @@ impl<'a> Style<'a> for Height<'a> {
             for class in self.static_css_classes {
                 raw_el = raw_el.class(&class);
             }
+            for (name, value) in self.dynamic_css_props {
+                style_group = style_group.style_signal(name, value);
+            }
             return (raw_el, Some(style_group));
         }
         for (name, css_prop_value) in self.static_css_props {
@@ -70,6 +85,9 @@ impl<'a> Style<'a> for Height<'a> {
         }
         for class in self.static_css_classes {
             raw_el = raw_el.class(&class);
+        }
+        for (name, value) in self.dynamic_css_props {
+            raw_el = raw_el.style_signal(name, value);
         }
         (raw_el, None)
     }
