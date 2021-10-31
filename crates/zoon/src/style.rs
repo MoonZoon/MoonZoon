@@ -24,7 +24,7 @@ mod clip;
 pub use clip::Clip;
 
 mod font;
-pub use font::{Font, FontFamily, FontWeight, NamedWeight};
+pub use font::{Font, FontFamily, FontWeight};
 
 mod height;
 pub use height::Height;

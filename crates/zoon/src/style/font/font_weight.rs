@@ -1,14 +1,7 @@
-use crate::*;
-use std::borrow::Cow;
-
 // ------ FontWeight ------
 
-pub trait FontWeight<'a>: IntoCowStr<'a> {}
-
-// ------ NamedWeight ------
-
 #[derive(Clone, Copy, PartialEq, PartialOrd)]
-pub enum NamedWeight {
+pub enum FontWeight {
     Heavy,
     ExtraBold,
     Bold,
@@ -18,27 +11,22 @@ pub enum NamedWeight {
     Light,
     ExtraLight,
     Hairline,
+    Number(u32),
 }
 
-impl FontWeight<'_> for NamedWeight {}
-
-impl<'a> IntoCowStr<'a> for NamedWeight {
-    fn into_cow_str(self) -> Cow<'a, str> {
+impl FontWeight {
+    pub fn number(&self) -> u32 {
         match self {
-            NamedWeight::Heavy => "900",
-            NamedWeight::ExtraBold => "800",
-            NamedWeight::Bold => "700",
-            NamedWeight::SemiBold => "600",
-            NamedWeight::Medium => "500",
-            NamedWeight::Regular => "400",
-            NamedWeight::Light => "300",
-            NamedWeight::ExtraLight => "200",
-            NamedWeight::Hairline => "100",
+            Self::Heavy => 900,
+            Self::ExtraBold => 800,
+            Self::Bold => 700,
+            Self::SemiBold => 600,
+            Self::Medium => 500,
+            Self::Regular => 400,
+            Self::Light => 300,
+            Self::ExtraLight => 200,
+            Self::Hairline => 100,
+            Self::Number(number) => *number,
         }
-        .into()
-    }
-
-    fn take_into_cow_str(&mut self) -> Cow<'a, str> {
-        self.into_cow_str()
     }
 }
