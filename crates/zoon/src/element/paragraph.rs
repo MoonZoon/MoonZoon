@@ -17,9 +17,7 @@ impl Paragraph<EmptyFlagSet> {
         run_once!(|| {
             global_styles()
                 .style_group(
-                    StyleGroup::new(".paragraph > *")
-                        .style_important("display", "inline-flex")
-                        .style("vertical-align", "middle"),
+                    StyleGroup::new(".paragraph > *").style_important("display", "inline")
                 )
                 .style_group(StyleGroup::new(".paragraph > .align_left").style("float", "left"))
                 .style_group(StyleGroup::new(".paragraph > .align_right").style("float", "right"));
