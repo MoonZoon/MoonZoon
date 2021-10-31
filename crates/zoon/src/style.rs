@@ -24,7 +24,7 @@ mod clip;
 pub use clip::Clip;
 
 mod font;
-pub use font::{Font, FontFamily, FontWeight};
+pub use font::{Font, FontFamily, FontWeight, FontLine};
 
 mod height;
 pub use height::Height;
@@ -87,6 +87,12 @@ impl<'a> IntoIterator for StaticCSSProps<'a> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
+    }
+}
+
+impl<'a> Extend<(&'a str, CssPropValue<'a>)> for StaticCSSProps<'a> {
+    fn extend<T: IntoIterator<Item=(&'a str, CssPropValue<'a>)>>(&mut self, iter: T) {
+        self.0.extend(iter);
     }
 }
 
