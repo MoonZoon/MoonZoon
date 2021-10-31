@@ -42,6 +42,16 @@ impl<'a> Font<'a> {
         self
     }
 
+    pub fn size_signal(
+        mut self,
+        size: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
+    ) -> Self {
+        let size = size.map(|size| size.into().map(px));
+        self.dynamic_css_props
+            .insert("font-size".into(), box_css_signal(size));
+        self
+    }
+
     pub fn line_height(mut self, line_height: u32) -> Self {
         self.static_css_props.insert("line-height", px(line_height));
         self
