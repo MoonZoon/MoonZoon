@@ -2,7 +2,7 @@ use crate::*;
 use std::borrow::Cow;
 
 mod font_weight;
-pub use font_weight::{FontWeight, NamedWeight};
+pub use font_weight::FontWeight;
 
 mod font_family;
 pub use font_family::FontFamily;
@@ -14,9 +14,9 @@ pub struct Font<'a> {
 }
 
 impl<'a> Font<'a> {
-    pub fn weight(mut self, weight: impl FontWeight<'a>) -> Self {
+    pub fn weight(mut self, weight: FontWeight) -> Self {
         self.static_css_props
-            .insert("font-weight", weight.into_cow_str());
+            .insert("font-weight", weight.number().into_cow_str());
         self
     }
 
