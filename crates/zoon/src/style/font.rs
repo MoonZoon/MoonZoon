@@ -7,6 +7,9 @@ pub use font_weight::FontWeight;
 mod font_family;
 pub use font_family::FontFamily;
 
+mod font_line;
+pub use font_line::FontLine;
+
 #[derive(Default)]
 pub struct Font<'a> {
     static_css_props: StaticCSSProps<'a>,
@@ -67,35 +70,6 @@ impl<'a> Font<'a> {
         self
     }
 
-    pub fn underline(mut self) -> Self {
-        self.static_css_props
-            .insert("text-decoration", "underline");
-        self
-    }
-
-    pub fn underline_signal(
-        mut self,
-        underline: impl Signal<Item = bool> + Unpin + 'static,
-    ) -> Self {
-        let underline = underline.map_bool(|| "underline", || "none");
-        self.dynamic_css_props
-            .insert("text-decoration".into(), box_css_signal(underline));
-        self
-    }
-
-    pub fn strike(mut self) -> Self {
-        self.static_css_props
-            .insert("text-decoration", "line-through");
-        self
-    }
-
-    pub fn strike_signal(mut self, strike: impl Signal<Item = bool> + Unpin + 'static) -> Self {
-        let strike = strike.map_bool(|| "line-through", || "none");
-        self.dynamic_css_props
-            .insert("text-decoration".into(), box_css_signal(strike));
-        self
-    }
-
     pub fn center(mut self) -> Self {
         self.static_css_props.insert("text-align", "center");
         self
@@ -109,6 +83,12 @@ impl<'a> Font<'a> {
             .join(", ");
         self.static_css_props
             .insert("font-family", font_family);
+        self
+    }
+
+    pub fn line(mut self, line: FontLine<'a>) -> Self {
+        self.static_css_props.extend(line.static_css_props.into_iter());
+        self.dynamic_css_props.extend(line.dynamic_css_props.into_iter());
         self
     }
 }
