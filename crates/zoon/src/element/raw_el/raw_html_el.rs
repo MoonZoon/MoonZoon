@@ -1,6 +1,7 @@
 use super::class_id_generator;
 use crate::css_property_name::CssPropertyName;
 use crate::*;
+use std::iter;
 
 // ------ ------
 //   Element
@@ -41,6 +42,16 @@ impl IntoDom for RawHtmlEl {
 impl Element for RawHtmlEl {
     fn into_raw_element(self) -> RawElement {
         RawElement::El(self)
+    }
+}
+
+impl IntoIterator for RawHtmlEl {
+    type Item = Self;
+    type IntoIter = iter::Once<Self>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        iter::once(self)
     }
 }
 

@@ -1,5 +1,6 @@
 use crate::{web_sys::HtmlParagraphElement, *};
 use std::marker::PhantomData;
+use std::iter;
 
 // ------ ------
 //   Element
@@ -32,6 +33,16 @@ impl Paragraph<EmptyFlagSet> {
 impl Element for Paragraph<EmptyFlagNotSet> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
+    }
+}
+
+impl<EmptyFlagSet> IntoIterator for Paragraph<EmptyFlagSet> {
+    type Item = Self;
+    type IntoIter = iter::Once<Self>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        iter::once(self)
     }
 }
 

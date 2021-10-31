@@ -1,5 +1,6 @@
 use crate::*;
 use std::borrow::Cow;
+use std::iter;
 
 // ------ ------
 //    Element
@@ -28,6 +29,17 @@ impl Text {
 impl Element for Text {
     fn into_raw_element(self) -> RawElement {
         self.raw_text.into()
+    }
+}
+
+
+impl IntoIterator for Text {
+    type Item = Self;
+    type IntoIter = iter::Once<Self>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        iter::once(self)
     }
 }
 

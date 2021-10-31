@@ -1,5 +1,6 @@
 use crate::{web_sys::HtmlLabelElement, *};
 use std::marker::PhantomData;
+use std::iter;
 
 // ------ ------
 //    Element
@@ -24,6 +25,16 @@ impl Label<LabelFlagNotSet, ForInputFlagNotSet> {
 impl<ForInputFlag> Element for Label<LabelFlagSet, ForInputFlag> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
+    }
+}
+
+impl<LabelFlag, ForInputFlag> IntoIterator for Label<LabelFlag, ForInputFlag> {
+    type Item = Self;
+    type IntoIter = iter::Once<Self>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        iter::once(self)
     }
 }
 

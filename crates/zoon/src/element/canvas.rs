@@ -1,5 +1,6 @@
 use crate::{web_sys::HtmlCanvasElement, *};
 use std::marker::PhantomData;
+use std::iter;
 
 // ------ ------
 //    Element
@@ -24,6 +25,16 @@ impl Canvas<WidthFlagNotSet, HeightFlagNotSet> {
 impl<HeightFlag> Element for Canvas<WidthFlagSet, HeightFlag> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
+    }
+}
+
+impl<WidthFlag, HeightFlag> IntoIterator for Canvas<WidthFlag, HeightFlag> {
+    type Item = Self;
+    type IntoIter = iter::Once<Self>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        iter::once(self)
     }
 }
 

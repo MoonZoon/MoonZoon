@@ -1,5 +1,6 @@
 use crate::{web_sys::HtmlDivElement, *};
 use std::marker::PhantomData;
+use std::iter;
 
 // ------ ------
 //    Element
@@ -50,6 +51,16 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
 impl<OnPressFlag> Element for Button<LabelFlagSet, OnPressFlag> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
+    }
+}
+
+impl<LabelFlag, OnPressFlag> IntoIterator for Button<LabelFlag, OnPressFlag> {
+    type Item = Self;
+    type IntoIter = iter::Once<Self>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        iter::once(self)
     }
 }
 

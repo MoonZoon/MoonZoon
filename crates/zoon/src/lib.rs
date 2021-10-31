@@ -198,9 +198,9 @@ macro_rules! element_vec {
 
 // ------ start_app ------
 
-pub fn start_app<'a, E: Element>(
+pub fn start_app<'a, E: Element, I: IntoIterator<Item = E>>(
     browser_element_id: impl Into<Option<&'a str>>,
-    view_root: impl FnOnce() -> E,
+    view_root: impl FnOnce() -> I,
 ) {
     #[cfg(feature = "panic_hook")]
     #[cfg(debug_assertions)]
@@ -212,5 +212,7 @@ pub fn start_app<'a, E: Element>(
         .map(dominator::get_id)
         .unwrap_or_else(|| dominator::body().unchecked_into());
 
-    dominator::append_dom(&parent, view_root().into_raw_element().into_dom());
+    for element in view_root() {
+        dominator::append_dom(&parent, element.into_raw_element().into_dom());
+    }
 }
