@@ -1,5 +1,6 @@
 use crate::{web_sys::HtmlInputElement, *};
 use std::{borrow::Cow, marker::PhantomData};
+use std::iter;
 
 mod input_type;
 pub use input_type::*;
@@ -79,6 +80,33 @@ impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag> Eleme
 {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
+    }
+}
+
+
+impl<
+    IdFlag,
+    OnChangeFlag,
+    PlaceholderFlag,
+    TextFlag,
+    LabelFlag,
+    InputTypeFlag,
+    ReadOnlyFlag,
+> IntoIterator for TextInput<
+    IdFlag,
+    OnChangeFlag,
+    PlaceholderFlag,
+    TextFlag,
+    LabelFlag,
+    InputTypeFlag,
+    ReadOnlyFlag,
+> {
+    type Item = Self;
+    type IntoIter = iter::Once<Self>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        iter::once(self)
     }
 }
 

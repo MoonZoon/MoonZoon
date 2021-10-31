@@ -3,6 +3,7 @@ use std::{
     borrow::Cow,
     pin::Pin,
     task::{Context, Poll},
+    iter,
 };
 
 // ------ IntoEither ------
@@ -35,6 +36,16 @@ impl<L: Element, R: Element> Element for Either<L, R> {
             Either::Left(element) => element.into_raw_element(),
             Either::Right(element) => element.into_raw_element(),
         }
+    }
+}
+
+impl<L: Element, R: Element> IntoIterator for Either<L, R> {
+    type Item = Self;
+    type IntoIter = iter::Once<Self>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        iter::once(self)
     }
 }
 

@@ -1,5 +1,6 @@
 use crate::{web_sys::HtmlElement, *};
 use std::marker::PhantomData;
+use std::iter;
 
 // ------ ------
 //   Element
@@ -21,6 +22,16 @@ impl Column<EmptyFlagSet> {
 impl Element for Column<EmptyFlagNotSet> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
+    }
+}
+
+impl<EmptyFlag> IntoIterator for Column<EmptyFlag> {
+    type Item = Self;
+    type IntoIter = iter::Once<Self>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        iter::once(self)
     }
 }
 

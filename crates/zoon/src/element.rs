@@ -1,4 +1,5 @@
 use crate::*;
+use std::iter;
 
 // -- modules --
 
@@ -53,7 +54,7 @@ pub use ability::*;
 
 // ------ Element ------
 
-pub trait Element {
+pub trait Element: IntoIterator<Item = Self> {
     fn into_raw_element(self) -> RawElement;
 }
 
@@ -78,6 +79,16 @@ impl IntoDom for RawElement {
 impl Element for RawElement {
     fn into_raw_element(self) -> RawElement {
         self
+    }
+}
+
+impl IntoIterator for RawElement {
+    type Item = Self;
+    type IntoIter = iter::Once<Self>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        iter::once(self)
     }
 }
 

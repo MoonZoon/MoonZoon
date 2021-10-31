@@ -1,5 +1,6 @@
 use crate::{web_sys::HtmlDivElement, *};
 use std::marker::PhantomData;
+use std::iter;
 
 // ------ ------
 //    Element
@@ -68,6 +69,16 @@ impl<OnChangeFlag, CheckedFlag> Element
 {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
+    }
+}
+
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> IntoIterator for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> {
+    type Item = Self;
+    type IntoIter = iter::Once<Self>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        iter::once(self)
     }
 }
 

@@ -1,5 +1,6 @@
 use crate::{web_sys::HtmlImageElement, *};
 use std::marker::PhantomData;
+use std::iter;
 
 // ------ ------
 //    Element
@@ -24,6 +25,16 @@ impl Image<UrlFlagNotSet, DescriptionFlagNotSet> {
 impl Element for Image<UrlFlagSet, DescriptionFlagSet> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
+    }
+}
+
+impl<UrlFlagSet, DescriptionFlagSet> IntoIterator for Image<UrlFlagSet, DescriptionFlagSet> {
+    type Item = Self;
+    type IntoIter = iter::Once<Self>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        iter::once(self)
     }
 }
 
