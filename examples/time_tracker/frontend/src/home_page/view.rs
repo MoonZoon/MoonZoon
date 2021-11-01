@@ -17,7 +17,7 @@ pub fn page() -> impl Element {
 
 fn title() -> impl Element {
     El::new()
-        .s(Font::new().size(50).weight(NamedWeight::SemiBold))
+        .s(Font::new().size(50).weight(FontWeight::SemiBold))
         .child("Time Tracker")
 }
 
@@ -32,7 +32,7 @@ fn moonzoon_link() -> impl Element {
 fn time_tracker_link() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Link::new()
-        .s(Font::new().weight(NamedWeight::Bold).color_signal(theme::font_3()).size(20).center())
+        .s(Font::new().weight(FontWeight::Bold).color_signal(theme::font_3()).size(20).center())
         .s(Padding::all(12).top(10))
         .s(RoundedCorners::all(6))
         .s(Background::new().color_signal(hovered_signal.map_bool_signal(

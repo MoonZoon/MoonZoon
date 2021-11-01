@@ -13,11 +13,12 @@ fn decrement() {
     counter().update(|counter| counter - 1)
 }
 
-fn root() -> impl Element {
-    Column::new()
-        .item(Button::new().label("-").on_press(decrement))
-        .item(Text::with_signal(counter().signal()))
-        .item(Button::new().label("+").on_press(increment))
+fn root() -> impl IntoIterator<Item = impl Element> {
+    element_vec![
+        Button::new().label("-").on_press(decrement),
+        Text::with_signal(counter().signal()),
+        Button::new().label("+").on_press(increment),
+    ]
 }
 
 #[wasm_bindgen(start)]

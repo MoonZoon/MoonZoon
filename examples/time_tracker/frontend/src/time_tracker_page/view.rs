@@ -15,7 +15,7 @@ fn title() -> impl Element {
         .s(
             Font::new()
                 .size(30)
-                .weight(NamedWeight::SemiBold)
+                .weight(FontWeight::SemiBold)
                 .color_signal(theme::font_0())
         )
         .child("Time Tracker")
@@ -268,7 +268,7 @@ fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static, is_active: Re
                 || theme::font_1(), 
                 || theme::font_3(),
             ))
-            .weight(NamedWeight::Bold)
+            .weight(FontWeight::Bold)
         )
         .s(RoundedCorners::all_max())
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
@@ -705,7 +705,7 @@ fn date_time_part_input(
                     || theme::font_1(),
                 ))
                 .center()
-                .weight(if bold { NamedWeight::Bold } else { NamedWeight::Regular } )
+                .weight(if bold { FontWeight::Bold } else { FontWeight::Regular } )
         )
         .s(Background::new().color_signal(valid_signal.map_bool_signal(
             || theme::transparent(), 

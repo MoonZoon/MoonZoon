@@ -34,7 +34,7 @@ fn back_button() -> impl Element {
 
 fn link(label: &str, route: Route) -> impl Element {
     Link::new()
-        .s(Font::new().underline().color(BLUE_4))
+        .s(Font::new().color(BLUE_4).line(FontLine::new().underline()))
         .label(label)
         .to(route)
 }

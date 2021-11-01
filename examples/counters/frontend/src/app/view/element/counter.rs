@@ -1,5 +1,5 @@
 use std::marker::PhantomData;
-use std::rc::Rc;
+use std::{rc::Rc, iter};
 use zoon::*;
 
 // ------ ------
@@ -102,6 +102,16 @@ impl<ValueFlag, StepFlag> Element
                 on_change(step);
             }),
         )
+    }
+}
+
+impl<ValueFlag, ValueSignal, OnChangeFlag, StepFlag> IntoIterator for Counter<ValueFlag, ValueSignal, OnChangeFlag, StepFlag> {
+    type Item = Self;
+    type IntoIter = iter::Once<Self>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        iter::once(self)
     }
 }
 

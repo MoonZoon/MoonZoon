@@ -44,7 +44,7 @@ fn received_message(message: super::Message) -> impl Element {
         .item(
             El::new()
                 .s(Font::new()
-                    .weight(NamedWeight::Bold)
+                    .weight(FontWeight::Bold)
                     .color(GRAY_0)
                     .size(17))
                 .child(message.username),
@@ -74,7 +74,7 @@ fn message_text_to_contents(text: &str) -> impl Iterator<Item = RawElement> + '_
 fn emoji(name: &str) -> impl Element {
     Image::new()
         .s(Height::new(17))
-        .s(Transform::new().scale(230).move_up(2))
+        .s(Transform::new().scale(230).move_down(2))
         .s(Padding::new().x(5))
         .url([PUBLIC_URL, "emoji/", name, ".png"].concat())
         .description(name)
