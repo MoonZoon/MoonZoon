@@ -212,14 +212,17 @@ impl GlobalStyles {
     fn new() -> Self {
         let style_element: HtmlStyleElement = document()
             .create_element("style")
-            .unwrap_throw()
+            .expect_throw("style: create_element failed")
             .unchecked_into();
         document()
             .head()
-            .unwrap_throw()
+            .expect_throw("style: head failed")
             .append_child(&style_element)
-            .unwrap_throw();
-        let sheet = style_element.sheet().unwrap_throw().unchecked_into();
+            .expect_throw("style: append_child failed");
+        let sheet = style_element
+            .sheet()
+            .expect_throw("style: sheet failed")
+            .unchecked_into();
         Self {
             sheet: SendWrapper::new(sheet),
             rule_ids: MonotonicIds::default(),
@@ -256,9 +259,9 @@ impl GlobalStyles {
         let declaration = self
             .sheet
             .css_rules()
-            .unwrap_throw()
+            .expect_throw("EEE")
             .item(rule_id_and_index)
-            .unwrap_throw()
+            .expect_throw("FFF")
             .unchecked_into::<CssStyleRule>()
             .style();
 
@@ -282,7 +285,9 @@ impl GlobalStyles {
                     // @TODO allow to set `important ` also in dynamic styles
                     set_css_property(&declaration, &name, &value, false);
                 } else {
-                    declaration.remove_property(&name).unwrap_throw();
+                    declaration
+                        .remove_property(&name)
+                        .expect_throw("style: remove_property failed");
                 }
             });
             if droppable {
@@ -297,19 +302,26 @@ impl GlobalStyles {
     fn remove_rule(&self, id: u32) {
         let (rule_index, _ids_lock) = self.rule_ids.remove_id(id);
         self.sheet
-            .delete_rule(u32::try_from(rule_index).unwrap_throw())
-            .unwrap_throw();
+            .delete_rule(u32::try_from(rule_index).expect_throw("style: rule_index casting failed"))
+            .expect_throw("style: delete_rule failed");
     }
 }
 
 fn set_css_property(declaration: &CssStyleDeclaration, name: &str, value: &str, important: bool) {
     let priority = if important { "important" } else { "" };
-    declaration
-        .set_property_with_priority(name, value, priority)
-        .unwrap_throw();
+
+    match declaration.set_property_with_priority(name, value, priority) {
+        Ok(declaration) => declaration,
+        Err(error) => {
+            // e.g. `CSSStyleDeclaration.setProperty: Can't set properties on CSSFontFaceRule declarations` on Firefox
+            crate::eprintln!("{:#?}", error);
+            return;
+        }
+    }
+
     if not(declaration
         .get_property_value(name)
-        .unwrap_throw()
+        .expect_throw("style: get_property_value failed")
         .is_empty())
     {
         return;
@@ -318,10 +330,10 @@ fn set_css_property(declaration: &CssStyleDeclaration, name: &str, value: &str, 
         let prefixed_name = [prefix, name].concat();
         declaration
             .set_property_with_priority(&prefixed_name, value, priority)
-            .unwrap_throw();
+            .expect_throw("style: set_property_with_priority failed");
         if not(declaration
             .get_property_value(&prefixed_name)
-            .unwrap_throw()
+            .expect_throw("style: get_property_value failed")
             .is_empty())
         {
             return;
