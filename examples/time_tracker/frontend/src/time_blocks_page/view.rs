@@ -16,7 +16,7 @@ fn title() -> impl Element {
         .s(
             Font::new()
                 .size(30)
-                .weight(NamedWeight::SemiBold)
+                .weight(FontWeight::SemiBold)
                 .color_signal(theme::font_0())
         )
         .child("Time Blocks")
@@ -358,7 +358,7 @@ fn add_entity_button(title: &str, on_press: impl FnOnce() + Clone + 'static) -> 
                     || theme::background_3_highlighted(),
                     || theme::background_3(),
                 )))
-                .s(Font::new().color_signal(theme::font_3()).weight(NamedWeight::SemiBold))
+                .s(Font::new().color_signal(theme::font_3()).weight(FontWeight::SemiBold))
                 .s(Padding::all(5))
                 .s(RoundedCorners::all_max())
                 .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
@@ -387,7 +387,7 @@ fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Eleme
             || theme::background_3_highlighted(),
             || theme::background_3(),
         )))
-        .s(Font::new().color_signal(theme::font_3()).weight(NamedWeight::Bold))
+        .s(Font::new().color_signal(theme::font_3()).weight(FontWeight::Bold))
         .s(RoundedCorners::all_max())
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(on_press)
@@ -404,7 +404,7 @@ fn link_button(invoice: Arc<super::Invoice>) -> impl Element {
             || theme::background_3_highlighted(),
             || theme::background_3(),
         )))
-        .s(Font::new().color_signal(theme::font_3()).weight(NamedWeight::Bold))
+        .s(Font::new().color_signal(theme::font_3()).weight(FontWeight::Bold))
         .s(RoundedCorners::all_max())
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .to_signal(invoice.url.signal_cloned())

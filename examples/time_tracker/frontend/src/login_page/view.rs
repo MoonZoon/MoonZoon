@@ -24,7 +24,7 @@ pub fn page() -> impl Element {
 fn title() -> impl Element {
     El::new()
         .s(Align::new().center_x())
-        .s(Font::new().size(25).weight(NamedWeight::SemiBold))
+        .s(Font::new().size(25).weight(FontWeight::SemiBold))
         .child("Login")
 }
 
@@ -101,7 +101,7 @@ fn login_button() -> impl Element {
             || theme::background_3_highlighted(),
             || theme::background_3(),
         )))
-        .s(Font::new().color_signal(theme::font_3()).weight(NamedWeight::Bold))
+        .s(Font::new().color_signal(theme::font_3()).weight(FontWeight::Bold))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))

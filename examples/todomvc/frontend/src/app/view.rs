@@ -11,7 +11,7 @@ pub fn root() -> impl Element {
         .s(Font::new()
             .size(14)
             .color(hsluv!(0, 0, 5.1))
-            .weight(NamedWeight::Light)
+            .weight(FontWeight::Light)
             .family(vec![
                 FontFamily::new("Helvetica Neue"),
                 FontFamily::new("Helvetica"),
@@ -44,7 +44,7 @@ fn header() -> impl Element {
         .s(Font::new()
             .size(100)
             .color(hsluv!(10.5, 62.8, 44.5, 15))
-            .weight(NamedWeight::Hairline))
+            .weight(FontWeight::Hairline))
         .child(El::with_tag(Tag::H1).child("todos"))
 }
 
@@ -153,14 +153,16 @@ fn todo_title(todo: Arc<Todo>) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Label::new()
         .s(Width::fill())
-        .s(Font::new()
-            .color_signal(
-                todo.completed
-                    .signal()
-                    .map_bool(|| hsluv!(0, 0, 86.7), || hsluv!(0, 0, 32.7)),
-            )
-            .strike_signal(todo.completed.signal())
-            .size(24))
+        .s(
+            Font::new()
+                .color_signal(
+                    todo.completed
+                        .signal()
+                        .map_bool(|| hsluv!(0, 0, 86.7), || hsluv!(0, 0, 32.7)),
+                )
+                .size(24)
+                .line(FontLine::new().strike_signal(todo.completed.signal()))
+        )
         .s(Padding::all(15).right(60))
         .s(Clip::x())
         .for_input(todo.id.to_string())
@@ -288,7 +290,7 @@ fn clear_completed_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(Align::new().right())
-        .s(Font::new().underline_signal(hovered_signal))
+        .s(Font::new().line(FontLine::new().underline_signal(hovered_signal)))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(super::remove_completed_todos)
         .label("Clear completed")
@@ -310,7 +312,7 @@ fn footer() -> impl Element {
 fn author_link() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Link::new()
-        .s(Font::new().underline_signal(hovered_signal))
+        .s(Font::new().line(FontLine::new().underline_signal(hovered_signal)))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .label("Martin Kavík")
         .to("https://github.com/MartinKavik")
@@ -320,7 +322,7 @@ fn author_link() -> impl Element {
 fn todomvc_link() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Link::new()
-        .s(Font::new().underline_signal(hovered_signal))
+        .s(Font::new().line(FontLine::new().underline_signal(hovered_signal)))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .label("TodoMVC")
         .to("http://todomvc.com")

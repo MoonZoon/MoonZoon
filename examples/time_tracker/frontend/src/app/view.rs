@@ -40,7 +40,7 @@ fn header() -> impl Element {
 fn logo() -> impl Element {
     Link::new()
         .s(Height::fill())
-        .s(Font::new().weight(NamedWeight::Bold).size(32))
+        .s(Font::new().weight(FontWeight::Bold).size(32))
         .s(Padding::new().x(12))
         .to(Route::Root)
         .label(Row::new().s(Height::fill()).item("TT"))
@@ -159,7 +159,7 @@ fn login_button() -> impl Element {
             || theme::background_3_highlighted(),
             || theme::background_3(),
         )))
-        .s(Font::new().color_signal(theme::font_3()).weight(NamedWeight::Bold))
+        .s(Font::new().color_signal(theme::font_3()).weight(FontWeight::Bold))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
@@ -181,7 +181,7 @@ fn logout_button() -> impl Element {
         .on_press(super::log_out)
         .label(
             Row::new()
-                .item(El::new().s(Font::new().weight(NamedWeight::SemiBold)).child("Log out "))
+                .item(El::new().s(Font::new().weight(FontWeight::SemiBold)).child("Log out "))
                 .item(super::logged_user_name())
         )
 }
