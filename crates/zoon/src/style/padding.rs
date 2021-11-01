@@ -11,9 +11,7 @@ impl<'a> Padding<'a> {
         Self::default().x(padding).y(padding)
     }
 
-    pub fn all_signal(
-        all: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
-    ) -> Self {
+    pub fn all_signal(all: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static) -> Self {
         let this = Self::default();
         let all = Broadcaster::new(all.map(|all| all.into()));
         this.x_signal(all.signal()).y_signal(all.signal())
@@ -23,10 +21,7 @@ impl<'a> Padding<'a> {
         self.left(x).right(x)
     }
 
-    pub fn x_signal(
-        self,
-        x: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
-    ) -> Self {
+    pub fn x_signal(self, x: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static) -> Self {
         let x = Broadcaster::new(x.map(|x| x.into()));
         self.left_signal(x.signal()).right_signal(x.signal())
     }
@@ -35,10 +30,7 @@ impl<'a> Padding<'a> {
         self.top(y).bottom(y)
     }
 
-    pub fn y_signal(
-        self,
-        y: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
-    ) -> Self {
+    pub fn y_signal(self, y: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static) -> Self {
         let y = Broadcaster::new(y.map(|y| y.into()));
         self.top_signal(y.signal()).bottom_signal(y.signal())
     }
@@ -53,7 +45,8 @@ impl<'a> Padding<'a> {
         top: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
     ) -> Self {
         let top = top.map(|top| top.into().map(px));
-        self.dynamic_css_props.insert("padding-top".into(), box_css_signal(top));
+        self.dynamic_css_props
+            .insert("padding-top".into(), box_css_signal(top));
         self
     }
 
@@ -67,7 +60,8 @@ impl<'a> Padding<'a> {
         right: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
     ) -> Self {
         let right = right.map(|right| right.into().map(px));
-        self.dynamic_css_props.insert("padding-right".into(), box_css_signal(right));
+        self.dynamic_css_props
+            .insert("padding-right".into(), box_css_signal(right));
         self
     }
 
@@ -81,7 +75,8 @@ impl<'a> Padding<'a> {
         bottom: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
     ) -> Self {
         let bottom = bottom.map(|bottom| bottom.into().map(px));
-        self.dynamic_css_props.insert("padding-bottom".into(), box_css_signal(bottom));
+        self.dynamic_css_props
+            .insert("padding-bottom".into(), box_css_signal(bottom));
         self
     }
 
@@ -95,7 +90,8 @@ impl<'a> Padding<'a> {
         left: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
     ) -> Self {
         let left = left.map(|left| left.into().map(px));
-        self.dynamic_css_props.insert("padding-left".into(), box_css_signal(left));
+        self.dynamic_css_props
+            .insert("padding-left".into(), box_css_signal(left));
         self
     }
 }

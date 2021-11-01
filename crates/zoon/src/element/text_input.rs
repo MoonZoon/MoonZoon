@@ -1,6 +1,6 @@
 use crate::{web_sys::HtmlInputElement, *};
-use std::{borrow::Cow, marker::PhantomData};
 use std::iter;
+use std::{borrow::Cow, marker::PhantomData};
 
 mod input_type;
 pub use input_type::*;
@@ -83,24 +83,18 @@ impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag> Eleme
     }
 }
 
-
-impl<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    InputTypeFlag,
-    ReadOnlyFlag,
-> IntoIterator for TextInput<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    InputTypeFlag,
-    ReadOnlyFlag,
-> {
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    IntoIterator
+    for TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
+{
     type Item = Self;
     type IntoIter = iter::Once<Self>;
 

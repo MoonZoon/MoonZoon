@@ -1,6 +1,6 @@
 use crate::{web_sys::HtmlAnchorElement, *};
-use std::marker::PhantomData;
 use std::iter;
+use std::marker::PhantomData;
 
 // ------ ------
 //    Element

@@ -1,9 +1,9 @@
 use crate::*;
 use std::{
     borrow::Cow,
+    iter,
     pin::Pin,
     task::{Context, Poll},
-    iter,
 };
 
 // ------ IntoEither ------

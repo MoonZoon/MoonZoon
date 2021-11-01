@@ -24,7 +24,7 @@ mod clip;
 pub use clip::Clip;
 
 mod font;
-pub use font::{Font, FontFamily, FontWeight, FontLine};
+pub use font::{Font, FontFamily, FontLine, FontWeight};
 
 mod height;
 pub use height::Height;
@@ -67,17 +67,23 @@ pub struct StaticCSSProps<'a>(BTreeMap<&'a str, CssPropValue<'a>>);
 
 impl<'a> StaticCSSProps<'a> {
     pub fn insert(&mut self, name: &'a str, value: impl IntoCowStr<'a>) {
-        self.0.insert(name, CssPropValue {
-            value: value.into_cow_str(),
-            important: false
-        });
+        self.0.insert(
+            name,
+            CssPropValue {
+                value: value.into_cow_str(),
+                important: false,
+            },
+        );
     }
 
     pub fn insert_important(&mut self, name: &'a str, value: impl IntoCowStr<'a>) {
-        self.0.insert(name, CssPropValue {
-            value: value.into_cow_str(),
-            important: true
-        });
+        self.0.insert(
+            name,
+            CssPropValue {
+                value: value.into_cow_str(),
+                important: true,
+            },
+        );
     }
 }
 
@@ -91,7 +97,7 @@ impl<'a> IntoIterator for StaticCSSProps<'a> {
 }
 
 impl<'a> Extend<(&'a str, CssPropValue<'a>)> for StaticCSSProps<'a> {
-    fn extend<T: IntoIterator<Item=(&'a str, CssPropValue<'a>)>>(&mut self, iter: T) {
+    fn extend<T: IntoIterator<Item = (&'a str, CssPropValue<'a>)>>(&mut self, iter: T) {
         self.0.extend(iter);
     }
 }
@@ -259,7 +265,12 @@ impl GlobalStyles {
         drop(ids_lock);
 
         for (name, css_prop_value) in group.static_css_props {
-            set_css_property(&declaration, name, &css_prop_value.value, css_prop_value.important);
+            set_css_property(
+                &declaration,
+                name,
+                &css_prop_value.value,
+                css_prop_value.important,
+            );
         }
 
         let declaration = Arc::new(SendWrapper::new(declaration));
@@ -293,7 +304,9 @@ impl GlobalStyles {
 
 fn set_css_property(declaration: &CssStyleDeclaration, name: &str, value: &str, important: bool) {
     let priority = if important { "important" } else { "" };
-    declaration.set_property_with_priority(name, value, priority).unwrap_throw();
+    declaration
+        .set_property_with_priority(name, value, priority)
+        .unwrap_throw();
     if not(declaration
         .get_property_value(name)
         .unwrap_throw()

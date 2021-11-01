@@ -21,7 +21,8 @@ impl<'a> Height<'a> {
     ) -> Self {
         let mut this = Self::default();
         let height = height.map(|height| height.into().map(px));
-        this.dynamic_css_props.insert("height".into(), box_css_signal(height));
+        this.dynamic_css_props
+            .insert("height".into(), box_css_signal(height));
         this.static_css_classes.insert("exact_height".into());
         this.static_css_classes.remove("fill_height".into());
         this
