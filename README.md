@@ -79,6 +79,15 @@
 
 ---
 
+# Create a New project
+
+1. Click the green button `Use this template`: [github.com/MoonZoon/demo](https://github.com/MoonZoon/demo)
+2. Follow the `demo`'s README.
+
+(_Note:_ There will be better project templates and better ways to create your new projects.)
+
+---
+
 # Examples
 
 - [Examples](examples) in the repo. 
