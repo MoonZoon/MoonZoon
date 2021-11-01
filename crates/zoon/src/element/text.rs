@@ -32,7 +32,6 @@ impl Element for Text {
     }
 }
 
-
 impl IntoIterator for Text {
     type Item = Self;
     type IntoIter = iter::Once<Self>;

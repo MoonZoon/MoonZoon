@@ -42,7 +42,8 @@ impl FontLine<'_> {
 
     pub fn color(mut self, color: impl Into<Option<HSLuv>>) -> Self {
         if let Some(color) = color.into() {
-            self.static_css_props.insert("text-decoration-color", color.into_cow_str());
+            self.static_css_props
+                .insert("text-decoration-color", color.into_cow_str());
         }
         self
     }

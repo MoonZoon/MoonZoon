@@ -1,6 +1,6 @@
 use crate::{web_sys::HtmlLabelElement, *};
-use std::marker::PhantomData;
 use std::iter;
+use std::marker::PhantomData;
 
 // ------ ------
 //    Element

@@ -81,14 +81,15 @@ impl<'a> Font<'a> {
             .map(|family| family.into_cow_str())
             .collect::<Cow<_>>()
             .join(", ");
-        self.static_css_props
-            .insert("font-family", font_family);
+        self.static_css_props.insert("font-family", font_family);
         self
     }
 
     pub fn line(mut self, line: FontLine<'a>) -> Self {
-        self.static_css_props.extend(line.static_css_props.into_iter());
-        self.dynamic_css_props.extend(line.dynamic_css_props.into_iter());
+        self.static_css_props
+            .extend(line.static_css_props.into_iter());
+        self.dynamic_css_props
+            .extend(line.dynamic_css_props.into_iter());
         self
     }
 }

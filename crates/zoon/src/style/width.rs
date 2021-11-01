@@ -21,7 +21,8 @@ impl<'a> Width<'a> {
     ) -> Self {
         let mut this = Self::default();
         let width = width.map(|width| width.into().map(px));
-        this.dynamic_css_props.insert("width".into(), box_css_signal(width));
+        this.dynamic_css_props
+            .insert("width".into(), box_css_signal(width));
         this.static_css_classes.insert("exact_width".into());
         this.static_css_classes.remove("fill_width".into());
         this
