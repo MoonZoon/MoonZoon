@@ -172,10 +172,10 @@ macro_rules! run_once {
         $crate::gensym! { $crate::run_once!($f) }
     };
     ($random_ident:ident, $f:expr) => {
-        $crate::paste! {
+        $crate::paste! {{
             static [<RUN_ONCE $random_ident:snake:upper>]: std::sync::Once = std::sync::Once::new();
             [<RUN_ONCE $random_ident:snake:upper>].call_once($f);
-        }
+        }}
     };
 }
 
