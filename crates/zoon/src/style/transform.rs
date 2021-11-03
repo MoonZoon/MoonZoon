@@ -1,11 +1,24 @@
 use crate::*;
+use std::{borrow::Cow, mem};
 
 #[derive(Default)]
 pub struct Transform {
     transformations: Vec<String>,
+    dynamic_css_props: DynamicCSSProps,
 }
 
 impl Transform {
+    pub fn with_signal(
+        transform: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
+    ) -> Self {
+        let mut this = Self::default();
+        let transform = transform.map(|transform| { 
+            transform.into().map(|mut transform| transform.transformations_into_value())
+        });
+        this.dynamic_css_props.insert("transform".into(), box_css_signal(transform));
+        this
+    }
+
     pub fn move_up(mut self, distance: impl Into<f64>) -> Self {
         self.transformations
             .push(crate::format!("translateY(-{}px)", distance.into()));
@@ -41,24 +54,30 @@ impl Transform {
             .push(crate::format!("scale({})", percent.into() / 100.));
         self
     }
+
+    fn transformations_into_value(&mut self) -> Cow<'static, str> {
+        let transformations = mem::take(&mut self.transformations);
+        if transformations.is_empty() {
+            return "none".into()
+        }
+        transformations
+            .into_iter()
+            .rev()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .into()
+    }
 }
 
 impl<'a> Style<'a> for Transform {
     fn apply_to_raw_el<E: RawEl>(
-        self,
+        mut self,
         mut raw_el: E,
         style_group: Option<StyleGroup<'a>>,
     ) -> (E, Option<StyleGroup<'a>>) {
         let mut static_css_props = StaticCSSProps::default();
-        if not(self.transformations.is_empty()) {
-            let transform_value = self
-                .transformations
-                .into_iter()
-                .rev()
-                .collect::<Vec<_>>()
-                .join(" ");
-            static_css_props.insert("transform", transform_value);
-        }
+        static_css_props.insert("transform", self.transformations_into_value());
+
         if let Some(mut style_group) = style_group {
             for (name, css_prop_value) in static_css_props {
                 style_group = if css_prop_value.important {
@@ -66,6 +85,9 @@ impl<'a> Style<'a> for Transform {
                 } else {
                     style_group.style_important(name, css_prop_value.value)
                 };
+            }
+            for (name, value) in self.dynamic_css_props {
+                style_group = style_group.style_signal(name, value);
             }
             return (raw_el, Some(style_group));
         }
@@ -75,6 +97,9 @@ impl<'a> Style<'a> for Transform {
             } else {
                 raw_el.style(name, &css_prop_value.value)
             };
+        }
+        for (name, value) in self.dynamic_css_props {
+            raw_el = raw_el.style_signal(name, value);
         }
         (raw_el, None)
     }
