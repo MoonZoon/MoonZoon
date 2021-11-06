@@ -12,10 +12,13 @@ impl Transform {
         transform: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
     ) -> Self {
         let mut this = Self::default();
-        let transform = transform.map(|transform| { 
-            transform.into().map(|mut transform| transform.transformations_into_value())
+        let transform = transform.map(|transform| {
+            transform
+                .into()
+                .map(|mut transform| transform.transformations_into_value())
         });
-        this.dynamic_css_props.insert("transform".into(), box_css_signal(transform));
+        this.dynamic_css_props
+            .insert("transform".into(), box_css_signal(transform));
         this
     }
 
@@ -58,7 +61,7 @@ impl Transform {
     fn transformations_into_value(&mut self) -> Cow<'static, str> {
         let transformations = mem::take(&mut self.transformations);
         if transformations.is_empty() {
-            return "none".into()
+            return "none".into();
         }
         transformations
             .into_iter()
