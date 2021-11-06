@@ -428,11 +428,19 @@ fn named_file_and_encoding(
 
     if accept_encodings.contains(ContentEncoding::Br.as_str()) {
         file.push_str(".br");
-        return Ok((NamedFile::open(file)?, Some(ContentEncoding::Br)));
+        let named_file = NamedFile::open(&file);
+        if named_file.is_err() {
+            eprintln!("Cannot load '{}'. Consider to set `ENV COMPRESSED_PKG false` or build with `mzoon build -r`.", file);
+        }
+        return Ok((named_file?, Some(ContentEncoding::Br)));
     }
     if accept_encodings.contains(ContentEncoding::Gzip.as_str()) {
         file.push_str(".gz");
-        return Ok((NamedFile::open(file)?, Some(ContentEncoding::Gzip)));
+        let named_file = NamedFile::open(&file);
+        if named_file.is_err() {
+            eprintln!("Cannot load '{}'. Consider to set `ENV COMPRESSED_PKG false` or build with `mzoon build -r`.", file);
+        }
+        return Ok((named_file?, Some(ContentEncoding::Gzip)));
     }
     Ok((NamedFile::open(file)?, None))
 }
