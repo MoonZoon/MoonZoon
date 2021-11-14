@@ -47,6 +47,9 @@ pub use shadows::{Shadow, Shadows};
 mod spacing;
 pub use spacing::Spacing;
 
+mod transitions;
+pub use transitions::{Transitions, Transition};
+
 mod transform;
 pub use transform::Transform;
 

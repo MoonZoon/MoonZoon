@@ -409,6 +409,23 @@ fn element_with_raw_styles() -> impl Element {
 - `StyleGroup` selector is prefixed by a unique element _class id_ - e.g. `._13:hover .icon`.
 - `StyleGroup`s are stored among the global styles and dropped when the associated element is removed from the DOM.
 
+### Animated styles
+
+```rust
+fn sidebar() -> impl Element {
+    Column::new()
+        .s(Width::with_signal(sidebar_expanded().signal().map_bool(|| 180, || 48)))
+        .s(Transitions::new([Transition::width().duration(500)]))
+        .s(Clip::both())
+        .item(toggle_button())
+        .item(menu())
+}
+```
+
+- Use `Transitions` with an iterator of `Transition` to create basic animations.
+- There are some typed properties like `Transition::width()` and `::height()`, but you can use also `::all()` and custom property names with `::property("font-size")`.
+- Let us know when you want to add another typed property. [The list of supported properties](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_animated_properties). 
+
 ---
 ## Color
 
@@ -805,7 +822,7 @@ fn save_todos() {
         </details>
         
 1. _"How are we taking care of animations?"_ (by None on [chat](https://discord.gg/eGduTxK2Es))
-   - The API for animations haven't been designed yet. We'll probably focus on it once we have a proof-of-concept of the basic MoonZoon features.
+   - The API for advanced animations haven't been designed yet. See the sub-section `Animated styles` for basic examples.
    - Inspiration:
       - [react-spring](https://www.react-spring.io/)
       - [Framer Motion](https://www.framer.com/motion/)
