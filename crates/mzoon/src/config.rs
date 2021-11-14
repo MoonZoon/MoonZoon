@@ -11,6 +11,7 @@ pub struct Config {
     pub cache_busting: bool,
     pub backend_log_level: LevelFilter,
     pub redirect: Redirect,
+    pub cors: Cors,
     pub watch: Watch,
 }
 
@@ -28,6 +29,11 @@ impl Config {
 pub struct Redirect {
     pub port: u16,
     pub enabled: bool,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Cors {
+    pub origins: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]

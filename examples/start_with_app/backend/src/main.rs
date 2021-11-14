@@ -8,6 +8,7 @@ use moon::{
         get,
         Responder,
     },
+    actix_cors::Cors,
     config::CONFIG,
 };
 
@@ -49,6 +50,18 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Condition::new(CONFIG.redirect.enabled, Compat::new(redirect)))
             .wrap(Logger::new("%r %s %D ms %a"))
+            .wrap(Cors::default()
+                .allowed_origin_fn(move |origin, _| {
+                    if CONFIG.cors.origins.contains("*") {
+                        return true;
+                    }
+                    let origin = match origin.to_str() {
+                        Ok(origin) => origin,
+                        Err(_) => return false,
+                    };
+                    CONFIG.cors.origins.contains(origin)
+                })
+            )
             .wrap(
                 ErrorHandlers::new()
                     .handler(
