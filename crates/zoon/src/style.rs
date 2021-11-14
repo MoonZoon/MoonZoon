@@ -48,7 +48,7 @@ mod spacing;
 pub use spacing::Spacing;
 
 mod transitions;
-pub use transitions::{Transitions, Transition};
+pub use transitions::{Transition, Transitions};
 
 mod transform;
 pub use transform::Transform;

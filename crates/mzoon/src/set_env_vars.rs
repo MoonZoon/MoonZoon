@@ -17,5 +17,9 @@ pub fn set_env_vars(config: &Config, release: bool) {
     // enabled = true
     env::set_var("REDIRECT_ENABLED", config.redirect.enabled.to_string());
 
+    // [cors]
+    // origins = ["*", "https://example.com"]
+    env::set_var("CORS_ORIGINS", config.cors.origins.join(","));
+
     env::set_var("COMPRESSED_PKG", release.to_string());
 }

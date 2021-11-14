@@ -2,6 +2,8 @@ use crate::from_env_vars::FromEnvVars;
 use log::LevelFilter;
 pub use once_cell::sync::Lazy;
 use serde::Deserialize;
+use std::borrow::Cow;
+use std::collections::BTreeSet;
 
 pub static CONFIG: Lazy<Config> = Lazy::new(Config::from_env_vars);
 
@@ -21,6 +23,9 @@ pub struct Config {
 
     #[serde(default = "Redirect::from_env_vars")]
     pub redirect: Redirect,
+
+    #[serde(default = "Cors::from_env_vars")]
+    pub cors: Cors,
 }
 
 impl FromEnvVars for Config {
@@ -36,6 +41,7 @@ impl Default for Config {
             cache_busting: true,
             backend_log_level: LevelFilter::Warn,
             redirect: Redirect::default(),
+            cors: Cors::default(),
         }
     }
 }
@@ -59,6 +65,26 @@ impl Default for Redirect {
         Self {
             port: 8081,
             enabled: false,
+        }
+    }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(default)]
+pub struct Cors {
+    // CORS_ORIGINS="http://localhost:8080,http://127.0.0.1:8080,*"
+    pub origins: BTreeSet<Cow<'static, str>>,
+}
+
+impl FromEnvVars for Cors {
+    const ENTITY_NAME: &'static str = "Cors";
+    const ENV_PREFIX: &'static str = "CORS_";
+}
+
+impl Default for Cors {
+    fn default() -> Self {
+        Self {
+            origins: BTreeSet::from_iter(["*".into()]),
         }
     }
 }

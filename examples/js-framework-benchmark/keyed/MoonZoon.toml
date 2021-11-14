@@ -8,6 +8,9 @@ backend_log_level = "warn" # "error" / "warn" / "info" / "debug" / "trace"
 port = 8081
 enabled = false
 
+[cors]
+origins = ["*"]
+
 [watch]
 frontend = [
     "public",

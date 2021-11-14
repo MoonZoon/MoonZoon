@@ -1,3 +1,4 @@
+use actix_cors::Cors;
 use actix_files::{Files, NamedFile};
 use actix_http::http::{header, ContentEncoding, HeaderMap};
 use actix_web::http::header::{CacheControl, CacheDirective, ContentType, ETag, EntityTag};
@@ -20,6 +21,7 @@ use tokio::fs;
 
 use futures::StreamExt;
 
+pub use actix_cors;
 pub use actix_files;
 pub use actix_http;
 pub use actix_web;
@@ -139,6 +141,18 @@ where
             ))
             // https://docs.rs/actix-web/4.0.0-beta.8/actix_web/middleware/struct.Logger.html
             .wrap(Logger::new(r#""%r" %s %b "%{Referer}i" %T"#))
+            .wrap(Cors::default().allowed_origin_fn(move |origin, _| {
+                if CONFIG.cors.origins.contains("*") {
+                    return true;
+                }
+                let origin = match origin.to_str() {
+                    Ok(origin) => origin,
+                    // Browsers should always send a valid Origin.
+                    // We don't care about invalid Origin sent from non-browser clients.
+                    Err(_) => return false,
+                };
+                CONFIG.cors.origins.contains(origin)
+            }))
             .wrap(
                 ErrorHandlers::new()
                     .handler(

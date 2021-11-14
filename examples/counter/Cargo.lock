@@ -19,6 +19,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix-cors"
+version = "0.6.0-beta.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa59d36d7ad063401d94ada05264a303791796ad5222d0954cc21f2e1052e99b"
+dependencies = [
+ "actix-service",
+ "actix-web",
+ "derive_more",
+ "futures-util",
+ "log",
+ "once_cell",
+ "smallvec 1.6.1",
+]
+
+[[package]]
 name = "actix-files"
 version = "0.6.0-beta.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -925,6 +940,7 @@ dependencies = [
 name = "moon"
 version = "0.1.0"
 dependencies = [
+ "actix-cors",
  "actix-files",
  "actix-http",
  "actix-rt",
