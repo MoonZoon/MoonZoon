@@ -589,30 +589,6 @@ The concept of `Scene` + `Viewport` has been "stolen" from the Elm world. Just l
 
 ## Built-in libraries / API
 
-### Timer
- 
-- Could be used as a timeout or stopwatch (to set an interval between callback calls).
-- See `examples/timer` for the entire code.
-
-```rust
-#[static_ref]
-fn timeout() -> &'static Mutable<Option<Timer>> {
-    Mutable::new(None)
-}
-
-fn timeout_enabled() -> impl Signal<Item = bool> {
-    timeout().signal_ref(Option::is_some)
-}
-
-fn start_timeout() {
-    timeout().set(Some(Timer::new(2_000, stop_timeout)));
-}
-
-fn stop_timeout() {
-    timeout().take();
-}
-```
-
 ### Connection + Task
 
 - `UpMsg` are sent from Zoon to Moon. `DownMsg` in the opposite direction.
@@ -645,6 +621,50 @@ fn send_message() {
             Err(error) => eprintln!("Failed to send message: {:?}", error),
         }
     });
+}
+```
+
+### Timer
+ 
+- Could be used as a timeout or stopwatch (to set an interval between callback calls).
+- `Timer` has methods `new`, `new_immediate`, `once` and `sleep`.
+- `Timer` is stopped on drop.
+- See `examples/timer` for the entire code.
+
+```rust
+#[static_ref]
+fn timeout() -> &'static Mutable<Option<Timer>> {
+    Mutable::new(None)
+}
+
+fn timeout_enabled() -> impl Signal<Item = bool> {
+    timeout().signal_ref(Option::is_some)
+}
+
+fn start_timeout() {
+    timeout().set(Some(Timer::once(2_000, stop_timeout)));
+}
+
+fn stop_timeout() {
+    timeout().take();
+}
+
+fn sleep_panel() -> impl Element {
+    let (asleep, asleep_signal) = Mutable::new_and_signal(false);
+    let sleep = move || {
+        Task::start(async move {
+            asleep.set_neq(true);
+            Timer::sleep(2_000).await;
+            asleep.set_neq(false);
+        })
+    };
+    Row::new()
+        .s(Spacing::new(20))
+        .item("2s Async Sleep")
+        .item_signal(asleep_signal.map_bool(
+            || El::new().child("zZZ...").left_either(),
+            move || start_button(sleep.clone()).right_either(),
+        ))
 }
 ```
 
