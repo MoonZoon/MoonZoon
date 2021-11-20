@@ -36,6 +36,7 @@ pub use dom_builder_ext::DomBuilderExt;
 pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};
 pub use either::{Either, IntoEither};
 pub use element::*;
+pub use futures_channel::{self, oneshot};
 pub use futures_signals::{
     self, map_mut, map_ref,
     signal::{

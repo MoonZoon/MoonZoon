@@ -1,4 +1,4 @@
-use zoon::{*, named_color::*};
+use zoon::{named_color::*, *};
 
 // -- stopwatch --
 
@@ -58,6 +58,7 @@ fn root() -> impl Element {
         .s(Spacing::new(30))
         .item(stopwatch_panel())
         .item(timeout_panel())
+        .item(sleep_panel())
 }
 
 fn stopwatch_panel() -> impl Element {
@@ -81,11 +82,29 @@ fn timeout_panel() -> impl Element {
         ))
 }
 
-fn start_button(on_press: fn()) -> impl Element {
+fn sleep_panel() -> impl Element {
+    let (asleep, asleep_signal) = Mutable::new_and_signal(false);
+    let sleep = move || {
+        Task::start(async move {
+            asleep.set_neq(true);
+            Timer::sleep(2_000).await;
+            asleep.set_neq(false);
+        })
+    };
+    Row::new()
+        .s(Spacing::new(20))
+        .item("2s Async Sleep")
+        .item_signal(asleep_signal.map_bool(
+            || El::new().child("zZZ...").left_either(),
+            move || start_button(sleep.clone()).right_either(),
+        ))
+}
+
+fn start_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
     button("Start", GREEN_7, GREEN_8, on_press)
 }
 
-fn stop_button(on_press: fn()) -> impl Element {
+fn stop_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
     button("Stop", RED_7, RED_8, on_press)
 }
 
@@ -93,7 +112,7 @@ fn button(
     label: &str,
     bg_color_hovered: HSLuv,
     bg_color: HSLuv,
-    on_press: fn(),
+    on_press: impl FnOnce() + Clone + 'static,
 ) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
