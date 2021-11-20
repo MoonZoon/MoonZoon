@@ -2067,6 +2067,7 @@ dependencies = [
  "console_error_panic_hook",
  "dominator",
  "enclose",
+ "futures-channel",
  "futures-signals",
  "futures-util",
  "gensym",
