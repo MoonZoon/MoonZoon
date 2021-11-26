@@ -489,9 +489,7 @@ impl<'a> Placeholder<'a> {
     pub fn with_signal(
         text: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static,
     ) -> Self {
-        let text = text.map(|text| {
-            Box::new(text) as Box<dyn IntoOptionCowStr<'static>>
-        });
+        let text = text.map(|text| Box::new(text) as Box<dyn IntoOptionCowStr<'static>>);
         Placeholder {
             text: PlaceholderText::Dynamic(Box::new(text)),
             style_applicators: Vec::new(),

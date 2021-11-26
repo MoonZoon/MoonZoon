@@ -104,12 +104,7 @@ impl RawHtmlEl {
         self
     }
 
-    pub fn focus_signal(
-        self,
-        focus: impl Signal<Item = bool> + Unpin + 'static,
-    ) -> Self {
-        self.update_dom_builder(|dom_builder| {
-            dom_builder.focused_signal(focus)
-        })
+    pub fn focus_signal(self, focus: impl Signal<Item = bool> + Unpin + 'static) -> Self {
+        self.update_dom_builder(|dom_builder| dom_builder.focused_signal(focus))
     }
 }
