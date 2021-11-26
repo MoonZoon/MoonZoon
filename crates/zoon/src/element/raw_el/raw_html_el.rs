@@ -99,8 +99,17 @@ impl RawEl for RawHtmlEl {
 }
 
 impl RawHtmlEl {
-    pub fn focused(mut self) -> Self {
+    pub fn focus(mut self) -> Self {
         self.dom_builder = self.dom_builder.focused(true);
         self
+    }
+
+    pub fn focus_signal(
+        self,
+        focus: impl Signal<Item = bool> + Unpin + 'static,
+    ) -> Self {
+        self.update_dom_builder(|dom_builder| {
+            dom_builder.focused_signal(focus)
+        })
     }
 }

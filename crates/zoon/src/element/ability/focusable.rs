@@ -3,9 +3,13 @@ use crate::*;
 pub trait Focusable: UpdateRawEl<RawHtmlEl> + Sized {
     fn focus(self, focus: bool) -> Self {
         if focus {
-            return self.update_raw_el(|raw_el| raw_el.focused());
+            return self.update_raw_el(|raw_el| raw_el.focus());
         }
         self
+    }
+
+    fn focus_signal(self, focus: impl Signal<Item = bool> + Unpin + 'static) -> Self {
+        self.update_raw_el(|raw_el| raw_el.focus_signal(focus))
     }
 
     fn on_focus(self, handler: impl FnOnce() + Clone + 'static) -> Self {
