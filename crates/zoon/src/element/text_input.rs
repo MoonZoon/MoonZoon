@@ -281,10 +281,16 @@ impl<
         for style_applicator in placeholder.style_applicators {
             el_and_group = style_applicator(el_and_group);
         }
-        self.raw_el = el_and_group
-            .0
-            .attr("placeholder", &placeholder.text)
-            .style_group(el_and_group.1.unwrap_throw());
+        let (raw_el, style_group) = el_and_group;
+        match placeholder.text {
+            PlaceholderText::Static(text) => {
+                self.raw_el = raw_el.attr("placeholder", &text);
+            }
+            PlaceholderText::Dynamic(text) => {
+                self.raw_el = raw_el.attr_signal("placeholder", text);
+            }
+        }
+        self.raw_el = self.raw_el.style_group(style_group.unwrap_throw());
         self.into_type()
     }
 
@@ -457,8 +463,13 @@ impl<
 
 // ------ Placeholder ------
 
+enum PlaceholderText<'a> {
+    Static(Cow<'a, str>),
+    Dynamic(Box<dyn Signal<Item = Box<dyn IntoOptionCowStr<'static>>> + Unpin>),
+}
+
 pub struct Placeholder<'a> {
-    text: Cow<'a, str>,
+    text: PlaceholderText<'a>,
     style_applicators: Vec<
         Box<
             dyn FnOnce((RawHtmlEl, Option<StyleGroup<'a>>)) -> (RawHtmlEl, Option<StyleGroup<'a>>)
@@ -470,7 +481,19 @@ pub struct Placeholder<'a> {
 impl<'a> Placeholder<'a> {
     pub fn new(text: impl IntoCowStr<'a>) -> Self {
         Placeholder {
-            text: text.into_cow_str(),
+            text: PlaceholderText::Static(text.into_cow_str()),
+            style_applicators: Vec::new(),
+        }
+    }
+
+    pub fn with_signal(
+        text: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static,
+    ) -> Self {
+        let text = text.map(|text| {
+            Box::new(text) as Box<dyn IntoOptionCowStr<'static>>
+        });
+        Placeholder {
+            text: PlaceholderText::Dynamic(Box::new(text)),
             style_applicators: Vec::new(),
         }
     }
