@@ -78,6 +78,7 @@ macro_rules! make_mouse_event {
 }
 
 make_mouse_event!(MouseOver, "mouseover");
+make_mouse_event!(MouseOut, "mouseout");
 
 make_event!(WheelEvent, "wheel" => web_sys::WheelEvent);
 
