@@ -52,6 +52,15 @@ macro_rules! make_mouse_event {
             #[inline] pub fn x(&self) -> i32 { self.event.client_x() }
             #[inline] pub fn y(&self) -> i32 { self.event.client_y() }
 
+            #[inline] pub fn movement_x(&self) -> i32 { self.event.movement_x() }
+            #[inline] pub fn movement_y(&self) -> i32 { self.event.movement_y() }
+
+            #[inline] pub fn offset_x(&self) -> i32 { self.event.offset_x() }
+            #[inline] pub fn offset_y(&self) -> i32 { self.event.offset_y() }
+
+            #[inline] pub fn page_x(&self) -> i32 { self.event.page_x() }
+            #[inline] pub fn page_y(&self) -> i32 { self.event.page_y() }
+
             #[inline] pub fn screen_x(&self) -> i32 { self.event.screen_x() }
             #[inline] pub fn screen_y(&self) -> i32 { self.event.screen_y() }
 
@@ -84,46 +93,28 @@ make_event!(WheelEvent, "wheel" => web_sys::WheelEvent);
 
 // WheelEvent is a subtype of MouseEvent. It implements what MouseEvent implements plus
 impl WheelEvent {
-    #[inline]
-    pub fn x(&self) -> i32 {
-        self.event.client_x()
-    }
-    #[inline]
-    pub fn y(&self) -> i32 {
-        self.event.client_y()
-    }
+    #[inline] pub fn x(&self) -> i32 { self.event.client_x() }
+    #[inline] pub fn y(&self) -> i32 { self.event.client_y() }
 
-    #[inline]
-    pub fn screen_x(&self) -> i32 {
-        self.event.screen_x()
-    }
-    #[inline]
-    pub fn screen_y(&self) -> i32 {
-        self.event.screen_y()
-    }
+    #[inline] pub fn movement_x(&self) -> i32 { self.event.movement_x() }
+    #[inline] pub fn movement_y(&self) -> i32 { self.event.movement_y() }
 
-    #[inline]
-    pub fn ctrl_key(&self) -> bool {
-        self.event.ctrl_key() || self.event.meta_key()
-    }
-    #[inline]
-    pub fn shift_key(&self) -> bool {
-        self.event.shift_key()
-    }
-    #[inline]
-    pub fn alt_key(&self) -> bool {
-        self.event.alt_key()
-    }
+    #[inline] pub fn offset_x(&self) -> i32 { self.event.offset_x() }
+    #[inline] pub fn offset_y(&self) -> i32 { self.event.offset_y() }
+
+    #[inline] pub fn page_x(&self) -> i32 { self.event.page_x() }
+    #[inline] pub fn page_y(&self) -> i32 { self.event.page_y() }
+
+    #[inline] pub fn screen_x(&self) -> i32 { self.event.screen_x() }
+    #[inline] pub fn screen_y(&self) -> i32 { self.event.screen_y() }
+
+    #[inline] pub fn ctrl_key(&self) -> bool { self.event.ctrl_key() || self.event.meta_key() }
+    #[inline] pub fn shift_key(&self) -> bool { self.event.shift_key() }
+    #[inline] pub fn alt_key(&self) -> bool { self.event.alt_key() }
 
     // TODO maybe deprecate these ?
-    #[inline]
-    pub fn mouse_x(&self) -> i32 {
-        self.event.client_x()
-    }
-    #[inline]
-    pub fn mouse_y(&self) -> i32 {
-        self.event.client_y()
-    }
+    #[inline] pub fn mouse_x(&self) -> i32 { self.event.client_x() }
+    #[inline] pub fn mouse_y(&self) -> i32 { self.event.client_y() }
 
     pub fn button(&self) -> MouseButton {
         match self.event.button() {
@@ -135,6 +126,8 @@ impl WheelEvent {
             _ => unreachable!("Unexpected MouseEvent.button value"),
         }
     }
+
+    // WheelEvent-specific properties
 
     #[inline]
     pub fn delta_x(&self) -> f64 {
@@ -165,3 +158,66 @@ pub enum WheelDeltaMode {
     Line,
     Page,
 }
+
+// pointer events
+
+macro_rules! make_pointer_event {
+    ($name:ident, $type:literal) => {
+        make_event!($name, $type => web_sys::PointerEvent);
+
+        // copied from MouseEvent (PointerEvent inherits from MouseEvent and Event)
+        impl $name {
+            #[inline] pub fn x(&self) -> i32 { self.event.client_x() }
+            #[inline] pub fn y(&self) -> i32 { self.event.client_y() }
+
+            #[inline] pub fn movement_x(&self) -> i32 { self.event.movement_x() }
+            #[inline] pub fn movement_y(&self) -> i32 { self.event.movement_y() }
+
+            #[inline] pub fn offset_x(&self) -> i32 { self.event.offset_x() }
+            #[inline] pub fn offset_y(&self) -> i32 { self.event.offset_y() }
+
+            #[inline] pub fn page_x(&self) -> i32 { self.event.page_x() }
+            #[inline] pub fn page_y(&self) -> i32 { self.event.page_y() }
+
+            #[inline] pub fn screen_x(&self) -> i32 { self.event.screen_x() }
+            #[inline] pub fn screen_y(&self) -> i32 { self.event.screen_y() }
+
+            #[inline] pub fn ctrl_key(&self) -> bool { self.event.ctrl_key() || self.event.meta_key() }
+            #[inline] pub fn shift_key(&self) -> bool { self.event.shift_key() }
+            #[inline] pub fn alt_key(&self) -> bool { self.event.alt_key() }
+
+            // TODO maybe deprecate these ?
+            #[inline] pub fn mouse_x(&self) -> i32 { self.event.client_x() }
+            #[inline] pub fn mouse_y(&self) -> i32 { self.event.client_y() }
+
+            pub fn button(&self) -> MouseButton {
+                match self.event.button() {
+                    0 => MouseButton::Left,
+                    1 => MouseButton::Middle,
+                    2 => MouseButton::Right,
+                    3 => MouseButton::Button4,
+                    4 => MouseButton::Button5,
+                    _ => unreachable!("Unexpected MouseEvent.button value"),
+                }
+            }
+
+            // PointerEvent-only properties
+            #[inline] pub fn pointer_id(&self) -> i32 { self.event.pointer_id() }
+            #[inline] pub fn width(&self) -> i32 { self.event.width() }
+            #[inline] pub fn height(&self) -> i32 { self.event.height() }
+            #[inline] pub fn pressure(&self) -> f32 { self.event.pressure() }
+            #[inline] pub fn tangential_pressure(&self) -> f32 { self.event.tangential_pressure() }
+            #[inline] pub fn tilt_x(&self) -> i32 { self.event.tilt_x() }
+            #[inline] pub fn tilt_y(&self) -> i32 { self.event.tilt_y() }
+            #[inline] pub fn twist(&self) -> i32 { self.event.twist() }
+            #[inline] pub fn pointer_type(&self) -> String { self.event.pointer_type() }
+            #[inline] pub fn is_primary(&self) -> bool { self.event.is_primary() }
+        }
+    };
+}
+
+make_pointer_event!(PointerDown, "pointerdown");
+make_pointer_event!(PointerUp, "pointerup");
+make_pointer_event!(PointerMove, "pointermove");
+make_pointer_event!(PointerLeave, "pointerleave");
+make_pointer_event!(PointerCancel, "pointercancel");
