@@ -1,7 +1,7 @@
 use moon::*;
 
 async fn frontend() -> Frontend {
-    Frontend::new().title("Counter example").append_to_head(
+    Frontend::new().title("Resize Drag example").append_to_head(
         "
         <style>
             html {
