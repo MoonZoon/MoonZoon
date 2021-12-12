@@ -1129,7 +1129,7 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 [[package]]
 name = "lexical"
 version = "6.0.0"
-source = "git+https://github.com/Alexhuszagh/rust-lexical?rev=7010efd#7010efd5e144faff0c9afbc1b22b47d9d9567966"
+source = "git+https://github.com/Alexhuszagh/rust-lexical?rev=7010efd5e144faff0c9afbc1b22b47d9d9567966#7010efd5e144faff0c9afbc1b22b47d9d9567966"
 dependencies = [
  "cfg-if 1.0.0",
  "lexical-core",
@@ -1138,7 +1138,7 @@ dependencies = [
 [[package]]
 name = "lexical-core"
 version = "0.8.0"
-source = "git+https://github.com/Alexhuszagh/rust-lexical?rev=7010efd#7010efd5e144faff0c9afbc1b22b47d9d9567966"
+source = "git+https://github.com/Alexhuszagh/rust-lexical?rev=7010efd5e144faff0c9afbc1b22b47d9d9567966#7010efd5e144faff0c9afbc1b22b47d9d9567966"
 dependencies = [
  "bitflags",
  "cfg-if 1.0.0",
