@@ -35,7 +35,7 @@ thiserror = { version = "1.0.26", default-features = false, optional = true }
 chrono = { version = "0.4", default-features = false, optional = true }
 
 ufmt = { version = "0.1.0", features = ["std"], default-features = false, optional = true }
-lexical = { git = "https://github.com/Alexhuszagh/rust-lexical", rev = "7010efd", features = ["std"], default-features = false, optional = true }
+lexical = { git = "https://github.com/Alexhuszagh/rust-lexical", rev = "7010efd5e144faff0c9afbc1b22b47d9d9567966", features = ["std"], default-features = false, optional = true }
 
 [dependencies.web-sys]
 version = "0.3.53"
