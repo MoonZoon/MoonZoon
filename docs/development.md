@@ -8,14 +8,14 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 
 - [Rust](https://www.rust-lang.org/)
   ```bash
-  rustup update
-  rustc -V # rustc 1.56.0 (09c42c458 2021-10-18)
+  rustup update stable
+  rustc -V # rustc 1.57.0 (f1edd0429 2021-11-29)
   ```
 
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
   ```bash
-  cargo install cargo-make
-  makers -V # makers 0.35.5
+  cargo install cargo-make --no-default-features
+  makers -V # makers 0.35.7
   ```
   - _Note_: `cargo-make` is needed only for MoonZoon development and running its examples, you don't need it for your apps.
 
@@ -51,7 +51,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
     "rust-analyzer.procMacro.enable": true,
     "rust-analyzer.cargo.allFeatures": true,
     "rust-analyzer.completion.autoimport.enable": false,
-    "rust-analyzer.updates.channel": "nightly"
+    // "rust-analyzer.updates.channel": "nightly"
 }
 ```
 
@@ -67,6 +67,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   - `js-framework-benchmark/keyed`
   - `start_with_app`
   - `pages`
+  - `resize_drag`
   - `svg`
   - `time_tracker`
   - `timer`
