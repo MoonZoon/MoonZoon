@@ -86,6 +86,10 @@ fn rectangle() -> impl Element {
         .s(Transform::with_signal(rectangle_offset().signal().map(|(x, y)| {
             Transform::new().move_right(x).move_down(y)
         })))
+        .s(Cursor::with_signal(drag_rectangle().signal().map_bool(
+            || CursorIcon::Grabbing, 
+            || CursorIcon::Grab, 
+        )))
         .update_raw_el(|raw_el| { 
             raw_el
                 .event_handler(|event: events_extra::PointerDown| {
@@ -93,11 +97,6 @@ fn rectangle() -> impl Element {
                         pointer_position().set_neq((event.x(), event.y()));
                         drag_rectangle().set_neq(true)
                 })
-                // https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
-                .style_signal("cursor", drag_rectangle().signal().map_bool(
-                    || "grabbing", 
-                    || "grab",
-                ))
                 .style("touch-action", "none")
         })
         .child(
@@ -132,6 +131,7 @@ fn handle() -> impl Element {
         )))
         .s(Transform::new().move_down(10).move_right(10))
         .s(RoundedCorners::all_max())
+        .s(Cursor::new(CursorIcon::UpLeftDownRightArrow))
         .update_raw_el(|raw_el| { 
             raw_el
                 .event_handler(|event: events_extra::PointerDown| {
@@ -142,8 +142,6 @@ fn handle() -> impl Element {
                         drag_rectangle().set_neq(false);
                     }
                 })
-                // https://developer.mozilla.org/en-US/docs/Web/CSS/cursor
-                .style("cursor", "nwse-resize")
                 // .style("touch-action", "none") 
         })
 }

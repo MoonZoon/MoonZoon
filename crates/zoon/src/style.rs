@@ -23,6 +23,9 @@ pub use borders::{Border, Borders};
 mod clip;
 pub use clip::Clip;
 
+mod cursor;
+pub use cursor::{Cursor, CursorIcon};
+
 mod font;
 pub use font::{Font, FontFamily, FontLine, FontWeight};
 
