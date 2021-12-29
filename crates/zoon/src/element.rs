@@ -33,6 +33,9 @@ pub use paragraph::Paragraph;
 pub mod row;
 pub use row::Row;
 
+pub mod stack;
+pub use stack::Stack;
+
 pub mod text;
 pub use text::Text;
 
