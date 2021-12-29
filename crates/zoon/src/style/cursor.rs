@@ -1,0 +1,175 @@
+use crate::*;
+use std::borrow::Cow;
+
+// ------ Cursor ------
+
+#[derive(Default)]
+pub struct Cursor<'a> {
+    static_css_props: StaticCSSProps<'a>,
+    dynamic_css_props: DynamicCSSProps,
+}
+
+impl<'a> Cursor<'a> {
+    pub fn new(cursor_icon: impl Into<Option<CursorIcon<'a>>>) -> Self {
+        let mut this = Self::default();
+        if let Some(cursor_icon) = cursor_icon.into() {
+            this.static_css_props
+                .insert("cursor", cursor_icon.into_cow_str());
+        }
+        this
+    }
+
+    pub fn with_signal(
+        cursor_icon: impl Signal<Item = impl Into<Option<CursorIcon<'static>>>> + Unpin + 'static,
+    ) -> Self {
+        let mut this = Self::default();
+        let cursor_icon = cursor_icon.map(|cursor_icon| cursor_icon.into().map(|cursor_icon| cursor_icon.into_cow_str()));
+        this.dynamic_css_props
+            .insert("cursor".into(), box_css_signal(cursor_icon));
+        this
+    }
+}
+
+impl<'a> Style<'a> for Cursor<'a> {
+    fn apply_to_raw_el<E: RawEl>(
+        self,
+        mut raw_el: E,
+        style_group: Option<StyleGroup<'a>>,
+    ) -> (E, Option<StyleGroup<'a>>) {
+        if let Some(mut style_group) = style_group {
+            for (name, css_prop_value) in self.static_css_props {
+                style_group = if css_prop_value.important {
+                    style_group.style(name, css_prop_value.value)
+                } else {
+                    style_group.style_important(name, css_prop_value.value)
+                };
+            }
+            for (name, value) in self.dynamic_css_props {
+                style_group = style_group.style_signal(name, value);
+            }
+            return (raw_el, Some(style_group));
+        }
+        for (name, css_prop_value) in self.static_css_props {
+            raw_el = if css_prop_value.important {
+                raw_el.style_important(name, &css_prop_value.value)
+            } else {
+                raw_el.style(name, &css_prop_value.value)
+            };
+        }
+        for (name, value) in self.dynamic_css_props {
+            raw_el = raw_el.style_signal(name, value);
+        }
+        (raw_el, None)
+    }
+}
+
+// ------ CursorIcon ------
+
+#[derive(Debug, Clone)]
+pub enum CursorIcon<'a> {
+    // -- General --
+    Auto,
+    Default,
+    None,
+    // -- Links & Status --
+    ContextMenu,
+    Help,
+    Pointer,
+    Progress,
+    Wait,
+    // -- Selection --
+    Cell,
+    Crosshair,
+    Text,
+    VerticalText,
+    // -- Drag & Drop --
+    Alias,
+    Copy,
+    Move,
+    NoDrop,
+    NotAllowed,
+    Grab,
+    Grabbing,
+    // -- Resizing & Panning --
+    Pan,
+    ColumnResize,
+    RowResize,
+    // -- Arrows --
+    UpArrow,
+    RightArrow,
+    LeftArrow,
+    DownArrow,
+    UpRightArrow,
+    UpLeftArrow,
+    DownRightArrow,
+    DownLeftArrow,
+    LeftRightArrow,
+    UpDownArrow,
+    UpRightDownLeftArrow,
+    UpLeftDownRightArrow,
+    Custom(Cow<'a, str>),
+}
+
+impl<'a> CursorIcon<'a> {
+    pub fn new(url: &str, hotspot: impl Into<Option<(u32, u32)>>) -> Self {
+        let url = url.into_cow_str();
+        let hotspot = match hotspot.into() {
+            Some((x, y)) => crate::format!(" {} {}", x, y),
+            None => String::new(),
+        };
+        let cursor_value = crate::format!("url({}){}, auto", url, hotspot);
+        CursorIcon::Custom(cursor_value.into())
+    }
+}
+
+impl<'a> IntoCowStr<'a> for CursorIcon<'a> {
+    fn into_cow_str(self) -> Cow<'a, str> {
+        match self {
+            // -- General --
+            CursorIcon::Auto => "auto".into(),
+            CursorIcon::Default => "default".into(),
+            CursorIcon::None => "none".into(),
+            // -- Links & Status --
+            CursorIcon::ContextMenu => "context-menu".into(),
+            CursorIcon::Help => "help".into(),
+            CursorIcon::Pointer => "pointer".into(),
+            CursorIcon::Progress => "progress".into(),
+            CursorIcon::Wait => "wait".into(),
+            // -- Selection --
+            CursorIcon::Cell => "cell".into(),
+            CursorIcon::Crosshair => "crosshair".into(),
+            CursorIcon::Text => "text".into(),
+            CursorIcon::VerticalText => "vertical-text".into(),
+            // -- Drag & Drop --
+            CursorIcon::Alias => "alias".into(),
+            CursorIcon::Copy => "copy".into(),
+            CursorIcon::Move => "move".into(),
+            CursorIcon::NoDrop => "no-drop".into(),
+            CursorIcon::NotAllowed => "not-allowed".into(),
+            CursorIcon::Grab => "grab".into(),
+            CursorIcon::Grabbing => "grabbing".into(),
+            // -- Resizing & Panning --
+            CursorIcon::Pan => "all-scroll".into(),
+            CursorIcon::ColumnResize => "col-resize".into(),
+            CursorIcon::RowResize => "row-resize".into(),
+            // -- Arrows --
+            CursorIcon::UpArrow => "n-resize".into(),
+            CursorIcon::RightArrow => "e-resize".into(),
+            CursorIcon::LeftArrow => "s-resize".into(),
+            CursorIcon::DownArrow => "w-resize".into(),
+            CursorIcon::UpRightArrow => "ne-resize".into(),
+            CursorIcon::UpLeftArrow => "nw-resize".into(),
+            CursorIcon::DownRightArrow => "se-resize".into(),
+            CursorIcon::DownLeftArrow => "sw-resize".into(),
+            CursorIcon::LeftRightArrow => "ew-resize".into(),
+            CursorIcon::UpDownArrow => "ns-resize".into(),
+            CursorIcon::UpRightDownLeftArrow => "nesw-resize".into(),
+            CursorIcon::UpLeftDownRightArrow => "nwse-resize".into(),
+            CursorIcon::Custom(cursor_value) => cursor_value.into(),
+        }
+    }
+
+    fn take_into_cow_str(&mut self) -> Cow<'a, str> {
+        unimplemented!()
+    }
+}
