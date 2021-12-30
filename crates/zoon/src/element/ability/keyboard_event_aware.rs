@@ -9,6 +9,7 @@ pub trait KeyboardEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
             raw_el.event_handler(move |event: events::KeyDown| {
                 let keyboard_event = KeyboardEvent {
                     key: Key::from(event.key()),
+                    raw_event: RawKeyboardEvent::KeyDown(event),
                 };
                 (handler.clone())(keyboard_event)
             })
@@ -20,6 +21,7 @@ pub trait KeyboardEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
 
 pub struct KeyboardEvent {
     key: Key,
+    pub raw_event: RawKeyboardEvent,
 }
 
 impl KeyboardEvent {
@@ -32,6 +34,12 @@ impl KeyboardEvent {
             f()
         }
     }
+}
+
+// ------ RawKeyboardEvent ------
+
+pub enum RawKeyboardEvent {
+    KeyDown(events::KeyDown)
 }
 
 // ------ Key ------

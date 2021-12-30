@@ -52,6 +52,7 @@ impl<LabelFlag, ForInputFlag> UpdateRawEl<RawHtmlEl> for Label<LabelFlag, ForInp
 impl<LabelFlag, ForInputFlag> Styleable<'_, RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
 impl<LabelFlag, ForInputFlag> KeyboardEventAware<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
 impl<LabelFlag, ForInputFlag> MouseEventAware<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> PointerEventAware<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
 impl<LabelFlag, ForInputFlag> Hookable<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {
     type WSElement = HtmlLabelElement;
 }

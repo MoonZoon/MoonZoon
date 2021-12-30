@@ -5,10 +5,13 @@ mod styleable;
 pub use styleable::Styleable;
 
 mod keyboard_event_aware;
-pub use keyboard_event_aware::{Key, KeyboardEvent, KeyboardEventAware};
+pub use keyboard_event_aware::{Key, KeyboardEvent, RawKeyboardEvent, KeyboardEventAware};
 
 mod mouse_event_aware;
 pub use mouse_event_aware::MouseEventAware;
+
+mod pointer_event_aware;
+pub use pointer_event_aware::{PointerEventAware, PointerEvent, RawPointerEvent};
 
 mod hookable;
 pub use hookable::Hookable;
