@@ -54,8 +54,6 @@ impl ChoosableTag for Stack<EmptyFlagSet> {
                     StyleGroup::new(".stack > *")
                         .style("grid-column", "1")
                         .style("grid-row", "1")
-                        .style("min-width", "0")
-                        .style("min-height", "0")
                 )
                 .style_group(
                     StyleGroup::new(".stack > .center_x")
@@ -80,7 +78,9 @@ impl ChoosableTag for Stack<EmptyFlagSet> {
         Self {
             raw_el: RawHtmlEl::new(tag.as_str())
                 .class("stack")
-                .style("display", "inline-grid"),
+                .style("display", "inline-grid")
+                .style("grid-auto-columns", "minmax(0, auto)")
+                .style("grid-auto-rows", "minmax(0, auto)"),
             flags: PhantomData,
         }
     }

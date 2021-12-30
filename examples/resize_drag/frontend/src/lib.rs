@@ -107,29 +107,32 @@ fn rectangle_attributes() -> impl Element {
     Column::new()
         .s(Align::center())
         .s(Font::new().color(GRAY_2))
+        .s(Width::default().max_fill())
+        .s(Height::default().max_fill())
+        .s(Clip::both())
         .update_raw_el(|raw_el| {
             raw_el
                 .style("user-select", "none")
         })
         .item(
-            Paragraph::new()
-                .content("offset X: ")
-                .content_signal(rectangle_offset().signal().map(|(x, _)| x).dedupe())
+            Row::new()
+                .item("offset X: ")
+                .item_signal(rectangle_offset().signal().map(|(x, _)| x).dedupe())
         )
         .item(
-            Paragraph::new()
-                .content("offset Y: ")
-                .content_signal(rectangle_offset().signal().map(|(_, y)| y).dedupe())
+            Row::new()
+                .item("offset Y: ")
+                .item_signal(rectangle_offset().signal().map(|(_, y)| y).dedupe())
         )
         .item(
-            Paragraph::new()
-                .content("width: ")
-                .content_signal(rectangle_size().signal().map(|(width, _)| width).dedupe())
+            Row::new()
+                .item("width: ")
+                .item_signal(rectangle_size().signal().map(|(width, _)| width).dedupe())
         )
         .item(
-            Paragraph::new()
-                .content("height: ")
-                .content_signal(rectangle_size().signal().map(|(_, height)| height).dedupe())
+            Row::new()
+                .item("height: ")
+                .item_signal(rectangle_size().signal().map(|(_, height)| height).dedupe())
         )
 }
 

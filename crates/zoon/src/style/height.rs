@@ -53,6 +53,11 @@ impl<'a> Height<'a> {
         self.static_css_props.insert("max-height", px(height));
         self
     }
+
+    pub fn max_fill(mut self) -> Self {
+        self.static_css_props.insert("max-height", "100%");
+        self
+    }
 }
 
 impl<'a> Style<'a> for Height<'a> {
