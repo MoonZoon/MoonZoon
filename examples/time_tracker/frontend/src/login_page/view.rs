@@ -58,7 +58,7 @@ fn name_input() -> impl Element {
         .focus(true)
         .on_change(super::set_name)
         .text_signal(super::name().signal_cloned())
-        .on_key_down(|event| event.if_key(Key::Enter, super::log_in))
+        .on_key_down_event(|event| event.if_key(Key::Enter, super::log_in))
         .placeholder(Placeholder::new("john@example.com"))
 }
 
@@ -84,7 +84,7 @@ fn password_input() -> impl Element {
         .s(Background::new().color_signal(theme::background_0()))
         .on_change(super::set_password)
         .text_signal(super::password().signal_cloned())
-        .on_key_down(|event| event.if_key(Key::Enter, super::log_in))
+        .on_key_down_event(|event| event.if_key(Key::Enter, super::log_in))
         .placeholder(Placeholder::new("Password1"))
         .input_type(InputType::password())
 }

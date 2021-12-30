@@ -78,7 +78,7 @@ fn new_todo_title() -> impl Element {
             Placeholder::new("What needs to be done?")
                 .s(Font::new().italic().color(hsluv!(0, 0, 91.3))),
         )
-        .on_key_down(|event| event.if_key(Key::Enter, super::add_todo))
+        .on_key_down_event(|event| event.if_key(Key::Enter, super::add_todo))
         .text_signal(super::new_todo_title().signal_cloned())
 }
 
@@ -204,7 +204,7 @@ fn editing_todo_title(todo: Arc<Todo>) -> impl Element {
         .focus(true)
         .on_blur(super::save_selected_todo)
         .on_change(move |text| todo.edited_title.set_neq(Some(text)))
-        .on_key_down(|event| match event.key() {
+        .on_key_down_event(|event| match event.key() {
             Key::Escape => super::select_todo(None),
             Key::Enter => super::save_selected_todo(),
             _ => (),
