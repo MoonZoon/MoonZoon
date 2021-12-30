@@ -20,11 +20,6 @@ fn rectangle_size() -> &'static Mutable<(u32, u32)> {
     Mutable::new((150, 150))
 }
 
-#[static_ref]
-fn pointer_position() -> &'static Mutable<(i32, i32)> {
-    Default::default()
-}
-
 fn root() -> impl Element {
     El::new()
         .s(Width::fill())
@@ -35,20 +30,14 @@ fn root() -> impl Element {
         })
         .on_pointer_move_event(|event| {
             if drag_rectangle().get() {
-                let current_x = event.x(); 
-                let current_y = event.y(); 
-                let (previous_x, previous_y) = pointer_position().replace((current_x, current_y));
                 rectangle_offset().update(|(x, y)| {
-                    (x + (current_x - previous_x), y + (current_y - previous_y))
+                    (x + event.movement_x(), y + event.movement_y())
                 });
             }
             else if drag_handle().get() {
-                let current_x = event.x(); 
-                let current_y = event.y(); 
-                let (previous_x, previous_y) = pointer_position().replace((current_x, current_y));
                 rectangle_size().update(|(width, height)| {
-                    let new_width = width as i32 + (current_x - previous_x);
-                    let new_height = height as i32 + (current_y - previous_y);
+                    let new_width = width as i32 + event.movement_x();
+                    let new_height = height as i32 + event.movement_y();
                     (u32::try_from(new_width).unwrap_or_default(), u32::try_from(new_height).unwrap_or_default())
                 });
             }
@@ -98,10 +87,7 @@ fn rectangle() -> impl Element {
 fn rectangle_content() -> impl Element {
     El::new()
         .s(Clip::both())
-        .on_pointer_down_event(|event| {
-            pointer_position().set_neq((event.x(), event.y()));
-            drag_rectangle().set_neq(true)
-        })
+        .on_pointer_down(|| drag_rectangle().set_neq(true))
         .child(rectangle_attributes())
 }
 
@@ -147,10 +133,7 @@ fn handle() -> impl Element {
         .s(Transform::new().move_down(10).move_right(10))
         .s(RoundedCorners::all_max())
         .s(Cursor::new(CursorIcon::UpLeftDownRightArrow))
-        .on_pointer_down_event(|event| {
-            pointer_position().set_neq((event.x(), event.y()));
-            drag_handle().set_neq(true);
-        })
+        .on_pointer_down(|| drag_handle().set_neq(true))
 }
 
 #[wasm_bindgen(start)]
