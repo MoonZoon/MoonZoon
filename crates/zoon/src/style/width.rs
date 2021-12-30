@@ -53,6 +53,11 @@ impl<'a> Width<'a> {
         self.static_css_props.insert("max-width", px(width));
         self
     }
+
+    pub fn max_fill(mut self) -> Self {
+        self.static_css_props.insert("max-width", "100%");
+        self
+    }
 }
 
 impl<'a> Style<'a> for Width<'a> {
