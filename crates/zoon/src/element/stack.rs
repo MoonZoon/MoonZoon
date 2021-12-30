@@ -88,6 +88,7 @@ impl ChoosableTag for Stack<EmptyFlagSet> {
 impl<EmptyFlag> Styleable<'_, RawHtmlEl> for Stack<EmptyFlag> {}
 impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Stack<EmptyFlag> {}
 impl<EmptyFlag> MouseEventAware<RawHtmlEl> for Stack<EmptyFlag> {}
+impl<EmptyFlag> PointerEventAware<RawHtmlEl> for Stack<EmptyFlag> {}
 impl<EmptyFlag> MutableViewport<RawHtmlEl> for Stack<EmptyFlag> {}
 impl<EmptyFlag> ResizableViewport<RawHtmlEl> for Stack<EmptyFlag> {}
 impl<EmptyFlag> Hookable<RawHtmlEl> for Stack<EmptyFlag> {

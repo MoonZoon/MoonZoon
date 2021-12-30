@@ -113,6 +113,10 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> MouseEventAware<Raw
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
 }
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> PointerEventAware<RawHtmlEl>
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+{
+}
 impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> Hookable<RawHtmlEl>
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {

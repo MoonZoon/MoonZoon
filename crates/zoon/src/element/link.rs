@@ -76,6 +76,7 @@ impl<LabelFlag, ToFlag> Styleable<'_, RawHtmlEl> for Link<LabelFlag, ToFlag> {}
 impl<LabelFlag, ToFlag> KeyboardEventAware<RawHtmlEl> for Link<LabelFlag, ToFlag> {}
 impl<LabelFlag, ToFlag> Focusable for Link<LabelFlag, ToFlag> {}
 impl<LabelFlag, ToFlag> MouseEventAware<RawHtmlEl> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> PointerEventAware<RawHtmlEl> for Link<LabelFlag, ToFlag> {}
 impl<LabelFlag, ToFlag> Hookable<RawHtmlEl> for Link<LabelFlag, ToFlag> {
     type WSElement = HtmlAnchorElement;
 }

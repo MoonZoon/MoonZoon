@@ -75,6 +75,7 @@ impl ChoosableTag for Row<EmptyFlagSet, MultilineFlagNotSet> {
 impl<EmptyFlag, MultilineFlag> Styleable<'_, RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
 impl<EmptyFlag, MultilineFlag> KeyboardEventAware<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
 impl<EmptyFlag, MultilineFlag> MouseEventAware<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> PointerEventAware<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
 impl<EmptyFlag, MultilineFlag> MutableViewport<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
 impl<EmptyFlag, MultilineFlag> ResizableViewport<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
 impl<EmptyFlag, MultilineFlag> Hookable<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {

@@ -179,6 +179,19 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    PointerEventAware<RawHtmlEl>
+    for TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
+{
+}
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
     Hookable<RawHtmlEl>
     for TextInput<
         IdFlag,

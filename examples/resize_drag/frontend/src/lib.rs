@@ -90,14 +90,12 @@ fn rectangle() -> impl Element {
             || CursorIcon::Grabbing, 
             || CursorIcon::Grab, 
         )))
+        .on_pointer_down_event(|event| {
+            pointer_position().set_neq((event.x(), event.y()));
+            drag_rectangle().set_neq(true)
+        })
         .update_raw_el(|raw_el| { 
-            raw_el
-                .event_handler(|event: events_extra::PointerDown| {
-                        event.prevent_default();
-                        pointer_position().set_neq((event.x(), event.y()));
-                        drag_rectangle().set_neq(true)
-                })
-                .style("touch-action", "none")
+            raw_el.style("touch-action", "none")
         })
         .layer(rectangle_attributes())
         .layer(handle())
@@ -148,17 +146,12 @@ fn handle() -> impl Element {
         .s(Transform::new().move_down(10).move_right(10))
         .s(RoundedCorners::all_max())
         .s(Cursor::new(CursorIcon::UpLeftDownRightArrow))
-        .update_raw_el(|raw_el| { 
-            raw_el
-                .event_handler(|event: events_extra::PointerDown| {
-                    event.prevent_default();
-                    pointer_position().set_neq((event.x(), event.y()));
-                    drag_handle().set_neq(true);
-                    if drag_rectangle().get() {
-                        drag_rectangle().set_neq(false);
-                    }
-                })
-                // .style("touch-action", "none") 
+        .on_pointer_down_event(|event| {
+            pointer_position().set_neq((event.x(), event.y()));
+            drag_handle().set_neq(true);
+            if drag_rectangle().get() {
+                drag_rectangle().set_neq(false);
+            }
         })
 }
 
