@@ -96,7 +96,7 @@ fn new_message_input() -> impl Element {
         .on_change(super::set_new_message_text)
         .label_hidden("New message text")
         .placeholder(Placeholder::new("Message"))
-        .on_key_down(|event| event.if_key(Key::Enter, super::send_message))
+        .on_key_down_event(|event| event.if_key(Key::Enter, super::send_message))
         .text_signal(super::new_message_text().signal_cloned())
 }
 

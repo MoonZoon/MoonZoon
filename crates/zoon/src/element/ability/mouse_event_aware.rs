@@ -11,11 +11,13 @@ pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
         })
     }
 
+    // @TODO add `on_click_event`
     fn on_click(self, handler: impl FnOnce() + Clone + 'static) -> Self {
         let handler = move || handler.clone()();
         self.update_raw_el(|raw_el| raw_el.event_handler(move |_: events::Click| handler()))
     }
 
+    // @TODO add `on_double_click_event`
     fn on_double_click(self, handler: impl FnOnce() + Clone + 'static) -> Self {
         let handler = move || handler.clone()();
         self.update_raw_el(|raw_el| raw_el.event_handler(move |_: events::DoubleClick| handler()))

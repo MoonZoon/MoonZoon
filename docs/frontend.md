@@ -357,7 +357,7 @@ fn new_todo_title() -> impl Element {
             Placeholder::new("What needs to be done?")
                 .s(Font::new().italic().color(hsl(0, 0, 91.3))),
         )
-        .on_key_down(|event| event.if_key(Key::Enter, super::add_todo))
+        .on_key_down_event(|event| event.if_key(Key::Enter, super::add_todo))
         .text_signal(super::new_todo_title().signal_cloned())
 }
 ```
