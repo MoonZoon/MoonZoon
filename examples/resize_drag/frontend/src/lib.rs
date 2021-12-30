@@ -29,35 +29,33 @@ fn root() -> impl Element {
     El::new()
         .s(Width::fill())
         .s(Height::fill())
+        .on_pointer_up(|| {
+            drag_rectangle().set_neq(false);
+            drag_handle().set_neq(false);
+        })
+        .on_pointer_move_event(|event| {
+            if drag_rectangle().get() {
+                let current_x = event.x(); 
+                let current_y = event.y(); 
+                let (previous_x, previous_y) = pointer_position().replace((current_x, current_y));
+                rectangle_offset().update(|(x, y)| {
+                    (x + (current_x - previous_x), y + (current_y - previous_y))
+                });
+            }
+            else if drag_handle().get() {
+                let current_x = event.x(); 
+                let current_y = event.y(); 
+                let (previous_x, previous_y) = pointer_position().replace((current_x, current_y));
+                rectangle_size().update(|(width, height)| {
+                    let new_width = width as i32 + (current_x - previous_x);
+                    let new_height = height as i32 + (current_y - previous_y);
+                    (u32::try_from(new_width).unwrap_or_default(), u32::try_from(new_height).unwrap_or_default())
+                });
+            }
+        })
         .update_raw_el(|raw_el| {
             let class_id = raw_el.class_id();
             raw_el
-                .event_handler(|event: events_extra::PointerMove| {
-                    event.prevent_default();  // ?
-                    if drag_rectangle().get() {
-                        let current_x = event.x(); 
-                        let current_y = event.y(); 
-                        let (previous_x, previous_y) = pointer_position().replace((current_x, current_y));
-                        rectangle_offset().update(|(x, y)| {
-                            (x + (current_x - previous_x), y + (current_y - previous_y))
-                        });
-                    }
-                    else if drag_handle().get() {
-                        let current_x = event.x(); 
-                        let current_y = event.y(); 
-                        let (previous_x, previous_y) = pointer_position().replace((current_x, current_y));
-                        rectangle_size().update(|(width, height)| {
-                            let new_width = width as i32 + (current_x - previous_x);
-                            let new_height = height as i32 + (current_y - previous_y);
-                            (u32::try_from(new_width).unwrap_or_default(), u32::try_from(new_height).unwrap_or_default())
-                        });
-                    }
-                })
-                .event_handler(|event: events_extra::PointerUp| {
-                    event.prevent_default();
-                    drag_rectangle().set_neq(false);
-                    drag_handle().set_neq(false);
-                })
                 .event_handler(move |event: events_extra::PointerLeave| {
                     let target = event.dyn_target::<web_sys::Element>().unwrap_throw();
                     let classes = target.get_attribute("class").unwrap_throw();
@@ -90,24 +88,27 @@ fn rectangle() -> impl Element {
             || CursorIcon::Grabbing, 
             || CursorIcon::Grab, 
         )))
+        .update_raw_el(|raw_el| { 
+            raw_el.style("touch-action", "none")
+        })
+        .layer(rectangle_content())
+        .layer(handle())
+}
+
+fn rectangle_content() -> impl Element {
+    El::new()
+        .s(Clip::both())
         .on_pointer_down_event(|event| {
             pointer_position().set_neq((event.x(), event.y()));
             drag_rectangle().set_neq(true)
         })
-        .update_raw_el(|raw_el| { 
-            raw_el.style("touch-action", "none")
-        })
-        .layer(rectangle_attributes())
-        .layer(handle())
+        .child(rectangle_attributes())
 }
 
 fn rectangle_attributes() -> impl Element {
     Column::new()
         .s(Align::center())
         .s(Font::new().color(GRAY_2))
-        .s(Width::default().max_fill())
-        .s(Height::default().max_fill())
-        .s(Clip::both())
         .update_raw_el(|raw_el| {
             raw_el
                 .style("user-select", "none")
@@ -149,9 +150,6 @@ fn handle() -> impl Element {
         .on_pointer_down_event(|event| {
             pointer_position().set_neq((event.x(), event.y()));
             drag_handle().set_neq(true);
-            if drag_rectangle().get() {
-                drag_rectangle().set_neq(false);
-            }
         })
 }
 
