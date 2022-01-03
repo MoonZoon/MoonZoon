@@ -38,6 +38,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/js-framework-benchmark/keyed/Cargo.toml",
         // "examples/start_with_app/Cargo.toml",
         // "examples/pages/Cargo.toml",
+        // "examples/paragraph/Cargo.toml",
         // "examples/svg/Cargo.toml",
         // "examples/time_tracker/Cargo.toml",
         // "examples/timer/Cargo.toml",
@@ -67,6 +68,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   - `js-framework-benchmark/keyed`
   - `start_with_app`
   - `pages`
+  - `paragraph`
   - `resize_drag`
   - `svg`
   - `time_tracker`
