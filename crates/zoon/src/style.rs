@@ -6,6 +6,7 @@ use std::{
     convert::TryFrom,
     mem,
     sync::Arc,
+    iter,
 };
 use web_sys::{CssStyleDeclaration, CssStyleRule, CssStyleSheet, HtmlStyleElement};
 
@@ -314,6 +315,8 @@ impl GlobalStyles {
 }
 
 fn set_css_property(declaration: &CssStyleDeclaration, name: &str, value: &str, important: bool) {
+    // @TODO refactor?
+
     let priority = if important { "important" } else { "" };
 
     match declaration.set_property_with_priority(name, value, priority) {
@@ -332,17 +335,20 @@ fn set_css_property(declaration: &CssStyleDeclaration, name: &str, value: &str, 
     {
         return;
     }
-    for prefix in VENDOR_PREFIXES {
-        let prefixed_name = [prefix, name].concat();
-        declaration
-            .set_property_with_priority(&prefixed_name, value, priority)
-            .expect_throw("style: set_property_with_priority failed");
-        if not(declaration
-            .get_property_value(&prefixed_name)
-            .expect_throw("style: get_property_value failed")
-            .is_empty())
-        {
-            return;
+    for name_prefix in iter::once("").chain(VENDOR_PREFIXES) {
+        let prefixed_name = [name_prefix, name].concat();
+        for value_prefix in iter::once("").chain(VENDOR_PREFIXES) {
+            let prefixed_value = [value_prefix, value].concat();
+            declaration
+                .set_property_with_priority(&prefixed_name, &prefixed_value, priority)
+                .expect_throw("style: set_property_with_priority failed");
+            if not(declaration
+                .get_property_value(&prefixed_name)
+                .expect_throw("style: get_property_value failed")
+                .is_empty())
+            {
+                return;
+            }
         }
     }
     panic!("invalid CSS property: `{}: {};`", name, value);

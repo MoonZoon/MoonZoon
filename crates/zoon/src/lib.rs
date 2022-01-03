@@ -10,7 +10,7 @@ pub mod web_storage;
 mod class_id;
 pub mod console;
 mod cow_str;
-mod css_property_name;
+mod css_property;
 mod dom;
 mod dom_builder_ext;
 mod either;
@@ -30,7 +30,7 @@ mod viewport;
 
 pub use class_id::ClassId;
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
-pub use css_property_name::VENDOR_PREFIXES;
+pub use css_property::VENDOR_PREFIXES;
 pub use dom::{document, history, window};
 pub use dom_builder_ext::DomBuilderExt;
 pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};
