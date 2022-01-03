@@ -75,6 +75,7 @@ impl<ChildFlag> Styleable<'_, RawHtmlEl> for El<ChildFlag> {}
 impl<ChildFlag> KeyboardEventAware<RawHtmlEl> for El<ChildFlag> {}
 impl<ChildFlag> MouseEventAware<RawHtmlEl> for El<ChildFlag> {}
 impl<ChildFlag> PointerEventAware<RawHtmlEl> for El<ChildFlag> {}
+impl<ChildFlag> TouchEventAware<RawHtmlEl> for El<ChildFlag> {}
 impl<ChildFlag> MutableViewport<RawHtmlEl> for El<ChildFlag> {}
 impl<ChildFlag> ResizableViewport<RawHtmlEl> for El<ChildFlag> {}
 impl<ChildFlag> Hookable<RawHtmlEl> for El<ChildFlag> {

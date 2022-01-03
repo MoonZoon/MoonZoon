@@ -53,6 +53,7 @@ impl<WidthFlag, HeightFlag> Styleable<'_, RawHtmlEl> for Canvas<WidthFlag, Heigh
 impl<WidthFlag, HeightFlag> KeyboardEventAware<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
 impl<WidthFlag, HeightFlag> MouseEventAware<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
 impl<WidthFlag, HeightFlag> PointerEventAware<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> TouchEventAware<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
 impl<WidthFlag, HeightFlag> Hookable<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {
     type WSElement = HtmlCanvasElement;
 }
