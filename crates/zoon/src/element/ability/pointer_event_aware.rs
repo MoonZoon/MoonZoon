@@ -103,13 +103,13 @@ pub trait PointerEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
 
     fn pointer_handling(self, handling: PointerHandling) -> Self {
         self.update_raw_el(|raw_el| {
-            raw_el.style("pointer-events", handling.as_str())
+            raw_el.style("pointer-events", handling.pointer_events)
         })
     }
 
     fn pointer_handling_svg(self, handling: PointerHandlingSvg) -> Self where Self: UpdateRawEl<RawSvgEl> {
         self.update_raw_el(|raw_el: RawSvgEl| {
-            raw_el.style("pointer-events", handling.as_str())
+            raw_el.style("pointer-events", handling.pointer_events)
         })
     }
 }
@@ -153,45 +153,61 @@ pub enum RawPointerEvent {
 // ------ PointerHandling ------
 
 #[derive(Clone, Copy)]
-pub enum PointerHandling {
-    Default,
-    None,
+pub struct PointerHandling {
+    pointer_events: &'static str,
+}
+
+impl Default for PointerHandling {
+    fn default() -> Self {
+        Self { pointer_events: "auto" }
+    }
 }
 
 impl PointerHandling {
-    fn as_str(&self) -> &str {
-        match self {
-            Self::Default => "auto",
-            Self::None => "none",
-        }
+    pub fn none() -> Self {
+        Self { pointer_events: "none" }
     }
 }
 
 // ------ PointerHandlingSvg ------
 
 #[derive(Clone, Copy)]
-pub enum PointerHandlingSvg {
-    Default,
-    None,
-    VisibleFill,
-    Fill,
-    VisibleStroke,
-    Stroke,
-    Painted,
-    All,
+pub struct PointerHandlingSvg {
+    pointer_events: &'static str,
+}
+
+impl Default for PointerHandlingSvg {
+    fn default() -> Self {
+        Self { pointer_events: "auto" }
+    }
 }
 
 impl PointerHandlingSvg {
-    fn as_str(&self) -> &str {
-        match self {
-            Self::Default => "auto",
-            Self::None => "none",
-            Self::VisibleFill => "visibleFill",
-            Self::Fill => "fill",
-            Self::VisibleStroke => "visibleStroke",
-            Self::Stroke => "stroke",
-            Self::Painted => "painted",
-            Self::All => "all",
-        }
+    pub fn none() -> Self {
+        Self { pointer_events: "none" }
+    }
+
+    pub fn visible_fill() -> Self {
+        Self { pointer_events: "visibleFill" }
+    }
+
+    pub fn fill() -> Self {
+        Self { pointer_events: "fill" }
+    }
+
+    pub fn visible_stroke() -> Self {
+        Self { pointer_events: "visibleStroke" }
+    }
+
+    pub fn stroke() -> Self {
+        Self { pointer_events: "stroke" }
+    }
+
+    pub fn painted() -> Self {
+        Self { pointer_events: "painted" }
+    }
+
+    pub fn all() -> Self {
+        Self { pointer_events: "all" }
     }
 }
