@@ -11,7 +11,7 @@ mod mouse_event_aware;
 pub use mouse_event_aware::MouseEventAware;
 
 mod pointer_event_aware;
-pub use pointer_event_aware::{PointerEventAware, PointerEvent, RawPointerEvent};
+pub use pointer_event_aware::{PointerEventAware, PointerEvent, RawPointerEvent, PointerHandling, PointerHandlingSvg};
 
 mod hookable;
 pub use hookable::Hookable;
