@@ -1,5 +1,7 @@
 use crate::*;
 
+// ------ MouseEventAware ------
+
 pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
     fn on_hovered_change(self, handler: impl FnOnce(bool) + Clone + 'static) -> Self {
         let mouse_over_handler = move |hovered| (handler.clone())(hovered);
@@ -11,19 +13,42 @@ pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
         })
     }
 
-    // @TODO add `on_click_event`
     fn on_click(self, handler: impl FnOnce() + Clone + 'static) -> Self {
         let handler = move || handler.clone()();
         self.update_raw_el(|raw_el| raw_el.event_handler(move |_: events::Click| handler()))
     }
 
-    // @TODO add `on_double_click_event`
+    fn on_click_event(self, handler: impl FnOnce(MouseEvent) + Clone + 'static) -> Self {
+        self.update_raw_el(|raw_el| raw_el.event_handler(move |event: events::Click| {
+            let mouse_event = MouseEvent {
+                x: event.x(),
+                y: event.y(),
+                movement_x: 0,
+                movement_y: 0,
+                raw_event: RawMouseEvent::Click(event),
+            };
+            (handler.clone())(mouse_event)
+        }))
+    }
+
     fn on_double_click(self, handler: impl FnOnce() + Clone + 'static) -> Self {
         let handler = move || handler.clone()();
         self.update_raw_el(|raw_el| raw_el.event_handler(move |_: events::DoubleClick| handler()))
     }
 
-    // @TODO add `on_double_outside_event` ?
+    fn on_double_click_event(self, handler: impl FnOnce(MouseEvent) + Clone + 'static) -> Self {
+        self.update_raw_el(|raw_el| raw_el.event_handler(move |event: events::DoubleClick| {
+            let mouse_event = MouseEvent {
+                x: event.x(),
+                y: event.y(),
+                movement_x: 0,
+                movement_y: 0,
+                raw_event: RawMouseEvent::DoubleClick(event),
+            };
+            (handler.clone())(mouse_event)
+        }))
+    }
+
     fn on_click_outside(
         self,
         handler: impl FnOnce() + Clone + 'static,
@@ -50,6 +75,39 @@ pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
             })
         })
     }
+
+    fn on_click_outside_event(
+        self,
+        handler: impl FnOnce(MouseEvent) + Clone + 'static,
+        ignored_class_ids: impl IntoIterator<Item = ClassId>,
+    ) -> Self {
+        let mut ignored_class_ids = ignored_class_ids.into_iter().collect::<Vec<_>>();
+
+        self.update_raw_el(move |raw_el| {
+            ignored_class_ids.push(raw_el.class_id());
+
+            raw_el.global_event_handler(move |event: events::Click| {
+                let selector = ignored_class_ids
+                    .iter()
+                    .filter_map(|class_id| {
+                        class_id.map(|option_class_id| Some([".", &option_class_id?].concat()))
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                if closest(event.target(), &selector).is_none() {
+                    let mouse_event = MouseEvent {
+                        x: event.x(),
+                        y: event.y(),
+                        movement_x: 0,
+                        movement_y: 0,
+                        raw_event: RawMouseEvent::Click(event),
+                    };
+                    (handler.clone())(mouse_event)
+                }
+            })
+        })
+    }
 }
 
 fn closest(target: Option<web_sys::EventTarget>, selector: &str) -> Option<web_sys::Element> {
@@ -57,4 +115,39 @@ fn closest(target: Option<web_sys::EventTarget>, selector: &str) -> Option<web_s
         .dyn_ref::<web_sys::Element>()?
         .closest(selector)
         .ok()?
+}
+
+// ------ MouseEvent ------
+
+pub struct MouseEvent {
+    x: i32,
+    y: i32,
+    movement_x: i32,
+    movement_y: i32,
+    pub raw_event: RawMouseEvent,
+}
+
+impl MouseEvent {
+    pub fn x(&self) -> i32 {
+        self.x
+    }
+
+    pub fn y(&self) -> i32 {
+        self.y
+    }
+
+    pub fn movement_x(&self) -> i32 {
+        self.movement_x
+    }
+
+    pub fn movement_y(&self) -> i32 {
+        self.movement_y
+    }
+}
+
+// ------ RawMouseEvent ------
+
+pub enum RawMouseEvent {
+    Click(events::Click),
+    DoubleClick(events::DoubleClick),
 }
