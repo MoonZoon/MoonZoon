@@ -77,10 +77,7 @@ fn rectangle_attributes() -> impl Element {
     Column::new()
         .s(Align::center())
         .s(Font::new().color(GRAY_2))
-        .update_raw_el(|raw_el| {
-            raw_el
-                .style("user-select", "none")
-        })
+        .text_content_selecting(TextContentSelecting::none())
         .item(
             Row::new()
                 .item("offset X: ")

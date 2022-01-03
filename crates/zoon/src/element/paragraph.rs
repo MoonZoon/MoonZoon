@@ -67,6 +67,7 @@ impl<EmptyFlag> Hookable<RawHtmlEl> for Paragraph<EmptyFlag> {
 }
 impl<EmptyFlag> AddNearbyElement<'_> for Paragraph<EmptyFlag> {}
 impl<EmptyFlag> HasClassId<RawHtmlEl> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> SelectableTextContent<RawHtmlEl> for Paragraph<EmptyFlag> {}
 
 // ------ ------
 //  Attributes

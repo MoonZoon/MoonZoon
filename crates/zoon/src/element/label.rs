@@ -59,6 +59,7 @@ impl<LabelFlag, ForInputFlag> Hookable<RawHtmlEl> for Label<LabelFlag, ForInputF
 }
 impl<LabelFlag, ForInputFlag> AddNearbyElement<'_> for Label<LabelFlag, ForInputFlag> {}
 impl<LabelFlag, ForInputFlag> HasClassId<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> SelectableTextContent<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
 
 // ------ ------
 //  Attributes
