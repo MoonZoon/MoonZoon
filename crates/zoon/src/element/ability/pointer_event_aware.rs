@@ -107,9 +107,27 @@ pub trait PointerEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
         })
     }
 
+    fn pointer_handling_signal(self, handling: impl Signal<Item = PointerHandling> + Unpin + 'static) -> Self {
+        self.update_raw_el(|raw_el| {
+            raw_el.style_signal("pointer-events", handling.map(|handling| {
+                handling.pointer_events
+            }))
+        })
+    }
+
     fn pointer_handling_svg(self, handling: PointerHandlingSvg) -> Self where Self: UpdateRawEl<RawSvgEl> {
         self.update_raw_el(|raw_el: RawSvgEl| {
             raw_el.style("pointer-events", handling.pointer_events)
+        })
+    }
+
+    fn pointer_handling_svg_signal(self, handling: impl Signal<Item = PointerHandlingSvg> + Unpin + 'static) -> Self
+        where Self: UpdateRawEl<RawSvgEl>
+    {
+        self.update_raw_el(|raw_el: RawSvgEl| {
+            raw_el.style_signal("pointer-events", handling.map(|handling| {
+                handling.pointer_events
+            }))
         })
     }
 }
