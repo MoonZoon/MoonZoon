@@ -19,16 +19,18 @@ pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
     }
 
     fn on_click_event(self, handler: impl FnOnce(MouseEvent) + Clone + 'static) -> Self {
-        self.update_raw_el(|raw_el| raw_el.event_handler(move |event: events::Click| {
-            let mouse_event = MouseEvent {
-                x: event.x(),
-                y: event.y(),
-                movement_x: 0,
-                movement_y: 0,
-                raw_event: RawMouseEvent::Click(event),
-            };
-            (handler.clone())(mouse_event)
-        }))
+        self.update_raw_el(|raw_el| {
+            raw_el.event_handler(move |event: events::Click| {
+                let mouse_event = MouseEvent {
+                    x: event.x(),
+                    y: event.y(),
+                    movement_x: 0,
+                    movement_y: 0,
+                    raw_event: RawMouseEvent::Click(event),
+                };
+                (handler.clone())(mouse_event)
+            })
+        })
     }
 
     fn on_double_click(self, handler: impl FnOnce() + Clone + 'static) -> Self {
@@ -37,16 +39,18 @@ pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
     }
 
     fn on_double_click_event(self, handler: impl FnOnce(MouseEvent) + Clone + 'static) -> Self {
-        self.update_raw_el(|raw_el| raw_el.event_handler(move |event: events::DoubleClick| {
-            let mouse_event = MouseEvent {
-                x: event.x(),
-                y: event.y(),
-                movement_x: 0,
-                movement_y: 0,
-                raw_event: RawMouseEvent::DoubleClick(event),
-            };
-            (handler.clone())(mouse_event)
-        }))
+        self.update_raw_el(|raw_el| {
+            raw_el.event_handler(move |event: events::DoubleClick| {
+                let mouse_event = MouseEvent {
+                    x: event.x(),
+                    y: event.y(),
+                    movement_x: 0,
+                    movement_y: 0,
+                    raw_event: RawMouseEvent::DoubleClick(event),
+                };
+                (handler.clone())(mouse_event)
+            })
+        })
     }
 
     fn on_click_outside(

@@ -23,7 +23,11 @@ impl<'a> Cursor<'a> {
         cursor_icon: impl Signal<Item = impl Into<Option<CursorIcon<'static>>>> + Unpin + 'static,
     ) -> Self {
         let mut this = Self::default();
-        let cursor_icon = cursor_icon.map(|cursor_icon| cursor_icon.into().map(|cursor_icon| cursor_icon.into_cow_str()));
+        let cursor_icon = cursor_icon.map(|cursor_icon| {
+            cursor_icon
+                .into()
+                .map(|cursor_icon| cursor_icon.into_cow_str())
+        });
         this.dynamic_css_props
             .insert("cursor".into(), box_css_signal(cursor_icon));
         this
