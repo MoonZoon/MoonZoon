@@ -80,6 +80,27 @@ pub trait PointerEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
             })
     }
 
+    fn on_pointer_leave(self, handler: impl FnOnce() + Clone + 'static) -> Self {
+        let handler = move || handler.clone()();
+        self.update_raw_el(|raw_el| {
+            let class_id = raw_el.class_id();
+            raw_el
+                .event_handler(move |event: events_extra::PointerLeave| {
+                    let target = event.dyn_target::<web_sys::Element>().unwrap_throw();
+                    let classes = target.get_attribute("class").unwrap_throw();
+                    class_id.map(|class_id| {
+                        let class_id = class_id.unwrap_throw();
+                        for class in classes.split_ascii_whitespace() {
+                            if class == class_id {
+                                handler();
+                                return;
+                            }
+                        }
+                    });
+                })
+        })
+    }
+
     // @TODO https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events
 }
 
