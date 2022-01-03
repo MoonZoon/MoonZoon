@@ -53,12 +53,12 @@ impl ChoosableTag for Stack<EmptyFlagSet> {
                 .style_group(
                     StyleGroup::new(".stack > *")
                         .style("grid-column", "1")
-                        .style("grid-row", "1")
+                        .style("grid-row", "1"),
                 )
                 .style_group(
                     StyleGroup::new(".stack > .center_x")
                         .style("margin-left", "auto")
-                        .style("margin-right", "auto")
+                        .style("margin-right", "auto"),
                 )
                 .style_group(
                     StyleGroup::new(".stack > .center_y")
@@ -66,12 +66,8 @@ impl ChoosableTag for Stack<EmptyFlagSet> {
                         .style("margin-bottom", "auto"),
                 )
                 .style_group(StyleGroup::new(".stack > .align_bottom").style("margin-top", "auto"))
-                .style_group(
-                    StyleGroup::new(".stack > .align_left").style("margin-right", "auto"),
-                )
-                .style_group(
-                    StyleGroup::new(".stack > .align_right").style("margin-left", "auto"),
-                )
+                .style_group(StyleGroup::new(".stack > .align_left").style("margin-right", "auto"))
+                .style_group(StyleGroup::new(".stack > .align_right").style("margin-left", "auto"))
                 .style_group(StyleGroup::new(".stack > .fill_width").style("width", "100%"))
                 .style_group(StyleGroup::new(".stack > .fill_height").style("height", "100%"));
         });

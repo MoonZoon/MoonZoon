@@ -32,11 +32,15 @@ impl TouchHandling {
     }
 
     pub fn none() -> Self {
-        Self { touch_action: "none".into() }
+        Self {
+            touch_action: "none".into(),
+        }
     }
 
     pub fn manipulation() -> Self {
-        Self { touch_action: "manipulation".into() }
+        Self {
+            touch_action: "manipulation".into(),
+        }
     }
 
     pub fn pan_x(mut self) -> Self {

@@ -93,28 +93,73 @@ make_event!(WheelEvent, "wheel" => web_sys::WheelEvent);
 
 // WheelEvent is a subtype of MouseEvent. It implements what MouseEvent implements plus
 impl WheelEvent {
-    #[inline] pub fn x(&self) -> i32 { self.event.client_x() }
-    #[inline] pub fn y(&self) -> i32 { self.event.client_y() }
+    #[inline]
+    pub fn x(&self) -> i32 {
+        self.event.client_x()
+    }
+    #[inline]
+    pub fn y(&self) -> i32 {
+        self.event.client_y()
+    }
 
-    #[inline] pub fn movement_x(&self) -> i32 { self.event.movement_x() }
-    #[inline] pub fn movement_y(&self) -> i32 { self.event.movement_y() }
+    #[inline]
+    pub fn movement_x(&self) -> i32 {
+        self.event.movement_x()
+    }
+    #[inline]
+    pub fn movement_y(&self) -> i32 {
+        self.event.movement_y()
+    }
 
-    #[inline] pub fn offset_x(&self) -> i32 { self.event.offset_x() }
-    #[inline] pub fn offset_y(&self) -> i32 { self.event.offset_y() }
+    #[inline]
+    pub fn offset_x(&self) -> i32 {
+        self.event.offset_x()
+    }
+    #[inline]
+    pub fn offset_y(&self) -> i32 {
+        self.event.offset_y()
+    }
 
-    #[inline] pub fn page_x(&self) -> i32 { self.event.page_x() }
-    #[inline] pub fn page_y(&self) -> i32 { self.event.page_y() }
+    #[inline]
+    pub fn page_x(&self) -> i32 {
+        self.event.page_x()
+    }
+    #[inline]
+    pub fn page_y(&self) -> i32 {
+        self.event.page_y()
+    }
 
-    #[inline] pub fn screen_x(&self) -> i32 { self.event.screen_x() }
-    #[inline] pub fn screen_y(&self) -> i32 { self.event.screen_y() }
+    #[inline]
+    pub fn screen_x(&self) -> i32 {
+        self.event.screen_x()
+    }
+    #[inline]
+    pub fn screen_y(&self) -> i32 {
+        self.event.screen_y()
+    }
 
-    #[inline] pub fn ctrl_key(&self) -> bool { self.event.ctrl_key() || self.event.meta_key() }
-    #[inline] pub fn shift_key(&self) -> bool { self.event.shift_key() }
-    #[inline] pub fn alt_key(&self) -> bool { self.event.alt_key() }
+    #[inline]
+    pub fn ctrl_key(&self) -> bool {
+        self.event.ctrl_key() || self.event.meta_key()
+    }
+    #[inline]
+    pub fn shift_key(&self) -> bool {
+        self.event.shift_key()
+    }
+    #[inline]
+    pub fn alt_key(&self) -> bool {
+        self.event.alt_key()
+    }
 
     // TODO maybe deprecate these ?
-    #[inline] pub fn mouse_x(&self) -> i32 { self.event.client_x() }
-    #[inline] pub fn mouse_y(&self) -> i32 { self.event.client_y() }
+    #[inline]
+    pub fn mouse_x(&self) -> i32 {
+        self.event.client_x()
+    }
+    #[inline]
+    pub fn mouse_y(&self) -> i32 {
+        self.event.client_y()
+    }
 
     pub fn button(&self) -> MouseButton {
         match self.event.button() {

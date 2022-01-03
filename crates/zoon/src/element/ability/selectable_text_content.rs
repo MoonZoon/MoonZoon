@@ -4,9 +4,7 @@ use crate::*;
 
 pub trait SelectableTextContent<T: RawEl>: UpdateRawEl<T> + Sized {
     fn text_content_selecting(self, selecting: TextContentSelecting) -> Self {
-        self.update_raw_el(|raw_el| {
-            raw_el.style("user-select", selecting.user_select)
-        })
+        self.update_raw_el(|raw_el| raw_el.style("user-select", selecting.user_select))
     }
 }
 
@@ -20,13 +18,17 @@ pub struct TextContentSelecting {
 
 impl Default for TextContentSelecting {
     fn default() -> Self {
-        Self { user_select: "auto" }
+        Self {
+            user_select: "auto",
+        }
     }
 }
 
 impl TextContentSelecting {
     pub fn none() -> Self {
-        Self { user_select: "none" }
+        Self {
+            user_select: "none",
+        }
     }
 
     pub fn all() -> Self {
@@ -39,6 +41,8 @@ impl TextContentSelecting {
     // }
 
     pub fn contain() -> Self {
-        Self { user_select: "contain" }
+        Self {
+            user_select: "contain",
+        }
     }
 }

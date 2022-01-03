@@ -4,9 +4,8 @@ use std::{
     borrow::Cow,
     collections::{BTreeMap, BTreeSet},
     convert::TryFrom,
-    mem,
+    iter, mem,
     sync::Arc,
-    iter,
 };
 use web_sys::{CssStyleDeclaration, CssStyleRule, CssStyleSheet, HtmlStyleElement};
 

@@ -39,7 +39,7 @@ impl KeyboardEvent {
 // ------ RawKeyboardEvent ------
 
 pub enum RawKeyboardEvent {
-    KeyDown(events::KeyDown)
+    KeyDown(events::KeyDown),
 }
 
 // ------ Key ------
