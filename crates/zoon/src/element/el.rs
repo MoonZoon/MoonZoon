@@ -83,6 +83,7 @@ impl<ChildFlag> Hookable<RawHtmlEl> for El<ChildFlag> {
 }
 impl<ChildFlag> AddNearbyElement<'_> for El<ChildFlag> {}
 impl<ChildFlag> HasClassId<RawHtmlEl> for El<ChildFlag> {}
+impl<ChildFlag> SelectableTextContent<RawHtmlEl> for El<ChildFlag> {}
 
 // ------ ------
 //  Attributes

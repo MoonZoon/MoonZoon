@@ -84,6 +84,7 @@ impl<EmptyFlag, MultilineFlag> Hookable<RawHtmlEl> for Row<EmptyFlag, MultilineF
 }
 impl<EmptyFlag, MultilineFlag> AddNearbyElement<'_> for Row<EmptyFlag, MultilineFlag> {}
 impl<EmptyFlag, MultilineFlag> HasClassId<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> SelectableTextContent<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
 
 // ------ ------
 //  Attributes

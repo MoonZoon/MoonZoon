@@ -244,6 +244,19 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
     >
 {
 }
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+    SelectableTextContent<RawHtmlEl>
+    for TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+    >
+{
+}
 
 // ------ ------
 //  Attributes
