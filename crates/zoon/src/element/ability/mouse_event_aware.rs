@@ -23,6 +23,7 @@ pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
         self.update_raw_el(|raw_el| raw_el.event_handler(move |_: events::DoubleClick| handler()))
     }
 
+    // @TODO add `on_double_outside_event` ?
     fn on_click_outside(
         self,
         handler: impl FnOnce() + Clone + 'static,

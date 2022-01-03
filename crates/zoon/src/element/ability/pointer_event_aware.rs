@@ -101,7 +101,17 @@ pub trait PointerEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
         })
     }
 
-    // @TODO https://developer.mozilla.org/en-US/docs/Web/CSS/pointer-events
+    fn pointer_handling(self, handling: PointerHandling) -> Self {
+        self.update_raw_el(|raw_el| {
+            raw_el.style("pointer-events", handling.as_str())
+        })
+    }
+
+    fn pointer_handling_svg(self, handling: PointerHandlingSvg) -> Self where Self: UpdateRawEl<RawSvgEl> {
+        self.update_raw_el(|raw_el: RawSvgEl| {
+            raw_el.style("pointer-events", handling.as_str())
+        })
+    }
 }
 
 // ------ PointerEvent ------
@@ -138,4 +148,50 @@ pub enum RawPointerEvent {
     PointerDown(events_extra::PointerDown),
     PointerUp(events_extra::PointerUp),
     PointerMove(events_extra::PointerMove),
+}
+
+// ------ PointerHandling ------
+
+#[derive(Clone, Copy)]
+pub enum PointerHandling {
+    Default,
+    None,
+}
+
+impl PointerHandling {
+    fn as_str(&self) -> &str {
+        match self {
+            Self::Default => "auto",
+            Self::None => "none",
+        }
+    }
+}
+
+// ------ PointerHandlingSvg ------
+
+#[derive(Clone, Copy)]
+pub enum PointerHandlingSvg {
+    Default,
+    None,
+    VisibleFill,
+    Fill,
+    VisibleStroke,
+    Stroke,
+    Painted,
+    All,
+}
+
+impl PointerHandlingSvg {
+    fn as_str(&self) -> &str {
+        match self {
+            Self::Default => "auto",
+            Self::None => "none",
+            Self::VisibleFill => "visibleFill",
+            Self::Fill => "fill",
+            Self::VisibleStroke => "visibleStroke",
+            Self::Stroke => "stroke",
+            Self::Painted => "painted",
+            Self::All => "all",
+        }
+    }
 }
