@@ -1010,6 +1010,7 @@ dependencies = [
  "actix-files",
  "actix-http",
  "actix-rt",
+ "actix-tls",
  "actix-web",
  "apply",
  "async-trait",
