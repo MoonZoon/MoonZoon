@@ -8,7 +8,7 @@ mod keyboard_event_aware;
 pub use keyboard_event_aware::{Key, KeyboardEvent, RawKeyboardEvent, KeyboardEventAware};
 
 mod mouse_event_aware;
-pub use mouse_event_aware::MouseEventAware;
+pub use mouse_event_aware::{MouseEventAware, MouseEvent, RawMouseEvent};
 
 mod pointer_event_aware;
 pub use pointer_event_aware::{PointerEventAware, PointerEvent, RawPointerEvent, PointerHandling, PointerHandlingSvg};
