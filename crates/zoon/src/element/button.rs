@@ -42,7 +42,8 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
                 .style("text-align", "center")
                 .style("display", "flex")
                 .style("flex-direction", "column")
-                .style("align-items", "center"),
+                .style("align-items", "center")
+                .style("touch-action", "manipulation"),
             flags: PhantomData,
         }
     }
@@ -80,6 +81,7 @@ impl<LabelFlag, OnPressFlag> KeyboardEventAware<RawHtmlEl> for Button<LabelFlag,
 impl<LabelFlag, OnPressFlag> Focusable for Button<LabelFlag, OnPressFlag> {}
 impl<LabelFlag, OnPressFlag> MouseEventAware<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
 impl<LabelFlag, OnPressFlag> PointerEventAware<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
+impl<LabelFlag, OnPressFlag> TouchEventAware<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
 impl<LabelFlag, OnPressFlag> Hookable<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {
     type WSElement = HtmlDivElement;
 }

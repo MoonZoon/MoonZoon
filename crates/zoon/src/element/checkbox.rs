@@ -117,6 +117,10 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> PointerEventAware<R
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
 }
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> TouchEventAware<RawHtmlEl>
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+{
+}
 impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> Hookable<RawHtmlEl>
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {

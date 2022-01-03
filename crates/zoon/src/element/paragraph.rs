@@ -60,6 +60,7 @@ impl<EmptyFlag> Styleable<'_, RawHtmlEl> for Paragraph<EmptyFlag> {}
 impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Paragraph<EmptyFlag> {}
 impl<EmptyFlag> MouseEventAware<RawHtmlEl> for Paragraph<EmptyFlag> {}
 impl<EmptyFlag> PointerEventAware<RawHtmlEl> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> TouchEventAware<RawHtmlEl> for Paragraph<EmptyFlag> {}
 impl<EmptyFlag> MutableViewport<RawHtmlEl> for Paragraph<EmptyFlag> {}
 impl<EmptyFlag> Hookable<RawHtmlEl> for Paragraph<EmptyFlag> {
     type WSElement = HtmlParagraphElement;

@@ -53,6 +53,7 @@ impl<UrlFlag, DescriptionFlag> Styleable<'_, RawHtmlEl> for Image<UrlFlag, Descr
 impl<UrlFlag, DescriptionFlag> KeyboardEventAware<RawHtmlEl> for Image<UrlFlag, DescriptionFlag> {}
 impl<UrlFlag, DescriptionFlag> MouseEventAware<RawHtmlEl> for Image<UrlFlag, DescriptionFlag> {}
 impl<UrlFlag, DescriptionFlag> PointerEventAware<RawHtmlEl> for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> TouchEventAware<RawHtmlEl> for Image<UrlFlag, DescriptionFlag> {}
 impl<UrlFlag, DescriptionFlag> Hookable<RawHtmlEl> for Image<UrlFlag, DescriptionFlag> {
     type WSElement = HtmlImageElement;
 }

@@ -61,9 +61,7 @@ fn rectangle() -> impl Element {
             || CursorIcon::Grabbing, 
             || CursorIcon::Grab, 
         )))
-        .update_raw_el(|raw_el| { 
-            raw_el.style("touch-action", "none")
-        })
+        .touch_native_handling(TouchHandling::none())
         .layer(rectangle_content())
         .layer(handle())
 }
