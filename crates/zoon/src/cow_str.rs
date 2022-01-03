@@ -1,4 +1,4 @@
-use crate::css_property_name::CssPropertyName;
+use crate::css_property::{CssPropertyName, CssPropertyValue};
 use crate::*;
 use dominator::traits::AsStr;
 use std::{borrow::Cow, mem};
@@ -158,6 +158,12 @@ pub struct CowStrWrapper<'a>(Cow<'a, str>);
 impl<'a> CowStrWrapper<'a> {
     pub fn into_css_property_name(self) -> CssPropertyName<'a> {
         CssPropertyName::new(self.0)
+    }
+}
+
+impl<'a> CowStrWrapper<'a> {
+    pub fn into_css_property_value(self) -> CssPropertyValue<'a> {
+        CssPropertyValue::new(self.0)
     }
 }
 

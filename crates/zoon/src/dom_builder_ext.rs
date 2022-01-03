@@ -148,6 +148,7 @@ where
     if let None = okay {
         if cfg!(debug_assertions) {
             // TODO maybe make this configurable
+            // @TODO nicer error
             panic!(
                 "style is incorrect:\n  names: {}\n  values: {}",
                 names.join(", "),

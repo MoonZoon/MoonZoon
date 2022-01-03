@@ -1,5 +1,5 @@
 use super::class_id_generator;
-use crate::css_property_name::CssPropertyName;
+use crate::css_property::{CssPropertyName, CssPropertyValue};
 use crate::*;
 use std::iter;
 
@@ -71,12 +71,14 @@ impl RawEl for RawHtmlEl {
     }
 
     fn style(self, name: &str, value: &str) -> Self {
-        self.update_dom_builder(|dom_builder| dom_builder.style(CssPropertyName::new(name), value))
+        self.update_dom_builder(|dom_builder| dom_builder.style(
+            CssPropertyName::new(name), CssPropertyValue::new(value)
+        ))
     }
 
     fn style_important(self, name: &str, value: &str) -> Self {
         self.update_dom_builder(|dom_builder| {
-            dom_builder.style_important(CssPropertyName::new(name), value)
+            dom_builder.style_important(CssPropertyName::new(name), CssPropertyValue::new(value))
         })
     }
 
@@ -88,7 +90,7 @@ impl RawEl for RawHtmlEl {
         self.update_dom_builder(|dom_builder| {
             dom_builder.style_signal(
                 name.into_cow_str_wrapper().into_css_property_name(),
-                value.map(|value| value.into_option_cow_str_wrapper()),
+                value.map(|value| value.into_option_cow_str_wrapper().map(|cow_str| cow_str.into_css_property_value())),
             )
         })
     }
