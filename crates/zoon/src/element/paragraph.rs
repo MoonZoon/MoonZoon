@@ -15,17 +15,7 @@ pub struct Paragraph<EmptyFlag> {
 
 impl Paragraph<EmptyFlagSet> {
     pub fn new() -> Self {
-        run_once!(|| {
-            global_styles()
-                // @TODO https://github.com/MoonZoon/MoonZoon/issues/43
-                // .style_group(StyleGroup::new(".paragraph > *").style_important("display", "inline"))
-                .style_group(StyleGroup::new(".paragraph > .align_left").style("float", "left"))
-                .style_group(StyleGroup::new(".paragraph > .align_right").style("float", "right"));
-        });
-        Self {
-            raw_el: RawHtmlEl::new("p").class("paragraph"),
-            flags: PhantomData,
-        }
+        Self::with_tag(Tag::Custom("p"))
     }
 }
 
@@ -56,6 +46,20 @@ impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Paragraph<EmptyFlag> {
 //   Abilities
 // ------ ------
 
+impl ChoosableTag for Paragraph<EmptyFlagSet> {
+    fn with_tag(tag: Tag) -> Self {
+        run_once!(|| {
+            global_styles()
+                .style_group(StyleGroup::new(".paragraph > *").style_important("display", "inline"))
+                .style_group(StyleGroup::new(".paragraph > .align_left").style("float", "left"))
+                .style_group(StyleGroup::new(".paragraph > .align_right").style("float", "right"));
+        });
+        Self {
+            raw_el: RawHtmlEl::new(tag.as_str()).class("paragraph"),
+            flags: PhantomData,
+        }
+    }
+}
 impl<EmptyFlag> Styleable<'_, RawHtmlEl> for Paragraph<EmptyFlag> {}
 impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Paragraph<EmptyFlag> {}
 impl<EmptyFlag> MouseEventAware<RawHtmlEl> for Paragraph<EmptyFlag> {}
