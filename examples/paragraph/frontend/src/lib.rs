@@ -26,7 +26,7 @@ fn paragraph() -> impl Element {
     Paragraph::new()
         .content(
             El::new()
-                .s(Font::new().size(60).line_height(52))
+                .s(Font::new().size(60).line_height(55))
                 .s(Align::new().left())
                 .s(Padding::new().right(10))
                 .child("L")
