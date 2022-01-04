@@ -1,4 +1,4 @@
-use zoon::{*, named_color::*};
+use zoon::{named_color::*, *};
 
 fn root() -> impl Element {
     Column::new()
@@ -7,19 +7,27 @@ fn root() -> impl Element {
         .s(Align::center())
         .s(Spacing::new(30))
         .item(title())
-        .item(paragraph())   
+        .item(paragraph())
 }
 
 fn title() -> impl Element {
     Paragraph::with_tag(Tag::H1)
         .s(Font::new().size(28).center())
-        .content(El::new().s(Font::new().no_wrap()).child("The no-wrap sentence."))
+        .content(
+            El::new()
+                .s(Font::new().no_wrap())
+                .child("The no-wrap sentence."),
+        )
         .content(" I'm centered and ")
         .content(
             El::new()
                 .s(Font::new().line(FontLine::new().underline().wavy()))
-                .child("wavy.")
+                .s(RoundedCorners::all(10))
+                .s(Background::new().color(BLUE_9))
+                .s(Padding::all(5).top(0))
+                .child("wavy"),
         )
+        .content(".")
 }
 
 fn paragraph() -> impl Element {

@@ -162,6 +162,21 @@ fn compute_radii(corners: RoundedCorners, width: f64, height: f64) -> String {
         corners.bottom_right.f64_pixels_or_zero(),
         corners.bottom_left.f64_pixels_or_zero(),
     ];
+
+    // It doesn't make sense to compute radii if the element is basically invisible.
+    // Or the element's width and height is 0px when the element's `display` is `inline`
+    // because `ResizeObserver` doesn't work with inlined elements. Hence want to preserve
+    // at least fixed radii.
+    if width == 0. || height == 0. {
+        return crate::format!(
+            "{}px {}px {}px {}px",
+            radii[0],
+            radii[1],
+            radii[2],
+            radii[3]
+        );
+    }
+
     let ratios = [
         // top side & adjacent radii
         width / (radii[0] + radii[1]),
