@@ -40,7 +40,7 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
                 .style("cursor", "pointer")
                 .style("user-select", "none")
                 .style("text-align", "center")
-                .style("display", "flex")
+                .style("display", "inline-flex")
                 .style("flex-direction", "column")
                 .style("align-items", "center")
                 .style("touch-action", "manipulation"),

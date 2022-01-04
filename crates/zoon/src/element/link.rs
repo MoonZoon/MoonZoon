@@ -37,7 +37,7 @@ impl Link<LabelFlagNotSet, ToFlagNotSet> {
                 .class("link")
                 .style("text-decoration", "none")
                 .style("color", "inherit")
-                .style("display", "flex")
+                .style("display", "inline-flex")
                 .style("flex-direction", "column")
                 .style("align-items", "center"),
             flags: PhantomData,
