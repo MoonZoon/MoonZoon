@@ -218,8 +218,9 @@ where
             .app_data(web::Data::new(reload_sse.clone()))
             .app_data(web::Data::new(message_sse.clone()))
             .service(
-                Files::new("_api/public", "public")
-                    .default_handler(web::to(|| async { HttpResponse::NotFound().reason("file not found").finish() }))
+                Files::new("_api/public", "public").default_handler(web::to(|| async {
+                    HttpResponse::NotFound().reason("file not found").finish()
+                })),
             )
             .service(
                 web::scope("_api")
@@ -234,7 +235,7 @@ where
                         web::get().to(message_sse_responder),
                     )
                     .route("reload_sse", web::get().to(reload_sse_responder))
-                    .route("ping", web::to(|| async { "pong" }))
+                    .route("ping", web::to(|| async { "pong" })),
             )
             .configure(service_config.clone())
             .default_service(web::get().to(frontend_responder::<FRB, FRBO>))

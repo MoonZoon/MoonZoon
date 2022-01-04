@@ -153,16 +153,14 @@ fn todo_title(todo: Arc<Todo>) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Label::new()
         .s(Width::fill())
-        .s(
-            Font::new()
-                .color_signal(
-                    todo.completed
-                        .signal()
-                        .map_bool(|| hsluv!(0, 0, 86.7), || hsluv!(0, 0, 32.7)),
-                )
-                .size(24)
-                .line(FontLine::new().strike_signal(todo.completed.signal()))
-        )
+        .s(Font::new()
+            .color_signal(
+                todo.completed
+                    .signal()
+                    .map_bool(|| hsluv!(0, 0, 86.7), || hsluv!(0, 0, 32.7)),
+            )
+            .size(24)
+            .line(FontLine::new().strike_signal(todo.completed.signal())))
         .s(Padding::all(15).right(60))
         .s(Clip::x())
         .for_input(todo.id.to_string())
