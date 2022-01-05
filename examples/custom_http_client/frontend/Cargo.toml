@@ -1,0 +1,22 @@
+[package]
+version = "0.1.0"
+name = "frontend"
+repository = "https://github.com/MoonZoon/MoonZoon"
+authors = ["Martin Kavík <martin@kavik.cz>"]
+description = "Custom HTTP client - MoonZoon example"
+categories = ["MoonZoon", "example"]
+license = "MIT"
+readme = "../README.md"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.19"
+
+[dependencies]
+zoon = { path = "../../../crates/zoon" }
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ['-Os']

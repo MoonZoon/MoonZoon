@@ -35,6 +35,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/chat/Cargo.toml",
         "examples/counter/Cargo.toml",
         // "examples/counters/Cargo.toml",
+        // "examples/custom_http_client/Cargo.toml",
         // "examples/js-framework-benchmark/keyed/Cargo.toml",
         // "examples/start_with_app/Cargo.toml",
         // "examples/pages/Cargo.toml",
@@ -65,6 +66,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   - `chat`
   - `counter`
   - `counters`
+  - `custom_http_client`
   - `js-framework-benchmark/keyed`
   - `start_with_app`
   - `pages`
