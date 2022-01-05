@@ -5,9 +5,13 @@
 
 _
 
-You'll be able to install `mzoon` with _Cargo_: 
+You'll be able to install `mzoon` with _Cargo_ soon: 
 ```sh
 cargo install --locked mzoon
+```
+but for now, you can use:
+```sh
+cargo install mzoon --git https://github.com/MoonZoon/MoonZoon --rev 15cb619faca5f78a47e08f4af4bfa595f0eb64b1 --root cargo_install_root --locked
 ```
 
 and faster installation methods with pre-compiled binaries will follow.
