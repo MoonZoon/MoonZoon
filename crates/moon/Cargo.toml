@@ -16,7 +16,7 @@ actix-files = { version = "=0.6.0-beta.8", default-features = false }
 actix-http = { version = "=3.0.0-beta.11", default-features = false }
 actix-cors = { version = "=0.6.0-beta.3", default-features = false }
 actix-tls = { version = "=3.0.0-beta.7", default-features = false }
-rustls = { version = "=0.20.0", default-features = false }
+rustls = { version = "=0.20.2", default-features = false }
 rustls-pemfile = { version = "=0.2.1", default-features = false }
 actix-rt = { version = "=2.3.0", default-features = false }
 trait-set = { version = "0.2.0", default-features = false }

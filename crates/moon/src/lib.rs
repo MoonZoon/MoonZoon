@@ -237,9 +237,12 @@ where
                     )
                     .route("reload_sse", web::get().to(reload_sse_responder))
                     .route("ping", web::to(|| async { "pong" }))
-                    .route("{path:.*}", web::to(|| async {
-                        HttpResponse::NotFound().reason("API Not Found").finish()
-                    })),
+                    .route(
+                        "{path:.*}",
+                        web::to(|| async {
+                            HttpResponse::NotFound().reason("API Not Found").finish()
+                        }),
+                    ),
             )
             .default_service(web::get().to(frontend_responder::<FRB, FRBO>))
     });
