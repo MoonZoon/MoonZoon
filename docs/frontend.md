@@ -680,7 +680,7 @@ fn sleep_panel() -> impl Element {
    Report { frequency: report_page::Frequency },
    ```
 - Urls are automatically encoded and decoded (see [encodeURIComponent() on MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent) for more info).
-- There are helpers like `routing::back`, `routing::current_url`, `Router::go` and `Router::replace`.
+- There are helpers like `routing::back`, `routing::url`, `Router::go` and `Router::replace`.
 - Routes are matched against the incoming url path from the first one to the last one. The example of the generated code for matching the route `#[route("report", frequency)]`:
    ```rust
    fn route_0_from_route_segments(segments: &[String]) -> Option<Self> {
