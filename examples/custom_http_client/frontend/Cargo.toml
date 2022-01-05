@@ -17,6 +17,7 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 zoon = { path = "../../../crates/zoon" }
+reqwest = { version = "0.11.8", default_features = false }
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ['-Os']
