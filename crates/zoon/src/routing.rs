@@ -12,6 +12,10 @@ pub fn current_url() -> String {
     window().location().href().unwrap_throw()
 }
 
+pub fn origin() -> String {
+    window().location().origin().unwrap_throw()
+}
+
 pub fn back() {
     history().back().unwrap_throw();
 }
