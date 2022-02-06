@@ -11,14 +11,19 @@ futures = { version = "0.3.13", default-features = false }
 uuid = { version = "0.8", features = ["v4"], default-features = false }
 mime = { version = "0.3.16", default-features = false }
 mime_guess = { version = "2.0.3", default-features = false }
+
+# exact versions to prevent "random" compilation fails 
+# caused by breaking changes in Actix libs
 actix-web = { version = "=4.0.0-beta.10", features = ["rustls"], default-features = false }
 actix-files = { version = "=0.6.0-beta.8", default-features = false }
 actix-http = { version = "=3.0.0-beta.11", default-features = false }
 actix-cors = { version = "=0.6.0-beta.3", default-features = false }
 actix-tls = { version = "=3.0.0-beta.7", default-features = false }
+actix-rt = { version = "=2.3.0", default-features = false }
+actix-router = { version = "=0.5.0-beta.2", default-features = false }
 rustls = { version = "=0.20.2", default-features = false }
 rustls-pemfile = { version = "=0.2.1", default-features = false }
-actix-rt = { version = "=2.3.0", default-features = false }
+
 trait-set = { version = "0.2.0", default-features = false }
 envy = { version = "0.4.2", default-features = false }
 serde = { version = "1.0.130", features = ["std", "derive"], default-features = false, optional = true }
@@ -27,12 +32,13 @@ parking_lot = { version = "0.11.1", default-features = false }
 env_logger = {version = "0.8.3", features = ["termcolor", "atty", "humantime"], default-features = false }
 log = { version = "0.4.14", features = ["serde"], default-features = false }
 bool_ext = { version = "0.5.1", default-features = false }
-moonlight = { path = "../moonlight", features = ["backend"] }
 enclose = { version = "1.1.8", default-features = false }
 apply = { version = "0.3.0", default-features = false }
 once_cell = { version = "1.8.0", features = ["std"], default-features = false }
 chashmap = { version = "2.2.2", default-features = false }
 async-trait = { version = "0.1.51", default-features = false }
+
+moonlight = { path = "../moonlight", features = ["backend"] }
 moon_entry_macros = { path = "../moon_entry_macros", default_features = false }
 
 [dev-dependencies]
