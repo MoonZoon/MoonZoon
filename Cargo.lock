@@ -107,9 +107,9 @@ dependencies = [
 
 [[package]]
 name = "actix-router"
-version = "0.5.0-beta.3"
+version = "0.5.0-beta.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ddd9f117b910fbcce6e9f45092ffd4ff017785a346d09e2d4fd049f4e20384f4"
+checksum = "36b95ce0d76d1aa2f98b681702807475ade0f99bd4552546a6843a966d42ea3d"
 dependencies = [
  "bytestring",
  "firestorm",
@@ -1277,6 +1277,7 @@ dependencies = [
  "actix-cors",
  "actix-files",
  "actix-http",
+ "actix-router",
  "actix-rt",
  "actix-tls",
  "actix-web",
