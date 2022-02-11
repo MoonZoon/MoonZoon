@@ -1,18 +1,9 @@
-use zoon::*;
+use zoon::{println, *};
 
 #[static_ref]
 fn counter() -> &'static Mutable<i32> {
     Mutable::new(0)
 }
-
-fn markdown_to_html(markdown: &str) -> String {
-    let options = pulldown_cmark::Options::all();
-    let parser = pulldown_cmark::Parser::new_ext(markdown, options);
-    let mut html_text = String::new();
-    pulldown_cmark::html::push_html(&mut html_text, parser);
-    html_text
-}
-
 
 fn increment() {
     counter().update(|counter| counter + 1)
@@ -26,7 +17,10 @@ fn root() -> impl Element {
     Column::new()
         .item(html_example())
         .item(markdown_example())
+        .item(maud_example())
 }
+
+// ------ HTML ------
 
 fn html_example() -> impl Element {
     RawHtmlEl::from_markup(
@@ -50,10 +44,39 @@ fn html_example() -> impl Element {
     })
 }
 
+// ------ MARKDOWN ------
+
+fn markdown_to_html(markdown: &str) -> String {
+    let options = pulldown_cmark::Options::all();
+    let parser = pulldown_cmark::Parser::new_ext(markdown, options);
+    let mut html_text = String::new();
+    pulldown_cmark::html::push_html(&mut html_text, parser);
+    html_text
+}
+
 fn markdown_example() -> impl Element {
-    RawHtmlEl::from_markup(
-        markdown_to_html(include_str!("markdown_page.md"))
-    ).unwrap_throw()
+    let html = markdown_to_html(include_str!("markdown_page.md"));
+    RawHtmlEl::new("div").inner_markup(html)
+}
+
+// ------ MAUD ------
+
+fn maud_example() -> impl Element {
+    let template = maud::html! {
+        h1 { "Hello from Maud!" }
+        p.intro {
+            "This is an example of the "
+            a href="https://github.com/lambda-fairy/maud" { "Maud" }
+            " template language."
+        }
+    };
+    RawHtmlEl::new("div")
+        .inner_markup(template.into_string())
+        .update_html_child("h1:first-child", |child| {
+            child
+                .style("cursor", "pointer")
+                .event_handler(|_: events::Click| println!("Hello!"))
+        })
 }
 
 #[wasm_bindgen(start)]

@@ -1,7 +1,5 @@
-hello
-=====
+A Markdown list:
+====================
 
 * alpha
 * beta
-
-hthth

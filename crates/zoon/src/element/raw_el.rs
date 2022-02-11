@@ -215,6 +215,13 @@ pub trait RawEl: Sized {
 
     fn class_id(&self) -> ClassId;
 
+    fn inner_markup(self, markup: impl AsRef<str>) -> Self {
+        let dom_element = self.dom_element();
+        let parent: &web_sys::Element = dom_element.as_ref();
+        parent.set_inner_html(markup.as_ref());
+        self
+    }
+
     fn from_markup(markup: impl AsRef<str>) -> Option<Self> {
         // https://grrr.tech/posts/create-dom-node-from-html-string/
 
