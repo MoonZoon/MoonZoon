@@ -1,24 +1,17 @@
 use moon::*;
 
 async fn frontend() -> Frontend {
-    Frontend::new().title("Markup example").append_to_head(
-        "
-        <style>
-            html {
-                background-color: black;
-                color: lightgray;
-            }
-
-            .button {
-                background-color: darkgreen;
-                padding: 5px;
-            }
-            
-            .button:hover {
-                background-color: green;
-            }
-        </style>",
-    )
+    Frontend::new().title("Markup example")
+        .default_styles(false)
+        .append_to_head(
+            "
+            <style>
+                html {
+                    background-color: black;
+                    color: lightgray;
+                }
+            </style>",
+        )
 }
 
 async fn up_msg_handler(_: UpMsgRequest<()>) {}
