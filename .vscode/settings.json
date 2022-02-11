@@ -9,7 +9,7 @@
         // "examples/counters/Cargo.toml",
         // "examples/custom_http_client/Cargo.toml",
         // "examples/js-framework-benchmark/keyed/Cargo.toml",
-        // "examples/markup/Cargo.toml",
+        "examples/markup/Cargo.toml",
         // "examples/pages/Cargo.toml",
         // "examples/paragraph/Cargo.toml",
         // "examples/resize_drag/Cargo.toml",

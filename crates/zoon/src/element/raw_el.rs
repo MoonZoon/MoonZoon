@@ -211,6 +211,8 @@ pub trait RawEl: Sized {
         })
     }
 
+    fn from_markup(markup: impl AsRef<str>) -> Option<Self>;
+
     // --
 
     fn class_id(&self) -> ClassId;
