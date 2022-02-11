@@ -5,6 +5,15 @@ fn counter() -> &'static Mutable<i32> {
     Mutable::new(0)
 }
 
+fn markdown_to_html(markdown: &str) -> String {
+    let options = pulldown_cmark::Options::all();
+    let parser = pulldown_cmark::Parser::new_ext(markdown, options);
+    let mut html_text = String::new();
+    pulldown_cmark::html::push_html(&mut html_text, parser);
+    html_text
+}
+
+
 fn increment() {
     counter().update(|counter| counter + 1)
 }
@@ -14,6 +23,12 @@ fn decrement() {
 }
 
 fn root() -> impl Element {
+    Column::new()
+        .item(html_example())
+        .item(markdown_example())
+}
+
+fn html_example() -> impl Element {
     RawHtmlEl::from_markup(
         r#"
         <div>
@@ -33,6 +48,12 @@ fn root() -> impl Element {
     .update_html_child("#btn-increment", |child| {
         child.event_handler(|_: events::Click| increment())
     })
+}
+
+fn markdown_example() -> impl Element {
+    RawHtmlEl::from_markup(
+        markdown_to_html(include_str!("markdown_page.md"))
+    ).unwrap_throw()
 }
 
 #[wasm_bindgen(start)]
