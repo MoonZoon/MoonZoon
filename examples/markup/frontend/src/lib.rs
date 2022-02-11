@@ -14,10 +14,12 @@ fn decrement() {
 }
 
 fn root() -> impl Element {
-    Column::new()
-        .item(Button::new().label("- Markup").on_press(decrement))
-        .item(Text::with_signal(counter().signal()))
-        .item(Button::new().label("+").on_press(increment))
+    // Column::new()
+    //     .item(Button::new().label("- Markup").on_press(decrement))
+    //     .item(Text::with_signal(counter().signal()))
+    //     .item(Button::new().label("+").on_press(increment))
+    // RawHtmlEl::new("div").inner_markup("<p>Hellow!<p>")
+    RawHtmlEl::from_markup("<h1>Hello!</h1>").unwrap_throw()
 }
 
 #[wasm_bindgen(start)]

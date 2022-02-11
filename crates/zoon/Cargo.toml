@@ -60,6 +60,7 @@ features = [
   'HtmlInputElement',
   'HtmlLabelElement',
   'HtmlParagraphElement',
+  'HtmlTemplateElement',
   'Location',
   'PointerEvent',
   'Response',

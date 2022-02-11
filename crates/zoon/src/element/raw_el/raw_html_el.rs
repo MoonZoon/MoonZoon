@@ -102,6 +102,28 @@ impl RawEl for RawHtmlEl {
     fn class_id(&self) -> ClassId {
         self.class_id.clone()
     }
+
+    fn from_markup(markup: impl AsRef<str>) -> Option<Self> {
+        // https://grrr.tech/posts/create-dom-node-from-html-string/
+
+        let template: web_sys::HtmlTemplateElement = document()
+            .create_element("template")
+            .unwrap_throw()
+            .unchecked_into();
+
+        template.set_inner_html(markup.as_ref().trim());
+        let element = template.content().first_element_child()?;
+        let mut dom_builder = DomBuilder::new(element.dyn_into().ok()?);
+
+        let class_id = class_id_generator().next_class_id();
+        dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
+
+        Some(Self {
+            class_id: class_id.clone(),
+            dom_builder: dom_builder
+                .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
+        })
+    }
 }
 
 impl RawHtmlEl {
