@@ -1,7 +1,8 @@
 use moon::*;
 
 async fn frontend() -> Frontend {
-    Frontend::new().title("Markup example")
+    Frontend::new()
+        .title("Markup example")
         .default_styles(false)
         .append_to_head(
             "
