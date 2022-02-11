@@ -231,24 +231,48 @@ pub trait RawEl: Sized {
     fn find_html_child(&self, selectors: impl AsRef<str>) -> Option<RawHtmlEl> {
         let parent_dom_element = self.dom_element();
         let parent: &web_sys::Element = parent_dom_element.as_ref();
-        let child= parent
+        let child = parent
             .query_selector(selectors.as_ref())
             .expect_throw("query_selector failed")?
             .dyn_into()
             .ok()?;
         Some(RawHtmlEl::from_dom_element(child))
-    } 
+    }
 
     fn find_svg_child(&self, selectors: impl AsRef<str>) -> Option<RawSvgEl> {
         let parent_dom_element = self.dom_element();
         let parent: &web_sys::Element = parent_dom_element.as_ref();
-        let child= parent
+        let child = parent
             .query_selector(selectors.as_ref())
             .expect_throw("query_selector failed")?
             .dyn_into()
             .ok()?;
         Some(RawSvgEl::from_dom_element(child))
-    } 
+    }
+
+    fn update_html_child(
+        self,
+        selectors: impl AsRef<str>,
+        updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl,
+    ) -> Self {
+        if let Some(child) = self.find_html_child(selectors) {
+            let child = updater(child);
+            return self.after_remove(move |_| drop(child));
+        }
+        self
+    }
+
+    fn update_svg_child(
+        self,
+        selectors: impl AsRef<str>,
+        updater: impl FnOnce(RawSvgEl) -> RawSvgEl,
+    ) -> Self {
+        if let Some(child) = self.find_svg_child(selectors) {
+            let child = updater(child);
+            return self.after_remove(move |_| drop(child));
+        }
+        self
+    }
 
     fn from_dom_element(dom_element: Self::WSElement) -> Self;
 }
