@@ -70,6 +70,10 @@ impl RawEl for RawSvgEl {
         self
     }
 
+    fn dom_element(&self) -> Self::WSElement {
+        self.dom_builder.__internal_element()
+    }
+
     fn style(self, name: &str, value: &str) -> Self {
         self.update_dom_builder(|dom_builder| {
             dom_builder.style(CssPropertyName::new(name), CssPropertyValue::new(value))
@@ -103,25 +107,16 @@ impl RawEl for RawSvgEl {
         self.class_id.clone()
     }
 
-    fn from_markup(markup: impl AsRef<str>) -> Option<Self> {
-        // https://grrr.tech/posts/create-dom-node-from-html-string/
-
-        let template: web_sys::HtmlTemplateElement = document()
-            .create_element("template")
-            .unwrap_throw()
-            .unchecked_into();
-
-        template.set_inner_html(markup.as_ref().trim());
-        let element = template.content().first_element_child()?;
-        let mut dom_builder = DomBuilder::new(element.dyn_into().ok()?);
+    fn from_dom_element(dom_element: Self::WSElement) -> Self {
+        let mut dom_builder = DomBuilder::new(dom_element);
 
         let class_id = class_id_generator().next_class_id();
         dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
 
-        Some(Self {
+        Self {
             class_id: class_id.clone(),
             dom_builder: dom_builder
                 .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
-        })
+        }
     }
 }

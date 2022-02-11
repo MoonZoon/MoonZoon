@@ -59,6 +59,8 @@ pub trait RawEl: Sized {
         updater: impl FnOnce(DomBuilder<Self::WSElement>) -> DomBuilder<Self::WSElement>,
     ) -> Self;
 
+    fn dom_element(&self) -> Self::WSElement;
+
     fn attr(self, name: &str, value: &str) -> Self {
         self.update_dom_builder(|dom_builder| dom_builder.attribute(name, value))
     }
@@ -211,9 +213,42 @@ pub trait RawEl: Sized {
         })
     }
 
-    fn from_markup(markup: impl AsRef<str>) -> Option<Self>;
-
-    // --
-
     fn class_id(&self) -> ClassId;
+
+    fn from_markup(markup: impl AsRef<str>) -> Option<Self> {
+        // https://grrr.tech/posts/create-dom-node-from-html-string/
+
+        let template: web_sys::HtmlTemplateElement = document()
+            .create_element("template")
+            .unwrap_throw()
+            .unchecked_into();
+
+        template.set_inner_html(markup.as_ref().trim());
+        let element = template.content().first_element_child()?;
+        Some(Self::from_dom_element(element.dyn_into().ok()?))
+    }
+
+    fn find_html_child(&self, selectors: impl AsRef<str>) -> Option<RawHtmlEl> {
+        let parent_dom_element = self.dom_element();
+        let parent: &web_sys::Element = parent_dom_element.as_ref();
+        let child= parent
+            .query_selector(selectors.as_ref())
+            .expect_throw("query_selector failed")?
+            .dyn_into()
+            .ok()?;
+        Some(RawHtmlEl::from_dom_element(child))
+    } 
+
+    fn find_svg_child(&self, selectors: impl AsRef<str>) -> Option<RawSvgEl> {
+        let parent_dom_element = self.dom_element();
+        let parent: &web_sys::Element = parent_dom_element.as_ref();
+        let child= parent
+            .query_selector(selectors.as_ref())
+            .expect_throw("query_selector failed")?
+            .dyn_into()
+            .ok()?;
+        Some(RawSvgEl::from_dom_element(child))
+    } 
+
+    fn from_dom_element(dom_element: Self::WSElement) -> Self;
 }
