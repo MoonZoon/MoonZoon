@@ -37,9 +37,11 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/counters/Cargo.toml",
         // "examples/custom_http_client/Cargo.toml",
         // "examples/js-framework-benchmark/keyed/Cargo.toml",
-        // "examples/start_with_app/Cargo.toml",
+        // "examples/markup/Cargo.toml",
         // "examples/pages/Cargo.toml",
         // "examples/paragraph/Cargo.toml",
+        // "examples/resize_drag/Cargo.toml",
+        // "examples/start_with_app/Cargo.toml",
         // "examples/svg/Cargo.toml",
         // "examples/time_tracker/Cargo.toml",
         // "examples/timer/Cargo.toml",
@@ -68,11 +70,12 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   - `counters`
   - `custom_http_client`
   - `js-framework-benchmark/keyed`
-  - `start_with_app`
+  - `markup`
   - `pages`
   - `paragraph`
   - `resize_drag`
   - `svg`
+  - `start_with_app`
   - `time_tracker`
   - `timer`
   - `todomvc`
@@ -88,4 +91,4 @@ makers mzoon start -o # add -r for the release mode
 
 --
 
-_Question:_ Do you think a [code tour](https://github.com/microsoft/codetour) would be useful for you?
+_Dev note_: You can kill a zombie server on Linux with `kill -9 $(lsof -t -i:8080)`
