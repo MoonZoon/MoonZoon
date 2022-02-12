@@ -1,5 +1,5 @@
 use crate::*;
-use std::{array, borrow::Cow};
+use std::borrow::Cow;
 
 // ------ Shadows ------
 
@@ -127,12 +127,12 @@ impl<'a> IntoCowStr<'a> for Shadow {
         if self.inner {
             shadow_settings.push("inset".into())
         }
-        shadow_settings.extend(array::IntoIter::new([
+        shadow_settings.extend([
             px(self.x),
             px(self.y),
             px(self.blur),
             px(self.spread),
-        ]));
+        ]);
         if let Some(color) = self.color {
             shadow_settings.push(color.into_cow_str());
         }
