@@ -1,6 +1,5 @@
 use crate::*;
 use futures_signals::signal::channel;
-use std::array;
 
 // ------ Radius ------
 
@@ -187,7 +186,7 @@ fn compute_radii(corners: RoundedCorners, width: f64, height: f64) -> String {
         // left side & adjacent radii
         height / (radii[3] + radii[0]),
     ];
-    let smallest_ratio = array::IntoIter::new(ratios).fold(f64::INFINITY, |a, b| a.min(b));
+    let smallest_ratio = IntoIterator::into_iter(ratios).fold(f64::INFINITY, |a, b| a.min(b));
     if smallest_ratio < 1. {
         // fix overlapping radii, but keep ratios between radii
         radii = [
@@ -229,7 +228,8 @@ fn compute_radii(corners: RoundedCorners, width: f64, height: f64) -> String {
         // left side & adjacent radii
         height / (max_radii[3] + max_radii[0]),
     ];
-    let max_smallest_ratio = array::IntoIter::new(max_ratios).fold(f64::INFINITY, |a, b| a.min(b));
+    let max_smallest_ratio =
+        IntoIterator::into_iter(max_ratios).fold(f64::INFINITY, |a, b| a.min(b));
     if max_smallest_ratio < 1. {
         // fix overlapping radii, but keep ratios between radii
         max_radii = [
@@ -240,7 +240,7 @@ fn compute_radii(corners: RoundedCorners, width: f64, height: f64) -> String {
         ];
     }
 
-    for (index, max_radius) in array::IntoIter::new(max_radii).enumerate() {
+    for (index, max_radius) in IntoIterator::into_iter(max_radii).enumerate() {
         if max_radius != 0. {
             radii[index] = max_radius;
         }
