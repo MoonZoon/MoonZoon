@@ -39,13 +39,13 @@ static ADJECTIVES: &[&'static str] = &[
 ];
 
 static COLOURS: &[&'static str] = &[
-    "red", "yellow", "blue", "green", "pink", "brown", "purple", "brown", "white", "black",
-    "orange",
+    "red", "yellow", "blue", "green", "pink", "brown", "purple", "brown",
+    "white", "black", "orange",
 ];
 
 static NOUNS: &[&'static str] = &[
-    "table", "chair", "house", "bbq", "desk", "car", "pony", "cookie", "sandwich", "burger",
-    "pizza", "mouse", "keyboard",
+    "table", "chair", "house", "bbq", "desk", "car", "pony", "cookie",
+    "sandwich", "burger", "pizza", "mouse", "keyboard",
 ];
 
 static NEXT_ID: AtomicUsize = AtomicUsize::new(1);
@@ -137,46 +137,44 @@ fn remove_row(id: ID) {
 // ------ ------
 
 fn root() -> RawHtmlEl {
-    RawHtmlEl::new("div")
-        .attr("class", "container")
-        .children(array::IntoIter::new([
-            jumbotron(),
-            table(),
-            RawHtmlEl::new("span")
-                .attr("class", "preloadicon glyphicon glyphicon-remove")
-                .attr("aria-hidden", ""),
-        ]))
+    RawHtmlEl::new("div").attr("class", "container").children([
+        jumbotron(),
+        table(),
+        RawHtmlEl::new("span")
+            .attr("class", "preloadicon glyphicon glyphicon-remove")
+            .attr("aria-hidden", ""),
+    ])
 }
 
 fn jumbotron() -> RawHtmlEl {
     RawHtmlEl::new("div").attr("class", "jumbotron").child(
-        RawHtmlEl::new("div")
-            .attr("class", "row")
-            .children(array::IntoIter::new([
-                RawHtmlEl::new("div")
-                    .attr("class", "col-md-6")
-                    .child(RawHtmlEl::new("h1").child("MoonZoon")),
-                RawHtmlEl::new("div")
-                    .attr("class", "col-md-6")
-                    .child(action_buttons()),
-            ])),
+        RawHtmlEl::new("div").attr("class", "row").children([
+            RawHtmlEl::new("div")
+                .attr("class", "col-md-6")
+                .child(RawHtmlEl::new("h1").child("MoonZoon")),
+            RawHtmlEl::new("div")
+                .attr("class", "col-md-6")
+                .child(action_buttons()),
+        ]),
     )
 }
 
 fn action_buttons() -> RawHtmlEl {
-    RawHtmlEl::new("div")
-        .attr("class", "row")
-        .children(array::IntoIter::new([
-            action_button("run", "Create 1,000 rows", || create_rows(1_000)),
-            action_button("runlots", "Create 10,000 rows", || create_rows(10_000)),
-            action_button("add", "Append 1,000 rows", || append_rows(1_000)),
-            action_button("update", "Update every 10th row", || update_rows(10)),
-            action_button("clear", "Clear", clear_rows),
-            action_button("swaprows", "Swap Rows", swap_rows),
-        ]))
+    RawHtmlEl::new("div").attr("class", "row").children([
+        action_button("run", "Create 1,000 rows", || create_rows(1_000)),
+        action_button("runlots", "Create 10,000 rows", || create_rows(10_000)),
+        action_button("add", "Append 1,000 rows", || append_rows(1_000)),
+        action_button("update", "Update every 10th row", || update_rows(10)),
+        action_button("clear", "Clear", clear_rows),
+        action_button("swaprows", "Swap Rows", swap_rows),
+    ])
 }
 
-fn action_button(id: &'static str, title: &'static str, on_click: fn()) -> RawHtmlEl {
+fn action_button(
+    id: &'static str,
+    title: &'static str,
+    on_click: fn(),
+) -> RawHtmlEl {
     RawHtmlEl::new("div")
         .attr("class", "col-sm-6 smallpad")
         .child(
@@ -204,21 +202,26 @@ fn row(row: Arc<Row>) -> RawHtmlEl {
     RawHtmlEl::new("tr")
         .attr_signal(
             "class",
-            selected_row().signal_ref(move |selected_id| ((*selected_id)? == id).then(|| "danger")),
+            selected_row().signal_ref(move |selected_id| {
+                ((*selected_id)? == id).then(|| "danger")
+            }),
         )
-        .children(array::IntoIter::new([
+        .children([
             row_id(id),
             row_label(id, row.label.signal_cloned()),
             row_remove_button(id),
             RawHtmlEl::new("td").attr("class", "col-md-6"),
-        ]))
+        ])
 }
 
 fn row_id(id: ID) -> RawHtmlEl {
     RawHtmlEl::new("td").attr("class", "col-md-1").child(id)
 }
 
-fn row_label(id: ID, label: impl Signal<Item = String> + Unpin + 'static) -> RawHtmlEl {
+fn row_label(
+    id: ID,
+    label: impl Signal<Item = String> + Unpin + 'static,
+) -> RawHtmlEl {
     RawHtmlEl::new("td").attr("class", "col-md-4").child(
         RawHtmlEl::new("a")
             .event_handler(move |_: events::Click| select_row(id))
