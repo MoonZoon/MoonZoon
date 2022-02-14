@@ -2,6 +2,7 @@
 
 #[derive(Clone, Copy, PartialEq, PartialOrd)]
 pub enum FontWeight {
+    ExtraHeavy,
     Heavy,
     ExtraBold,
     Bold,
@@ -17,6 +18,7 @@ pub enum FontWeight {
 impl FontWeight {
     pub fn number(&self) -> u32 {
         match self {
+            Self::ExtraHeavy => 1000,
             Self::Heavy => 900,
             Self::ExtraBold => 800,
             Self::Bold => 700,
