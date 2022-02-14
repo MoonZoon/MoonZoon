@@ -23,6 +23,16 @@ impl<'a> Font<'a> {
         self
     }
 
+    pub fn weight_signal(
+        mut self,
+        weight: impl Signal<Item = impl Into<Option<FontWeight>>> + Unpin + 'static,
+    ) -> Self {
+        let weight = weight.map(|weight| weight.into().map(|weight| weight.number()));
+        self.dynamic_css_props
+            .insert("font-weight".into(), box_css_signal(weight));
+        self
+    }
+
     pub fn color(mut self, color: impl Into<Option<HSLuv>>) -> Self {
         if let Some(color) = color.into() {
             self.static_css_props.insert("color", color.into_cow_str());
