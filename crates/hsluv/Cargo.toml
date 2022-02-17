@@ -5,7 +5,7 @@ authors = ["Martin Kavík <martin@kavik.cz>"]
 edition = "2021"
 
 [dependencies]
-rust-hsluv = { version = "0.1.4", default-features = false }
+rust_hsluv = { version = "0.1.4", default-features = false, package = "rust-hsluv" }
 hsluv_macro = { path = "../hsluv_macro", default-features = false, optional = true }
 
 [features]
