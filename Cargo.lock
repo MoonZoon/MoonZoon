@@ -1311,7 +1311,6 @@ dependencies = [
 name = "moon_entry_macros"
 version = "0.1.0"
 dependencies = [
- "actix-web",
  "moon",
  "quote 1.0.14",
 ]
