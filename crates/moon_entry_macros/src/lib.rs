@@ -13,7 +13,7 @@ use quote::quote;
 #[proc_macro_attribute]
 pub fn main(_: TokenStream, item: TokenStream) -> TokenStream {
     let mut output: TokenStream = (quote! {
-        #[actix_web::rt::main(system = "actix_web::rt::System")]
+        #[moon::actix_web::rt::main(system = "moon::actix_web::rt::System")]
     })
     .into();
 
@@ -33,7 +33,7 @@ pub fn main(_: TokenStream, item: TokenStream) -> TokenStream {
 #[proc_macro_attribute]
 pub fn test(_: TokenStream, item: TokenStream) -> TokenStream {
     let mut output: TokenStream = (quote! {
-        #[actix_web::rt::test(system = "actix_web::rt::System")]
+        #[moon::actix_web::rt::test(system = "moon::actix_web::rt::System")]
     })
     .into();
 
