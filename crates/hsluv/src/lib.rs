@@ -1,4 +1,4 @@
-use hsluv::hsluv_to_rgb;
+use rust_hsluv::hsluv_to_rgb;
 
 #[cfg(feature = "hsluv_macro")]
 pub use hsluv_macro::hsluv;
