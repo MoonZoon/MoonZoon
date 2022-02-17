@@ -9,3 +9,7 @@ proc-macro = true
 
 [dependencies]
 quote = { version = "1.0", default-features = false }
+
+[dev-dependencies]
+moon = {path = "../moon"}
+actix-web = { version = "=4.0.0-beta.10", features = ["rustls"], default-features = false }
