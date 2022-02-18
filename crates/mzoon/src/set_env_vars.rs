@@ -1,7 +1,7 @@
-use crate::config::Config;
+use crate::{config::Config, BuildMode};
 use std::env;
 
-pub fn set_env_vars(config: &Config, release: bool) {
+pub fn set_env_vars(config: &Config, build_mode: BuildMode) {
     // port = 8443
     env::set_var("PORT", config.port.to_string());
     // https = true
@@ -21,7 +21,7 @@ pub fn set_env_vars(config: &Config, release: bool) {
     // origins = ["*", "https://example.com"]
     env::set_var("CORS_ORIGINS", config.cors.origins.join(","));
 
-    env::set_var("COMPRESSED_PKG", release.to_string());
+    env::set_var("COMPRESSED_PKG", build_mode.is_not_dev().to_string());
 
     for (key, value) in &config.custom_env_vars {
         env::set_var(key, value);

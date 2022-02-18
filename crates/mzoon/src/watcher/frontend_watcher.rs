@@ -1,6 +1,7 @@
 use super::project_watcher::ProjectWatcher;
 use crate::build_frontend::build_frontend;
 use crate::config::Config;
+use crate::BuildMode;
 use anyhow::{Context, Error, Result};
 use fehler::throws;
 use std::sync::Arc;
@@ -14,7 +15,7 @@ pub struct FrontendWatcher {
 
 impl FrontendWatcher {
     #[throws]
-    pub async fn start(config: &Config, release: bool, debounce_time: Duration) -> Self {
+    pub async fn start(config: &Config, build_mode: BuildMode, debounce_time: Duration) -> Self {
         let (watcher, debounced_receiver) =
             ProjectWatcher::start(&config.watch.frontend, debounce_time)
                 .context("Failed to start the frontend project watcher")?;
@@ -30,7 +31,7 @@ impl FrontendWatcher {
             task: spawn(on_change(
                 debounced_receiver,
                 reload_url,
-                release,
+                build_mode,
                 config.cache_busting,
             )),
         }
@@ -47,7 +48,7 @@ impl FrontendWatcher {
 async fn on_change(
     mut receiver: UnboundedReceiver<()>,
     reload_url: Arc<String>,
-    release: bool,
+    build_mode: BuildMode,
     cache_busting: bool,
 ) {
     let mut build_task = None::<JoinHandle<()>>;
@@ -58,7 +59,7 @@ async fn on_change(
         }
         build_task = Some(spawn(build_and_reload(
             Arc::clone(&reload_url),
-            release,
+            build_mode,
             cache_busting,
         )));
     }
@@ -68,8 +69,8 @@ async fn on_change(
     }
 }
 
-async fn build_and_reload(reload_url: Arc<String>, release: bool, cache_busting: bool) {
-    if let Err(error) = build_frontend(release, cache_busting).await {
+async fn build_and_reload(reload_url: Arc<String>, build_mode: BuildMode, cache_busting: bool) {
+    if let Err(error) = build_frontend(build_mode, cache_busting).await {
         return eprintln!("{}", error);
     }
     println!("Reload frontend");

@@ -1,3 +1,4 @@
+use crate::BuildMode;
 use anyhow::{anyhow, Context, Error};
 use apply::Apply;
 use bool_ext::BoolExt;
@@ -11,7 +12,7 @@ use uuid::Uuid;
 // -- public --
 
 #[throws]
-pub async fn build_backend(release: bool, https: bool) {
+pub async fn build_backend(build_mode: BuildMode, https: bool) {
     println!("Building backend...");
 
     if https {
@@ -19,11 +20,19 @@ pub async fn build_backend(release: bool, https: bool) {
     }
 
     let mut args = vec!["build", "--package", "backend"];
-    if release {
-        args.push("--release");
+    let mut envs = vec![];
+    match build_mode {
+        BuildMode::Release => args.push("--release"),
+        BuildMode::Profiling => {
+            args.push("--release");
+            // https://doc.rust-lang.org/rustc/command-line-arguments.html#-g-include-debug-information
+            envs.push(("RUSTFLAGS", "-g"));
+        }
+        BuildMode::Dev => (),
     }
     Command::new("cargo")
         .args(&args)
+        .envs(envs)
         .status()
         .await
         .context("Failed to get frontend build status")?
