@@ -6,6 +6,8 @@ macro_rules! color {
     };
 }
 
+pub static TRANSPARENT: HSLuv = hsluv!(0, 0, 0, 0);
+
 // The palette based on https://tailwindcss.com/docs/customizing-colors
 
 color!(GRAY_0 => 235.5, 22.1, 98.2);
