@@ -19,6 +19,8 @@ macro_rules! color {
     };
 }
 
+pub static TRANSPARENT: HSLuv = hsluv!(0, 0, 0, 0);
+
 color!(GRAY_0 => 235.5, 22.1, 98.2);
 color!(GRAY_1 => 248.2, 18.5, 96.2);
 color!(GRAY_2 => 248.3, 16.7, 91.6);
