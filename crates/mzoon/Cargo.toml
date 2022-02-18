@@ -5,7 +5,7 @@ authors = ["Martin Kavík <martin@kavik.cz>"]
 edition = "2021"
 
 [dependencies]
-structopt = { version = "0.3", default-features = false }
+clap = { version = "3.1.0", features = ["std", "color", "suggestions", "derive"], default-features = false }
 toml = { version = "0.5.8", features = ["preserve_order"], default-features = false }
 serde = { version = "1.0", features = ["derive"], default-features = false }
 notify = { version = "=5.0.0-pre.9", default-features = false }

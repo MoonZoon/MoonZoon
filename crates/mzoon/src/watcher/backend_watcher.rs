@@ -2,6 +2,7 @@ use super::project_watcher::ProjectWatcher;
 use crate::build_backend::build_backend;
 use crate::config::Config;
 use crate::run_backend::run_backend;
+use crate::BuildMode;
 use anyhow::{Context, Error, Result};
 use fehler::throws;
 use parking_lot::Mutex;
@@ -19,7 +20,7 @@ impl BackendWatcher {
     #[throws]
     pub async fn start(
         config: &Config,
-        release: bool,
+        build_mode: BuildMode,
         debounce_time: Duration,
         server: Arc<Mutex<Option<Child>>>,
     ) -> Self {
@@ -28,7 +29,12 @@ impl BackendWatcher {
                 .context("Failed to start the backend project watcher")?;
         Self {
             watcher,
-            task: spawn(on_change(debounced_receiver, release, config.https, server)),
+            task: spawn(on_change(
+                debounced_receiver,
+                build_mode,
+                config.https,
+                server,
+            )),
         }
     }
 
@@ -42,7 +48,7 @@ impl BackendWatcher {
 #[throws]
 async fn on_change(
     mut receiver: UnboundedReceiver<()>,
-    release: bool,
+    build_mode: BuildMode,
     https: bool,
     server: Arc<Mutex<Option<Child>>>,
 ) {
@@ -58,7 +64,7 @@ async fn on_change(
             let _ = server.kill().await;
         }
 
-        build_task = Some(spawn(build_and_run(Arc::clone(&server), release, https)));
+        build_task = Some(spawn(build_and_run(Arc::clone(&server), build_mode, https)));
     }
 
     if let Some(build_task) = build_task.take() {
@@ -66,11 +72,11 @@ async fn on_change(
     }
 }
 
-async fn build_and_run(server: Arc<Mutex<Option<Child>>>, release: bool, https: bool) {
-    if let Err(error) = build_backend(release, https).await {
+async fn build_and_run(server: Arc<Mutex<Option<Child>>>, build_mode: BuildMode, https: bool) {
+    if let Err(error) = build_backend(build_mode, https).await {
         return eprintln!("{}", error);
     }
-    match run_backend(release) {
+    match run_backend(build_mode) {
         Ok(backend) => *server.lock() = Some(backend),
         Err(error) => eprintln!("{}", error),
     }

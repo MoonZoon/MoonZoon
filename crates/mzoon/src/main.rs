@@ -1,6 +1,6 @@
 use anyhow::Error;
+use clap::Parser;
 use fehler::throws;
-use structopt::StructOpt;
 
 mod build_backend;
 mod build_frontend;
@@ -12,34 +12,71 @@ mod set_env_vars;
 mod wasm_bindgen;
 mod watcher;
 
-#[derive(Debug, StructOpt)]
-enum Opt {
+/// MoonZoon CLI <http://MoonZoon.rs>
+#[derive(Parser, Debug)]
+#[clap(author, version, about, long_about = None)]
+enum Args {
     New {
         project_name: String,
-        #[structopt(short, long)]
+        #[clap(short, long)]
         here: bool,
     },
     Start {
-        #[structopt(short, long)]
+        #[clap(short, long)]
         release: bool,
-        #[structopt(short, long)]
+        #[clap(short, long)]
+        profiling: bool,
+        #[clap(short, long)]
         open: bool,
     },
     Build {
-        #[structopt(short, long)]
+        #[clap(short, long)]
         release: bool,
+        #[clap(short, long)]
+        profiling: bool,
     },
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum BuildMode {
+    Dev,
+    Release,
+    Profiling,
+}
+
+impl BuildMode {
+    fn new(release: bool, profiling: bool) -> Self {
+        match (release, profiling) {
+            (false, false) => Self::Dev,
+            (true, false) => Self::Release,
+            (_, true) => Self::Profiling,
+        }
+    }
+
+    fn is_dev(&self) -> bool {
+        matches!(self, Self::Dev)
+    }
+
+    fn is_not_dev(&self) -> bool {
+        !self.is_dev()
+    }
 }
 
 #[throws]
 #[tokio::main]
 async fn main() {
-    let opt = Opt::from_args();
-    println!("{:?}", opt);
+    let args = Args::parse();
+    println!("{:?}", args);
 
-    match opt {
-        Opt::New { project_name, here } => command::new(project_name, here).await?,
-        Opt::Start { release, open } => command::start(release, open).await?,
-        Opt::Build { release } => command::build(release).await?,
+    match args {
+        Args::New { project_name, here } => command::new(project_name, here).await?,
+        Args::Start {
+            release,
+            profiling,
+            open,
+        } => command::start(BuildMode::new(release, profiling), open).await?,
+        Args::Build { release, profiling } => {
+            command::build(BuildMode::new(release, profiling)).await?
+        }
     }
 }
