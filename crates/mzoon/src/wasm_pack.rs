@@ -1,4 +1,4 @@
-use crate::helper::download;
+use crate::{helper::download, BuildMode};
 use anyhow::{anyhow, Context, Error};
 use apply::Apply;
 use bool_ext::BoolExt;
@@ -57,7 +57,7 @@ pub async fn check_or_install_wasm_pack() {
 }
 
 #[throws]
-pub async fn build_with_wasm_pack(release: bool) {
+pub async fn build_with_wasm_pack(build_mode: BuildMode) {
     let mut args = vec![
         "--log-level",
         "warn",
@@ -67,8 +67,14 @@ pub async fn build_with_wasm_pack(release: bool) {
         "web",
         "--no-typescript",
     ];
-    if !release {
-        args.push("--dev");
+    // https://rustwasm.github.io/docs/wasm-pack/commands/build.html#profile
+    match build_mode {
+        BuildMode::Dev => args.push("--dev"),
+        // @TODO does it work? See
+        // https://github.com/rustwasm/wasm-pack/blob/4ae6306570a0011246c39c8028a4f11a4236f54b/src/build/mod.rs#L92-L99
+        // and https://github.com/rustwasm/wasm-pack/issues/797
+        BuildMode::Profiling => args.push("--profiling"),
+        BuildMode::Release => (),
     }
     Command::new("frontend/wasm-pack")
         .args(&args)

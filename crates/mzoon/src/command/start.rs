@@ -4,6 +4,7 @@ use crate::config::Config;
 use crate::run_backend::run_backend;
 use crate::set_env_vars::set_env_vars;
 use crate::watcher::{BackendWatcher, FrontendWatcher};
+use crate::BuildMode;
 use anyhow::{Context, Error};
 use fehler::throws;
 use tokio::{join, process::Child, signal, time::Duration};
@@ -11,12 +12,12 @@ use tokio::{join, process::Child, signal, time::Duration};
 const DEBOUNCE_TIME: Duration = Duration::from_millis(100);
 
 #[throws]
-pub async fn start(release: bool, open: bool) {
+pub async fn start(build_mode: BuildMode, open: bool) {
     let config = Config::load_from_moonzoon_toml().await?;
-    set_env_vars(&config, release);
+    set_env_vars(&config, build_mode);
 
-    let frontend_watcher = build_and_watch_frontend(&config, release).await?;
-    let backend_watcher = build_run_and_watch_backend(&config, release, open).await?;
+    let frontend_watcher = build_and_watch_frontend(&config, build_mode).await?;
+    let backend_watcher = build_run_and_watch_backend(&config, build_mode, open).await?;
 
     signal::ctrl_c().await?;
     println!("Stopping watchers...");
@@ -25,29 +26,33 @@ pub async fn start(release: bool, open: bool) {
 }
 
 #[throws]
-async fn build_and_watch_frontend(config: &Config, release: bool) -> FrontendWatcher {
-    if let Err(error) = build_frontend(release, config.cache_busting).await {
+async fn build_and_watch_frontend(config: &Config, build_mode: BuildMode) -> FrontendWatcher {
+    if let Err(error) = build_frontend(build_mode, config.cache_busting).await {
         eprintln!("{}", error);
     }
-    FrontendWatcher::start(&config, release, DEBOUNCE_TIME).await?
+    FrontendWatcher::start(&config, build_mode, DEBOUNCE_TIME).await?
 }
 
 #[throws]
-async fn build_run_and_watch_backend(config: &Config, release: bool, open: bool) -> BackendWatcher {
-    let server = build_and_run_backend(config, release).await;
+async fn build_run_and_watch_backend(
+    config: &Config,
+    build_mode: BuildMode,
+    open: bool,
+) -> BackendWatcher {
+    let server = build_and_run_backend(config, build_mode).await;
     if open && server.is_some() {
         open_in_browser(config)?;
     }
-    BackendWatcher::start(&config, release, DEBOUNCE_TIME, server).await?
+    BackendWatcher::start(&config, build_mode, DEBOUNCE_TIME, server).await?
 }
 
 #[throws(as Option)]
-async fn build_and_run_backend(config: &Config, release: bool) -> Child {
-    if let Err(error) = build_backend(release, config.https).await {
+async fn build_and_run_backend(config: &Config, build_mode: BuildMode) -> Child {
+    if let Err(error) = build_backend(build_mode, config.https).await {
         eprintln!("{}", error);
         None?;
     }
-    match run_backend(release) {
+    match run_backend(build_mode) {
         Err(error) => {
             eprintln!("{}", error);
             None?
