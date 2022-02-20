@@ -17,6 +17,20 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 zoon = { path = "../../../crates/zoon" }
+instant = { version = "0.1.12", features = ["wasm-bindgen"] }
+
+image = "0.22"
+rand = { version = "0.7", features = ["small_rng"] }
+rayon = "1.2"
+minterpolate = { version = "0.4", optional = true }
+splines = { version = "2.0", optional = true }
+sdfu = { version = "0.3", features = ["ultraviolet"] }
+num_cpus = "1.10"
+generic-array = "0.14"
+bumpalo = { version = "3.4", features = ["collections"] }
+ultraviolet = "0.4"
+quasi-rd = { git = "https://github.com/termhn/quasi-rd", branch = "master" }
+arrayref = "0.3"
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = ['-Os']

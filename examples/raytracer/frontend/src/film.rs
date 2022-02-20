@@ -19,7 +19,7 @@ use std::collections::hash_map::HashMap;
 use std::ops::Range;
 use std::sync::{
     atomic::{AtomicUsize, Ordering},
-    Arc, Mutex,
+    /*Arc,*/ Mutex,
 };
 
 macro_rules! declare_channels {
@@ -633,17 +633,17 @@ impl<'a, N: ArrayLength<ChannelStorage> + ArrayLength<ChannelTileStorage>> Film<
     {
         let num_tiles = tiles.len();
 
-        let pb = Arc::new(Mutex::new(pbr::ProgressBar::new(num_tiles as u64)));
+        // let pb = Arc::new(Mutex::new(pbr::ProgressBar::new(num_tiles as u64)));
 
         {
             let this = &*self;
             rayon::scope_fifo(|scope| {
                 for mut tile in tiles.into_iter() {
-                    let pb = pb.clone();
+                    // let pb = pb.clone();
                     scope.spawn_fifo(move |_| {
                         integrate_tile(&mut tile);
 
-                        this.tile_finished(tile, samples, pb)
+                        this.tile_finished(tile, samples, /*pb*/)
                     })
                 }
             });
@@ -661,7 +661,7 @@ impl<'a, N: ArrayLength<ChannelStorage> + ArrayLength<ChannelTileStorage>> Film<
         &self,
         tile: Tile<N>,
         samples: usize,
-        pb: Arc<Mutex<pbr::ProgressBar<std::io::Stdout>>>,
+        // pb: Arc<Mutex<pbr::ProgressBar<std::io::Stdout>>>,
     ) {
         if self.progressive_epoch != tile.epoch {
             panic!(
@@ -670,8 +670,8 @@ impl<'a, N: ArrayLength<ChannelStorage> + ArrayLength<ChannelTileStorage>> Film<
             );
         }
 
-        let mut pb = pb.lock().unwrap();
-        pb.inc();
+        // let mut pb = pb.lock().unwrap();
+        // pb.inc();
 
         let mut channels = self.channels.lock().unwrap();
 
