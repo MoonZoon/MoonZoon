@@ -9,6 +9,6 @@ namespace = "default"
 [tasks.mzoon]
 description = "Run MZoon"
 command = "cargo"
-args = ["run", "--manifest-path", "../../crates/mzoon/Cargo.toml", "${@}"]
+args = ["run", "--target", "x86_64-unknown-linux-gnu", "--manifest-path", "../../crates/mzoon/Cargo.toml", "${@}"]
 
 

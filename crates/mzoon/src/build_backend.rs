@@ -18,7 +18,7 @@ pub async fn build_backend(release: bool, https: bool) {
         write_new_certificate_if_not_present().await?;
     }
 
-    let mut args = vec!["build", "--package", "backend"];
+    let mut args = vec!["build", "--package", "backend", "--target", "x86_64-unknown-linux-gnu"];
     if release {
         args.push("--release");
     }

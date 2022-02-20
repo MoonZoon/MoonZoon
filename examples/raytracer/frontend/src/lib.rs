@@ -27,17 +27,15 @@ use math::Extent2u;
 
 use instant::Instant;
 
-#[static_ref]
-fn counter() -> &'static Mutable<i32> {
-    Mutable::new(0)
-}
+pub use wasm_bindgen_rayon::init_thread_pool;
 
 fn root() -> impl Element {
-    Text::new("raytracer")
+    Button::new()
+        .label("Start!")
+        .on_press(render)
 }
 
-#[wasm_bindgen(start)]
-pub fn start() {
+fn render() {
     // rayon::ThreadPoolBuilder::new()
     //     .num_threads(num_cpus::get())
     //     .build_global()
@@ -107,6 +105,10 @@ pub fn start() {
         // )
         // .unwrap();
     }
+    println!("Done!!!!");
+}
 
+#[wasm_bindgen(start)]
+pub fn start() {
     start_app("app", root);
 }
