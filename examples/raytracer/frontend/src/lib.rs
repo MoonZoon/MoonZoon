@@ -108,7 +108,7 @@ fn render() {
     println!("Done!!!!");
 }
 
-#[wasm_bindgen(start)]
+#[wasm_bindgen]
 pub fn start() {
     start_app("app", root);
 }

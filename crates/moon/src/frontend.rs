@@ -96,8 +96,12 @@ impl Frontend {
           </script>
     
           <script type="module">
-            import init from '/_api/pkg/frontend{cache_busting_string}.js';
-            init('/_api/pkg/frontend_bg{cache_busting_string}.wasm');
+            import init, {{ initThreadPool, start }} from '/_api/pkg/frontend{cache_busting_string}.js';
+            await init('/_api/pkg/frontend_bg{cache_busting_string}.wasm');
+            // await initThreadPool(navigator.hardwareConcurrency);
+            await initThreadPool(2);
+            console.log("thread pool initialized!");
+            start();
           </script>
         </body>
         

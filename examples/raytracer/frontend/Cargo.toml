@@ -22,9 +22,10 @@ instant = { version = "0.1.12", features = ["wasm-bindgen"] }
 rand = { version = "0.8.3", features = ["small_rng", "getrandom"], default-features = false }
 getrandom = { version = "0.2", features = ["js"], default-features = false }
 
-wasm-bindgen = "0.2"
+wasm-bindgen = "0.2.74"
 rayon = "1.5"
-wasm-bindgen-rayon = "1.0"
+# wasm-bindgen-rayon = "1.0"
+wasm-bindgen-rayon = { git = "https://github.com/GoogleChromeLabs/wasm-bindgen-rayon.git" }
 
 image = "0.22"
 minterpolate = { version = "0.4", optional = true }

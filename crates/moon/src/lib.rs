@@ -518,6 +518,9 @@ where
 {
     HttpResponse::Ok()
         .content_type(ContentType::html())
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer#security_requirements
+        .append_header(("Cross-Origin-Embedder-Policy", "require-corp"))
+        .append_header(("Cross-Origin-Opener-Policy", "same-origin"))
         .body(frontend.get_ref().clone()().await.into_html().await)
 }
 

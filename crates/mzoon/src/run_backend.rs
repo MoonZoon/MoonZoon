@@ -11,6 +11,7 @@ pub fn run_backend(release: bool) -> Child {
         .no_deps()
         .exec()?
         .target_directory
+        .also(|directory| directory.push("x86_64-unknown-linux-gnu"))
         .also(|directory| directory.push(if release { "release" } else { "debug" }))
         .also(|directory| directory.push("backend"))
         .apply(Command::new)
