@@ -10,7 +10,8 @@ use std::path::PathBuf;
 use tar::Archive;
 use tokio::process::Command;
 
-const VERSION: &str = "0.10.2";
+// @TODO Update once https://github.com/rustwasm/wasm-pack/issues/1097 is resolved.
+const VERSION: &str = "0.10.1";
 
 // -- public --
 
