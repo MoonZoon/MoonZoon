@@ -28,7 +28,7 @@ pub async fn start(build_mode: BuildMode, open: bool) {
 #[throws]
 async fn build_and_watch_frontend(config: &Config, build_mode: BuildMode) -> FrontendWatcher {
     if let Err(error) = build_frontend(build_mode, config.cache_busting).await {
-        eprintln!("{}", error);
+        eprintln!("{error:#}");
     }
     FrontendWatcher::start(&config, build_mode, DEBOUNCE_TIME).await?
 }
@@ -49,12 +49,12 @@ async fn build_run_and_watch_backend(
 #[throws(as Option)]
 async fn build_and_run_backend(config: &Config, build_mode: BuildMode) -> Child {
     if let Err(error) = build_backend(build_mode, config.https).await {
-        eprintln!("{}", error);
+        eprintln!("{error:#}");
         None?;
     }
     match run_backend(build_mode) {
         Err(error) => {
-            eprintln!("{}", error);
+            eprintln!("{error:#}");
             None?
         }
         Ok(server) => server,
@@ -68,6 +68,6 @@ fn open_in_browser(config: &Config) {
         protocol = if config.https { "https" } else { "http" },
         port = config.port
     );
-    println!("Open {} in the default web browser", url);
+    println!("Open {url} in the default web browser");
     open::that(url).context("Failed to open the URL in the browser")?;
 }
