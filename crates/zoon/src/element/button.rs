@@ -8,6 +8,78 @@ use std::marker::PhantomData;
 
 make_flags!(Label, OnPress);
 
+/// Create a customizable Button for your web page.
+/// The button is actually built using a div to avoid default behaviors and
+/// styling from regular Html buttons.
+/// You can create a new button by using its constructor and chain styling.
+///
+/// # Examples
+/// ```no_run
+/// use zoon::*;
+/// let button = Button::new().s(Align::center()).s(Padding::all(5));
+/// ```
+/// You can also create your button with specific events as well and update the styling the way you need by using [signals](https://crates.io/crates/futures-signals)
+///
+/// 1 - Create a signal for local state management.
+///
+/// 2 - The variable **`hovered`** gets updated when the user hovers the button
+///
+/// 3 - The variable **`hovered_signal`** is the notification send by signal
+/// that will actually determine the background color for the button.
+///
+/// # Example
+/// ```no_run
+/// use zoon::{named_color::*, *};
+/// let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+///
+/// let button = Button::new()
+///     .s(Background::new().color_signal(hovered_signal.map_bool(|| GREEN_7, || GREEN_8)))
+///     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered));
+/// ```
+/// It is possible to style a button with different properties such as `width` ,
+/// `height` or `font`. Colors are available with macros as well.
+///
+/// # Example
+/// ```no_run
+/// use zoon::*;
+/// let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+///
+/// let button = Button::new()
+///     .s(Width::new(40))
+///     .s(Height::new(40))
+///     .s(Transform::new().move_left(50).move_down(14))
+///     .s(Font::new().size(30).center().color_signal(
+///         hovered_signal.map_bool(|| hsluv!(10.5, 37.7, 48.8), || hsluv!(12.2, 34.7, 68.2)),
+///     ))
+///     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+///     .label("×");
+/// ```
+/// It is also possible to create a button with local state for dynamic updates.
+///
+/// # Example
+/// ```no_run
+/// use std::borrow::Cow;
+/// use zoon::{named_color::*, *};
+///
+/// let click_count = Mutable::new(0);
+///
+/// // Create a title that gets updated when counting changes.
+/// let title = click_count.signal().map(|count| {
+///     if count == 0 {
+///         return Cow::from("Click me!");
+///     }
+///     Cow::from(format!("Clicked {}x", count))
+/// });
+///
+/// // Create a row with a button.
+/// // The button's label is dynamic and changing according to the title signal.
+/// // Clicking the button will increment the click_count value.
+/// let raw_with_a_button = Row::new().item(
+///     Button::new()
+///         .label_signal(title)
+///         .on_press(move || click_count.update(|count| count + 1)),
+/// );
+/// ```
 pub struct Button<LabelFlag, OnPressFlag> {
     raw_el: RawHtmlEl,
     flags: PhantomData<(LabelFlag, OnPressFlag)>,
