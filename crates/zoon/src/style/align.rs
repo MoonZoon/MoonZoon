@@ -2,6 +2,30 @@ use crate::*;
 use std::collections::{BTreeMap, BTreeSet};
 use strum::{EnumIter, IntoEnumIterator, IntoStaticStr};
 
+/// Styling to align elements inside their container.
+/// It is possible to combine different methods to get the styling you need.
+///
+/// Here the element is positioned on the bottom of the right side.
+/// # Example
+/// ```no_run
+/// use zoon::*;
+///
+/// let right_bottom_element = El::new()
+///     .s(Font::new().size(50).weight(FontWeight::Bold))
+///     .s(Align::new().bottom().right())
+///     .child("bottom_right element");
+/// ```
+///
+/// Here is the element is vertically aligned on the right side.
+/// # Example
+/// ```no_run
+/// use zoon::*;
+///
+/// let right_bottom_element = El::new()
+///     .s(Font::new().size(50).weight(FontWeight::Bold))
+///     .s(Align::new().right().center_y())
+///     .child("bottom_right element");
+/// ```
 #[derive(Default)]
 pub struct Align {
     alignments: BTreeSet<Alignment>,
@@ -43,11 +67,29 @@ impl Align {
         }
         this
     }
-
+    /// Align an element in the center of its container.
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let centered_element = El::new()
+    ///     .s(Font::new().size(50).weight(FontWeight::Bold))
+    ///     .s(Align::center())
+    ///     .child("centered element");
+    /// ```
     pub fn center() -> Self {
         Self::default().center_x().center_y()
     }
 
+    /// The element will be centered horizontally.
+    ///
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let horizontal_centered_element = El::new()
+    ///     .s(Font::new().size(50).weight(FontWeight::Bold))
+    ///     .s(Align::new().center_x())
+    ///     .child("Horizontally centered element");
+    ///  ```
     pub fn center_x(mut self) -> Self {
         self.alignments.insert(Alignment::CenterX);
         self.alignments.remove(&Alignment::AlignLeft);
@@ -55,6 +97,16 @@ impl Align {
         self
     }
 
+    /// The element will be centered vertically.
+    ///
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let vertically_centered_element = El::new()
+    ///     .s(Font::new().size(50).weight(FontWeight::Bold))
+    ///     .s(Align::new().center_y())
+    ///     .child("Vertically centered header");
+    ///  ```
     pub fn center_y(mut self) -> Self {
         self.alignments.insert(Alignment::CenterY);
         self.alignments.remove(&Alignment::AlignTop);
@@ -62,6 +114,17 @@ impl Align {
         self
     }
 
+    /// The element will be aligned at the top of its container.
+    /// By default the element is also positioned on left side as well.
+    ///
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let top_element = El::new()
+    ///     .s(Font::new().size(50).weight(FontWeight::Bold))
+    ///     .s(Align::new().top())
+    ///     .child("Top element");
+    ///  ```
     pub fn top(mut self) -> Self {
         self.alignments.insert(Alignment::AlignTop);
         self.alignments.remove(&Alignment::CenterY);
@@ -69,6 +132,16 @@ impl Align {
         self
     }
 
+    /// The element will be aligned at the bottom of its container.
+    /// By default the element is also positioned on left side as well.
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let bottom_element = El::new()
+    ///     .s(Font::new().size(50).weight(FontWeight::Bold))
+    ///     .s(Align::new().bottom())
+    ///     .child("Bottom element");
+    ///  ```
     pub fn bottom(mut self) -> Self {
         self.alignments.insert(Alignment::AlignBottom);
         self.alignments.remove(&Alignment::CenterY);
@@ -76,6 +149,16 @@ impl Align {
         self
     }
 
+    /// The element will be aligned at the left of its container.
+    ///
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let bottom_element = El::new()
+    ///     .s(Font::new().size(50).weight(FontWeight::Bold))
+    ///     .s(Align::new().left())
+    ///     .child("Left element");
+    ///  ```
     pub fn left(mut self) -> Self {
         self.alignments.insert(Alignment::AlignLeft);
         self.alignments.remove(&Alignment::CenterX);
@@ -83,6 +166,16 @@ impl Align {
         self
     }
 
+    /// The element will be aligned at the right of its container.
+    /// By default the element is also positioned on top as well.
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let right_element = El::new()
+    ///     .s(Font::new().size(50).weight(FontWeight::Bold))
+    ///     .s(Align::new().right())
+    ///     .child("Right element");
+    ///  ```
     pub fn right(mut self) -> Self {
         self.alignments.insert(Alignment::AlignRight);
         self.alignments.remove(&Alignment::CenterX);
