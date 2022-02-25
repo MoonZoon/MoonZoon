@@ -8,6 +8,7 @@ use syn::{
     spanned::Spanned,
     Arm, Attribute, ExprIf, FieldValue, Ident, ItemEnum, ItemFn, ItemImpl, LitStr, Token, Variant,
 };
+use urlencoding::encode as url_encode;
 
 // @TODO rewrite panics/expects/unwraps to `syn::Error`s (see hsluv_macro)?
 
@@ -320,7 +321,9 @@ fn assemble_url_template(segments: &[RouteSegment]) -> LitStr {
     for segment in segments {
         url_template.push('/');
         match segment {
-            RouteSegment::LitStr(lit_str) => url_template.push_str(&lit_str.value()),
+            RouteSegment::LitStr(lit_str) => {
+                url_template.push_str(&url_encode(&lit_str.value()))
+            },
             RouteSegment::Ident(ident) => {
                 url_template.push('{');
                 url_template.push_str(&ident.to_string());
