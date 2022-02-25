@@ -1,7 +1,7 @@
 use crate::router::Route;
 use evalexpr::eval;
 use std::fmt;
-use zoon::{*, named_color::*};
+use zoon::{named_color::*, *};
 
 // ------ ------
 //     Types

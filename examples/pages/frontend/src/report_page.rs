@@ -1,6 +1,6 @@
 use crate::{app, router::Route};
 use std::borrow::Cow;
-use zoon::{*, named_color::*};
+use zoon::{named_color::*, *};
 
 const DAILY: &str = "daily";
 const WEEKLY: &str = "weekly";

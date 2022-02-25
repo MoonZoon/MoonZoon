@@ -321,9 +321,7 @@ fn assemble_url_template(segments: &[RouteSegment]) -> LitStr {
     for segment in segments {
         url_template.push('/');
         match segment {
-            RouteSegment::LitStr(lit_str) => {
-                url_template.push_str(&url_encode(&lit_str.value()))
-            },
+            RouteSegment::LitStr(lit_str) => url_template.push_str(&url_encode(&lit_str.value())),
             RouteSegment::Ident(ident) => {
                 url_template.push('{');
                 url_template.push_str(&ident.to_string());
