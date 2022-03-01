@@ -1,0 +1,23 @@
+# ======= ======= ======= =======-
+#             GENERAL
+# ======= ======= ======= =======-
+my_api = "example.com/api"
+
+# ======= ======= ======= =======-
+#            POSTGRES
+# ======= ======= ======= =======-
+
+[postgres]
+username = "xxxxxxxx"
+password = "xxxxxxxxxxx"
+host = "localhost"
+name = "example_db"
+
+# ======= ======= ======= =======-
+#            FACEBOOK
+# ======= ======= ======= =======-
+
+[facebook] 
+app_id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+app_secret = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
