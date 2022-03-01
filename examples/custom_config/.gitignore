@@ -1,2 +1,9 @@
 target
 frontend/wasm-pack*
+
+
+# The line below commented out for the example purposes.
+# You want to create `MoonZoonCustom.toml` by yourself from `MoonZoonCustom.ex.toml`
+# in the real app to prevent secret data leaks.
+
+# MoonZoonCustom.toml
