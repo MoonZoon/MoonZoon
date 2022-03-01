@@ -1,2 +1,2 @@
-# Resize Drag
+# Custom Config
 > MoonZoon example
