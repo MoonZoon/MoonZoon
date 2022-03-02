@@ -50,6 +50,7 @@ pub trait RawEl: Sized {
         + AsRef<EventTarget>
         + AsRef<JsValue>
         + AsRef<web_sys::Element>
+        + Into<web_sys::Element>
         + Clone
         + JsCast
         + 'static;
@@ -220,6 +221,18 @@ pub trait RawEl: Sized {
         let parent: &web_sys::Element = dom_element.as_ref();
         parent.set_inner_html(markup.as_ref());
         self
+    }
+
+    fn inner_markup_signal<'a>(
+        self,
+        markup: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static,
+    ) -> Self {
+        let parent: web_sys::Element = self.dom_element().into();
+        let inner_html_updater = markup.for_each_sync(move |markup| {
+            parent.set_inner_html(&markup.into_cow_str());
+        });
+        let inner_html_updater = Task::start_droppable(inner_html_updater);
+        self.after_remove(move |_| drop(inner_html_updater))
     }
 
     fn from_markup(markup: impl AsRef<str>) -> Option<Self> {
