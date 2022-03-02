@@ -12,7 +12,7 @@ const DEBOUNCE_TIME: Duration = Duration::from_millis(100);
 
 #[throws]
 pub async fn start(release: bool, open: bool) {
-    let config = Config::load_from_moonzoon_toml().await?;
+    let config = Config::load_from_moonzoon_tomls().await?;
     set_env_vars(&config, release);
 
     let frontend_watcher = build_and_watch_frontend(&config, release).await?;
