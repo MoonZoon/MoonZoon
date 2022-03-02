@@ -55,8 +55,27 @@ fn markdown_to_html(markdown: &str) -> String {
 }
 
 fn markdown_example() -> impl Element {
-    let html = markdown_to_html(include_str!("markdown_page.md"));
-    RawHtmlEl::new("div").inner_markup(html)
+    Column::new()
+        .item(counter_info())
+        .item(divider())
+        .item(html_page())
+}
+
+fn counter_info() -> impl Element {
+    fn content(counter_value: i32) -> String {
+        markdown_to_html(&format!("Counter value: _**{counter_value}**_"))
+    }
+    RawHtmlEl::new("div").inner_markup_signal(counter().signal().map(content))
+}
+
+fn divider() -> impl Element {
+    RawHtmlEl::from_markup(markdown_to_html("---"))
+        .unwrap_throw()
+        .style("width", "100%")
+}
+
+fn html_page() -> impl Element {
+    RawHtmlEl::new("div").inner_markup(markdown_to_html(include_str!("markdown_page.md")))
 }
 
 // ------ MAUD ------
