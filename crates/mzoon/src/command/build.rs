@@ -7,7 +7,7 @@ use fehler::throws;
 
 #[throws]
 pub async fn build(release: bool) {
-    let config = Config::load_from_moonzoon_toml().await?;
+    let config = Config::load_from_moonzoon_tomls().await?;
     set_env_vars(&config, release);
 
     build_frontend(release, config.cache_busting).await?;
