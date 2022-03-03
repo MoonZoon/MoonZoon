@@ -1,9 +1,12 @@
+use crate::helper::{
+    tree_into_pairs::{tree_into_pairs, NodeContent},
+    TryIntoString,
+};
 use anyhow::{Context, Error};
 use fehler::throws;
 use log::LevelFilter;
 use serde::Deserialize;
 use tokio::fs;
-use crate::helper::{TryIntoString, tree_into_pairs::{tree_into_pairs, NodeContent}};
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
@@ -66,28 +69,26 @@ async fn read_moonzoon_custom_toml() -> Option<Vec<(String, String)>> {
         .await
         .context("Failed to read MoonZoonCustom.toml")?;
 
-    let custom_config = toml::from_str(&custom_config_toml).context("Failed to parse MoonZoonCustom.toml")?;
-    let pairs = toml_to_env_vars(custom_config).context("Failed to parse MoonZoonCustom.toml's content")?;
+    let custom_config =
+        toml::from_str(&custom_config_toml).context("Failed to parse MoonZoonCustom.toml")?;
+    let pairs =
+        toml_to_env_vars(custom_config).context("Failed to parse MoonZoonCustom.toml's content")?;
     Some(pairs)
-} 
+}
 
 #[throws]
 fn toml_to_env_vars(toml: toml::Value) -> Vec<(String, String)> {
     tree_into_pairs(
         toml,
         |parent_name, original_name| format!("{parent_name}_{original_name}"),
-        |toml| {
-            match toml {
-                toml::Value::Table(table) => {
-                    Ok(NodeContent::Children(Box::new(
-                        table.into_iter().map(|(mut name, value)| {
-                            name.make_ascii_uppercase();
-                            (name, value)
-                        })
-                    )))
-                }
-                value => Ok(NodeContent::Value(value.try_into_string()?))
-            }
+        |toml| match toml {
+            toml::Value::Table(table) => Ok(NodeContent::Children(Box::new(
+                table.into_iter().map(|(mut name, value)| {
+                    name.make_ascii_uppercase();
+                    (name, value)
+                }),
+            ))),
+            value => Ok(NodeContent::Value(value.try_into_string()?)),
         },
     )?
 }
