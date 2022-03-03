@@ -3,7 +3,8 @@ use fehler::throws;
 use log::LevelFilter;
 use serde::Deserialize;
 use tokio::fs;
-use std::{collections::VecDeque, rc::Rc, ops::ControlFlow};
+use std::{collections::VecDeque, rc::Rc};
+use crate::helper::TryIntoString;
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
@@ -56,7 +57,12 @@ pub struct Watch {
     pub backend: Vec<String>,
 }
 
-type NodeChildren<T> = Box<dyn Iterator<Item = (String, T)>>;
+type Name = String;
+
+enum NodeContent<T> {
+    Children(Box<dyn Iterator<Item = (Name, T)>>),
+    Value(String),
+}
 
 // #[throws]
 fn toml_to_env_vars(toml: toml::Value) -> anyhow::Result<Vec<(String, String)>> {
@@ -67,11 +73,11 @@ fn toml_to_env_vars(toml: toml::Value) -> anyhow::Result<Vec<(String, String)>> 
         |toml| {
             match toml {
                 toml::Value::Table(table) => {
-                    Ok(ControlFlow::Continue(Box::new(
+                    Ok(NodeContent::Children(Box::new(
                         table.into_iter().map(|(name, value)| (name.to_ascii_uppercase(), value))
                     )))
                 }
-                value => Ok(ControlFlow::Break(value.try_into_string()?))
+                value => Ok(NodeContent::Value(value.try_into_string()?))
             }
         },
     )
@@ -79,15 +85,15 @@ fn toml_to_env_vars(toml: toml::Value) -> anyhow::Result<Vec<(String, String)>> 
 
 fn tree_to_string_pairs<T>(
     tree: T,
-    child_name: impl Fn(&str, &str) -> String,
-    children_or_value: impl Fn(T) -> anyhow::Result<ControlFlow<String, NodeChildren<T>>>,
-) -> anyhow::Result<Vec<(String, String)>> 
+    child_name: impl Fn(&str, &str) -> Name,
+    children_or_value: impl Fn(T) -> anyhow::Result<NodeContent<T>>,
+) -> anyhow::Result<Vec<(Name, String)>> 
 {
-    let mut vars = Vec::<(String, String)>::new();
+    let mut vars = Vec::<(Name, String)>::new();
 
     struct StackItem<T> {
-        parent_name: Option<Rc<String>>,
-        name: Option<String>,
+        parent_name: Option<Rc<Name>>,
+        name: Option<Name>,
         node: T,
     }
 
@@ -109,7 +115,7 @@ fn tree_to_string_pairs<T>(
             (Some(_), None) => unreachable!(),
         };
         let output_value = match children_or_value(node)? {
-            ControlFlow::Continue(children) => {
+            NodeContent::Children(children) => {
                 let parent_name = output_name.map(Rc::new);
                 stack.extend(children.map(|(name, node)| {
                     StackItem { 
@@ -120,39 +126,13 @@ fn tree_to_string_pairs<T>(
                 }));
                 continue;
             },
-            ControlFlow::Break(value) => value,
+            NodeContent::Value(value) => value,
         }; 
         if let Some(output_name) = output_name {
             vars.push((output_name, output_value));
         } else {
-            unreachable!();
+            bail!("Root node cannot be a leaf node")
         }
     }
     Ok(vars)
-}
-
-trait TryIntoString {
-    fn try_into_string(self) -> anyhow::Result<String>;
-}
-
-impl TryIntoString for toml::Value {
-    fn try_into_string(self) -> anyhow::Result<String> {
-        let string_value = match self {
-            toml::Value::Table(_) => bail!("TOML tables cannot be stringified"),
-            toml::Value::Boolean(value) => value.to_string(),
-            toml::Value::Float(value) => value.to_string(),
-            toml::Value::Integer(value) => value.to_string(),
-            toml::Value::String(value) => value,
-            toml::Value::Datetime(value) => value.to_string(),
-            toml::Value::Array(value) => {
-                let string_value = value
-                    .into_iter()
-                    .map(|value| value.try_into_string())
-                    .collect::<anyhow::Result<Vec<_>>>()?
-                    .join(",");
-                format!("[{string_value}]")
-            },
-        };
-        Ok(string_value)
-    }
 }
