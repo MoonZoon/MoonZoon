@@ -22,4 +22,8 @@ pub fn set_env_vars(config: &Config, release: bool) {
     env::set_var("CORS_ORIGINS", config.cors.origins.join(","));
 
     env::set_var("COMPRESSED_PKG", release.to_string());
+
+    for (key, value) in &config.custom_env_vars {
+        env::set_var(key, value);
+    }
 }

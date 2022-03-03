@@ -43,7 +43,6 @@ impl Config {
     pub async fn load_from_moonzoon_tomls() -> Config {
         let mut config = read_moonzoon_toml().await?;
         if let Some(custom_env_vars) = read_moonzoon_custom_toml().await? {
-            println!("custom_env_vars: {custom_env_vars:#?}");
             config.custom_env_vars = custom_env_vars;
         }
         config

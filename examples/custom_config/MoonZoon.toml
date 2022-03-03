@@ -1,15 +1,44 @@
+# ====== ====== ====== ======
+#           GENERAL
+# ====== ====== ====== ======
+
+# env var PORT = 8080
 port = 8080
 # port = 8443
+
+# HTTPS = false
 https = false
+
+# CACHE_BUSTING = true
 cache_busting = true
+
+# BACKEND_LOG_LEVEL = warn
 backend_log_level = "warn" # "error" / "warn" / "info" / "debug" / "trace"
 
+# ====== ====== ====== ======
+#          REDIRECT
+# ====== ====== ====== ======
+
 [redirect]
+
+# REDIRECT_PORT = 8081
 port = 8081
+
+# REDIRECT_ENABLED = false
 enabled = false
 
+# ====== ====== ====== ======
+#            CORS
+# ====== ====== ====== ======
+
 [cors]
-origins = ["*"]
+
+# CORS_ORIGINS = *,http://example.com
+origins = ["*", "https://example.com"]
+
+# ====== ====== ====== ======
+#           WATCH
+# ====== ====== ====== ======
 
 [watch]
 frontend = [

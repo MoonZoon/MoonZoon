@@ -1,25 +1,46 @@
-# ======= ======= ======= =======-
-#             GENERAL
-# ======= ======= ======= =======-
+# ====== ====== ====== ======
+#           GENERAL
+# ====== ====== ====== ======
+
+# env var MY_API = example.com/api
 my_api = "example.com/api"
+
+# PI = 3.14
 pi = 3.14
+
+# FAVORITE_LANGUAGES = [Rust,Magmide,[Gleam]]
 favorite_languages = ["Rust", "Magmide", ["Gleam"]]
+
+# IS_PIG_PINK = true
 is_pig_pink = true
+
+# BIRTHDAY = 1993-07-21T04:32:15+02:00
 birthday = 1993-07-21T04:32:15+02:00
 
-# ======= ======= ======= =======-
-#            POSTGRES
-# ======= ======= ======= =======-
+# ====== ====== ====== ======
+#          POSTGRES
+# ====== ====== ====== ======
 
 [postgres]
+
+# POSTGRES_USER_NAME = postgres
+# POSTGRES_USER_PASSWORD = postgres
 user = { name = "postgres", password = "postgres" }
+
+# POSTGRES_HOST = localhost
 host = "localhost"
+
+# POSTGRES_NAME = example_db
 name = "example_db"
 
-# ======= ======= ======= =======-
-#            FACEBOOK
-# ======= ======= ======= =======-
+# ====== ====== ====== ======
+#          FACEBOOK
+# ====== ====== ====== ======
 
 [facebook] 
+
+# FACEBOOK_APP_ID = 2333222321131223
 app_id = "2333222321131223"
+
+# FACEBOOK_APP_SECRET = 212a2a2a2a1111aa212aa12112aaa121
 app_secret = "212a2a2a2a1111aa212aa12112aaa121"

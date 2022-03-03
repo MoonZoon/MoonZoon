@@ -1,23 +1,26 @@
-# ======= ======= ======= =======-
-#             GENERAL
-# ======= ======= ======= =======-
-my_api = "example.com/api"
+# ====== ====== ====== ======
+#           GENERAL
+# ====== ====== ====== ======
 
-# ======= ======= ======= =======-
-#            POSTGRES
-# ======= ======= ======= =======-
+my_api = "example.com/api"
+pi = 3.14
+favorite_languages = ["Xxxx",["Xxxxx"]]
+is_pig_pink = true
+birthday = 0000-01-01T00:00:00+00:00
+
+# ====== ====== ====== ======
+#          POSTGRES
+# ====== ====== ====== ======
 
 [postgres]
-username = "xxxxxxxx"
-password = "xxxxxxxxxxx"
+user = { name = "xxxxxxxx", password = "xxxxxxxxxxx" }
 host = "localhost"
 name = "example_db"
 
-# ======= ======= ======= =======-
-#            FACEBOOK
-# ======= ======= ======= =======-
+# ====== ====== ====== ======
+#          FACEBOOK
+# ====== ====== ====== ======
 
 [facebook] 
-app_id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+app_id = "xxxxxxxxxxxxxxxx"
 app_secret = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-
