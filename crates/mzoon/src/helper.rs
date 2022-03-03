@@ -1,6 +1,7 @@
 mod download;
 mod file_compressor;
 mod read_to_vec;
+pub mod tree_into_pairs;
 mod try_into_string;
 mod visit_files;
 
