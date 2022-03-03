@@ -1,4 +1,4 @@
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 
 pub trait TryIntoString {
     fn try_into_string(self) -> Result<String>;
@@ -20,7 +20,7 @@ impl TryIntoString for toml::Value {
                     .collect::<Result<Vec<_>>>()?
                     .join(",");
                 format!("[{string_value}]")
-            },
+            }
         };
         Ok(string_value)
     }

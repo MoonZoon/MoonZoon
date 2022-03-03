@@ -1,8 +1,10 @@
-use moon::{*, config::CONFIG};
+use moon::{config::CONFIG, *};
 
 async fn frontend() -> Frontend {
-    Frontend::new().title("Custom Config example").append_to_head(
-        "
+    Frontend::new()
+        .title("Custom Config example")
+        .append_to_head(
+            "
         <style>
             html {
                 background-color: black;
@@ -18,7 +20,7 @@ async fn frontend() -> Frontend {
                 background-color: green;
             }
         </style>",
-    )
+        )
 }
 
 async fn up_msg_handler(_: UpMsgRequest<()>) {}
