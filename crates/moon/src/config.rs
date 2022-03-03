@@ -2,8 +2,7 @@ use crate::from_env_vars::FromEnvVars;
 use log::LevelFilter;
 pub use once_cell::sync::Lazy;
 use serde::Deserialize;
-use std::borrow::Cow;
-use std::collections::BTreeSet;
+use std::{borrow::Cow, collections::BTreeSet};
 
 pub static CONFIG: Lazy<Config> = Lazy::new(Config::from_env_vars);
 

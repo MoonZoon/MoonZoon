@@ -8,8 +8,8 @@ my_api = "example.com/api"
 # PI = 3.14
 pi = 3.14
 
-# FAVORITE_LANGUAGES = [Rust,Magmide,[Gleam]]
-favorite_languages = ["Rust", "Magmide", ["Gleam"]]
+# FAVORITE_LANGUAGES = Rust,Magmide,Gleam
+favorite_languages = ["Rust", "Magmide", "Gleam"]
 
 # IS_PIG_PINK = true
 is_pig_pink = true
