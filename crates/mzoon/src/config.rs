@@ -56,57 +56,82 @@ pub struct Watch {
     pub backend: Vec<String>,
 }
 
+fn children_or_string_value_x(toml_value: toml::Value) -> Result<Vec<(String, toml::Value)>, String> {
+    match toml_value {
+        toml::Value::Table(table) => {
+            Ok(table.into_iter().collect())
+        }
+        value => Err(value.try_into_string().unwrap())
+    }
+}
+
 // #[throws]
 fn toml_to_env_vars(toml: toml::Value) -> anyhow::Result<Vec<(String, String)>> {
     println!("{toml:#}");
 
+    let vars = tree_to_string_pairs(
+        |parent_name, name| format!("{parent_name}_{name}"),
+        children_or_string_value_x,
+        toml,
+    );
+
+    println!("{vars:#?}");
+    vars
+}
+
+fn tree_to_string_pairs<T>(
+    output_name: impl Fn(&str, &str) -> String,
+    children_or_string_value: impl Fn(T) -> Result<Vec<(String, T)>, String>,
+    tree: T,
+) -> anyhow::Result<Vec<(String, String)>> 
+{
     let mut vars = Vec::<(String, String)>::new();
 
-    struct StackItem {
+    struct StackItem<T> {
         parent_name: Option<Rc<String>>,
         name: Option<String>,
-        toml_value: toml::Value
+        node: T,
     }
 
-    let mut stack = VecDeque::<StackItem>::new();
+    let mut stack = VecDeque::<StackItem<T>>::new();
     let root = StackItem {
         parent_name: None,
         name: None,
-        toml_value: toml
+        node: tree,
     };
     stack.push_back(root);
 
-    while let Some(StackItem { parent_name, name, toml_value }) = stack.pop_front() {
-        let env_name = match (parent_name, name) {
+    while let Some(StackItem { parent_name, name, node }) = stack.pop_front() {
+        let output_name = match (parent_name, name) {
             (Some(parent_name), Some(name)) => {
-                Some(format!("{parent_name}_{name}"))
+                Some(output_name(&parent_name, &name))
             }
             (None, Some(name)) => Some(name),
             (None, None) => None,
             (Some(_), None) => unreachable!(),
         };
-        let env_value = match toml_value {
-            toml::Value::Table(table) => {
-                let parent_name = env_name.map(Rc::new);
-                stack.extend(table.into_iter().map(|(name, toml_value)| {
+        let output_value = match children_or_string_value(node) {
+            Ok(children) => {
+                let parent_name = output_name.map(Rc::new);
+                stack.extend(children.into_iter().map(|(name, node)| {
                     StackItem { 
                         parent_name: parent_name.clone(), 
                         name: Some(name.to_ascii_uppercase()), 
-                        toml_value 
+                        node 
                     }
                 }));
                 continue;
+            },
+            Err(string_value) => {
+                string_value
             }
-            value => value.try_into_string()?
-        };
-        if let Some(env_name) = env_name {
-            vars.push((env_name, env_value));
+        }; 
+        if let Some(output_name) = output_name {
+            vars.push((output_name, output_value));
         } else {
             unreachable!();
         }
     }
-
-    println!("{vars:#?}");
     Ok(vars)
 }
 
