@@ -3,8 +3,7 @@ use fehler::throws;
 use log::LevelFilter;
 use serde::Deserialize;
 use tokio::fs;
-use std::collections::VecDeque;
-use std::rc::Rc;
+use std::{collections::VecDeque, rc::Rc, ops::ControlFlow};
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
@@ -35,6 +34,7 @@ impl Config {
             .context("Failed to read MoonZoonCustom.toml")?;
         let custom_config = toml::from_str(&custom_config_toml).context("Failed to parse MoonZoonCustom.toml")?;
         config.custom_env_vars = toml_to_env_vars(custom_config).context("Failed to parse MoonZoonCustom.toml's content")?;
+        println!("{:#?}", config.custom_env_vars);
         config
     }
 }
@@ -56,33 +56,31 @@ pub struct Watch {
     pub backend: Vec<String>,
 }
 
-fn children_or_string_value_x(toml_value: toml::Value) -> Result<Vec<(String, toml::Value)>, String> {
-    match toml_value {
-        toml::Value::Table(table) => {
-            Ok(table.into_iter().collect())
-        }
-        value => Err(value.try_into_string().unwrap())
-    }
-}
+type NodeChildren<T> = Box<dyn Iterator<Item = (String, T)>>;
 
 // #[throws]
 fn toml_to_env_vars(toml: toml::Value) -> anyhow::Result<Vec<(String, String)>> {
     println!("{toml:#}");
-
-    let vars = tree_to_string_pairs(
-        |parent_name, name| format!("{parent_name}_{name}"),
-        children_or_string_value_x,
+    tree_to_string_pairs(
         toml,
-    );
-
-    println!("{vars:#?}");
-    vars
+        |parent_name, original_name| format!("{parent_name}_{original_name}"),
+        |toml| {
+            match toml {
+                toml::Value::Table(table) => {
+                    Ok(ControlFlow::Continue(Box::new(
+                        table.into_iter().map(|(name, value)| (name.to_ascii_uppercase(), value))
+                    )))
+                }
+                value => Ok(ControlFlow::Break(value.try_into_string()?))
+            }
+        },
+    )
 }
 
 fn tree_to_string_pairs<T>(
-    output_name: impl Fn(&str, &str) -> String,
-    children_or_string_value: impl Fn(T) -> Result<Vec<(String, T)>, String>,
     tree: T,
+    child_name: impl Fn(&str, &str) -> String,
+    children_or_value: impl Fn(T) -> anyhow::Result<ControlFlow<String, NodeChildren<T>>>,
 ) -> anyhow::Result<Vec<(String, String)>> 
 {
     let mut vars = Vec::<(String, String)>::new();
@@ -104,27 +102,25 @@ fn tree_to_string_pairs<T>(
     while let Some(StackItem { parent_name, name, node }) = stack.pop_front() {
         let output_name = match (parent_name, name) {
             (Some(parent_name), Some(name)) => {
-                Some(output_name(&parent_name, &name))
+                Some(child_name(&parent_name, &name))
             }
             (None, Some(name)) => Some(name),
             (None, None) => None,
             (Some(_), None) => unreachable!(),
         };
-        let output_value = match children_or_string_value(node) {
-            Ok(children) => {
+        let output_value = match children_or_value(node)? {
+            ControlFlow::Continue(children) => {
                 let parent_name = output_name.map(Rc::new);
-                stack.extend(children.into_iter().map(|(name, node)| {
+                stack.extend(children.map(|(name, node)| {
                     StackItem { 
                         parent_name: parent_name.clone(), 
-                        name: Some(name.to_ascii_uppercase()), 
+                        name: Some(name), 
                         node 
                     }
                 }));
                 continue;
             },
-            Err(string_value) => {
-                string_value
-            }
+            ControlFlow::Break(value) => value,
         }; 
         if let Some(output_name) = output_name {
             vars.push((output_name, output_value));
