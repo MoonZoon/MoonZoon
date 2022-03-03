@@ -19,7 +19,7 @@ impl TryIntoString for toml::Value {
                     .map(|value| value.try_into_string())
                     .collect::<Result<Vec<_>>>()?
                     .join(",");
-                format!("[{string_value}]")
+                format!("{string_value}")
             }
         };
         Ok(string_value)

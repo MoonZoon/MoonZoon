@@ -1,4 +1,7 @@
-use moon::{config::CONFIG, *};
+use moon::*;
+
+mod custom_config;
+use custom_config::CUSTOM_CONFIG;
 
 async fn frontend() -> Frontend {
     Frontend::new()
@@ -27,7 +30,7 @@ async fn up_msg_handler(_: UpMsgRequest<()>) {}
 
 #[moon::main]
 async fn main() -> std::io::Result<()> {
-    println!("{:#?}", *CONFIG);
+    println!("{:#?}", *CUSTOM_CONFIG);
 
     start(frontend, up_msg_handler, |_| {}).await
 }
