@@ -1,10 +1,9 @@
-use anyhow::{Context, Error, bail};
+use anyhow::{Context, Error, Result};
 use fehler::throws;
 use log::LevelFilter;
 use serde::Deserialize;
 use tokio::fs;
-use std::{collections::VecDeque, rc::Rc};
-use crate::helper::TryIntoString;
+use crate::helper::{TryIntoString, tree_into_pairs::{tree_into_pairs, NodeContent}};
 
 #[derive(Debug, Deserialize)]
 pub struct Config {
@@ -17,6 +16,23 @@ pub struct Config {
     pub watch: Watch,
     #[serde(skip)]
     pub custom_env_vars: Vec<(String, String)>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Redirect {
+    pub port: u16,
+    pub enabled: bool,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Cors {
+    pub origins: Vec<String>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Watch {
+    pub frontend: Vec<String>,
+    pub backend: Vec<String>,
 }
 
 impl Config {
@@ -40,34 +56,9 @@ impl Config {
     }
 }
 
-#[derive(Debug, Deserialize)]
-pub struct Redirect {
-    pub port: u16,
-    pub enabled: bool,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Cors {
-    pub origins: Vec<String>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Watch {
-    pub frontend: Vec<String>,
-    pub backend: Vec<String>,
-}
-
-type Name = String;
-
-enum NodeContent<T> {
-    Children(Box<dyn Iterator<Item = (Name, T)>>),
-    Value(String),
-}
-
-// #[throws]
-fn toml_to_env_vars(toml: toml::Value) -> anyhow::Result<Vec<(String, String)>> {
+fn toml_to_env_vars(toml: toml::Value) -> Result<Vec<(String, String)>> {
     println!("{toml:#}");
-    tree_to_string_pairs(
+    tree_into_pairs(
         toml,
         |parent_name, original_name| format!("{parent_name}_{original_name}"),
         |toml| {
@@ -81,58 +72,4 @@ fn toml_to_env_vars(toml: toml::Value) -> anyhow::Result<Vec<(String, String)>> 
             }
         },
     )
-}
-
-fn tree_to_string_pairs<T>(
-    tree: T,
-    child_name: impl Fn(&str, &str) -> Name,
-    children_or_value: impl Fn(T) -> anyhow::Result<NodeContent<T>>,
-) -> anyhow::Result<Vec<(Name, String)>> 
-{
-    let mut vars = Vec::<(Name, String)>::new();
-
-    struct StackItem<T> {
-        parent_name: Option<Rc<Name>>,
-        name: Option<Name>,
-        node: T,
-    }
-
-    let mut stack = VecDeque::<StackItem<T>>::new();
-    let root = StackItem {
-        parent_name: None,
-        name: None,
-        node: tree,
-    };
-    stack.push_back(root);
-
-    while let Some(StackItem { parent_name, name, node }) = stack.pop_front() {
-        let output_name = match (parent_name, name) {
-            (Some(parent_name), Some(name)) => {
-                Some(child_name(&parent_name, &name))
-            }
-            (None, Some(name)) => Some(name),
-            (None, None) => None,
-            (Some(_), None) => unreachable!(),
-        };
-        let output_value = match children_or_value(node)? {
-            NodeContent::Children(children) => {
-                let parent_name = output_name.map(Rc::new);
-                stack.extend(children.map(|(name, node)| {
-                    StackItem { 
-                        parent_name: parent_name.clone(), 
-                        name: Some(name), 
-                        node 
-                    }
-                }));
-                continue;
-            },
-            NodeContent::Value(value) => value,
-        }; 
-        if let Some(output_name) = output_name {
-            vars.push((output_name, output_value));
-        } else {
-            bail!("Root node cannot be a leaf node")
-        }
-    }
-    Ok(vars)
 }
