@@ -28,4 +28,3 @@ fehler = { version = "1.0.0", default-features = false }
 apply = { version = "0.3.0", default-features = false }
 bool_ext = { version = "0.5.1", default-features = false }
 cfg-if = { version = "1.0.0", default-features = false }
-heck = { version = "0.4.0", default-features = false }
