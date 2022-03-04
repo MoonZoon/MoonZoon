@@ -72,7 +72,18 @@ features = [
 default-features = false
 
 [features]
-default = ["static_ref", "panic_hook", "small_alloc", "clone", "apply", "connection", "routing", "web_storage", "chrono"]
+default = [
+  "static_ref", 
+  "panic_hook", 
+  "small_alloc", 
+  "clone", 
+  "apply", 
+  "connection", 
+  "routing", 
+  "web_storage", 
+  "chrono",
+  "jsvalue_into_serde",
+  ]
 routing = ["route_macro"]
 connection = ["moonlight"]
 static_ref = ["static_ref_macro"]
@@ -83,3 +94,4 @@ fast_alloc = []
 clone = ["enclose"]  # @TODO use Dominator's clone! instead?
 fmt = ["ufmt", "lexical"]
 web_storage = ["serde", "serde_json", "thiserror"]
+jsvalue_into_serde = ["wasm-bindgen/serde-serialize"]
