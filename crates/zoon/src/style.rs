@@ -91,6 +91,10 @@ impl<'a> StaticCSSProps<'a> {
             },
         );
     }
+
+    pub fn remove(&mut self, name: &'a str) -> Option<CssPropValue> {
+        self.0.remove(name)
+    }
 }
 
 impl<'a> IntoIterator for StaticCSSProps<'a> {
