@@ -8,3 +8,10 @@ categories = ["MoonZoon", "example"]
 license = "MIT"
 readme = "../README.md"
 edition = "2021"
+
+[dependencies]
+moonlight = { path = "../../../crates/moonlight" }
+
+[features]
+frontend = ["moonlight/frontend"]
+backend = ["moonlight/backend"]

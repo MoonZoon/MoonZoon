@@ -1,5 +1,4 @@
 use moon::*;
-use std::collections::BTreeSet;
 
 // @TODO improve API & refactor the code below and:
 // @TODO return `Result` from `from_env_vars`? +(rename?)
@@ -12,7 +11,7 @@ pub static CUSTOM_CONFIG: Lazy<CustomConfig> = Lazy::new(CustomConfig::from_env_
 pub struct CustomConfig {
     pub my_api: String,
     pub pi: f32,
-    pub favorite_languages: BTreeSet<String>,
+    pub favorite_languages: Vec<String>,
     pub is_pig_pink: bool,
     pub birthday: DateTime<Local>,
     #[serde(default = "Postgres::from_env_vars")]
