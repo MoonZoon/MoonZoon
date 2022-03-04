@@ -1,5 +1,5 @@
-use zoon::{*, named_color::*};
 use crate::markup;
+use zoon::{named_color::*, *};
 
 // ------ ------
 //     View
@@ -33,7 +33,7 @@ fn received_messages() -> impl Element {
         .child(
             Column::new()
                 .s(Align::new().bottom())
-                .items_signal_vec(super::messages().signal_vec_cloned().map(received_message))
+                .items_signal_vec(super::messages().signal_vec_cloned().map(received_message)),
         )
 }
 
@@ -43,31 +43,21 @@ fn received_message(message: super::Message) -> impl Element {
         .s(Spacing::new(6))
         .item(
             El::new()
-                .s(Font::new()
-                    .weight(FontWeight::Bold)
-                    .color(GRAY_0)
-                    .size(17))
+                .s(Font::new().weight(FontWeight::Bold).color(GRAY_0).size(17))
                 .child(message.username),
         )
         .item(
             Paragraph::new()
-                .s(
-                    Font::new()
-                        .color(GRAY_2)
-                        .size(17)
-                        .line_height(27)
-                )
+                .s(Font::new().color(GRAY_2).size(17).line_height(27))
                 .contents(message_text_to_contents(&message.text)),
         )
 }
 
 fn message_text_to_contents(text: &str) -> impl Iterator<Item = RawElement> + '_ {
-    markup::parse_markup_objects(text).map(|object| {
-        match object {
-            markup::Object::Text(text) => Text::new(text).into_raw_element(),
-            markup::Object::Smile => emoji("smile").into_raw_element(),
-            markup::Object::SlightSmile => emoji("slight_smile").into_raw_element(),
-        }
+    markup::parse_markup_objects(text).map(|object| match object {
+        markup::Object::Text(text) => Text::new(text).into_raw_element(),
+        markup::Object::Smile => emoji("smile").into_raw_element(),
+        markup::Object::SlightSmile => emoji("slight_smile").into_raw_element(),
     })
 }
 
@@ -105,8 +95,7 @@ fn send_button() -> impl Element {
     Button::new()
         .s(Padding::all(10))
         .s(RoundedCorners::new().right(5))
-        .s(Background::new()
-            .color_signal(hovered_signal.map_bool(|| GREEN_7, || GREEN_8)))
+        .s(Background::new().color_signal(hovered_signal.map_bool(|| GREEN_7, || GREEN_8)))
         .s(Font::new().color(GRAY_0).size(17))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .on_press(super::send_message)
