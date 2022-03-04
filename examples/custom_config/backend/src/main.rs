@@ -1,4 +1,5 @@
 use moon::*;
+use shared::{DownMsg, UpMsg};
 
 mod custom_config;
 use custom_config::CUSTOM_CONFIG;
@@ -13,20 +14,21 @@ async fn frontend() -> Frontend {
                 background-color: black;
                 color: lightgray;
             }
-
-            .button {
-                background-color: darkgreen;
-                padding: 5px;
-            }
-            
-            .button:hover {
-                background-color: green;
-            }
         </style>",
         )
 }
 
-async fn up_msg_handler(_: UpMsgRequest<()>) {}
+async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
+    println!("{:?}", req);
+    let (session_id, cor_id) = (req.session_id, req.cor_id);
+
+    let favorite_languages = CUSTOM_CONFIG.favorite_languages.join(",");
+
+    if let Some(session) = sessions::by_session_id().wait_for(session_id).await {
+        return session.send_down_msg(&DownMsg::FavoriteLanguages(favorite_languages), cor_id).await;
+    }
+    eprintln!("cannot find the session with id `{}`", session_id);
+}
 
 #[moon::main]
 async fn main() -> std::io::Result<()> {

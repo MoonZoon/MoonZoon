@@ -1,9 +1,25 @@
-use zoon::*;
+use zoon::{*, eprintln};
+use shared::{DownMsg, UpMsg};
+
+// ------ ------
+//    States
+// ------ ------
 
 #[static_ref]
 fn favorite_languages() -> &'static Mutable<String> {
     Mutable::new("Loading...".to_owned())
 }
+
+#[static_ref]
+pub fn connection() -> &'static Connection<UpMsg, DownMsg> {
+    Connection::new(|DownMsg::FavoriteLanguages(languages), _| {
+        favorite_languages().set_neq(languages)
+    })
+}
+
+// ------ ------
+//     View
+// ------ ------
 
 fn root() -> impl Element {
     Column::new()
@@ -33,7 +49,16 @@ fn root() -> impl Element {
         )
 }
 
+// ------ ------
+//     Start
+// ------ ------
+
 #[wasm_bindgen(start)]
 pub fn start() {
     start_app("app", root);
+    Task::start(async {
+        if let Err(error) = connection().send_up_msg(UpMsg::GetFavoriteLanguages).await {
+            eprintln!("send UpMsg failed: {error}");
+        }
+    });
 }
