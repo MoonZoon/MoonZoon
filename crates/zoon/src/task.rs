@@ -1,6 +1,6 @@
 use crate::*;
-use wasm_bindgen_futures::spawn_local;
 use futures_util::future::{abortable, AbortHandle};
+use wasm_bindgen_futures::spawn_local;
 
 // ------ Task ------
 

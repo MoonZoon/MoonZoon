@@ -1,5 +1,5 @@
-use zoon::{*, eprintln};
 use shared::{DownMsg, UpMsg};
+use zoon::{eprintln, *};
 
 // ------ ------
 //    States
@@ -31,23 +31,39 @@ fn root() -> impl Element {
             El::with_tag(Tag::H1)
                 .s(Font::new().size(30).no_wrap().wrap_anywhere())
                 .s(Font::new().size(30))
-                .child("Variables loaded from MoonZoonCustom.toml")
+                .child("Variables loaded from MoonZoonCustom.toml"),
         )
         .item(
             Row::new()
                 .s(Spacing::new(20))
                 .multiline()
                 .item(El::new().child("my_api / MY_API:"))
-                .item(El::new().s(Font::new().weight(FontWeight::Bold)).child(env!("MY_API")))
-                .item(El::new().s(Font::new().italic()).child("(included at compile time)"))
+                .item(
+                    El::new()
+                        .s(Font::new().weight(FontWeight::Bold))
+                        .child(env!("MY_API")),
+                )
+                .item(
+                    El::new()
+                        .s(Font::new().italic())
+                        .child("(included at compile time)"),
+                ),
         )
         .item(
             Row::new()
                 .s(Spacing::new(20))
                 .multiline()
                 .item(El::new().child("favorite_languages / FAVORITE_LANGUAGES:"))
-                .item(El::new().s(Font::new().weight(FontWeight::Bold)).child_signal(favorite_languages().signal_cloned()))
-                .item(El::new().s(Font::new().italic()).child("(loaded at runtime)"))
+                .item(
+                    El::new()
+                        .s(Font::new().weight(FontWeight::Bold))
+                        .child_signal(favorite_languages().signal_cloned()),
+                )
+                .item(
+                    El::new()
+                        .s(Font::new().italic())
+                        .child("(loaded at runtime)"),
+                ),
         )
 }
 

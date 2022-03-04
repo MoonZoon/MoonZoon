@@ -25,7 +25,9 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
     let favorite_languages = CUSTOM_CONFIG.favorite_languages.join(",");
 
     if let Some(session) = sessions::by_session_id().wait_for(session_id).await {
-        return session.send_down_msg(&DownMsg::FavoriteLanguages(favorite_languages), cor_id).await;
+        return session
+            .send_down_msg(&DownMsg::FavoriteLanguages(favorite_languages), cor_id)
+            .await;
     }
     eprintln!("cannot find the session with id `{}`", session_id);
 }

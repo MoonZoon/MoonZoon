@@ -79,7 +79,7 @@ impl<'a> Font<'a> {
         self.static_css_props.insert("white-space", "nowrap");
         self
     }
-    
+
     pub fn wrap_anywhere(mut self) -> Self {
         // @TODO replace with the line below once `overflow-wrap: anywhere` works on Safari
         // https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-wrap#browser_compatibility

@@ -83,7 +83,7 @@ default = [
   "web_storage", 
   "chrono",
   "jsvalue_into_serde",
-  ]
+]
 routing = ["route_macro"]
 connection = ["moonlight"]
 static_ref = ["static_ref_macro"]
