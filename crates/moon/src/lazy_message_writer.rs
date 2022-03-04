@@ -1,7 +1,7 @@
 use crate::config::Config;
+use local_ip_address::local_ip;
 use std::io::{self, stdout, Write};
 use std::net::SocketAddr;
-use local_ip_address::local_ip;
 
 pub struct LazyMessageWriter(Vec<u8>);
 

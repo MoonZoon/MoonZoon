@@ -15,7 +15,7 @@ pub struct CustomConfig {
     pub is_pig_pink: bool,
     pub birthday: DateTime<Local>,
     #[serde(default = "Postgres::from_env_vars")]
-    pub postgres: Postgres
+    pub postgres: Postgres,
 }
 
 impl FromEnvVars for CustomConfig {
