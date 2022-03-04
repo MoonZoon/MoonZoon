@@ -1,6 +1,6 @@
-use zoon::*;
 use pest::Parser;
 use pest_derive::Parser;
+use zoon::*;
 
 #[derive(Parser)]
 #[grammar = "../markup.pest"]

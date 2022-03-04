@@ -1,9 +1,7 @@
-use actix_web::dev::{
-    forward_ready, ResponseBody, Service, ServiceRequest, ServiceResponse, Transform,
-};
+use actix_web::dev::{forward_ready, Service, ServiceRequest, ServiceResponse, Transform};
 use actix_web::http::header::LOCATION;
 use actix_web::http::uri::{Authority, InvalidUriParts, Scheme, Uri};
-use actix_web::{Error, HttpResponse};
+use actix_web::{body::EitherBody, Error, HttpResponse};
 use bool_ext::BoolExt;
 use futures::future::{ok, Either, FutureExt, LocalBoxFuture, Ready};
 use std::convert::TryFrom;
@@ -50,7 +48,7 @@ where
     S::Future: 'static,
     B: 'static,
 {
-    type Response = ServiceResponse<ResponseBody<B>>;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = S::Error;
     type InitError = ();
     type Transform = RedirectMiddleware<S>;
@@ -113,11 +111,11 @@ impl<S> RedirectMiddleware<S> {
         &self,
         req: ServiceRequest,
         uri: &Uri,
-    ) -> Ready<Result<ServiceResponse<ResponseBody<B>>, Error>> {
+    ) -> Ready<Result<ServiceResponse<EitherBody<B>>, Error>> {
         let http_response = HttpResponse::MovedPermanently()
             .insert_header((LOCATION, uri.to_string()))
             .finish()
-            .map_body(|_, body| ResponseBody::Other(body));
+            .map_into_right_body();
 
         ok(req.into_response(http_response))
     }
@@ -129,7 +127,7 @@ where
     S::Future: 'static,
     B: 'static,
 {
-    type Response = ServiceResponse<ResponseBody<B>>;
+    type Response = ServiceResponse<EitherBody<B>>;
     type Error = S::Error;
     type Future = Either<
         LocalBoxFuture<'static, Result<Self::Response, Self::Error>>,
@@ -147,9 +145,7 @@ where
         }
         self.service
             .call(req)
-            .map(|result| {
-                result.map(|response| response.map_body(|_, body| ResponseBody::Body(body)))
-            })
+            .map(|result| result.map(|response| response.map_into_left_body()))
             .boxed_local()
             .left_future()
     }

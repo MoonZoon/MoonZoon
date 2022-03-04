@@ -1,6 +1,9 @@
 use actix_cors::Cors;
 use actix_files::{Files, NamedFile};
-use actix_http::http::{header, ContentEncoding, HeaderMap};
+use actix_http::{
+    header::{self, HeaderMap},
+    ContentEncoding,
+};
 use actix_web::http::header::{CacheControl, CacheDirective, ContentType, ETag, EntityTag};
 use actix_web::{
     body::MessageBody,
@@ -168,7 +171,7 @@ where
 pub async fn start_with_app<FRB, FRBO, UPH, UPHO, UMsg, AT, AB, ABE>(
     frontend: FRB,
     up_msg_handler: UPH,
-    app: impl FnOnce() -> App<AT, AB> + Clone + Send + 'static,
+    app: impl FnOnce() -> App<AT> + Clone + Send + 'static,
     service_config: impl FnOnce(&mut web::ServiceConfig) + Clone + Send + 'static,
 ) -> io::Result<()>
 where
@@ -417,19 +420,20 @@ async fn pkg_responder(
         .prefer_utf8(true)
         .use_etag(false)
         .use_last_modified(false)
-        .disable_content_disposition();
+        .disable_content_disposition()
+        .customize();
 
     let mut responder = if shared_data.cache_busting {
-        named_file.with_header(CacheControl(vec![CacheDirective::MaxAge(31536000)]))
+        named_file.insert_header(CacheControl(vec![CacheDirective::MaxAge(31536000)]))
     } else {
-        named_file.with_header(ETag(EntityTag::new(
+        named_file.insert_header(ETag(EntityTag::new(
             false,
             shared_data.frontend_build_id.to_string(),
         )))
     };
 
     if let Some(encoding) = encoding {
-        responder = responder.with_header(encoding);
+        responder = responder.insert_header(encoding);
     }
     Ok::<_, Error>(responder)
 }
@@ -450,13 +454,13 @@ fn named_file_and_encoding(
         .map(|accept_encoding| accept_encoding.split(", ").collect::<BTreeSet<_>>())
         .unwrap_or_default();
 
-    if accept_encodings.contains(ContentEncoding::Br.as_str()) {
+    if accept_encodings.contains(ContentEncoding::Brotli.as_str()) {
         file.push_str(".br");
         let named_file = NamedFile::open(&file);
         if named_file.is_err() {
             eprintln!("Cannot load '{}'. Consider to set `ENV COMPRESSED_PKG false` or build with `mzoon build -r`.", file);
         }
-        return Ok((named_file?, Some(ContentEncoding::Br)));
+        return Ok((named_file?, Some(ContentEncoding::Brotli)));
     }
     if accept_encodings.contains(ContentEncoding::Gzip.as_str()) {
         file.push_str(".gz");
