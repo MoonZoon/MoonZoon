@@ -1,11 +1,13 @@
 use crate::*;
 
+/// Styling to manage hidden overflow.
 #[derive(Default)]
 pub struct Clip<'a> {
     static_css_props: StaticCSSProps<'a>,
 }
 
 impl<'a> Clip<'a> {
+    /// Set vertical and horizontal overflow.
     pub fn both() -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("overflow-x", "hidden");
@@ -13,12 +15,14 @@ impl<'a> Clip<'a> {
         this
     }
 
+    /// Set horizontal overflow.
     pub fn x() -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("overflow-x", "hidden");
         this
     }
 
+    /// Set vertical overflow.
     pub fn y() -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("overflow-y", "hidden");
