@@ -2,14 +2,22 @@ use crate::*;
 use std::borrow::Cow;
 
 // ------ Cursor ------
-
+/// Styling to manage mouse cursor.
 #[derive(Default)]
 pub struct Cursor<'a> {
+    /// Default static properties used by zoon.
     static_css_props: StaticCSSProps<'a>,
+    /// Customizable properties that can be added.
     dynamic_css_props: DynamicCSSProps,
 }
 
 impl<'a> Cursor<'a> {
+    /// Create a new cursor.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    /// let help_button = Button::new().s(Cursor::new(CursorIcon::Help));
+    /// ```
     pub fn new(cursor_icon: impl Into<Option<CursorIcon<'a>>>) -> Self {
         let mut this = Self::default();
         if let Some(cursor_icon) = cursor_icon.into() {
@@ -19,6 +27,19 @@ impl<'a> Cursor<'a> {
         this
     }
 
+    /// Create a new cursor depending of the signal's state.
+    /// # Example
+    /// This example updates the cursor when the user clicks the button.
+    /// ```no_run
+    /// use zoon::*;
+    /// let (pressing, pressing_state) = Mutable::new_and_signal(false);
+    /// let help_button = Button::new()
+    ///     .s(Cursor::with_signal(
+    ///         pressing_state.map_bool(|| CursorIcon::Grab, || CursorIcon::Default),
+    ///     ))
+    ///     .on_click(move || pressing.set(!pressing.take()))
+    ///     .label("Click me");
+    /// ```
     pub fn with_signal(
         cursor_icon: impl Signal<Item = impl Into<Option<CursorIcon<'static>>>> + Unpin + 'static,
     ) -> Self {
