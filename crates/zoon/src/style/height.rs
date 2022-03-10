@@ -1,8 +1,11 @@
 use crate::*;
 
+/// Styling for height.
 #[derive(Default)]
 pub struct Height<'a> {
+    /// Static css properties used by zoon.
     static_css_props: StaticCSSProps<'a>,
+    /// Customizable css properties which can be added.
     dynamic_css_props: DynamicCSSProps,
     height_mode: HeightMode,
 }
@@ -21,6 +24,13 @@ impl Default for HeightMode {
 }
 
 impl<'a> Height<'a> {
+    /// Define the height with pixels for an element.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new().s(Height::new(50));
+    /// ```
     pub fn new(height: u32) -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("height", px(height));
@@ -28,6 +38,17 @@ impl<'a> Height<'a> {
         this
     }
 
+    /// Define the height with pixels depending of signal's state.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let (is_hovered, hover_signal) = Mutable::new_and_signal(false);
+    /// let button = Button::new()
+    ///     .s(Height::with_signal(hover_signal.map_bool(|| 50, || 100)))
+    ///     .on_hovered_change(move |hover| is_hovered.set(hover))
+    ///     .label("hover me");
+    /// ```
     pub fn with_signal(
         height: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
     ) -> Self {
@@ -39,6 +60,15 @@ impl<'a> Height<'a> {
         this
     }
 
+    /// Set the element height to fill its container or parent element.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(Height::fill())
+    ///     .label("Hover this giant button");
+    /// ```
     pub fn fill() -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("height", "100%");
@@ -46,6 +76,16 @@ impl<'a> Height<'a> {
         this
     }
 
+    /// THe element height will be the height of thw device screen or web
+    /// browser frame.
+    /// #Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(Height::screen())
+    ///     .label("Hover this giant button");
+    /// ```
     pub fn screen() -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("height", "100vh");
@@ -53,16 +93,44 @@ impl<'a> Height<'a> {
         this
     }
 
+    /// THe element minimum height will be the height of thw device screen or
+    /// web browser frame.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(Height::default().min_screen())
+    ///     .label("Hover this giant button");
+    /// ```
     pub fn min_screen(mut self) -> Self {
         self.static_css_props.insert("min-height", "100vh");
         self
     }
 
+    /// The element maximum height can be set by value in pixels.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(Height::default().max(150))
+    ///     .label("Hover this giant button");
+    /// ```
     pub fn max(mut self, height: u32) -> Self {
         self.static_css_props.insert("max-height", px(height));
         self
     }
 
+    /// Set the maximum element height to fill its container.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(Height::default().max_fill())
+    ///     .label("Hover this giant button");
+    /// ```
     pub fn max_fill(mut self) -> Self {
         self.static_css_props.insert("max-height", "100%");
         self
