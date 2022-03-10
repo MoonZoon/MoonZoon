@@ -1,12 +1,22 @@
+//! Set of colors available for use in Zoon. They can be used in every methods
+//! accepting [HSLuv] colors. The palette is based on <https://tailwindcss.com/docs/customizing-colors>
+//! ```no_run
+//! use zoon::{named_color::*, *};
+//!
+//! let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+//!
+//! let button = Button::new()
+//!     .s(Background::new().color_signal(hovered_signal.map_bool(|| GREEN_7, || GREEN_8)))
+//!     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered));
+//! ```
 use crate::*;
 
+/// Get `hsluv` value for the given color.
 macro_rules! color {
     ($color:ident => $h:literal, $s:literal, $l:literal) => {
         pub static $color: HSLuv = hsluv!($h, $s, $l);
     };
 }
-
-// The palette based on https://tailwindcss.com/docs/customizing-colors
 
 color!(GRAY_0 => 235.5, 22.1, 98.2);
 color!(GRAY_1 => 248.2, 18.5, 96.2);
