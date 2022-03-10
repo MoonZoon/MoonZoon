@@ -1,5 +1,7 @@
 use crate::*;
 
+/// Styling to define the value on the `z` axis for an element. It does
+/// translate to z-index in css.
 #[derive(Default)]
 pub struct LayerIndex<'a> {
     static_css_props: StaticCSSProps<'a>,
@@ -12,6 +14,21 @@ impl<'a> LayerIndex<'a> {
     pub const MIN_VALUE: i32 = i32::MIN + Self::MAX_VALUE_OFFSET;
     pub const MAX_VALUE: i32 = i32::MAX - Self::MAX_VALUE_OFFSET;
 
+    pub fn new(index: i32) -> Self {
+    /// Set the layer index for an element.
+    /// # Example
+    /// ```no_run
+    /// use zoon::{named_color::*, *};
+    ///
+    /// let contained_items = Column::new()
+    ///     .s(Background::new().color(GREEN_7))
+    ///     .item(
+    ///         Paragraph::new()
+    ///             .s(LayerIndex::new(-1))
+    ///             .content("Behind and trying to hide"),
+    ///     )
+    ///     .item(Paragraph::new().content("Front and you can see me"));
+    /// ```
     pub fn new(index: i32) -> Self {
         let mut this = Self::default();
         this.static_css_props
