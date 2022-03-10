@@ -1,5 +1,6 @@
 //! Set of colors available for use in Zoon. They can be used in every methods
 //! accepting [HSLuv] colors. The palette is based on <https://tailwindcss.com/docs/customizing-colors>
+//! # Example
 //! ```no_run
 //! use zoon::{named_color::*, *};
 //!
