@@ -24,7 +24,7 @@ fn rectangle() -> impl Element {
         .s(Background::new().color(GREEN_8))
         .s(Width::new(150))
         .s(Height::new(150))
-        .s(RoundedCorners::all(20))
+        .s(RoundedCorners::all_signal(radius().signal()))
 }
 
 fn rectangle_radius() -> impl Element {
@@ -42,7 +42,7 @@ fn slider() -> impl Element {
     RawHtmlEl::new("input")
         .attr("type", "range")
         .attr("min", "0")
-        .attr("max", "150")
+        .attr("max", "75")
         .attr_signal("value", radius().signal())
         .event_handler(|event: events::Input| {
             #[allow(deprecated)]

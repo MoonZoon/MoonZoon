@@ -35,17 +35,39 @@ impl Default for Radius {
 
 // ------ RoundedCorners ------
 
-#[derive(Debug, Default, Clone, Copy)]
+type RadiusSignal = Box<dyn Signal<Item = Radius> + 'static + Unpin>;
+
+fn new_radius_signal(radius: Radius) -> RadiusSignal {
+    Box::new(always(radius))
+}
+
 pub struct RoundedCorners {
-    top_left: Radius,
-    top_right: Radius,
-    bottom_left: Radius,
-    bottom_right: Radius,
+    top_left: RadiusSignal,
+    top_right: RadiusSignal,
+    bottom_left: RadiusSignal,
+    bottom_right: RadiusSignal,
+}
+
+impl Default for RoundedCorners {
+    fn default() -> Self {
+        Self {
+            top_left: new_radius_signal(Radius::default()),
+            top_right: new_radius_signal(Radius::default()),
+            bottom_left: new_radius_signal(Radius::default()),
+            bottom_right: new_radius_signal(Radius::default()),
+        }
+    }
 }
 
 impl RoundedCorners {
     pub fn all(radius: u32) -> Self {
         Self::default().top(radius).bottom(radius)
+    }
+
+    pub fn all_signal(all: impl Signal<Item = u32> + Unpin + 'static) -> Self {
+        let this = Self::default();
+        let all = Broadcaster::new(all);
+        this.top_signal(all.signal()).bottom_signal(all.signal())
     }
 
     pub fn all_max() -> Self {
@@ -56,12 +78,22 @@ impl RoundedCorners {
         self.top_left(radius).top_right(radius)
     }
 
+    pub fn top_signal(self, top: impl Signal<Item = u32> + Unpin + 'static) -> Self {
+        let top = Broadcaster::new(top);
+        self.top_left_signal(top.signal()).top_right_signal(top.signal())
+    }
+
     pub fn top_max(self) -> Self {
         self.top_left_max().top_right_max()
     }
 
     pub fn bottom(self, radius: u32) -> Self {
         self.bottom_left(radius).bottom_right(radius)
+    }
+
+    pub fn bottom_signal(self, bottom: impl Signal<Item = u32> + Unpin + 'static) -> Self {
+        let bottom = Broadcaster::new(bottom);
+        self.bottom_left_signal(bottom.signal()).bottom_right_signal(bottom.signal())
     }
 
     pub fn bottom_max(self) -> Self {
@@ -72,6 +104,11 @@ impl RoundedCorners {
         self.top_left(radius).bottom_left(radius)
     }
 
+    pub fn left_signal(self, left: impl Signal<Item = u32> + Unpin + 'static) -> Self {
+        let left = Broadcaster::new(left);
+        self.top_left_signal(left.signal()).bottom_left_signal(left.signal())
+    }
+
     pub fn left_max(self) -> Self {
         self.top_left_max().bottom_left_max()
     }
@@ -80,47 +117,72 @@ impl RoundedCorners {
         self.top_right(radius).bottom_right(radius)
     }
 
+    pub fn right_signal(self, right: impl Signal<Item = u32> + Unpin + 'static) -> Self {
+        let right = Broadcaster::new(right);
+        self.top_right_signal(right.signal()).bottom_right_signal(right.signal())
+    }
+
     pub fn right_max(self) -> Self {
         self.top_right_max().bottom_right_max()
     }
 
     pub fn top_left(mut self, radius: u32) -> Self {
-        self.top_left = Radius::Px(radius);
+        self.top_left = new_radius_signal(Radius::Px(radius));
+        self
+    }
+
+    pub fn top_left_signal(mut self, radius: impl Signal<Item = u32> + Unpin + 'static) -> Self {
+        self.top_left = Box::new(radius.map(|radius| Radius::Px(radius)));
         self
     }
 
     pub fn top_left_max(mut self) -> Self {
-        self.top_left = Radius::Max;
+        self.top_left = new_radius_signal(Radius::Max);
         self
     }
 
     pub fn top_right(mut self, radius: u32) -> Self {
-        self.top_right = Radius::Px(radius);
+        self.top_right = new_radius_signal(Radius::Px(radius));
+        self
+    }
+
+    pub fn top_right_signal(mut self, radius: impl Signal<Item = u32> + Unpin + 'static) -> Self {
+        self.top_right = Box::new(radius.map(|radius| Radius::Px(radius)));
         self
     }
 
     pub fn top_right_max(mut self) -> Self {
-        self.top_right = Radius::Max;
+        self.top_right = new_radius_signal(Radius::Max);
         self
     }
 
     pub fn bottom_left(mut self, radius: u32) -> Self {
-        self.bottom_left = Radius::Px(radius);
+        self.bottom_left = new_radius_signal(Radius::Px(radius));
+        self
+    }
+
+    pub fn bottom_left_signal(mut self, radius: impl Signal<Item = u32> + Unpin + 'static) -> Self {
+        self.bottom_left = Box::new(radius.map(|radius| Radius::Px(radius)));
         self
     }
 
     pub fn bottom_left_max(mut self) -> Self {
-        self.bottom_left = Radius::Max;
+        self.bottom_left = new_radius_signal(Radius::Max);
         self
     }
 
     pub fn bottom_right(mut self, radius: u32) -> Self {
-        self.bottom_right = Radius::Px(radius);
+        self.bottom_right = new_radius_signal(Radius::Px(radius));
+        self
+    }
+
+    pub fn bottom_right_signal(mut self, radius: impl Signal<Item = u32> + Unpin + 'static) -> Self {
+        self.bottom_right = Box::new(radius.map(|radius| Radius::Px(radius)));
         self
     }
 
     pub fn bottom_right_max(mut self) -> Self {
-        self.bottom_right = Radius::Max;
+        self.bottom_right = new_radius_signal(Radius::Max);
         self
     }
 }
@@ -137,8 +199,21 @@ impl<'a> Style<'a> for RoundedCorners {
             size_sender.send((width, height)).unwrap_throw();
         });
 
-        let border_radius_signal = size_receiver
-            .map(move |(width, height)| compute_radii(self, f64::from(width), f64::from(height)));
+        let border_radius_signal = map_ref! {
+            let top_left = self.top_left, 
+            let top_right = self.top_right, 
+            let bottom_left = self.bottom_left, 
+            let bottom_right = self.bottom_right, 
+            let (width, height) = size_receiver => 
+            compute_radii(
+                *top_left, 
+                *top_right, 
+                *bottom_left, 
+                *bottom_right, 
+                *width, 
+                *height,
+            )
+        };
 
         if let Some(mut style_group) = style_group {
             style_group = style_group.style_signal("border-radius", border_radius_signal);
@@ -151,15 +226,25 @@ impl<'a> Style<'a> for RoundedCorners {
 
 // https://css-tricks.com/what-happens-when-border-radii-overlap/
 // https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
-fn compute_radii(corners: RoundedCorners, width: f64, height: f64) -> String {
+fn compute_radii(
+    top_left: Radius, 
+    top_right: Radius, 
+    bottom_left: Radius, 
+    bottom_right: Radius, 
+    width: u32, 
+    height: u32,
+) -> String {
+    let width = f64::from(width);
+    let height = f64::from(height);
+
     // @TODO cache some parts? If/when signal methods are implemented?
     // @TODO bug in ResizeObserver on iOS? (see "Add Client" button in time_tracker example)
 
     let mut radii = [
-        corners.top_left.f64_pixels_or_zero(),
-        corners.top_right.f64_pixels_or_zero(),
-        corners.bottom_right.f64_pixels_or_zero(),
-        corners.bottom_left.f64_pixels_or_zero(),
+        top_left.f64_pixels_or_zero(),
+        top_right.f64_pixels_or_zero(),
+        bottom_right.f64_pixels_or_zero(),
+        bottom_left.f64_pixels_or_zero(),
     ];
 
     // It doesn't make sense to compute radii if the element is basically invisible.
@@ -201,19 +286,19 @@ fn compute_radii(corners: RoundedCorners, width: f64, height: f64) -> String {
 
     // each value represents a max radius when treating other Radius::Max as zeros
     let mut max_radii = [
-        corners.top_left.map_max_or_zero(|| {
+        top_left.map_max_or_zero(|| {
             // left & top
             f64::min(height - radii[3], width - radii[1])
         }),
-        corners.top_right.map_max_or_zero(|| {
+        top_right.map_max_or_zero(|| {
             // top & right sides
             f64::min(width - radii[0], height - radii[2])
         }),
-        corners.bottom_right.map_max_or_zero(|| {
+        bottom_right.map_max_or_zero(|| {
             // right & bottom sides
             f64::min(height - radii[1], width - radii[3])
         }),
-        corners.bottom_left.map_max_or_zero(|| {
+        bottom_left.map_max_or_zero(|| {
             // bottom & left sides
             f64::min(width - radii[2], height - radii[0])
         }),
