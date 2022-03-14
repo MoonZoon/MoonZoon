@@ -40,7 +40,7 @@ fn rectangle() -> impl Element {
         .s(Background::new().color(GREEN_8))
         .s(Width::new(150))
         .s(Height::new(150))
-        .s(RoundedCorners::all_signal(radius().signal()))
+        .s(RoundedCorners::all_signal(radius().signal().map(|_| Radius::Px(50))))
 }
 
 fn rectangle_radius() -> impl Element {

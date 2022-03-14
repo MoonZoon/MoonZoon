@@ -4,7 +4,7 @@ use futures_signals::signal::channel;
 // ------ Radius ------
 
 #[derive(Debug, Clone, Copy)]
-enum Radius {
+pub enum Radius {
     Px(u32),
     Max,
 }
@@ -30,6 +30,12 @@ impl Radius {
 impl Default for Radius {
     fn default() -> Self {
         Self::Px(0)
+    }
+}
+
+impl From<u32> for Radius {
+    fn from(radius: u32) -> Self {
+        Self::Px(radius)
     }
 }
 
@@ -68,9 +74,9 @@ impl RoundedCorners {
         Self::default().top(radius).bottom(radius)
     }
 
-    pub fn all_signal(all: impl Signal<Item = u32> + Unpin + 'static) -> Self {
+    pub fn all_signal(all: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
         let this = Self::default();
-        let all = Broadcaster::new(all);
+        let all = Broadcaster::new(all.map(Into::into));
         this.top_signal(all.signal()).bottom_signal(all.signal())
     }
 
@@ -82,8 +88,8 @@ impl RoundedCorners {
         self.top_left(radius).top_right(radius)
     }
 
-    pub fn top_signal(self, top: impl Signal<Item = u32> + Unpin + 'static) -> Self {
-        let top = Broadcaster::new(top);
+    pub fn top_signal(self, top: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
+        let top = Broadcaster::new(top.map(Into::into));
         self.top_left_signal(top.signal()).top_right_signal(top.signal())
     }
 
@@ -95,8 +101,8 @@ impl RoundedCorners {
         self.bottom_left(radius).bottom_right(radius)
     }
 
-    pub fn bottom_signal(self, bottom: impl Signal<Item = u32> + Unpin + 'static) -> Self {
-        let bottom = Broadcaster::new(bottom);
+    pub fn bottom_signal(self, bottom: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
+        let bottom = Broadcaster::new(bottom.map(Into::into));
         self.bottom_left_signal(bottom.signal()).bottom_right_signal(bottom.signal())
     }
 
@@ -108,8 +114,8 @@ impl RoundedCorners {
         self.top_left(radius).bottom_left(radius)
     }
 
-    pub fn left_signal(self, left: impl Signal<Item = u32> + Unpin + 'static) -> Self {
-        let left = Broadcaster::new(left);
+    pub fn left_signal(self, left: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
+        let left = Broadcaster::new(left.map(Into::into));
         self.top_left_signal(left.signal()).bottom_left_signal(left.signal())
     }
 
@@ -121,8 +127,8 @@ impl RoundedCorners {
         self.top_right(radius).bottom_right(radius)
     }
 
-    pub fn right_signal(self, right: impl Signal<Item = u32> + Unpin + 'static) -> Self {
-        let right = Broadcaster::new(right);
+    pub fn right_signal(self, right: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
+        let right = Broadcaster::new(right.map(Into::into));
         self.top_right_signal(right.signal()).bottom_right_signal(right.signal())
     }
 
@@ -135,8 +141,8 @@ impl RoundedCorners {
         self
     }
 
-    pub fn top_left_signal(mut self, radius: impl Signal<Item = u32> + Unpin + 'static) -> Self {
-        self.top_left = RadiusSignal::new_from_signal(radius.map(|radius| Radius::Px(radius)));
+    pub fn top_left_signal(mut self, radius: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
+        self.top_left = RadiusSignal::new_from_signal(radius.map(Into::into));
         self
     }
 
@@ -150,8 +156,8 @@ impl RoundedCorners {
         self
     }
 
-    pub fn top_right_signal(mut self, radius: impl Signal<Item = u32> + Unpin + 'static) -> Self {
-        self.top_right = RadiusSignal::new_from_signal(radius.map(|radius| Radius::Px(radius)));
+    pub fn top_right_signal(mut self, radius: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
+        self.top_right = RadiusSignal::new_from_signal(radius.map(Into::into));
         self
     }
 
@@ -165,8 +171,8 @@ impl RoundedCorners {
         self
     }
 
-    pub fn bottom_left_signal(mut self, radius: impl Signal<Item = u32> + Unpin + 'static) -> Self {
-        self.bottom_left = RadiusSignal::new_from_signal(radius.map(|radius| Radius::Px(radius)));
+    pub fn bottom_left_signal(mut self, radius: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
+        self.bottom_left = RadiusSignal::new_from_signal(radius.map(Into::into));
         self
     }
 
@@ -180,8 +186,8 @@ impl RoundedCorners {
         self
     }
 
-    pub fn bottom_right_signal(mut self, radius: impl Signal<Item = u32> + Unpin + 'static) -> Self {
-        self.bottom_right = RadiusSignal::new_from_signal(radius.map(|radius| Radius::Px(radius)));
+    pub fn bottom_right_signal(mut self, radius: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
+        self.bottom_right = RadiusSignal::new_from_signal(radius.map(Into::into));
         self
     }
 
