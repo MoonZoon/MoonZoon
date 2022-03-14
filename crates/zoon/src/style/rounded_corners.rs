@@ -3,7 +3,7 @@ use futures_signals::signal::channel;
 
 // ------ Radius ------
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Radius {
     Px(u32),
     Max,
