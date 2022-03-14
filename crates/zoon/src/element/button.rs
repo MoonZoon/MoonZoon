@@ -13,7 +13,7 @@ make_flags!(Label, OnPress);
 /// styling from regular Html buttons.
 /// You can create a new button by using its constructor and chain styling.
 ///
-/// # Examples
+/// # Example
 /// ```no_run
 /// use zoon::*;
 /// let button = Button::new().s(Align::center()).s(Padding::all(5));
