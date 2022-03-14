@@ -374,7 +374,7 @@ impl<
 
     pub fn text_signal(
         mut self,
-        text: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static,
+        text: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
     ) -> TextInput<
         IdFlag,
         OnChangeFlag,
@@ -387,6 +387,9 @@ impl<
     where
         TextFlag: FlagNotSet,
     {
+        let text = text.map(|text| {
+            text.into_option_cow_str().unwrap_or_default()
+        });
         self.raw_el = self.raw_el.prop_signal("value", text);
         self.into_type()
     }
