@@ -39,7 +39,7 @@ mod padding;
 pub use padding::Padding;
 
 mod rounded_corners;
-pub use rounded_corners::{RoundedCorners, Radius};
+pub use rounded_corners::{RoundedCorners, Radius, IntoOptionRadius};
 
 mod scrollbars;
 pub use scrollbars::Scrollbars;
