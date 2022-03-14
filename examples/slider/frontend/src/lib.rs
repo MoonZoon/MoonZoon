@@ -9,6 +9,11 @@ fn radius() -> &'static Mutable<u32> {
     Mutable::new(20)
 }
 
+#[static_ref]
+fn radius_max() -> &'static Mutable<bool> {
+    Mutable::new(false)
+}
+
 // ------ ------
 //   Commands
 // ------ ------
@@ -17,9 +22,25 @@ fn set_radius(new_radius: u32) {
     radius().set_neq(new_radius);
 }
 
+fn set_radius_max(is_max: bool) {
+    radius_max().set_neq(is_max);
+}
+
 // ------ ------
 //    Signals
 // ------ ------
+
+fn radius_signal() -> impl Signal<Item = Radius> {
+    map_ref! {
+        let radius = radius().signal(),
+        let is_max = radius_max().signal() =>
+        if *is_max {
+            Radius::Max
+        } else {
+            Radius::Px(*radius)
+        }
+    }
+}
 
 // ------ ------
 //     View
@@ -32,6 +53,7 @@ fn root() -> impl Element {
         .item(rectangle())
         .item(rectangle_radius())
         .item(slider())
+        .item(max_panel())
 }
 
 fn rectangle() -> impl Element {
@@ -40,7 +62,7 @@ fn rectangle() -> impl Element {
         .s(Background::new().color(GREEN_8))
         .s(Width::new(150))
         .s(Height::new(150))
-        .s(RoundedCorners::all_signal(radius().signal()))
+        .s(RoundedCorners::all_signal(radius_signal()))
 }
 
 fn rectangle_radius() -> impl Element {
@@ -69,6 +91,32 @@ fn slider() -> impl Element {
                 .expect("u32 value");
             set_radius(value)
         })
+}
+
+fn max_panel() -> impl Element {
+    let checkbox_id = "max_checkbox";
+    Row::new()
+        .s(Align::new().center_x())
+        .s(Spacing::new(5))
+        .item(max_label(checkbox_id))
+        .item(max_checkbox(checkbox_id))
+
+}
+
+fn max_label(checkbox_id: &str) -> impl Element {
+    Label::new()
+        .label("Max")
+        .for_input(checkbox_id)
+        .text_content_selecting(TextContentSelecting::none())
+
+}
+
+fn max_checkbox(checkbox_id: &str) -> impl Element {
+    Checkbox::new()
+        .id(checkbox_id)
+        .icon(|checked| checkbox::default_icon(checked.signal()))
+        .checked_signal(radius_max().signal())
+        .on_change(set_radius_max)
 }
 
 // ------ ------

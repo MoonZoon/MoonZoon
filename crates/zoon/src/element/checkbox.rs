@@ -43,6 +43,8 @@ impl
                     }),
                 )
                 .style("cursor", "pointer")
+                .style("display", "inline-flex")
+                .style("flex-direction", "column")
                 .event_handler(move |_: events::Click| {
                     check_state.update(|check_state| match check_state {
                         CheckState::NotSet => CheckState::FirstValue(true),
