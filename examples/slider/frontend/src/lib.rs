@@ -1,13 +1,29 @@
 use zoon::{*, named_color::*};
 
+// ------ ------
+//    States
+// ------ ------
+
 #[static_ref]
 fn radius() -> &'static Mutable<u32> {
     Mutable::new(20)
 }
 
+// ------ ------
+//   Commands
+// ------ ------
+
 fn set_radius(new_radius: u32) {
     radius().set_neq(new_radius);
 }
+
+// ------ ------
+//    Signals
+// ------ ------
+
+// ------ ------
+//     View
+// ------ ------
 
 fn root() -> impl Element {
     Column::new()
@@ -54,6 +70,10 @@ fn slider() -> impl Element {
             set_radius(value)
         })
 }
+
+// ------ ------
+//     Start
+// ------ ------
 
 #[wasm_bindgen(start)]
 pub fn start() {
