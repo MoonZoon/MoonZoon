@@ -30,8 +30,6 @@ impl LazyMessageWriter {
             let qr_code = QrCode::new(&url)
                 .expect("failed to create a QR code with the server url")
                 .render::<QrUnicode::Dense1x2>()
-                .dark_color(QrUnicode::Dense1x2::Light)
-                .light_color(QrUnicode::Dense1x2::Dark)
                 .quiet_zone(false)
                 .build();
 
