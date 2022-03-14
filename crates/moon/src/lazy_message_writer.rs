@@ -1,7 +1,7 @@
 use crate::config::Config;
 use local_ip_address::local_ip;
-use std::io::{self, stdout, Write};
-use std::net::SocketAddr;
+use std::{io::{self, stdout, Write}, net::SocketAddr};
+use qrcode::{QrCode, render::unicode as QrUnicode};
 
 pub struct LazyMessageWriter(Vec<u8>);
 
@@ -22,9 +22,19 @@ impl LazyMessageWriter {
             "Server is running on {protocol}://{address} [{protocol}://localhost:{port}]",
         )?;
         if let Ok(ip) = local_ip() {
+            let url = format!("{protocol}://{ip}:{port}");
+
+            let qr_code = QrCode::new(&url)
+                .expect("failed to create a QR code with the server url")
+                .render::<QrUnicode::Dense1x2>()
+                .dark_color(QrUnicode::Dense1x2::Light)
+                .light_color(QrUnicode::Dense1x2::Dark)
+                .quiet_zone(false)
+                .build();
+
             writeln!(
                 &mut self.0,
-                "Server URL on the local network: {protocol}://{ip}:{port}",
+                "Server URL on the local network: {url}\n{qr_code}",
             )?;
         }
         Ok(())
