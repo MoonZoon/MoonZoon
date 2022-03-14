@@ -62,8 +62,8 @@ impl<T: Into<Radius>> IntoOptionRadius for Option<T> {
 struct RadiusSignal(Box<dyn Signal<Item = Option<Radius>> + 'static + Unpin>);
 
 impl RadiusSignal {
-    fn new_from_value(radius: Radius) -> Self {
-        Self(Box::new(always(Some(radius))))
+    fn new_from_value(radius: impl Into<Radius>) -> Self {
+        Self(Box::new(always(Some(radius.into()))))
     }
 
     fn new_from_signal(radius: impl Signal<Item = impl IntoOptionRadius> + 'static + Unpin) -> Self {
@@ -102,7 +102,8 @@ impl RoundedCorners {
         Self::default().top_max().bottom_max()
     }
 
-    pub fn top(self, radius: u32) -> Self {
+    pub fn top(self, radius: impl Into<Radius>) -> Self {
+        let radius = radius.into();
         self.top_left(radius).top_right(radius)
     }
 
@@ -115,7 +116,8 @@ impl RoundedCorners {
         self.top_left_max().top_right_max()
     }
 
-    pub fn bottom(self, radius: u32) -> Self {
+    pub fn bottom(self, radius: impl Into<Radius>) -> Self {
+        let radius = radius.into();
         self.bottom_left(radius).bottom_right(radius)
     }
 
@@ -128,7 +130,8 @@ impl RoundedCorners {
         self.bottom_left_max().bottom_right_max()
     }
 
-    pub fn left(self, radius: u32) -> Self {
+    pub fn left(self, radius: impl Into<Radius>) -> Self {
+        let radius = radius.into();
         self.top_left(radius).bottom_left(radius)
     }
 
@@ -141,7 +144,8 @@ impl RoundedCorners {
         self.top_left_max().bottom_left_max()
     }
 
-    pub fn right(self, radius: u32) -> Self {
+    pub fn right(self, radius: impl Into<Radius>) -> Self {
+        let radius = radius.into();
         self.top_right(radius).bottom_right(radius)
     }
 
@@ -154,8 +158,8 @@ impl RoundedCorners {
         self.top_right_max().bottom_right_max()
     }
 
-    pub fn top_left(mut self, radius: u32) -> Self {
-        self.top_left = RadiusSignal::new_from_value(Radius::Px(radius));
+    pub fn top_left(mut self, radius: impl Into<Radius>) -> Self {
+        self.top_left = RadiusSignal::new_from_value(radius);
         self
     }
 
@@ -169,8 +173,8 @@ impl RoundedCorners {
         self
     }
 
-    pub fn top_right(mut self, radius: u32) -> Self {
-        self.top_right = RadiusSignal::new_from_value(Radius::Px(radius));
+    pub fn top_right(mut self, radius: impl Into<Radius>) -> Self {
+        self.top_right = RadiusSignal::new_from_value(radius);
         self
     }
 
@@ -184,8 +188,8 @@ impl RoundedCorners {
         self
     }
 
-    pub fn bottom_left(mut self, radius: u32) -> Self {
-        self.bottom_left = RadiusSignal::new_from_value(Radius::Px(radius));
+    pub fn bottom_left(mut self, radius: impl Into<Radius>) -> Self {
+        self.bottom_left = RadiusSignal::new_from_value(radius);
         self
     }
 
@@ -199,8 +203,8 @@ impl RoundedCorners {
         self
     }
 
-    pub fn bottom_right(mut self, radius: u32) -> Self {
-        self.bottom_right = RadiusSignal::new_from_value(Radius::Px(radius));
+    pub fn bottom_right(mut self, radius: impl Into<Radius>) -> Self {
+        self.bottom_right = RadiusSignal::new_from_value(radius);
         self
     }
 
