@@ -39,17 +39,35 @@ impl From<u32> for Radius {
     }
 }
 
+// ------ IntoOptionRadius ------
+
+pub trait IntoOptionRadius {
+    fn into_option_radius(self) -> Option<Radius>;
+}
+
+impl<T: Into<Radius>> IntoOptionRadius for T {
+    fn into_option_radius(self) -> Option<Radius> {
+        Some(self.into())
+    }
+}
+
+impl<T: Into<Radius>> IntoOptionRadius for Option<T> {
+    fn into_option_radius(self) -> Option<Radius> {
+        self.map(Into::into)
+    }
+}
+
 // ------ RadiusSignal ------
 
-struct RadiusSignal(Box<dyn Signal<Item = Radius> + 'static + Unpin>);
+struct RadiusSignal(Box<dyn Signal<Item = Option<Radius>> + 'static + Unpin>);
 
 impl RadiusSignal {
     fn new_from_value(radius: Radius) -> Self {
-        Self(Box::new(always(radius)))
+        Self(Box::new(always(Some(radius))))
     }
 
-    fn new_from_signal(radius: impl Signal<Item = Radius> + 'static + Unpin) -> Self {
-        Self(Box::new(radius))
+    fn new_from_signal(radius: impl Signal<Item = impl IntoOptionRadius> + 'static + Unpin) -> Self {
+        Self(Box::new(radius.map(|radius| radius.into_option_radius())))
     }
 }
 
@@ -74,9 +92,9 @@ impl RoundedCorners {
         Self::default().top(radius).bottom(radius)
     }
 
-    pub fn all_signal(all: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
+    pub fn all_signal(all: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
         let this = Self::default();
-        let all = Broadcaster::new(all.map(Into::into));
+        let all = Broadcaster::new(all.map(|radius| radius.into_option_radius()));
         this.top_signal(all.signal()).bottom_signal(all.signal())
     }
 
@@ -88,8 +106,8 @@ impl RoundedCorners {
         self.top_left(radius).top_right(radius)
     }
 
-    pub fn top_signal(self, top: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
-        let top = Broadcaster::new(top.map(Into::into));
+    pub fn top_signal(self, top: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+        let top = Broadcaster::new(top.map(|radius| radius.into_option_radius()));
         self.top_left_signal(top.signal()).top_right_signal(top.signal())
     }
 
@@ -101,8 +119,8 @@ impl RoundedCorners {
         self.bottom_left(radius).bottom_right(radius)
     }
 
-    pub fn bottom_signal(self, bottom: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
-        let bottom = Broadcaster::new(bottom.map(Into::into));
+    pub fn bottom_signal(self, bottom: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+        let bottom = Broadcaster::new(bottom.map(|radius| radius.into_option_radius()));
         self.bottom_left_signal(bottom.signal()).bottom_right_signal(bottom.signal())
     }
 
@@ -114,8 +132,8 @@ impl RoundedCorners {
         self.top_left(radius).bottom_left(radius)
     }
 
-    pub fn left_signal(self, left: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
-        let left = Broadcaster::new(left.map(Into::into));
+    pub fn left_signal(self, left: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+        let left = Broadcaster::new(left.map(|radius| radius.into_option_radius()));
         self.top_left_signal(left.signal()).bottom_left_signal(left.signal())
     }
 
@@ -127,8 +145,8 @@ impl RoundedCorners {
         self.top_right(radius).bottom_right(radius)
     }
 
-    pub fn right_signal(self, right: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
-        let right = Broadcaster::new(right.map(Into::into));
+    pub fn right_signal(self, right: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+        let right = Broadcaster::new(right.map(|radius| radius.into_option_radius()));
         self.top_right_signal(right.signal()).bottom_right_signal(right.signal())
     }
 
@@ -141,8 +159,8 @@ impl RoundedCorners {
         self
     }
 
-    pub fn top_left_signal(mut self, radius: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
-        self.top_left = RadiusSignal::new_from_signal(radius.map(Into::into));
+    pub fn top_left_signal(mut self, radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+        self.top_left = RadiusSignal::new_from_signal(radius);
         self
     }
 
@@ -156,8 +174,8 @@ impl RoundedCorners {
         self
     }
 
-    pub fn top_right_signal(mut self, radius: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
-        self.top_right = RadiusSignal::new_from_signal(radius.map(Into::into));
+    pub fn top_right_signal(mut self, radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+        self.top_right = RadiusSignal::new_from_signal(radius);
         self
     }
 
@@ -171,8 +189,8 @@ impl RoundedCorners {
         self
     }
 
-    pub fn bottom_left_signal(mut self, radius: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
-        self.bottom_left = RadiusSignal::new_from_signal(radius.map(Into::into));
+    pub fn bottom_left_signal(mut self, radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+        self.bottom_left = RadiusSignal::new_from_signal(radius);
         self
     }
 
@@ -186,8 +204,8 @@ impl RoundedCorners {
         self
     }
 
-    pub fn bottom_right_signal(mut self, radius: impl Signal<Item = impl Into<Radius> + 'static> + Unpin + 'static) -> Self {
-        self.bottom_right = RadiusSignal::new_from_signal(radius.map(Into::into));
+    pub fn bottom_right_signal(mut self, radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+        self.bottom_right = RadiusSignal::new_from_signal(radius);
         self
     }
 
@@ -216,10 +234,10 @@ impl<'a> Style<'a> for RoundedCorners {
             let bottom_right = self.bottom_right.0, 
             let (width, height) = size_receiver => 
             compute_radii(
-                *top_left, 
-                *top_right, 
-                *bottom_left, 
-                *bottom_right, 
+                top_left.unwrap_or_default(), 
+                top_right.unwrap_or_default(), 
+                bottom_left.unwrap_or_default(), 
+                bottom_right.unwrap_or_default(), 
                 *width, 
                 *height,
             )
