@@ -66,7 +66,9 @@ impl RadiusSignal {
         Self(Box::new(always(Some(radius.into()))))
     }
 
-    fn new_from_signal(radius: impl Signal<Item = impl IntoOptionRadius> + 'static + Unpin) -> Self {
+    fn new_from_signal(
+        radius: impl Signal<Item = impl IntoOptionRadius> + 'static + Unpin,
+    ) -> Self {
         Self(Box::new(radius.map(|radius| radius.into_option_radius())))
     }
 }
@@ -107,9 +109,13 @@ impl RoundedCorners {
         self.top_left(radius).top_right(radius)
     }
 
-    pub fn top_signal(self, top: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+    pub fn top_signal(
+        self,
+        top: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
+    ) -> Self {
         let top = Broadcaster::new(top.map(|radius| radius.into_option_radius()));
-        self.top_left_signal(top.signal()).top_right_signal(top.signal())
+        self.top_left_signal(top.signal())
+            .top_right_signal(top.signal())
     }
 
     pub fn top_max(self) -> Self {
@@ -121,9 +127,13 @@ impl RoundedCorners {
         self.bottom_left(radius).bottom_right(radius)
     }
 
-    pub fn bottom_signal(self, bottom: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+    pub fn bottom_signal(
+        self,
+        bottom: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
+    ) -> Self {
         let bottom = Broadcaster::new(bottom.map(|radius| radius.into_option_radius()));
-        self.bottom_left_signal(bottom.signal()).bottom_right_signal(bottom.signal())
+        self.bottom_left_signal(bottom.signal())
+            .bottom_right_signal(bottom.signal())
     }
 
     pub fn bottom_max(self) -> Self {
@@ -135,9 +145,13 @@ impl RoundedCorners {
         self.top_left(radius).bottom_left(radius)
     }
 
-    pub fn left_signal(self, left: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+    pub fn left_signal(
+        self,
+        left: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
+    ) -> Self {
         let left = Broadcaster::new(left.map(|radius| radius.into_option_radius()));
-        self.top_left_signal(left.signal()).bottom_left_signal(left.signal())
+        self.top_left_signal(left.signal())
+            .bottom_left_signal(left.signal())
     }
 
     pub fn left_max(self) -> Self {
@@ -149,9 +163,13 @@ impl RoundedCorners {
         self.top_right(radius).bottom_right(radius)
     }
 
-    pub fn right_signal(self, right: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+    pub fn right_signal(
+        self,
+        right: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
+    ) -> Self {
         let right = Broadcaster::new(right.map(|radius| radius.into_option_radius()));
-        self.top_right_signal(right.signal()).bottom_right_signal(right.signal())
+        self.top_right_signal(right.signal())
+            .bottom_right_signal(right.signal())
     }
 
     pub fn right_max(self) -> Self {
@@ -163,7 +181,10 @@ impl RoundedCorners {
         self
     }
 
-    pub fn top_left_signal(mut self, radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+    pub fn top_left_signal(
+        mut self,
+        radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
+    ) -> Self {
         self.top_left = RadiusSignal::new_from_signal(radius);
         self
     }
@@ -178,7 +199,10 @@ impl RoundedCorners {
         self
     }
 
-    pub fn top_right_signal(mut self, radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+    pub fn top_right_signal(
+        mut self,
+        radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
+    ) -> Self {
         self.top_right = RadiusSignal::new_from_signal(radius);
         self
     }
@@ -193,7 +217,10 @@ impl RoundedCorners {
         self
     }
 
-    pub fn bottom_left_signal(mut self, radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+    pub fn bottom_left_signal(
+        mut self,
+        radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
+    ) -> Self {
         self.bottom_left = RadiusSignal::new_from_signal(radius);
         self
     }
@@ -208,7 +235,10 @@ impl RoundedCorners {
         self
     }
 
-    pub fn bottom_right_signal(mut self, radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static) -> Self {
+    pub fn bottom_right_signal(
+        mut self,
+        radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
+    ) -> Self {
         self.bottom_right = RadiusSignal::new_from_signal(radius);
         self
     }
@@ -232,17 +262,17 @@ impl<'a> Style<'a> for RoundedCorners {
         });
 
         let border_radius_signal = map_ref! {
-            let top_left = self.top_left.0, 
-            let top_right = self.top_right.0, 
-            let bottom_left = self.bottom_left.0, 
-            let bottom_right = self.bottom_right.0, 
-            let (width, height) = size_receiver => 
+            let top_left = self.top_left.0,
+            let top_right = self.top_right.0,
+            let bottom_left = self.bottom_left.0,
+            let bottom_right = self.bottom_right.0,
+            let (width, height) = size_receiver =>
             compute_radii(
-                top_left.unwrap_or_default(), 
-                top_right.unwrap_or_default(), 
-                bottom_left.unwrap_or_default(), 
-                bottom_right.unwrap_or_default(), 
-                *width, 
+                top_left.unwrap_or_default(),
+                top_right.unwrap_or_default(),
+                bottom_left.unwrap_or_default(),
+                bottom_right.unwrap_or_default(),
+                *width,
                 *height,
             )
         };
@@ -259,11 +289,11 @@ impl<'a> Style<'a> for RoundedCorners {
 // https://css-tricks.com/what-happens-when-border-radii-overlap/
 // https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
 fn compute_radii(
-    top_left: Radius, 
-    top_right: Radius, 
-    bottom_left: Radius, 
-    bottom_right: Radius, 
-    width: u32, 
+    top_left: Radius,
+    top_right: Radius,
+    bottom_left: Radius,
+    bottom_right: Radius,
+    width: u32,
     height: u32,
 ) -> String {
     let width = f64::from(width);
