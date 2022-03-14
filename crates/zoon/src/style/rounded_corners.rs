@@ -33,30 +33,34 @@ impl Default for Radius {
     }
 }
 
-// ------ RoundedCorners ------
+// ------ RadiusSignal ------
 
-type RadiusSignal = Box<dyn Signal<Item = Radius> + 'static + Unpin>;
+struct RadiusSignal(Box<dyn Signal<Item = Radius> + 'static + Unpin>);
 
-fn new_radius_signal(radius: Radius) -> RadiusSignal {
-    Box::new(always(radius))
+impl RadiusSignal {
+    fn new_from_value(radius: Radius) -> Self {
+        Self(Box::new(always(radius)))
+    }
+
+    fn new_from_signal(radius: impl Signal<Item = Radius> + 'static + Unpin) -> Self {
+        Self(Box::new(radius))
+    }
 }
 
+impl Default for RadiusSignal {
+    fn default() -> Self {
+        Self::new_from_value(Radius::default())
+    }
+}
+
+// ------ RoundedCorners ------
+
+#[derive(Default)]
 pub struct RoundedCorners {
     top_left: RadiusSignal,
     top_right: RadiusSignal,
     bottom_left: RadiusSignal,
     bottom_right: RadiusSignal,
-}
-
-impl Default for RoundedCorners {
-    fn default() -> Self {
-        Self {
-            top_left: new_radius_signal(Radius::default()),
-            top_right: new_radius_signal(Radius::default()),
-            bottom_left: new_radius_signal(Radius::default()),
-            bottom_right: new_radius_signal(Radius::default()),
-        }
-    }
 }
 
 impl RoundedCorners {
@@ -127,62 +131,62 @@ impl RoundedCorners {
     }
 
     pub fn top_left(mut self, radius: u32) -> Self {
-        self.top_left = new_radius_signal(Radius::Px(radius));
+        self.top_left = RadiusSignal::new_from_value(Radius::Px(radius));
         self
     }
 
     pub fn top_left_signal(mut self, radius: impl Signal<Item = u32> + Unpin + 'static) -> Self {
-        self.top_left = Box::new(radius.map(|radius| Radius::Px(radius)));
+        self.top_left = RadiusSignal::new_from_signal(radius.map(|radius| Radius::Px(radius)));
         self
     }
 
     pub fn top_left_max(mut self) -> Self {
-        self.top_left = new_radius_signal(Radius::Max);
+        self.top_left = RadiusSignal::new_from_value(Radius::Max);
         self
     }
 
     pub fn top_right(mut self, radius: u32) -> Self {
-        self.top_right = new_radius_signal(Radius::Px(radius));
+        self.top_right = RadiusSignal::new_from_value(Radius::Px(radius));
         self
     }
 
     pub fn top_right_signal(mut self, radius: impl Signal<Item = u32> + Unpin + 'static) -> Self {
-        self.top_right = Box::new(radius.map(|radius| Radius::Px(radius)));
+        self.top_right = RadiusSignal::new_from_signal(radius.map(|radius| Radius::Px(radius)));
         self
     }
 
     pub fn top_right_max(mut self) -> Self {
-        self.top_right = new_radius_signal(Radius::Max);
+        self.top_right = RadiusSignal::new_from_value(Radius::Max);
         self
     }
 
     pub fn bottom_left(mut self, radius: u32) -> Self {
-        self.bottom_left = new_radius_signal(Radius::Px(radius));
+        self.bottom_left = RadiusSignal::new_from_value(Radius::Px(radius));
         self
     }
 
     pub fn bottom_left_signal(mut self, radius: impl Signal<Item = u32> + Unpin + 'static) -> Self {
-        self.bottom_left = Box::new(radius.map(|radius| Radius::Px(radius)));
+        self.bottom_left = RadiusSignal::new_from_signal(radius.map(|radius| Radius::Px(radius)));
         self
     }
 
     pub fn bottom_left_max(mut self) -> Self {
-        self.bottom_left = new_radius_signal(Radius::Max);
+        self.bottom_left = RadiusSignal::new_from_value(Radius::Max);
         self
     }
 
     pub fn bottom_right(mut self, radius: u32) -> Self {
-        self.bottom_right = new_radius_signal(Radius::Px(radius));
+        self.bottom_right = RadiusSignal::new_from_value(Radius::Px(radius));
         self
     }
 
     pub fn bottom_right_signal(mut self, radius: impl Signal<Item = u32> + Unpin + 'static) -> Self {
-        self.bottom_right = Box::new(radius.map(|radius| Radius::Px(radius)));
+        self.bottom_right = RadiusSignal::new_from_signal(radius.map(|radius| Radius::Px(radius)));
         self
     }
 
     pub fn bottom_right_max(mut self) -> Self {
-        self.bottom_right = new_radius_signal(Radius::Max);
+        self.bottom_right = RadiusSignal::new_from_value(Radius::Max);
         self
     }
 }
@@ -200,10 +204,10 @@ impl<'a> Style<'a> for RoundedCorners {
         });
 
         let border_radius_signal = map_ref! {
-            let top_left = self.top_left, 
-            let top_right = self.top_right, 
-            let bottom_left = self.bottom_left, 
-            let bottom_right = self.bottom_right, 
+            let top_left = self.top_left.0, 
+            let top_right = self.top_right.0, 
+            let bottom_left = self.bottom_left.0, 
+            let bottom_right = self.bottom_right.0, 
             let (width, height) = size_receiver => 
             compute_radii(
                 *top_left, 
@@ -337,6 +341,8 @@ fn compute_radii(
         radii[3]
     )
 }
+
+// @TODO remove or integrate to an existing example (e.g. slider) or to a new one?
 
 //         .item(test_a())
 //         .item(test_a2())
