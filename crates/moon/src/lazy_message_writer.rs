@@ -1,7 +1,10 @@
 use crate::config::Config;
 use local_ip_address::local_ip;
-use std::{io::{self, stdout, Write}, net::SocketAddr};
-use qrcode::{QrCode, render::unicode as QrUnicode};
+use qrcode::{render::unicode as QrUnicode, QrCode};
+use std::{
+    io::{self, stdout, Write},
+    net::SocketAddr,
+};
 
 pub struct LazyMessageWriter(Vec<u8>);
 

@@ -387,9 +387,7 @@ impl<
     where
         TextFlag: FlagNotSet,
     {
-        let text = text.map(|text| {
-            text.into_option_cow_str().unwrap_or_default()
-        });
+        let text = text.map(|text| text.into_option_cow_str().unwrap_or_default());
         self.raw_el = self.raw_el.prop_signal("value", text);
         self.into_type()
     }
