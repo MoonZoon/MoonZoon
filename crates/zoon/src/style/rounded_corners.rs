@@ -2,9 +2,9 @@ use crate::*;
 use futures_signals::signal::channel;
 
 // ------ Radius ------
-
+/// Define radius for rounded corners with pixels.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Radius {
+enum Radius {
     Px(u32),
     Max,
 }
@@ -80,7 +80,8 @@ impl Default for RadiusSignal {
 }
 
 // ------ RoundedCorners ------
-
+/// Define rounded corners. It does translate to css `border-radius` for web.
+/// More information at <https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius>.
 #[derive(Default)]
 pub struct RoundedCorners {
     top_left: RadiusSignal,
@@ -90,6 +91,13 @@ pub struct RoundedCorners {
 }
 
 impl RoundedCorners {
+    /// Set radius for top and bottom corners.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new().s(RoundedCorners::all(10)).label("Click me");
+    /// ```
     pub fn all(radius: u32) -> Self {
         Self::default().top(radius).bottom(radius)
     }
@@ -100,12 +108,29 @@ impl RoundedCorners {
         this.top_signal(all.signal()).bottom_signal(all.signal())
     }
 
+    /// Set radius to maximum value for top and bottom corners.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new().s(RoundedCorners::all_max()).label("Click me");
+    /// ```
     pub fn all_max() -> Self {
         Self::default().top_max().bottom_max()
     }
 
     pub fn top(self, radius: impl Into<Radius>) -> Self {
         let radius = radius.into();
+    /// Set radius for top corners.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().top(10))
+    ///     .label("Click me");
+    /// ```
+    pub fn top(self, radius: u32) -> Self {
         self.top_left(radius).top_right(radius)
     }
 
@@ -118,12 +143,31 @@ impl RoundedCorners {
             .top_right_signal(top.signal())
     }
 
+    /// Set radius to maximum for top corners.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().top_max())
+    ///     .label("Click me");
+    /// ```
     pub fn top_max(self) -> Self {
         self.top_left_max().top_right_max()
     }
 
     pub fn bottom(self, radius: impl Into<Radius>) -> Self {
         let radius = radius.into();
+    /// Set radius for bottom corners.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().bottom(10))
+    ///     .label("Click me");
+    /// ```
+    pub fn bottom(self, radius: u32) -> Self {
         self.bottom_left(radius).bottom_right(radius)
     }
 
@@ -136,12 +180,31 @@ impl RoundedCorners {
             .bottom_right_signal(bottom.signal())
     }
 
+    /// Set radius to maximum for bottom corners.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().bottom_max())
+    ///     .label("Click me");
+    /// ```
     pub fn bottom_max(self) -> Self {
         self.bottom_left_max().bottom_right_max()
     }
 
     pub fn left(self, radius: impl Into<Radius>) -> Self {
         let radius = radius.into();
+    /// Set radius for left corners.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().left(10))
+    ///     .label("Click me");
+    /// ```
+    pub fn left(self, radius: u32) -> Self {
         self.top_left(radius).bottom_left(radius)
     }
 
@@ -154,12 +217,31 @@ impl RoundedCorners {
             .bottom_left_signal(left.signal())
     }
 
+    /// Set radius to maximum for left corners.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().left_max())
+    ///     .label("Click me");
+    /// ```
     pub fn left_max(self) -> Self {
         self.top_left_max().bottom_left_max()
     }
 
     pub fn right(self, radius: impl Into<Radius>) -> Self {
         let radius = radius.into();
+    /// Set radius for right corners.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().right(10))
+    ///     .label("Click me");
+    /// ```
+    pub fn right(self, radius: u32) -> Self {
         self.top_right(radius).bottom_right(radius)
     }
 
@@ -172,6 +254,15 @@ impl RoundedCorners {
             .bottom_right_signal(right.signal())
     }
 
+    /// Set radius to maximum for right corners.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().right_max())
+    ///     .label("Click me");
+    /// ```
     pub fn right_max(self) -> Self {
         self.top_right_max().bottom_right_max()
     }
@@ -186,9 +277,29 @@ impl RoundedCorners {
         radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
     ) -> Self {
         self.top_left = RadiusSignal::new_from_signal(radius);
+    /// Set radius for the top left corner.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().top_left(10))
+    ///     .label("Click me");
+    /// ```
+    pub fn top_left(mut self, radius: u32) -> Self {
+        self.top_left = Radius::Px(radius);
         self
     }
 
+    /// Set radius to maximum for the top left corner.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().top_left_max())
+    ///     .label("Click me");
+    /// ```
     pub fn top_left_max(mut self) -> Self {
         self.top_left = RadiusSignal::new_from_value(Radius::Max);
         self
@@ -204,9 +315,29 @@ impl RoundedCorners {
         radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
     ) -> Self {
         self.top_right = RadiusSignal::new_from_signal(radius);
+    /// Set radius for the top right corner.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().top_right(10))
+    ///     .label("Click me");
+    /// ```
+    pub fn top_right(mut self, radius: u32) -> Self {
+        self.top_right = Radius::Px(radius);
         self
     }
 
+    /// Set radius to maximum for the top right corner.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().top_right_max())
+    ///     .label("Click me");
+    /// ```
     pub fn top_right_max(mut self) -> Self {
         self.top_right = RadiusSignal::new_from_value(Radius::Max);
         self
@@ -222,9 +353,29 @@ impl RoundedCorners {
         radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
     ) -> Self {
         self.bottom_left = RadiusSignal::new_from_signal(radius);
+    /// Set radius for the bottom left corner.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().bottom_left(10))
+    ///     .label("Click me");
+    /// ```
+    pub fn bottom_left(mut self, radius: u32) -> Self {
+        self.bottom_left = Radius::Px(radius);
         self
     }
 
+    /// Set radius to maximum for the bottom left corner.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().bottom_left_max())
+    ///     .label("Click me");
+    /// ```
     pub fn bottom_left_max(mut self) -> Self {
         self.bottom_left = RadiusSignal::new_from_value(Radius::Max);
         self
@@ -240,9 +391,29 @@ impl RoundedCorners {
         radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
     ) -> Self {
         self.bottom_right = RadiusSignal::new_from_signal(radius);
+    /// Set radius for the bottom right corner.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().bottom_right(10))
+    ///     .label("Click me");
+    /// ```
+    pub fn bottom_right(mut self, radius: u32) -> Self {
+        self.bottom_right = Radius::Px(radius);
         self
     }
 
+    /// Set radius to maximum for the bottom right corner.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let button = Button::new()
+    ///     .s(RoundedCorners::new().bottom_right_max())
+    ///     .label("Click me");
+    /// ```
     pub fn bottom_right_max(mut self) -> Self {
         self.bottom_right = RadiusSignal::new_from_value(Radius::Max);
         self
@@ -300,7 +471,8 @@ fn compute_radii(
     let height = f64::from(height);
 
     // @TODO cache some parts? If/when signal methods are implemented?
-    // @TODO bug in ResizeObserver on iOS? (see "Add Client" button in time_tracker example)
+    // @TODO bug in ResizeObserver on iOS? (see "Add Client" button in time_tracker
+    // example)
 
     let mut radii = [
         top_left.f64_pixels_or_zero(),
@@ -310,9 +482,9 @@ fn compute_radii(
     ];
 
     // It doesn't make sense to compute radii if the element is basically invisible.
-    // Or the element's width and height is 0px when the element's `display` is `inline`
-    // because `ResizeObserver` doesn't work with inlined elements. Hence want to preserve
-    // at least fixed radii.
+    // Or the element's width and height is 0px when the element's `display` is
+    // `inline` because `ResizeObserver` doesn't work with inlined elements.
+    // Hence want to preserve at least fixed radii.
     if width == 0. || height == 0. {
         return crate::format!(
             "{}px {}px {}px {}px",
