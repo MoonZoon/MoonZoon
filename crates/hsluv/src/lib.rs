@@ -79,4 +79,23 @@ impl HSLuv {
     pub fn a(&self) -> f64 {
         self.a
     }
+
+    // -- updaters --
+
+    pub fn update_h(self, h: impl FnOnce(f64) -> f64) -> Self {
+        self.set_h(h(self.h))
+    }
+
+    pub fn update_s(self, s: impl FnOnce(f64) -> f64) -> Self {
+        self.set_s(s(self.s))
+    }
+
+    pub fn update_l(self, l: impl FnOnce(f64) -> f64) -> Self {
+        self.set_l(l(self.l))
+    }
+
+    pub fn update_a(self, a: impl FnOnce(f64) -> f64) -> Self {
+        self.set_a(a(self.a))
+    }
+
 }
