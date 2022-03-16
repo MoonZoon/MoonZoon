@@ -1,5 +1,9 @@
-use zoon::{*, named_color::*};
+use zoon::{named_color::*, *};
 use LayerId::*;
+
+// ------ ------
+//     Types
+// ------ ------
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum LayerId {
@@ -8,16 +12,41 @@ enum LayerId {
     C,
 }
 
+// ------ ------
+//    States
+// ------ ------
+
 #[static_ref]
-fn layer_order() -> &'static Mutable<[LayerId; 3]> {
-    Mutable::new([A, B, C])
+fn layer_order() -> &'static Mutable<Vec<LayerId>> {
+    Mutable::new(vec![A, B, C])
 }
+
+// ------ ------
+//   Commands
+// ------ ------
 
 fn bring_to_front(layer_id: LayerId) {
     let mut layers = layer_order().lock_mut();
     let layer_position = layers.iter().position(|id| id == &layer_id).unwrap_throw();
-    layers.swap(0, layer_position);
+    let layer = layers.remove(layer_position);
+    layers.push(layer);
 }
+
+// ------ ------
+//    Signals
+// ------ ------
+
+fn layer_index(layer_id: LayerId) -> impl Signal<Item = u32> {
+    layer_order()
+        .signal_ref(move |layers| {
+            layers.iter().position(|id| id == &layer_id).unwrap_throw() as u32
+        })
+        .dedupe()
+}
+
+// ------ ------
+//     View
+// ------ ------
 
 fn root() -> impl Element {
     Stack::new()
@@ -37,14 +66,18 @@ fn rectangle(layer_id: LayerId, color: HSLuv, align: Align) -> impl Element {
         .s(RoundedCorners::all(15))
         .s(Cursor::new(CursorIcon::Pointer))
         .s(Shadows::new([Shadow::new().blur(20).color(GRAY_8)]))
-        .s(Background::new().color_signal(hovered_signal.map_bool(
-            move || color.update_l(|l| l + 5.), 
-            move || color,
-        )))
+        .s(Background::new().color_signal(
+            hovered_signal.map_bool(move || color.update_l(|l| l + 5.), move || color),
+        ))
         .s(align)
+        .s(LayerIndex::with_signal(layer_index(layer_id)))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_click(move || bring_to_front(layer_id))
 }
+
+// ------ ------
+//     Start
+// ------ ------
 
 #[wasm_bindgen(start)]
 pub fn start() {
