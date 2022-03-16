@@ -3,6 +3,7 @@ use crate::*;
 #[derive(Default)]
 pub struct LayerIndex<'a> {
     static_css_props: StaticCSSProps<'a>,
+    dynamic_css_props: DynamicCSSProps,
 }
 
 impl<'a> LayerIndex<'a> {
@@ -10,6 +11,16 @@ impl<'a> LayerIndex<'a> {
         let mut this = Self::default();
         this.static_css_props
             .insert("z-index", index.into_cow_str());
+        this
+    }
+
+    pub fn with_signal(
+        index: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
+    ) -> Self {
+        let mut this = Self::default();
+        let index = index.map(|index| index.into());
+        this.dynamic_css_props
+            .insert("z-index".into(), box_css_signal(index));
         this
     }
 }
@@ -28,6 +39,9 @@ impl<'a> Style<'a> for LayerIndex<'a> {
                     style_group.style_important(name, css_prop_value.value)
                 };
             }
+            for (name, value) in self.dynamic_css_props {
+                style_group = style_group.style_signal(name, value);
+            }
             return (raw_el, Some(style_group));
         }
         for (name, css_prop_value) in self.static_css_props {
@@ -36,6 +50,9 @@ impl<'a> Style<'a> for LayerIndex<'a> {
             } else {
                 raw_el.style(name, &css_prop_value.value)
             };
+        }
+        for (name, value) in self.dynamic_css_props {
+            raw_el = raw_el.style_signal(name, value);
         }
         (raw_el, None)
     }

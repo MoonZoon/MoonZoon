@@ -97,5 +97,4 @@ impl HSLuv {
     pub fn update_a(self, a: impl FnOnce(f64) -> f64) -> Self {
         self.set_a(a(self.a))
     }
-
 }
