@@ -36,10 +36,10 @@ fn bring_to_front(layer_id: LayerId) {
 //    Signals
 // ------ ------
 
-fn layer_index(layer_id: LayerId) -> impl Signal<Item = u32> {
+fn layer_index(layer_id: LayerId) -> impl Signal<Item = i32> {
     layer_order()
         .signal_ref(move |layers| {
-            layers.iter().position(|id| id == &layer_id).unwrap_throw() as u32
+            layers.iter().position(|id| id == &layer_id).unwrap_throw() as i32
         })
         .dedupe()
 }
