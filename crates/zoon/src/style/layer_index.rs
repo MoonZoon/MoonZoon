@@ -7,7 +7,12 @@ pub struct LayerIndex<'a> {
 }
 
 impl<'a> LayerIndex<'a> {
-    pub fn new(index: u32) -> Self {
+    // Google says we can't use `i32::MIN/MAX` on all browsers directly, don't know why
+    const MAX_VALUE_OFFSET: i32 = 9;
+    pub const MIN_VALUE: i32 = i32::MIN + Self::MAX_VALUE_OFFSET;
+    pub const MAX_VALUE: i32 = i32::MAX - Self::MAX_VALUE_OFFSET;
+
+    pub fn new(index: i32) -> Self {
         let mut this = Self::default();
         this.static_css_props
             .insert("z-index", index.into_cow_str());
@@ -15,7 +20,7 @@ impl<'a> LayerIndex<'a> {
     }
 
     pub fn with_signal(
-        index: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
+        index: impl Signal<Item = impl Into<Option<i32>>> + Unpin + 'static,
     ) -> Self {
         let mut this = Self::default();
         let index = index.map(|index| index.into());

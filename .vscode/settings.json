@@ -10,7 +10,7 @@
         // "examples/custom_config/Cargo.toml",
         // "examples/custom_http_client/Cargo.toml",
         // "examples/js-framework-benchmark/keyed/Cargo.toml",
-        // "examples/layers/Cargo.toml",
+        "examples/layers/Cargo.toml",
         // "examples/markup/Cargo.toml",
         // "examples/pages/Cargo.toml",
         // "examples/paragraph/Cargo.toml",
