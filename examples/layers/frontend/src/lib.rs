@@ -1,15 +1,25 @@
-use zoon::{named_color::*, *};
-use LayerId::*;
+use strum::{EnumIter, IntoEnumIterator};
+use zoon::{named_color::*, println, *};
 
 // ------ ------
 //     Types
 // ------ ------
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-enum LayerId {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
+enum Rectangle {
     A,
     B,
     C,
+}
+
+impl Rectangle {
+    fn color_and_align(&self) -> (HSLuv, Align) {
+        match self {
+            Self::A => (RED_6, Align::new()),
+            Self::B => (GREEN_6, Align::center()),
+            Self::C => (BLUE_6, Align::new().bottom().right()),
+        }
+    }
 }
 
 // ------ ------
@@ -17,31 +27,21 @@ enum LayerId {
 // ------ ------
 
 #[static_ref]
-fn layer_order() -> &'static Mutable<Vec<LayerId>> {
-    Mutable::new(vec![A, B, C])
+fn rectangles() -> &'static MutableVec<Rectangle> {
+    MutableVec::new_with_values(Rectangle::iter().collect())
 }
 
 // ------ ------
 //   Commands
 // ------ ------
 
-fn bring_to_front(layer_id: LayerId) {
-    let mut layers = layer_order().lock_mut();
-    let layer_position = layers.iter().position(|id| id == &layer_id).unwrap_throw();
-    let layer = layers.remove(layer_position);
-    layers.push(layer);
-}
-
-// ------ ------
-//    Signals
-// ------ ------
-
-fn layer_index(layer_id: LayerId) -> impl Signal<Item = i32> {
-    layer_order()
-        .signal_ref(move |layers| {
-            layers.iter().position(|id| id == &layer_id).unwrap_throw() as i32
-        })
-        .dedupe()
+fn bring_to_front(rectangle: Rectangle) {
+    let mut rectangles = rectangles().lock_mut();
+    let position = rectangles
+        .iter()
+        .position(|r| r == &rectangle)
+        .unwrap_throw();
+    rectangles.move_from_to(position, rectangles.len() - 1);
 }
 
 // ------ ------
@@ -53,13 +53,15 @@ fn root() -> impl Element {
         .s(Align::center())
         .s(Width::new(180))
         .s(Height::new(180))
-        .layer(rectangle(A, RED_6, Align::new()))
-        .layer(rectangle(B, GREEN_6, Align::center()))
-        .layer(rectangle(C, BLUE_6, Align::new().bottom().right()))
+        .layers_signal_vec(rectangles().signal_vec().map(rectangle))
 }
 
-fn rectangle(layer_id: LayerId, color: HSLuv, align: Align) -> impl Element {
+fn rectangle(rectangle: Rectangle) -> impl Element {
+    println!("render Rectangle '{rectangle:?}'");
+
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    let (color, align) = rectangle.color_and_align();
+
     El::new()
         .s(Width::new(100))
         .s(Height::new(100))
@@ -70,9 +72,8 @@ fn rectangle(layer_id: LayerId, color: HSLuv, align: Align) -> impl Element {
             hovered_signal.map_bool(move || color.update_l(|l| l + 5.), move || color),
         ))
         .s(align)
-        .s(LayerIndex::with_signal(layer_index(layer_id)))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-        .on_click(move || bring_to_front(layer_id))
+        .on_click(move || bring_to_front(rectangle))
 }
 
 // ------ ------
