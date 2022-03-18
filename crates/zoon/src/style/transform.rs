@@ -1,13 +1,34 @@
 use crate::*;
 use std::{borrow::Cow, mem};
 
+/// Define transformation styling to update the shape or position of an element.
+/// More information at <https://developer.mozilla.org/en-US/docs/Web/CSS/transform>.
 #[derive(Default)]
 pub struct Transform {
+    /// Vector to chain transformations.
     transformations: Vec<String>,
+    /// Customizable css properties which can be added.
     dynamic_css_props: DynamicCSSProps,
 }
 
 impl Transform {
+    /// Apply transformations depending of signal's state.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let (hovered, hover_signal) = Mutable::new_and_signal(false);
+    /// let page = El::new().s(Height::screen()).child(
+    ///     Button::new()
+    ///         .s(Align::center())
+    ///         .s(Transform::with_signal(hover_signal.map_bool(
+    ///             || Transform::new().rotate(45),
+    ///             || Transform::new(),
+    ///         )))
+    ///         .on_hovered_change(move |hover| hovered.set(hover))
+    ///         .label("Hover me"),
+    /// );
+    /// ```
     pub fn with_signal(
         transform: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
     ) -> Self {
@@ -22,36 +43,122 @@ impl Transform {
         this
     }
 
+    /// Apply an upward translation to the element.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let page = El::new().s(Height::screen()).child(
+    ///     Button::new()
+    ///         .s(Align::center())
+    ///         .s(Transform::new().move_up(50))
+    ///         .label("Click me"),
+    /// );
+    /// ```
     pub fn move_up(mut self, distance: impl Into<f64>) -> Self {
         self.transformations
             .push(crate::format!("translateY(-{}px)", distance.into()));
         self
     }
 
+    /// Apply a downward translation to the element.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let page = El::new().s(Height::screen()).child(
+    ///     Button::new()
+    ///         .s(Align::center())
+    ///         .s(Transform::new().move_down(50))
+    ///         .label("Click me"),
+    /// );
+    /// ```
     pub fn move_down(mut self, distance: impl Into<f64>) -> Self {
         self.transformations
             .push(crate::format!("translateY({}px)", distance.into()));
         self
     }
 
+    /// Apply a leftward translation to the element.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let page = El::new().s(Height::screen()).child(
+    ///     Button::new()
+    ///         .s(Align::center())
+    ///         .s(Transform::new().move_left(50))
+    ///         .label("Click me"),
+    /// );
+    /// ```
     pub fn move_left(mut self, distance: impl Into<f64>) -> Self {
         self.transformations
             .push(crate::format!("translateX(-{}px)", distance.into()));
         self
     }
 
+    /// Apply a rightward translation to the element.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let page = El::new().s(Height::screen()).child(
+    ///     Button::new()
+    ///         .s(Align::center())
+    ///         .s(Transform::new().move_right(50))
+    ///         .label("Click me"),
+    /// );
+    /// ```
     pub fn move_right(mut self, distance: impl Into<f64>) -> Self {
         self.transformations
             .push(crate::format!("translateX({}px)", distance.into()));
         self
     }
 
+    /// Apply a rotation to the element.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let page = El::new().s(Height::screen()).child(
+    ///     Button::new()
+    ///         .s(Align::center())
+    ///         .s(Transform::new().rotate(45))
+    ///         .label("Click me"),
+    /// );
+    /// ```
     pub fn rotate(mut self, degrees: impl Into<f64>) -> Self {
         self.transformations
             .push(crate::format!("rotateZ({}deg)", degrees.into()));
         self
     }
 
+    /// Apply scaling in `percentage` to the element.
+    ///
+    /// You can increase the size of the element.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let page = El::new().s(Height::screen()).child(
+    ///     Button::new()
+    ///         .s(Align::center())
+    ///         .s(Transform::new().scale(300))
+    ///         .label("Click me"),
+    /// );
+    /// ```
+    /// You can also decrease it.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let page = El::new().s(Height::screen()).child(
+    ///     Button::new()
+    ///         .s(Align::center())
+    ///         .s(Transform::new().scale(50))
+    ///         .label("Click me"),
+    /// );
+    /// ```
     pub fn scale(mut self, percent: impl Into<f64>) -> Self {
         self.transformations
             .push(crate::format!("scale({})", percent.into() / 100.));
