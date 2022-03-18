@@ -4,6 +4,7 @@ use crate::*;
 /// translate to z-index in css.
 #[derive(Default)]
 pub struct LayerIndex<'a> {
+    /// Static css properties used by zoon.
     static_css_props: StaticCSSProps<'a>,
     dynamic_css_props: DynamicCSSProps,
 }
