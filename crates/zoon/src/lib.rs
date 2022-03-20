@@ -62,6 +62,7 @@ pub use pin_project::pin_project;
 pub use resize_observer::ResizeObserver;
 pub use send_wrapper::SendWrapper;
 pub use std::future::Future;
+pub use strum;
 pub use style::*;
 pub use task::{Task, TaskHandle};
 pub use timer::Timer;
@@ -69,7 +70,6 @@ pub use viewport::{Scene, Viewport};
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 pub use wasm_bindgen_futures::{self, JsFuture};
 pub use web_sys;
-pub use strum;
 
 #[cfg(feature = "connection")]
 pub use connection::{Connection, SendUpMsgError};

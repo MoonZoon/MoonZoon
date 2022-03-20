@@ -1,6 +1,6 @@
 use crate::*;
+use std::collections::{BTreeMap, BTreeSet};
 use strum::{EnumIter, IntoEnumIterator, IntoStaticStr};
-use std::collections::{BTreeSet, BTreeMap};
 
 #[derive(Default)]
 pub struct Align {
@@ -27,9 +27,19 @@ impl Align {
         let align = Broadcaster::new(align.map(|align| align.into()));
 
         for alignment in Alignment::iter() {
-            this.dynamic_alignments.insert(alignment, Box::new(align.signal_ref(move |align| {
-                align.as_ref().map_or(false, |align| align.alignments.contains(&alignment))
-            }).dedupe()));
+            this.dynamic_alignments.insert(
+                alignment,
+                Box::new(
+                    align
+                        .signal_ref(move |align| {
+                            align
+                                .as_ref()
+                                .map(|align| align.alignments.contains(&alignment))
+                                .unwrap_or_default()
+                        })
+                        .dedupe(),
+                ),
+            );
         }
         this
     }
