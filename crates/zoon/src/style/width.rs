@@ -3,16 +3,26 @@ use crate::*;
 #[derive(Default)]
 pub struct Width<'a> {
     static_css_props: StaticCSSProps<'a>,
-    static_css_classes: StaticCssClasses<'a>,
     dynamic_css_props: DynamicCSSProps,
+    width_mode: WidthMode,
+}
+
+enum WidthMode {
+    Exact,
+    Fill,
+}
+
+impl Default for WidthMode {
+    fn default() -> Self {
+        Self::Exact
+    }
 }
 
 impl<'a> Width<'a> {
     pub fn new(width: u32) -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("width", px(width));
-        this.static_css_classes.insert("exact_width".into());
-        this.static_css_classes.remove("fill_width".into());
+        this.width_mode = WidthMode::Exact;
         this
     }
 
@@ -23,24 +33,21 @@ impl<'a> Width<'a> {
         let width = width.map(|width| width.into().map(px));
         this.dynamic_css_props
             .insert("width".into(), box_css_signal(width));
-        this.static_css_classes.insert("exact_width".into());
-        this.static_css_classes.remove("fill_width".into());
+        this.width_mode = WidthMode::Exact;
         this
     }
 
     pub fn zeros(zeros: u32) -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("width", ch(zeros));
-        this.static_css_classes.insert("exact_width".into());
-        this.static_css_classes.remove("fill_width".into());
+        this.width_mode = WidthMode::Exact;
         this
     }
 
     pub fn fill() -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("width", "100%");
-        this.static_css_classes.insert("fill_width".into());
-        this.static_css_classes.remove("exact_width".into());
+        this.width_mode = WidthMode::Fill;
         this
     }
 
@@ -66,6 +73,12 @@ impl<'a> Style<'a> for Width<'a> {
         mut raw_el: E,
         style_group: Option<StyleGroup<'a>>,
     ) -> (E, Option<StyleGroup<'a>>) {
+        let width_mode_class = match self.width_mode {
+            WidthMode::Exact => "exact_width",
+            WidthMode::Fill => "fill_width",
+        };
+        raw_el = raw_el.class(&width_mode_class);
+
         if let Some(mut style_group) = style_group {
             for (name, css_prop_value) in self.static_css_props {
                 style_group = if css_prop_value.important {
@@ -73,9 +86,6 @@ impl<'a> Style<'a> for Width<'a> {
                 } else {
                     style_group.style_important(name, css_prop_value.value)
                 };
-            }
-            for class in self.static_css_classes {
-                raw_el = raw_el.class(&class);
             }
             for (name, value) in self.dynamic_css_props {
                 style_group = style_group.style_signal(name, value);
@@ -88,9 +98,6 @@ impl<'a> Style<'a> for Width<'a> {
             } else {
                 raw_el.style(name, &css_prop_value.value)
             };
-        }
-        for class in self.static_css_classes {
-            raw_el = raw_el.class(&class);
         }
         for (name, value) in self.dynamic_css_props {
             raw_el = raw_el.style_signal(name, value);

@@ -1,12 +1,6 @@
 use crate::*;
 use once_cell::race::OnceBox;
-use std::{
-    borrow::Cow,
-    collections::{BTreeMap, BTreeSet},
-    convert::TryFrom,
-    iter, mem,
-    sync::Arc,
-};
+use std::{borrow::Cow, collections::BTreeMap, convert::TryFrom, iter, mem, sync::Arc};
 use web_sys::{CssStyleDeclaration, CssStyleRule, CssStyleSheet, HtmlStyleElement};
 
 pub mod named_color;
@@ -115,10 +109,6 @@ impl<'a> Extend<(&'a str, CssPropValue<'a>)> for StaticCSSProps<'a> {
 // ------ DynamicCSSProps ------
 
 pub type DynamicCSSProps = BTreeMap<Cow<'static, str>, BoxedCssSignal>;
-
-// ------ StaticCssClasses ------
-
-pub type StaticCssClasses<'a> = BTreeSet<Cow<'a, str>>;
 
 // ------ BoxedCssSignal ------
 
