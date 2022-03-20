@@ -13,7 +13,7 @@ enum RectangleAlignment {
 }
 
 impl RectangleAlignment {
-    fn to_align(&self) -> Align<'static> {
+    fn to_align(&self) -> Align {
         match self {
             Self::TopRight => Align::new().top().right(),
             Self::Center => Align::center(),
