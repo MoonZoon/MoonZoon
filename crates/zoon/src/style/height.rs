@@ -3,16 +3,28 @@ use crate::*;
 #[derive(Default)]
 pub struct Height<'a> {
     static_css_props: StaticCSSProps<'a>,
-    static_css_classes: StaticCssClasses<'a>,
     dynamic_css_props: DynamicCSSProps,
+    height_mode: HeightMode,
+}
+
+enum HeightMode {
+    Exact,
+    Fill,
+}
+
+// @TODO remove (in the entire codebase) once `derive_default_enum` is stable
+// https://github.com/rust-lang/rust/issues/87517
+impl Default for HeightMode {
+    fn default() -> Self {
+        Self::Exact
+    }
 }
 
 impl<'a> Height<'a> {
     pub fn new(height: u32) -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("height", px(height));
-        this.static_css_classes.insert("exact_height".into());
-        this.static_css_classes.remove("fill_height".into());
+        this.height_mode = HeightMode::Exact;
         this
     }
 
@@ -23,24 +35,21 @@ impl<'a> Height<'a> {
         let height = height.map(|height| height.into().map(px));
         this.dynamic_css_props
             .insert("height".into(), box_css_signal(height));
-        this.static_css_classes.insert("exact_height".into());
-        this.static_css_classes.remove("fill_height".into());
+        this.height_mode = HeightMode::Exact;
         this
     }
 
     pub fn fill() -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("height", "100%");
-        this.static_css_classes.insert("fill_height".into());
-        this.static_css_classes.remove("exact_height".into());
+        this.height_mode = HeightMode::Fill;
         this
     }
 
     pub fn screen() -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("height", "100vh");
-        this.static_css_classes.insert("exact_height".into());
-        this.static_css_classes.remove("fill_height".into());
+        this.height_mode = HeightMode::Exact;
         this
     }
 
@@ -66,6 +75,12 @@ impl<'a> Style<'a> for Height<'a> {
         mut raw_el: E,
         style_group: Option<StyleGroup<'a>>,
     ) -> (E, Option<StyleGroup<'a>>) {
+        let height_mode_class = match self.height_mode {
+            HeightMode::Exact => "exact_height",
+            HeightMode::Fill => "fill_height",
+        };
+        raw_el = raw_el.class(&height_mode_class);
+
         if let Some(mut style_group) = style_group {
             for (name, css_prop_value) in self.static_css_props {
                 style_group = if css_prop_value.important {
@@ -73,9 +88,6 @@ impl<'a> Style<'a> for Height<'a> {
                 } else {
                     style_group.style_important(name, css_prop_value.value)
                 };
-            }
-            for class in self.static_css_classes {
-                raw_el = raw_el.class(&class);
             }
             for (name, value) in self.dynamic_css_props {
                 style_group = style_group.style_signal(name, value);
@@ -88,9 +100,6 @@ impl<'a> Style<'a> for Height<'a> {
             } else {
                 raw_el.style(name, &css_prop_value.value)
             };
-        }
-        for class in self.static_css_classes {
-            raw_el = raw_el.class(&class);
         }
         for (name, value) in self.dynamic_css_props {
             raw_el = raw_el.style_signal(name, value);
