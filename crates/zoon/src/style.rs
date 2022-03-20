@@ -131,6 +131,14 @@ pub fn box_css_signal(
     Box::new(signal.map(|value| Box::new(value) as Box<dyn IntoOptionCowStr<'static>>))
 }
 
+// ------ DynamicCssClasses ------
+
+pub type DynamicCssClasses = BTreeMap<Cow<'static, str>, BoxedCssValueSignal>;
+
+// ------ BoxedCssValueSignal ------
+
+pub type BoxedCssValueSignal = Box<dyn Signal<Item = bool> + Unpin>;
+
 // ------ units ------
 
 pub fn px<'a>(px: impl IntoCowStr<'a>) -> Cow<'a, str> {
