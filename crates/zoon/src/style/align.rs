@@ -11,7 +11,32 @@ impl<'a> Align<'a> {
         align: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
     ) -> Self {
         let mut this = Self::default();
-        // @TODO
+        let align = Broadcaster::new(align.map(|align| align.into()));
+
+        this.dynamic_css_classes.insert("center_x".into(), Box::new(align.signal_ref(|align| {
+            align.as_ref().map_or(false, |align| align.static_css_classes.contains("center_x"))
+        }).dedupe()));
+
+        this.dynamic_css_classes.insert("center_y".into(), Box::new(align.signal_ref(|align| {
+            align.as_ref().map_or(false, |align| align.static_css_classes.contains("center_y"))
+        }).dedupe()));
+
+        this.dynamic_css_classes.insert("align_left".into(), Box::new(align.signal_ref(|align| {
+            align.as_ref().map_or(false, |align| align.static_css_classes.contains("align_left"))
+        }).dedupe()));
+
+        this.dynamic_css_classes.insert("align_right".into(), Box::new(align.signal_ref(|align| {
+            align.as_ref().map_or(false, |align| align.static_css_classes.contains("align_right"))
+        }).dedupe()));
+
+        this.dynamic_css_classes.insert("align_top".into(), Box::new(align.signal_ref(|align| {
+            align.as_ref().map_or(false, |align| align.static_css_classes.contains("align_top"))
+        }).dedupe()));
+
+        this.dynamic_css_classes.insert("align_bottom".into(), Box::new(align.signal_ref(|align| {
+            align.as_ref().map_or(false, |align| align.static_css_classes.contains("align_bottom"))
+        }).dedupe()));
+
         this
     }
 
@@ -70,6 +95,9 @@ impl<'a> Style<'a> for Align<'a> {
     ) -> (E, Option<StyleGroup<'a>>) {
         for class in self.static_css_classes {
             raw_el = raw_el.class(&class);
+        }
+        for (class, enabled) in self.dynamic_css_classes {
+            raw_el = raw_el.class_signal(class, enabled);
         }
         (raw_el, style_group)
     }
