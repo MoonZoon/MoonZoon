@@ -50,8 +50,8 @@ fn root() -> impl Element {
         .s(Height::new(200))
         .s(Borders::all(Border::new().color(GRAY_5).width(3)))
         .s(RoundedCorners::all(15))
-        .layers(RectangleAlignment::iter().map(button))
         .layer(rectangle())
+        .layers(RectangleAlignment::iter().map(button))
 }
 
 fn button(rectangle_alignment: RectangleAlignment) -> impl Element {
