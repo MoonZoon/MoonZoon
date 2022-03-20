@@ -56,6 +56,7 @@ impl ChoosableTag for El<ChildFlagNotSet> {
                         .style("margin-top", "auto")
                         .style("margin-bottom", "auto"),
                 )
+                .style_group(StyleGroup::new(".el > .align_top").style("margin-bottom", "auto"))
                 .style_group(StyleGroup::new(".el > .align_bottom").style("margin-top", "auto"))
                 .style_group(StyleGroup::new(".el > .align_left").style("align-self", "flex-start"))
                 .style_group(StyleGroup::new(".el > .align_right").style("align-self", "flex-end"))

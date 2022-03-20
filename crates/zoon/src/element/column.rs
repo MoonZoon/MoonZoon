@@ -56,6 +56,7 @@ impl ChoosableTag for Column<EmptyFlagSet> {
                         .style("margin-top", "auto")
                         .style("margin-bottom", "auto"),
                 )
+                .style_group(StyleGroup::new(".column > .align_top").style("margin-bottom", "auto"))
                 .style_group(StyleGroup::new(".column > .align_bottom").style("margin-top", "auto"))
                 .style_group(
                     StyleGroup::new(".column > .align_left").style("align-self", "flex-start"),

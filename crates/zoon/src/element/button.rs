@@ -22,6 +22,7 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
                         .style("margin-top", "auto")
                         .style("margin-bottom", "auto"),
                 )
+                .style_group(StyleGroup::new(".button > .align_top").style("margin-bottom", "auto"))
                 .style_group(StyleGroup::new(".button > .align_bottom").style("margin-top", "auto"))
                 .style_group(
                     StyleGroup::new(".button > .align_left").style("align-self", "flex-start"),

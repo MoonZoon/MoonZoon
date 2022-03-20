@@ -22,6 +22,7 @@ impl Link<LabelFlagNotSet, ToFlagNotSet> {
                         .style("margin-top", "auto")
                         .style("margin-bottom", "auto"),
                 )
+                .style_group(StyleGroup::new(".link > .align_top").style("margin-bottom", "auto"))
                 .style_group(StyleGroup::new(".link > .align_bottom").style("margin-top", "auto"))
                 .style_group(
                     StyleGroup::new(".link > .align_left").style("align-self", "flex-start"),

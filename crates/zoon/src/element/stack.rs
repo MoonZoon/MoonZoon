@@ -65,6 +65,7 @@ impl ChoosableTag for Stack<EmptyFlagSet> {
                         .style("margin-top", "auto")
                         .style("margin-bottom", "auto"),
                 )
+                .style_group(StyleGroup::new(".stack > .align_top").style("margin-bottom", "auto"))
                 .style_group(StyleGroup::new(".stack > .align_bottom").style("margin-top", "auto"))
                 .style_group(StyleGroup::new(".stack > .align_left").style("margin-right", "auto"))
                 .style_group(StyleGroup::new(".stack > .align_right").style("margin-left", "auto"))
