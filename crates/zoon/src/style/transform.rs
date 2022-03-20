@@ -79,7 +79,7 @@ impl<'a> Style<'a> for Transform {
         style_group: Option<StyleGroup<'a>>,
     ) -> (E, Option<StyleGroup<'a>>) {
         let mut static_css_props = StaticCSSProps::default();
-        
+
         if self.dynamic_css_props.is_empty() {
             static_css_props.insert("transform", self.transformations_into_value());
         }

@@ -1,4 +1,8 @@
-use zoon::{*, named_color::*, strum::{EnumIter, IntoEnumIterator, AsRefStr}};
+use zoon::{
+    named_color::*,
+    strum::{AsRefStr, EnumIter, IntoEnumIterator},
+    *,
+};
 
 // ------ ------
 //     Types
@@ -9,7 +13,7 @@ use zoon::{*, named_color::*, strum::{EnumIter, IntoEnumIterator, AsRefStr}};
 enum RectangleAlignment {
     TopRight,
     Center,
-    BottomLeft
+    BottomLeft,
 }
 
 impl RectangleAlignment {
@@ -58,9 +62,7 @@ fn button(rectangle_alignment: RectangleAlignment) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(rectangle_alignment.to_align())
-        .s(Background::new().color_signal(hovered_signal.map_bool(
-            || BLUE_7, || BLUE_9
-        )))
+        .s(Background::new().color_signal(hovered_signal.map_bool(|| BLUE_7, || BLUE_9)))
         .s(Padding::all(5))
         .s(RoundedCorners::all(10))
         .label(rectangle_alignment.as_ref())
@@ -74,9 +76,9 @@ fn rectangle() -> impl Element {
         .s(Height::new(70))
         .s(Background::new().color(GREEN_7))
         .s(RoundedCorners::all(10))
-        .s(Align::with_signal(rectangle_alignment().signal_ref(|alignment| {
-            alignment.map(|alignment| alignment.to_align())
-        })))
+        .s(Align::with_signal(rectangle_alignment().signal_ref(
+            |alignment| alignment.map(|alignment| alignment.to_align()),
+        )))
 }
 
 // ------ ------
