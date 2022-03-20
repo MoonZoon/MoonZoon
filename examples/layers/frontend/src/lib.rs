@@ -1,11 +1,11 @@
-use strum::{EnumIter, IntoEnumIterator};
-use zoon::{named_color::*, println, *};
+use zoon::{named_color::*, println, *, strum::{EnumIter, IntoEnumIterator}};
 
 // ------ ------
 //     Types
 // ------ ------
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
+#[strum(crate = "strum")]
 enum Rectangle {
     A,
     B,

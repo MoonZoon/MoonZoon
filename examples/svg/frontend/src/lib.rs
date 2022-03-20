@@ -1,6 +1,5 @@
 use std::{collections::VecDeque, iter::FromIterator};
-use strum::{EnumIter, IntoEnumIterator, IntoStaticStr};
-use zoon::*;
+use zoon::{*, strum::{EnumIter, IntoEnumIterator, IntoStaticStr}};
 
 // ------ ------
 //    Types
@@ -9,6 +8,7 @@ use zoon::*;
 use LightState::*;
 
 #[derive(Clone, Copy, IntoStaticStr, EnumIter)]
+#[strum(crate = "strum")]
 enum LightState {
     Stop,
     Ready,

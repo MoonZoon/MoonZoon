@@ -1,11 +1,11 @@
-use strum::{EnumIter, IntoEnumIterator, AsRefStr};
-use zoon::{*, named_color::*};
+use zoon::{*, named_color::*, strum::{EnumIter, IntoEnumIterator, AsRefStr}};
 
 // ------ ------
 //     Types
 // ------ ------
 
 #[derive(Clone, Copy, EnumIter, AsRefStr)]
+#[strum(crate = "strum")]
 enum RectangleAlignment {
     TopRight,
     Center,

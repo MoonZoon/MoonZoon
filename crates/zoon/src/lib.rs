@@ -69,6 +69,7 @@ pub use viewport::{Scene, Viewport};
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 pub use wasm_bindgen_futures::{self, JsFuture};
 pub use web_sys;
+pub use strum;
 
 #[cfg(feature = "connection")]
 pub use connection::{Connection, SendUpMsgError};

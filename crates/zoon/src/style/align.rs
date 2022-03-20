@@ -91,7 +91,7 @@ impl<'a> Style<'a> for Align {
             raw_el = raw_el.class(alignment.into());
         }
         for (alignment, enabled) in self.dynamic_alignments {
-            raw_el = raw_el.class_signal(Into::<&str>::into(alignment), enabled);
+            raw_el = raw_el.class_signal(<&str>::from(alignment), enabled);
         }
         (raw_el, style_group)
     }
