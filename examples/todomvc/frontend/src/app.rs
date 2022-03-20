@@ -1,6 +1,5 @@
 use std::sync::Arc;
-use strum::EnumIter;
-use zoon::{eprintln, println, *};
+use zoon::{eprintln, println, *, strum::EnumIter};
 
 pub mod view;
 
@@ -17,6 +16,7 @@ static STORAGE_KEY: &str = "todomvc-zoon";
 
 #[derive(Copy, Clone, Eq, PartialEq, EnumIter, Deserialize, Serialize)]
 #[serde(crate = "serde")]
+#[strum(crate = "strum")]
 pub enum Filter {
     All,
     Active,

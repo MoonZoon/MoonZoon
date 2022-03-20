@@ -571,7 +571,6 @@ dependencies = [
 name = "frontend"
 version = "0.1.0"
 dependencies = [
- "strum",
  "wasm-bindgen-test",
  "zoon",
 ]
@@ -2196,6 +2195,7 @@ dependencies = [
  "serde",
  "serde_json",
  "static_ref_macro",
+ "strum",
  "thiserror",
  "wasm-bindgen",
  "wasm-bindgen-futures",

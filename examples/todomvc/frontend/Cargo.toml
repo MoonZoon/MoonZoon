@@ -17,7 +17,6 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 zoon = { path = "../../../crates/zoon" }
-strum = { version = "0.21.0",  features = ["derive"], default-features = false }
 uuid = { version = "0.8.2", features = ["wasm-bindgen", "v4", "serde"], default-features = false }
 
 [package.metadata.wasm-pack.profile.release]
