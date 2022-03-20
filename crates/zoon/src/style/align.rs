@@ -3,9 +3,18 @@ use crate::*;
 #[derive(Default)]
 pub struct Align<'a> {
     static_css_classes: StaticCssClasses<'a>,
+    dynamic_css_classes: DynamicCssClasses,
 }
 
 impl<'a> Align<'a> {
+    pub fn with_signal(
+        align: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
+    ) -> Self {
+        let mut this = Self::default();
+        // @TODO
+        this
+    }
+
     pub fn center() -> Self {
         Self::default().center_x().center_y()
     }

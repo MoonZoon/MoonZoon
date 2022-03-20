@@ -1,13 +1,47 @@
+use strum::{EnumIter, IntoEnumIterator, AsRefStr};
 use zoon::{*, named_color::*};
 
+// ------ ------
+//     Types
+// ------ ------
+
+#[derive(Clone, Copy, EnumIter, AsRefStr)]
+enum RectangleAlignment {
+    TopRight,
+    Center,
+    BottomLeft
+}
+
+impl RectangleAlignment {
+    fn to_align(&self) -> Align<'static> {
+        match self {
+            Self::TopRight => Align::new().top().right(),
+            Self::Center => Align::center(),
+            Self::BottomLeft => Align::new().bottom().left(),
+        }
+    }
+}
+
+// ------ ------
+//    States
+// ------ ------
+
 #[static_ref]
-fn alignment() -> &'static Mutable<Option<Align<'static>>> {
+fn rectangle_alignment() -> &'static Mutable<Option<RectangleAlignment>> {
     Mutable::default()
 }
 
-fn set_alignment(align: Align<'static>) {
-    alignment().set(Some(align))
+// ------ ------
+//   Commands
+// ------ ------
+
+fn set_rectangle_alignment(alignment: RectangleAlignment) {
+    rectangle_alignment().set(Some(alignment))
 }
+
+// ------ ------
+//     View
+// ------ ------
 
 fn root() -> impl Element {
     Stack::new()
@@ -15,25 +49,39 @@ fn root() -> impl Element {
         .s(Width::new(200))
         .s(Height::new(200))
         .s(Borders::all(Border::new().color(GRAY_5).width(3)))
-        .s(RoundedCorners::all(10))
-        .layer(button("Top Right", || Align::new().top().right()))
-        .layer(button("Center",|| Align::center()))
-        .layer(button("Bottom Left", || Align::new().bottom().left()))
+        .s(RoundedCorners::all(15))
+        .layers(RectangleAlignment::iter().map(button))
+        .layer(rectangle())
 }
 
-fn button(label: &str, align: fn() -> Align<'static>) -> impl Element {
+fn button(rectangle_alignment: RectangleAlignment) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .s(align())
+        .s(rectangle_alignment.to_align())
         .s(Background::new().color_signal(hovered_signal.map_bool(
             || BLUE_7, || BLUE_9
         )))
         .s(Padding::all(5))
         .s(RoundedCorners::all(10))
-        .label(label)
+        .label(rectangle_alignment.as_ref())
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-        .on_press(move || set_alignment(align()))
+        .on_press(move || set_rectangle_alignment(rectangle_alignment))
 }
+
+fn rectangle() -> impl Element {
+    El::new()
+        .s(Width::new(70))
+        .s(Height::new(70))
+        .s(Background::new().color(GREEN_7))
+        .s(RoundedCorners::all(10))
+        .s(Align::with_signal(rectangle_alignment().signal_ref(|alignment| {
+            alignment.map(|alignment| alignment.to_align())
+        })))
+}
+
+// ------ ------
+//     Start
+// ------ ------
 
 #[wasm_bindgen(start)]
 pub fn start() {
