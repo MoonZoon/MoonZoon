@@ -2196,6 +2196,7 @@ dependencies = [
  "serde",
  "serde_json",
  "static_ref_macro",
+ "strum",
  "thiserror",
  "wasm-bindgen",
  "wasm-bindgen-futures",

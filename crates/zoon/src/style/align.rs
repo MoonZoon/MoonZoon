@@ -1,42 +1,36 @@
 use crate::*;
+use strum::{EnumIter, IntoEnumIterator, IntoStaticStr};
+use std::collections::{BTreeSet, BTreeMap};
 
 #[derive(Default)]
-pub struct Align<'a> {
-    static_css_classes: StaticCssClasses<'a>,
-    dynamic_css_classes: DynamicCssClasses,
+pub struct Align {
+    alignments: BTreeSet<Alignment>,
+    dynamic_alignments: BTreeMap<Alignment, Box<dyn Signal<Item = bool> + Unpin>>,
 }
 
-impl<'a> Align<'a> {
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
+#[strum(serialize_all = "snake_case")]
+enum Alignment {
+    CenterX,
+    CenterY,
+    AlignLeft,
+    AlignRight,
+    AlignTop,
+    AlignBottom,
+}
+
+impl Align {
     pub fn with_signal(
         align: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
     ) -> Self {
         let mut this = Self::default();
         let align = Broadcaster::new(align.map(|align| align.into()));
 
-        this.dynamic_css_classes.insert("center_x".into(), Box::new(align.signal_ref(|align| {
-            align.as_ref().map_or(false, |align| align.static_css_classes.contains("center_x"))
-        }).dedupe()));
-
-        this.dynamic_css_classes.insert("center_y".into(), Box::new(align.signal_ref(|align| {
-            align.as_ref().map_or(false, |align| align.static_css_classes.contains("center_y"))
-        }).dedupe()));
-
-        this.dynamic_css_classes.insert("align_left".into(), Box::new(align.signal_ref(|align| {
-            align.as_ref().map_or(false, |align| align.static_css_classes.contains("align_left"))
-        }).dedupe()));
-
-        this.dynamic_css_classes.insert("align_right".into(), Box::new(align.signal_ref(|align| {
-            align.as_ref().map_or(false, |align| align.static_css_classes.contains("align_right"))
-        }).dedupe()));
-
-        this.dynamic_css_classes.insert("align_top".into(), Box::new(align.signal_ref(|align| {
-            align.as_ref().map_or(false, |align| align.static_css_classes.contains("align_top"))
-        }).dedupe()));
-
-        this.dynamic_css_classes.insert("align_bottom".into(), Box::new(align.signal_ref(|align| {
-            align.as_ref().map_or(false, |align| align.static_css_classes.contains("align_bottom"))
-        }).dedupe()));
-
+        for alignment in Alignment::iter() {
+            this.dynamic_alignments.insert(alignment, Box::new(align.signal_ref(move |align| {
+                align.as_ref().map_or(false, |align| align.alignments.contains(&alignment))
+            }).dedupe()));
+        }
         this
     }
 
@@ -45,59 +39,59 @@ impl<'a> Align<'a> {
     }
 
     pub fn center_x(mut self) -> Self {
-        self.static_css_classes.insert("center_x".into());
-        self.static_css_classes.remove("align_left".into());
-        self.static_css_classes.remove("align_right".into());
+        self.alignments.insert(Alignment::CenterX);
+        self.alignments.remove(&Alignment::AlignLeft);
+        self.alignments.remove(&Alignment::AlignRight);
         self
     }
 
     pub fn center_y(mut self) -> Self {
-        self.static_css_classes.insert("center_y".into());
-        self.static_css_classes.remove("align_top".into());
-        self.static_css_classes.remove("align_bottom".into());
+        self.alignments.insert(Alignment::CenterY);
+        self.alignments.remove(&Alignment::AlignTop);
+        self.alignments.remove(&Alignment::AlignBottom);
         self
     }
 
     pub fn top(mut self) -> Self {
-        self.static_css_classes.insert("align_top".into());
-        self.static_css_classes.remove("center_y".into());
-        self.static_css_classes.remove("align_bottom".into());
+        self.alignments.insert(Alignment::AlignTop);
+        self.alignments.remove(&Alignment::CenterY);
+        self.alignments.remove(&Alignment::AlignBottom);
         self
     }
 
     pub fn bottom(mut self) -> Self {
-        self.static_css_classes.insert("align_bottom".into());
-        self.static_css_classes.remove("center_y".into());
-        self.static_css_classes.remove("align_top".into());
+        self.alignments.insert(Alignment::AlignBottom);
+        self.alignments.remove(&Alignment::CenterY);
+        self.alignments.remove(&Alignment::AlignTop);
         self
     }
 
     pub fn left(mut self) -> Self {
-        self.static_css_classes.insert("align_left".into());
-        self.static_css_classes.remove("center_x".into());
-        self.static_css_classes.remove("align_right".into());
+        self.alignments.insert(Alignment::AlignLeft);
+        self.alignments.remove(&Alignment::CenterX);
+        self.alignments.remove(&Alignment::AlignRight);
         self
     }
 
     pub fn right(mut self) -> Self {
-        self.static_css_classes.insert("align_right".into());
-        self.static_css_classes.remove("center_x".into());
-        self.static_css_classes.remove("align_left".into());
+        self.alignments.insert(Alignment::AlignRight);
+        self.alignments.remove(&Alignment::CenterX);
+        self.alignments.remove(&Alignment::AlignLeft);
         self
     }
 }
 
-impl<'a> Style<'a> for Align<'a> {
+impl<'a> Style<'a> for Align {
     fn apply_to_raw_el<E: RawEl>(
         self,
         mut raw_el: E,
         style_group: Option<StyleGroup<'a>>,
     ) -> (E, Option<StyleGroup<'a>>) {
-        for class in self.static_css_classes {
-            raw_el = raw_el.class(&class);
+        for alignment in self.alignments {
+            raw_el = raw_el.class(alignment.into());
         }
-        for (class, enabled) in self.dynamic_css_classes {
-            raw_el = raw_el.class_signal(class, enabled);
+        for (alignment, enabled) in self.dynamic_alignments {
+            raw_el = raw_el.class_signal(Into::<&str>::into(alignment), enabled);
         }
         (raw_el, style_group)
     }
