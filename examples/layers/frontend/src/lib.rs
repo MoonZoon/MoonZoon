@@ -63,6 +63,7 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
     let (color, align) = rectangle.color_and_align();
 
     El::new()
+        .update_raw_el(|el| el.class("rectangle"))
         .s(Width::new(100))
         .s(Height::new(100))
         .s(RoundedCorners::all(15))
