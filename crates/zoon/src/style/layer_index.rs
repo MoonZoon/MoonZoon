@@ -10,12 +10,12 @@ pub struct LayerIndex<'a> {
 }
 
 impl<'a> LayerIndex<'a> {
-    // Google says we can't use `i32::MIN/MAX` on all browsers directly, don't know why
+    // Google says we can't use `i32::MIN/MAX` on all browsers directly, don't know
+    // why
     const MAX_VALUE_OFFSET: i32 = 9;
     pub const MIN_VALUE: i32 = i32::MIN + Self::MAX_VALUE_OFFSET;
     pub const MAX_VALUE: i32 = i32::MAX - Self::MAX_VALUE_OFFSET;
 
-    pub fn new(index: i32) -> Self {
     /// Set the layer index for an element.
     /// # Example
     /// ```no_run

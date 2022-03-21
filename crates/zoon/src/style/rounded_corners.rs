@@ -4,7 +4,7 @@ use futures_signals::signal::channel;
 // ------ Radius ------
 /// Define radius for rounded corners with pixels.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Radius {
+pub enum Radius {
     Px(u32),
     Max,
 }
@@ -119,8 +119,6 @@ impl RoundedCorners {
         Self::default().top_max().bottom_max()
     }
 
-    pub fn top(self, radius: impl Into<Radius>) -> Self {
-        let radius = radius.into();
     /// Set radius for top corners.
     /// # Example
     /// ```no_run
@@ -130,7 +128,8 @@ impl RoundedCorners {
     ///     .s(RoundedCorners::new().top(10))
     ///     .label("Click me");
     /// ```
-    pub fn top(self, radius: u32) -> Self {
+    pub fn top(self, radius: impl Into<Radius>) -> Self {
+        let radius = radius.into();
         self.top_left(radius).top_right(radius)
     }
 
@@ -156,8 +155,6 @@ impl RoundedCorners {
         self.top_left_max().top_right_max()
     }
 
-    pub fn bottom(self, radius: impl Into<Radius>) -> Self {
-        let radius = radius.into();
     /// Set radius for bottom corners.
     /// # Example
     /// ```no_run
@@ -167,7 +164,8 @@ impl RoundedCorners {
     ///     .s(RoundedCorners::new().bottom(10))
     ///     .label("Click me");
     /// ```
-    pub fn bottom(self, radius: u32) -> Self {
+    pub fn bottom(self, radius: impl Into<Radius>) -> Self {
+        let radius = radius.into();
         self.bottom_left(radius).bottom_right(radius)
     }
 
@@ -193,8 +191,6 @@ impl RoundedCorners {
         self.bottom_left_max().bottom_right_max()
     }
 
-    pub fn left(self, radius: impl Into<Radius>) -> Self {
-        let radius = radius.into();
     /// Set radius for left corners.
     /// # Example
     /// ```no_run
@@ -204,7 +200,8 @@ impl RoundedCorners {
     ///     .s(RoundedCorners::new().left(10))
     ///     .label("Click me");
     /// ```
-    pub fn left(self, radius: u32) -> Self {
+    pub fn left(self, radius: impl Into<Radius>) -> Self {
+        let radius = radius.into();
         self.top_left(radius).bottom_left(radius)
     }
 
@@ -230,8 +227,6 @@ impl RoundedCorners {
         self.top_left_max().bottom_left_max()
     }
 
-    pub fn right(self, radius: impl Into<Radius>) -> Self {
-        let radius = radius.into();
     /// Set radius for right corners.
     /// # Example
     /// ```no_run
@@ -241,7 +236,8 @@ impl RoundedCorners {
     ///     .s(RoundedCorners::new().right(10))
     ///     .label("Click me");
     /// ```
-    pub fn right(self, radius: u32) -> Self {
+    pub fn right(self, radius: impl Into<Radius>) -> Self {
+        let radius = radius.into();
         self.top_right(radius).bottom_right(radius)
     }
 
@@ -267,16 +263,13 @@ impl RoundedCorners {
         self.top_right_max().bottom_right_max()
     }
 
-    pub fn top_left(mut self, radius: impl Into<Radius>) -> Self {
-        self.top_left = RadiusSignal::new_from_value(radius);
-        self
-    }
-
     pub fn top_left_signal(
         mut self,
         radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
     ) -> Self {
         self.top_left = RadiusSignal::new_from_signal(radius);
+        self
+    }
     /// Set radius for the top left corner.
     /// # Example
     /// ```no_run
@@ -286,8 +279,8 @@ impl RoundedCorners {
     ///     .s(RoundedCorners::new().top_left(10))
     ///     .label("Click me");
     /// ```
-    pub fn top_left(mut self, radius: u32) -> Self {
-        self.top_left = Radius::Px(radius);
+    pub fn top_left(mut self, radius: impl Into<Radius>) -> Self {
+        self.top_left = RadiusSignal::new_from_value(radius);
         self
     }
 
@@ -305,16 +298,14 @@ impl RoundedCorners {
         self
     }
 
-    pub fn top_right(mut self, radius: impl Into<Radius>) -> Self {
-        self.top_right = RadiusSignal::new_from_value(radius);
-        self
-    }
-
     pub fn top_right_signal(
         mut self,
         radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
     ) -> Self {
         self.top_right = RadiusSignal::new_from_signal(radius);
+        self
+    }
+
     /// Set radius for the top right corner.
     /// # Example
     /// ```no_run
@@ -324,8 +315,8 @@ impl RoundedCorners {
     ///     .s(RoundedCorners::new().top_right(10))
     ///     .label("Click me");
     /// ```
-    pub fn top_right(mut self, radius: u32) -> Self {
-        self.top_right = Radius::Px(radius);
+    pub fn top_right(mut self, radius: impl Into<Radius>) -> Self {
+        self.top_right = RadiusSignal::new_from_value(radius);
         self
     }
 
@@ -343,16 +334,14 @@ impl RoundedCorners {
         self
     }
 
-    pub fn bottom_left(mut self, radius: impl Into<Radius>) -> Self {
-        self.bottom_left = RadiusSignal::new_from_value(radius);
-        self
-    }
-
     pub fn bottom_left_signal(
         mut self,
         radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
     ) -> Self {
         self.bottom_left = RadiusSignal::new_from_signal(radius);
+        self
+    }
+
     /// Set radius for the bottom left corner.
     /// # Example
     /// ```no_run
@@ -362,8 +351,8 @@ impl RoundedCorners {
     ///     .s(RoundedCorners::new().bottom_left(10))
     ///     .label("Click me");
     /// ```
-    pub fn bottom_left(mut self, radius: u32) -> Self {
-        self.bottom_left = Radius::Px(radius);
+    pub fn bottom_left(mut self, radius: impl Into<Radius>) -> Self {
+        self.bottom_left = RadiusSignal::new_from_value(radius);
         self
     }
 
@@ -381,16 +370,14 @@ impl RoundedCorners {
         self
     }
 
-    pub fn bottom_right(mut self, radius: impl Into<Radius>) -> Self {
-        self.bottom_right = RadiusSignal::new_from_value(radius);
-        self
-    }
-
     pub fn bottom_right_signal(
         mut self,
         radius: impl Signal<Item = impl IntoOptionRadius> + Unpin + 'static,
     ) -> Self {
         self.bottom_right = RadiusSignal::new_from_signal(radius);
+        self
+    }
+
     /// Set radius for the bottom right corner.
     /// # Example
     /// ```no_run
@@ -400,8 +387,8 @@ impl RoundedCorners {
     ///     .s(RoundedCorners::new().bottom_right(10))
     ///     .label("Click me");
     /// ```
-    pub fn bottom_right(mut self, radius: u32) -> Self {
-        self.bottom_right = Radius::Px(radius);
+    pub fn bottom_right(mut self, radius: impl Into<Radius>) -> Self {
+        self.bottom_right = RadiusSignal::new_from_value(radius);
         self
     }
 
@@ -572,7 +559,8 @@ fn compute_radii(
     )
 }
 
-// @TODO remove or integrate to an existing example (e.g. slider) or to a new one?
+// @TODO remove or integrate to an existing example (e.g. slider) or to a new
+// one?
 
 //         .item(test_a())
 //         .item(test_a2())
