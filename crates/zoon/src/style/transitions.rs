@@ -3,13 +3,30 @@ use std::borrow::Cow;
 
 // ------ Transitions ------
 
+/// Define transitions for an element between two states.
+/// More information at <https://developer.mozilla.org/en-US/docs/Web/CSS/transition>
 #[derive(Default)]
 pub struct Transitions<'a> {
+    /// Static css properties used by zoon.
     static_css_props: StaticCSSProps<'a>,
+    /// Customizable css properties which can be added.
     dynamic_css_props: DynamicCSSProps,
 }
 
 impl<'a> Transitions<'a> {
+    /// Apply a transformation to an element. For now we need to use raw css to
+    /// update the element with the use of `pseudo class` # Example
+    /// ```no_run
+    /// use zoon::*;
+    /// let button = Button::new()
+    ///     .update_raw_el(|raw_el| {
+    ///         raw_el.style_group(StyleGroup::new(":hover").style("margin-right", "40%"))
+    ///     })
+    ///     .s(Transitions::new([
+    ///         Transition::property("margin-right").duration(2000)
+    ///     ]))
+    ///     .label("Hover me");
+    /// ```
     pub fn new(transitions: impl IntoIterator<Item = Transition>) -> Self {
         let transitions = transitions
             .into_iter()
@@ -21,6 +38,7 @@ impl<'a> Transitions<'a> {
         this
     }
 
+    /// # Todo : write documentation when Api is improved.
     pub fn with_signal(
         transitions: impl Signal<Item = impl IntoIterator<Item = Transition>> + Unpin + 'static,
     ) -> Self {
