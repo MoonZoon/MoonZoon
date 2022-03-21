@@ -37,6 +37,26 @@ impl<'a> LayerIndex<'a> {
         this
     }
 
+    /// Set the layer index for an element depending on signal's state..
+    /// # Example
+    /// ```no_run
+    /// use zoon::{named_color::*, *};
+    ///
+    /// let (is_hovered, hover_signal) = Mutable::new_and_signal(false);
+    ///
+    /// let container = Column::new()
+    ///     .s(Background::new().color(GREEN_7))
+    ///     .item(
+    ///         Paragraph::new()
+    ///             .s(LayerIndex::with_signal(hover_signal.map_bool(|| 1, || -1)))
+    ///             .content("Behind and trying to hide"),
+    ///     )
+    ///     .item(
+    ///         Paragraph::new()
+    ///             .content("Front and you can see me. Hover me so you can see a surprise")
+    ///             .on_hovered_change(move |hover| is_hovered.set(hover)),
+    ///     );
+    /// ```
     pub fn with_signal(
         index: impl Signal<Item = impl Into<Option<i32>>> + Unpin + 'static,
     ) -> Self {
