@@ -219,11 +219,24 @@ fn root() -> impl Element {
         .layers_signal_vec(rectangles().signal_vec().map(rectangle))
 }
 
+pub struct Timeline {
+    
+}
+
 fn rectangle(rectangle: Rectangle) -> impl Element {
     println!("render Rectangle '{rectangle:?}'");
 
-    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let (color, align) = rectangle.color_and_align();
+
+    let hover_timeline = Timeline::new(false);
+    let hover_oscillator = WaveOscillator::new(color.l(), color.l() + 5.);
+    let hover_signal = hover_timeline.signal(move |state, input| {
+        if state {
+            hover_oscillator.interpolate(input)
+        } else {
+            hover_oscillator.interpolate(1. - input)
+        }
+    });
 
     El::new()
         .s(Transform::with_signal(breathing().signal().map(|percent| {
@@ -235,10 +248,12 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
         .s(Cursor::new(CursorIcon::Pointer))
         .s(Shadows::new([Shadow::new().blur(20).color(GRAY_8)]))
         .s(Background::new().color_signal(
-            hovered_signal.map_bool(move || color.update_l(|l| l + 5.), move || color),
+            hover_signal.map(move |l| color.set_l(l))
         ))
         .s(align)
-        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .on_hovered_change(move |is_hovered| { 
+            hover_timeline.go(Duration::milliseconds(200), is_hovered)
+        })
         .on_click(move || bring_to_front(rectangle))
 }
 
