@@ -93,7 +93,7 @@ impl<'a> Height<'a> {
         this
     }
 
-    /// THe element minimum height will be the height of thw device screen or
+    /// The element minimum height will be the height of thw device screen or
     /// web browser frame.
     /// # Example
     /// ```no_run
