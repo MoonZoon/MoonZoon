@@ -29,7 +29,7 @@ impl<'a> Height<'a> {
     /// ```no_run
     /// use zoon::*;
     ///
-    /// let button = Button::new().s(Height::new(50));
+    /// let button = Button::new().s(Height::new(50)).label("Click me");
     /// ```
     pub fn new(height: u32) -> Self {
         let mut this = Self::default();
