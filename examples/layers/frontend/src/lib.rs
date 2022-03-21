@@ -31,6 +31,169 @@ fn rectangles() -> &'static MutableVec<Rectangle> {
     MutableVec::new_with_values(Rectangle::iter().collect())
 }
 
+#[static_ref]
+fn breathing() -> &'static Movement {
+    WaveOscillator::new(100, 120).cycle(Duration::seconds(2))
+}
+
+pub struct Movement {
+    repeat: Option<usize>,
+    duration: Duration,
+    oscillator: Box<dyn Oscillator + Sync + Send>,
+    value: Mutable<f64>
+}
+
+impl Movement {
+    pub fn new(
+        repeat: Option<usize>, 
+        duration: Duration, 
+        oscillator: impl Oscillator + Sync + Send + 'static,
+    ) -> Self {
+        Self {
+            repeat,
+            duration,
+            oscillator: Box::new(oscillator),
+            value: Mutable::default(),
+        }
+    }
+
+    pub fn signal(&self) -> MutableSignal<f64> {
+        self.value.signal()
+    }
+}
+
+pub trait Oscillator {
+    fn interpolate(&self, input: f64) -> f64;
+}
+
+pub trait OscillatorExt: Oscillator where Self: Sized + Send + Sync + 'static {
+    fn shift(self, shift: f64) -> Self;
+
+    fn cycle(self, duration: Duration) -> Movement {
+        Movement::new(None, duration, self)
+    }
+    fn repeat(self, n: usize, duration: Duration) -> Movement {
+        Movement::new(Some(n), duration, self)
+    }
+    fn once(self, duration: Duration) -> Movement {
+        self.repeat(1, duration)
+    }
+}
+
+pub struct WaveOscillator {
+    min: f64,
+    max: f64,
+    shift: f64,
+}
+
+impl WaveOscillator {
+    pub fn new(min: impl Into<f64>, max: impl Into<f64>) -> Self {
+        Self {
+            min: min.into(),
+            max: max.into(),
+            shift: 0.,
+        }
+    }
+}
+
+impl Oscillator for WaveOscillator {
+    fn interpolate(&self, input: f64) -> f64 {
+        todo!()
+    }
+}
+
+impl OscillatorExt for WaveOscillator {
+    fn shift(mut self, shift: f64) -> Self {
+        self.shift = shift;
+        self
+    }
+}
+
+pub struct WrapOscillator {
+    start: f64,
+    end: f64,
+    shift: f64,
+}
+
+impl WrapOscillator {
+    pub fn new(start: impl Into<f64>, end: impl Into<f64>) -> Self {
+        Self {
+            start: start.into(),
+            end: end.into(),
+            shift: 0.,
+        }
+    }
+}
+
+impl Oscillator for WrapOscillator {
+    fn interpolate(&self, input: f64) -> f64 {
+        todo!()
+    }
+}
+
+impl OscillatorExt for WrapOscillator {
+    fn shift(mut self, shift: f64) -> Self {
+        self.shift = shift;
+        self
+    }
+}
+
+pub struct ZigZagOscillator {
+    start: f64,
+    end: f64,
+    shift: f64,
+}
+
+impl ZigZagOscillator {
+    pub fn new(start: impl Into<f64>, end: impl Into<f64>) -> Self {
+        Self {
+            start: start.into(),
+            end: end.into(),
+            shift: 0.,
+        }
+    }
+}
+
+impl Oscillator for ZigZagOscillator {
+    fn interpolate(&self, input: f64) -> f64 {
+        todo!()
+    }
+}
+
+impl OscillatorExt for ZigZagOscillator {
+    fn shift(mut self, shift: f64) -> Self {
+        self.shift = shift;
+        self
+    }
+}
+
+pub struct CustomOscillator {
+    iterpolation: Box<dyn Fn(f64) -> f64 + Send + Sync>,
+    shift: f64,
+}
+
+impl CustomOscillator {
+    pub fn new(iterpolation: impl Fn(f64) -> f64 + 'static + Send + Sync) -> Self {
+        Self {
+            iterpolation: Box::new(iterpolation),
+            shift: 0.,
+        }
+    }
+}
+
+impl Oscillator for CustomOscillator {
+    fn interpolate(&self, input: f64) -> f64 {
+        todo!()
+    }
+}
+
+impl OscillatorExt for CustomOscillator {
+    fn shift(mut self, shift: f64) -> Self {
+        self.shift = shift;
+        self
+    }
+}
+
 // ------ ------
 //   Commands
 // ------ ------
@@ -63,7 +226,9 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
     let (color, align) = rectangle.color_and_align();
 
     El::new()
-        .update_raw_el(|el| el.class("rectangle"))
+        .s(Transform::with_signal(breathing().signal().map(|percent| {
+            Transform::new().scale(percent)
+        })))
         .s(Width::new(100))
         .s(Height::new(100))
         .s(RoundedCorners::all(15))
