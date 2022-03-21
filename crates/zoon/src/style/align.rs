@@ -16,7 +16,7 @@ use strum::{EnumIter, IntoEnumIterator, IntoStaticStr};
 ///     .child("bottom_right element");
 /// ```
 ///
-/// Here is the element is vertically aligned on the right side.
+/// Here the element is vertically aligned on the right side.
 /// # Example
 /// ```no_run
 /// use zoon::*;
@@ -68,6 +68,7 @@ impl Align {
         this
     }
     /// Align an element in the center of its container.
+    /// # Example
     /// ```no_run
     /// use zoon::*;
     ///
@@ -81,7 +82,7 @@ impl Align {
     }
 
     /// The element will be centered horizontally.
-    ///
+    /// # Example
     /// ```no_run
     /// use zoon::*;
     ///
@@ -98,7 +99,7 @@ impl Align {
     }
 
     /// The element will be centered vertically.
-    ///
+    /// # Example
     /// ```no_run
     /// use zoon::*;
     ///
@@ -116,7 +117,7 @@ impl Align {
 
     /// The element will be aligned at the top of its container.
     /// By default the element is also positioned on left side as well.
-    ///
+    /// # Example
     /// ```no_run
     /// use zoon::*;
     ///
@@ -134,6 +135,7 @@ impl Align {
 
     /// The element will be aligned at the bottom of its container.
     /// By default the element is also positioned on left side as well.
+    /// # Example
     /// ```no_run
     /// use zoon::*;
     ///
@@ -150,7 +152,7 @@ impl Align {
     }
 
     /// The element will be aligned at the left of its container.
-    ///
+    /// # Example
     /// ```no_run
     /// use zoon::*;
     ///
@@ -168,6 +170,7 @@ impl Align {
 
     /// The element will be aligned at the right of its container.
     /// By default the element is also positioned on top as well.
+    /// # Example
     /// ```no_run
     /// use zoon::*;
     ///
