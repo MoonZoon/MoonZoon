@@ -44,6 +44,22 @@ enum Alignment {
 }
 
 impl Align {
+    /// Set the alignment depending on Signal's state.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let (is_hovered, hover_signal) = Mutable::new_and_signal(false);
+    ///
+    /// let container = Column::new().s(Height::screen()).item(
+    ///     Button::new()
+    ///         .s(Align::with_signal(
+    ///             hover_signal.map_bool(|| Align::default().bottom(), Align::center),
+    ///         ))
+    ///         .on_hovered_change(move |hover| is_hovered.set(hover))
+    ///         .label("hover me"),
+    /// );
+    /// ```
     pub fn with_signal(
         align: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
     ) -> Self {
