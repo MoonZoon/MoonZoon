@@ -11,6 +11,7 @@ pub struct Timeline<T> {
     queue: Arc<RwLock<VecDeque<Step<T>>>>,
     current: Mutable<Option<Step<T>>>,
     arrived: Mutable<Step<T>>,
+    previous: Mutable<Option<Step<T>>>,
 }
 
 impl<T> Timeline<T> {
@@ -20,6 +21,7 @@ impl<T> Timeline<T> {
             queue: Arc::new(RwLock::new(VecDeque::new())),
             current: Mutable::new(Some(step.clone())),
             arrived: Mutable::new(step),
+            previous: Mutable::new(None),
         }
     }
 
@@ -44,6 +46,7 @@ impl<T> Timeline<T> {
 struct Step<T> {
     duration: Duration,
     state: Arc<T>,
+    elapsed: Arc<RwLock<Duration>>,
 }
 
 impl<T> Clone for Step<T> {
@@ -51,6 +54,7 @@ impl<T> Clone for Step<T> {
         Self {
             duration: self.duration,
             state: Arc::clone(&self.state),
+            elapsed: Arc::clone(&self.elapsed),
         }
     }
 }
@@ -60,6 +64,7 @@ impl<T> Step<T> {
         Self {
             duration,
             state: Arc::new(state),
+            elapsed: Arc::new(RwLock::new(Duration::zero())),
         }
     }
 }
