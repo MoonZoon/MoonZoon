@@ -1,6 +1,8 @@
 use crate::*;
 use once_cell::race::OnceBox;
-use std::{borrow::Cow, collections::BTreeMap, convert::TryFrom, iter, mem, sync::Arc};
+use std::{
+    borrow::Cow, collections::BTreeMap, convert::TryFrom, iter, mem, sync::Arc,
+};
 use web_sys::{CssStyleDeclaration, CssStyleRule, CssStyleSheet, HtmlStyleElement};
 
 pub mod named_color;
@@ -61,7 +63,7 @@ pub struct CssPropValue<'a> {
 }
 
 // ------ StaticCSSProps ------
-
+/// Css properties to be added to the generated html.
 #[derive(Default)]
 pub struct StaticCSSProps<'a>(BTreeMap<&'a str, CssPropValue<'a>>);
 
@@ -101,7 +103,10 @@ impl<'a> IntoIterator for StaticCSSProps<'a> {
 }
 
 impl<'a> Extend<(&'a str, CssPropValue<'a>)> for StaticCSSProps<'a> {
-    fn extend<T: IntoIterator<Item = (&'a str, CssPropValue<'a>)>>(&mut self, iter: T) {
+    fn extend<T: IntoIterator<Item = (&'a str, CssPropValue<'a>)>>(
+        &mut self,
+        iter: T,
+    ) {
         self.0.extend(iter);
     }
 }
@@ -112,13 +117,18 @@ pub type DynamicCSSProps = BTreeMap<Cow<'static, str>, BoxedCssSignal>;
 
 // ------ BoxedCssSignal ------
 
-pub type BoxedCssSignal = Box<dyn Signal<Item = Box<dyn IntoOptionCowStr<'static>>> + Unpin>;
+pub type BoxedCssSignal =
+    Box<dyn Signal<Item = Box<dyn IntoOptionCowStr<'static>>> + Unpin>;
 
 // @TODO replace with a new function? https://github.com/Pauan/rust-signals/blob/master/CHANGELOG.md#0322---2021-06-13
 pub fn box_css_signal(
-    signal: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static,
+    signal: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static>
+        + Unpin
+        + 'static,
 ) -> BoxedCssSignal {
-    Box::new(signal.map(|value| Box::new(value) as Box<dyn IntoOptionCowStr<'static>>))
+    Box::new(
+        signal.map(|value| Box::new(value) as Box<dyn IntoOptionCowStr<'static>>),
+    )
 }
 
 // ------ units ------
@@ -133,11 +143,26 @@ pub fn ch<'a>(ch: impl IntoCowStr<'a>) -> Cow<'a, str> {
 
 // ------ Style ------
 
+/// Traits that allows to add styling to an element.
+/// # Example
+/// ```no_run
+/// use zoon::*;
+/// let button = Button::new()
+///     .update_raw_el(|raw_el| {
+///         raw_el
+///             .style_group(StyleGroup::new(":hover").style("margin-right", "40%"))
+///     })
+///     .s(Transitions::new([
+///         Transition::property("margin-right").duration(2000)
+///     ]))
+///     .label("Hover me");
+/// ```
 pub trait Style<'a>: Default {
     fn new() -> Self {
         Self::default()
     }
 
+    /// Set raw css to a raw element.
     fn apply_to_raw_el<E: RawEl>(
         self,
         raw_el: E,
@@ -146,14 +171,46 @@ pub trait Style<'a>: Default {
 }
 
 // ------ StyleGroup ------
-
+/// Css styles that can be added on a raw html element or globally with a
+/// selector.
 pub struct StyleGroup<'a> {
+    /// The `css selector` where the styles apply.
     pub selector: Cow<'a, str>,
     static_css_props: StaticCSSProps<'a>,
     dynamic_css_props: DynamicCSSProps,
 }
 
 impl<'a> StyleGroup<'a> {
+    /// Create a set of css properties for the specific selector.
+    /// More information about `css selectors` at <https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors>.
+    /// # Example
+    /// We can use already existing classes to apply different styles.
+    /// ```no_run
+    /// use zoon::*;
+    /// let button = Button::new()
+    ///     .update_raw_el(|raw_el| {
+    ///         raw_el.style_group(
+    ///             StyleGroup::new(".button")
+    ///                 .style("background", "purple")
+    ///                 .style("padding", "10px"),
+    ///         )
+    ///     })
+    ///     .label("Click me");
+    /// ```
+    /// # Example
+    /// Here we add a transition to animate the button when the user hovers it.
+    /// ```no_run
+    /// use zoon::*;
+    /// let button = Button::new()
+    ///     .update_raw_el(|raw_el| {
+    ///         raw_el
+    ///             .style_group(StyleGroup::new(":hover").style("margin-right", "40%"))
+    ///     })
+    ///     .s(Transitions::new([
+    ///         Transition::property("margin-right").duration(2000)
+    ///     ]))
+    ///     .label("Hover me");
+    /// ```
     pub fn new(selector: impl IntoCowStr<'a>) -> Self {
         Self {
             selector: selector.into_cow_str(),
@@ -162,20 +219,63 @@ impl<'a> StyleGroup<'a> {
         }
     }
 
+    /// Add a css a property to a specific selector with a `key` and `value`.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    /// use zoon::RawEl;
+    ///
+    ///  let button = Button::new()
+    ///         .update_raw_el(|el| el.style_group(StyleGroup::new(":hover").style("background", "purple")))
+    ///         .label("Click me");
     pub fn style(mut self, name: &'a str, value: impl Into<Cow<'a, str>>) -> Self {
         self.static_css_props.insert(name, value.into());
         self
     }
 
-    pub fn style_important(mut self, name: &'a str, value: impl Into<Cow<'a, str>>) -> Self {
+    /// Add a css property to a specific selector followed by the`!important`
+    /// rule. This example shows how to add the rule event if
+    /// it is not necessary in this specific case for displaying the correct
+    /// background.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    /// use zoon::RawEl;
+    ///
+    ///  let button = Button::new()
+    ///         .update_raw_el(|el| el.style_group(StyleGroup::new(".button")
+    /// .style_important("background", "purple")))
+    ///         .label("Click me");
+    pub fn style_important(
+        mut self,
+        name: &'a str,
+        value: impl Into<Cow<'a, str>>,
+    ) -> Self {
         self.static_css_props.insert_important(name, value.into());
         self
     }
 
+    /// Update the group style depending of the signal's state.
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    /// let (is_hovered, hover_signal) = Mutable::new_and_signal(false);
+    /// let button = Button::new()
+    ///     .update_raw_el(|el| {
+    ///         el.style_group(StyleGroup::new(".button").style_signal(
+    ///             "background",
+    ///             hover_signal.map_bool(|| "pink", || "purple"),
+    ///         ))
+    ///     })
+    ///     .on_hovered_change(move |hover| is_hovered.set(hover))
+    ///     .label("Hover me");
+    /// ```
     pub fn style_signal(
         mut self,
         name: impl IntoCowStr<'static>,
-        value: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static,
+        value: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static>
+            + Unpin
+            + 'static,
     ) -> Self {
         self.dynamic_css_props
             .insert(name.into_cow_str(), box_css_signal(value));
@@ -198,6 +298,36 @@ impl Drop for StyleGroupHandle {
 
 // ------ global_styles ------
 
+/// Set styles that are globally used in your application.
+/// Very convenient for customizing the design at one single place.
+/// # Example
+/// How to style every button in your app in few lanes. The [Button] element has
+/// the `button` class attached by default to it. So it is possible to overwrite
+/// it.
+/// ```no_run
+/// use zoon::{named_color::*, *};
+///
+/// global_styles().style_group(
+///     StyleGroup::new(".button")
+///         .style("background", "purple")
+///         .style("padding", "10px"),
+/// );
+/// let button = Button::new().label("Click me");
+/// ```
+/// # Example
+/// Global styles can be used to add regular css classes.
+/// ```no_run
+/// use zoon::{named_color::*, *};
+///
+/// global_styles().style_group(
+///     StyleGroup::new(".my_button_class")
+///         .style("background", "purple")
+///         .style("padding", "10px"),
+/// );
+/// let button = Button::new()
+///     .label("Click me")
+///     .update_raw_el(|el| el.class("my_button_class"));
+/// ```
 pub fn global_styles() -> &'static GlobalStyles {
     static GLOBAL_STYLES: OnceBox<GlobalStyles> = OnceBox::new();
     GLOBAL_STYLES.get_or_init(|| Box::new(GlobalStyles::new()))
@@ -246,7 +376,11 @@ impl GlobalStyles {
 
     // --
 
-    fn style_group_inner(&self, group: StyleGroup, droppable: bool) -> (u32, Vec<TaskHandle>) {
+    fn style_group_inner(
+        &self,
+        group: StyleGroup,
+        droppable: bool,
+    ) -> (u32, Vec<TaskHandle>) {
         let (rule_id_and_index, ids_lock) = self.rule_ids.add_new_id();
         let empty_rule = [&group.selector, "{}"].concat();
 
@@ -302,12 +436,20 @@ impl GlobalStyles {
     fn remove_rule(&self, id: u32) {
         let (rule_index, _ids_lock) = self.rule_ids.remove_id(id);
         self.sheet
-            .delete_rule(u32::try_from(rule_index).expect_throw("style: rule_index casting failed"))
+            .delete_rule(
+                u32::try_from(rule_index)
+                    .expect_throw("style: rule_index casting failed"),
+            )
             .expect_throw("style: delete_rule failed");
     }
 }
 
-fn set_css_property(declaration: &CssStyleDeclaration, name: &str, value: &str, important: bool) {
+fn set_css_property(
+    declaration: &CssStyleDeclaration,
+    name: &str,
+    value: &str,
+    important: bool,
+) {
     // @TODO refactor?
 
     let priority = if important { "important" } else { "" };
@@ -315,7 +457,8 @@ fn set_css_property(declaration: &CssStyleDeclaration, name: &str, value: &str, 
     match declaration.set_property_with_priority(name, value, priority) {
         Ok(declaration) => declaration,
         Err(error) => {
-            // e.g. `CSSStyleDeclaration.setProperty: Can't set properties on CSSFontFaceRule declarations` on Firefox
+            // e.g. `CSSStyleDeclaration.setProperty: Can't set properties on
+            // CSSFontFaceRule declarations` on Firefox
             crate::eprintln!("{:#?}", error);
             return;
         }
@@ -333,7 +476,11 @@ fn set_css_property(declaration: &CssStyleDeclaration, name: &str, value: &str, 
         for value_prefix in iter::once("").chain(VENDOR_PREFIXES) {
             let prefixed_value = [value_prefix, value].concat();
             declaration
-                .set_property_with_priority(&prefixed_name, &prefixed_value, priority)
+                .set_property_with_priority(
+                    &prefixed_name,
+                    &prefixed_value,
+                    priority,
+                )
                 .expect_throw("style: set_property_with_priority failed");
             if not(declaration
                 .get_property_value(&prefixed_name)
