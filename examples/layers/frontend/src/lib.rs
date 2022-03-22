@@ -22,6 +22,23 @@ impl Rectangle {
     }
 }
 
+
+
+
+
+// pub struct Timeline {
+
+// }
+
+// @TODO rename to Transition or something else?
+// pub struct Oscillator {
+
+// }
+
+
+
+
+
 // ------ ------
 //    States
 // ------ ------
@@ -31,167 +48,38 @@ fn rectangles() -> &'static MutableVec<Rectangle> {
     MutableVec::new_with_values(Rectangle::iter().collect())
 }
 
+#[derive(Clone, Copy)]
+enum Breath {
+    Out,
+    In,
+}
+
+// @TODO refactor / merge with `breathing_oscillator()`?
 #[static_ref]
-fn breathing() -> &'static Movement {
-    WaveOscillator::new(100, 120).cycle(Duration::seconds(2))
+fn breathing_timeline() -> &'static Timeline {
+    Timeline::new(Breath::Out);
 }
 
-pub struct Movement {
-    repeat: Option<usize>,
-    duration: Duration,
-    oscillator: Box<dyn Oscillator + Sync + Send>,
-    value: Mutable<f64>
-}
 
-impl Movement {
-    pub fn new(
-        repeat: Option<usize>, 
-        duration: Duration, 
-        oscillator: impl Oscillator + Sync + Send + 'static,
-    ) -> Self {
-        Self {
-            repeat,
-            duration,
-            oscillator: Box::new(oscillator),
-            value: Mutable::default(),
+#[static_ref]
+fn breathing_oscillator() -> &'static Oscillator {
+    Task::start(
+        breathing_timeline().arrived_signal().for_each_sync(|arrived| {
+            let next_state = if matches!(arrived, Breath::Out) {
+                Breath::In
+            } else {
+                Breath::Out
+            };
+            breathing_timeline().push(Duration::seconds(2), next_state);
+        })
+    );
+
+    Oscillator::new(breathing_timeline(), |breath| {
+        match breath {
+            Breath::Out => 100.,
+            Breath::In => 120.,
         }
-    }
-
-    pub fn signal(&self) -> MutableSignal<f64> {
-        self.value.signal()
-    }
-}
-
-pub trait Oscillator {
-    fn interpolate(&self, input: f64) -> f64;
-}
-
-pub trait OscillatorExt: Oscillator where Self: Sized + Send + Sync + 'static {
-    fn shift(self, shift: f64) -> Self;
-
-    fn cycle(self, duration: Duration) -> Movement {
-        Movement::new(None, duration, self)
-    }
-    fn repeat(self, n: usize, duration: Duration) -> Movement {
-        Movement::new(Some(n), duration, self)
-    }
-    fn once(self, duration: Duration) -> Movement {
-        self.repeat(1, duration)
-    }
-}
-
-pub struct WaveOscillator {
-    min: f64,
-    max: f64,
-    shift: f64,
-}
-
-impl WaveOscillator {
-    pub fn new(min: impl Into<f64>, max: impl Into<f64>) -> Self {
-        Self {
-            min: min.into(),
-            max: max.into(),
-            shift: 0.,
-        }
-    }
-}
-
-impl Oscillator for WaveOscillator {
-    fn interpolate(&self, input: f64) -> f64 {
-        todo!()
-    }
-}
-
-impl OscillatorExt for WaveOscillator {
-    fn shift(mut self, shift: f64) -> Self {
-        self.shift = shift;
-        self
-    }
-}
-
-pub struct WrapOscillator {
-    start: f64,
-    end: f64,
-    shift: f64,
-}
-
-impl WrapOscillator {
-    pub fn new(start: impl Into<f64>, end: impl Into<f64>) -> Self {
-        Self {
-            start: start.into(),
-            end: end.into(),
-            shift: 0.,
-        }
-    }
-}
-
-impl Oscillator for WrapOscillator {
-    fn interpolate(&self, input: f64) -> f64 {
-        todo!()
-    }
-}
-
-impl OscillatorExt for WrapOscillator {
-    fn shift(mut self, shift: f64) -> Self {
-        self.shift = shift;
-        self
-    }
-}
-
-pub struct ZigZagOscillator {
-    start: f64,
-    end: f64,
-    shift: f64,
-}
-
-impl ZigZagOscillator {
-    pub fn new(start: impl Into<f64>, end: impl Into<f64>) -> Self {
-        Self {
-            start: start.into(),
-            end: end.into(),
-            shift: 0.,
-        }
-    }
-}
-
-impl Oscillator for ZigZagOscillator {
-    fn interpolate(&self, input: f64) -> f64 {
-        todo!()
-    }
-}
-
-impl OscillatorExt for ZigZagOscillator {
-    fn shift(mut self, shift: f64) -> Self {
-        self.shift = shift;
-        self
-    }
-}
-
-pub struct CustomOscillator {
-    iterpolation: Box<dyn Fn(f64) -> f64 + Send + Sync>,
-    shift: f64,
-}
-
-impl CustomOscillator {
-    pub fn new(iterpolation: impl Fn(f64) -> f64 + 'static + Send + Sync) -> Self {
-        Self {
-            iterpolation: Box::new(iterpolation),
-            shift: 0.,
-        }
-    }
-}
-
-impl Oscillator for CustomOscillator {
-    fn interpolate(&self, input: f64) -> f64 {
-        todo!()
-    }
-}
-
-impl OscillatorExt for CustomOscillator {
-    fn shift(mut self, shift: f64) -> Self {
-        self.shift = shift;
-        self
-    }
+    });
 }
 
 // ------ ------
@@ -219,22 +107,17 @@ fn root() -> impl Element {
         .layers_signal_vec(rectangles().signal_vec().map(rectangle))
 }
 
-pub struct Timeline {
-    
-}
-
 fn rectangle(rectangle: Rectangle) -> impl Element {
     println!("render Rectangle '{rectangle:?}'");
 
     let (color, align) = rectangle.color_and_align();
 
     let hover_timeline = Timeline::new(false);
-    let hover_oscillator = WaveOscillator::new(color.l(), color.l() + 5.);
-    let hover_signal = hover_timeline.signal(move |state, input| {
-        if state {
-            hover_oscillator.interpolate(input)
+    let lightness_oscillator = Oscillator::new(hover_timeline, move |hovered| {
+        if hovered {
+            color.l() + 5.
         } else {
-            hover_oscillator.interpolate(1. - input)
+            color.l()
         }
     });
 
@@ -248,11 +131,13 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
         .s(Cursor::new(CursorIcon::Pointer))
         .s(Shadows::new([Shadow::new().blur(20).color(GRAY_8)]))
         .s(Background::new().color_signal(
-            hover_signal.map(move |l| color.set_l(l))
+            lightness_oscillator.signal().map(move |l| color.set_l(l))
         ))
         .s(align)
         .on_hovered_change(move |is_hovered| { 
-            hover_timeline.go(Duration::milliseconds(200), is_hovered)
+            // @TODO replace `push` with `to/go` (+ implement `interrupt`)
+            hover_timeline.push(Duration::milliseconds(200), is_hovered);
+            drop(lightness_oscillator);
         })
         .on_click(move || bring_to_front(rectangle))
 }
