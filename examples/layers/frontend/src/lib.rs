@@ -1,4 +1,9 @@
-use zoon::{named_color::*, println, *, strum::{EnumIter, IntoEnumIterator}};
+use zoon::{
+    named_color::*,
+    println,
+    strum::{EnumIter, IntoEnumIterator},
+    *,
+};
 
 // ------ ------
 //     Types
@@ -22,23 +27,6 @@ impl Rectangle {
     }
 }
 
-
-
-
-
-// pub struct Timeline {
-
-// }
-
-// @TODO rename to Transition or something else?
-// pub struct Oscillator {
-
-// }
-
-
-
-
-
 // ------ ------
 //    States
 // ------ ------
@@ -54,32 +42,30 @@ enum Breath {
     In,
 }
 
-// @TODO refactor / merge with `breathing_oscillator()`?
 #[static_ref]
-fn breathing_timeline() -> &'static Timeline {
-    Timeline::new(Breath::Out);
+fn breathing_timeline() -> &'static Timeline<Breath> {
+    Timeline::new(Breath::Out)
 }
-
 
 #[static_ref]
 fn breathing_oscillator() -> &'static Oscillator {
     Task::start(
-        breathing_timeline().arrived_signal().for_each_sync(|arrived| {
-            let next_state = if matches!(arrived, Breath::Out) {
-                Breath::In
-            } else {
-                Breath::Out
-            };
-            breathing_timeline().push(Duration::seconds(2), next_state);
-        })
+        breathing_timeline()
+            .arrived_signal()
+            .for_each_sync(|arrived| {
+                let next_state = if matches!(arrived, Breath::Out) {
+                    Breath::In
+                } else {
+                    Breath::Out
+                };
+                breathing_timeline().push(Duration::seconds(2), next_state);
+            }),
     );
 
-    Oscillator::new(breathing_timeline(), |breath| {
-        match breath {
-            Breath::Out => 100.,
-            Breath::In => 120.,
-        }
-    });
+    Oscillator::new(breathing_timeline(), |breath| match breath {
+        Breath::Out => 100.,
+        Breath::In => 120.,
+    })
 }
 
 // ------ ------
@@ -113,7 +99,7 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
     let (color, align) = rectangle.color_and_align();
 
     let hover_timeline = Timeline::new(false);
-    let lightness_oscillator = Oscillator::new(hover_timeline, move |hovered| {
+    let lightness_oscillator = Oscillator::new(&hover_timeline, move |hovered| {
         if hovered {
             color.l() + 5.
         } else {
@@ -122,24 +108,24 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
     });
 
     El::new()
-        .s(Transform::with_signal(breathing().signal().map(|percent| {
-            Transform::new().scale(percent)
-        })))
+        .s(Transform::with_signal(
+            breathing_oscillator()
+                .signal()
+                .map(|percent| Transform::new().scale(percent)),
+        ))
         .s(Width::new(100))
         .s(Height::new(100))
         .s(RoundedCorners::all(15))
         .s(Cursor::new(CursorIcon::Pointer))
         .s(Shadows::new([Shadow::new().blur(20).color(GRAY_8)]))
-        .s(Background::new().color_signal(
-            lightness_oscillator.signal().map(move |l| color.set_l(l))
-        ))
+        .s(Background::new()
+            .color_signal(lightness_oscillator.signal().map(move |l| color.set_l(l))))
         .s(align)
-        .on_hovered_change(move |is_hovered| { 
-            // @TODO replace `push` with `to/go` (+ implement `interrupt`)
+        .on_hovered_change(move |is_hovered| {
             hover_timeline.push(Duration::milliseconds(200), is_hovered);
-            drop(lightness_oscillator);
         })
         .on_click(move || bring_to_front(rectangle))
+        .after_remove(move |_| drop(lightness_oscillator))
 }
 
 // ------ ------
