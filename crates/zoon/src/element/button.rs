@@ -16,7 +16,10 @@ make_flags!(Label, OnPress);
 /// # Example
 /// ```no_run
 /// use zoon::*;
-/// let button = Button::new().s(Align::center()).s(Padding::all(5));
+/// let button = Button::new()
+///     .s(Align::center())
+///     .s(Padding::all(5))
+///     .label("Click me");
 /// ```
 /// You can also create your button with specific events as well and update the styling the way you need by using [signals](https://crates.io/crates/futures-signals)
 ///
@@ -30,11 +33,13 @@ make_flags!(Label, OnPress);
 /// # Example
 /// ```no_run
 /// use zoon::{named_color::*, *};
-/// let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+/// let (hovered, hover_signal) = Mutable::new_and_signal(false);
 ///
 /// let button = Button::new()
-///     .s(Background::new().color_signal(hovered_signal.map_bool(|| GREEN_7, || GREEN_8)))
-///     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered));
+///     .s(Background::new()
+///         .color_signal(hover_signal.map_bool(|| GREEN_7, || GREEN_8)))
+///     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+///     .label("Hover me");
 /// ```
 /// It is possible to style a button with different properties such as `width` ,
 /// `height` or `font`. Colors are available with macros as well.
@@ -42,17 +47,17 @@ make_flags!(Label, OnPress);
 /// # Example
 /// ```no_run
 /// use zoon::*;
-/// let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+/// let (hovered, hover_signal) = Mutable::new_and_signal(false);
 ///
 /// let button = Button::new()
 ///     .s(Width::new(40))
 ///     .s(Height::new(40))
-///     .s(Transform::new().move_left(50).move_down(14))
 ///     .s(Font::new().size(30).center().color_signal(
-///         hovered_signal.map_bool(|| hsluv!(10.5, 37.7, 48.8), || hsluv!(12.2, 34.7, 68.2)),
+///         hover_signal
+///             .map_bool(|| hsluv!(10.5, 37.7, 48.8), || hsluv!(12.2, 34.7, 68.2)),
 ///     ))
 ///     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-///     .label("×");
+///     .label("Hover me");
 /// ```
 /// It is also possible to create a button with local state for dynamic updates.
 ///
@@ -94,16 +99,30 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
                         .style("margin-top", "auto")
                         .style("margin-bottom", "auto"),
                 )
-                .style_group(StyleGroup::new(".button > .align_top").style("margin-bottom", "auto"))
-                .style_group(StyleGroup::new(".button > .align_bottom").style("margin-top", "auto"))
                 .style_group(
-                    StyleGroup::new(".button > .align_left").style("align-self", "flex-start"),
+                    StyleGroup::new(".button > .align_top")
+                        .style("margin-bottom", "auto"),
                 )
                 .style_group(
-                    StyleGroup::new(".button > .align_right").style("align-self", "flex-end"),
+                    StyleGroup::new(".button > .align_bottom")
+                        .style("margin-top", "auto"),
                 )
-                .style_group(StyleGroup::new(".button > .exact_height").style("flex-shrink", "0"))
-                .style_group(StyleGroup::new(".button > .fill_height").style("flex-grow", "1"));
+                .style_group(
+                    StyleGroup::new(".button > .align_left")
+                        .style("align-self", "flex-start"),
+                )
+                .style_group(
+                    StyleGroup::new(".button > .align_right")
+                        .style("align-self", "flex-end"),
+                )
+                .style_group(
+                    StyleGroup::new(".button > .exact_height")
+                        .style("flex-shrink", "0"),
+                )
+                .style_group(
+                    StyleGroup::new(".button > .fill_height")
+                        .style("flex-grow", "1"),
+                );
         });
         Self {
             raw_el: RawHtmlEl::new("div")
@@ -138,8 +157,13 @@ impl<LabelFlag, OnPressFlag> IntoIterator for Button<LabelFlag, OnPressFlag> {
     }
 }
 
-impl<LabelFlag, OnPressFlag> UpdateRawEl<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<LabelFlag, OnPressFlag> UpdateRawEl<RawHtmlEl>
+    for Button<LabelFlag, OnPressFlag>
+{
+    fn update_raw_el(
+        mut self,
+        updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl,
+    ) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -149,24 +173,48 @@ impl<LabelFlag, OnPressFlag> UpdateRawEl<RawHtmlEl> for Button<LabelFlag, OnPres
 //   Abilities
 // ------ ------
 
-impl<LabelFlag, OnPressFlag> Styleable<'_, RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
-impl<LabelFlag, OnPressFlag> KeyboardEventAware<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
+impl<LabelFlag, OnPressFlag> Styleable<'_, RawHtmlEl>
+    for Button<LabelFlag, OnPressFlag>
+{
+}
+impl<LabelFlag, OnPressFlag> KeyboardEventAware<RawHtmlEl>
+    for Button<LabelFlag, OnPressFlag>
+{
+}
 impl<LabelFlag, OnPressFlag> Focusable for Button<LabelFlag, OnPressFlag> {}
-impl<LabelFlag, OnPressFlag> MouseEventAware<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
-impl<LabelFlag, OnPressFlag> PointerEventAware<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
-impl<LabelFlag, OnPressFlag> TouchEventAware<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
+impl<LabelFlag, OnPressFlag> MouseEventAware<RawHtmlEl>
+    for Button<LabelFlag, OnPressFlag>
+{
+}
+impl<LabelFlag, OnPressFlag> PointerEventAware<RawHtmlEl>
+    for Button<LabelFlag, OnPressFlag>
+{
+}
+impl<LabelFlag, OnPressFlag> TouchEventAware<RawHtmlEl>
+    for Button<LabelFlag, OnPressFlag>
+{
+}
 impl<LabelFlag, OnPressFlag> Hookable<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {
     type WSElement = HtmlDivElement;
 }
-impl<LabelFlag, OnPressFlag> AddNearbyElement<'_> for Button<LabelFlag, OnPressFlag> {}
-impl<LabelFlag, OnPressFlag> HasClassId<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
+impl<LabelFlag, OnPressFlag> AddNearbyElement<'_>
+    for Button<LabelFlag, OnPressFlag>
+{
+}
+impl<LabelFlag, OnPressFlag> HasClassId<RawHtmlEl>
+    for Button<LabelFlag, OnPressFlag>
+{
+}
 
 // ------ ------
 //  Attributes
 // ------ ------
 
 impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
-    pub fn label(mut self, label: impl IntoElement<'a> + 'a) -> Button<LabelFlagSet, OnPressFlag>
+    pub fn label(
+        mut self,
+        label: impl IntoElement<'a> + 'a,
+    ) -> Button<LabelFlagSet, OnPressFlag>
     where
         LabelFlag: FlagNotSet,
     {
@@ -198,7 +246,9 @@ impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
         self.into_type()
     }
 
-    fn into_type<NewLabelFlag, NewOnPressFlag>(self) -> Button<NewLabelFlag, NewOnPressFlag> {
+    fn into_type<NewLabelFlag, NewOnPressFlag>(
+        self,
+    ) -> Button<NewLabelFlag, NewOnPressFlag> {
         Button {
             raw_el: self.raw_el,
             flags: PhantomData,
