@@ -143,26 +143,16 @@ pub fn ch<'a>(ch: impl IntoCowStr<'a>) -> Cow<'a, str> {
 
 // ------ Style ------
 
-/// Traits that allows to add styling to an element.
-/// # Example
-/// ```no_run
-/// use zoon::*;
-/// let button = Button::new()
-///     .update_raw_el(|raw_el| {
-///         raw_el
-///             .style_group(StyleGroup::new(":hover").style("margin-right", "40%"))
-///     })
-///     .s(Transitions::new([
-///         Transition::property("margin-right").duration(2000)
-///     ]))
-///     .label("Hover me");
-/// ```
+/// Trait to be implemented to enable the use for styling.
+/// Every `struct` such as [Align] and [Background] needs to implement
+/// this trait so they can be used by [Styleable] implementations with
+/// the `s()` method within a `Zoon` element.
 pub trait Style<'a>: Default {
     fn new() -> Self {
         Self::default()
     }
 
-    /// Set raw css to a raw element.
+    /// Set css to a raw element.
     fn apply_to_raw_el<E: RawEl>(
         self,
         raw_el: E,
