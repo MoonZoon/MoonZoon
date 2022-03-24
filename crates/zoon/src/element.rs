@@ -42,6 +42,9 @@ pub use text::Text;
 pub mod text_input;
 pub use text_input::{InputType, Placeholder, TextInput};
 
+pub mod text_area;
+pub use text_area::TextArea;
+
 // --
 
 pub mod raw_el;

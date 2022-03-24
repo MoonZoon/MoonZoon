@@ -503,14 +503,14 @@ impl<
 
 // ------ Placeholder ------
 
-enum PlaceholderText<'a> {
+pub(crate) enum PlaceholderText<'a> {
     Static(Cow<'a, str>),
     Dynamic(Box<dyn Signal<Item = Box<dyn IntoOptionCowStr<'static>>> + Unpin>),
 }
 
 pub struct Placeholder<'a> {
-    text: PlaceholderText<'a>,
-    style_applicators: Vec<
+    pub(crate) text: PlaceholderText<'a>,
+    pub(crate) style_applicators: Vec<
         Box<
             dyn FnOnce((RawHtmlEl, Option<StyleGroup<'a>>)) -> (RawHtmlEl, Option<StyleGroup<'a>>)
                 + 'a,
