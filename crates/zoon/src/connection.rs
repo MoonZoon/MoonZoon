@@ -53,7 +53,7 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned> Connection<UMsg, DMsg> {
 
         // ---- Request ----
         let request =
-            Request::new_with_str_and_init("_api/up_msg_handler", &request_init).unwrap_throw();
+            Request::new_with_str_and_init("/_api/up_msg_handler", &request_init).unwrap_throw();
 
         // ---- Headers ----
         let cor_id = CorId::new();
