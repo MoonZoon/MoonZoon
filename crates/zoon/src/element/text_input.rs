@@ -666,14 +666,14 @@ impl<
 
 // ------ Placeholder ------
 
-enum PlaceholderText<'a> {
+pub(crate) enum PlaceholderText<'a> {
     Static(Cow<'a, str>),
     Dynamic(Box<dyn Signal<Item = Box<dyn IntoOptionCowStr<'static>>> + Unpin>),
 }
 
 pub struct Placeholder<'a> {
-    text: PlaceholderText<'a>,
-    style_group: StyleGroup<'a>,
+    pub(crate) text: PlaceholderText<'a>,
+    pub(crate) style_group: StyleGroup<'a>,
 }
 
 impl<'a> Placeholder<'a> {
