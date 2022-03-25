@@ -2,8 +2,8 @@ use zoon::console::log;
 use zoon::*;
 
 fn root() -> impl Element {
-    // let (content, content_signal) = Mutable::new_and_signal("".to_string());
-    // let on_press = move |c: String| *content.lock_mut() = c;
+    let (content, content_signal) = Mutable::new_and_signal_cloned("".to_string());
+    let press = move |c: &str| *content.lock_mut() = c.to_string();
 
     Column::new()
         .item(
@@ -28,9 +28,9 @@ fn root() -> impl Element {
         .item(
             Button::new()
                 .label("Display content")
-                .on_press(move || log(&*get_content_from_quill())),
+                .on_press(move || press(&*get_content_from_quill())),
         )
-    // .item(Paragraph::new().content_signal(content_signal))
+        .item(Paragraph::new().content_signal(content_signal))
 }
 
 #[wasm_bindgen(
