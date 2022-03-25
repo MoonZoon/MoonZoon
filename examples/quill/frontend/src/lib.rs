@@ -1,6 +1,10 @@
+use zoon::console::log;
 use zoon::*;
 
 fn root() -> impl Element {
+    // let (content, content_signal) = Mutable::new_and_signal("".to_string());
+    // let on_press = move |c: String| *content.lock_mut() = c;
+
     Column::new()
         .item(
             El::new()
@@ -21,8 +25,24 @@ fn root() -> impl Element {
 "#,
                 ),
         )
+        .item(
+            Button::new()
+                .label("Display content")
+                .on_press(move || log(&*get_content_from_quill())),
+        )
+    // .item(Paragraph::new().content_signal(content_signal))
 }
 
+#[wasm_bindgen(
+    inline_js = "export function get_content() { return JSON.stringify(quill.getContents()); }"
+)]
+extern "C" {
+    fn get_content() -> String;
+}
+
+fn get_content_from_quill() -> String {
+    get_content()
+}
 // ---------- // -----------
 
 #[wasm_bindgen(start)]
