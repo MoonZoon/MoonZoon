@@ -9,14 +9,18 @@ fn root() -> impl Element {
                     El::new().update_raw_el(|el| el.attr("id", "snow-container")),
                 ),
         )
-        .item(El::with_tag(Tag::Custom("script")).child(
-            r#"
+        .item(
+            El::with_tag(Tag::Custom("script"))
+                .update_raw_el(|el| el.style("display", "none"))
+                .child(
+                    r#"
   var quill = new Quill('#snow-container', {
     placeholder: 'Compose an epic...',
     theme: 'snow'
   });
 "#,
-        ))
+                ),
+        )
 }
 
 // ---------- // -----------
