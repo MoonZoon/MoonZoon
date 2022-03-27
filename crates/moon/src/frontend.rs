@@ -54,7 +54,12 @@ impl Frontend {
     }
 
     pub async fn into_html(self) -> String {
-        let Frontend { title, default_styles, append_to_head, body_content } = self;
+        let Frontend {
+            title,
+            default_styles,
+            append_to_head,
+            body_content,
+        } = self;
 
         let cache_busting_string = if CONFIG.cache_busting {
             Cow::from(format!("_{}", Self::build_id().await))
@@ -75,7 +80,8 @@ impl Frontend {
             ""
         };
 
-        let reconnecting_event_source_js_code = include_str!("../js/ReconnectingEventSource.min.js");
+        let reconnecting_event_source_js_code =
+            include_str!("../js/ReconnectingEventSource.min.js");
         let sse_js_code = include_str!("../js/sse.js");
 
         format!(
