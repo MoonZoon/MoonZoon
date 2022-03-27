@@ -1,4 +1,3 @@
-use zoon::console::log;
 use zoon::*;
 
 fn root() -> impl Element {
