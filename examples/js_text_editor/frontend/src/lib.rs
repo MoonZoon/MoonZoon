@@ -17,9 +17,7 @@ fn contents() -> &'static Mutable<Option<String>> {
 // ------ ------
 
 fn root() -> impl Element {
-    Column::new()
-        .item(text_editor())
-        .item(contents_display())
+    Column::new().item(text_editor()).item(contents_display())
 }
 
 fn text_editor() -> impl Element {
