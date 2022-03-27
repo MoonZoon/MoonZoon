@@ -31,7 +31,7 @@ mod viewport;
 pub use class_id::ClassId;
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use css_property::VENDOR_PREFIXES;
-pub use dom::{document, history, window};
+pub use dom::{document, history, window, load_script, load_stylesheet};
 pub use dom_builder_ext::DomBuilderExt;
 pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};
 pub use either::{Either, IntoEither};

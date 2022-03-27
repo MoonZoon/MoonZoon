@@ -11,14 +11,15 @@ pub struct TextEditor {
 impl TextEditor {
     pub fn new() -> Self {
         run_once!(|| {
-            dom::append_to_head(r#"<link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">"#);
-            zoon::println!("gdrg");
+            load_stylesheet("https://cdn.quilljs.com/1.3.6/quill.snow.css");
+            load_script("https://cdn.quilljs.com/1.3.6/quill.min.js");
         });
 
         let controller = Mutable::default();
 
         let raw_el = RawHtmlEl::new("div")
             .after_insert(clone!((controller) move |html_element| {
+                // @TODO wait until the Quill is defined
                 controller.set(Some(Arc::new(externs::QuillController::new(&html_element))))
             }))
             .after_remove(clone!((controller) move |_| drop(controller)));

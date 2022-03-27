@@ -12,7 +12,6 @@ async fn frontend() -> Frontend {
                 </style>   
             "#,
         )
-        .append_to_head(r#"<script src="//cdn.quilljs.com/1.3.6/quill.min.js"></script>"#)
 }
 
 async fn up_msg_handler(_: UpMsgRequest<()>) {}
