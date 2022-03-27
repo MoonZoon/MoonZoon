@@ -12,7 +12,6 @@ async fn frontend() -> Frontend {
                 </style>   
             "#,
         )
-        .append_to_head(r#"<link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">"#)
         .append_to_head(r#"<script src="//cdn.quilljs.com/1.3.6/quill.min.js"></script>"#)
 }
 

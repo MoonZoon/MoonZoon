@@ -10,6 +10,11 @@ pub struct TextEditor {
 
 impl TextEditor {
     pub fn new() -> Self {
+        run_once!(|| {
+            dom::append_to_head(r#"<link href="//cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">"#);
+            zoon::println!("gdrg");
+        });
+
         let controller = Mutable::default();
 
         let raw_el = RawHtmlEl::new("div")
