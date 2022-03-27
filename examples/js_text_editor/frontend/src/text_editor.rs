@@ -1,6 +1,16 @@
 use std::{iter, sync::Arc};
 use zoon::*;
 
+#[static_ref]
+fn load_assets_once() -> &'static Mutable<bool> {
+    Task::start(async {
+        load_stylesheet("https://cdn.quilljs.com/1.3.6/quill.snow.css");
+        load_script("https://cdn.quilljs.com/1.3.6/quill.min.js");
+        load_assets_once().set(true);
+    });
+    Mutable::default()
+}
+
 // ------ TextEditor ------
 
 pub struct TextEditor {
@@ -10,11 +20,7 @@ pub struct TextEditor {
 
 impl TextEditor {
     pub fn new() -> Self {
-        run_once!(|| {
-            load_stylesheet("https://cdn.quilljs.com/1.3.6/quill.snow.css");
-            load_script("https://cdn.quilljs.com/1.3.6/quill.min.js");
-        });
-
+        load_assets_once();
         let controller = Mutable::default();
 
         let raw_el = RawHtmlEl::new("div")
