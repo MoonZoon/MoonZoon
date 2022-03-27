@@ -51,7 +51,7 @@ pub use futures_util::{self, future, FutureExt, Stream, StreamExt};
 pub use gensym::gensym;
 pub use hsluv::{hsluv, HSLuv};
 pub use index_generator::IndexGenerator;
-pub use js_sys::{self, Reflect, JsString};
+pub use js_sys::{self, JsString, Reflect};
 pub use monotonic_ids::MonotonicIds;
 pub use mutable::Mutable;
 pub use mutable_vec::MutableVec;

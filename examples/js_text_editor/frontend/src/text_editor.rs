@@ -1,5 +1,5 @@
-use zoon::*;
 use std::{iter, sync::Arc};
+use zoon::*;
 
 // ------ TextEditor ------
 
@@ -18,25 +18,27 @@ impl TextEditor {
             }))
             .after_remove(clone!((controller) move |_| drop(controller)));
 
-        Self {
-            raw_el,
-            controller,
-        }
+        Self { raw_el, controller }
     }
 
     pub fn on_change(mut self, on_change: impl Fn(serde_json::Value) + 'static) -> Self {
         let callback = move |json: JsString| {
-            let json = json.as_string().and_then(|json| serde_json::from_str(&json).ok());
+            let json = json
+                .as_string()
+                .and_then(|json| serde_json::from_str(&json).ok());
             on_change(json.expect_throw("failed to parse Quill contents"))
         };
 
         let closure = Closure::wrap(Box::new(callback) as Box<dyn Fn(JsString)>);
 
-        let on_change_setter = Task::start_droppable(self.controller.signal_cloned().for_each_sync(move |controller| {
-            if let Some(controller) = controller {
-                controller.on_change(&closure);
-            }
-        }));
+        let on_change_setter =
+            Task::start_droppable(self.controller.signal_cloned().for_each_sync(
+                move |controller| {
+                    if let Some(controller) = controller {
+                        controller.on_change(&closure);
+                    }
+                },
+            ));
         self.raw_el = self.raw_el.after_remove(move |_| drop(on_change_setter));
 
         self
@@ -65,7 +67,7 @@ impl IntoIterator for TextEditor {
 
 mod externs {
     use super::*;
-    #[wasm_bindgen(module = "/js/quill_controller.js")]
+    #[wasm_bindgen(module = "/js/text_editor/quill_controller.js")]
     extern "C" {
         pub type QuillController;
 
