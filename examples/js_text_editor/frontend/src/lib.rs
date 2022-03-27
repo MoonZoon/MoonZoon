@@ -1,48 +1,72 @@
 use zoon::*;
+use zoon::js_sys::JsString;
+use std::rc::Rc;
+
+// ------ ------
+//    States
+// ------ ------
+
+#[static_ref]
+fn contents() -> &'static Mutable<Option<String>> {
+    Mutable::default()
+}
+
+// ------ ------
+//     View
+// ------ ------
 
 fn root() -> impl Element {
-    let (content, content_signal) = Mutable::new_and_signal_cloned("".to_string());
-    let press = move |c: &str| *content.lock_mut() = c.to_string();
-
     Column::new()
-        .item(
-            El::new()
-                .update_raw_el(|el| el.attr("class", "standalone-container"))
-                .child(
-                    El::new().update_raw_el(|el| el.attr("id", "snow-container")),
-                ),
-        )
-        .item(
-            El::with_tag(Tag::Custom("script"))
-                .update_raw_el(|el| el.style("display", "none"))
-                .child(
-                    r#"
-  var quill = new Quill('#snow-container', {
-    placeholder: 'Compose an epic...',
-    theme: 'snow'
-  });
-"#,
-                ),
-        )
-        .item(
-            Button::new()
-                .label("Display content")
-                .on_press(move || press(&*get_content_from_quill())),
-        )
-        .item(Paragraph::new().content_signal(content_signal))
+        .item(text_editor())
+        .item(contents_display())
 }
 
-#[wasm_bindgen(
-    inline_js = "export function get_content() { return JSON.stringify(quill.getContents()); }"
-)]
-extern "C" {
-    fn get_content() -> String;
+fn text_editor() -> impl Element {
+    fn format_contents(json: JsString) -> Option<String> {
+        let json = json.as_string()?;
+        let json: serde_json::Value = serde_json::from_str(&json).ok()?;
+        Some(format!("{json:#}"))
+    }
+
+    let on_change = Rc::new(Closure::wrap(Box::new(|json: JsString| {
+        contents().set(format_contents(json)) 
+    }) as Box<dyn Fn(JsString)>));
+
+    El::new()
+        .after_insert(clone!((on_change) move |html_element| {
+            externs::QuillController::new(html_element.into()).on_change(&on_change);
+        }))
+        .after_remove(|_| drop(on_change))
 }
 
-fn get_content_from_quill() -> String {
-    get_content()
+fn contents_display() -> impl Element {
+    El::new()
+        .s(Padding::all(10))
+        .s(Font::new().family([FontFamily::Monospace]))
+        .child_signal(contents().signal_cloned())
 }
-// ---------- // -----------
+
+// ------ ------
+//    Externs
+// ------ ------
+
+mod externs {
+    use super::*;
+    #[wasm_bindgen(module = "/js/quill_controller.js")]
+    extern "C" {
+        pub type QuillController;
+
+        #[wasm_bindgen(constructor)]
+        pub fn new(element: JsValue) -> QuillController;
+
+        #[wasm_bindgen(method)]
+        pub fn on_change(this: &QuillController, on_change: &Closure<dyn Fn(JsString)>);
+    }
+}
+
+// ------ ------
+//     Start
+// ------ ------
 
 #[wasm_bindgen(start)]
 pub fn start() {

@@ -16,6 +16,7 @@ frontend = [
     "public",
     "frontend/Cargo.toml",
     "frontend/src",
+    "frontend/js",
     "../../crates/zoon/Cargo.toml",
     "../../crates/zoon/src",
     "../../crates/static_ref_macro/Cargo.toml",
