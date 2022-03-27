@@ -23,15 +23,9 @@ fn root() -> impl Element {
 }
 
 fn text_editor() -> impl Element {
-    let text_editor = Mutable::new(None);
-    El::new()
-        .after_insert(clone!((text_editor) move |html_element| {
-            let editor = TextEditor::new(html_element).on_change(|json| {
-                contents().set(json.map(|json| format!("{json:#}")));
-            });
-            text_editor.set(Some(editor));
-        }))
-        .after_remove(|_| drop(text_editor))
+    TextEditor::new().on_change(|json| {
+        contents().set(Some(format!("{json:#}")));
+    })
 }
 
 fn contents_display() -> impl Element {
