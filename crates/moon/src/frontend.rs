@@ -3,7 +3,7 @@ use std::borrow::Cow;
 use tokio::fs;
 
 pub struct Frontend {
-    pub(crate) title: String,
+    pub(crate) title: Cow<'static, str>,
     pub(crate) default_styles: bool,
     pub(crate) append_to_head: String,
     pub(crate) body_content: Cow<'static, str>,
@@ -12,7 +12,7 @@ pub struct Frontend {
 impl Default for Frontend {
     fn default() -> Self {
         Self {
-            title: String::new(),
+            title: Cow::from("MoonZoon app"),
             default_styles: true,
             append_to_head: String::new(),
             body_content: Cow::from(r#"<section id="app"></section>"#),
@@ -33,7 +33,7 @@ impl Frontend {
         Self::default()
     }
 
-    pub fn title(mut self, title: impl Into<String>) -> Self {
+    pub fn title(mut self, title: impl Into<Cow<'static, str>>) -> Self {
         self.title = title.into();
         self
     }
@@ -54,13 +54,15 @@ impl Frontend {
     }
 
     pub async fn into_html(self) -> String {
+        let Frontend { title, default_styles, append_to_head, body_content } = self;
+
         let cache_busting_string = if CONFIG.cache_busting {
             Cow::from(format!("_{}", Self::build_id().await))
         } else {
             Cow::from("")
         };
 
-        let default_styles = if self.default_styles {
+        let default_styles = if default_styles {
             concat!(
                 "<style>",
                 include_str!("../css/modern-normalize.min.css"),
@@ -72,6 +74,9 @@ impl Frontend {
         } else {
             ""
         };
+
+        let reconnecting_event_source_js_code = include_str!("../js/ReconnectingEventSource.min.js");
+        let sse_js_code = include_str!("../js/sse.js");
 
         format!(
             r#"<!DOCTYPE html>
@@ -91,8 +96,8 @@ impl Frontend {
           {body_content}
     
           <script type="text/javascript">
-            {reconnecting_event_source}
-            {sse}
+            {reconnecting_event_source_js_code}
+            {sse_js_code}
           </script>
     
           <script type="module">
@@ -101,14 +106,7 @@ impl Frontend {
           </script>
         </body>
         
-        </html>"#,
-            title = self.title,
-            default_styles = default_styles,
-            append_to_head = self.append_to_head,
-            body_content = self.body_content,
-            reconnecting_event_source = include_str!("../js/ReconnectingEventSource.min.js"),
-            sse = include_str!("../js/sse.js"),
-            cache_busting_string = cache_busting_string,
+        </html>"#
         )
     }
 }
