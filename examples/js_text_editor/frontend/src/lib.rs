@@ -1,5 +1,4 @@
 use zoon::*;
-use zoon::js_sys::JsString;
 use std::rc::Rc;
 
 // ------ ------
