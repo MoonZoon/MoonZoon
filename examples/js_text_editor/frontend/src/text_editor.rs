@@ -1,11 +1,13 @@
-use std::{iter, sync::Arc};
-use zoon::*;
+use std::{cell::Cell, iter, rc::Rc, sync::Arc};
+use zoon::{futures_util::join, *};
 
 #[static_ref]
 fn load_assets_once() -> &'static Mutable<bool> {
     Task::start(async {
-        load_stylesheet("https://cdn.quilljs.com/1.3.6/quill.snow.css");
-        load_script("https://cdn.quilljs.com/1.3.6/quill.min.js");
+        join!(
+            load_stylesheet("https://cdn.quilljs.com/1.3.6/quill.snow.css"),
+            load_script("https://cdn.quilljs.com/1.3.6/quill.min.js"),
+        );
         load_assets_once().set(true);
     });
     Mutable::default()
@@ -22,13 +24,19 @@ impl TextEditor {
     pub fn new() -> Self {
         load_assets_once();
         let controller = Mutable::default();
+        let controller_creator = Rc::new(Cell::new(None));
 
         let raw_el = RawHtmlEl::new("div")
-            .after_insert(clone!((controller) move |html_element| {
-                // @TODO wait until the Quill is defined
-                controller.set(Some(Arc::new(externs::QuillController::new(&html_element))))
+            .after_insert(clone!((controller, controller_creator) move |html_element| {
+                controller_creator.set(Some(Task::start_droppable(async move {
+                    load_assets_once().signal().wait_for(true).await;
+                    controller.set(Some(Arc::new(externs::QuillController::new(&html_element))));
+                })));
             }))
-            .after_remove(clone!((controller) move |_| drop(controller)));
+            .after_remove(clone!((controller) move |_| {
+                drop(controller);
+                drop(controller_creator);
+            }));
 
         Self { raw_el, controller }
     }
@@ -37,8 +45,9 @@ impl TextEditor {
         let callback = move |json: JsString| {
             let json = json
                 .as_string()
-                .and_then(|json| serde_json::from_str(&json).ok());
-            on_change(json.expect_throw("failed to parse Quill contents"))
+                .and_then(|json| serde_json::from_str(&json).ok())
+                .expect_throw("failed to parse Quill contents");
+            on_change(json)
         };
 
         let closure = Closure::wrap(Box::new(callback) as Box<dyn Fn(JsString)>);
