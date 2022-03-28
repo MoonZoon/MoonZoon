@@ -17,7 +17,7 @@ fn load_assets_once() -> &'static Mutable<bool> {
 
 pub struct TextEditor {
     raw_el: RawHtmlEl,
-    controller: Mutable<Option<Arc<externs::QuillController>>>,
+    controller: Mutable<Option<Arc<js_bridge::QuillController>>>,
 }
 
 impl TextEditor {
@@ -30,7 +30,7 @@ impl TextEditor {
             .after_insert(clone!((controller, controller_creator) move |html_element| {
                 controller_creator.set(Some(Task::start_droppable(async move {
                     load_assets_once().signal().wait_for(true).await;
-                    controller.set(Some(Arc::new(externs::QuillController::new(&html_element))));
+                    controller.set(Some(Arc::new(js_bridge::QuillController::new(&html_element))));
                 })));
             }))
             .after_remove(clone!((controller) move |_| {
@@ -83,11 +83,12 @@ impl IntoIterator for TextEditor {
 }
 
 // ------ ------
-//    Externs
+//   JS Bridge
 // ------ ------
 
-mod externs {
+mod js_bridge {
     use super::*;
+    // https://rustwasm.github.io/wasm-bindgen/reference/js-snippets.html
     #[wasm_bindgen(module = "/js/text_editor/quill_controller.js")]
     extern "C" {
         pub type QuillController;
