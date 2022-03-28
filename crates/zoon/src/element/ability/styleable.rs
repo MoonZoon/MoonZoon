@@ -31,7 +31,7 @@ pub trait Styleable<'a, T: RawEl>: UpdateRawEl<T> + Sized {
     /// );
     /// ```
     /// # Example
-    /// It is possible to use more than one signal and apply  many styling
+    /// It is possible to use more than one signal and apply many styling
     /// effects.
     /// ```no_run
     /// use zoon::{named_color::*, *};
