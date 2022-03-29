@@ -39,7 +39,7 @@ impl<'a> Transitions<'a> {
         this
     }
 
-    /// # Todo : write documentation when Api is improved.
+    // @TODO: write documentation when Api is improved.
     pub fn with_signal(
         transitions: impl Signal<Item = impl IntoIterator<Item = Transition>> + Unpin + 'static,
     ) -> Self {
