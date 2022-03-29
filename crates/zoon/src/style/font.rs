@@ -151,9 +151,8 @@ impl<'a> Font<'a> {
     /// use zoon::*;
     ///
     /// let paragraph = Paragraph::new()
-    /// .s(Font::new()
-    /// .line_height(150))
-    /// .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
+    ///     .s(Font::new().line_height(150))
+    ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```
     pub fn line_height(mut self, line_height: u32) -> Self {
         self.static_css_props.insert("line-height", px(line_height));
@@ -166,9 +165,8 @@ impl<'a> Font<'a> {
     /// use zoon::*;
     ///
     /// let paragraph = Paragraph::new()
-    /// .s(Font::new()
-    /// .italic())
-    /// .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
+    ///     .s(Font::new().italic())
+    ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```
     pub fn italic(mut self) -> Self {
         self.static_css_props.insert("font-style", "italic");
@@ -181,9 +179,8 @@ impl<'a> Font<'a> {
     /// use zoon::*;
     ///
     /// let paragraph = Paragraph::new()
-    /// .s(Font::new()
-    /// .no_wrap())
-    /// .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
+    ///     .s(Font::new().no_wrap())
+    ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```
     pub fn no_wrap(mut self) -> Self {
         self.static_css_props.insert("white-space", "nowrap");
@@ -197,10 +194,9 @@ impl<'a> Font<'a> {
     /// use zoon::*;
     ///
     ///  let paragraph =  Paragraph::new()
-    /// .s(Width::new(50))
-    /// .s(Font::new()
-    /// .wrap_anywhere())
-    /// .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
+    ///     .s(Width::new(50))
+    ///     .s(Font::new().wrap_anywhere())
+    ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```
     pub fn wrap_anywhere(mut self) -> Self {
         // @TODO replace with the line below once `overflow-wrap: anywhere` works on
@@ -218,9 +214,8 @@ impl<'a> Font<'a> {
     /// use zoon::*;
     ///
     /// let paragraph = Paragraph::new()
-    /// .s(Font::new()
-    /// .center())
-    /// .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
+    ///    .s(Font::new().center())
+    ///    .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```
     pub fn center(mut self) -> Self {
         self.static_css_props.insert("text-align", "center");
@@ -237,13 +232,13 @@ impl<'a> Font<'a> {
     /// use zoon::*;
     ///
     /// let paragraph = Paragraph::new()
-    /// .s(Font::new().family([
-    ///   FontFamily::new("Helvetica Neue"),
-    ///   FontFamily::new("Helvetica"),
-    ///   FontFamily::new("Arial"),
-    ///   FontFamily::SansSerif,
+    ///    .s(Font::new().family([
+    ///     FontFamily::new("Helvetica Neue"),
+    ///     FontFamily::new("Helvetica"),
+    ///     FontFamily::new("Arial"),
+    ///     FontFamily::SansSerif,
     ///    ]))
-    /// .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
+    ///    .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```
     pub fn family(mut self, family: impl IntoIterator<Item = FontFamily<'a>>) -> Self {
         let font_family = family
@@ -262,8 +257,8 @@ impl<'a> Font<'a> {
     /// use zoon::*;
     ///
     /// let paragraph = Paragraph::new()
-    /// .s(Font::new().line(FontLine::new().underline().dashed()))
-    /// .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
+    ///     .s(Font::new().line(FontLine::new().underline().dashed()))
+    ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```
     pub fn line(mut self, line: FontLine<'a>) -> Self {
         self.static_css_props
