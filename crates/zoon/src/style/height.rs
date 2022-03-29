@@ -78,7 +78,7 @@ impl<'a> Height<'a> {
 
     /// The element height will be the height of the device screen or web
     /// browser frame.
-    /// #Example
+    /// # Example
     /// ```no_run
     /// use zoon::*;
     ///
