@@ -191,6 +191,18 @@ impl<'a> Font<'a> {
         self
     }
 
+    /// Set the text to be wrapped withing its element and prevent overflow.
+    /// More information at <https://developer.mozilla.org/en-US/docs/Web/CSS/word-break>.
+    /// # Example
+    /// ```no_run
+    /// use zoon::*;
+    ///
+    ///  let paragraph =  Paragraph::new()
+    /// .s(Width::new(50))
+    /// .s(Font::new()
+    /// .wrap_anywhere())
+    /// .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
+    /// ```
     pub fn wrap_anywhere(mut self) -> Self {
         // @TODO replace with the line below once `overflow-wrap: anywhere` works on
         // Safari https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-wrap#browser_compatibility
