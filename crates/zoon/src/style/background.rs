@@ -83,11 +83,11 @@ impl<'a> Background<'a> {
     ///
     /// let element = El::new()
     ///     .s(Background::new().url_signal(travel_to_space.map_bool(
-    ///         || "/assets/images/stars.png",
-    ///         || "/assets/images/launch_pad.png",
+    ///         || format!("{PUBLIC_URL}images/stars.png"),
+    ///         || format!("{PUBLIC_URL}images/launch_pad.png"),
     ///     )))
     ///     .child("Travel to space")
-    ///     .on_click(move || traveling.set(!traveling.take()));
+    ///     .on_click(move || traveling.update(not));
     /// ```
     pub fn url_signal(
         mut self,
