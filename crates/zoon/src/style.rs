@@ -291,7 +291,7 @@ impl Drop for StyleGroupHandle {
 /// Set styles that are globally used in your application.
 /// Very convenient for customizing the design at one single place.
 /// # Example
-/// How to style every button in your app in few lanes. The [Button] element has
+/// How to style every button in your app in few lines. The [Button] element has
 /// the `button` class attached by default to it. So it is possible to overwrite
 /// it.
 /// ```no_run
