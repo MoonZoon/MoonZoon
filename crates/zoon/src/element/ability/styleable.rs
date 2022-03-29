@@ -18,17 +18,16 @@ pub trait Styleable<'a, T: RawEl>: UpdateRawEl<T> + Sized {
     /// use zoon::{named_color::*, *};
     /// let (hovered, hover_signal) = Mutable::new_and_signal(false);
     ///
-    /// let view = Column::new().s(Height::screen()).item(
-    ///     Button::new()
-    ///         .s(Align::center())
-    ///         .s(Width::new(140))
-    ///         .s(Height::new(140))
-    ///         .s(Font::new().size(30).center())
-    ///         .s(Background::new()
-    ///             .color_signal(hover_signal.map_bool(|| GREEN_2, || GREEN_1)))
-    ///         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
-    ///         .label("Hover me"),
-    /// );
+    /// let button = Button::new()
+    ///     .s(Align::center())
+    ///     .s(Width::new(140))
+    ///     .s(Height::new(140))
+    ///     .s(Font::new().size(30).center())
+    ///     .s(Background::new().color_signal(hover_signal.map_bool(|| GREEN_2, || GREEN_1)))
+    ///     .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+    ///     .label("Hover me");
+    ///
+    /// let view = Column::new().s(Height::screen()).item(button);
     /// ```
     /// # Example
     /// It is possible to use more than one signal and apply many styling
@@ -37,20 +36,20 @@ pub trait Styleable<'a, T: RawEl>: UpdateRawEl<T> + Sized {
     /// use zoon::{named_color::*, *};
     ///
     /// let hovered = Mutable::new(false);
-    /// Column::new().s(Height::screen()).item(
-    ///     Button::new()
-    ///         .s(Align::center())
-    ///         .s(Width::new(140))
-    ///         .s(Height::new(140))
-    ///         .s(Font::new()
-    ///             .size(30)
-    ///             .center()
-    ///             .color_signal(hovered.signal().map_bool(|| PINK_5, || PINK_7)))
-    ///         .s(Background::new()
-    ///             .color_signal(hovered.signal().map_bool(|| GREEN_7, || GREEN_2)))
-    ///         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
-    ///         .label("Hover me"),
-    /// )
+    ///
+    /// let button = Button::new()
+    ///     .s(Align::center())
+    ///     .s(Width::new(140))
+    ///     .s(Height::new(140))
+    ///     .s(Font::new()
+    ///         .size(30)
+    ///         .center()
+    ///         .color_signal(hovered.signal().map_bool(|| PINK_5, || PINK_7)))
+    ///     .s(Background::new().color_signal(hovered.signal().map_bool(|| GREEN_7, || GREEN_2)))
+    ///     .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+    ///     .label("Hover me");
+    ///
+    /// let view = Column::new().s(Height::screen()).item(button);
     /// ```
     fn s(self, style: impl Style<'a>) -> Self {
         self.update_raw_el(|raw_el| style.apply_to_raw_el(raw_el, None).0)
