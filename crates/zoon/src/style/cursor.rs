@@ -32,12 +32,12 @@ impl<'a> Cursor<'a> {
     /// This example updates the cursor when the user clicks the button.
     /// ```no_run
     /// use zoon::*;
-    /// let (pressing, pressing_state) = Mutable::new_and_signal(false);
+    /// let (pressing, pressing_signal) = Mutable::new_and_signal(false);
     /// let help_button = Button::new()
-    ///     .s(Cursor::with_signal(
-    ///         pressing_state.map_bool(|| CursorIcon::Grab, || CursorIcon::Default),
-    ///     ))
-    ///     .on_click(move || pressing.set(!pressing.take()))
+    ///     .s(Cursor::with_signal(pressing_signal.map_true(|| CursorIcon::Grabbing)))
+    ///     .on_pointer_down(clone!((pressing) move || pressing.set_neq(true)))
+    ///     .on_pointer_up(clone!((pressing) move || pressing.set_neq(false)))
+    ///     .on_pointer_leave(move || pressing.set_neq(false))
     ///     .label("Click me");
     /// ```
     pub fn with_signal(
