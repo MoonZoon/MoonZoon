@@ -38,13 +38,37 @@ impl<'a> Width<'a> {
     /// Define the width with pixels depending of signal's state.
     /// # Example
     /// ```no_run
-    /// use zoon::*;
+    /// use zoon::{named_color::*, *};
     ///
-    /// let (is_hovered, hover_signal) = Mutable::new_and_signal(false);
-    /// let button = Button::new()
-    ///     .s(Width::with_signal(hover_signal.map_bool(|| 50, || 100)))
-    ///     .on_hovered_change(move |hover| is_hovered.set(hover))
-    ///     .label("hover me");
+    /// let container_width = Mutable::new(0);
+    /// let container_width_broadcaster = Broadcaster::new(container_width.signal());
+    ///
+    /// let button = Row::new()
+    ///     .s(Align::center())
+    ///     .s(Font::new().color(GRAY_8))
+    ///     .s(Background::new().color(BLUE_4))
+    ///     .s(Borders::all(Border::new().color(BLUE_8).width(3)))
+    ///     .s(Spacing::new(20))
+    ///     .s(Width::with_signal(
+    ///         container_width_broadcaster.signal().map(|width| {
+    ///             if width > 1000 {
+    ///                 return width / 2;
+    ///             }
+    ///             (f64::from(width) * 0.9) as u32
+    ///         }),
+    ///     ))
+    ///     .item("Change the window size!")
+    ///     .item(
+    ///         El::new()
+    ///             .s(Align::new().right())
+    ///             .child_signal(container_width_broadcaster.signal()),
+    ///     );
+    ///
+    /// let container = El::new()
+    ///     .s(Width::fill())
+    ///     .s(Height::fill())
+    ///     .on_viewport_size_change(move |width, _| container_width.set_neq(width))
+    ///     .child(button);
     /// ```
     pub fn with_signal(
         width: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
