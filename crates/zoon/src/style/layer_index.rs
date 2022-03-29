@@ -53,7 +53,7 @@ impl<'a> LayerIndex<'a> {
     ///     )
     ///     .item(
     ///         Paragraph::new()
-    ///             .content("Front and you can see me. Hover me so you can see a surprise")
+    ///             .content("Front and you can see me. Hover me so you can see a surprise.")
     ///             .on_hovered_change(move |hover| is_hovered.set(hover)),
     ///     );
     /// ```
