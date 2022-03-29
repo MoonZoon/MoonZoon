@@ -7,7 +7,22 @@ pub struct Clip<'a> {
 }
 
 impl<'a> Clip<'a> {
-    /// Set vertical and horizontal overflow.
+    /// THe element gets vertically and horizontally clipped by its parent.
+    /// # Example
+    /// ```no_run
+    /// 
+    /// use zoon::{*, named_color::* };
+    ///
+    /// let paragraph =   Paragraph::new()
+    ///     .s(Font::new()).s(Clip::x())
+    ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
+    ///
+    ///  let parent_element =  Column::new()
+    ///         .s(Width::new(50))
+    ///         .s(Height::new(50))
+    ///         .s(Background::new().color(BLUE_9))
+    ///         .item(paragraph);
+    /// ```
     pub fn both() -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("overflow-x", "hidden");
@@ -15,14 +30,44 @@ impl<'a> Clip<'a> {
         this
     }
 
-    /// Set horizontal overflow.
+    /// The element gets clipped by its parent horizontally.
+    /// # Example
+    /// ```no_run
+    /// 
+    /// use zoon::{*, named_color::* };
+    ///
+    /// let paragraph =   Paragraph::new()
+    ///     .s(Font::new()).s(Clip::x())
+    ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
+    ///
+    ///  let parent_element =  Column::new()
+    ///         .s(Width::new(50))
+    ///         .s(Height::new(50))
+    ///         .s(Background::new().color(BLUE_9))
+    ///         .item(paragraph);
+    /// ```
     pub fn x() -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("overflow-x", "hidden");
         this
     }
 
-    /// Set vertical overflow.
+    /// The element gets clipped by its parent vertically.
+    /// # Example
+    /// ```no_run
+    /// 
+    /// use zoon::{*, named_color::* };
+    ///
+    /// let paragraph =   Paragraph::new()
+    ///     .s(Font::new()).s(Clip::x())
+    ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
+    ///
+    ///  let parent_element =  Column::new()
+    ///         .s(Width::new(50))
+    ///         .s(Height::new(50))
+    ///         .s(Background::new().color(BLUE_9))
+    ///         .item(paragraph);
+    /// ```
     pub fn y() -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("overflow-y", "hidden");
