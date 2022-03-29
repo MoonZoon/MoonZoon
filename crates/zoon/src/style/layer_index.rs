@@ -48,7 +48,7 @@ impl<'a> LayerIndex<'a> {
     ///     .s(Background::new().color(GREEN_7))
     ///     .item(
     ///         Paragraph::new()
-    ///             .s(LayerIndex::with_signal(hover_signal.map_bool(|| 1, || -1)))
+    ///             .s(LayerIndex::with_signal(hover_signal.map_false(|| -1)))
     ///             .content("Behind and trying to hide"),
     ///     )
     ///     .item(
