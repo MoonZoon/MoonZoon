@@ -1,6 +1,6 @@
 use crate::*;
 
-/// Styling to manage hidden overflow.
+/// Clip the element by its parent or a mask to show only a specific area.
 #[derive(Default)]
 pub struct Clip<'a> {
     static_css_props: StaticCSSProps<'a>,
