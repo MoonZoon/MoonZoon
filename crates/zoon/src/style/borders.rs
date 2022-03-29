@@ -423,7 +423,6 @@ impl Border {
 // ------ BorderStyle ------
 
 /// Border line styling.
-/// # Todo: Maybe add other line styling from https://developer.mozilla.org/en-US/docs/Web/CSS/border-style .
 #[derive(Clone, Copy)]
 enum BorderStyle {
     Solid,
