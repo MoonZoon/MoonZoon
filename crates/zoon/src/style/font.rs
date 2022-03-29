@@ -145,8 +145,7 @@ impl<'a> Font<'a> {
         self
     }
 
-    /// Set the font line height which is the height between lines of text in an
-    /// element.
+    /// Set the text line height in pixels.
     /// # Example
     /// ```no_run
     /// use zoon::*;
