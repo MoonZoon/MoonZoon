@@ -208,7 +208,7 @@ impl<'a> Font<'a> {
         self
     }
 
-    /// Center the text inside its container.
+    /// Horizontally center the text inside its element.
     /// # Example
     /// ```no_run
     /// use zoon::*;
@@ -225,7 +225,7 @@ impl<'a> Font<'a> {
     /// Set the family font with an array of [FontFamily].
     /// It is recommended to have few family fonts as
     /// fallback if the first ones are not available for web
-    /// as documented here : <https://developer.mozilla.org/en-US/docs/Web/CSS/font-family>
+    /// as documented here: <https://developer.mozilla.org/en-US/docs/Web/CSS/font-family>
     ///
     /// # Example
     /// ```no_run
