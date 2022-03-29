@@ -76,7 +76,7 @@ impl<'a> Height<'a> {
         this
     }
 
-    /// THe element height will be the height of thw device screen or web
+    /// The element height will be the height of the device screen or web
     /// browser frame.
     /// #Example
     /// ```no_run
