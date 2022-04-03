@@ -15,6 +15,7 @@ impl Oscillator {
     }
 
     pub fn signal(&self) -> impl Signal<Item = f64> {
-        self.value.signal()
+        // @TODO remove dedupe?
+        self.value.signal().dedupe()
     }
 }

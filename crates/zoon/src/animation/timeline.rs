@@ -30,6 +30,7 @@ impl<T> Timeline<T> {
     pub fn new(state: T) -> Self {
         let step = Step::new(Duration::zero(), state);
         let this = Self {
+            // @TODO channel?
             queue: Arc::new(RwLock::new(VecDeque::new())),
             current: Mutable::new(Some(step.clone())),
             arrived: Mutable::new(step),
@@ -80,11 +81,20 @@ impl<T> Timeline<T> {
         }
     }
 
+    // @TODO cloned version
     pub fn arrived_signal(&self) -> impl Signal<Item = T>
     where
         T: Copy,
     {
         self.arrived.signal_cloned().map(|step| *step.state)
+    }
+
+    // @TODO cloned version
+    pub fn current_signal(&self) -> impl Signal<Item = Option<T>>
+    where
+        T: Copy,
+    {
+        self.current.signal_cloned().map(|step| step.map(|step| *step.state))
     }
 
     pub fn push(&self, duration: Duration, state: T) {

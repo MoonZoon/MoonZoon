@@ -36,6 +36,7 @@ fn rectangles() -> &'static MutableVec<Rectangle> {
     MutableVec::new_with_values(Rectangle::iter().collect())
 }
 
+// @TODO remove PartialEq + Eq
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Breath {
     Out,
