@@ -4,6 +4,9 @@ use std::{
     sync::{Arc, RwLock, Mutex},
 };
 
+// @TODO interrupt (hover multiple times)
+// @TODO replace Timer with Raf
+
 // ------ Timeline ------
 
 pub struct Timeline<T: 'static> {
@@ -49,7 +52,7 @@ impl<T> Timeline<T> {
             let mut current_lock = self.current.lock_mut();
             let current = current_lock.as_mut().unwrap_throw();
             
-            let mut elapsed = current.elapsed.write().expect_throw("failed to lock Timeline elapsed");
+            let mut elapsed = current.elapsed.lock_mut();
             let elapsed_with_jump = *elapsed + jump;
             
             let add_to_next_step = if elapsed_with_jump <= current.duration {
@@ -97,6 +100,22 @@ impl<T> Timeline<T> {
         self.current.signal_cloned().map(|step| step.map(|step| *step.state))
     }
 
+    // @TODO cloned version
+    // pub fn arrived_step_signal_cloned(&self) -> impl Signal<Item = Step<T>>
+    // where
+    //     T: Copy,
+    // {
+    //     self.arrived.signal_cloned().map(|step| step)
+    // }
+
+    // // @TODO cloned version
+    // pub fn current_step_signal_cloned(&self) -> impl Signal<Item = Option<Step<T>>>
+    // where
+    //     T: Copy,
+    // {
+    //     self.current.signal_cloned().map(|step| step)
+    // }
+
     pub fn push(&self, duration: Duration, state: T) {
         let step = Step::new(duration, state);
         self.queue
@@ -104,14 +123,41 @@ impl<T> Timeline<T> {
             .expect("failed to lock Timeline queue")
             .push_back(step);
     }
+
+    // @TODO rename oscillator and keyframes
+    pub fn oscillator(&self, keyframes: impl Fn(&T) -> f64) -> impl Signal<Item = f64> {
+        let current_and_elapsed = self.current.signal_cloned().switch(|current| {
+            if let Some(current) = current {
+                return current.elapsed.signal().map(move |elapsed| Some((current.clone(), elapsed))).boxed_local();
+            }
+            always(None).boxed_local()
+        });
+
+        map_ref! {
+            let arrived = self.arrived.signal_cloned(),
+            let current_and_elapsed = current_and_elapsed => move {
+                let arrived = keyframes(&arrived.state);
+                if let Some((current, elapsed)) = current_and_elapsed  {
+                    let progress = if current.duration.is_zero() {
+                        0.
+                    } else {
+                        elapsed.num_milliseconds() as f64 / current.duration.num_milliseconds() as f64
+                    };
+                    let current = keyframes(&current.state);
+                    return arrived + ((current - arrived) * progress);
+                }
+                arrived
+            }
+        }
+    }
 }
 
 // ------ Step ------
 
-struct Step<T> {
+pub struct Step<T> {
     duration: Duration,
     state: Arc<T>,
-    elapsed: Arc<RwLock<Duration>>,
+    elapsed: Mutable<Duration>,
 }
 
 impl<T> Clone for Step<T> {
@@ -119,7 +165,7 @@ impl<T> Clone for Step<T> {
         Self {
             duration: self.duration,
             state: Arc::clone(&self.state),
-            elapsed: Arc::clone(&self.elapsed),
+            elapsed: self.elapsed.clone(),
         }
     }
 }
@@ -129,7 +175,7 @@ impl<T> Step<T> {
         Self {
             duration,
             state: Arc::new(state),
-            elapsed: Arc::new(RwLock::new(Duration::zero())),
+            elapsed: Mutable::new(Duration::zero()),
         }
     }
 }

@@ -48,25 +48,8 @@ fn breathing_timeline() -> &'static Timeline<Breath> {
     Timeline::new(Breath::Out)
 }
 
-#[static_ref]
-fn breathing_oscillator() -> &'static Oscillator {
-    Task::start(
-        breathing_timeline()
-            .arrived_signal()
-            .dedupe()
-            .for_each_sync(|arrived| {
-                let next_state = if matches!(arrived, Breath::Out) {
-                    println!("IN");
-                    Breath::In
-                } else {
-                    println!("OUT");
-                    Breath::Out
-                };
-                breathing_timeline().push(Duration::seconds(2), next_state);
-            }),
-    );
-
-    Oscillator::new(breathing_timeline(), |breath| match breath {
+fn breathing_oscillator() -> impl Signal<Item = f64> {
+    breathing_timeline().oscillator(|breath| match breath {
         Breath::Out => 100.,
         Breath::In => 120.,
     })
@@ -103,8 +86,8 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
     let (color, align) = rectangle.color_and_align();
 
     let hover_timeline = Timeline::new(false);
-    let lightness_oscillator = Oscillator::new(&hover_timeline, move |hovered| {
-        if hovered {
+    let lightness_oscillator = hover_timeline.oscillator(move |hovered| {
+        if *hovered {
             color.l() + 5.
         } else {
             color.l()
@@ -114,7 +97,6 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
     El::new()
         .s(Transform::with_signal(
             breathing_oscillator()
-                .signal()
                 .map(|percent| Transform::new().scale(percent)),
         ))
         .s(Width::new(100))
@@ -123,13 +105,12 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
         .s(Cursor::new(CursorIcon::Pointer))
         .s(Shadows::new([Shadow::new().blur(20).color(GRAY_8)]))
         .s(Background::new()
-            .color_signal(lightness_oscillator.signal().map(move |l| color.set_l(l))))
+            .color_signal(lightness_oscillator.map(move |l| color.set_l(l))))
         .s(align)
         .on_hovered_change(move |is_hovered| {
             hover_timeline.push(Duration::milliseconds(200), is_hovered);
         })
         .on_click(move || bring_to_front(rectangle))
-        .after_remove(move |_| drop(lightness_oscillator))
 }
 
 // ------ ------
@@ -138,5 +119,21 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
 
 #[wasm_bindgen(start)]
 pub fn start() {
+    Task::start(
+        breathing_timeline()
+            .arrived_signal()
+            .dedupe()
+            .for_each_sync(|arrived| {
+                let next_state = if matches!(arrived, Breath::Out) {
+                    // println!("IN");
+                    Breath::In
+                } else {
+                    // println!("OUT");
+                    Breath::Out
+                };
+                breathing_timeline().push(Duration::seconds(2), next_state);
+            }),
+    );
+
     start_app("app", root);
 }
