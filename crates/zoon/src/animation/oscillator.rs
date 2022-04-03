@@ -10,7 +10,7 @@ pub struct Oscillator {
 impl Oscillator {
     pub fn new<T>(timeline: &Timeline<T>, keyframes: impl Fn(T) -> f64) -> Self {
         Self {
-            value: Mutable::new(0.),
+            value: Mutable::new(30.),
         }
     }
 

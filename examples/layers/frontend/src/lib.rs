@@ -36,7 +36,7 @@ fn rectangles() -> &'static MutableVec<Rectangle> {
     MutableVec::new_with_values(Rectangle::iter().collect())
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 enum Breath {
     Out,
     In,
@@ -52,10 +52,13 @@ fn breathing_oscillator() -> &'static Oscillator {
     Task::start(
         breathing_timeline()
             .arrived_signal()
+            .dedupe()
             .for_each_sync(|arrived| {
                 let next_state = if matches!(arrived, Breath::Out) {
+                    println!("IN");
                     Breath::In
                 } else {
+                    println!("OUT");
                     Breath::Out
                 };
                 breathing_timeline().push(Duration::seconds(2), next_state);

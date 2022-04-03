@@ -1,27 +1,82 @@
 use crate::*;
 use std::{
     collections::VecDeque,
-    sync::{Arc, RwLock},
+    sync::{Arc, RwLock, Mutex},
 };
 
 // ------ Timeline ------
 
-#[derive(Clone)]
-pub struct Timeline<T> {
+pub struct Timeline<T: 'static> {
     queue: Arc<RwLock<VecDeque<Step<T>>>>,
     current: Mutable<Option<Step<T>>>,
     arrived: Mutable<Step<T>>,
     previous: Mutable<Option<Step<T>>>,
+    timer: Arc<Mutex<Option<Timer>>>,
+}
+
+impl<T> Clone for Timeline<T> {
+    fn clone(&self) -> Self {
+        Self {
+            queue: Arc::clone(&self.queue),
+            current: self.current.clone(),
+            arrived: self.arrived.clone(),
+            previous: self.previous.clone(),
+            timer: Arc::clone(&self.timer),
+        }
+    }
 }
 
 impl<T> Timeline<T> {
     pub fn new(state: T) -> Self {
         let step = Step::new(Duration::zero(), state);
-        Self {
+        let this = Self {
             queue: Arc::new(RwLock::new(VecDeque::new())),
             current: Mutable::new(Some(step.clone())),
             arrived: Mutable::new(step),
             previous: Mutable::new(None),
+            timer: Arc::new(Mutex::new(None))
+        };
+        let timeline = this.clone();
+        this.timer.lock().expect_throw("failed to lock Timeline timer").replace(
+            Timer::new(50, move || timeline.jump(Duration::milliseconds(50)))
+        );
+        this
+    }
+
+    pub fn jump(&self, jump: Duration) {
+        if self.current.map(Option::is_some) {
+            let mut current_lock = self.current.lock_mut();
+            let current = current_lock.as_mut().unwrap_throw();
+            
+            let mut elapsed = current.elapsed.write().expect_throw("failed to lock Timeline elapsed");
+            let elapsed_with_jump = *elapsed + jump;
+            
+            let add_to_next_step = if elapsed_with_jump <= current.duration {
+                Duration::zero()
+            } else {
+                elapsed_with_jump - current.duration
+            };
+            *elapsed = elapsed_with_jump - add_to_next_step;
+
+            if current.duration == *elapsed {
+                self.previous.set(Some(self.arrived.get_cloned()));
+                self.arrived.set(current.clone());
+                if not(add_to_next_step.is_zero()) {
+                    drop(elapsed);
+                    if let Some(next_step) = self.queue.write().expect_throw("failed to lock Timeline queue").pop_front() {
+                        *current = next_step;
+                        drop(current_lock);
+                        self.jump(add_to_next_step);
+                    } else {
+                        *current_lock = None;
+                    }
+                }
+            }
+        } else {
+            if let Some(next_step) = self.queue.write().expect_throw("failed to lock Timeline queue").pop_front() {
+                self.current.set(Some(next_step));
+                self.jump(jump);
+            }
         }
     }
 
