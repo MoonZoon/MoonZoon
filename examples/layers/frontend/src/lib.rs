@@ -45,6 +45,22 @@ enum Breath {
 
 #[static_ref]
 fn breathing_timeline() -> &'static Timeline<Breath> {
+    Task::start(async {
+        breathing_timeline()
+            .arrived_signal()
+            // @TODO remove dedupe once fixed in Zoon
+            .dedupe()
+            .for_each_sync(|arrived| {
+                let next_state = if matches!(arrived, Breath::Out) {
+                    // println!("IN");
+                    Breath::In
+                } else {
+                    // println!("OUT");
+                    Breath::Out
+                };
+                breathing_timeline().push(Duration::seconds(2), next_state);
+            }).await;
+    });
     Timeline::new(Breath::Out)
 }
 
@@ -108,6 +124,7 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
             .color_signal(lightness_oscillator.map(move |l| color.set_l(l))))
         .s(align)
         .on_hovered_change(move |is_hovered| {
+            // @TODO push -> to ; replace `current`? move `current` to `arrived`?
             hover_timeline.push(Duration::milliseconds(200), is_hovered);
         })
         .on_click(move || bring_to_front(rectangle))
@@ -119,21 +136,5 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
 
 #[wasm_bindgen(start)]
 pub fn start() {
-    Task::start(
-        breathing_timeline()
-            .arrived_signal()
-            .dedupe()
-            .for_each_sync(|arrived| {
-                let next_state = if matches!(arrived, Breath::Out) {
-                    // println!("IN");
-                    Breath::In
-                } else {
-                    // println!("OUT");
-                    Breath::Out
-                };
-                breathing_timeline().push(Duration::seconds(2), next_state);
-            }),
-    );
-
     start_app("app", root);
 }

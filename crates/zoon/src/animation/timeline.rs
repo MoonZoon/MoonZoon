@@ -33,8 +33,9 @@ impl<T> Timeline<T> {
     pub fn new(state: T) -> Self {
         let step = Step::new(Duration::zero(), state);
         let this = Self {
-            // @TODO channel?
+            // @TODO channel? how to resolve interruptions with channel?
             queue: Arc::new(RwLock::new(VecDeque::new())),
+            // @TODO do not overlap current and arrived (current None from start?)
             current: Mutable::new(Some(step.clone())),
             arrived: Mutable::new(step),
             previous: Mutable::new(None),
@@ -47,6 +48,7 @@ impl<T> Timeline<T> {
         this
     }
 
+    // @TODO recursion -> loop + refactor
     pub fn jump(&self, jump: Duration) {
         if self.current.map(Option::is_some) {
             let mut current_lock = self.current.lock_mut();
@@ -100,22 +102,6 @@ impl<T> Timeline<T> {
         self.current.signal_cloned().map(|step| step.map(|step| *step.state))
     }
 
-    // @TODO cloned version
-    // pub fn arrived_step_signal_cloned(&self) -> impl Signal<Item = Step<T>>
-    // where
-    //     T: Copy,
-    // {
-    //     self.arrived.signal_cloned().map(|step| step)
-    // }
-
-    // // @TODO cloned version
-    // pub fn current_step_signal_cloned(&self) -> impl Signal<Item = Option<Step<T>>>
-    // where
-    //     T: Copy,
-    // {
-    //     self.current.signal_cloned().map(|step| step)
-    // }
-
     pub fn push(&self, duration: Duration, state: T) {
         let step = Step::new(duration, state);
         self.queue
@@ -136,6 +122,7 @@ impl<T> Timeline<T> {
         map_ref! {
             let arrived = self.arrived.signal_cloned(),
             let current_and_elapsed = current_and_elapsed => move {
+                // @TODO if `arrived` elapsed != duration, compute the value from previous and arrived
                 let arrived = keyframes(&arrived.state);
                 if let Some((current, elapsed)) = current_and_elapsed  {
                     let progress = if current.duration.is_zero() {
