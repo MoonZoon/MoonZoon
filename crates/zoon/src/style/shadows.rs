@@ -40,7 +40,7 @@ impl<'a> Shadows<'a> {
         this.static_css_props.insert("box-shadow", shadows);
         this
     }
-    /// Add new shadows depending of signal's state..
+    /// Add new shadows depending of signal's state.
     /// The method accepts an iterator of [Shadow] so multiple effects can be
     /// used.
     /// # Example
@@ -111,7 +111,7 @@ impl<'a> Style<'a> for Shadows<'a> {
 // ------ Shadow ------
 
 /// Single Shadow effect.
-/// NMore information available at <https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow>.
+/// More information available at <https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow>.
 #[derive(Default)]
 pub struct Shadow {
     inner: bool,
@@ -149,7 +149,7 @@ impl Shadow {
         self
     }
 
-    /// Set the horizontal distance for the offset.
+    /// Move the shadow left or right.
     /// # Example
     /// ```no_run
     /// use zoon::{named_color::*, *};
@@ -165,7 +165,7 @@ impl Shadow {
         self
     }
 
-    /// Set the vertical distance for the offset.
+    /// Move the shadow top or bottom.
     /// # Example
     /// ```no_run
     /// use zoon::{named_color::*, *};
@@ -199,7 +199,7 @@ impl Shadow {
         self
     }
 
-    /// Add blur radius for the shadow..
+    /// Add blur radius for the shadow.
     /// # Example
     /// ```no_run
     /// use zoon::{named_color::*, *};
