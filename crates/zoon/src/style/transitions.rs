@@ -14,8 +14,7 @@ pub struct Transitions<'a> {
 }
 
 impl<'a> Transitions<'a> {
-    /// Apply a transformation to an element. For now we need to use raw css to
-    /// update the element with the use of `pseudo class`
+    /// Apply a transformation to an element.
     /// # Example
     /// ```no_run
     /// use zoon::*;
