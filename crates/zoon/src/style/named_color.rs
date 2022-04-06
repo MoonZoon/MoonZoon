@@ -12,7 +12,7 @@
 //! ```
 use crate::*;
 
-/// Get `hsluv` value for the given color.
+/// Create a `static` `HSluv` color from a color name, hue, saturation and lightness.
 macro_rules! color {
     ($color:ident => $h:literal, $s:literal, $l:literal) => {
         pub static $color: HSLuv = hsluv!($h, $s, $l);
