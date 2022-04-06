@@ -10,7 +10,7 @@ pub struct Padding<'a> {
 }
 
 impl<'a> Padding<'a> {
-    /// Set all padding, e.g top, right, bottom and left for an element.
+    /// Set all paddings, e.g top, right, bottom and left for an element.
     /// # Example
     /// ```no_run
     /// use zoon::*;
@@ -21,7 +21,7 @@ impl<'a> Padding<'a> {
         Self::default().x(padding).y(padding)
     }
 
-    /// Set all padding, e.g top, right, bottom and left depending of signal's
+    /// Set all paddings, e.g top, right, bottom and left depending of signal's
     /// state.
     /// # Example
     /// ```no_run
