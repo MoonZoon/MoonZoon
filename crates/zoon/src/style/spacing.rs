@@ -9,8 +9,7 @@ pub struct Spacing<'a> {
 }
 
 impl<'a> Spacing<'a> {
-    /// Add space in pixels between elements. It needs to be set on the
-    /// container.
+    /// Space between child elements in pixels.
     /// More information at <https://developer.mozilla.org/en-US/docs/Web/CSS/gap>.
     /// # Example
     /// ```no_run
