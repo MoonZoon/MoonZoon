@@ -49,6 +49,7 @@ impl<'a> Scrollbars<'a> {
         this.static_css_props.insert("overflow-y", "hidden");
         this
     }
+
     /// Add only the vertical scrollbar.
     /// More information available at <https://css-tricks.com/popping-hidden-overflow/>
     /// # Example
