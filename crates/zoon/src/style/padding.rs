@@ -178,7 +178,7 @@ impl<'a> Padding<'a> {
     ///
     /// let (hovered, hover_signal) = Mutable::new_and_signal(false);
     /// let button = Button::new()
-    ///     .s(Padding::new().bottom_signal(hover_signal.map_bool(|| 20, || 0)))
+    ///     .s(Padding::new().bottom_signal(hover_signal.map_true(|| 20)))
     ///     .on_hovered_change(move |hover| hovered.set(hover))
     ///     .label("Hover me");
     /// ```
@@ -211,7 +211,7 @@ impl<'a> Padding<'a> {
     ///
     /// let (hovered, hover_signal) = Mutable::new_and_signal(false);
     /// let button = Button::new()
-    ///     .s(Padding::new().left_signal(hover_signal.map_bool(|| 20, || 0)))
+    ///     .s(Padding::new().left_signal(hover_signal.map_true(|| 20)))
     ///     .on_hovered_change(move |hover| hovered.set(hover))
     ///     .label("Hover me");
     /// ```
