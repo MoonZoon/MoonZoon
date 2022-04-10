@@ -97,16 +97,36 @@ pub trait RawEl: Sized {
     }
 
     fn event_handler<E: StaticEvent>(self, handler: impl FnOnce(E) + Clone + 'static) -> Self {
+        self.event_handler_with_options(EventOptions::default(), handler)
+    }
+
+    fn event_handler_with_options<E: StaticEvent>(
+        self,
+        options: EventOptions,
+        handler: impl FnOnce(E) + Clone + 'static,
+    ) -> Self {
         let handler = move |event: E| handler.clone()(event);
-        self.update_dom_builder(|dom_builder| dom_builder.event(handler))
+        self.update_dom_builder(|dom_builder| {
+            dom_builder.event_with_options(&options.into(), handler)
+        })
     }
 
     fn global_event_handler<E: StaticEvent>(
         self,
         handler: impl FnOnce(E) + Clone + 'static,
     ) -> Self {
+        self.global_event_handler_with_options(EventOptions::default(), handler)
+    }
+
+    fn global_event_handler_with_options<E: StaticEvent>(
+        self,
+        options: EventOptions,
+        handler: impl FnOnce(E) + Clone + 'static,
+    ) -> Self {
         let handler = move |event: E| handler.clone()(event);
-        self.update_dom_builder(|dom_builder| dom_builder.global_event(handler))
+        self.update_dom_builder(|dom_builder| {
+            dom_builder.global_event_with_options(&options.into(), handler)
+        })
     }
 
     fn child<'a>(self, child: impl IntoOptionElement<'a> + 'a) -> Self {

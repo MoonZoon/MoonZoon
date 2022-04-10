@@ -5,8 +5,16 @@ use std::borrow::Borrow;
 
 pub trait KeyboardEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
     fn on_key_down_event(self, handler: impl FnOnce(KeyboardEvent) + Clone + 'static) -> Self {
+        self.on_key_down_event_with_options(EventOptions::default(), handler)
+    }
+
+    fn on_key_down_event_with_options(
+        self,
+        options: EventOptions,
+        handler: impl FnOnce(KeyboardEvent) + Clone + 'static,
+    ) -> Self {
         self.update_raw_el(|raw_el| {
-            raw_el.event_handler(move |event: events::KeyDown| {
+            raw_el.event_handler_with_options(options, move |event: events::KeyDown| {
                 let keyboard_event = KeyboardEvent {
                     key: Key::from(event.key()),
                     raw_event: RawKeyboardEvent::KeyDown(event),

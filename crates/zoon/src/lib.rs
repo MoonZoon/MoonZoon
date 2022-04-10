@@ -15,6 +15,7 @@ pub mod dom;
 mod dom_builder_ext;
 mod either;
 mod element;
+mod event_options;
 pub mod events_extra;
 mod futures_signals_ext;
 mod index_generator;
@@ -36,6 +37,7 @@ pub use dom_builder_ext::DomBuilderExt;
 pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};
 pub use either::{Either, IntoEither};
 pub use element::*;
+pub use event_options::EventOptions;
 pub use futures_channel::{self, oneshot};
 pub use futures_signals::{
     self, map_mut, map_ref,
