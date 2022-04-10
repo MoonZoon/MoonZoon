@@ -1,2 +1,2 @@
-# Counter
+# Js text editor 
 > MoonZoon example

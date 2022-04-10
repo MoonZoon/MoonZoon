@@ -1,2 +1,2 @@
-# Counter
+# Slider
 > MoonZoon example
