@@ -9,7 +9,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 - [Rust](https://www.rust-lang.org/)
   ```bash
   rustup update stable
-  rustc -V # rustc 1.59.0 (9d1b2106e 2022-02-23)
+  rustc -V # rustc 1.60.0 (7737e0b5c 2022-04-04)
   ```
 
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
@@ -40,6 +40,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/custom_http_client/Cargo.toml",
         // "examples/js_text_editor/Cargo.toml",
         // "examples/js-framework-benchmark/keyed/Cargo.toml",
+        // "examples/keyboard/Cargo.toml",
         // "examples/layers/Cargo.toml",
         // "examples/markup/Cargo.toml",
         // "examples/pages/Cargo.toml",
@@ -78,6 +79,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   - `custom_http_client`
   - `js_text_editor`
   - `js-framework-benchmark/keyed`
+  - `keyboard`
   - `layers`
   - `markup`
   - `pages`
