@@ -21,7 +21,7 @@ impl BackendWatcher {
         config: &Config,
         release: bool,
         debounce_time: Duration,
-        server: Option<Child>,
+        server: Arc<Mutex<Option<Child>>>,
     ) -> Self {
         let (watcher, debounced_receiver) =
             ProjectWatcher::start(&config.watch.backend, debounce_time)
@@ -44,10 +44,9 @@ async fn on_change(
     mut receiver: UnboundedReceiver<()>,
     release: bool,
     https: bool,
-    server: Option<Child>,
+    server: Arc<Mutex<Option<Child>>>,
 ) {
     let mut build_task = None::<JoinHandle<()>>;
-    let server = Arc::new(Mutex::new(server));
 
     while receiver.recv().await.is_some() {
         if let Some(build_task) = build_task.take() {
