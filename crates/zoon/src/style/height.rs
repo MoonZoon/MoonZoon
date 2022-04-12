@@ -60,7 +60,7 @@ impl<'a> Height<'a> {
         this
     }
 
-    /// Set the element height to fill its container or parent element.
+    /// Set the element height to fill its container.
     /// # Example
     /// ```no_run
     /// use zoon::*;

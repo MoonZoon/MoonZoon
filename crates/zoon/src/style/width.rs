@@ -96,7 +96,7 @@ impl<'a> Width<'a> {
         this
     }
 
-    /// Set the element width to fill its container or parent element.
+    /// Set the element width to fill its container.
     /// # Example
     /// ```no_run
     /// use zoon::*;
