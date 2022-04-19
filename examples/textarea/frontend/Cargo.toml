@@ -1,0 +1,20 @@
+[package]
+version = "0.1.0"
+name = "frontend"
+repository = "https://github.com/MoonZoon/MoonZoon"
+authors = ["Martin Kavík <martin@kavik.cz>"]
+description = "TextArea - MoonZoon example"
+categories = ["MoonZoon", "example"]
+license = "MIT"
+readme = "../README.md"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+zoon = { path = "../../../crates/zoon" }
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ['-Oz']
+

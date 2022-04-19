@@ -1,0 +1,16 @@
+[workspace]
+members = [
+    "frontend",
+    "backend",
+    "shared",
+]
+
+[profile.release]
+lto = true
+codegen-units = 1
+
+[profile.release.package.frontend]
+opt-level = 'z'
+
+[profile.release.package.backend]
+opt-level = 3
