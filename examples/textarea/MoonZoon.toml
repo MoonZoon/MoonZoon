@@ -1,0 +1,22 @@
+port = 8080
+# port = 8443
+https = false
+cache_busting = true
+backend_log_level = "warn" # "error" / "warn" / "info" / "debug" / "trace"
+
+[redirect]
+port = 8081
+enabled = false
+
+[cors]
+origins = ["*"]
+
+[watch]
+frontend = [
+    "frontend/Cargo.toml",
+    "frontend/src",
+]
+backend = [
+    "backend/Cargo.toml",
+    "backend/src",
+]
