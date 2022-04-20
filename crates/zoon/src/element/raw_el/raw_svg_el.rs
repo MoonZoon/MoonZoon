@@ -7,9 +7,7 @@ use std::{iter, marker::PhantomData};
 //   Element
 // ------ ------
 
-pub struct RawSvgEl<DomElement = web_sys::SvgElement>
-    where web_sys::SvgElement: From<DomElement>
-{
+pub struct RawSvgEl<DomElement: Into<web_sys::SvgElement>> {
     class_id: ClassId,
     dom_builder: DomBuilder<web_sys::SvgElement>,
     dom_element_phantom: PhantomData<DomElement>,
@@ -31,43 +29,31 @@ impl RawSvgEl<web_sys::SvgElement> {
     }
 }
 
-impl<DomElement> RawSvgEl<DomElement> 
-where web_sys::SvgElement: From<DomElement>
-{
-    pub fn dom_element_type<T>(self) -> RawSvgEl<T> 
-        where web_sys::SvgElement: From<T>
-    {
+impl<DomElement: Into<web_sys::SvgElement>> RawSvgEl<DomElement> {
+    pub fn dom_element_type<T: Into<web_sys::SvgElement>>(self) -> RawSvgEl<T> {
         RawSvgEl { class_id: self.class_id, dom_builder: self.dom_builder, dom_element_phantom: PhantomData }
     }
 }
 
-impl<DomElement> From<RawSvgEl<DomElement>> for RawElement 
-where web_sys::SvgElement: From<DomElement>
-{
+impl<DomElement: Into<web_sys::SvgElement>> From<RawSvgEl<DomElement>> for RawElement {
     fn from(raw_svg_el: RawSvgEl<DomElement>) -> Self {
         RawElement::SvgEl(raw_svg_el.dom_element_type::<web_sys::SvgElement>())
     }
 }
 
-impl<DomElement> IntoDom for RawSvgEl<DomElement> 
-where web_sys::SvgElement: From<DomElement>
-{
+impl<DomElement: Into<web_sys::SvgElement>> IntoDom for RawSvgEl<DomElement> {
     fn into_dom(self) -> Dom {
         self.dom_builder.into_dom()
     }
 }
 
-impl<DomElement> Element for RawSvgEl<DomElement> 
-where web_sys::SvgElement: From<DomElement>
-{
+impl<DomElement: Into<web_sys::SvgElement>> Element for RawSvgEl<DomElement> {
     fn into_raw_element(self) -> RawElement {
         RawElement::SvgEl(self.dom_element_type::<web_sys::SvgElement>())
     }
 }
 
-impl<DomElement> IntoIterator for RawSvgEl<DomElement> 
-where web_sys::SvgElement: From<DomElement>
-{
+impl<DomElement: Into<web_sys::SvgElement>> IntoIterator for RawSvgEl<DomElement> {
     type Item = Self;
     type IntoIter = iter::Once<Self>;
 
@@ -81,11 +67,7 @@ where web_sys::SvgElement: From<DomElement>
 //  Attributes
 // ------ ------
 
-impl<DomElement> RawEl for RawSvgEl<DomElement> 
-    where
-        DomElement:JsCast,
-        web_sys::SvgElement: From<DomElement>
-{
+impl<DomElement: Into<web_sys::SvgElement> + JsCast> RawEl for RawSvgEl<DomElement> {
     type DomBuilderElement = web_sys::SvgElement;
     type DomElement = DomElement;
 
@@ -135,7 +117,7 @@ impl<DomElement> RawEl for RawSvgEl<DomElement>
     }
 
     fn from_dom_element(dom_element: Self::DomElement) -> Self {
-        let dom_builder_element = Self::DomBuilderElement::from(dom_element);
+        let dom_builder_element: Self::DomBuilderElement = dom_element.into();
         let mut dom_builder = DomBuilder::new(dom_builder_element);
 
         let class_id = class_id_generator().next_class_id();

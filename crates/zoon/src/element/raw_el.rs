@@ -293,7 +293,7 @@ pub trait RawEl: Sized {
         Some(RawHtmlEl::from_dom_element(child))
     }
 
-    fn find_svg_child(&self, selectors: impl AsRef<str>) -> Option<RawSvgEl> {
+    fn find_svg_child(&self, selectors: impl AsRef<str>) -> Option<RawSvgEl<web_sys::SvgElement>> {
         let parent_dom_element = self.dom_builder_element();
         let parent: &web_sys::Element = parent_dom_element.as_ref();
         let child = parent
@@ -319,7 +319,7 @@ pub trait RawEl: Sized {
     fn update_svg_child(
         self,
         selectors: impl AsRef<str>,
-        updater: impl FnOnce(RawSvgEl) -> RawSvgEl,
+        updater: impl FnOnce(RawSvgEl<web_sys::SvgElement>) -> RawSvgEl<web_sys::SvgElement>,
     ) -> Self {
         if let Some(child) = self.find_svg_child(selectors) {
             let child = updater(child);

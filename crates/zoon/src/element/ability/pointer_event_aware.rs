@@ -123,9 +123,10 @@ pub trait PointerEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
 
     fn pointer_handling_svg(self, handling: PointerHandlingSvg) -> Self
     where
-        Self: UpdateRawEl<RawSvgEl>,
+        web_sys::SvgElement: From<T::DomElement>,
+        Self: UpdateRawEl<RawSvgEl<T::DomElement>>,
     {
-        self.update_raw_el(|raw_el: RawSvgEl| {
+        self.update_raw_el(|raw_el: RawSvgEl<T::DomElement>| {
             raw_el.style("pointer-events", handling.pointer_events)
         })
     }
@@ -135,9 +136,10 @@ pub trait PointerEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
         handling: impl Signal<Item = PointerHandlingSvg> + Unpin + 'static,
     ) -> Self
     where
-        Self: UpdateRawEl<RawSvgEl>,
+        web_sys::SvgElement: From<T::DomElement>,
+        Self: UpdateRawEl<RawSvgEl<T::DomElement>>,
     {
-        self.update_raw_el(|raw_el: RawSvgEl| {
+        self.update_raw_el(|raw_el: RawSvgEl<T::DomElement>| {
             raw_el.style_signal(
                 "pointer-events",
                 handling.map(|handling| handling.pointer_events),
