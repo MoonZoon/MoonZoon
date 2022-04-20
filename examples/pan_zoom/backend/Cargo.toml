@@ -1,0 +1,13 @@
+[package]
+version = "0.1.0"
+name = "backend"
+repository = "https://github.com/MoonZoon/MoonZoon"
+authors = ["Martin Kavík <martin@kavik.cz>"]
+description = "Pan Zoom - MoonZoon example"
+categories = ["MoonZoon", "example"]
+license = "MIT"
+readme = "../README.md"
+edition = "2021"
+
+[dependencies]
+moon = { path = "../../../crates/moon" }

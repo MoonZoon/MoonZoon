@@ -16,6 +16,7 @@
         // "examples/layers/Cargo.toml",
         // "examples/markup/Cargo.toml",
         // "examples/pages/Cargo.toml",
+        "examples/pan_zoom/Cargo.toml",
         // "examples/paragraph/Cargo.toml",
         // "examples/resize_drag/Cargo.toml",
         // "examples/slider/Cargo.toml",
