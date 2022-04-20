@@ -7,12 +7,12 @@ use std::iter;
 //   Element
 // ------ ------
 
-pub struct RawHtmlEl {
+pub struct RawHtmlEl<DomElement: Into<web_sys::HtmlElement>> {
     class_id: ClassId,
-    dom_builder: DomBuilder<web_sys::HtmlElement>,
+    dom_builder: DomBuilder<DomElement>,
 }
 
-impl RawHtmlEl {
+impl RawHtmlEl<web_sys::HtmlElement> {
     pub fn new(tag: &str) -> Self {
         let class_id = class_id_generator().next_class_id();
 
@@ -27,25 +27,33 @@ impl RawHtmlEl {
     }
 }
 
-impl From<RawHtmlEl> for RawElement {
-    fn from(raw_html_el: RawHtmlEl) -> Self {
+impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> RawHtmlEl<DomElement> {
+    pub fn dom_element_type<T: Into<web_sys::SvgElement> + JsCast>(self) -> RawHtmlEl<T> {
+        let element = self.dom_builder.__internal_element().unchecked_into::<T>();
+        let dom_builder = DomBuilder::new(element).__internal_transfer_callbacks(self.dom_builder);
+        RawSvgEl { class_id: self.class_id, dom_builder }
+    }
+}
+
+impl<DomElement: Into<web_sys::HtmlElement>> From<RawHtmlEl<DomElement>> for RawElement {
+    fn from(raw_html_el: RawHtmlEl<DomElement>) -> Self {
         RawElement::El(raw_html_el)
     }
 }
 
-impl IntoDom for RawHtmlEl {
+impl<DomElement: Into<web_sys::HtmlElement> + Into<web_sys::Node>> IntoDom for RawHtmlEl<DomElement> {
     fn into_dom(self) -> Dom {
         self.dom_builder.into_dom()
     }
 }
 
-impl Element for RawHtmlEl {
+impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> Element for RawHtmlEl<DomElement> {
     fn into_raw_element(self) -> RawElement {
         RawElement::El(self)
     }
 }
 
-impl IntoIterator for RawHtmlEl {
+impl<DomElement: Into<web_sys::HtmlElement>> IntoIterator for RawHtmlEl<DomElement> {
     type Item = Self;
     type IntoIter = iter::Once<Self>;
 
@@ -59,7 +67,19 @@ impl IntoIterator for RawHtmlEl {
 //  Attributes
 // ------ ------
 
-impl RawEl for RawHtmlEl {
+impl<DomElement> RawEl for RawHtmlEl<DomElement> 
+    where DomElement: AsRef<web_sys::Node>
+    + Into<web_sys::HtmlElement>
+    + AsRef<web_sys::EventTarget>
+    + AsRef<JsValue>
+    + AsRef<web_sys::Element>
+    + Into<web_sys::Element>
+    + AsRef<web_sys::SvgElement>
+    + Into<web_sys::Node>
+    + Clone
+    + JsCast
+    + 'static
+{
     type DomElement = web_sys::HtmlElement;
 
     fn update_dom_builder(
@@ -121,7 +141,7 @@ impl RawEl for RawHtmlEl {
     }
 }
 
-impl RawHtmlEl {
+impl<DomElement> RawHtmlEl<DomElement> {
     pub fn focus(mut self) -> Self {
         self.dom_builder = self.dom_builder.focused(true);
         self

@@ -276,7 +276,7 @@ pub trait RawEl: Sized {
         Some(Self::from_dom_element(element.dyn_into().ok()?))
     }
 
-    fn find_html_child(&self, selectors: impl AsRef<str>) -> Option<RawHtmlEl> {
+    fn find_html_child(&self, selectors: impl AsRef<str>) -> Option<RawHtmlEl<web_sys::HtmlElement>> {
         let parent_dom_element = self.dom_element();
         let parent: &web_sys::Element = parent_dom_element.as_ref();
         let child = parent
@@ -301,7 +301,7 @@ pub trait RawEl: Sized {
     fn update_html_child(
         self,
         selectors: impl AsRef<str>,
-        updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl,
+        updater: impl FnOnce(RawHtmlEl<web_sys::HtmlElement>) -> RawHtmlEl<web_sys::HtmlElement>,
     ) -> Self {
         if let Some(child) = self.find_html_child(selectors) {
             let child = updater(child);
