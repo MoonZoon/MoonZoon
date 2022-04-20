@@ -1,7 +1,7 @@
 use super::class_id_generator;
 use crate::css_property::{CssPropertyName, CssPropertyValue};
 use crate::*;
-use std::{iter, marker::PhantomData};
+use std::iter;
 
 // ------ ------
 //   Element
@@ -9,8 +9,7 @@ use std::{iter, marker::PhantomData};
 
 pub struct RawSvgEl<DomElement: Into<web_sys::SvgElement>> {
     class_id: ClassId,
-    dom_builder: DomBuilder<web_sys::SvgElement>,
-    dom_element_phantom: PhantomData<DomElement>,
+    dom_builder: DomBuilder<DomElement>,
 }
 
 impl RawSvgEl<web_sys::SvgElement> {
@@ -24,30 +23,31 @@ impl RawSvgEl<web_sys::SvgElement> {
             class_id: class_id.clone(),
             dom_builder: dom_builder
                 .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
-            dom_element_phantom: PhantomData,
         }
     }
 }
 
-impl<DomElement: Into<web_sys::SvgElement>> RawSvgEl<DomElement> {
-    pub fn dom_element_type<T: Into<web_sys::SvgElement>>(self) -> RawSvgEl<T> {
-        RawSvgEl { class_id: self.class_id, dom_builder: self.dom_builder, dom_element_phantom: PhantomData }
+impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> RawSvgEl<DomElement> {
+    pub fn dom_element_type<T: Into<web_sys::SvgElement> + JsCast>(self) -> RawSvgEl<T> {
+        let element = self.dom_builder.__internal_element().unchecked_into::<T>();
+        let dom_builder = DomBuilder::new(element).__internal_transfer_callbacks(self.dom_builder);
+        RawSvgEl { class_id: self.class_id, dom_builder }
     }
 }
 
-impl<DomElement: Into<web_sys::SvgElement>> From<RawSvgEl<DomElement>> for RawElement {
+impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> From<RawSvgEl<DomElement>> for RawElement {
     fn from(raw_svg_el: RawSvgEl<DomElement>) -> Self {
         RawElement::SvgEl(raw_svg_el.dom_element_type::<web_sys::SvgElement>())
     }
 }
 
-impl<DomElement: Into<web_sys::SvgElement>> IntoDom for RawSvgEl<DomElement> {
+impl<DomElement: Into<web_sys::SvgElement> + Into<web_sys::Node>> IntoDom for RawSvgEl<DomElement> {
     fn into_dom(self) -> Dom {
         self.dom_builder.into_dom()
     }
 }
 
-impl<DomElement: Into<web_sys::SvgElement>> Element for RawSvgEl<DomElement> {
+impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> Element for RawSvgEl<DomElement> {
     fn into_raw_element(self) -> RawElement {
         RawElement::SvgEl(self.dom_element_type::<web_sys::SvgElement>())
     }
@@ -67,19 +67,29 @@ impl<DomElement: Into<web_sys::SvgElement>> IntoIterator for RawSvgEl<DomElement
 //  Attributes
 // ------ ------
 
-impl<DomElement: Into<web_sys::SvgElement> + JsCast> RawEl for RawSvgEl<DomElement> {
-    type DomBuilderElement = web_sys::SvgElement;
+impl<DomElement: Into<web_sys::SvgElement> + JsCast> RawEl for RawSvgEl<DomElement> 
+    where DomElement: AsRef<web_sys::Node>
+    + AsRef<web_sys::EventTarget>
+    + AsRef<JsValue>
+    + AsRef<web_sys::Element>
+    + Into<web_sys::Element>
+    + AsRef<web_sys::SvgElement>
+    + Into<web_sys::Node>
+    + Clone
+    + JsCast
+    + 'static
+{
     type DomElement = DomElement;
 
     fn update_dom_builder(
         mut self,
-        updater: impl FnOnce(DomBuilder<Self::DomBuilderElement>) -> DomBuilder<Self::DomBuilderElement>,
+        updater: impl FnOnce(DomBuilder<Self::DomElement>) -> DomBuilder<Self::DomElement>,
     ) -> Self {
         self.dom_builder = updater(self.dom_builder);
         self
     }
 
-    fn dom_builder_element(&self) -> Self::DomBuilderElement {
+    fn dom_element(&self) -> Self::DomElement {
         self.dom_builder.__internal_element()
     }
 
@@ -117,8 +127,7 @@ impl<DomElement: Into<web_sys::SvgElement> + JsCast> RawEl for RawSvgEl<DomEleme
     }
 
     fn from_dom_element(dom_element: Self::DomElement) -> Self {
-        let dom_builder_element: Self::DomBuilderElement = dom_element.into();
-        let mut dom_builder = DomBuilder::new(dom_builder_element);
+        let mut dom_builder = DomBuilder::new(dom_element);
 
         let class_id = class_id_generator().next_class_id();
         dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
@@ -127,7 +136,6 @@ impl<DomElement: Into<web_sys::SvgElement> + JsCast> RawEl for RawSvgEl<DomEleme
             class_id: class_id.clone(),
             dom_builder: dom_builder
                 .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
-            dom_element_phantom: PhantomData,
         }
     }
 }

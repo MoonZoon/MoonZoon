@@ -47,7 +47,7 @@ pub trait UpdateRawEl<T: RawEl> {
 
 pub trait RawEl: Sized {
     #[doc(hidden)]
-    type DomBuilderElement: AsRef<Node>
+    type DomElement: AsRef<Node>
         + AsRef<EventTarget>
         + AsRef<JsValue>
         + AsRef<web_sys::Element>
@@ -55,20 +55,14 @@ pub trait RawEl: Sized {
         + Clone
         + JsCast
         + 'static;
-    type DomElement: JsCast;
 
     #[doc(hidden)]
     fn update_dom_builder(
         self,
-        updater: impl FnOnce(DomBuilder<Self::DomBuilderElement>) -> DomBuilder<Self::DomBuilderElement>,
+        updater: impl FnOnce(DomBuilder<Self::DomElement>) -> DomBuilder<Self::DomElement>,
     ) -> Self;
 
-    #[doc(hidden)]
-    fn dom_builder_element(&self) -> Self::DomBuilderElement;
-
-    fn dom_element(&self) -> Self::DomElement {
-        self.dom_builder_element().unchecked_into()
-    }
+    fn dom_element(&self) -> Self::DomElement;
 
     fn use_dom_element(self, f: impl FnOnce(Self, Self::DomElement) -> Self) -> Self {
         let dom_element = self.dom_element();
@@ -205,13 +199,13 @@ pub trait RawEl: Sized {
         self.after_remove(|_| drop(group_handle))
     }
 
-    fn after_insert(self, handler: impl FnOnce(Self::DomBuilderElement) + 'static) -> Self {
+    fn after_insert(self, handler: impl FnOnce(Self::DomElement) + 'static) -> Self {
         let handler = ManuallyDrop::new(handler);
         let handler = |ws_element| ManuallyDrop::into_inner(handler)(ws_element);
         self.update_dom_builder(|dom_builder| dom_builder.after_inserted(handler))
     }
 
-    fn after_remove(self, handler: impl FnOnce(Self::DomBuilderElement) + 'static) -> Self {
+    fn after_remove(self, handler: impl FnOnce(Self::DomElement) + 'static) -> Self {
         let handler = ManuallyDrop::new(handler);
         let handler = |ws_element| ManuallyDrop::into_inner(handler)(ws_element);
         self.update_dom_builder(|dom_builder| dom_builder.after_removed(handler))
@@ -251,7 +245,7 @@ pub trait RawEl: Sized {
     fn class_id(&self) -> ClassId;
 
     fn inner_markup(self, markup: impl AsRef<str>) -> Self {
-        let dom_element = self.dom_builder_element();
+        let dom_element = self.dom_element();
         let parent: &web_sys::Element = dom_element.as_ref();
         parent.set_inner_html(markup.as_ref());
         self
@@ -261,7 +255,7 @@ pub trait RawEl: Sized {
         self,
         markup: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static,
     ) -> Self {
-        let parent: web_sys::Element = self.dom_builder_element().into();
+        let parent: web_sys::Element = self.dom_element().into();
         let inner_html_updater = markup.for_each_sync(move |markup| {
             parent.set_inner_html(&markup.into_cow_str());
         });
@@ -283,7 +277,7 @@ pub trait RawEl: Sized {
     }
 
     fn find_html_child(&self, selectors: impl AsRef<str>) -> Option<RawHtmlEl> {
-        let parent_dom_element = self.dom_builder_element();
+        let parent_dom_element = self.dom_element();
         let parent: &web_sys::Element = parent_dom_element.as_ref();
         let child = parent
             .query_selector(selectors.as_ref())
@@ -294,7 +288,7 @@ pub trait RawEl: Sized {
     }
 
     fn find_svg_child(&self, selectors: impl AsRef<str>) -> Option<RawSvgEl<web_sys::SvgElement>> {
-        let parent_dom_element = self.dom_builder_element();
+        let parent_dom_element = self.dom_element();
         let parent: &web_sys::Element = parent_dom_element.as_ref();
         let child = parent
             .query_selector(selectors.as_ref())

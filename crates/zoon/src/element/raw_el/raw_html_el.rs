@@ -60,18 +60,17 @@ impl IntoIterator for RawHtmlEl {
 // ------ ------
 
 impl RawEl for RawHtmlEl {
-    type DomBuilderElement = web_sys::HtmlElement;
     type DomElement = web_sys::HtmlElement;
 
     fn update_dom_builder(
         mut self,
-        updater: impl FnOnce(DomBuilder<Self::DomBuilderElement>) -> DomBuilder<Self::DomBuilderElement>,
+        updater: impl FnOnce(DomBuilder<Self::DomElement>) -> DomBuilder<Self::DomElement>,
     ) -> Self {
         self.dom_builder = updater(self.dom_builder);
         self
     }
 
-    fn dom_builder_element(&self) -> Self::DomBuilderElement {
+    fn dom_element(&self) -> Self::DomElement {
         self.dom_builder.__internal_element()
     }
 
@@ -109,8 +108,7 @@ impl RawEl for RawHtmlEl {
     }
 
     fn from_dom_element(dom_element: Self::DomElement) -> Self {
-        let dom_builder_element = Self::DomBuilderElement::from(dom_element);
-        let mut dom_builder = DomBuilder::new(dom_builder_element);
+        let mut dom_builder = DomBuilder::new(dom_element);
 
         let class_id = class_id_generator().next_class_id();
         dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
