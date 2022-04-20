@@ -1,6 +1,5 @@
-use crate::{web_sys::HtmlLabelElement, *};
-use std::iter;
-use std::marker::PhantomData;
+use crate::*;
+use std::{iter, marker::PhantomData};
 
 // ------ ------
 //    Element
@@ -8,15 +7,17 @@ use std::marker::PhantomData;
 
 make_flags!(Label, ForInput);
 
+type LabelRawEl = RawHtmlEl<web_sys::HtmlLabelElement>;
+
 pub struct Label<LabelFlag, ForInputFlag> {
-    raw_el: RawHtmlEl,
+    raw_el: LabelRawEl,
     flags: PhantomData<(LabelFlag, ForInputFlag)>,
 }
 
 impl Label<LabelFlagNotSet, ForInputFlagNotSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("label").class("label"),
+            raw_el: RawHtmlEl::new("label").class("label").dom_element_type(),
             flags: PhantomData,
         }
     }
@@ -38,8 +39,8 @@ impl<LabelFlag, ForInputFlag> IntoIterator for Label<LabelFlag, ForInputFlag> {
     }
 }
 
-impl<LabelFlag, ForInputFlag> UpdateRawEl<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<LabelFlag, ForInputFlag> UpdateRawEl<LabelRawEl> for Label<LabelFlag, ForInputFlag> {
+    fn update_raw_el(mut self, updater: impl FnOnce(LabelRawEl) -> LabelRawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -49,17 +50,16 @@ impl<LabelFlag, ForInputFlag> UpdateRawEl<RawHtmlEl> for Label<LabelFlag, ForInp
 //   Abilities
 // ------ ------
 
-impl<LabelFlag, ForInputFlag> Styleable<'_, RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> KeyboardEventAware<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> MouseEventAware<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> PointerEventAware<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> TouchEventAware<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> Hookable<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {
-    type WSElement = HtmlLabelElement;
+impl<LabelFlag, ForInputFlag> Styleable<'_, LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> KeyboardEventAware<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> MouseEventAware<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> PointerEventAware<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> TouchEventAware<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> Hookable<LabelRawEl> for Label<LabelFlag, ForInputFlag> {
 }
-impl<LabelFlag, ForInputFlag> AddNearbyElement<'_> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> HasClassId<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> SelectableTextContent<RawHtmlEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> AddNearbyElement<'_, LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> HasClassId<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> SelectableTextContent<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
 
 // ------ ------
 //  Attributes

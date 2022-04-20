@@ -139,4 +139,14 @@ impl<DomElement> RawEl for RawSvgEl<DomElement>
                 .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
         }
     }
+
+    fn focus(self) -> Self where Self::DomElement: AsRef<web_sys::HtmlElement> {
+        unimplemented!();
+    }
+
+    fn focus_signal(self, _focus: impl Signal<Item = bool> + Unpin + 'static) -> Self
+        where Self::DomElement: AsRef<web_sys::HtmlElement> 
+    {
+        unimplemented!();
+    }
 }

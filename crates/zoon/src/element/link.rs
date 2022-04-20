@@ -1,6 +1,5 @@
-use crate::{web_sys::HtmlAnchorElement, *};
-use std::iter;
-use std::marker::PhantomData;
+use crate::*;
+use std::{iter, marker::PhantomData};
 
 // ------ ------
 //    Element
@@ -8,8 +7,10 @@ use std::marker::PhantomData;
 
 make_flags!(Label, To);
 
+type LinkRawEl = RawHtmlEl<web_sys::HtmlAnchorElement>;
+
 pub struct Link<LabelFlag, ToFlag> {
-    raw_el: RawHtmlEl,
+    raw_el: LinkRawEl,
     flags: PhantomData<(LabelFlag, ToFlag)>,
 }
 
@@ -40,7 +41,8 @@ impl Link<LabelFlagNotSet, ToFlagNotSet> {
                 .style("color", "inherit")
                 .style("display", "inline-flex")
                 .style("flex-direction", "column")
-                .style("align-items", "center"),
+                .style("align-items", "center")
+                .dom_element_type(),
             flags: PhantomData,
         }
     }
@@ -62,8 +64,8 @@ impl<LabelFlag, ToFlag> IntoIterator for Link<LabelFlag, ToFlag> {
     }
 }
 
-impl<LabelFlag, ToFlag> UpdateRawEl<RawHtmlEl> for Link<LabelFlag, ToFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<LabelFlag, ToFlag> UpdateRawEl<LinkRawEl> for Link<LabelFlag, ToFlag> {
+    fn update_raw_el(mut self, updater: impl FnOnce(LinkRawEl) -> LinkRawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -73,18 +75,17 @@ impl<LabelFlag, ToFlag> UpdateRawEl<RawHtmlEl> for Link<LabelFlag, ToFlag> {
 //   Abilities
 // ------ ------
 
-impl<LabelFlag, ToFlag> Styleable<'_, RawHtmlEl> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> KeyboardEventAware<RawHtmlEl> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> Focusable for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> MouseEventAware<RawHtmlEl> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> PointerEventAware<RawHtmlEl> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> TouchEventAware<RawHtmlEl> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> Hookable<RawHtmlEl> for Link<LabelFlag, ToFlag> {
-    type WSElement = HtmlAnchorElement;
+impl<LabelFlag, ToFlag> Styleable<'_, LinkRawEl> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> KeyboardEventAware<LinkRawEl> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> Focusable<LinkRawEl> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> MouseEventAware<LinkRawEl> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> PointerEventAware<LinkRawEl> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> TouchEventAware<LinkRawEl> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> Hookable<LinkRawEl> for Link<LabelFlag, ToFlag> {
 }
-impl<LabelFlag, ToFlag> AddNearbyElement<'_> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> HasClassId<RawHtmlEl> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> SelectableTextContent<RawHtmlEl> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> AddNearbyElement<'_, LinkRawEl> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> HasClassId<LinkRawEl> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> SelectableTextContent<LinkRawEl> for Link<LabelFlag, ToFlag> {}
 
 // ------ ------
 //  Attributes

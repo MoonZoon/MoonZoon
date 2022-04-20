@@ -1,6 +1,5 @@
-use crate::{web_sys::HtmlElement, *};
-use std::iter;
-use std::marker::PhantomData;
+use crate::*;
+use std::{iter, marker::PhantomData};
 
 // ------ ------
 //   Element
@@ -8,8 +7,10 @@ use std::marker::PhantomData;
 
 make_flags!(Empty);
 
+type StackRawEl = RawHtmlEl<web_sys::HtmlElement>;
+
 pub struct Stack<EmptyFlag> {
-    raw_el: RawHtmlEl,
+    raw_el: StackRawEl,
     flags: PhantomData<EmptyFlag>,
 }
 
@@ -35,8 +36,8 @@ impl<EmptyFlag> IntoIterator for Stack<EmptyFlag> {
     }
 }
 
-impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Stack<EmptyFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<EmptyFlag> UpdateRawEl<StackRawEl> for Stack<EmptyFlag> {
+    fn update_raw_el(mut self, updater: impl FnOnce(StackRawEl) -> StackRawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -82,19 +83,18 @@ impl ChoosableTag for Stack<EmptyFlagSet> {
         }
     }
 }
-impl<EmptyFlag> Styleable<'_, RawHtmlEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> MouseEventAware<RawHtmlEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> PointerEventAware<RawHtmlEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> TouchEventAware<RawHtmlEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> MutableViewport<RawHtmlEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> ResizableViewport<RawHtmlEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> Hookable<RawHtmlEl> for Stack<EmptyFlag> {
-    type WSElement = HtmlElement;
+impl<EmptyFlag> Styleable<'_, StackRawEl> for Stack<EmptyFlag> {}
+impl<EmptyFlag> KeyboardEventAware<StackRawEl> for Stack<EmptyFlag> {}
+impl<EmptyFlag> MouseEventAware<StackRawEl> for Stack<EmptyFlag> {}
+impl<EmptyFlag> PointerEventAware<StackRawEl> for Stack<EmptyFlag> {}
+impl<EmptyFlag> TouchEventAware<StackRawEl> for Stack<EmptyFlag> {}
+impl<EmptyFlag> MutableViewport<StackRawEl> for Stack<EmptyFlag> {}
+impl<EmptyFlag> ResizableViewport<StackRawEl> for Stack<EmptyFlag> {}
+impl<EmptyFlag> Hookable<StackRawEl> for Stack<EmptyFlag> {
 }
-impl<EmptyFlag> AddNearbyElement<'_> for Stack<EmptyFlag> {}
-impl<EmptyFlag> HasClassId<RawHtmlEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> SelectableTextContent<RawHtmlEl> for Stack<EmptyFlag> {}
+impl<EmptyFlag> AddNearbyElement<'_, StackRawEl> for Stack<EmptyFlag> {}
+impl<EmptyFlag> HasClassId<StackRawEl> for Stack<EmptyFlag> {}
+impl<EmptyFlag> SelectableTextContent<StackRawEl> for Stack<EmptyFlag> {}
 
 // ------ ------
 //  Attributes

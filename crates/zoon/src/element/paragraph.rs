@@ -1,6 +1,5 @@
-use crate::{web_sys::HtmlParagraphElement, *};
-use std::iter;
-use std::marker::PhantomData;
+use crate::*;
+use std::{iter, marker::PhantomData};
 
 // ------ ------
 //   Element
@@ -8,8 +7,10 @@ use std::marker::PhantomData;
 
 make_flags!(Empty);
 
+type ParagraphRawEl = RawHtmlEl<web_sys::HtmlParagraphElement>;
+
 pub struct Paragraph<EmptyFlag> {
-    raw_el: RawHtmlEl,
+    raw_el: ParagraphRawEl,
     flags: PhantomData<EmptyFlag>,
 }
 
@@ -35,8 +36,8 @@ impl<EmptyFlagSet> IntoIterator for Paragraph<EmptyFlagSet> {
     }
 }
 
-impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Paragraph<EmptyFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<EmptyFlag> UpdateRawEl<ParagraphRawEl> for Paragraph<EmptyFlag> {
+    fn update_raw_el(mut self, updater: impl FnOnce(ParagraphRawEl) -> ParagraphRawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -55,23 +56,22 @@ impl ChoosableTag for Paragraph<EmptyFlagSet> {
                 .style_group(StyleGroup::new(".paragraph > .align_right").style("float", "right"));
         });
         Self {
-            raw_el: RawHtmlEl::new(tag.as_str()).class("paragraph"),
+            raw_el: RawHtmlEl::new(tag.as_str()).class("paragraph").dom_element_type(),
             flags: PhantomData,
         }
     }
 }
-impl<EmptyFlag> Styleable<'_, RawHtmlEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> MouseEventAware<RawHtmlEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> PointerEventAware<RawHtmlEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> TouchEventAware<RawHtmlEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> MutableViewport<RawHtmlEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> Hookable<RawHtmlEl> for Paragraph<EmptyFlag> {
-    type WSElement = HtmlParagraphElement;
+impl<EmptyFlag> Styleable<'_, ParagraphRawEl> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> KeyboardEventAware<ParagraphRawEl> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> MouseEventAware<ParagraphRawEl> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> PointerEventAware<ParagraphRawEl> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> TouchEventAware<ParagraphRawEl> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> MutableViewport<ParagraphRawEl> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> Hookable<ParagraphRawEl> for Paragraph<EmptyFlag> {
 }
-impl<EmptyFlag> AddNearbyElement<'_> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> HasClassId<RawHtmlEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> SelectableTextContent<RawHtmlEl> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> AddNearbyElement<'_, ParagraphRawEl> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> HasClassId<ParagraphRawEl> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> SelectableTextContent<ParagraphRawEl> for Paragraph<EmptyFlag> {}
 
 // ------ ------
 //  Attributes

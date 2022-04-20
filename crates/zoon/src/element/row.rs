@@ -1,6 +1,5 @@
-use crate::{web_sys::HtmlElement, *};
-use std::iter;
-use std::marker::PhantomData;
+use crate::*;
+use std::{iter, marker::PhantomData};
 
 // ------ ------
 //   Element
@@ -8,8 +7,10 @@ use std::marker::PhantomData;
 
 make_flags!(Empty, Multiline);
 
+type RowRawEl = RawHtmlEl<web_sys::HtmlElement>;
+
 pub struct Row<EmptyFlag, MultilineFlag> {
-    raw_el: RawHtmlEl,
+    raw_el: RowRawEl,
     flags: PhantomData<(EmptyFlag, MultilineFlag)>,
 }
 
@@ -35,8 +36,8 @@ impl<EmptyFlag, MultilineFlag> IntoIterator for Row<EmptyFlag, MultilineFlag> {
     }
 }
 
-impl<EmptyFlag, MultilineFlag> UpdateRawEl<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<EmptyFlag, MultilineFlag> UpdateRawEl<RowRawEl> for Row<EmptyFlag, MultilineFlag> {
+    fn update_raw_el(mut self, updater: impl FnOnce(RowRawEl) -> RowRawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -72,19 +73,18 @@ impl ChoosableTag for Row<EmptyFlagSet, MultilineFlagNotSet> {
         }
     }
 }
-impl<EmptyFlag, MultilineFlag> Styleable<'_, RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> KeyboardEventAware<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> MouseEventAware<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> PointerEventAware<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> TouchEventAware<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> MutableViewport<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> ResizableViewport<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> Hookable<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {
-    type WSElement = HtmlElement;
+impl<EmptyFlag, MultilineFlag> Styleable<'_, RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> KeyboardEventAware<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> MouseEventAware<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> PointerEventAware<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> TouchEventAware<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> MutableViewport<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> ResizableViewport<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> Hookable<RowRawEl> for Row<EmptyFlag, MultilineFlag> {
 }
-impl<EmptyFlag, MultilineFlag> AddNearbyElement<'_> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> HasClassId<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> SelectableTextContent<RawHtmlEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> AddNearbyElement<'_, RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> HasClassId<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> SelectableTextContent<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
 
 // ------ ------
 //  Attributes

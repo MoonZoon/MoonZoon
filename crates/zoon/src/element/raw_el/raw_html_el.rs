@@ -28,16 +28,16 @@ impl RawHtmlEl<web_sys::HtmlElement> {
 }
 
 impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> RawHtmlEl<DomElement> {
-    pub fn dom_element_type<T: Into<web_sys::SvgElement> + JsCast>(self) -> RawHtmlEl<T> {
+    pub fn dom_element_type<T: Into<web_sys::HtmlElement> + JsCast>(self) -> RawHtmlEl<T> {
         let element = self.dom_builder.__internal_element().unchecked_into::<T>();
         let dom_builder = DomBuilder::new(element).__internal_transfer_callbacks(self.dom_builder);
-        RawSvgEl { class_id: self.class_id, dom_builder }
+        RawHtmlEl { class_id: self.class_id, dom_builder }
     }
 }
 
-impl<DomElement: Into<web_sys::HtmlElement>> From<RawHtmlEl<DomElement>> for RawElement {
+impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> From<RawHtmlEl<DomElement>> for RawElement {
     fn from(raw_html_el: RawHtmlEl<DomElement>) -> Self {
-        RawElement::El(raw_html_el)
+        RawElement::El(raw_html_el.dom_element_type::<web_sys::HtmlElement>())
     }
 }
 
@@ -47,9 +47,9 @@ impl<DomElement: Into<web_sys::HtmlElement> + Into<web_sys::Node>> IntoDom for R
     }
 }
 
-impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> Element for RawHtmlEl<DomElement> {
+impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> Element for RawHtmlEl<DomElement> {
     fn into_raw_element(self) -> RawElement {
-        RawElement::El(self)
+        RawElement::El(self.dom_element_type::<web_sys::HtmlElement>())
     }
 }
 
@@ -74,13 +74,13 @@ impl<DomElement> RawEl for RawHtmlEl<DomElement>
     + AsRef<JsValue>
     + AsRef<web_sys::Element>
     + Into<web_sys::Element>
-    + AsRef<web_sys::SvgElement>
+    + AsRef<web_sys::HtmlElement>
     + Into<web_sys::Node>
     + Clone
     + JsCast
     + 'static
 {
-    type DomElement = web_sys::HtmlElement;
+    type DomElement = DomElement;
 
     fn update_dom_builder(
         mut self,
@@ -139,15 +139,14 @@ impl<DomElement> RawEl for RawHtmlEl<DomElement>
                 .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
         }
     }
-}
 
-impl<DomElement> RawHtmlEl<DomElement> {
-    pub fn focus(mut self) -> Self {
-        self.dom_builder = self.dom_builder.focused(true);
-        self
+    fn focus(self) -> Self where Self::DomElement: AsRef<web_sys::HtmlElement> {
+        self.update_dom_builder(|dom_builder| dom_builder.focused(true))
     }
 
-    pub fn focus_signal(self, focus: impl Signal<Item = bool> + Unpin + 'static) -> Self {
+    fn focus_signal(self, focus: impl Signal<Item = bool> + Unpin + 'static) -> Self
+        where Self::DomElement: AsRef<web_sys::HtmlElement> 
+    {
         self.update_dom_builder(|dom_builder| dom_builder.focused_signal(focus))
     }
 }
