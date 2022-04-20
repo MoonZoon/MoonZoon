@@ -36,8 +36,7 @@ fn artboard() -> impl Element {
             let ViewBox { x, y, width, height } = view_box;
             format!("{x} {y} {width} {height}")
         }))
-        .apply(clone!((view_box) move |this| {
-            let dom_element = this.dom_element();
+        .use_dom_element(clone!((view_box) move |this, dom_element| {
             this.event_handler_with_options(EventOptions::new().preventable(), move |event: events_extra::WheelEvent| {
                 event.prevent_default();
                 let current_view_box = view_box.get();
@@ -67,8 +66,7 @@ fn artboard() -> impl Element {
             pan.set_neq(true);
         }))
         .event_handler(clone!((pan) move |_: events_extra::PointerUp| pan.set_neq(false)))
-        .apply(clone!((pan) move |this| {
-            let dom_element = this.dom_element();
+        .use_dom_element(clone!((pan) move |this, dom_element| {
             this.event_handler(move |event: events_extra::PointerMove| {
                 if not(pan.get()) {
                     return;
