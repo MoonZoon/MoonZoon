@@ -1,6 +1,6 @@
 use crate::*;
 
-pub trait AddNearbyElement<'a, T: RawEl>: UpdateRawEl<T> + Sized {
+pub trait AddNearbyElement<'a>: UpdateRawEl + Sized {
     fn element_above(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
         self.update_raw_el(|raw_el| raw_el.child(element_above_container().child(element)))
     }

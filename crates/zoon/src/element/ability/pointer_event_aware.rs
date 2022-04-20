@@ -3,7 +3,7 @@ use std::{cell::Cell, rc::Rc};
 
 // ------ PointerEventAware ------
 
-pub trait PointerEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
+pub trait PointerEventAware: UpdateRawEl + Sized {
     fn on_pointer_down(self, handler: impl FnOnce() + Clone + 'static) -> Self {
         let handler = move || handler.clone()();
         self.update_raw_el(|raw_el| {
@@ -123,10 +123,9 @@ pub trait PointerEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
 
     fn pointer_handling_svg(self, handling: PointerHandlingSvg) -> Self
     where
-        T::DomElement: AsRef<web_sys::SvgElement> + Into<web_sys::SvgElement> + Into<web_sys::Node>,
-        Self: UpdateRawEl<RawSvgEl<T::DomElement>>,
+        <Self::RawEl as RawEl>::DomElement: AsRef<web_sys::SvgElement> + Into<web_sys::SvgElement> + Into<web_sys::Node>,
     {
-        self.update_raw_el(|raw_el: RawSvgEl<T::DomElement>| {
+        self.update_raw_el(|raw_el| {
             raw_el.style("pointer-events", handling.pointer_events)
         })
     }
@@ -136,10 +135,9 @@ pub trait PointerEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
         handling: impl Signal<Item = PointerHandlingSvg> + Unpin + 'static,
     ) -> Self
     where
-        T::DomElement: AsRef<web_sys::SvgElement> + Into<web_sys::SvgElement> + Into<web_sys::Node>,
-        Self: UpdateRawEl<RawSvgEl<T::DomElement>>,
+        <Self::RawEl as RawEl>::DomElement: AsRef<web_sys::SvgElement> + Into<web_sys::SvgElement> + Into<web_sys::Node>,
     {
-        self.update_raw_el(|raw_el: RawSvgEl<T::DomElement>| {
+        self.update_raw_el(|raw_el| {
             raw_el.style_signal(
                 "pointer-events",
                 handling.map(|handling| handling.pointer_events),

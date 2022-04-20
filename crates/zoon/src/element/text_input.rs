@@ -10,8 +10,6 @@ pub use input_type::*;
 
 make_flags!(Id, OnChange, Placeholder, Text, Label, InputType, ReadOnly);
 
-type TextInputRawEl = RawHtmlEl<web_sys::HtmlInputElement>;
-
 pub struct TextInput<
     IdFlag,
     OnChangeFlag,
@@ -20,6 +18,7 @@ pub struct TextInput<
     LabelFlag,
     InputTypeFlag,
     ReadOnlyFlag,
+    TextInputRawEl = RawHtmlEl<web_sys::HtmlInputElement>,
 > {
     raw_el: TextInputRawEl,
     flags: PhantomData<(
@@ -105,7 +104,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
     }
 }
 
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, TextInputRawEl: RawEl>
     UpdateRawEl
     for TextInput<
         IdFlag,
@@ -115,6 +114,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        TextInputRawEl,
     >
 {
     type RawEl = TextInputRawEl;
@@ -130,7 +130,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 // ------ ------
 
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
-    Styleable<'_, TextInputRawEl>
+    Styleable<'_>
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -143,7 +143,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
-    KeyboardEventAware<TextInputRawEl>
+    KeyboardEventAware
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -156,7 +156,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
-    Focusable<TextInputRawEl>
+    Focusable
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -169,7 +169,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
-    MouseEventAware<TextInputRawEl>
+    MouseEventAware
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -182,7 +182,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
-    PointerEventAware<TextInputRawEl>
+    PointerEventAware
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -195,7 +195,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
-    TouchEventAware<TextInputRawEl>
+    TouchEventAware
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -221,7 +221,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
-    AddNearbyElement<'_, TextInputRawEl>
+    AddNearbyElement<'_>
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -234,7 +234,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
-    HasClassId<TextInputRawEl>
+    HasClassId
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -247,7 +247,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
-    SelectableTextContent<TextInputRawEl>
+    SelectableTextContent
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -318,19 +318,20 @@ impl<
     where
         PlaceholderFlag: FlagNotSet,
     {
-        let mut el_and_group = (self.raw_el, Some(StyleGroup::new("::placeholder")));
+        let mut el_and_group = (self.raw_el.dom_element_type(), Some(StyleGroup::new("::placeholder")));
         for style_applicator in placeholder.style_applicators {
             el_and_group = style_applicator(el_and_group);
         }
         let (raw_el, style_group) = el_and_group;
-        match placeholder.text {
+        let raw_el = raw_el.dom_element_type();
+        self.raw_el = match placeholder.text {
             PlaceholderText::Static(text) => {
-                self.raw_el = raw_el.attr("placeholder", &text);
+                raw_el.attr("placeholder", &text)
             }
             PlaceholderText::Dynamic(text) => {
-                self.raw_el = raw_el.attr_signal("placeholder", text);
+                raw_el.attr_signal("placeholder", text)
             }
-        }
+        };
         self.raw_el = self.raw_el.style_group(style_group.unwrap_throw());
         self.into_type()
     }
@@ -514,7 +515,7 @@ pub struct Placeholder<'a> {
     text: PlaceholderText<'a>,
     style_applicators: Vec<
         Box<
-            dyn FnOnce((TextInputRawEl, Option<StyleGroup<'a>>)) -> (TextInputRawEl, Option<StyleGroup<'a>>)
+            dyn FnOnce((RawHtmlEl<web_sys::HtmlElement>, Option<StyleGroup<'a>>)) -> (RawHtmlEl<web_sys::HtmlElement>, Option<StyleGroup<'a>>)
                 + 'a,
         >,
     >,
@@ -540,7 +541,7 @@ impl<'a> Placeholder<'a> {
 
     pub fn s(mut self, style: impl Style<'a> + 'a) -> Self {
         self.style_applicators.push(Box::new(
-            |(raw_html_el, style_group): (TextInputRawEl, Option<StyleGroup<'a>>)| {
+            |(raw_html_el, style_group): (RawHtmlEl<web_sys::HtmlElement>, Option<StyleGroup<'a>>)| {
                 style.apply_to_raw_el(raw_html_el, style_group)
             },
         ));

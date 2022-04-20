@@ -7,9 +7,7 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Empty);
 
-type ParagraphRawEl = RawHtmlEl<web_sys::HtmlParagraphElement>;
-
-pub struct Paragraph<EmptyFlag> {
+pub struct Paragraph<EmptyFlag, ParagraphRawEl = RawHtmlEl<web_sys::HtmlParagraphElement>> {
     raw_el: ParagraphRawEl,
     flags: PhantomData<EmptyFlag>,
 }
@@ -36,7 +34,7 @@ impl<EmptyFlagSet> IntoIterator for Paragraph<EmptyFlagSet> {
     }
 }
 
-impl<EmptyFlag> UpdateRawEl for Paragraph<EmptyFlag> {
+impl<EmptyFlag, ParagraphRawEl: RawEl> UpdateRawEl for Paragraph<EmptyFlag, ParagraphRawEl> {
     type RawEl = ParagraphRawEl;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
@@ -63,17 +61,17 @@ impl ChoosableTag for Paragraph<EmptyFlagSet> {
         }
     }
 }
-impl<EmptyFlag> Styleable<'_, ParagraphRawEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> KeyboardEventAware<ParagraphRawEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> MouseEventAware<ParagraphRawEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> PointerEventAware<ParagraphRawEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> TouchEventAware<ParagraphRawEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> MutableViewport<ParagraphRawEl> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> Styleable<'_> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> KeyboardEventAware for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> MouseEventAware for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> PointerEventAware for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> TouchEventAware for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> MutableViewport for Paragraph<EmptyFlag> {}
 impl<EmptyFlag> Hookable for Paragraph<EmptyFlag> {
 }
-impl<EmptyFlag> AddNearbyElement<'_, ParagraphRawEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> HasClassId<ParagraphRawEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> SelectableTextContent<ParagraphRawEl> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> AddNearbyElement<'_> for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> HasClassId for Paragraph<EmptyFlag> {}
+impl<EmptyFlag> SelectableTextContent for Paragraph<EmptyFlag> {}
 
 // ------ ------
 //  Attributes

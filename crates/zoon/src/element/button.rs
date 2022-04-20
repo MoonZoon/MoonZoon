@@ -7,8 +7,6 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Label, OnPress);
 
-type ButtonRawEl = RawHtmlEl<web_sys::HtmlDivElement>;
-
 /// Create a customizable Button for your web page.
 /// The button is actually built using a div to avoid default behaviors and
 /// styling from regular Html buttons.
@@ -86,7 +84,7 @@ type ButtonRawEl = RawHtmlEl<web_sys::HtmlDivElement>;
 ///         .on_press(move || click_count.update(|count| count + 1)),
 /// );
 /// ```
-pub struct Button<LabelFlag, OnPressFlag> {
+pub struct Button<LabelFlag, OnPressFlag, ButtonRawEl = RawHtmlEl<web_sys::HtmlDivElement>> {
     raw_el: ButtonRawEl,
     flags: PhantomData<(LabelFlag, OnPressFlag)>,
 }
@@ -159,8 +157,8 @@ impl<LabelFlag, OnPressFlag> IntoIterator for Button<LabelFlag, OnPressFlag> {
     }
 }
 
-impl<LabelFlag, OnPressFlag> UpdateRawEl
-    for Button<LabelFlag, OnPressFlag>
+impl<LabelFlag, OnPressFlag, ButtonRawEl: RawEl> UpdateRawEl
+    for Button<LabelFlag, OnPressFlag, ButtonRawEl>
 {
     type RawEl = ButtonRawEl;
 
@@ -177,34 +175,34 @@ impl<LabelFlag, OnPressFlag> UpdateRawEl
 //   Abilities
 // ------ ------
 
-impl<LabelFlag, OnPressFlag> Styleable<'_, ButtonRawEl>
+impl<LabelFlag, OnPressFlag> Styleable<'_>
     for Button<LabelFlag, OnPressFlag>
 {
 }
-impl<LabelFlag, OnPressFlag> KeyboardEventAware<ButtonRawEl>
+impl<LabelFlag, OnPressFlag> KeyboardEventAware
     for Button<LabelFlag, OnPressFlag>
 {
 }
-impl<LabelFlag, OnPressFlag> Focusable<ButtonRawEl> for Button<LabelFlag, OnPressFlag> {}
-impl<LabelFlag, OnPressFlag> MouseEventAware<ButtonRawEl>
+impl<LabelFlag, OnPressFlag> Focusable for Button<LabelFlag, OnPressFlag> {}
+impl<LabelFlag, OnPressFlag> MouseEventAware
     for Button<LabelFlag, OnPressFlag>
 {
 }
-impl<LabelFlag, OnPressFlag> PointerEventAware<ButtonRawEl>
+impl<LabelFlag, OnPressFlag> PointerEventAware
     for Button<LabelFlag, OnPressFlag>
 {
 }
-impl<LabelFlag, OnPressFlag> TouchEventAware<ButtonRawEl>
+impl<LabelFlag, OnPressFlag> TouchEventAware
     for Button<LabelFlag, OnPressFlag>
 {
 }
 impl<LabelFlag, OnPressFlag> Hookable for Button<LabelFlag, OnPressFlag> {
 }
-impl<LabelFlag, OnPressFlag> AddNearbyElement<'_, ButtonRawEl>
+impl<LabelFlag, OnPressFlag> AddNearbyElement<'_>
     for Button<LabelFlag, OnPressFlag>
 {
 }
-impl<LabelFlag, OnPressFlag> HasClassId<ButtonRawEl>
+impl<LabelFlag, OnPressFlag> HasClassId
     for Button<LabelFlag, OnPressFlag>
 {
 }

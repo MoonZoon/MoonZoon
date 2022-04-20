@@ -7,9 +7,7 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Empty, Multiline);
 
-type RowRawEl = RawHtmlEl<web_sys::HtmlElement>;
-
-pub struct Row<EmptyFlag, MultilineFlag> {
+pub struct Row<EmptyFlag, MultilineFlag, RowRawEl = RawHtmlEl<web_sys::HtmlElement>> {
     raw_el: RowRawEl,
     flags: PhantomData<(EmptyFlag, MultilineFlag)>,
 }
@@ -36,7 +34,7 @@ impl<EmptyFlag, MultilineFlag> IntoIterator for Row<EmptyFlag, MultilineFlag> {
     }
 }
 
-impl<EmptyFlag, MultilineFlag> UpdateRawEl for Row<EmptyFlag, MultilineFlag> {
+impl<EmptyFlag, MultilineFlag, RowRawEl: RawEl> UpdateRawEl for Row<EmptyFlag, MultilineFlag, RowRawEl> {
     type RawEl = RowRawEl;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
@@ -75,18 +73,18 @@ impl ChoosableTag for Row<EmptyFlagSet, MultilineFlagNotSet> {
         }
     }
 }
-impl<EmptyFlag, MultilineFlag> Styleable<'_, RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> KeyboardEventAware<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> MouseEventAware<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> PointerEventAware<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> TouchEventAware<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> MutableViewport<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> ResizableViewport<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> Styleable<'_> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> KeyboardEventAware for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> MouseEventAware for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> PointerEventAware for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> TouchEventAware for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> MutableViewport for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> ResizableViewport for Row<EmptyFlag, MultilineFlag> {}
 impl<EmptyFlag, MultilineFlag> Hookable for Row<EmptyFlag, MultilineFlag> {
 }
-impl<EmptyFlag, MultilineFlag> AddNearbyElement<'_, RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> HasClassId<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> SelectableTextContent<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> AddNearbyElement<'_> for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> HasClassId for Row<EmptyFlag, MultilineFlag> {}
+impl<EmptyFlag, MultilineFlag> SelectableTextContent for Row<EmptyFlag, MultilineFlag> {}
 
 // ------ ------
 //  Attributes

@@ -3,7 +3,7 @@ use crate::*;
 type U32Width = u32;
 type U32Height = u32;
 
-pub trait ResizableViewport<T: RawEl>: UpdateRawEl<T> + Sized {
+pub trait ResizableViewport: UpdateRawEl + Sized {
     fn on_viewport_size_change(
         self,
         handler: impl FnOnce(U32Width, U32Height) + Clone + 'static,

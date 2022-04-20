@@ -7,9 +7,7 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Empty);
 
-type StackRawEl = RawHtmlEl<web_sys::HtmlElement>;
-
-pub struct Stack<EmptyFlag> {
+pub struct Stack<EmptyFlag, StackRawEl = RawHtmlEl<web_sys::HtmlElement>> {
     raw_el: StackRawEl,
     flags: PhantomData<EmptyFlag>,
 }
@@ -36,7 +34,7 @@ impl<EmptyFlag> IntoIterator for Stack<EmptyFlag> {
     }
 }
 
-impl<EmptyFlag> UpdateRawEl for Stack<EmptyFlag> {
+impl<EmptyFlag, StackRawEl: RawEl> UpdateRawEl for Stack<EmptyFlag, StackRawEl> {
     type RawEl = StackRawEl;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
@@ -85,18 +83,18 @@ impl ChoosableTag for Stack<EmptyFlagSet> {
         }
     }
 }
-impl<EmptyFlag> Styleable<'_, StackRawEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> KeyboardEventAware<StackRawEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> MouseEventAware<StackRawEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> PointerEventAware<StackRawEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> TouchEventAware<StackRawEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> MutableViewport<StackRawEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> ResizableViewport<StackRawEl> for Stack<EmptyFlag> {}
+impl<EmptyFlag> Styleable<'_> for Stack<EmptyFlag> {}
+impl<EmptyFlag> KeyboardEventAware for Stack<EmptyFlag> {}
+impl<EmptyFlag> MouseEventAware for Stack<EmptyFlag> {}
+impl<EmptyFlag> PointerEventAware for Stack<EmptyFlag> {}
+impl<EmptyFlag> TouchEventAware for Stack<EmptyFlag> {}
+impl<EmptyFlag> MutableViewport for Stack<EmptyFlag> {}
+impl<EmptyFlag> ResizableViewport for Stack<EmptyFlag> {}
 impl<EmptyFlag> Hookable for Stack<EmptyFlag> {
 }
-impl<EmptyFlag> AddNearbyElement<'_, StackRawEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> HasClassId<StackRawEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> SelectableTextContent<StackRawEl> for Stack<EmptyFlag> {}
+impl<EmptyFlag> AddNearbyElement<'_> for Stack<EmptyFlag> {}
+impl<EmptyFlag> HasClassId for Stack<EmptyFlag> {}
+impl<EmptyFlag> SelectableTextContent for Stack<EmptyFlag> {}
 
 // ------ ------
 //  Attributes

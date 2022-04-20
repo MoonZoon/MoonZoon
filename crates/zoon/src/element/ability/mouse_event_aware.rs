@@ -2,7 +2,7 @@ use crate::*;
 
 // ------ MouseEventAware ------
 
-pub trait MouseEventAware<T: RawEl>: UpdateRawEl<T> + Sized {
+pub trait MouseEventAware: UpdateRawEl + Sized {
     fn on_hovered_change(self, handler: impl FnOnce(bool) + Clone + 'static) -> Self {
         let mouse_over_handler = move |hovered| (handler.clone())(hovered);
         let mouse_leave_handler = mouse_over_handler.clone();
