@@ -44,6 +44,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/layers/Cargo.toml",
         // "examples/markup/Cargo.toml",
         // "examples/pages/Cargo.toml",
+        // "examples/pan_zoom/Cargo.toml",
         // "examples/paragraph/Cargo.toml",
         // "examples/resize_drag/Cargo.toml",
         // "examples/slider/Cargo.toml",
@@ -83,6 +84,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   - `layers`
   - `markup`
   - `pages`
+  - `pan_zoom`
   - `paragraph`
   - `resize_drag`
   - `slider`
