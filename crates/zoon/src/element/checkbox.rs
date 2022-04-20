@@ -14,9 +14,7 @@ enum CheckState {
 
 make_flags!(Id, OnChange, Label, Icon, Checked);
 
-type CheckboxRawEl = RawHtmlEl<web_sys::HtmlDivElement>;
-
-pub struct Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> {
+pub struct Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, CheckboxRawEl = RawHtmlEl<web_sys::HtmlDivElement>> {
     check_state: Mutable<CheckState>,
     raw_el: CheckboxRawEl,
     flags: PhantomData<(IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag)>,
@@ -88,8 +86,8 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> IntoIterator
     }
 }
 
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> UpdateRawEl
-    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, CheckboxRawEl: RawEl> UpdateRawEl
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, CheckboxRawEl>
 {
     type RawEl = CheckboxRawEl;
 
@@ -103,27 +101,27 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> UpdateRawEl
 //   Abilities
 // ------ ------
 
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> Styleable<'_, CheckboxRawEl>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> Styleable<'_>
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> KeyboardEventAware<CheckboxRawEl>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> KeyboardEventAware
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> Focusable<CheckboxRawEl>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> Focusable
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> MouseEventAware<CheckboxRawEl>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> MouseEventAware
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> PointerEventAware<CheckboxRawEl>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> PointerEventAware
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> TouchEventAware<CheckboxRawEl>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> TouchEventAware
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
 }
@@ -131,11 +129,11 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> Hookable
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> AddNearbyElement<'_, CheckboxRawEl>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> AddNearbyElement<'_>
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> HasClassId<CheckboxRawEl>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> HasClassId
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
 }

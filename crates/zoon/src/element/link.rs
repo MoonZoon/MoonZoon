@@ -7,9 +7,7 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Label, To);
 
-type LinkRawEl = RawHtmlEl<web_sys::HtmlAnchorElement>;
-
-pub struct Link<LabelFlag, ToFlag> {
+pub struct Link<LabelFlag, ToFlag, LinkRawEl = RawHtmlEl<web_sys::HtmlAnchorElement>> {
     raw_el: LinkRawEl,
     flags: PhantomData<(LabelFlag, ToFlag)>,
 }
@@ -64,7 +62,7 @@ impl<LabelFlag, ToFlag> IntoIterator for Link<LabelFlag, ToFlag> {
     }
 }
 
-impl<LabelFlag, ToFlag> UpdateRawEl for Link<LabelFlag, ToFlag> {
+impl<LabelFlag, ToFlag, LinkRawEl: RawEl> UpdateRawEl for Link<LabelFlag, ToFlag, LinkRawEl> {
     type RawEl = LinkRawEl;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
@@ -77,17 +75,17 @@ impl<LabelFlag, ToFlag> UpdateRawEl for Link<LabelFlag, ToFlag> {
 //   Abilities
 // ------ ------
 
-impl<LabelFlag, ToFlag> Styleable<'_, LinkRawEl> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> KeyboardEventAware<LinkRawEl> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> Focusable<LinkRawEl> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> MouseEventAware<LinkRawEl> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> PointerEventAware<LinkRawEl> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> TouchEventAware<LinkRawEl> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> Styleable<'_> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> KeyboardEventAware for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> Focusable for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> MouseEventAware for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> PointerEventAware for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> TouchEventAware for Link<LabelFlag, ToFlag> {}
 impl<LabelFlag, ToFlag> Hookable for Link<LabelFlag, ToFlag> {
 }
-impl<LabelFlag, ToFlag> AddNearbyElement<'_, LinkRawEl> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> HasClassId<LinkRawEl> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> SelectableTextContent<LinkRawEl> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> AddNearbyElement<'_> for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> HasClassId for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag> SelectableTextContent for Link<LabelFlag, ToFlag> {}
 
 // ------ ------
 //  Attributes

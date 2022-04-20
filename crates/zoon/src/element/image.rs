@@ -7,9 +7,7 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Url, Description);
 
-type ImageRawEl = RawHtmlEl<web_sys::HtmlImageElement>;
-
-pub struct Image<UrlFlag, DescriptionFlag> {
+pub struct Image<UrlFlag, DescriptionFlag, ImageRawEl = RawHtmlEl<web_sys::HtmlImageElement>> {
     raw_el: ImageRawEl,
     flags: PhantomData<(UrlFlag, DescriptionFlag)>,
 }
@@ -39,7 +37,7 @@ impl<UrlFlagSet, DescriptionFlagSet> IntoIterator for Image<UrlFlagSet, Descript
     }
 }
 
-impl<UrlFlag, DescriptionFlag> UpdateRawEl for Image<UrlFlag, DescriptionFlag> {
+impl<UrlFlag, DescriptionFlag, ImageRawEl: RawEl> UpdateRawEl for Image<UrlFlag, DescriptionFlag, ImageRawEl> {
     type RawEl = ImageRawEl;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
@@ -52,15 +50,15 @@ impl<UrlFlag, DescriptionFlag> UpdateRawEl for Image<UrlFlag, DescriptionFlag> {
 //   Abilities
 // ------ ------
 
-impl<UrlFlag, DescriptionFlag> Styleable<'_, ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> KeyboardEventAware<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> MouseEventAware<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> PointerEventAware<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> TouchEventAware<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> Styleable<'_> for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> KeyboardEventAware for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> MouseEventAware for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> PointerEventAware for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> TouchEventAware for Image<UrlFlag, DescriptionFlag> {}
 impl<UrlFlag, DescriptionFlag> Hookable for Image<UrlFlag, DescriptionFlag> {
 }
-impl<UrlFlag, DescriptionFlag> AddNearbyElement<'_, ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> HasClassId<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> AddNearbyElement<'_> for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> HasClassId for Image<UrlFlag, DescriptionFlag> {}
 
 // ------ ------
 //  Attributes

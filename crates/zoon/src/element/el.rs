@@ -7,9 +7,7 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Child);
 
-type ElRawEl = RawHtmlEl<web_sys::HtmlElement>;
-
-pub struct El<ChildFlag> {
+pub struct El<ChildFlag, ElRawEl = RawHtmlEl<web_sys::HtmlElement>> {
     raw_el: ElRawEl,
     flags: PhantomData<ChildFlag>,
 }
@@ -36,7 +34,7 @@ impl<ChildFlag> IntoIterator for El<ChildFlag> {
     }
 }
 
-impl<ChildFlag> UpdateRawEl for El<ChildFlag> {
+impl<ChildFlag, ElRawEl: RawEl> UpdateRawEl for El<ChildFlag, ElRawEl> {
     type RawEl = ElRawEl;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
@@ -75,18 +73,18 @@ impl ChoosableTag for El<ChildFlagNotSet> {
         }
     }
 }
-impl<ChildFlag> Styleable<'_, ElRawEl> for El<ChildFlag> {}
-impl<ChildFlag> KeyboardEventAware<ElRawEl> for El<ChildFlag> {}
-impl<ChildFlag> MouseEventAware<ElRawEl> for El<ChildFlag> {}
-impl<ChildFlag> PointerEventAware<ElRawEl> for El<ChildFlag> {}
-impl<ChildFlag> TouchEventAware<ElRawEl> for El<ChildFlag> {}
-impl<ChildFlag> MutableViewport<ElRawEl> for El<ChildFlag> {}
-impl<ChildFlag> ResizableViewport<ElRawEl> for El<ChildFlag> {}
+impl<ChildFlag> Styleable<'_> for El<ChildFlag> {}
+impl<ChildFlag> KeyboardEventAware for El<ChildFlag> {}
+impl<ChildFlag> MouseEventAware for El<ChildFlag> {}
+impl<ChildFlag> PointerEventAware for El<ChildFlag> {}
+impl<ChildFlag> TouchEventAware for El<ChildFlag> {}
+impl<ChildFlag> MutableViewport for El<ChildFlag> {}
+impl<ChildFlag> ResizableViewport for El<ChildFlag> {}
 impl<ChildFlag> Hookable for El<ChildFlag> {
 }
-impl<ChildFlag> AddNearbyElement<'_, ElRawEl> for El<ChildFlag> {}
-impl<ChildFlag> HasClassId<ElRawEl> for El<ChildFlag> {}
-impl<ChildFlag> SelectableTextContent<ElRawEl> for El<ChildFlag> {}
+impl<ChildFlag> AddNearbyElement<'_> for El<ChildFlag> {}
+impl<ChildFlag> HasClassId for El<ChildFlag> {}
+impl<ChildFlag> SelectableTextContent for El<ChildFlag> {}
 
 // ------ ------
 //  Attributes

@@ -7,9 +7,7 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Width, Height);
 
-type CanvasRawEl = RawHtmlEl<web_sys::HtmlCanvasElement>;
-
-pub struct Canvas<WidthFlag, HeightFlag> {
+pub struct Canvas<WidthFlag, HeightFlag, CanvasRawEl = RawHtmlEl<web_sys::HtmlCanvasElement>> {
     raw_el: CanvasRawEl,
     flags: PhantomData<(WidthFlag, HeightFlag)>,
 }
@@ -39,7 +37,7 @@ impl<WidthFlag, HeightFlag> IntoIterator for Canvas<WidthFlag, HeightFlag> {
     }
 }
 
-impl<WidthFlag, HeightFlag> UpdateRawEl for Canvas<WidthFlag, HeightFlag> {
+impl<WidthFlag, HeightFlag, CanvasRawEl: RawEl> UpdateRawEl for Canvas<WidthFlag, HeightFlag, CanvasRawEl> {
     type RawEl = CanvasRawEl;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
@@ -52,15 +50,15 @@ impl<WidthFlag, HeightFlag> UpdateRawEl for Canvas<WidthFlag, HeightFlag> {
 //   Abilities
 // ------ ------
 
-impl<WidthFlag, HeightFlag> Styleable<'_, CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
-impl<WidthFlag, HeightFlag> KeyboardEventAware<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
-impl<WidthFlag, HeightFlag> MouseEventAware<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
-impl<WidthFlag, HeightFlag> PointerEventAware<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
-impl<WidthFlag, HeightFlag> TouchEventAware<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> Styleable<'_> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> KeyboardEventAware for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> MouseEventAware for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> PointerEventAware for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> TouchEventAware for Canvas<WidthFlag, HeightFlag> {}
 impl<WidthFlag, HeightFlag> Hookable for Canvas<WidthFlag, HeightFlag> {
 }
-impl<WidthFlag, HeightFlag> AddNearbyElement<'_, CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
-impl<WidthFlag, HeightFlag> HasClassId<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> AddNearbyElement<'_> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> HasClassId for Canvas<WidthFlag, HeightFlag> {}
 
 // ------ ------
 //  Attributes

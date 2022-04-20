@@ -7,9 +7,7 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Empty);
 
-type ColumnRawEl = RawHtmlEl<web_sys::HtmlElement>;
-
-pub struct Column<EmptyFlag> {
+pub struct Column<EmptyFlag, ColumnRawEl = RawHtmlEl<web_sys::HtmlElement>> {
     raw_el: ColumnRawEl,
     flags: PhantomData<EmptyFlag>,
 }
@@ -36,7 +34,7 @@ impl<EmptyFlag> IntoIterator for Column<EmptyFlag> {
     }
 }
 
-impl<EmptyFlag> UpdateRawEl for Column<EmptyFlag> {
+impl<EmptyFlag, ColumnRawEl: RawEl> UpdateRawEl for Column<EmptyFlag, ColumnRawEl> {
     type RawEl = ColumnRawEl;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
@@ -79,18 +77,18 @@ impl ChoosableTag for Column<EmptyFlagSet> {
         }
     }
 }
-impl<EmptyFlag> Styleable<'_, ColumnRawEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> KeyboardEventAware<ColumnRawEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> MouseEventAware<ColumnRawEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> PointerEventAware<ColumnRawEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> TouchEventAware<ColumnRawEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> MutableViewport<ColumnRawEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> ResizableViewport<ColumnRawEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> Styleable<'_> for Column<EmptyFlag> {}
+impl<EmptyFlag> KeyboardEventAware for Column<EmptyFlag> {}
+impl<EmptyFlag> MouseEventAware for Column<EmptyFlag> {}
+impl<EmptyFlag> PointerEventAware for Column<EmptyFlag> {}
+impl<EmptyFlag> TouchEventAware for Column<EmptyFlag> {}
+impl<EmptyFlag> MutableViewport for Column<EmptyFlag> {}
+impl<EmptyFlag> ResizableViewport for Column<EmptyFlag> {}
 impl<EmptyFlag> Hookable for Column<EmptyFlag> {
 }
-impl<EmptyFlag> AddNearbyElement<'_, ColumnRawEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> HasClassId<ColumnRawEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> SelectableTextContent<ColumnRawEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> AddNearbyElement<'_> for Column<EmptyFlag> {}
+impl<EmptyFlag> HasClassId for Column<EmptyFlag> {}
+impl<EmptyFlag> SelectableTextContent for Column<EmptyFlag> {}
 
 // ------ ------
 //  Attributes

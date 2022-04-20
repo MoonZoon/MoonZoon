@@ -7,9 +7,7 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Label, ForInput);
 
-type LabelRawEl = RawHtmlEl<web_sys::HtmlLabelElement>;
-
-pub struct Label<LabelFlag, ForInputFlag> {
+pub struct Label<LabelFlag, ForInputFlag, LabelRawEl = RawHtmlEl<web_sys::HtmlLabelElement>> {
     raw_el: LabelRawEl,
     flags: PhantomData<(LabelFlag, ForInputFlag)>,
 }
@@ -39,7 +37,7 @@ impl<LabelFlag, ForInputFlag> IntoIterator for Label<LabelFlag, ForInputFlag> {
     }
 }
 
-impl<LabelFlag, ForInputFlag> UpdateRawEl for Label<LabelFlag, ForInputFlag> {
+impl<LabelFlag, ForInputFlag, LabelRawEl: RawEl> UpdateRawEl for Label<LabelFlag, ForInputFlag, LabelRawEl> {
     type RawEl = LabelRawEl;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
@@ -52,16 +50,16 @@ impl<LabelFlag, ForInputFlag> UpdateRawEl for Label<LabelFlag, ForInputFlag> {
 //   Abilities
 // ------ ------
 
-impl<LabelFlag, ForInputFlag> Styleable<'_, LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> KeyboardEventAware<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> MouseEventAware<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> PointerEventAware<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> TouchEventAware<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> Styleable<'_> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> KeyboardEventAware for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> MouseEventAware for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> PointerEventAware for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> TouchEventAware for Label<LabelFlag, ForInputFlag> {}
 impl<LabelFlag, ForInputFlag> Hookable for Label<LabelFlag, ForInputFlag> {
 }
-impl<LabelFlag, ForInputFlag> AddNearbyElement<'_, LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> HasClassId<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> SelectableTextContent<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> AddNearbyElement<'_> for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> HasClassId for Label<LabelFlag, ForInputFlag> {}
+impl<LabelFlag, ForInputFlag> SelectableTextContent for Label<LabelFlag, ForInputFlag> {}
 
 // ------ ------
 //  Attributes
