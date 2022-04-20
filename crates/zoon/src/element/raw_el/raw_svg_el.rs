@@ -1,18 +1,19 @@
 use super::class_id_generator;
 use crate::css_property::{CssPropertyName, CssPropertyValue};
 use crate::*;
-use std::iter;
+use std::{iter, marker::PhantomData};
 
 // ------ ------
 //   Element
 // ------ ------
 
-pub struct RawSvgEl {
+pub struct RawSvgEl<WSElement = web_sys::SvgElement> {
     class_id: ClassId,
     dom_builder: DomBuilder<web_sys::SvgElement>,
+    dom_element_phantom: PhantomData<WSElement>,
 }
 
-impl RawSvgEl {
+impl RawSvgEl<web_sys::SvgElement> {
     pub fn new(tag: &str) -> Self {
         let class_id = class_id_generator().next_class_id();
 
@@ -23,29 +24,36 @@ impl RawSvgEl {
             class_id: class_id.clone(),
             dom_builder: dom_builder
                 .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
+            dom_element_phantom: PhantomData,
         }
     }
 }
 
-impl From<RawSvgEl> for RawElement {
-    fn from(raw_svg_el: RawSvgEl) -> Self {
-        RawElement::SvgEl(raw_svg_el)
+impl<WSElement> RawSvgEl<WSElement> {
+    pub fn dom_element_type<T: AsRef<web_sys::SvgElement>>(self) -> RawSvgEl<T> {
+        RawSvgEl { class_id: self.class_id, dom_builder: self.dom_builder, dom_element_phantom: PhantomData }
     }
 }
 
-impl IntoDom for RawSvgEl {
+impl<WSElement> From<RawSvgEl<WSElement>> for RawElement {
+    fn from(raw_svg_el: RawSvgEl<WSElement>) -> Self {
+        RawElement::SvgEl(raw_svg_el.dom_element_type::<web_sys::SvgElement>())
+    }
+}
+
+impl<WSElement> IntoDom for RawSvgEl<WSElement> {
     fn into_dom(self) -> Dom {
         self.dom_builder.into_dom()
     }
 }
 
-impl Element for RawSvgEl {
+impl<WSElement: AsRef<web_sys::SvgElement>> Element for RawSvgEl<WSElement> {
     fn into_raw_element(self) -> RawElement {
-        RawElement::SvgEl(self)
+        RawElement::SvgEl(self.dom_element_type::<web_sys::SvgElement>())
     }
 }
 
-impl IntoIterator for RawSvgEl {
+impl<WSElement: AsRef<web_sys::SvgElement>> IntoIterator for RawSvgEl<WSElement> {
     type Item = Self;
     type IntoIter = iter::Once<Self>;
 
@@ -59,8 +67,15 @@ impl IntoIterator for RawSvgEl {
 //  Attributes
 // ------ ------
 
-impl RawEl for RawSvgEl {
+impl<WSElement> RawEl for RawSvgEl<WSElement> 
+    where
+    WSElement: 
+        Into<web_sys::Element> 
+        + AsRef<web_sys::Element>
+        + JsCast
+{
     type WSElement = web_sys::SvgElement;
+    type DomElement = WSElement;
 
     fn update_dom_builder(
         mut self,
@@ -70,8 +85,8 @@ impl RawEl for RawSvgEl {
         self
     }
 
-    fn dom_element(&self) -> Self::WSElement {
-        self.dom_builder.__internal_element()
+    fn dom_element(&self) -> Self::DomElement {
+        self.dom_builder.__internal_element().unchecked_into()
     }
 
     fn style(self, name: &str, value: &str) -> Self {
@@ -117,6 +132,7 @@ impl RawEl for RawSvgEl {
             class_id: class_id.clone(),
             dom_builder: dom_builder
                 .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
+            dom_element_phantom: PhantomData,
         }
     }
 }

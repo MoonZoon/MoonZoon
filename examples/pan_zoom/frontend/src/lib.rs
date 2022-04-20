@@ -26,7 +26,7 @@ fn artboard() -> impl Element {
     });
     let (pan, pan_signal) = Mutable::new_and_signal(false);
 
-    let svg = RawSvgEl::new("svg");
+    let svg = RawSvgEl::new("svg").dom_element_type::<web_sys::SvgsvgElement>();
     let svg_dom_element = svg.dom_element().unchecked_into::<web_sys::SvgsvgElement>();
     let class_id = svg.class_id();
     svg

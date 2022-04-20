@@ -61,6 +61,7 @@ impl IntoIterator for RawHtmlEl {
 
 impl RawEl for RawHtmlEl {
     type WSElement = web_sys::HtmlElement;
+    type DomElement = web_sys::HtmlElement;
 
     fn update_dom_builder(
         mut self,
@@ -70,8 +71,8 @@ impl RawEl for RawHtmlEl {
         self
     }
 
-    fn dom_element(&self) -> Self::WSElement {
-        self.dom_builder.__internal_element()
+    fn dom_element(&self) -> Self::DomElement {
+        self.dom_builder.__internal_element().into()
     }
 
     fn style(self, name: &str, value: &str) -> Self {

@@ -54,13 +54,14 @@ pub trait RawEl: Sized {
         + Clone
         + JsCast
         + 'static;
+    type DomElement: AsRef<web_sys::Element> + Into<web_sys::Element>;
 
     fn update_dom_builder(
         self,
         updater: impl FnOnce(DomBuilder<Self::WSElement>) -> DomBuilder<Self::WSElement>,
     ) -> Self;
 
-    fn dom_element(&self) -> Self::WSElement;
+    fn dom_element(&self) -> Self::DomElement;
 
     fn attr(self, name: &str, value: &str) -> Self {
         self.update_dom_builder(|dom_builder| dom_builder.attribute(name, value))
