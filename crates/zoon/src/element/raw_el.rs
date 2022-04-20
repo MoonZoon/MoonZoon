@@ -46,7 +46,8 @@ pub trait UpdateRawEl<T: RawEl> {
 // ------ RawEl ------
 
 pub trait RawEl: Sized {
-    type WSElement: AsRef<Node>
+    #[doc(hidden)]
+    type DomBuilderElement: AsRef<Node>
         + AsRef<EventTarget>
         + AsRef<JsValue>
         + AsRef<web_sys::Element>
@@ -54,14 +55,25 @@ pub trait RawEl: Sized {
         + Clone
         + JsCast
         + 'static;
-    type DomElement: AsRef<web_sys::Element> + Into<web_sys::Element>;
+    type DomElement: JsCast;
 
+    #[doc(hidden)]
     fn update_dom_builder(
         self,
-        updater: impl FnOnce(DomBuilder<Self::WSElement>) -> DomBuilder<Self::WSElement>,
+        updater: impl FnOnce(DomBuilder<Self::DomBuilderElement>) -> DomBuilder<Self::DomBuilderElement>,
     ) -> Self;
 
-    fn dom_element(&self) -> Self::DomElement;
+    #[doc(hidden)]
+    fn dom_builder_element(&self) -> Self::DomBuilderElement;
+
+    fn dom_element(&self) -> Self::DomElement {
+        self.dom_builder_element().unchecked_into()
+    }
+
+    fn use_dom_element(self, f: impl FnOnce(Self, Self::DomElement) -> Self) -> Self {
+        let dom_element = self.dom_element();
+        f(self, dom_element)
+    }
 
     fn attr(self, name: &str, value: &str) -> Self {
         self.update_dom_builder(|dom_builder| dom_builder.attribute(name, value))
@@ -193,13 +205,13 @@ pub trait RawEl: Sized {
         self.after_remove(|_| drop(group_handle))
     }
 
-    fn after_insert(self, handler: impl FnOnce(Self::WSElement) + 'static) -> Self {
+    fn after_insert(self, handler: impl FnOnce(Self::DomBuilderElement) + 'static) -> Self {
         let handler = ManuallyDrop::new(handler);
         let handler = |ws_element| ManuallyDrop::into_inner(handler)(ws_element);
         self.update_dom_builder(|dom_builder| dom_builder.after_inserted(handler))
     }
 
-    fn after_remove(self, handler: impl FnOnce(Self::WSElement) + 'static) -> Self {
+    fn after_remove(self, handler: impl FnOnce(Self::DomBuilderElement) + 'static) -> Self {
         let handler = ManuallyDrop::new(handler);
         let handler = |ws_element| ManuallyDrop::into_inner(handler)(ws_element);
         self.update_dom_builder(|dom_builder| dom_builder.after_removed(handler))
@@ -221,6 +233,7 @@ pub trait RawEl: Sized {
 
     fn on_resize(mut self, handler: impl FnOnce(U32Width, U32Height) + Clone + 'static) -> Self {
         // @TODO should we create one global ResizeObserver to improve performance?
+        // Inspiration: https://gist.github.com/Pauan/d9dcf0b47fc03c7a49b95f29ff8ef3c3
 
         let resize_observer = Rc::new(Cell::new(None));
         let resize_observer_for_insert = Rc::clone(&resize_observer);
@@ -238,7 +251,7 @@ pub trait RawEl: Sized {
     fn class_id(&self) -> ClassId;
 
     fn inner_markup(self, markup: impl AsRef<str>) -> Self {
-        let dom_element = self.dom_element();
+        let dom_element = self.dom_builder_element();
         let parent: &web_sys::Element = dom_element.as_ref();
         parent.set_inner_html(markup.as_ref());
         self
@@ -248,7 +261,7 @@ pub trait RawEl: Sized {
         self,
         markup: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static,
     ) -> Self {
-        let parent: web_sys::Element = self.dom_element().into();
+        let parent: web_sys::Element = self.dom_builder_element().into();
         let inner_html_updater = markup.for_each_sync(move |markup| {
             parent.set_inner_html(&markup.into_cow_str());
         });
@@ -270,7 +283,7 @@ pub trait RawEl: Sized {
     }
 
     fn find_html_child(&self, selectors: impl AsRef<str>) -> Option<RawHtmlEl> {
-        let parent_dom_element = self.dom_element();
+        let parent_dom_element = self.dom_builder_element();
         let parent: &web_sys::Element = parent_dom_element.as_ref();
         let child = parent
             .query_selector(selectors.as_ref())
@@ -281,7 +294,7 @@ pub trait RawEl: Sized {
     }
 
     fn find_svg_child(&self, selectors: impl AsRef<str>) -> Option<RawSvgEl> {
-        let parent_dom_element = self.dom_element();
+        let parent_dom_element = self.dom_builder_element();
         let parent: &web_sys::Element = parent_dom_element.as_ref();
         let child = parent
             .query_selector(selectors.as_ref())
@@ -315,5 +328,5 @@ pub trait RawEl: Sized {
         self
     }
 
-    fn from_dom_element(dom_element: Self::WSElement) -> Self;
+    fn from_dom_element(dom_element: Self::DomElement) -> Self;
 }
