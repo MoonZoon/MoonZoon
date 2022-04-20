@@ -1,6 +1,5 @@
-use crate::{web_sys::HtmlElement, *};
-use std::iter;
-use std::marker::PhantomData;
+use crate::*;
+use std::{iter, marker::PhantomData};
 
 // ------ ------
 //   Element
@@ -8,8 +7,10 @@ use std::marker::PhantomData;
 
 make_flags!(Empty);
 
+type ColumnRawEl = RawHtmlEl<web_sys::HtmlElement>;
+
 pub struct Column<EmptyFlag> {
-    raw_el: RawHtmlEl,
+    raw_el: ColumnRawEl,
     flags: PhantomData<EmptyFlag>,
 }
 
@@ -35,8 +36,8 @@ impl<EmptyFlag> IntoIterator for Column<EmptyFlag> {
     }
 }
 
-impl<EmptyFlag> UpdateRawEl<RawHtmlEl> for Column<EmptyFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<EmptyFlag> UpdateRawEl<ColumnRawEl> for Column<EmptyFlag> {
+    fn update_raw_el(mut self, updater: impl FnOnce(ColumnRawEl) -> ColumnRawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -76,19 +77,18 @@ impl ChoosableTag for Column<EmptyFlagSet> {
         }
     }
 }
-impl<EmptyFlag> Styleable<'_, RawHtmlEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> KeyboardEventAware<RawHtmlEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> MouseEventAware<RawHtmlEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> PointerEventAware<RawHtmlEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> TouchEventAware<RawHtmlEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> MutableViewport<RawHtmlEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> ResizableViewport<RawHtmlEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> Hookable<RawHtmlEl> for Column<EmptyFlag> {
-    type WSElement = HtmlElement;
+impl<EmptyFlag> Styleable<'_, ColumnRawEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> KeyboardEventAware<ColumnRawEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> MouseEventAware<ColumnRawEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> PointerEventAware<ColumnRawEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> TouchEventAware<ColumnRawEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> MutableViewport<ColumnRawEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> ResizableViewport<ColumnRawEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> Hookable<ColumnRawEl> for Column<EmptyFlag> {
 }
-impl<EmptyFlag> AddNearbyElement<'_> for Column<EmptyFlag> {}
-impl<EmptyFlag> HasClassId<RawHtmlEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> SelectableTextContent<RawHtmlEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> AddNearbyElement<'_, ColumnRawEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> HasClassId<ColumnRawEl> for Column<EmptyFlag> {}
+impl<EmptyFlag> SelectableTextContent<ColumnRawEl> for Column<EmptyFlag> {}
 
 // ------ ------
 //  Attributes

@@ -1,12 +1,13 @@
-use crate::{web_sys::HtmlDivElement, *};
-use std::iter;
-use std::marker::PhantomData;
+use crate::*;
+use std::{iter, marker::PhantomData};
 
 // ------ ------
 //    Element
 // ------ ------
 
 make_flags!(Label, OnPress);
+
+type ButtonRawEl = RawHtmlEl<web_sys::HtmlDivElement>;
 
 /// Create a customizable Button for your web page.
 /// The button is actually built using a div to avoid default behaviors and
@@ -86,7 +87,7 @@ make_flags!(Label, OnPress);
 /// );
 /// ```
 pub struct Button<LabelFlag, OnPressFlag> {
-    raw_el: RawHtmlEl,
+    raw_el: ButtonRawEl,
     flags: PhantomData<(LabelFlag, OnPressFlag)>,
 }
 
@@ -135,7 +136,8 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
                 .style("display", "inline-flex")
                 .style("flex-direction", "column")
                 .style("align-items", "center")
-                .style("touch-action", "manipulation"),
+                .style("touch-action", "manipulation")
+                .dom_element_type(),
             flags: PhantomData,
         }
     }
@@ -157,12 +159,12 @@ impl<LabelFlag, OnPressFlag> IntoIterator for Button<LabelFlag, OnPressFlag> {
     }
 }
 
-impl<LabelFlag, OnPressFlag> UpdateRawEl<RawHtmlEl>
+impl<LabelFlag, OnPressFlag> UpdateRawEl<ButtonRawEl>
     for Button<LabelFlag, OnPressFlag>
 {
     fn update_raw_el(
         mut self,
-        updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl,
+        updater: impl FnOnce(ButtonRawEl) -> ButtonRawEl,
     ) -> Self {
         self.raw_el = updater(self.raw_el);
         self
@@ -173,35 +175,34 @@ impl<LabelFlag, OnPressFlag> UpdateRawEl<RawHtmlEl>
 //   Abilities
 // ------ ------
 
-impl<LabelFlag, OnPressFlag> Styleable<'_, RawHtmlEl>
+impl<LabelFlag, OnPressFlag> Styleable<'_, ButtonRawEl>
     for Button<LabelFlag, OnPressFlag>
 {
 }
-impl<LabelFlag, OnPressFlag> KeyboardEventAware<RawHtmlEl>
+impl<LabelFlag, OnPressFlag> KeyboardEventAware<ButtonRawEl>
     for Button<LabelFlag, OnPressFlag>
 {
 }
-impl<LabelFlag, OnPressFlag> Focusable for Button<LabelFlag, OnPressFlag> {}
-impl<LabelFlag, OnPressFlag> MouseEventAware<RawHtmlEl>
+impl<LabelFlag, OnPressFlag> Focusable<ButtonRawEl> for Button<LabelFlag, OnPressFlag> {}
+impl<LabelFlag, OnPressFlag> MouseEventAware<ButtonRawEl>
     for Button<LabelFlag, OnPressFlag>
 {
 }
-impl<LabelFlag, OnPressFlag> PointerEventAware<RawHtmlEl>
+impl<LabelFlag, OnPressFlag> PointerEventAware<ButtonRawEl>
     for Button<LabelFlag, OnPressFlag>
 {
 }
-impl<LabelFlag, OnPressFlag> TouchEventAware<RawHtmlEl>
+impl<LabelFlag, OnPressFlag> TouchEventAware<ButtonRawEl>
     for Button<LabelFlag, OnPressFlag>
 {
 }
-impl<LabelFlag, OnPressFlag> Hookable<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {
-    type WSElement = HtmlDivElement;
+impl<LabelFlag, OnPressFlag> Hookable<ButtonRawEl> for Button<LabelFlag, OnPressFlag> {
 }
-impl<LabelFlag, OnPressFlag> AddNearbyElement<'_>
+impl<LabelFlag, OnPressFlag> AddNearbyElement<'_, ButtonRawEl>
     for Button<LabelFlag, OnPressFlag>
 {
 }
-impl<LabelFlag, OnPressFlag> HasClassId<RawHtmlEl>
+impl<LabelFlag, OnPressFlag> HasClassId<ButtonRawEl>
     for Button<LabelFlag, OnPressFlag>
 {
 }

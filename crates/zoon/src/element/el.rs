@@ -1,6 +1,5 @@
-use crate::{web_sys::HtmlElement, *};
-use std::iter;
-use std::marker::PhantomData;
+use crate::*;
+use std::{iter, marker::PhantomData};
 
 // ------ ------
 //   Element
@@ -8,8 +7,10 @@ use std::marker::PhantomData;
 
 make_flags!(Child);
 
+type ElRawEl = RawHtmlEl<web_sys::HtmlElement>;
+
 pub struct El<ChildFlag> {
-    raw_el: RawHtmlEl,
+    raw_el: ElRawEl,
     flags: PhantomData<ChildFlag>,
 }
 
@@ -35,8 +36,8 @@ impl<ChildFlag> IntoIterator for El<ChildFlag> {
     }
 }
 
-impl<ChildFlag> UpdateRawEl<RawHtmlEl> for El<ChildFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<ChildFlag> UpdateRawEl<ElRawEl> for El<ChildFlag> {
+    fn update_raw_el(mut self, updater: impl FnOnce(ElRawEl) -> ElRawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -72,19 +73,18 @@ impl ChoosableTag for El<ChildFlagNotSet> {
         }
     }
 }
-impl<ChildFlag> Styleable<'_, RawHtmlEl> for El<ChildFlag> {}
-impl<ChildFlag> KeyboardEventAware<RawHtmlEl> for El<ChildFlag> {}
-impl<ChildFlag> MouseEventAware<RawHtmlEl> for El<ChildFlag> {}
-impl<ChildFlag> PointerEventAware<RawHtmlEl> for El<ChildFlag> {}
-impl<ChildFlag> TouchEventAware<RawHtmlEl> for El<ChildFlag> {}
-impl<ChildFlag> MutableViewport<RawHtmlEl> for El<ChildFlag> {}
-impl<ChildFlag> ResizableViewport<RawHtmlEl> for El<ChildFlag> {}
-impl<ChildFlag> Hookable<RawHtmlEl> for El<ChildFlag> {
-    type WSElement = HtmlElement;
+impl<ChildFlag> Styleable<'_, ElRawEl> for El<ChildFlag> {}
+impl<ChildFlag> KeyboardEventAware<ElRawEl> for El<ChildFlag> {}
+impl<ChildFlag> MouseEventAware<ElRawEl> for El<ChildFlag> {}
+impl<ChildFlag> PointerEventAware<ElRawEl> for El<ChildFlag> {}
+impl<ChildFlag> TouchEventAware<ElRawEl> for El<ChildFlag> {}
+impl<ChildFlag> MutableViewport<ElRawEl> for El<ChildFlag> {}
+impl<ChildFlag> ResizableViewport<ElRawEl> for El<ChildFlag> {}
+impl<ChildFlag> Hookable<ElRawEl> for El<ChildFlag> {
 }
-impl<ChildFlag> AddNearbyElement<'_> for El<ChildFlag> {}
-impl<ChildFlag> HasClassId<RawHtmlEl> for El<ChildFlag> {}
-impl<ChildFlag> SelectableTextContent<RawHtmlEl> for El<ChildFlag> {}
+impl<ChildFlag> AddNearbyElement<'_, ElRawEl> for El<ChildFlag> {}
+impl<ChildFlag> HasClassId<ElRawEl> for El<ChildFlag> {}
+impl<ChildFlag> SelectableTextContent<ElRawEl> for El<ChildFlag> {}
 
 // ------ ------
 //  Attributes

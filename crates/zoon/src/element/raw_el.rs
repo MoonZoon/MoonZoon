@@ -323,4 +323,9 @@ pub trait RawEl: Sized {
     }
 
     fn from_dom_element(dom_element: Self::DomElement) -> Self;
+
+    fn focus(self) -> Self where Self::DomElement: AsRef<web_sys::HtmlElement>;
+
+    fn focus_signal(self, focus: impl Signal<Item = bool> + Unpin + 'static) -> Self
+        where Self::DomElement: AsRef<web_sys::HtmlElement>;
 }

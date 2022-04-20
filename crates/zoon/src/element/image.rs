@@ -1,6 +1,5 @@
-use crate::{web_sys::HtmlImageElement, *};
-use std::iter;
-use std::marker::PhantomData;
+use crate::*;
+use std::{iter, marker::PhantomData};
 
 // ------ ------
 //    Element
@@ -8,15 +7,17 @@ use std::marker::PhantomData;
 
 make_flags!(Url, Description);
 
+type ImageRawEl = RawHtmlEl<web_sys::HtmlImageElement>;
+
 pub struct Image<UrlFlag, DescriptionFlag> {
-    raw_el: RawHtmlEl,
+    raw_el: ImageRawEl,
     flags: PhantomData<(UrlFlag, DescriptionFlag)>,
 }
 
 impl Image<UrlFlagNotSet, DescriptionFlagNotSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("img").class("image"),
+            raw_el: RawHtmlEl::new("img").class("image").dom_element_type(),
             flags: PhantomData,
         }
     }
@@ -38,8 +39,8 @@ impl<UrlFlagSet, DescriptionFlagSet> IntoIterator for Image<UrlFlagSet, Descript
     }
 }
 
-impl<UrlFlag, DescriptionFlag> UpdateRawEl<RawHtmlEl> for Image<UrlFlag, DescriptionFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<UrlFlag, DescriptionFlag> UpdateRawEl<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {
+    fn update_raw_el(mut self, updater: impl FnOnce(ImageRawEl) -> ImageRawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -49,16 +50,15 @@ impl<UrlFlag, DescriptionFlag> UpdateRawEl<RawHtmlEl> for Image<UrlFlag, Descrip
 //   Abilities
 // ------ ------
 
-impl<UrlFlag, DescriptionFlag> Styleable<'_, RawHtmlEl> for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> KeyboardEventAware<RawHtmlEl> for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> MouseEventAware<RawHtmlEl> for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> PointerEventAware<RawHtmlEl> for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> TouchEventAware<RawHtmlEl> for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> Hookable<RawHtmlEl> for Image<UrlFlag, DescriptionFlag> {
-    type WSElement = HtmlImageElement;
+impl<UrlFlag, DescriptionFlag> Styleable<'_, ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> KeyboardEventAware<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> MouseEventAware<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> PointerEventAware<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> TouchEventAware<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> Hookable<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {
 }
-impl<UrlFlag, DescriptionFlag> AddNearbyElement<'_> for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> HasClassId<RawHtmlEl> for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> AddNearbyElement<'_, ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag> HasClassId<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
 
 // ------ ------
 //  Attributes

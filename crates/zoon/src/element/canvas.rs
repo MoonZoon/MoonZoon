@@ -1,6 +1,5 @@
-use crate::{web_sys::HtmlCanvasElement, *};
-use std::iter;
-use std::marker::PhantomData;
+use crate::*;
+use std::{iter, marker::PhantomData};
 
 // ------ ------
 //    Element
@@ -8,15 +7,17 @@ use std::marker::PhantomData;
 
 make_flags!(Width, Height);
 
+type CanvasRawEl = RawHtmlEl<web_sys::HtmlCanvasElement>;
+
 pub struct Canvas<WidthFlag, HeightFlag> {
-    raw_el: RawHtmlEl,
+    raw_el: CanvasRawEl,
     flags: PhantomData<(WidthFlag, HeightFlag)>,
 }
 
 impl Canvas<WidthFlagNotSet, HeightFlagNotSet> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("canvas").class("canvas"),
+            raw_el: RawHtmlEl::new("canvas").class("canvas").dom_element_type(),
             flags: PhantomData,
         }
     }
@@ -38,8 +39,8 @@ impl<WidthFlag, HeightFlag> IntoIterator for Canvas<WidthFlag, HeightFlag> {
     }
 }
 
-impl<WidthFlag, HeightFlag> UpdateRawEl<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<WidthFlag, HeightFlag> UpdateRawEl<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {
+    fn update_raw_el(mut self, updater: impl FnOnce(CanvasRawEl) -> CanvasRawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -49,16 +50,15 @@ impl<WidthFlag, HeightFlag> UpdateRawEl<RawHtmlEl> for Canvas<WidthFlag, HeightF
 //   Abilities
 // ------ ------
 
-impl<WidthFlag, HeightFlag> Styleable<'_, RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
-impl<WidthFlag, HeightFlag> KeyboardEventAware<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
-impl<WidthFlag, HeightFlag> MouseEventAware<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
-impl<WidthFlag, HeightFlag> PointerEventAware<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
-impl<WidthFlag, HeightFlag> TouchEventAware<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
-impl<WidthFlag, HeightFlag> Hookable<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {
-    type WSElement = HtmlCanvasElement;
+impl<WidthFlag, HeightFlag> Styleable<'_, CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> KeyboardEventAware<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> MouseEventAware<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> PointerEventAware<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> TouchEventAware<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> Hookable<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {
 }
-impl<WidthFlag, HeightFlag> AddNearbyElement<'_> for Canvas<WidthFlag, HeightFlag> {}
-impl<WidthFlag, HeightFlag> HasClassId<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> AddNearbyElement<'_, CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
+impl<WidthFlag, HeightFlag> HasClassId<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
 
 // ------ ------
 //  Attributes
