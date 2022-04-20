@@ -39,8 +39,10 @@ impl<UrlFlagSet, DescriptionFlagSet> IntoIterator for Image<UrlFlagSet, Descript
     }
 }
 
-impl<UrlFlag, DescriptionFlag> UpdateRawEl<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(ImageRawEl) -> ImageRawEl) -> Self {
+impl<UrlFlag, DescriptionFlag> UpdateRawEl for Image<UrlFlag, DescriptionFlag> {
+    type RawEl = ImageRawEl;
+
+    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -55,7 +57,7 @@ impl<UrlFlag, DescriptionFlag> KeyboardEventAware<ImageRawEl> for Image<UrlFlag,
 impl<UrlFlag, DescriptionFlag> MouseEventAware<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
 impl<UrlFlag, DescriptionFlag> PointerEventAware<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
 impl<UrlFlag, DescriptionFlag> TouchEventAware<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> Hookable<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {
+impl<UrlFlag, DescriptionFlag> Hookable for Image<UrlFlag, DescriptionFlag> {
 }
 impl<UrlFlag, DescriptionFlag> AddNearbyElement<'_, ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}
 impl<UrlFlag, DescriptionFlag> HasClassId<ImageRawEl> for Image<UrlFlag, DescriptionFlag> {}

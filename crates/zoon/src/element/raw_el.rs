@@ -39,8 +39,9 @@ impl ClassIdGenerator {
 
 // ------ UpdateRawEl ------
 
-pub trait UpdateRawEl<T: RawEl> {
-    fn update_raw_el(self, updater: impl FnOnce(T) -> T) -> Self;
+pub trait UpdateRawEl {
+    type RawEl: RawEl;
+    fn update_raw_el(self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self;
 }
 
 // ------ RawEl ------

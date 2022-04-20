@@ -36,8 +36,10 @@ impl<EmptyFlag, MultilineFlag> IntoIterator for Row<EmptyFlag, MultilineFlag> {
     }
 }
 
-impl<EmptyFlag, MultilineFlag> UpdateRawEl<RowRawEl> for Row<EmptyFlag, MultilineFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(RowRawEl) -> RowRawEl) -> Self {
+impl<EmptyFlag, MultilineFlag> UpdateRawEl for Row<EmptyFlag, MultilineFlag> {
+    type RawEl = RowRawEl;
+
+    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -80,7 +82,7 @@ impl<EmptyFlag, MultilineFlag> PointerEventAware<RowRawEl> for Row<EmptyFlag, Mu
 impl<EmptyFlag, MultilineFlag> TouchEventAware<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
 impl<EmptyFlag, MultilineFlag> MutableViewport<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
 impl<EmptyFlag, MultilineFlag> ResizableViewport<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
-impl<EmptyFlag, MultilineFlag> Hookable<RowRawEl> for Row<EmptyFlag, MultilineFlag> {
+impl<EmptyFlag, MultilineFlag> Hookable for Row<EmptyFlag, MultilineFlag> {
 }
 impl<EmptyFlag, MultilineFlag> AddNearbyElement<'_, RowRawEl> for Row<EmptyFlag, MultilineFlag> {}
 impl<EmptyFlag, MultilineFlag> HasClassId<RowRawEl> for Row<EmptyFlag, MultilineFlag> {}

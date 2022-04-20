@@ -88,10 +88,12 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> IntoIterator
     }
 }
 
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> UpdateRawEl<CheckboxRawEl>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> UpdateRawEl
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
-    fn update_raw_el(mut self, updater: impl FnOnce(CheckboxRawEl) -> CheckboxRawEl) -> Self {
+    type RawEl = CheckboxRawEl;
+
+    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -125,7 +127,7 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> TouchEventAware<Che
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> Hookable<CheckboxRawEl>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> Hookable
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 {
 }

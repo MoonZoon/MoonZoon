@@ -36,8 +36,10 @@ impl<EmptyFlag> IntoIterator for Column<EmptyFlag> {
     }
 }
 
-impl<EmptyFlag> UpdateRawEl<ColumnRawEl> for Column<EmptyFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(ColumnRawEl) -> ColumnRawEl) -> Self {
+impl<EmptyFlag> UpdateRawEl for Column<EmptyFlag> {
+    type RawEl = ColumnRawEl;
+
+    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -84,7 +86,7 @@ impl<EmptyFlag> PointerEventAware<ColumnRawEl> for Column<EmptyFlag> {}
 impl<EmptyFlag> TouchEventAware<ColumnRawEl> for Column<EmptyFlag> {}
 impl<EmptyFlag> MutableViewport<ColumnRawEl> for Column<EmptyFlag> {}
 impl<EmptyFlag> ResizableViewport<ColumnRawEl> for Column<EmptyFlag> {}
-impl<EmptyFlag> Hookable<ColumnRawEl> for Column<EmptyFlag> {
+impl<EmptyFlag> Hookable for Column<EmptyFlag> {
 }
 impl<EmptyFlag> AddNearbyElement<'_, ColumnRawEl> for Column<EmptyFlag> {}
 impl<EmptyFlag> HasClassId<ColumnRawEl> for Column<EmptyFlag> {}
