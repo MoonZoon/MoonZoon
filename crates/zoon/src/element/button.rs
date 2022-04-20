@@ -159,12 +159,14 @@ impl<LabelFlag, OnPressFlag> IntoIterator for Button<LabelFlag, OnPressFlag> {
     }
 }
 
-impl<LabelFlag, OnPressFlag> UpdateRawEl<ButtonRawEl>
+impl<LabelFlag, OnPressFlag> UpdateRawEl
     for Button<LabelFlag, OnPressFlag>
 {
+    type RawEl = ButtonRawEl;
+
     fn update_raw_el(
         mut self,
-        updater: impl FnOnce(ButtonRawEl) -> ButtonRawEl,
+        updater: impl FnOnce(Self::RawEl) -> Self::RawEl,
     ) -> Self {
         self.raw_el = updater(self.raw_el);
         self
@@ -196,7 +198,7 @@ impl<LabelFlag, OnPressFlag> TouchEventAware<ButtonRawEl>
     for Button<LabelFlag, OnPressFlag>
 {
 }
-impl<LabelFlag, OnPressFlag> Hookable<ButtonRawEl> for Button<LabelFlag, OnPressFlag> {
+impl<LabelFlag, OnPressFlag> Hookable for Button<LabelFlag, OnPressFlag> {
 }
 impl<LabelFlag, OnPressFlag> AddNearbyElement<'_, ButtonRawEl>
     for Button<LabelFlag, OnPressFlag>

@@ -36,8 +36,10 @@ impl<ChildFlag> IntoIterator for El<ChildFlag> {
     }
 }
 
-impl<ChildFlag> UpdateRawEl<ElRawEl> for El<ChildFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(ElRawEl) -> ElRawEl) -> Self {
+impl<ChildFlag> UpdateRawEl for El<ChildFlag> {
+    type RawEl = ElRawEl;
+
+    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -80,7 +82,7 @@ impl<ChildFlag> PointerEventAware<ElRawEl> for El<ChildFlag> {}
 impl<ChildFlag> TouchEventAware<ElRawEl> for El<ChildFlag> {}
 impl<ChildFlag> MutableViewport<ElRawEl> for El<ChildFlag> {}
 impl<ChildFlag> ResizableViewport<ElRawEl> for El<ChildFlag> {}
-impl<ChildFlag> Hookable<ElRawEl> for El<ChildFlag> {
+impl<ChildFlag> Hookable for El<ChildFlag> {
 }
 impl<ChildFlag> AddNearbyElement<'_, ElRawEl> for El<ChildFlag> {}
 impl<ChildFlag> HasClassId<ElRawEl> for El<ChildFlag> {}

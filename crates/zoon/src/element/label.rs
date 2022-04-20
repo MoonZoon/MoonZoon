@@ -39,8 +39,10 @@ impl<LabelFlag, ForInputFlag> IntoIterator for Label<LabelFlag, ForInputFlag> {
     }
 }
 
-impl<LabelFlag, ForInputFlag> UpdateRawEl<LabelRawEl> for Label<LabelFlag, ForInputFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(LabelRawEl) -> LabelRawEl) -> Self {
+impl<LabelFlag, ForInputFlag> UpdateRawEl for Label<LabelFlag, ForInputFlag> {
+    type RawEl = LabelRawEl;
+
+    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -55,7 +57,7 @@ impl<LabelFlag, ForInputFlag> KeyboardEventAware<LabelRawEl> for Label<LabelFlag
 impl<LabelFlag, ForInputFlag> MouseEventAware<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
 impl<LabelFlag, ForInputFlag> PointerEventAware<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
 impl<LabelFlag, ForInputFlag> TouchEventAware<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
-impl<LabelFlag, ForInputFlag> Hookable<LabelRawEl> for Label<LabelFlag, ForInputFlag> {
+impl<LabelFlag, ForInputFlag> Hookable for Label<LabelFlag, ForInputFlag> {
 }
 impl<LabelFlag, ForInputFlag> AddNearbyElement<'_, LabelRawEl> for Label<LabelFlag, ForInputFlag> {}
 impl<LabelFlag, ForInputFlag> HasClassId<LabelRawEl> for Label<LabelFlag, ForInputFlag> {}

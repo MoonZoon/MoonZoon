@@ -64,8 +64,10 @@ impl<LabelFlag, ToFlag> IntoIterator for Link<LabelFlag, ToFlag> {
     }
 }
 
-impl<LabelFlag, ToFlag> UpdateRawEl<LinkRawEl> for Link<LabelFlag, ToFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(LinkRawEl) -> LinkRawEl) -> Self {
+impl<LabelFlag, ToFlag> UpdateRawEl for Link<LabelFlag, ToFlag> {
+    type RawEl = LinkRawEl;
+
+    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -81,7 +83,7 @@ impl<LabelFlag, ToFlag> Focusable<LinkRawEl> for Link<LabelFlag, ToFlag> {}
 impl<LabelFlag, ToFlag> MouseEventAware<LinkRawEl> for Link<LabelFlag, ToFlag> {}
 impl<LabelFlag, ToFlag> PointerEventAware<LinkRawEl> for Link<LabelFlag, ToFlag> {}
 impl<LabelFlag, ToFlag> TouchEventAware<LinkRawEl> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> Hookable<LinkRawEl> for Link<LabelFlag, ToFlag> {
+impl<LabelFlag, ToFlag> Hookable for Link<LabelFlag, ToFlag> {
 }
 impl<LabelFlag, ToFlag> AddNearbyElement<'_, LinkRawEl> for Link<LabelFlag, ToFlag> {}
 impl<LabelFlag, ToFlag> HasClassId<LinkRawEl> for Link<LabelFlag, ToFlag> {}

@@ -106,7 +106,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 }
 
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
-    UpdateRawEl<TextInputRawEl>
+    UpdateRawEl
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -117,7 +117,9 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         ReadOnlyFlag,
     >
 {
-    fn update_raw_el(mut self, updater: impl FnOnce(TextInputRawEl) -> TextInputRawEl) -> Self {
+    type RawEl = TextInputRawEl;
+
+    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -206,7 +208,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
-    Hookable<TextInputRawEl>
+    Hookable
     for TextInput<
         IdFlag,
         OnChangeFlag,

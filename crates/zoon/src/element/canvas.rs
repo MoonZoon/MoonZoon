@@ -39,8 +39,10 @@ impl<WidthFlag, HeightFlag> IntoIterator for Canvas<WidthFlag, HeightFlag> {
     }
 }
 
-impl<WidthFlag, HeightFlag> UpdateRawEl<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(CanvasRawEl) -> CanvasRawEl) -> Self {
+impl<WidthFlag, HeightFlag> UpdateRawEl for Canvas<WidthFlag, HeightFlag> {
+    type RawEl = CanvasRawEl;
+
+    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -55,7 +57,7 @@ impl<WidthFlag, HeightFlag> KeyboardEventAware<CanvasRawEl> for Canvas<WidthFlag
 impl<WidthFlag, HeightFlag> MouseEventAware<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
 impl<WidthFlag, HeightFlag> PointerEventAware<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
 impl<WidthFlag, HeightFlag> TouchEventAware<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
-impl<WidthFlag, HeightFlag> Hookable<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {
+impl<WidthFlag, HeightFlag> Hookable for Canvas<WidthFlag, HeightFlag> {
 }
 impl<WidthFlag, HeightFlag> AddNearbyElement<'_, CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}
 impl<WidthFlag, HeightFlag> HasClassId<CanvasRawEl> for Canvas<WidthFlag, HeightFlag> {}

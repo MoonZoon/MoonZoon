@@ -36,8 +36,10 @@ impl<EmptyFlag> IntoIterator for Stack<EmptyFlag> {
     }
 }
 
-impl<EmptyFlag> UpdateRawEl<StackRawEl> for Stack<EmptyFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(StackRawEl) -> StackRawEl) -> Self {
+impl<EmptyFlag> UpdateRawEl for Stack<EmptyFlag> {
+    type RawEl = StackRawEl;
+
+    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -90,7 +92,7 @@ impl<EmptyFlag> PointerEventAware<StackRawEl> for Stack<EmptyFlag> {}
 impl<EmptyFlag> TouchEventAware<StackRawEl> for Stack<EmptyFlag> {}
 impl<EmptyFlag> MutableViewport<StackRawEl> for Stack<EmptyFlag> {}
 impl<EmptyFlag> ResizableViewport<StackRawEl> for Stack<EmptyFlag> {}
-impl<EmptyFlag> Hookable<StackRawEl> for Stack<EmptyFlag> {
+impl<EmptyFlag> Hookable for Stack<EmptyFlag> {
 }
 impl<EmptyFlag> AddNearbyElement<'_, StackRawEl> for Stack<EmptyFlag> {}
 impl<EmptyFlag> HasClassId<StackRawEl> for Stack<EmptyFlag> {}

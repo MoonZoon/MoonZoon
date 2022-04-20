@@ -36,8 +36,10 @@ impl<EmptyFlagSet> IntoIterator for Paragraph<EmptyFlagSet> {
     }
 }
 
-impl<EmptyFlag> UpdateRawEl<ParagraphRawEl> for Paragraph<EmptyFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(ParagraphRawEl) -> ParagraphRawEl) -> Self {
+impl<EmptyFlag> UpdateRawEl for Paragraph<EmptyFlag> {
+    type RawEl = ParagraphRawEl;
+
+    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
@@ -67,7 +69,7 @@ impl<EmptyFlag> MouseEventAware<ParagraphRawEl> for Paragraph<EmptyFlag> {}
 impl<EmptyFlag> PointerEventAware<ParagraphRawEl> for Paragraph<EmptyFlag> {}
 impl<EmptyFlag> TouchEventAware<ParagraphRawEl> for Paragraph<EmptyFlag> {}
 impl<EmptyFlag> MutableViewport<ParagraphRawEl> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> Hookable<ParagraphRawEl> for Paragraph<EmptyFlag> {
+impl<EmptyFlag> Hookable for Paragraph<EmptyFlag> {
 }
 impl<EmptyFlag> AddNearbyElement<'_, ParagraphRawEl> for Paragraph<EmptyFlag> {}
 impl<EmptyFlag> HasClassId<ParagraphRawEl> for Paragraph<EmptyFlag> {}
