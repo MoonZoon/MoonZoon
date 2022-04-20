@@ -64,7 +64,7 @@ pub trait Element: IntoIterator<Item = Self> {
 // ------ RawElement ------
 
 pub enum RawElement {
-    El(RawHtmlEl),
+    El(RawHtmlEl<web_sys::HtmlElement>),
     SvgEl(RawSvgEl<web_sys::SvgElement>),
     Text(RawText),
 }

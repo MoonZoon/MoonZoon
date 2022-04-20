@@ -1,6 +1,6 @@
 use crate::*;
 
-pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
+pub trait AddNearbyElement<'a, DomElement>: UpdateRawEl<RawHtmlEl<DomElement>> + Sized {
     fn element_above(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
         self.update_raw_el(|raw_el| raw_el.child(element_above_container().child(element)))
     }
@@ -48,7 +48,7 @@ pub trait AddNearbyElement<'a>: UpdateRawEl<RawHtmlEl> + Sized {
     }
 }
 
-fn element_above_container() -> RawHtmlEl {
+fn element_above_container<DomElement>() -> RawHtmlEl<DomElement> {
     run_once!(|| {
         global_styles().style_group(StyleGroup::new(".above > *").style("pointer-events", "auto"));
     });
@@ -64,7 +64,7 @@ fn element_above_container() -> RawHtmlEl {
         .style("z-index", "20")
 }
 
-fn element_below_container() -> RawHtmlEl {
+fn element_below_container<DomElement>() -> RawHtmlEl<DomElement> {
     run_once!(|| {
         global_styles().style_group(StyleGroup::new(".below > *").style("pointer-events", "auto"));
     });
@@ -80,7 +80,7 @@ fn element_below_container() -> RawHtmlEl {
         .style("z-index", "20")
 }
 
-fn element_on_left_container() -> RawHtmlEl {
+fn element_on_left_container<DomElement>() -> RawHtmlEl<DomElement> {
     run_once!(|| {
         global_styles()
             .style_group(StyleGroup::new(".on_left > *").style("pointer-events", "auto"));
@@ -97,7 +97,7 @@ fn element_on_left_container() -> RawHtmlEl {
         .style("z-index", "20")
 }
 
-fn element_on_right_container() -> RawHtmlEl {
+fn element_on_right_container<DomElement>() -> RawHtmlEl<DomElement> {
     run_once!(|| {
         global_styles()
             .style_group(StyleGroup::new(".on_right > *").style("pointer-events", "auto"));

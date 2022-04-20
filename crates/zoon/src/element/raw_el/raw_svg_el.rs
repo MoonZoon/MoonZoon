@@ -67,8 +67,9 @@ impl<DomElement: Into<web_sys::SvgElement>> IntoIterator for RawSvgEl<DomElement
 //  Attributes
 // ------ ------
 
-impl<DomElement: Into<web_sys::SvgElement> + JsCast> RawEl for RawSvgEl<DomElement> 
+impl<DomElement> RawEl for RawSvgEl<DomElement> 
     where DomElement: AsRef<web_sys::Node>
+    + Into<web_sys::SvgElement>
     + AsRef<web_sys::EventTarget>
     + AsRef<JsValue>
     + AsRef<web_sys::Element>
