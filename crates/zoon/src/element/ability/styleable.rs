@@ -52,6 +52,8 @@ pub trait Styleable<'a>: UpdateRawEl + Sized {
     /// let view = Column::new().s(Height::screen()).item(button);
     /// ```
     fn s(self, style: impl Style<'a>) -> Self {
-        self.update_raw_el(|raw_el| style.apply_to_raw_el(raw_el, None).0)
+        self.update_raw_el(|raw_el| {
+            raw_el.style_group(style.merge_with_group(StyleGroup::default()))
+        })
     }
 }

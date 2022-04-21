@@ -204,6 +204,9 @@ impl Align {
 }
 
 impl<'a> Style<'a> for Align {
+    fn merge_with_group(self, group: StyleGroup<'a>) -> StyleGroup<'a> {
+        
+    }
     fn apply_to_raw_el<E: RawEl>(
         self,
         mut raw_el: E,

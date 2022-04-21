@@ -180,6 +180,9 @@ impl Transform {
 }
 
 impl<'a> Style<'a> for Transform {
+    fn merge_with_group(self, group: StyleGroup<'a>) -> StyleGroup<'a> {
+        
+    }
     fn apply_to_raw_el<E: RawEl>(
         mut self,
         mut raw_el: E,

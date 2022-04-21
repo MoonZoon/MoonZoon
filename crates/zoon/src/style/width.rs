@@ -154,6 +154,9 @@ impl<'a> Width<'a> {
 }
 
 impl<'a> Style<'a> for Width<'a> {
+    fn merge_with_group(self, group: StyleGroup<'a>) -> StyleGroup<'a> {
+        
+    }
     fn apply_to_raw_el<E: RawEl>(
         self,
         mut raw_el: E,

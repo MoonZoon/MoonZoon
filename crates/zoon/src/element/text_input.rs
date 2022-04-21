@@ -556,7 +556,7 @@ impl<'a> Placeholder<'a> {
     }
 
     pub fn s(mut self, style: impl Style<'a> + 'a) -> Self {
-        self.style_group = style.apply_to_raw_el(RawHtmlEl::new("div"), Some(self.style_group)).1.unwrap();
+        self.style_group = style.merge_with_group(self.style_group);
         self
     }
 }
