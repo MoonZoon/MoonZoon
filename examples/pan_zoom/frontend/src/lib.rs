@@ -27,7 +27,6 @@ fn artboard() -> impl Element {
     let (pan, pan_signal) = Mutable::new_and_signal(false);
 
     RawSvgEl::new("svg")
-        .dom_element_type::<web_sys::SvgsvgElement>()
         .style("touch-action", "none")
         .style_signal("cursor", pan_signal.map_true(|| "grabbing"))
         .attr("width", "100%")

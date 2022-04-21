@@ -57,6 +57,8 @@ pub trait RawEl: Sized {
         + JsCast
         + 'static;
 
+    fn new(tag: &str) -> Self;
+
     #[doc(hidden)]
     fn update_dom_builder(
         self,

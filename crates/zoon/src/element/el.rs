@@ -7,24 +7,24 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Child);
 
-pub struct El<ChildFlag, ElRawEl = RawHtmlEl<web_sys::HtmlElement>> {
-    raw_el: ElRawEl,
+pub struct El<ChildFlag, RE: RawEl> {
+    raw_el: RE,
     flags: PhantomData<ChildFlag>,
 }
 
-impl El<ChildFlagNotSet> {
+impl El<ChildFlagNotSet, RawHtmlEl<web_sys::HtmlElement>> {
     pub fn new() -> Self {
         Self::with_tag(Tag::Custom("div"))
     }
 }
 
-impl<ChildFlag> Element for El<ChildFlag> {
+impl<ChildFlag, RE: RawEl + Into<RawElement>> Element for El<ChildFlag, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<ChildFlag> IntoIterator for El<ChildFlag> {
+impl<ChildFlag, RE: RawEl> IntoIterator for El<ChildFlag, RE> {
     type Item = Self;
     type IntoIter = iter::Once<Self>;
 
@@ -34,8 +34,8 @@ impl<ChildFlag> IntoIterator for El<ChildFlag> {
     }
 }
 
-impl<ChildFlag, ElRawEl: RawEl> UpdateRawEl for El<ChildFlag, ElRawEl> {
-    type RawEl = ElRawEl;
+impl<ChildFlag, RE: RawEl> UpdateRawEl for El<ChildFlag, RE> {
+    type RawEl = RE;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
@@ -47,7 +47,7 @@ impl<ChildFlag, ElRawEl: RawEl> UpdateRawEl for El<ChildFlag, ElRawEl> {
 //   Abilities
 // ------ ------
 
-impl ChoosableTag for El<ChildFlagNotSet> {
+impl ChoosableTag for El<ChildFlagNotSet, RawHtmlEl<web_sys::HtmlElement>> {
     fn with_tag(tag: Tag) -> Self {
         run_once!(|| {
             global_styles()
@@ -73,25 +73,25 @@ impl ChoosableTag for El<ChildFlagNotSet> {
         }
     }
 }
-impl<ChildFlag> Styleable<'_> for El<ChildFlag> {}
-impl<ChildFlag> KeyboardEventAware for El<ChildFlag> {}
-impl<ChildFlag> MouseEventAware for El<ChildFlag> {}
-impl<ChildFlag> PointerEventAware for El<ChildFlag> {}
-impl<ChildFlag> TouchEventAware for El<ChildFlag> {}
-impl<ChildFlag> MutableViewport for El<ChildFlag> {}
-impl<ChildFlag> ResizableViewport for El<ChildFlag> {}
-impl<ChildFlag> Hookable for El<ChildFlag> {
+impl<ChildFlag, RE: RawEl> Styleable<'_> for El<ChildFlag, RE> {}
+impl<ChildFlag, RE: RawEl> KeyboardEventAware for El<ChildFlag, RE> {}
+impl<ChildFlag, RE: RawEl> MouseEventAware for El<ChildFlag, RE> {}
+impl<ChildFlag, RE: RawEl> PointerEventAware for El<ChildFlag, RE> {}
+impl<ChildFlag, RE: RawEl> TouchEventAware for El<ChildFlag, RE> {}
+impl<ChildFlag, RE: RawEl> MutableViewport for El<ChildFlag, RE> {}
+impl<ChildFlag, RE: RawEl> ResizableViewport for El<ChildFlag, RE> {}
+impl<ChildFlag, RE: RawEl> Hookable for El<ChildFlag, RE> {
 }
-impl<ChildFlag> AddNearbyElement<'_> for El<ChildFlag> {}
-impl<ChildFlag> HasClassId for El<ChildFlag> {}
-impl<ChildFlag> SelectableTextContent for El<ChildFlag> {}
+impl<ChildFlag, RE: RawEl> AddNearbyElement<'_> for El<ChildFlag, RE> {}
+impl<ChildFlag, RE: RawEl> HasClassId for El<ChildFlag, RE> {}
+impl<ChildFlag, RE: RawEl> SelectableTextContent for El<ChildFlag, RE> {}
 
 // ------ ------
 //  Attributes
 // ------ ------
 
-impl<'a, ChildFlag> El<ChildFlag> {
-    pub fn child(mut self, child: impl IntoOptionElement<'a> + 'a) -> El<ChildFlagSet>
+impl<'a, ChildFlag, RE: RawEl> El<ChildFlag, RE> {
+    pub fn child(mut self, child: impl IntoOptionElement<'a> + 'a) -> El<ChildFlagSet, RE>
     where
         ChildFlag: FlagNotSet,
     {
@@ -102,7 +102,7 @@ impl<'a, ChildFlag> El<ChildFlag> {
     pub fn child_signal(
         mut self,
         child: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
-    ) -> El<ChildFlagSet>
+    ) -> El<ChildFlagSet, RE>
     where
         ChildFlag: FlagNotSet,
     {
@@ -110,7 +110,7 @@ impl<'a, ChildFlag> El<ChildFlag> {
         self.into_type()
     }
 
-    fn into_type<NewChildFlag>(self) -> El<NewChildFlag> {
+    fn into_type<NewChildFlag>(self) -> El<NewChildFlag, RE> {
         El {
             raw_el: self.raw_el,
             flags: PhantomData,

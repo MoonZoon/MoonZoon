@@ -7,27 +7,27 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Url, Description);
 
-pub struct Image<UrlFlag, DescriptionFlag, ImageRawEl = RawHtmlEl<web_sys::HtmlImageElement>> {
-    raw_el: ImageRawEl,
+pub struct Image<UrlFlag, DescriptionFlag, RE: RawEl> {
+    raw_el: RE,
     flags: PhantomData<(UrlFlag, DescriptionFlag)>,
 }
 
-impl Image<UrlFlagNotSet, DescriptionFlagNotSet> {
+impl Image<UrlFlagNotSet, DescriptionFlagNotSet, RawHtmlEl<web_sys::HtmlImageElement>> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("img").class("image").dom_element_type(),
+            raw_el: RawHtmlEl::<web_sys::HtmlImageElement>::new("img").class("image"),
             flags: PhantomData,
         }
     }
 }
 
-impl Element for Image<UrlFlagSet, DescriptionFlagSet> {
+impl<RE: RawEl + Into<RawElement>> Element for Image<UrlFlagSet, DescriptionFlagSet, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<UrlFlagSet, DescriptionFlagSet> IntoIterator for Image<UrlFlagSet, DescriptionFlagSet> {
+impl<UrlFlagSet, DescriptionFlagSet, RE: RawEl> IntoIterator for Image<UrlFlagSet, DescriptionFlagSet, RE> {
     type Item = Self;
     type IntoIter = iter::Once<Self>;
 
@@ -37,8 +37,8 @@ impl<UrlFlagSet, DescriptionFlagSet> IntoIterator for Image<UrlFlagSet, Descript
     }
 }
 
-impl<UrlFlag, DescriptionFlag, ImageRawEl: RawEl> UpdateRawEl for Image<UrlFlag, DescriptionFlag, ImageRawEl> {
-    type RawEl = ImageRawEl;
+impl<UrlFlag, DescriptionFlag, RE: RawEl> UpdateRawEl for Image<UrlFlag, DescriptionFlag, RE> {
+    type RawEl = RE;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
@@ -50,22 +50,22 @@ impl<UrlFlag, DescriptionFlag, ImageRawEl: RawEl> UpdateRawEl for Image<UrlFlag,
 //   Abilities
 // ------ ------
 
-impl<UrlFlag, DescriptionFlag> Styleable<'_> for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> KeyboardEventAware for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> MouseEventAware for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> PointerEventAware for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> TouchEventAware for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> Hookable for Image<UrlFlag, DescriptionFlag> {
+impl<UrlFlag, DescriptionFlag, RE: RawEl> Styleable<'_> for Image<UrlFlag, DescriptionFlag, RE> {}
+impl<UrlFlag, DescriptionFlag, RE: RawEl> KeyboardEventAware for Image<UrlFlag, DescriptionFlag, RE> {}
+impl<UrlFlag, DescriptionFlag, RE: RawEl> MouseEventAware for Image<UrlFlag, DescriptionFlag, RE> {}
+impl<UrlFlag, DescriptionFlag, RE: RawEl> PointerEventAware for Image<UrlFlag, DescriptionFlag, RE> {}
+impl<UrlFlag, DescriptionFlag, RE: RawEl> TouchEventAware for Image<UrlFlag, DescriptionFlag, RE> {}
+impl<UrlFlag, DescriptionFlag, RE: RawEl> Hookable for Image<UrlFlag, DescriptionFlag, RE> {
 }
-impl<UrlFlag, DescriptionFlag> AddNearbyElement<'_> for Image<UrlFlag, DescriptionFlag> {}
-impl<UrlFlag, DescriptionFlag> HasClassId for Image<UrlFlag, DescriptionFlag> {}
+impl<UrlFlag, DescriptionFlag, RE: RawEl> AddNearbyElement<'_> for Image<UrlFlag, DescriptionFlag, RE> {}
+impl<UrlFlag, DescriptionFlag, RE: RawEl> HasClassId for Image<UrlFlag, DescriptionFlag, RE> {}
 
 // ------ ------
 //  Attributes
 // ------ ------
 
-impl<'a, UrlFlag, DescriptionFlag> Image<UrlFlag, DescriptionFlag> {
-    pub fn url(mut self, url: impl IntoCowStr<'a> + 'a) -> Image<UrlFlagSet, DescriptionFlag>
+impl<'a, UrlFlag, DescriptionFlag, RE: RawEl> Image<UrlFlag, DescriptionFlag, RE> {
+    pub fn url(mut self, url: impl IntoCowStr<'a> + 'a) -> Image<UrlFlagSet, DescriptionFlag, RE>
     where
         UrlFlag: FlagNotSet,
     {
@@ -76,7 +76,7 @@ impl<'a, UrlFlag, DescriptionFlag> Image<UrlFlag, DescriptionFlag> {
     pub fn url_signal(
         mut self,
         url: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static,
-    ) -> Image<UrlFlagSet, DescriptionFlag>
+    ) -> Image<UrlFlagSet, DescriptionFlag, RE>
     where
         UrlFlag: FlagNotSet,
     {
@@ -87,7 +87,7 @@ impl<'a, UrlFlag, DescriptionFlag> Image<UrlFlag, DescriptionFlag> {
     pub fn description(
         mut self,
         description: impl IntoCowStr<'a> + 'a,
-    ) -> Image<UrlFlag, DescriptionFlagSet>
+    ) -> Image<UrlFlag, DescriptionFlagSet, RE>
     where
         DescriptionFlag: FlagNotSet,
     {
@@ -98,7 +98,7 @@ impl<'a, UrlFlag, DescriptionFlag> Image<UrlFlag, DescriptionFlag> {
     pub fn description_signal(
         mut self,
         description: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static,
-    ) -> Image<UrlFlag, DescriptionFlagSet>
+    ) -> Image<UrlFlag, DescriptionFlagSet, RE>
     where
         DescriptionFlag: FlagNotSet,
     {
@@ -106,7 +106,7 @@ impl<'a, UrlFlag, DescriptionFlag> Image<UrlFlag, DescriptionFlag> {
         self.into_type()
     }
 
-    fn into_type<NewUrlFlag, NewDescriptionFlag>(self) -> Image<NewUrlFlag, NewDescriptionFlag> {
+    fn into_type<NewUrlFlag, NewDescriptionFlag>(self) -> Image<NewUrlFlag, NewDescriptionFlag, RE> {
         Image {
             raw_el: self.raw_el,
             flags: PhantomData,

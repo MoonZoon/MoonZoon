@@ -14,16 +14,7 @@ pub struct RawSvgEl<DomElement: Into<web_sys::SvgElement>> {
 
 impl RawSvgEl<web_sys::SvgElement> {
     pub fn new(tag: &str) -> Self {
-        let class_id = class_id_generator().next_class_id();
-
-        let mut dom_builder = DomBuilder::new_svg(tag);
-        dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
-
-        Self {
-            class_id: class_id.clone(),
-            dom_builder: dom_builder
-                .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
-        }
+        <Self as RawEl>::new(tag)
     }
 }
 
@@ -64,7 +55,7 @@ impl<DomElement: Into<web_sys::SvgElement>> IntoIterator for RawSvgEl<DomElement
 }
 
 // ------ ------
-//  Attributes
+//     RawEl
 // ------ ------
 
 impl<DomElement> RawEl for RawSvgEl<DomElement> 
@@ -81,6 +72,19 @@ impl<DomElement> RawEl for RawSvgEl<DomElement>
     + 'static
 {
     type DomElement = DomElement;
+
+    fn new(tag: &str) -> Self {
+        let class_id = class_id_generator().next_class_id();
+
+        let mut dom_builder = DomBuilder::new_svg(tag);
+        dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
+
+        Self {
+            class_id: class_id.clone(),
+            dom_builder: dom_builder
+                .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
+        }
+    }
 
     fn update_dom_builder(
         mut self,

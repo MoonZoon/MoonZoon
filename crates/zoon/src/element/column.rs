@@ -7,24 +7,24 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Empty);
 
-pub struct Column<EmptyFlag, ColumnRawEl = RawHtmlEl<web_sys::HtmlElement>> {
-    raw_el: ColumnRawEl,
+pub struct Column<EmptyFlag, RE: RawEl> {
+    raw_el: RE,
     flags: PhantomData<EmptyFlag>,
 }
 
-impl Column<EmptyFlagSet> {
+impl Column<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
     pub fn new() -> Self {
         Self::with_tag(Tag::Custom("div"))
     }
 }
 
-impl Element for Column<EmptyFlagNotSet> {
+impl<RE: RawEl + Into<RawElement>> Element for Column<EmptyFlagNotSet, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<EmptyFlag> IntoIterator for Column<EmptyFlag> {
+impl<EmptyFlag, RE: RawEl> IntoIterator for Column<EmptyFlag, RE> {
     type Item = Self;
     type IntoIter = iter::Once<Self>;
 
@@ -34,8 +34,8 @@ impl<EmptyFlag> IntoIterator for Column<EmptyFlag> {
     }
 }
 
-impl<EmptyFlag, ColumnRawEl: RawEl> UpdateRawEl for Column<EmptyFlag, ColumnRawEl> {
-    type RawEl = ColumnRawEl;
+impl<EmptyFlag, RE: RawEl> UpdateRawEl for Column<EmptyFlag, RE> {
+    type RawEl = RE;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
@@ -47,7 +47,7 @@ impl<EmptyFlag, ColumnRawEl: RawEl> UpdateRawEl for Column<EmptyFlag, ColumnRawE
 //   Abilities
 // ------ ------
 
-impl ChoosableTag for Column<EmptyFlagSet> {
+impl ChoosableTag for Column<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
     fn with_tag(tag: Tag) -> Self {
         run_once!(|| {
             global_styles()
@@ -77,25 +77,25 @@ impl ChoosableTag for Column<EmptyFlagSet> {
         }
     }
 }
-impl<EmptyFlag> Styleable<'_> for Column<EmptyFlag> {}
-impl<EmptyFlag> KeyboardEventAware for Column<EmptyFlag> {}
-impl<EmptyFlag> MouseEventAware for Column<EmptyFlag> {}
-impl<EmptyFlag> PointerEventAware for Column<EmptyFlag> {}
-impl<EmptyFlag> TouchEventAware for Column<EmptyFlag> {}
-impl<EmptyFlag> MutableViewport for Column<EmptyFlag> {}
-impl<EmptyFlag> ResizableViewport for Column<EmptyFlag> {}
-impl<EmptyFlag> Hookable for Column<EmptyFlag> {
+impl<EmptyFlag, RE: RawEl> Styleable<'_> for Column<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> KeyboardEventAware for Column<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> MouseEventAware for Column<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> PointerEventAware for Column<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> TouchEventAware for Column<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> MutableViewport for Column<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> ResizableViewport for Column<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> Hookable for Column<EmptyFlag, RE> {
 }
-impl<EmptyFlag> AddNearbyElement<'_> for Column<EmptyFlag> {}
-impl<EmptyFlag> HasClassId for Column<EmptyFlag> {}
-impl<EmptyFlag> SelectableTextContent for Column<EmptyFlag> {}
+impl<EmptyFlag, RE: RawEl> AddNearbyElement<'_> for Column<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> HasClassId for Column<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> SelectableTextContent for Column<EmptyFlag, RE> {}
 
 // ------ ------
 //  Attributes
 // ------ ------
 
-impl<'a, EmptyFlag> Column<EmptyFlag> {
-    pub fn item(mut self, item: impl IntoOptionElement<'a> + 'a) -> Column<EmptyFlagNotSet> {
+impl<'a, EmptyFlag, RE: RawEl> Column<EmptyFlag, RE> {
+    pub fn item(mut self, item: impl IntoOptionElement<'a> + 'a) -> Column<EmptyFlagNotSet, RE> {
         self.raw_el = self.raw_el.child(item);
         self.into_type()
     }
@@ -103,7 +103,7 @@ impl<'a, EmptyFlag> Column<EmptyFlag> {
     pub fn item_signal(
         mut self,
         item: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
-    ) -> Column<EmptyFlagNotSet> {
+    ) -> Column<EmptyFlagNotSet, RE> {
         self.raw_el = self.raw_el.child_signal(item);
         self.into_type()
     }
@@ -111,7 +111,7 @@ impl<'a, EmptyFlag> Column<EmptyFlag> {
     pub fn items(
         mut self,
         items: impl IntoIterator<Item = impl IntoElement<'a> + 'a>,
-    ) -> Column<EmptyFlagNotSet> {
+    ) -> Column<EmptyFlagNotSet, RE> {
         self.raw_el = self.raw_el.children(items);
         self.into_type()
     }
@@ -119,12 +119,12 @@ impl<'a, EmptyFlag> Column<EmptyFlag> {
     pub fn items_signal_vec(
         mut self,
         items: impl SignalVec<Item = impl IntoElement<'a>> + Unpin + 'static,
-    ) -> Column<EmptyFlagNotSet> {
+    ) -> Column<EmptyFlagNotSet, RE> {
         self.raw_el = self.raw_el.children_signal_vec(items);
         self.into_type()
     }
 
-    fn into_type<NewEmptyFlag>(self) -> Column<NewEmptyFlag> {
+    fn into_type<NewEmptyFlag>(self) -> Column<NewEmptyFlag, RE> {
         Column {
             raw_el: self.raw_el,
             flags: PhantomData,

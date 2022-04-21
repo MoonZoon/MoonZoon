@@ -7,24 +7,24 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Empty);
 
-pub struct Paragraph<EmptyFlag, ParagraphRawEl = RawHtmlEl<web_sys::HtmlParagraphElement>> {
-    raw_el: ParagraphRawEl,
+pub struct Paragraph<EmptyFlag, RE: RawEl> {
+    raw_el: RE,
     flags: PhantomData<EmptyFlag>,
 }
 
-impl Paragraph<EmptyFlagSet> {
+impl Paragraph<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
     pub fn new() -> Self {
         Self::with_tag(Tag::Custom("p"))
     }
 }
 
-impl Element for Paragraph<EmptyFlagNotSet> {
+impl<RE: RawEl + Into<RawElement>> Element for Paragraph<EmptyFlagNotSet, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<EmptyFlagSet> IntoIterator for Paragraph<EmptyFlagSet> {
+impl<EmptyFlagSet, RE: RawEl> IntoIterator for Paragraph<EmptyFlagSet, RE> {
     type Item = Self;
     type IntoIter = iter::Once<Self>;
 
@@ -34,8 +34,8 @@ impl<EmptyFlagSet> IntoIterator for Paragraph<EmptyFlagSet> {
     }
 }
 
-impl<EmptyFlag, ParagraphRawEl: RawEl> UpdateRawEl for Paragraph<EmptyFlag, ParagraphRawEl> {
-    type RawEl = ParagraphRawEl;
+impl<EmptyFlag, RE: RawEl> UpdateRawEl for Paragraph<EmptyFlag, RE> {
+    type RawEl = RE;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
@@ -47,7 +47,7 @@ impl<EmptyFlag, ParagraphRawEl: RawEl> UpdateRawEl for Paragraph<EmptyFlag, Para
 //   Abilities
 // ------ ------
 
-impl ChoosableTag for Paragraph<EmptyFlagSet> {
+impl ChoosableTag for Paragraph<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
     fn with_tag(tag: Tag) -> Self {
         run_once!(|| {
             global_styles()
@@ -56,32 +56,32 @@ impl ChoosableTag for Paragraph<EmptyFlagSet> {
                 .style_group(StyleGroup::new(".paragraph > .align_right").style("float", "right"));
         });
         Self {
-            raw_el: RawHtmlEl::new(tag.as_str()).class("paragraph").dom_element_type(),
+            raw_el: RawHtmlEl::new(tag.as_str()).class("paragraph"),
             flags: PhantomData,
         }
     }
 }
-impl<EmptyFlag> Styleable<'_> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> KeyboardEventAware for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> MouseEventAware for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> PointerEventAware for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> TouchEventAware for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> MutableViewport for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> Hookable for Paragraph<EmptyFlag> {
+impl<EmptyFlag, RE: RawEl> Styleable<'_> for Paragraph<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> KeyboardEventAware for Paragraph<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> MouseEventAware for Paragraph<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> PointerEventAware for Paragraph<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> TouchEventAware for Paragraph<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> MutableViewport for Paragraph<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> Hookable for Paragraph<EmptyFlag, RE> {
 }
-impl<EmptyFlag> AddNearbyElement<'_> for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> HasClassId for Paragraph<EmptyFlag> {}
-impl<EmptyFlag> SelectableTextContent for Paragraph<EmptyFlag> {}
+impl<EmptyFlag, RE: RawEl> AddNearbyElement<'_> for Paragraph<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> HasClassId for Paragraph<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> SelectableTextContent for Paragraph<EmptyFlag, RE> {}
 
 // ------ ------
 //  Attributes
 // ------ ------
 
-impl<'a, EmptyFlag> Paragraph<EmptyFlag> {
+impl<'a, EmptyFlag, RE: RawEl> Paragraph<EmptyFlag, RE> {
     pub fn content(
         mut self,
         content: impl IntoOptionElement<'a> + 'a,
-    ) -> Paragraph<EmptyFlagNotSet> {
+    ) -> Paragraph<EmptyFlagNotSet, RE> {
         self.raw_el = self.raw_el.child(content);
         self.into_type()
     }
@@ -89,7 +89,7 @@ impl<'a, EmptyFlag> Paragraph<EmptyFlag> {
     pub fn content_signal(
         mut self,
         content: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
-    ) -> Paragraph<EmptyFlagNotSet> {
+    ) -> Paragraph<EmptyFlagNotSet, RE> {
         self.raw_el = self.raw_el.child_signal(content);
         self.into_type()
     }
@@ -97,7 +97,7 @@ impl<'a, EmptyFlag> Paragraph<EmptyFlag> {
     pub fn contents(
         mut self,
         contents: impl IntoIterator<Item = impl IntoElement<'a> + 'a>,
-    ) -> Paragraph<EmptyFlagNotSet> {
+    ) -> Paragraph<EmptyFlagNotSet, RE> {
         self.raw_el = self.raw_el.children(contents);
         self.into_type()
     }
@@ -105,12 +105,12 @@ impl<'a, EmptyFlag> Paragraph<EmptyFlag> {
     pub fn contents_signal_vec(
         mut self,
         contents: impl SignalVec<Item = impl IntoElement<'a>> + Unpin + 'static,
-    ) -> Paragraph<EmptyFlagNotSet> {
+    ) -> Paragraph<EmptyFlagNotSet, RE> {
         self.raw_el = self.raw_el.children_signal_vec(contents);
         self.into_type()
     }
 
-    fn into_type<NewEmptyFlag>(self) -> Paragraph<NewEmptyFlag> {
+    fn into_type<NewEmptyFlag>(self) -> Paragraph<NewEmptyFlag, RE> {
         Paragraph {
             raw_el: self.raw_el,
             flags: PhantomData,
