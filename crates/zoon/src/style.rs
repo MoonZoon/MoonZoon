@@ -56,8 +56,8 @@ pub use width::Width;
 // --
 
 pub struct CssPropValue<'a> {
-    value: Cow<'a, str>,
-    important: bool,
+    pub(crate) value: Cow<'a, str>,
+    pub(crate) important: bool,
 }
 
 // ------ StaticCSSProps ------
@@ -143,21 +143,23 @@ pub trait Style<'a>: Default {
     }
 
     /// Set css to a raw element.
-    fn apply_to_raw_el<E: RawEl>(
+    fn apply_to_raw_el<RE: RawEl>(
         self,
-        raw_el: E,
+        raw_el: RE,
         style_group: Option<StyleGroup<'a>>,
-    ) -> (E, Option<StyleGroup<'a>>);
+    ) -> (RE, Option<StyleGroup<'a>>);
 }
 
 // ------ StyleGroup ------
+
 /// Css styles that can be added on a raw html element or globally with a
 /// selector.
+#[derive(Default)]
 pub struct StyleGroup<'a> {
     /// The `css selector` where the styles apply.
     pub selector: Cow<'a, str>,
-    static_css_props: StaticCSSProps<'a>,
-    dynamic_css_props: DynamicCSSProps,
+    pub(crate) static_css_props: StaticCSSProps<'a>,
+    pub(crate) dynamic_css_props: DynamicCSSProps,
 }
 
 impl<'a> StyleGroup<'a> {
@@ -361,9 +363,9 @@ impl GlobalStyles {
         let declaration = self
             .sheet
             .css_rules()
-            .expect_throw("EEE")
+            .expect_throw("failed to get global CSS rules")
             .item(rule_id_and_index)
-            .expect_throw("FFF")
+            .expect_throw("failed to get selected global CSS rule")
             .unchecked_into::<CssStyleRule>()
             .style();
 

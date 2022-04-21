@@ -192,7 +192,22 @@ pub trait RawEl: Sized {
         value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
     ) -> Self;
 
-    fn style_group(self, mut group: StyleGroup) -> Self {
+    fn style_group(mut self, mut group: StyleGroup) -> Self {
+        if group.selector.is_empty() {
+            let StyleGroup { selector: _, static_css_props, dynamic_css_props } = group;
+            for (name, CssPropValue { value, important }) in static_css_props {
+                if important {
+                    self = self.style_important(name, &value);
+                } else {
+                    self = self.style(name, &value);
+                }
+            }
+            for (name, value) in dynamic_css_props {
+                self = self.style_signal(name, value);
+            }
+            return self;
+        }
+
         group.selector = self.class_id().map(|class_id| {
             [".", class_id.unwrap_throw(), &group.selector]
                 .concat()

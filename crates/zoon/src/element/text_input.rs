@@ -337,21 +337,15 @@ impl<
     where
         PlaceholderFlag: FlagNotSet,
     {
-        let mut el_and_group = (self.raw_el.dom_element_type(), Some(StyleGroup::new("::placeholder")));
-        for style_applicator in placeholder.style_applicators {
-            el_and_group = style_applicator(el_and_group);
-        }
-        let (raw_el, style_group) = el_and_group;
-        let raw_el = raw_el.dom_element_type();
         self.raw_el = match placeholder.text {
             PlaceholderText::Static(text) => {
-                raw_el.attr("placeholder", &text)
+                self.raw_el.attr("placeholder", &text)
             }
             PlaceholderText::Dynamic(text) => {
-                raw_el.attr_signal("placeholder", text)
+                self.raw_el.attr_signal("placeholder", text)
             }
         };
-        self.raw_el = self.raw_el.style_group(style_group.unwrap_throw());
+        self.raw_el = self.raw_el.style_group(placeholder.style_group);
         self.into_type()
     }
 
@@ -540,19 +534,14 @@ enum PlaceholderText<'a> {
 
 pub struct Placeholder<'a> {
     text: PlaceholderText<'a>,
-    style_applicators: Vec<
-        Box<
-            dyn FnOnce((RawHtmlEl<web_sys::HtmlElement>, Option<StyleGroup<'a>>)) -> (RawHtmlEl<web_sys::HtmlElement>, Option<StyleGroup<'a>>)
-                + 'a,
-        >,
-    >,
+    style_group: StyleGroup<'a>,
 }
 
 impl<'a> Placeholder<'a> {
     pub fn new(text: impl IntoCowStr<'a>) -> Self {
         Placeholder {
             text: PlaceholderText::Static(text.into_cow_str()),
-            style_applicators: Vec::new(),
+            style_group: StyleGroup::new("::placeholder"),
         }
     }
 
@@ -562,16 +551,12 @@ impl<'a> Placeholder<'a> {
         let text = text.map(|text| Box::new(text) as Box<dyn IntoOptionCowStr<'static>>);
         Placeholder {
             text: PlaceholderText::Dynamic(Box::new(text)),
-            style_applicators: Vec::new(),
+            style_group: StyleGroup::new("::placeholder"),
         }
     }
 
     pub fn s(mut self, style: impl Style<'a> + 'a) -> Self {
-        self.style_applicators.push(Box::new(
-            |(raw_html_el, style_group): (RawHtmlEl<web_sys::HtmlElement>, Option<StyleGroup<'a>>)| {
-                style.apply_to_raw_el(raw_html_el, style_group)
-            },
-        ));
+        self.style_group = style.apply_to_raw_el(RawHtmlEl::new("div"), Some(self.style_group)).1.unwrap();
         self
     }
 }
