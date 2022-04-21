@@ -18,9 +18,9 @@ pub struct TextInput<
     LabelFlag,
     InputTypeFlag,
     ReadOnlyFlag,
-    TextInputRawEl = RawHtmlEl<web_sys::HtmlInputElement>,
+    RE: RawEl,
 > {
-    raw_el: TextInputRawEl,
+    raw_el: RE,
     flags: PhantomData<(
         IdFlag,
         OnChangeFlag,
@@ -41,17 +41,18 @@ impl
         LabelFlagNotSet,
         InputTypeFlagNotSet,
         ReadOnlyFlagNotSet,
+        RawHtmlEl<web_sys::HtmlInputElement>,
     >
 {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("input").class("text_input").dom_element_type(),
+            raw_el: RawHtmlEl::<web_sys::HtmlInputElement>::new("input").class("text_input"),
             flags: PhantomData,
         }
     }
 }
 
-impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag> Element
+impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl + Into<RawElement>> Element
     for TextInput<
         IdFlagSet,
         OnChangeFlag,
@@ -60,6 +61,7 @@ impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag> Eleme
         LabelFlagNotSet,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
 {
     fn into_raw_element(self) -> RawElement {
@@ -67,7 +69,7 @@ impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag> Eleme
     }
 }
 
-impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag> Element
+impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl + Into<RawElement>> Element
     for TextInput<
         IdFlagNotSet,
         OnChangeFlag,
@@ -76,6 +78,7 @@ impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag> Eleme
         LabelFlagSet,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
 {
     fn into_raw_element(self) -> RawElement {
@@ -83,7 +86,7 @@ impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag> Eleme
     }
 }
 
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
     IntoIterator
     for TextInput<
         IdFlag,
@@ -93,6 +96,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
 {
     type Item = Self;
@@ -104,7 +108,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
     }
 }
 
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, TextInputRawEl: RawEl>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
     UpdateRawEl
     for TextInput<
         IdFlag,
@@ -114,10 +118,10 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
-        TextInputRawEl,
+        RE,
     >
 {
-    type RawEl = TextInputRawEl;
+    type RawEl = RE;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
@@ -129,7 +133,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 //   Abilities
 // ------ ------
 
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
     Styleable<'_>
     for TextInput<
         IdFlag,
@@ -139,10 +143,11 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
     KeyboardEventAware
     for TextInput<
         IdFlag,
@@ -152,10 +157,11 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
     Focusable
     for TextInput<
         IdFlag,
@@ -165,10 +171,12 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
+    where RE::DomElement: AsRef<web_sys::HtmlElement>
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
     MouseEventAware
     for TextInput<
         IdFlag,
@@ -178,10 +186,11 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
     PointerEventAware
     for TextInput<
         IdFlag,
@@ -191,10 +200,11 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
     TouchEventAware
     for TextInput<
         IdFlag,
@@ -204,10 +214,11 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
     Hookable
     for TextInput<
         IdFlag,
@@ -217,10 +228,11 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
     AddNearbyElement<'_>
     for TextInput<
         IdFlag,
@@ -230,10 +242,11 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
     HasClassId
     for TextInput<
         IdFlag,
@@ -243,10 +256,11 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag>
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
     SelectableTextContent
     for TextInput<
         IdFlag,
@@ -256,6 +270,7 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
 {
 }
@@ -273,6 +288,7 @@ impl<
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE: RawEl,
     >
     TextInput<
         IdFlag,
@@ -282,6 +298,7 @@ impl<
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
 {
     pub fn id(
@@ -295,6 +312,7 @@ impl<
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
     where
         IdFlag: FlagNotSet,
@@ -314,6 +332,7 @@ impl<
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
     where
         PlaceholderFlag: FlagNotSet,
@@ -347,6 +366,7 @@ impl<
         LabelFlag,
         InputTypeFlagSet,
         ReadOnlyFlag,
+        RE,
     >
     where
         InputTypeFlag: FlagNotSet,
@@ -367,6 +387,7 @@ impl<
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
     where
         TextFlag: FlagNotSet,
@@ -386,6 +407,7 @@ impl<
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
     where
         TextFlag: FlagNotSet,
@@ -406,6 +428,7 @@ impl<
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlagSet,
+        RE,
     >
     where
         ReadOnlyFlag: FlagNotSet,
@@ -427,6 +450,7 @@ impl<
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlagSet,
+        RE,
     >
     where
         ReadOnlyFlag: FlagNotSet,
@@ -448,6 +472,7 @@ impl<
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
     where
         OnChangeFlag: FlagNotSet,
@@ -470,6 +495,7 @@ impl<
         LabelFlagSet,
         InputTypeFlag,
         ReadOnlyFlag,
+        RE,
     >
     where
         LabelFlag: FlagNotSet,
@@ -496,6 +522,7 @@ impl<
         NewLabelFlag,
         NewInputTypeFlag,
         NewReadOnlyFlag,
+        RE,
     > {
         TextInput {
             raw_el: self.raw_el,

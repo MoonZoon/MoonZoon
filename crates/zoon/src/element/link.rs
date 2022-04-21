@@ -7,12 +7,12 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Label, To);
 
-pub struct Link<LabelFlag, ToFlag, LinkRawEl = RawHtmlEl<web_sys::HtmlAnchorElement>> {
-    raw_el: LinkRawEl,
+pub struct Link<LabelFlag, ToFlag, RE: RawEl> {
+    raw_el: RE,
     flags: PhantomData<(LabelFlag, ToFlag)>,
 }
 
-impl Link<LabelFlagNotSet, ToFlagNotSet> {
+impl Link<LabelFlagNotSet, ToFlagNotSet, RawHtmlEl<web_sys::HtmlAnchorElement>> {
     pub fn new() -> Self {
         run_once!(|| {
             global_styles()
@@ -33,26 +33,25 @@ impl Link<LabelFlagNotSet, ToFlagNotSet> {
                 .style_group(StyleGroup::new(".link > .fill_height").style("flex-grow", "1"));
         });
         Self {
-            raw_el: RawHtmlEl::new("a")
+            raw_el: RawHtmlEl::<web_sys::HtmlAnchorElement>::new("a")
                 .class("link")
                 .style("text-decoration", "none")
                 .style("color", "inherit")
                 .style("display", "inline-flex")
                 .style("flex-direction", "column")
-                .style("align-items", "center")
-                .dom_element_type(),
+                .style("align-items", "center"),
             flags: PhantomData,
         }
     }
 }
 
-impl Element for Link<LabelFlagSet, ToFlagSet> {
+impl<RE: RawEl + Into<RawElement>> Element for Link<LabelFlagSet, ToFlagSet, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<LabelFlag, ToFlag> IntoIterator for Link<LabelFlag, ToFlag> {
+impl<LabelFlag, ToFlag, RE: RawEl> IntoIterator for Link<LabelFlag, ToFlag, RE> {
     type Item = Self;
     type IntoIter = iter::Once<Self>;
 
@@ -62,8 +61,8 @@ impl<LabelFlag, ToFlag> IntoIterator for Link<LabelFlag, ToFlag> {
     }
 }
 
-impl<LabelFlag, ToFlag, LinkRawEl: RawEl> UpdateRawEl for Link<LabelFlag, ToFlag, LinkRawEl> {
-    type RawEl = LinkRawEl;
+impl<LabelFlag, ToFlag, RE: RawEl> UpdateRawEl for Link<LabelFlag, ToFlag, RE> {
+    type RawEl = RE;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
@@ -75,24 +74,26 @@ impl<LabelFlag, ToFlag, LinkRawEl: RawEl> UpdateRawEl for Link<LabelFlag, ToFlag
 //   Abilities
 // ------ ------
 
-impl<LabelFlag, ToFlag> Styleable<'_> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> KeyboardEventAware for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> Focusable for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> MouseEventAware for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> PointerEventAware for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> TouchEventAware for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> Hookable for Link<LabelFlag, ToFlag> {
+impl<LabelFlag, ToFlag, RE: RawEl> Styleable<'_> for Link<LabelFlag, ToFlag, RE> {}
+impl<LabelFlag, ToFlag, RE: RawEl> KeyboardEventAware for Link<LabelFlag, ToFlag, RE> {}
+impl<LabelFlag, ToFlag, RE: RawEl> Focusable for Link<LabelFlag, ToFlag, RE> 
+    where RE::DomElement: AsRef<web_sys::HtmlElement>
+{}
+impl<LabelFlag, ToFlag, RE: RawEl> MouseEventAware for Link<LabelFlag, ToFlag, RE> {}
+impl<LabelFlag, ToFlag, RE: RawEl> PointerEventAware for Link<LabelFlag, ToFlag, RE> {}
+impl<LabelFlag, ToFlag, RE: RawEl> TouchEventAware for Link<LabelFlag, ToFlag, RE> {}
+impl<LabelFlag, ToFlag, RE: RawEl> Hookable for Link<LabelFlag, ToFlag, RE> {
 }
-impl<LabelFlag, ToFlag> AddNearbyElement<'_> for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> HasClassId for Link<LabelFlag, ToFlag> {}
-impl<LabelFlag, ToFlag> SelectableTextContent for Link<LabelFlag, ToFlag> {}
+impl<LabelFlag, ToFlag, RE: RawEl> AddNearbyElement<'_> for Link<LabelFlag, ToFlag, RE> {}
+impl<LabelFlag, ToFlag, RE: RawEl> HasClassId for Link<LabelFlag, ToFlag, RE> {}
+impl<LabelFlag, ToFlag, RE: RawEl> SelectableTextContent for Link<LabelFlag, ToFlag, RE> {}
 
 // ------ ------
 //  Attributes
 // ------ ------
 
-impl<'a, LabelFlag, ToFlag> Link<LabelFlag, ToFlag> {
-    pub fn label(mut self, label: impl IntoElement<'a> + 'a) -> Link<LabelFlagSet, ToFlag>
+impl<'a, LabelFlag, ToFlag, RE: RawEl> Link<LabelFlag, ToFlag, RE> {
+    pub fn label(mut self, label: impl IntoElement<'a> + 'a) -> Link<LabelFlagSet, ToFlag, RE>
     where
         LabelFlag: FlagNotSet,
     {
@@ -103,7 +104,7 @@ impl<'a, LabelFlag, ToFlag> Link<LabelFlag, ToFlag> {
     pub fn label_signal(
         mut self,
         label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static,
-    ) -> Link<LabelFlagSet, ToFlag>
+    ) -> Link<LabelFlagSet, ToFlag, RE>
     where
         LabelFlag: FlagNotSet,
     {
@@ -111,7 +112,7 @@ impl<'a, LabelFlag, ToFlag> Link<LabelFlag, ToFlag> {
         self.into_type()
     }
 
-    pub fn to(mut self, to: impl IntoCowStr<'a>) -> Link<LabelFlag, ToFlagSet>
+    pub fn to(mut self, to: impl IntoCowStr<'a>) -> Link<LabelFlag, ToFlagSet, RE>
     where
         ToFlag: FlagNotSet,
     {
@@ -122,7 +123,7 @@ impl<'a, LabelFlag, ToFlag> Link<LabelFlag, ToFlag> {
     pub fn to_signal(
         mut self,
         to: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static,
-    ) -> Link<LabelFlag, ToFlagSet>
+    ) -> Link<LabelFlag, ToFlagSet, RE>
     where
         ToFlag: FlagNotSet,
     {
@@ -130,12 +131,12 @@ impl<'a, LabelFlag, ToFlag> Link<LabelFlag, ToFlag> {
         self.into_type()
     }
 
-    pub fn new_tab(mut self) -> Link<LabelFlag, ToFlag> {
+    pub fn new_tab(mut self) -> Link<LabelFlag, ToFlag, RE> {
         self.raw_el = self.raw_el.attr("target", "_blank");
         self.into_type()
     }
 
-    fn into_type<NewLabelFlag, NewToFlag>(self) -> Link<NewLabelFlag, NewToFlag> {
+    fn into_type<NewLabelFlag, NewToFlag>(self) -> Link<NewLabelFlag, NewToFlag, RE> {
         Link {
             raw_el: self.raw_el,
             flags: PhantomData,

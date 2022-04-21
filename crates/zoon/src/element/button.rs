@@ -84,12 +84,12 @@ make_flags!(Label, OnPress);
 ///         .on_press(move || click_count.update(|count| count + 1)),
 /// );
 /// ```
-pub struct Button<LabelFlag, OnPressFlag, ButtonRawEl = RawHtmlEl<web_sys::HtmlDivElement>> {
-    raw_el: ButtonRawEl,
+pub struct Button<LabelFlag, OnPressFlag, RE: RawEl> {
+    raw_el: RE,
     flags: PhantomData<(LabelFlag, OnPressFlag)>,
 }
 
-impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
+impl Button<LabelFlagNotSet, OnPressFlagNotSet, RawHtmlEl<web_sys::HtmlDivElement>> {
     pub fn new() -> Self {
         run_once!(|| {
             global_styles()
@@ -124,7 +124,7 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
                 );
         });
         Self {
-            raw_el: RawHtmlEl::new("div")
+            raw_el: RawHtmlEl::<web_sys::HtmlDivElement>::new("div")
                 .class("button")
                 .attr("role", "button")
                 .attr("tabindex", "0")
@@ -134,20 +134,20 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
                 .style("display", "inline-flex")
                 .style("flex-direction", "column")
                 .style("align-items", "center")
-                .style("touch-action", "manipulation")
-                .dom_element_type(),
+                .style("touch-action", "manipulation"),
             flags: PhantomData,
         }
     }
 }
 
-impl<OnPressFlag> Element for Button<LabelFlagSet, OnPressFlag> {
+impl<OnPressFlag, RE: RawEl + Into<RawElement>> Element for Button<LabelFlagSet, OnPressFlag, RE>
+{
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<LabelFlag, OnPressFlag> IntoIterator for Button<LabelFlag, OnPressFlag> {
+impl<LabelFlag, OnPressFlag, RE: RawEl> IntoIterator for Button<LabelFlag, OnPressFlag, RE> {
     type Item = Self;
     type IntoIter = iter::Once<Self>;
 
@@ -157,10 +157,10 @@ impl<LabelFlag, OnPressFlag> IntoIterator for Button<LabelFlag, OnPressFlag> {
     }
 }
 
-impl<LabelFlag, OnPressFlag, ButtonRawEl: RawEl> UpdateRawEl
-    for Button<LabelFlag, OnPressFlag, ButtonRawEl>
+impl<LabelFlag, OnPressFlag, RE: RawEl> UpdateRawEl
+    for Button<LabelFlag, OnPressFlag, RE>
 {
-    type RawEl = ButtonRawEl;
+    type RawEl = RE;
 
     fn update_raw_el(
         mut self,
@@ -175,35 +175,39 @@ impl<LabelFlag, OnPressFlag, ButtonRawEl: RawEl> UpdateRawEl
 //   Abilities
 // ------ ------
 
-impl<LabelFlag, OnPressFlag> Styleable<'_>
-    for Button<LabelFlag, OnPressFlag>
+impl<LabelFlag, OnPressFlag, RE: RawEl> Styleable<'_>
+    for Button<LabelFlag, OnPressFlag, RE>
 {
 }
-impl<LabelFlag, OnPressFlag> KeyboardEventAware
-    for Button<LabelFlag, OnPressFlag>
+impl<LabelFlag, OnPressFlag, RE: RawEl> KeyboardEventAware
+    for Button<LabelFlag, OnPressFlag, RE>
 {
 }
-impl<LabelFlag, OnPressFlag> Focusable for Button<LabelFlag, OnPressFlag> {}
-impl<LabelFlag, OnPressFlag> MouseEventAware
-    for Button<LabelFlag, OnPressFlag>
+impl<LabelFlag, OnPressFlag, RE: RawEl> Focusable for Button<LabelFlag, OnPressFlag, RE> 
+    where RE::DomElement: AsRef<web_sys::HtmlElement>
+{
+
+}
+impl<LabelFlag, OnPressFlag, RE: RawEl> MouseEventAware
+    for Button<LabelFlag, OnPressFlag, RE>
 {
 }
-impl<LabelFlag, OnPressFlag> PointerEventAware
-    for Button<LabelFlag, OnPressFlag>
+impl<LabelFlag, OnPressFlag, RE: RawEl> PointerEventAware
+    for Button<LabelFlag, OnPressFlag, RE>
 {
 }
-impl<LabelFlag, OnPressFlag> TouchEventAware
-    for Button<LabelFlag, OnPressFlag>
+impl<LabelFlag, OnPressFlag, RE: RawEl> TouchEventAware
+    for Button<LabelFlag, OnPressFlag, RE>
 {
 }
-impl<LabelFlag, OnPressFlag> Hookable for Button<LabelFlag, OnPressFlag> {
+impl<LabelFlag, OnPressFlag, RE: RawEl> Hookable for Button<LabelFlag, OnPressFlag, RE> {
 }
-impl<LabelFlag, OnPressFlag> AddNearbyElement<'_>
-    for Button<LabelFlag, OnPressFlag>
+impl<LabelFlag, OnPressFlag, RE: RawEl> AddNearbyElement<'_>
+    for Button<LabelFlag, OnPressFlag, RE>
 {
 }
-impl<LabelFlag, OnPressFlag> HasClassId
-    for Button<LabelFlag, OnPressFlag>
+impl<LabelFlag, OnPressFlag, RE: RawEl> HasClassId
+    for Button<LabelFlag, OnPressFlag, RE>
 {
 }
 
@@ -211,11 +215,11 @@ impl<LabelFlag, OnPressFlag> HasClassId
 //  Attributes
 // ------ ------
 
-impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
+impl<'a, LabelFlag, OnPressFlag, RE: RawEl> Button<LabelFlag, OnPressFlag, RE> {
     pub fn label(
         mut self,
         label: impl IntoElement<'a> + 'a,
-    ) -> Button<LabelFlagSet, OnPressFlag>
+    ) -> Button<LabelFlagSet, OnPressFlag, RE>
     where
         LabelFlag: FlagNotSet,
     {
@@ -226,7 +230,7 @@ impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
     pub fn label_signal(
         mut self,
         label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static,
-    ) -> Button<LabelFlagSet, OnPressFlag>
+    ) -> Button<LabelFlagSet, OnPressFlag, RE>
     where
         LabelFlag: FlagNotSet,
     {
@@ -237,7 +241,7 @@ impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
     pub fn on_press(
         mut self,
         on_press: impl FnOnce() + Clone + 'static,
-    ) -> Button<LabelFlag, OnPressFlagSet>
+    ) -> Button<LabelFlag, OnPressFlagSet, RE>
     where
         OnPressFlag: FlagNotSet,
     {
@@ -249,7 +253,7 @@ impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
 
     fn into_type<NewLabelFlag, NewOnPressFlag>(
         self,
-    ) -> Button<NewLabelFlag, NewOnPressFlag> {
+    ) -> Button<NewLabelFlag, NewOnPressFlag, RE> {
         Button {
             raw_el: self.raw_el,
             flags: PhantomData,

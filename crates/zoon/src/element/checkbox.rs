@@ -14,20 +14,20 @@ enum CheckState {
 
 make_flags!(Id, OnChange, Label, Icon, Checked);
 
-pub struct Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, CheckboxRawEl = RawHtmlEl<web_sys::HtmlDivElement>> {
+pub struct Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> {
     check_state: Mutable<CheckState>,
-    raw_el: CheckboxRawEl,
+    raw_el: RE,
     flags: PhantomData<(IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag)>,
 }
 
 impl
-    Checkbox<IdFlagNotSet, OnChangeFlagNotSet, LabelFlagNotSet, IconFlagNotSet, CheckedFlagNotSet>
+    Checkbox<IdFlagNotSet, OnChangeFlagNotSet, LabelFlagNotSet, IconFlagNotSet, CheckedFlagNotSet, RawHtmlEl<web_sys::HtmlDivElement>>
 {
     pub fn new() -> Self {
         let check_state = Mutable::new(CheckState::NotSet);
         Self {
             check_state: check_state.clone(),
-            raw_el: RawHtmlEl::new("div")
+            raw_el: RawHtmlEl::<web_sys::HtmlDivElement>::new("div")
                 .class("checkbox")
                 .attr("role", "checkbox")
                 .attr("aria-live", "polite")
@@ -51,31 +51,30 @@ impl
                             CheckState::Value(!checked)
                         }
                     })
-                })
-                .dom_element_type(),
+                }),
             flags: PhantomData,
         }
     }
 }
 
-impl<OnChangeFlag, CheckedFlag> Element
-    for Checkbox<IdFlagSet, OnChangeFlag, LabelFlagNotSet, IconFlagSet, CheckedFlag>
+impl<OnChangeFlag, CheckedFlag, RE: RawEl + Into<RawElement>> Element
+    for Checkbox<IdFlagSet, OnChangeFlag, LabelFlagNotSet, IconFlagSet, CheckedFlag, RE>
 {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<OnChangeFlag, CheckedFlag> Element
-    for Checkbox<IdFlagNotSet, OnChangeFlag, LabelFlagSet, IconFlagSet, CheckedFlag>
+impl<OnChangeFlag, CheckedFlag, RE: RawEl + Into<RawElement>> Element
+    for Checkbox<IdFlagNotSet, OnChangeFlag, LabelFlagSet, IconFlagSet, CheckedFlag, RE>
 {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> IntoIterator
-    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> IntoIterator
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
     type Item = Self;
     type IntoIter = iter::Once<Self>;
@@ -86,10 +85,10 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> IntoIterator
     }
 }
 
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, CheckboxRawEl: RawEl> UpdateRawEl
-    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, CheckboxRawEl>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> UpdateRawEl
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
-    type RawEl = CheckboxRawEl;
+    type RawEl = RE;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
@@ -101,40 +100,41 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, CheckboxRawEl: RawE
 //   Abilities
 // ------ ------
 
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> Styleable<'_>
-    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> Styleable<'_>
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> KeyboardEventAware
-    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> KeyboardEventAware
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> Focusable
-    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> Focusable
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
+    where RE::DomElement: AsRef<web_sys::HtmlElement>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> MouseEventAware
-    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> MouseEventAware
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> PointerEventAware
-    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> PointerEventAware
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> TouchEventAware
-    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> TouchEventAware
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> Hookable
-    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> Hookable
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> AddNearbyElement<'_>
-    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> AddNearbyElement<'_>
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> HasClassId
-    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> HasClassId
+    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
 }
 
@@ -142,13 +142,13 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag> HasClassId
 //  Attributes
 // ------ ------
 
-impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
-    Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl>
+    Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
     pub fn id(
         mut self,
         id: impl IntoCowStr<'a>,
-    ) -> Checkbox<IdFlagSet, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
+    ) -> Checkbox<IdFlagSet, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
     where
         IdFlag: FlagNotSet,
     {
@@ -159,7 +159,7 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
     pub fn checked(
         self,
         checked: bool,
-    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlagSet>
+    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlagSet, RE>
     where
         CheckedFlag: FlagNotSet,
     {
@@ -173,7 +173,7 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
     pub fn checked_signal(
         mut self,
         checked: impl Signal<Item = bool> + Unpin + 'static,
-    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlagSet>
+    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlagSet, RE>
     where
         CheckedFlag: FlagNotSet,
     {
@@ -193,7 +193,7 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
     pub fn on_change(
         mut self,
         on_change: impl FnOnce(bool) + Clone + 'static,
-    ) -> Checkbox<IdFlag, OnChangeFlagSet, LabelFlag, IconFlag, CheckedFlag>
+    ) -> Checkbox<IdFlag, OnChangeFlagSet, LabelFlag, IconFlag, CheckedFlag, RE>
     where
         OnChangeFlag: FlagNotSet,
     {
@@ -211,7 +211,7 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
     pub fn label_hidden(
         mut self,
         label: impl IntoCowStr<'a>,
-    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlagSet, IconFlag, CheckedFlag>
+    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlagSet, IconFlag, CheckedFlag, RE>
     where
         LabelFlag: FlagNotSet,
     {
@@ -222,7 +222,7 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
     pub fn icon<IE: IntoElement<'a> + 'a>(
         mut self,
         icon: impl FnOnce(Mutable<bool>) -> IE,
-    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlagSet, CheckedFlag>
+    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlagSet, CheckedFlag, RE>
     where
         IconFlag: FlagNotSet,
     {
@@ -248,7 +248,7 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag>
 
     fn into_type<NewIdFlag, NewOnChangeFlag, NewLabelFlag, NewIconFlag, NewCheckedFlag>(
         self,
-    ) -> Checkbox<NewIdFlag, NewOnChangeFlag, NewLabelFlag, NewIconFlag, NewCheckedFlag> {
+    ) -> Checkbox<NewIdFlag, NewOnChangeFlag, NewLabelFlag, NewIconFlag, NewCheckedFlag, RE> {
         Checkbox {
             check_state: self.check_state,
             raw_el: self.raw_el,
