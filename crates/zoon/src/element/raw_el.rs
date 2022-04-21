@@ -47,7 +47,6 @@ pub trait UpdateRawEl {
 // ------ RawEl ------
 
 pub trait RawEl: Sized {
-    #[doc(hidden)]
     type DomElement: AsRef<Node>
         + AsRef<EventTarget>
         + AsRef<JsValue>
@@ -194,7 +193,7 @@ pub trait RawEl: Sized {
 
     fn style_group(mut self, mut group: StyleGroup) -> Self {
         if group.selector.is_empty() {
-            let StyleGroup { selector: _, static_css_props, dynamic_css_props } = group;
+            let StyleGroup { selector: _, static_css_props, dynamic_css_props, task_handles } = group;
             for (name, CssPropValue { value, important }) in static_css_props {
                 if important {
                     self = self.style_important(name, &value);
@@ -204,6 +203,9 @@ pub trait RawEl: Sized {
             }
             for (name, value) in dynamic_css_props {
                 self = self.style_signal(name, value);
+            }
+            if not(task_handles.is_empty()) {
+                self = self.after_remove(move |_| drop(task_handles))
             }
             return self;
         }

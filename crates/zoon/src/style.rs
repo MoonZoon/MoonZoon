@@ -142,12 +142,7 @@ pub trait Style<'a>: Default {
         Self::default()
     }
 
-    /// Set css to a raw element.
-    fn apply_to_raw_el<RE: RawEl>(
-        self,
-        raw_el: RE,
-        style_group: Option<StyleGroup<'a>>,
-    ) -> (RE, Option<StyleGroup<'a>>);
+    fn merge_with_group(self, group: StyleGroup<'a>) -> StyleGroup<'a>;
 }
 
 // ------ StyleGroup ------
@@ -158,8 +153,9 @@ pub trait Style<'a>: Default {
 pub struct StyleGroup<'a> {
     /// The `css selector` where the styles apply.
     pub selector: Cow<'a, str>,
-    pub(crate) static_css_props: StaticCSSProps<'a>,
-    pub(crate) dynamic_css_props: DynamicCSSProps,
+    pub static_css_props: StaticCSSProps<'a>,
+    pub dynamic_css_props: DynamicCSSProps,
+    pub task_handles: Vec<TaskHandle>,
 }
 
 impl<'a> StyleGroup<'a> {
@@ -197,6 +193,7 @@ impl<'a> StyleGroup<'a> {
             selector: selector.into_cow_str(),
             static_css_props: StaticCSSProps::default(),
             dynamic_css_props: DynamicCSSProps::default(),
+            task_handles: Vec::default(),
         }
     }
 
