@@ -1,8 +1,5 @@
 use crate::*;
 
-type U32Width = u32;
-type U32Height = u32;
-
 pub trait ResizableViewport: UpdateRawEl + Sized {
     fn on_viewport_size_change(
         self,

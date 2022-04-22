@@ -409,18 +409,7 @@ impl RoundedCorners {
 
 impl<'a> Style<'a> for RoundedCorners {
     fn merge_with_group(self, group: StyleGroup<'a>) -> StyleGroup<'a> {
-        
-    }
-    fn apply_to_raw_el<E: RawEl>(
-        self,
-        mut raw_el: E,
-        style_group: Option<StyleGroup<'a>>,
-    ) -> (E, Option<StyleGroup<'a>>) {
         let (size_sender, size_receiver) = channel((0, 0));
-
-        raw_el = raw_el.on_resize(move |width, height| {
-            size_sender.send((width, height)).unwrap_throw();
-        });
 
         let border_radius_signal = map_ref! {
             let top_left = self.top_left.0,
@@ -437,13 +426,11 @@ impl<'a> Style<'a> for RoundedCorners {
                 *height,
             )
         };
-
-        if let Some(mut style_group) = style_group {
-            style_group = style_group.style_signal("border-radius", border_radius_signal);
-            return (raw_el, Some(style_group));
-        }
-        raw_el = raw_el.style_signal("border-radius", border_radius_signal);
-        (raw_el, None)
+        group
+            .on_resize(move |width, height| {
+                size_sender.send((width, height)).unwrap_throw();
+            })
+            .style_signal("border-radius", border_radius_signal)
     }
 }
 

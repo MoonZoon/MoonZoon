@@ -1,5 +1,5 @@
 use crate::*;
-use std::{borrow::Cow, mem};
+use std::borrow::Cow;
 
 /// Define transformation styling to update the shape or position of an element.
 /// More information at <https://developer.mozilla.org/en-US/docs/Web/CSS/transform>.
@@ -158,19 +158,18 @@ impl Transform {
             .push(crate::format!("scale({})", percent.into() / 100.));
         self
     }
+}
 
-    fn transformations_into_value(&mut self) -> Cow<'static, str> {
-        let transformations = mem::take(&mut self.transformations);
-        if transformations.is_empty() {
-            return "none".into();
-        }
-        transformations
-            .into_iter()
-            .rev()
-            .collect::<Vec<_>>()
-            .join(" ")
-            .into()
+fn transformations_into_value(transformations: Vec<String>) -> Cow<'static, str> {
+    if transformations.is_empty() {
+        return "none".into();
     }
+    transformations
+        .into_iter()
+        .rev()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .into()
 }
 
 impl<'a> Style<'a> for Transform {
@@ -178,12 +177,11 @@ impl<'a> Style<'a> for Transform {
         let Self { transformations, self_signal } = self;
 
         if let Some(self_signal) = self_signal {
-            group = group.style_signal("transform", self_signal.map(|transform| {
-                transform.map(|transform| transform.transformations_into_value())
-            }));
+            group.style_signal("transform", self_signal.map(|transform| {
+                transform.map(|transform| transformations_into_value(transform.transformations))
+            }))
         } else {
-            group = group.style("transform", self.transformations_into_value());
+            group.style("transform", transformations_into_value(transformations))
         }
-        group
     }
 }

@@ -55,6 +55,9 @@ pub use width::Width;
 
 // --
 
+pub type U32Width = u32;
+pub type U32Height = u32;
+
 pub struct CssPropValue<'a> {
     pub(crate) value: Cow<'a, str>,
     pub(crate) important: bool,
@@ -167,6 +170,7 @@ pub struct StyleGroup<'a> {
     // --- not applicable to global styles (only directly to elements) ---
     pub static_css_classes: StaticCSSClasses<'a>,
     pub dynamic_css_classes: DynamicCSSClasses,
+    pub resize_handlers: Vec<Arc<dyn Fn(U32Width, U32Height)>>
 }
 
 impl<'a> StyleGroup<'a> {
@@ -275,6 +279,11 @@ impl<'a> StyleGroup<'a> {
     ) -> Self {
         self.dynamic_css_classes
             .insert(class.into_cow_str(), Box::new(enabled));
+        self
+    }
+
+    pub fn on_resize(mut self, handler: impl FnOnce(U32Width, U32Height) + Clone + 'static) -> Self {
+        self.resize_handlers.push(Arc::new(move |width, height| handler.clone()(width, height)));
         self
     }
 }

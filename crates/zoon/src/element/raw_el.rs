@@ -1,7 +1,7 @@
 use crate::*;
 use once_cell::race::OnceBox;
 use std::mem::ManuallyDrop;
-use std::{cell::Cell, rc::Rc};
+use std::{cell::Cell, rc::Rc, mem};
 use web_sys::{EventTarget, Node};
 
 mod raw_html_el;
@@ -9,9 +9,6 @@ mod raw_svg_el;
 
 pub use raw_html_el::RawHtmlEl;
 pub use raw_svg_el::RawSvgEl;
-
-type U32Width = u32;
-type U32Height = u32;
 
 // ------ class_ids ------
 
@@ -192,10 +189,10 @@ pub trait RawEl: Sized {
     ) -> Self;
 
     fn style_group(mut self, mut group: StyleGroup) -> Self {
-        for class in group.static_css_classes {
+        for class in mem::take(&mut group.static_css_classes) {
             self = self.class(class);
         }
-        for (class, enabled) in group.dynamic_css_classes {
+        for (class, enabled) in mem::take(&mut group.dynamic_css_classes) {
             self = self.class_signal(class, enabled);
         }
 
@@ -205,8 +202,9 @@ pub trait RawEl: Sized {
                 static_css_props, 
                 dynamic_css_props, 
                 task_handles, 
-                static_css_classes: _, 
-                dynamic_css_classes: _, 
+                static_css_classes: _,
+                dynamic_css_classes: _,
+                resize_handlers,
             } = group;
 
             for (name, CssPropValue { value, important }) in static_css_props {
@@ -221,6 +219,13 @@ pub trait RawEl: Sized {
             }
             if not(task_handles.is_empty()) {
                 self = self.after_remove(move |_| drop(task_handles))
+            }
+            if not(resize_handlers.is_empty()) {
+                self = self.on_resize(move |width, height| {
+                    for handler in resize_handlers {
+                        handler(width, height);
+                    }
+                });
             }
             return self;
         }
