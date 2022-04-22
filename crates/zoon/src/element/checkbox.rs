@@ -80,6 +80,14 @@ impl<OnChangeFlag, CheckedFlag, RE: RawEl + Into<RawElement>> Element
     }
 }
 
+impl<OnChangeFlag, CheckedFlag, RE: RawEl + Into<RawElement>> Element
+    for Checkbox<IdFlagSet, OnChangeFlag, LabelFlagSet, IconFlagSet, CheckedFlag, RE>
+{
+    fn into_raw_element(self) -> RawElement {
+        self.raw_el.into()
+    }
+}
+
 impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> IntoIterator
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
@@ -160,7 +168,7 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl>
     where
         IdFlag: FlagNotSet,
     {
-        self.raw_el = self.raw_el.attr("id", &id.into_cow_str());
+        self.raw_el = self.raw_el.id(id);
         self.into_type()
     }
 

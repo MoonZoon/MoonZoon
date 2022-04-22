@@ -101,6 +101,30 @@ impl<
 }
 
 impl<
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE: RawEl + Into<RawElement>,
+    > Element
+    for TextInput<
+        IdFlagSet,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlagSet,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE,
+    >
+{
+    fn into_raw_element(self) -> RawElement {
+        self.raw_el.into()
+    }
+}
+
+impl<
         IdFlag,
         OnChangeFlag,
         PlaceholderFlag,
@@ -428,7 +452,7 @@ impl<
     where
         IdFlag: FlagNotSet,
     {
-        self.raw_el = self.raw_el.attr("id", &id.into_cow_str());
+        self.raw_el = self.raw_el.id(id);
         self.into_type()
     }
 
