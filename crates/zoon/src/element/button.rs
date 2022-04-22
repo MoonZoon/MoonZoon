@@ -169,7 +169,7 @@ impl<LabelFlag, OnPressFlag, RE: RawEl> AddNearbyElement<'_>
     for Button<LabelFlag, OnPressFlag, RE>
 {
 }
-impl<LabelFlag, OnPressFlag, RE: RawEl> HasClassId for Button<LabelFlag, OnPressFlag, RE> {}
+impl<LabelFlag, OnPressFlag, RE: RawEl> HasIds for Button<LabelFlag, OnPressFlag, RE> {}
 
 // ------ ------
 //  Attributes

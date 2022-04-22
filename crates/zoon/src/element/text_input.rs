@@ -350,7 +350,7 @@ impl<
         InputTypeFlag,
         ReadOnlyFlag,
         RE: RawEl,
-    > HasClassId
+    > HasIds
     for TextInput<
         IdFlag,
         OnChangeFlag,

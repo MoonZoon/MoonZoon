@@ -60,7 +60,7 @@ impl<LabelFlag, ForInputFlag, RE: RawEl> AddNearbyElement<'_>
     for Label<LabelFlag, ForInputFlag, RE>
 {
 }
-impl<LabelFlag, ForInputFlag, RE: RawEl> HasClassId for Label<LabelFlag, ForInputFlag, RE> {}
+impl<LabelFlag, ForInputFlag, RE: RawEl> HasIds for Label<LabelFlag, ForInputFlag, RE> {}
 impl<LabelFlag, ForInputFlag, RE: RawEl> SelectableTextContent
     for Label<LabelFlag, ForInputFlag, RE>
 {

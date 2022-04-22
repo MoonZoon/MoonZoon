@@ -92,7 +92,7 @@ impl<EmptyFlag, RE: RawEl> MutableViewport for Stack<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> ResizableViewport for Stack<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> Hookable for Stack<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> AddNearbyElement<'_> for Stack<EmptyFlag, RE> {}
-impl<EmptyFlag, RE: RawEl> HasClassId for Stack<EmptyFlag, RE> {}
+impl<EmptyFlag, RE: RawEl> HasIds for Stack<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> SelectableTextContent for Stack<EmptyFlag, RE> {}
 
 // ------ ------

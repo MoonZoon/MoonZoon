@@ -141,7 +141,7 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> AddNearb
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> HasClassId
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> HasIds
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
 }
