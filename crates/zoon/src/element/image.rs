@@ -27,7 +27,9 @@ impl<RE: RawEl + Into<RawElement>> Element for Image<UrlFlagSet, DescriptionFlag
     }
 }
 
-impl<UrlFlagSet, DescriptionFlagSet, RE: RawEl> IntoIterator for Image<UrlFlagSet, DescriptionFlagSet, RE> {
+impl<UrlFlagSet, DescriptionFlagSet, RE: RawEl> IntoIterator
+    for Image<UrlFlagSet, DescriptionFlagSet, RE>
+{
     type Item = Self;
     type IntoIter = iter::Once<Self>;
 
@@ -51,13 +53,21 @@ impl<UrlFlag, DescriptionFlag, RE: RawEl> UpdateRawEl for Image<UrlFlag, Descrip
 // ------ ------
 
 impl<UrlFlag, DescriptionFlag, RE: RawEl> Styleable<'_> for Image<UrlFlag, DescriptionFlag, RE> {}
-impl<UrlFlag, DescriptionFlag, RE: RawEl> KeyboardEventAware for Image<UrlFlag, DescriptionFlag, RE> {}
-impl<UrlFlag, DescriptionFlag, RE: RawEl> MouseEventAware for Image<UrlFlag, DescriptionFlag, RE> {}
-impl<UrlFlag, DescriptionFlag, RE: RawEl> PointerEventAware for Image<UrlFlag, DescriptionFlag, RE> {}
-impl<UrlFlag, DescriptionFlag, RE: RawEl> TouchEventAware for Image<UrlFlag, DescriptionFlag, RE> {}
-impl<UrlFlag, DescriptionFlag, RE: RawEl> Hookable for Image<UrlFlag, DescriptionFlag, RE> {
+impl<UrlFlag, DescriptionFlag, RE: RawEl> KeyboardEventAware
+    for Image<UrlFlag, DescriptionFlag, RE>
+{
 }
-impl<UrlFlag, DescriptionFlag, RE: RawEl> AddNearbyElement<'_> for Image<UrlFlag, DescriptionFlag, RE> {}
+impl<UrlFlag, DescriptionFlag, RE: RawEl> MouseEventAware for Image<UrlFlag, DescriptionFlag, RE> {}
+impl<UrlFlag, DescriptionFlag, RE: RawEl> PointerEventAware
+    for Image<UrlFlag, DescriptionFlag, RE>
+{
+}
+impl<UrlFlag, DescriptionFlag, RE: RawEl> TouchEventAware for Image<UrlFlag, DescriptionFlag, RE> {}
+impl<UrlFlag, DescriptionFlag, RE: RawEl> Hookable for Image<UrlFlag, DescriptionFlag, RE> {}
+impl<UrlFlag, DescriptionFlag, RE: RawEl> AddNearbyElement<'_>
+    for Image<UrlFlag, DescriptionFlag, RE>
+{
+}
 impl<UrlFlag, DescriptionFlag, RE: RawEl> HasClassId for Image<UrlFlag, DescriptionFlag, RE> {}
 
 // ------ ------
@@ -106,7 +116,9 @@ impl<'a, UrlFlag, DescriptionFlag, RE: RawEl> Image<UrlFlag, DescriptionFlag, RE
         self.into_type()
     }
 
-    fn into_type<NewUrlFlag, NewDescriptionFlag>(self) -> Image<NewUrlFlag, NewDescriptionFlag, RE> {
+    fn into_type<NewUrlFlag, NewDescriptionFlag>(
+        self,
+    ) -> Image<NewUrlFlag, NewDescriptionFlag, RE> {
         Image {
             raw_el: self.raw_el,
             flags: PhantomData,

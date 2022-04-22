@@ -76,14 +76,14 @@ impl<LabelFlag, ToFlag, RE: RawEl> UpdateRawEl for Link<LabelFlag, ToFlag, RE> {
 
 impl<LabelFlag, ToFlag, RE: RawEl> Styleable<'_> for Link<LabelFlag, ToFlag, RE> {}
 impl<LabelFlag, ToFlag, RE: RawEl> KeyboardEventAware for Link<LabelFlag, ToFlag, RE> {}
-impl<LabelFlag, ToFlag, RE: RawEl> Focusable for Link<LabelFlag, ToFlag, RE> 
-    where RE::DomElement: AsRef<web_sys::HtmlElement>
-{}
+impl<LabelFlag, ToFlag, RE: RawEl> Focusable for Link<LabelFlag, ToFlag, RE> where
+    RE::DomElement: AsRef<web_sys::HtmlElement>
+{
+}
 impl<LabelFlag, ToFlag, RE: RawEl> MouseEventAware for Link<LabelFlag, ToFlag, RE> {}
 impl<LabelFlag, ToFlag, RE: RawEl> PointerEventAware for Link<LabelFlag, ToFlag, RE> {}
 impl<LabelFlag, ToFlag, RE: RawEl> TouchEventAware for Link<LabelFlag, ToFlag, RE> {}
-impl<LabelFlag, ToFlag, RE: RawEl> Hookable for Link<LabelFlag, ToFlag, RE> {
-}
+impl<LabelFlag, ToFlag, RE: RawEl> Hookable for Link<LabelFlag, ToFlag, RE> {}
 impl<LabelFlag, ToFlag, RE: RawEl> AddNearbyElement<'_> for Link<LabelFlag, ToFlag, RE> {}
 impl<LabelFlag, ToFlag, RE: RawEl> HasClassId for Link<LabelFlag, ToFlag, RE> {}
 impl<LabelFlag, ToFlag, RE: RawEl> SelectableTextContent for Link<LabelFlag, ToFlag, RE> {}

@@ -10,7 +10,7 @@ impl<'a> Clip<'a> {
     /// THe element gets vertically and horizontally clipped by its parent.
     /// # Example
     /// ```no_run
-    /// 
+    ///
     /// use zoon::{*, named_color::* };
     ///
     /// let paragraph =   Paragraph::new()
@@ -33,7 +33,7 @@ impl<'a> Clip<'a> {
     /// The element gets clipped by its parent horizontally.
     /// # Example
     /// ```no_run
-    /// 
+    ///
     /// use zoon::{*, named_color::* };
     ///
     /// let paragraph =   Paragraph::new()
@@ -55,7 +55,7 @@ impl<'a> Clip<'a> {
     /// The element gets clipped by its parent vertically.
     /// # Example
     /// ```no_run
-    /// 
+    ///
     /// use zoon::{*, named_color::* };
     ///
     /// let paragraph =   Paragraph::new()
@@ -77,7 +77,7 @@ impl<'a> Clip<'a> {
 
 impl<'a> Style<'a> for Clip<'a> {
     fn merge_with_group(self, mut group: StyleGroup<'a>) -> StyleGroup<'a> {
-        let Self { static_css_props} = self;
+        let Self { static_css_props } = self;
         group.static_css_props.extend(static_css_props);
         group
     }

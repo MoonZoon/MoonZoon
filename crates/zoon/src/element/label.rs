@@ -55,18 +55,26 @@ impl<LabelFlag, ForInputFlag, RE: RawEl> KeyboardEventAware for Label<LabelFlag,
 impl<LabelFlag, ForInputFlag, RE: RawEl> MouseEventAware for Label<LabelFlag, ForInputFlag, RE> {}
 impl<LabelFlag, ForInputFlag, RE: RawEl> PointerEventAware for Label<LabelFlag, ForInputFlag, RE> {}
 impl<LabelFlag, ForInputFlag, RE: RawEl> TouchEventAware for Label<LabelFlag, ForInputFlag, RE> {}
-impl<LabelFlag, ForInputFlag, RE: RawEl> Hookable for Label<LabelFlag, ForInputFlag, RE> {
+impl<LabelFlag, ForInputFlag, RE: RawEl> Hookable for Label<LabelFlag, ForInputFlag, RE> {}
+impl<LabelFlag, ForInputFlag, RE: RawEl> AddNearbyElement<'_>
+    for Label<LabelFlag, ForInputFlag, RE>
+{
 }
-impl<LabelFlag, ForInputFlag, RE: RawEl> AddNearbyElement<'_> for Label<LabelFlag, ForInputFlag, RE> {}
 impl<LabelFlag, ForInputFlag, RE: RawEl> HasClassId for Label<LabelFlag, ForInputFlag, RE> {}
-impl<LabelFlag, ForInputFlag, RE: RawEl> SelectableTextContent for Label<LabelFlag, ForInputFlag, RE> {}
+impl<LabelFlag, ForInputFlag, RE: RawEl> SelectableTextContent
+    for Label<LabelFlag, ForInputFlag, RE>
+{
+}
 
 // ------ ------
 //  Attributes
 // ------ ------
 
 impl<'a, LabelFlag, ForInputFlag, RE: RawEl> Label<LabelFlag, ForInputFlag, RE> {
-    pub fn label(mut self, label: impl IntoElement<'a> + 'a) -> Label<LabelFlagSet, ForInputFlag, RE>
+    pub fn label(
+        mut self,
+        label: impl IntoElement<'a> + 'a,
+    ) -> Label<LabelFlagSet, ForInputFlag, RE>
     where
         LabelFlag: FlagNotSet,
     {

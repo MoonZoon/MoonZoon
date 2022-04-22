@@ -22,11 +22,16 @@ impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> RawSvgEl<DomElement
     pub fn dom_element_type<T: Into<web_sys::SvgElement> + JsCast>(self) -> RawSvgEl<T> {
         let element = self.dom_builder.__internal_element().unchecked_into::<T>();
         let dom_builder = DomBuilder::new(element).__internal_transfer_callbacks(self.dom_builder);
-        RawSvgEl { class_id: self.class_id, dom_builder }
+        RawSvgEl {
+            class_id: self.class_id,
+            dom_builder,
+        }
     }
 }
 
-impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> From<RawSvgEl<DomElement>> for RawElement {
+impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> From<RawSvgEl<DomElement>>
+    for RawElement
+{
     fn from(raw_svg_el: RawSvgEl<DomElement>) -> Self {
         RawElement::SvgEl(raw_svg_el.dom_element_type::<web_sys::SvgElement>())
     }
@@ -58,18 +63,19 @@ impl<DomElement: Into<web_sys::SvgElement>> IntoIterator for RawSvgEl<DomElement
 //     RawEl
 // ------ ------
 
-impl<DomElement> RawEl for RawSvgEl<DomElement> 
-    where DomElement: AsRef<web_sys::Node>
-    + Into<web_sys::SvgElement>
-    + AsRef<web_sys::EventTarget>
-    + AsRef<JsValue>
-    + AsRef<web_sys::Element>
-    + Into<web_sys::Element>
-    + AsRef<web_sys::SvgElement>
-    + Into<web_sys::Node>
-    + Clone
-    + JsCast
-    + 'static
+impl<DomElement> RawEl for RawSvgEl<DomElement>
+where
+    DomElement: AsRef<web_sys::Node>
+        + Into<web_sys::SvgElement>
+        + AsRef<web_sys::EventTarget>
+        + AsRef<JsValue>
+        + AsRef<web_sys::Element>
+        + Into<web_sys::Element>
+        + AsRef<web_sys::SvgElement>
+        + Into<web_sys::Node>
+        + Clone
+        + JsCast
+        + 'static,
 {
     type DomElement = DomElement;
 
@@ -144,12 +150,16 @@ impl<DomElement> RawEl for RawSvgEl<DomElement>
         }
     }
 
-    fn focus(self) -> Self where Self::DomElement: AsRef<web_sys::HtmlElement> {
+    fn focus(self) -> Self
+    where
+        Self::DomElement: AsRef<web_sys::HtmlElement>,
+    {
         unimplemented!();
     }
 
     fn focus_signal(self, _focus: impl Signal<Item = bool> + Unpin + 'static) -> Self
-        where Self::DomElement: AsRef<web_sys::HtmlElement> 
+    where
+        Self::DomElement: AsRef<web_sys::HtmlElement>,
     {
         unimplemented!();
     }

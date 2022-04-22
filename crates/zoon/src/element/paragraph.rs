@@ -67,8 +67,7 @@ impl<EmptyFlag, RE: RawEl> MouseEventAware for Paragraph<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> PointerEventAware for Paragraph<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> TouchEventAware for Paragraph<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> MutableViewport for Paragraph<EmptyFlag, RE> {}
-impl<EmptyFlag, RE: RawEl> Hookable for Paragraph<EmptyFlag, RE> {
-}
+impl<EmptyFlag, RE: RawEl> Hookable for Paragraph<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> AddNearbyElement<'_> for Paragraph<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> HasClassId for Paragraph<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> SelectableTextContent for Paragraph<EmptyFlag, RE> {}

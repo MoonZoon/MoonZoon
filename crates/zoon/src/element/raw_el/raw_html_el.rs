@@ -22,17 +22,24 @@ impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> RawHtmlEl<DomEleme
     pub fn dom_element_type<T: Into<web_sys::HtmlElement> + JsCast>(self) -> RawHtmlEl<T> {
         let element = self.dom_builder.__internal_element().unchecked_into::<T>();
         let dom_builder = DomBuilder::new(element).__internal_transfer_callbacks(self.dom_builder);
-        RawHtmlEl { class_id: self.class_id, dom_builder }
+        RawHtmlEl {
+            class_id: self.class_id,
+            dom_builder,
+        }
     }
 }
 
-impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> From<RawHtmlEl<DomElement>> for RawElement {
+impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> From<RawHtmlEl<DomElement>>
+    for RawElement
+{
     fn from(raw_html_el: RawHtmlEl<DomElement>) -> Self {
         RawElement::El(raw_html_el.dom_element_type::<web_sys::HtmlElement>())
     }
 }
 
-impl<DomElement: Into<web_sys::HtmlElement> + Into<web_sys::Node>> IntoDom for RawHtmlEl<DomElement> {
+impl<DomElement: Into<web_sys::HtmlElement> + Into<web_sys::Node>> IntoDom
+    for RawHtmlEl<DomElement>
+{
     fn into_dom(self) -> Dom {
         self.dom_builder.into_dom()
     }
@@ -58,18 +65,19 @@ impl<DomElement: Into<web_sys::HtmlElement>> IntoIterator for RawHtmlEl<DomEleme
 //     RawEl
 // ------ ------
 
-impl<DomElement> RawEl for RawHtmlEl<DomElement> 
-    where DomElement: AsRef<web_sys::Node>
-    + Into<web_sys::HtmlElement>
-    + AsRef<web_sys::EventTarget>
-    + AsRef<JsValue>
-    + AsRef<web_sys::Element>
-    + Into<web_sys::Element>
-    + AsRef<web_sys::HtmlElement>
-    + Into<web_sys::Node>
-    + Clone
-    + JsCast
-    + 'static
+impl<DomElement> RawEl for RawHtmlEl<DomElement>
+where
+    DomElement: AsRef<web_sys::Node>
+        + Into<web_sys::HtmlElement>
+        + AsRef<web_sys::EventTarget>
+        + AsRef<JsValue>
+        + AsRef<web_sys::Element>
+        + Into<web_sys::Element>
+        + AsRef<web_sys::HtmlElement>
+        + Into<web_sys::Node>
+        + Clone
+        + JsCast
+        + 'static,
 {
     type DomElement = DomElement;
 
@@ -144,12 +152,16 @@ impl<DomElement> RawEl for RawHtmlEl<DomElement>
         }
     }
 
-    fn focus(self) -> Self where Self::DomElement: AsRef<web_sys::HtmlElement> {
+    fn focus(self) -> Self
+    where
+        Self::DomElement: AsRef<web_sys::HtmlElement>,
+    {
         self.update_dom_builder(|dom_builder| dom_builder.focused(true))
     }
 
     fn focus_signal(self, focus: impl Signal<Item = bool> + Unpin + 'static) -> Self
-        where Self::DomElement: AsRef<web_sys::HtmlElement> 
+    where
+        Self::DomElement: AsRef<web_sys::HtmlElement>,
     {
         self.update_dom_builder(|dom_builder| dom_builder.focused_signal(focus))
     }

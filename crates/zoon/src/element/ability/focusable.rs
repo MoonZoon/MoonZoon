@@ -1,7 +1,8 @@
 use crate::*;
 
 pub trait Focusable: UpdateRawEl + Sized
-    where <Self::RawEl as RawEl>::DomElement: AsRef<web_sys::HtmlElement>
+where
+    <Self::RawEl as RawEl>::DomElement: AsRef<web_sys::HtmlElement>,
 {
     fn focus(self, focus: bool) -> Self {
         if focus {

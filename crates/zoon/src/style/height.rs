@@ -139,7 +139,11 @@ impl<'a> Height<'a> {
 
 impl<'a> Style<'a> for Height<'a> {
     fn merge_with_group(self, mut group: StyleGroup<'a>) -> StyleGroup<'a> {
-        let Self { static_css_props, dynamic_css_props, height_mode } = self;
+        let Self {
+            static_css_props,
+            dynamic_css_props,
+            height_mode,
+        } = self;
         group.static_css_props.extend(static_css_props);
         group.dynamic_css_props.extend(dynamic_css_props);
 
@@ -147,8 +151,6 @@ impl<'a> Style<'a> for Height<'a> {
             HeightMode::Exact => "exact_height",
             HeightMode::Fill => "fill_height",
         };
-        group = group.class(height_mode_class);
-
-        group
+        group.class(height_mode_class)
     }
 }

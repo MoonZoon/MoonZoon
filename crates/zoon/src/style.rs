@@ -1,6 +1,12 @@
 use crate::*;
 use once_cell::race::OnceBox;
-use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, convert::TryFrom, iter, mem, sync::Arc};
+use std::{
+    borrow::Cow,
+    collections::{BTreeMap, BTreeSet},
+    convert::TryFrom,
+    iter, mem,
+    sync::Arc,
+};
 use web_sys::{CssStyleDeclaration, CssStyleRule, CssStyleSheet, HtmlStyleElement};
 
 pub mod named_color;
@@ -169,7 +175,7 @@ pub struct StyleGroup<'a> {
     // --- not applicable to global styles (only directly to elements) ---
     pub static_css_classes: StaticCSSClasses<'a>,
     pub dynamic_css_classes: DynamicCSSClasses,
-    pub resize_handlers: Vec<Arc<dyn Fn(U32Width, U32Height)>>
+    pub resize_handlers: Vec<Arc<dyn Fn(U32Width, U32Height)>>,
 }
 
 impl<'a> StyleGroup<'a> {
@@ -281,8 +287,13 @@ impl<'a> StyleGroup<'a> {
         self
     }
 
-    pub fn on_resize(mut self, handler: impl FnOnce(U32Width, U32Height) + Clone + 'static) -> Self {
-        self.resize_handlers.push(Arc::new(move |width, height| handler.clone()(width, height)));
+    pub fn on_resize(
+        mut self,
+        handler: impl FnOnce(U32Width, U32Height) + Clone + 'static,
+    ) -> Self {
+        self.resize_handlers.push(Arc::new(move |width, height| {
+            handler.clone()(width, height)
+        }));
         self
     }
 }

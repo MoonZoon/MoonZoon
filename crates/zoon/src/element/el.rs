@@ -80,8 +80,7 @@ impl<ChildFlag, RE: RawEl> PointerEventAware for El<ChildFlag, RE> {}
 impl<ChildFlag, RE: RawEl> TouchEventAware for El<ChildFlag, RE> {}
 impl<ChildFlag, RE: RawEl> MutableViewport for El<ChildFlag, RE> {}
 impl<ChildFlag, RE: RawEl> ResizableViewport for El<ChildFlag, RE> {}
-impl<ChildFlag, RE: RawEl> Hookable for El<ChildFlag, RE> {
-}
+impl<ChildFlag, RE: RawEl> Hookable for El<ChildFlag, RE> {}
 impl<ChildFlag, RE: RawEl> AddNearbyElement<'_> for El<ChildFlag, RE> {}
 impl<ChildFlag, RE: RawEl> HasClassId for El<ChildFlag, RE> {}
 impl<ChildFlag, RE: RawEl> SelectableTextContent for El<ChildFlag, RE> {}
