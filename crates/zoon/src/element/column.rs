@@ -84,8 +84,7 @@ impl<EmptyFlag, RE: RawEl> PointerEventAware for Column<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> TouchEventAware for Column<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> MutableViewport for Column<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> ResizableViewport for Column<EmptyFlag, RE> {}
-impl<EmptyFlag, RE: RawEl> Hookable for Column<EmptyFlag, RE> {
-}
+impl<EmptyFlag, RE: RawEl> Hookable for Column<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> AddNearbyElement<'_> for Column<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> HasClassId for Column<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> SelectableTextContent for Column<EmptyFlag, RE> {}

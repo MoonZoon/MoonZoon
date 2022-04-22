@@ -79,8 +79,7 @@ impl<'a> Borders<'a> {
     /// ```
     pub fn x_signal(self, border: impl Signal<Item = Border> + Unpin + 'static) -> Self {
         let border = Broadcaster::new(border);
-        self
-            .left_signal(border.signal_cloned())
+        self.left_signal(border.signal_cloned())
             .right_signal(border.signal_cloned())
     }
 
@@ -115,8 +114,7 @@ impl<'a> Borders<'a> {
     /// ```
     pub fn y_signal(self, border: impl Signal<Item = Border> + Unpin + 'static) -> Self {
         let border = Broadcaster::new(border);
-        self
-            .top_signal(border.signal_cloned())
+        self.top_signal(border.signal_cloned())
             .bottom_signal(border.signal_cloned())
     }
 
@@ -271,7 +269,10 @@ impl<'a> Borders<'a> {
 
 impl<'a> Style<'a> for Borders<'a> {
     fn merge_with_group(self, mut group: StyleGroup<'a>) -> StyleGroup<'a> {
-        let Self { static_css_props, dynamic_css_props  } = self;
+        let Self {
+            static_css_props,
+            dynamic_css_props,
+        } = self;
         group.static_css_props.extend(static_css_props);
         group.dynamic_css_props.extend(dynamic_css_props);
         group

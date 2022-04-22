@@ -21,7 +21,7 @@ impl Canvas<WidthFlagNotSet, HeightFlagNotSet, RawHtmlEl<web_sys::HtmlCanvasElem
     }
 }
 
-impl<HeightFlag, RE: RawEl + Into<RawElement>> Element for Canvas<WidthFlagSet, HeightFlag, RE>{
+impl<HeightFlag, RE: RawEl + Into<RawElement>> Element for Canvas<WidthFlagSet, HeightFlag, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
@@ -55,8 +55,7 @@ impl<WidthFlag, HeightFlag, RE: RawEl> KeyboardEventAware for Canvas<WidthFlag, 
 impl<WidthFlag, HeightFlag, RE: RawEl> MouseEventAware for Canvas<WidthFlag, HeightFlag, RE> {}
 impl<WidthFlag, HeightFlag, RE: RawEl> PointerEventAware for Canvas<WidthFlag, HeightFlag, RE> {}
 impl<WidthFlag, HeightFlag, RE: RawEl> TouchEventAware for Canvas<WidthFlag, HeightFlag, RE> {}
-impl<WidthFlag, HeightFlag, RE: RawEl> Hookable for Canvas<WidthFlag, HeightFlag, RE> {
-}
+impl<WidthFlag, HeightFlag, RE: RawEl> Hookable for Canvas<WidthFlag, HeightFlag, RE> {}
 impl<WidthFlag, HeightFlag, RE: RawEl> AddNearbyElement<'_> for Canvas<WidthFlag, HeightFlag, RE> {}
 impl<WidthFlag, HeightFlag, RE: RawEl> HasClassId for Canvas<WidthFlag, HeightFlag, RE> {}
 

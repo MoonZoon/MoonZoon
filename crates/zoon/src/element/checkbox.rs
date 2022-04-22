@@ -21,7 +21,14 @@ pub struct Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: 
 }
 
 impl
-    Checkbox<IdFlagNotSet, OnChangeFlagNotSet, LabelFlagNotSet, IconFlagNotSet, CheckedFlagNotSet, RawHtmlEl<web_sys::HtmlDivElement>>
+    Checkbox<
+        IdFlagNotSet,
+        OnChangeFlagNotSet,
+        LabelFlagNotSet,
+        IconFlagNotSet,
+        CheckedFlagNotSet,
+        RawHtmlEl<web_sys::HtmlDivElement>,
+    >
 {
     pub fn new() -> Self {
         let check_state = Mutable::new(CheckState::NotSet);
@@ -110,7 +117,8 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> Keyboard
 }
 impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> Focusable
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
-    where RE::DomElement: AsRef<web_sys::HtmlElement>
+where
+    RE::DomElement: AsRef<web_sys::HtmlElement>,
 {
 }
 impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> MouseEventAware

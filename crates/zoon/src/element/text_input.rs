@@ -1,5 +1,5 @@
 use crate::*;
-use std::{iter, borrow::Cow, marker::PhantomData};
+use std::{borrow::Cow, iter, marker::PhantomData};
 
 mod input_type;
 pub use input_type::*;
@@ -52,7 +52,14 @@ impl
     }
 }
 
-impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl + Into<RawElement>> Element
+impl<
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE: RawEl + Into<RawElement>,
+    > Element
     for TextInput<
         IdFlagSet,
         OnChangeFlag,
@@ -69,7 +76,14 @@ impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: R
     }
 }
 
-impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl + Into<RawElement>> Element
+impl<
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE: RawEl + Into<RawElement>,
+    > Element
     for TextInput<
         IdFlagNotSet,
         OnChangeFlag,
@@ -86,8 +100,16 @@ impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: R
     }
 }
 
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
-    IntoIterator
+impl<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE: RawEl,
+    > IntoIterator
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -108,8 +130,16 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
     }
 }
 
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
-    UpdateRawEl
+impl<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE: RawEl,
+    > UpdateRawEl
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -133,8 +163,16 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
 //   Abilities
 // ------ ------
 
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
-    Styleable<'_>
+impl<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE: RawEl,
+    > Styleable<'_>
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -147,8 +185,16 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
     >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
-    KeyboardEventAware
+impl<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE: RawEl,
+    > KeyboardEventAware
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -161,8 +207,16 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
     >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
-    Focusable
+impl<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE: RawEl,
+    > Focusable
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -173,12 +227,11 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         ReadOnlyFlag,
         RE,
     >
-    where RE::DomElement: AsRef<web_sys::HtmlElement>
+where
+    RE::DomElement: AsRef<web_sys::HtmlElement>,
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
-    MouseEventAware
-    for TextInput<
+impl<
         IdFlag,
         OnChangeFlag,
         PlaceholderFlag,
@@ -186,26 +239,8 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
         LabelFlag,
         InputTypeFlag,
         ReadOnlyFlag,
-        RE,
-    >
-{
-}
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
-    PointerEventAware
-    for TextInput<
-        IdFlag,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlag,
-        InputTypeFlag,
-        ReadOnlyFlag,
-        RE,
-    >
-{
-}
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
-    TouchEventAware
+        RE: RawEl,
+    > MouseEventAware
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -218,8 +253,16 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
     >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
-    Hookable
+impl<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE: RawEl,
+    > PointerEventAware
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -232,8 +275,16 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
     >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
-    AddNearbyElement<'_>
+impl<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE: RawEl,
+    > TouchEventAware
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -246,8 +297,16 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
     >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
-    HasClassId
+impl<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE: RawEl,
+    > Hookable
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -260,8 +319,60 @@ impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, 
     >
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl>
-    SelectableTextContent
+impl<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE: RawEl,
+    > AddNearbyElement<'_>
+    for TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE,
+    >
+{
+}
+impl<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE: RawEl,
+    > HasClassId
+    for TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE,
+    >
+{
+}
+impl<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlag,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE: RawEl,
+    > SelectableTextContent
     for TextInput<
         IdFlag,
         OnChangeFlag,
@@ -338,12 +449,8 @@ impl<
         PlaceholderFlag: FlagNotSet,
     {
         self.raw_el = match placeholder.text {
-            PlaceholderText::Static(text) => {
-                self.raw_el.attr("placeholder", &text)
-            }
-            PlaceholderText::Dynamic(text) => {
-                self.raw_el.attr_signal("placeholder", text)
-            }
+            PlaceholderText::Static(text) => self.raw_el.attr("placeholder", &text),
+            PlaceholderText::Dynamic(text) => self.raw_el.attr_signal("placeholder", text),
         };
         self.raw_el = self.raw_el.style_group(placeholder.style_group);
         self.into_type()

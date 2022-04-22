@@ -4,10 +4,10 @@ use crate::config::Config;
 use crate::run_backend::run_backend;
 use crate::set_env_vars::set_env_vars;
 use crate::watcher::{BackendWatcher, FrontendWatcher};
-use parking_lot::Mutex;
-use std::sync::Arc;
 use anyhow::{Context, Error};
 use fehler::throws;
+use parking_lot::Mutex;
+use std::sync::Arc;
 use tokio::{join, process::Child, signal, time::Duration};
 
 const DEBOUNCE_TIME: Duration = Duration::from_millis(100);
@@ -18,9 +18,10 @@ pub async fn start(release: bool, open: bool) {
     set_env_vars(&config, release);
 
     let server = Arc::new(Mutex::new(None));
-    
+
     let frontend_watcher = build_and_watch_frontend(&config, release).await?;
-    let backend_watcher = build_run_and_watch_backend(&config, release, open, Arc::clone(&server)).await?;
+    let backend_watcher =
+        build_run_and_watch_backend(&config, release, open, Arc::clone(&server)).await?;
 
     signal::ctrl_c().await?;
 
@@ -47,7 +48,12 @@ async fn build_and_watch_frontend(config: &Config, release: bool) -> FrontendWat
 }
 
 #[throws]
-async fn build_run_and_watch_backend(config: &Config, release: bool, open: bool, server: Arc<Mutex<Option<Child>>>) -> BackendWatcher {
+async fn build_run_and_watch_backend(
+    config: &Config,
+    release: bool,
+    open: bool,
+    server: Arc<Mutex<Option<Child>>>,
+) -> BackendWatcher {
     build_and_run_backend(config, release, &server).await;
     if open {
         open_in_browser(config)?;
@@ -67,7 +73,7 @@ async fn build_and_run_backend(config: &Config, release: bool, server: &Mutex<Op
         }
         Ok(server_process) => {
             *server.lock() = Some(server_process);
-        },
+        }
     }
 }
 

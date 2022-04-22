@@ -1,7 +1,7 @@
 use crate::*;
 use once_cell::race::OnceBox;
 use std::mem::ManuallyDrop;
-use std::{cell::Cell, rc::Rc, mem};
+use std::{cell::Cell, mem, rc::Rc};
 use web_sys::{EventTarget, Node};
 
 mod raw_html_el;
@@ -197,10 +197,10 @@ pub trait RawEl: Sized {
         }
 
         if group.selector.is_empty() {
-            let StyleGroup { 
-                selector: _, 
-                static_css_props, 
-                dynamic_css_props, 
+            let StyleGroup {
+                selector: _,
+                static_css_props,
+                dynamic_css_props,
                 static_css_classes: _,
                 dynamic_css_classes: _,
                 resize_handlers,
@@ -312,7 +312,10 @@ pub trait RawEl: Sized {
         Some(Self::from_dom_element(element.dyn_into().ok()?))
     }
 
-    fn find_html_child(&self, selectors: impl AsRef<str>) -> Option<RawHtmlEl<web_sys::HtmlElement>> {
+    fn find_html_child(
+        &self,
+        selectors: impl AsRef<str>,
+    ) -> Option<RawHtmlEl<web_sys::HtmlElement>> {
         let parent_dom_element = self.dom_element();
         let parent: &web_sys::Element = parent_dom_element.as_ref();
         let child = parent
@@ -360,8 +363,11 @@ pub trait RawEl: Sized {
 
     fn from_dom_element(dom_element: Self::DomElement) -> Self;
 
-    fn focus(self) -> Self where Self::DomElement: AsRef<web_sys::HtmlElement>;
+    fn focus(self) -> Self
+    where
+        Self::DomElement: AsRef<web_sys::HtmlElement>;
 
     fn focus_signal(self, focus: impl Signal<Item = bool> + Unpin + 'static) -> Self
-        where Self::DomElement: AsRef<web_sys::HtmlElement>;
+    where
+        Self::DomElement: AsRef<web_sys::HtmlElement>;
 }
