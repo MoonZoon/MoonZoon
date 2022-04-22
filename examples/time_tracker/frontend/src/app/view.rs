@@ -18,6 +18,7 @@ pub fn content() -> impl Element {
 }
 
 fn header() -> impl Element {
+    let hamburger_id = "hamburger";
     Row::with_tag(Tag::Nav)
         .s(Height::new(64))
         .s(Background::new().color_signal(theme::background_1()))
@@ -33,8 +34,8 @@ fn header() -> impl Element {
         .item_signal(super::saving().signal().map_true(|| "Saving..."))
         .item(theme_button())
         .item_signal(super::wide_screen().map_true(auth_controls))
-        .item_signal(super::wide_screen().map_false(hamburger))
-        .element_below(El::new().child_signal(super::show_menu_panel().map_true(menu_panel)))
+        .item_signal(super::wide_screen().map_false(|| hamburger(hamburger_id)))
+        .element_below(El::new().child_signal(super::show_menu_panel().map_true(|| menu_panel(hamburger_id))))
 }
 
 fn logo() -> impl Element {
@@ -68,9 +69,10 @@ fn theme_button() -> impl Element {
     )
 }
 
-fn hamburger() -> impl Element {
+fn hamburger(id: &str) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
+        .id(id)
         .s(Height::fill())
         .s(Align::new().right())
         .s(Background::new().color_signal(hovered_signal.map_bool_signal(
@@ -90,7 +92,7 @@ fn hamburger() -> impl Element {
         .class_id(super::set_hamburger_class_id)
 }
 
-fn menu_panel() -> impl Element {
+fn menu_panel(hamburger_id: &str) -> impl Element {
     Column::new()
         .s(Background::new().color_signal(theme::background_0()))
         .s(Font::new().color_signal(theme::font_0()))
@@ -101,10 +103,7 @@ fn menu_panel() -> impl Element {
             Shadow::new().y(8).blur(16).color(color)
         ])))
         .s(RoundedCorners::new().bottom(10))
-        .on_click_outside(
-            super::close_menu, 
-            Some(super::hamburger_class_id().get_cloned())
-        )
+        .on_click_outside(super::close_menu, Some(hamburger_id))
         .after_remove(|_| super::close_menu())
         .items(menu_links(true))
         .item(El::new().s(Height::new(10)))
