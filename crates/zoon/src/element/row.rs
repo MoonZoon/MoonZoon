@@ -87,7 +87,7 @@ impl<EmptyFlag, MultilineFlag, RE: RawEl> AddNearbyElement<'_>
     for Row<EmptyFlag, MultilineFlag, RE>
 {
 }
-impl<EmptyFlag, MultilineFlag, RE: RawEl> HasClassId for Row<EmptyFlag, MultilineFlag, RE> {}
+impl<EmptyFlag, MultilineFlag, RE: RawEl> HasIds for Row<EmptyFlag, MultilineFlag, RE> {}
 impl<EmptyFlag, MultilineFlag, RE: RawEl> SelectableTextContent
     for Row<EmptyFlag, MultilineFlag, RE>
 {

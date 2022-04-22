@@ -68,7 +68,7 @@ impl<UrlFlag, DescriptionFlag, RE: RawEl> AddNearbyElement<'_>
     for Image<UrlFlag, DescriptionFlag, RE>
 {
 }
-impl<UrlFlag, DescriptionFlag, RE: RawEl> HasClassId for Image<UrlFlag, DescriptionFlag, RE> {}
+impl<UrlFlag, DescriptionFlag, RE: RawEl> HasIds for Image<UrlFlag, DescriptionFlag, RE> {}
 
 // ------ ------
 //  Attributes

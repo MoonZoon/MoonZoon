@@ -58,7 +58,6 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         handler: impl FnOnce() + Clone + 'static,
         ignored_ids: impl IntoIterator<Item = impl IntoCowStr<'a>>,
     ) -> Self {
-        let handler = move || handler.clone()();
         let ids_selector = ignored_ids
             .into_iter()
             .map(|id| crate::format!("#{}", id.into_cow_str()))
@@ -72,53 +71,56 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                 if dom_element.contains(Some(target.unchecked_ref())) {
                     return;
                 }
-                if dom_element.closest(&ids_selector).expect_throw("failed to get closest elements").is_some() {
+                if target
+                    .unchecked_ref::<web_sys::Element>()
+                    .closest(&ids_selector)
+                    .expect_throw("failed to get closest elements")
+                    .is_some() 
+                {
                     return;
                 }
-                handler();
+                (handler.clone())();
             })
         })
     }
 
-    fn on_click_outside_event(
+    fn on_click_outside_event<'a>(
         self,
         handler: impl FnOnce(MouseEvent) + Clone + 'static,
-        ignored_class_ids: impl IntoIterator<Item = ClassId>,
+        ignored_ids: impl IntoIterator<Item = impl IntoCowStr<'a>>,
     ) -> Self {
-        let mut ignored_class_ids = ignored_class_ids.into_iter().collect::<Vec<_>>();
+        let ids_selector = ignored_ids
+            .into_iter()
+            .map(|id| crate::format!("#{}", id.into_cow_str()))
+            .collect::<Vec<_>>()
+            .join(", ");
 
         self.update_raw_el(move |raw_el| {
-            ignored_class_ids.push(raw_el.class_id());
-
+            let dom_element = raw_el.dom_element().unchecked_into::<web_sys::Element>();
             raw_el.global_event_handler(move |event: events::Click| {
-                let selector = ignored_class_ids
-                    .iter()
-                    .filter_map(|class_id| {
-                        class_id.map(|option_class_id| Some([".", &option_class_id?].concat()))
-                    })
-                    .collect::<Vec<_>>()
-                    .join(", ");
-
-                if closest(event.target(), &selector).is_none() {
-                    let mouse_event = MouseEvent {
-                        x: event.x(),
-                        y: event.y(),
-                        movement_x: 0,
-                        movement_y: 0,
-                        raw_event: RawMouseEvent::Click(event),
-                    };
-                    (handler.clone())(mouse_event)
+                let target = event.target().expect_throw("failed to get event target");
+                if dom_element.contains(Some(target.unchecked_ref())) {
+                    return;
                 }
+                if target
+                    .unchecked_ref::<web_sys::Element>()
+                    .closest(&ids_selector)
+                    .expect_throw("failed to get closest elements")
+                    .is_some() 
+                {
+                    return;
+                }
+                let mouse_event = MouseEvent {
+                    x: event.x(),
+                    y: event.y(),
+                    movement_x: 0,
+                    movement_y: 0,
+                    raw_event: RawMouseEvent::Click(event),
+                };
+                (handler.clone())(mouse_event);
             })
         })
     }
-}
-
-fn closest(target: Option<web_sys::EventTarget>, selector: &str) -> Option<web_sys::Element> {
-    target?
-        .dyn_ref::<web_sys::Element>()?
-        .closest(selector)
-        .ok()?
 }
 
 // ------ MouseEvent ------

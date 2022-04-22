@@ -85,7 +85,7 @@ impl<LabelFlag, ToFlag, RE: RawEl> PointerEventAware for Link<LabelFlag, ToFlag,
 impl<LabelFlag, ToFlag, RE: RawEl> TouchEventAware for Link<LabelFlag, ToFlag, RE> {}
 impl<LabelFlag, ToFlag, RE: RawEl> Hookable for Link<LabelFlag, ToFlag, RE> {}
 impl<LabelFlag, ToFlag, RE: RawEl> AddNearbyElement<'_> for Link<LabelFlag, ToFlag, RE> {}
-impl<LabelFlag, ToFlag, RE: RawEl> HasClassId for Link<LabelFlag, ToFlag, RE> {}
+impl<LabelFlag, ToFlag, RE: RawEl> HasIds for Link<LabelFlag, ToFlag, RE> {}
 impl<LabelFlag, ToFlag, RE: RawEl> SelectableTextContent for Link<LabelFlag, ToFlag, RE> {}
 
 // ------ ------

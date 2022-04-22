@@ -68,6 +68,10 @@ pub trait RawEl: Sized {
         f(self, dom_element)
     }
 
+    fn id<'a>(self, id: impl IntoCowStr<'a>) -> Self {
+        self.attr("id", &id.into_cow_str())
+    }
+
     fn attr(self, name: &str, value: &str) -> Self {
         self.update_dom_builder(|dom_builder| dom_builder.attribute(name, value))
     }
