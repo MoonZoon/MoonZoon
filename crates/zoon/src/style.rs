@@ -1,6 +1,6 @@
 use crate::*;
 use once_cell::race::OnceBox;
-use std::{borrow::Cow, collections::BTreeMap, convert::TryFrom, iter, mem, sync::Arc};
+use std::{borrow::Cow, collections::{BTreeMap, BTreeSet}, convert::TryFrom, iter, mem, sync::Arc};
 use web_sys::{CssStyleDeclaration, CssStyleRule, CssStyleSheet, HtmlStyleElement};
 
 pub mod named_color;
@@ -121,6 +121,14 @@ pub fn box_css_signal(
     Box::new(signal.map(|value| Box::new(value) as Box<dyn IntoOptionCowStr<'static>>))
 }
 
+// ------ StaticCSSClasses ------
+
+pub type StaticCSSClasses<'a> = BTreeSet<&'a str>;
+
+// ------ DynamicCSSClasses ------
+
+pub type DynamicCSSClasses = BTreeMap<Cow<'static, str>, Box<dyn Signal<Item = bool> + Unpin>>;
+
 // ------ units ------
 
 pub fn px<'a>(px: impl IntoCowStr<'a>) -> Cow<'a, str> {
@@ -156,6 +164,9 @@ pub struct StyleGroup<'a> {
     pub static_css_props: StaticCSSProps<'a>,
     pub dynamic_css_props: DynamicCSSProps,
     pub task_handles: Vec<TaskHandle>,
+    // --- not applicable to global styles (only directly to elements) ---
+    pub static_css_classes: StaticCSSClasses<'a>,
+    pub dynamic_css_classes: DynamicCSSClasses,
 }
 
 impl<'a> StyleGroup<'a> {
@@ -191,9 +202,7 @@ impl<'a> StyleGroup<'a> {
     pub fn new(selector: impl IntoCowStr<'a>) -> Self {
         Self {
             selector: selector.into_cow_str(),
-            static_css_props: StaticCSSProps::default(),
-            dynamic_css_props: DynamicCSSProps::default(),
-            task_handles: Vec::default(),
+            ..Default::default()
         }
     }
 
