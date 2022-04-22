@@ -201,7 +201,6 @@ pub trait RawEl: Sized {
                 selector: _, 
                 static_css_props, 
                 dynamic_css_props, 
-                task_handles, 
                 static_css_classes: _,
                 dynamic_css_classes: _,
                 resize_handlers,
@@ -216,9 +215,6 @@ pub trait RawEl: Sized {
             }
             for (name, value) in dynamic_css_props {
                 self = self.style_signal(name, value);
-            }
-            if not(task_handles.is_empty()) {
-                self = self.after_remove(move |_| drop(task_handles))
             }
             if not(resize_handlers.is_empty()) {
                 self = self.on_resize(move |width, height| {

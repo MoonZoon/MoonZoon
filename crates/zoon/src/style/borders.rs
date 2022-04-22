@@ -1,8 +1,5 @@
 use crate::*;
-use std::{
-    borrow::{Borrow, Cow},
-    sync::Arc,
-};
+use std::borrow::{Borrow, Cow};
 
 // ------ Borders ------
 
@@ -13,8 +10,6 @@ pub struct Borders<'a> {
     static_css_props: StaticCSSProps<'a>,
     /// Customizable properties that can be added.
     dynamic_css_props: DynamicCSSProps,
-    /// Handles to update borders from signals calls.
-    task_handles: Vec<TaskHandle>,
 }
 
 impl<'a> Borders<'a> {
@@ -47,17 +42,10 @@ impl<'a> Borders<'a> {
     ///     .label("hover me");
     /// ```
     pub fn all_signal(border: impl Signal<Item = Border> + Unpin + 'static) -> Self {
-        let mutable = Mutable::new(Border::new());
-        let mut this = Self::default()
-            .x_signal(mutable.signal_cloned())
-            .y_signal(mutable.signal_cloned());
-        this.task_handles
-            .push(Task::start_droppable(border.for_each_sync(
-                move |new_border| {
-                    mutable.set(new_border);
-                },
-            )));
-        this
+        let border = Broadcaster::new(border);
+        Self::default()
+            .x_signal(border.signal_cloned())
+            .y_signal(border.signal_cloned())
     }
 
     /// Set left & right borders.
@@ -89,18 +77,11 @@ impl<'a> Borders<'a> {
     ///     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
     ///     .label("hover me");
     /// ```
-    pub fn x_signal(mut self, border: impl Signal<Item = Border> + Unpin + 'static) -> Self {
-        let mutable = Mutable::new(Border::new());
-        self = self
-            .left_signal(mutable.signal_cloned())
-            .right_signal(mutable.signal_cloned());
-        self.task_handles
-            .push(Task::start_droppable(border.for_each_sync(
-                move |new_border| {
-                    mutable.set(new_border);
-                },
-            )));
+    pub fn x_signal(self, border: impl Signal<Item = Border> + Unpin + 'static) -> Self {
+        let border = Broadcaster::new(border);
         self
+            .left_signal(border.signal_cloned())
+            .right_signal(border.signal_cloned())
     }
 
     /// Set bottom and top borders.
@@ -132,18 +113,11 @@ impl<'a> Borders<'a> {
     ///     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
     ///     .label("hover me");
     /// ```
-    pub fn y_signal(mut self, border: impl Signal<Item = Border> + Unpin + 'static) -> Self {
-        let mutable = Mutable::new(Border::new());
-        self = self
-            .top_signal(mutable.signal_cloned())
-            .bottom_signal(mutable.signal_cloned());
-        self.task_handles
-            .push(Task::start_droppable(border.for_each_sync(
-                move |new_border| {
-                    mutable.set(new_border);
-                },
-            )));
+    pub fn y_signal(self, border: impl Signal<Item = Border> + Unpin + 'static) -> Self {
+        let border = Broadcaster::new(border);
         self
+            .top_signal(border.signal_cloned())
+            .bottom_signal(border.signal_cloned())
     }
 
     /// Set the top border.
@@ -297,10 +271,9 @@ impl<'a> Borders<'a> {
 
 impl<'a> Style<'a> for Borders<'a> {
     fn merge_with_group(self, mut group: StyleGroup<'a>) -> StyleGroup<'a> {
-        let Self { static_css_props, dynamic_css_props, task_handles } = self;
+        let Self { static_css_props, dynamic_css_props  } = self;
         group.static_css_props.extend(static_css_props);
         group.dynamic_css_props.extend(dynamic_css_props);
-        group.task_handles.extend(task_handles);
         group
     }
 }
@@ -315,7 +288,7 @@ pub struct Border {
     /// Style to apply.
     style: BorderStyle,
     /// Color with Hsluv standard.
-    color: Arc<HSLuv>,
+    color: HSLuv,
 }
 
 impl Border {
@@ -325,7 +298,7 @@ impl Border {
         Self {
             width: 1,
             style: BorderStyle::Solid,
-            color: Arc::new(hsluv!(0, 0, 0)),
+            color: hsluv!(0, 0, 0),
         }
     }
 
@@ -346,7 +319,7 @@ impl Border {
     /// ```
     pub fn color(mut self, color: impl Into<Option<HSLuv>>) -> Self {
         if let Some(color) = color.into() {
-            self.color = Arc::new(color);
+            self.color = color;
         }
         self
     }
