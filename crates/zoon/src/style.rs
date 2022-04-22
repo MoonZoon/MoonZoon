@@ -166,7 +166,6 @@ pub struct StyleGroup<'a> {
     pub selector: Cow<'a, str>,
     pub static_css_props: StaticCSSProps<'a>,
     pub dynamic_css_props: DynamicCSSProps,
-    pub task_handles: Vec<TaskHandle>,
     // --- not applicable to global styles (only directly to elements) ---
     pub static_css_classes: StaticCSSClasses<'a>,
     pub dynamic_css_classes: DynamicCSSClasses,
