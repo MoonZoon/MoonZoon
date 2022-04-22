@@ -84,7 +84,7 @@ fn artboard() -> impl Element {
             let dom_element = dom_element.unchecked_into();
             this.event_handler(move |event: events_extra::PointerLeave| {
                 if let Some(target) = event.target() {
-                    // we are on leaving from the element itself, not only from its child
+                    // we are leaving from the element itself, not only from its child
                     if target == dom_element {
                         pan.set_neq(false);
                     }
