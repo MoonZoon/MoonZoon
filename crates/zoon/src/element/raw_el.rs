@@ -192,8 +192,23 @@ pub trait RawEl: Sized {
     ) -> Self;
 
     fn style_group(mut self, mut group: StyleGroup) -> Self {
+        for class in group.static_css_classes {
+            self = self.class(class);
+        }
+        for (class, enabled) in group.dynamic_css_classes {
+            self = self.class_signal(class, enabled);
+        }
+
         if group.selector.is_empty() {
-            let StyleGroup { selector: _, static_css_props, dynamic_css_props, task_handles } = group;
+            let StyleGroup { 
+                selector: _, 
+                static_css_props, 
+                dynamic_css_props, 
+                task_handles, 
+                static_css_classes: _, 
+                dynamic_css_classes: _, 
+            } = group;
+
             for (name, CssPropValue { value, important }) in static_css_props {
                 if important {
                     self = self.style_important(name, &value);
