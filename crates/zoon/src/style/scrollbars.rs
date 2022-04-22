@@ -74,7 +74,7 @@ impl<'a> Scrollbars<'a> {
 }
 
 impl<'a> Style<'a> for Scrollbars<'a> {
-    fn merge_with_group(self, group: StyleGroup<'a>) -> StyleGroup<'a> {
+    fn merge_with_group(self, mut group: StyleGroup<'a>) -> StyleGroup<'a> {
         let Self { static_css_props } = self;
         group.static_css_props.extend(static_css_props);
         group

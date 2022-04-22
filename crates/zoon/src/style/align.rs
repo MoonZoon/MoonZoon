@@ -204,7 +204,7 @@ impl Align {
 }
 
 impl<'a> Style<'a> for Align {
-    fn merge_with_group(self, group: StyleGroup<'a>) -> StyleGroup<'a> {
+    fn merge_with_group(self, mut group: StyleGroup<'a>) -> StyleGroup<'a> {
         for alignment in self.alignments {
             group = group.class(alignment.into());
         }
