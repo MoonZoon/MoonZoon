@@ -139,42 +139,16 @@ impl<'a> Height<'a> {
 
 impl<'a> Style<'a> for Height<'a> {
     fn merge_with_group(self, group: StyleGroup<'a>) -> StyleGroup<'a> {
-        
-    }
-    fn apply_to_raw_el<E: RawEl>(
-        self,
-        mut raw_el: E,
-        style_group: Option<StyleGroup<'a>>,
-    ) -> (E, Option<StyleGroup<'a>>) {
-        let height_mode_class = match self.height_mode {
+        let Self { static_css_props, dynamic_css_props, height_mode } = self;
+        group.static_css_props.extend(static_css_props);
+        group.dynamic_css_props.extend(dynamic_css_props);
+
+        let height_mode_class = match height_mode {
             HeightMode::Exact => "exact_height",
             HeightMode::Fill => "fill_height",
         };
-        raw_el = raw_el.class(&height_mode_class);
+        group = group.class(height_mode_class);
 
-        if let Some(mut style_group) = style_group {
-            for (name, css_prop_value) in self.static_css_props {
-                style_group = if css_prop_value.important {
-                    style_group.style(name, css_prop_value.value)
-                } else {
-                    style_group.style_important(name, css_prop_value.value)
-                };
-            }
-            for (name, value) in self.dynamic_css_props {
-                style_group = style_group.style_signal(name, value);
-            }
-            return (raw_el, Some(style_group));
-        }
-        for (name, css_prop_value) in self.static_css_props {
-            raw_el = if css_prop_value.important {
-                raw_el.style_important(name, &css_prop_value.value)
-            } else {
-                raw_el.style(name, &css_prop_value.value)
-            };
-        }
-        for (name, value) in self.dynamic_css_props {
-            raw_el = raw_el.style_signal(name, value);
-        }
-        (raw_el, None)
+        group
     }
 }

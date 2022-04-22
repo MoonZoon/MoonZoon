@@ -205,19 +205,12 @@ impl Align {
 
 impl<'a> Style<'a> for Align {
     fn merge_with_group(self, group: StyleGroup<'a>) -> StyleGroup<'a> {
-        
-    }
-    fn apply_to_raw_el<E: RawEl>(
-        self,
-        mut raw_el: E,
-        style_group: Option<StyleGroup<'a>>,
-    ) -> (E, Option<StyleGroup<'a>>) {
         for alignment in self.alignments {
-            raw_el = raw_el.class(alignment.into());
+            group = group.class(alignment.into());
         }
         for (alignment, enabled) in self.dynamic_alignments {
-            raw_el = raw_el.class_signal(<&str>::from(alignment), enabled);
+            group = group.class_signal(<&str>::from(alignment), enabled);
         }
-        (raw_el, style_group)
+        group
     }
 }

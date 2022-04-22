@@ -7,8 +7,7 @@ use std::{borrow::Cow, mem};
 pub struct Transform {
     /// Vector to chain transformations.
     transformations: Vec<String>,
-    /// Customizable css properties which can be added.
-    dynamic_css_props: DynamicCSSProps,
+    self_signal: Option<Box<dyn Signal<Item = Option<Self>> + Unpin>>,
 }
 
 impl Transform {
@@ -33,13 +32,8 @@ impl Transform {
         transform: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
     ) -> Self {
         let mut this = Self::default();
-        let transform = transform.map(|transform| {
-            transform
-                .into()
-                .map(|mut transform| transform.transformations_into_value())
-        });
-        this.dynamic_css_props
-            .insert("transform".into(), box_css_signal(transform));
+        let transform = transform.map(|transform| transform.into());
+        this.self_signal = Some(Box::new(transform));
         this
     }
 
@@ -181,42 +175,15 @@ impl Transform {
 
 impl<'a> Style<'a> for Transform {
     fn merge_with_group(self, group: StyleGroup<'a>) -> StyleGroup<'a> {
-        
-    }
-    fn apply_to_raw_el<E: RawEl>(
-        mut self,
-        mut raw_el: E,
-        style_group: Option<StyleGroup<'a>>,
-    ) -> (E, Option<StyleGroup<'a>>) {
-        let mut static_css_props = StaticCSSProps::default();
+        let Self { transformations, self_signal } = self;
 
-        if self.dynamic_css_props.is_empty() {
-            static_css_props.insert("transform", self.transformations_into_value());
+        if let Some(self_signal) = self_signal {
+            group = group.style_signal("transform", self_signal.map(|transform| {
+                transform.map(|transform| transform.transformations_into_value())
+            }));
+        } else {
+            group = group.style("transform", self.transformations_into_value());
         }
-
-        if let Some(mut style_group) = style_group {
-            for (name, css_prop_value) in static_css_props {
-                style_group = if css_prop_value.important {
-                    style_group.style(name, css_prop_value.value)
-                } else {
-                    style_group.style_important(name, css_prop_value.value)
-                };
-            }
-            for (name, value) in self.dynamic_css_props {
-                style_group = style_group.style_signal(name, value);
-            }
-            return (raw_el, Some(style_group));
-        }
-        for (name, css_prop_value) in static_css_props {
-            raw_el = if css_prop_value.important {
-                raw_el.style_important(name, &css_prop_value.value)
-            } else {
-                raw_el.style(name, &css_prop_value.value)
-            };
-        }
-        for (name, value) in self.dynamic_css_props {
-            raw_el = raw_el.style_signal(name, value);
-        }
-        (raw_el, None)
+        group
     }
 }
