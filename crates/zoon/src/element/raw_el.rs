@@ -73,7 +73,7 @@ pub trait RawEl: Sized {
     }
 
     fn attr(self, name: &str, value: &str) -> Self {
-        self.update_dom_builder(|dom_builder| dom_builder.attribute(name, value))
+        self.update_dom_builder(|dom_builder| dom_builder.attr(name, value))
     }
 
     fn attr_signal<'a>(
@@ -82,7 +82,7 @@ pub trait RawEl: Sized {
         value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
     ) -> Self {
         self.update_dom_builder(|dom_builder| {
-            dom_builder.attribute_signal(
+            dom_builder.attr_signal(
                 name.into_cow_str_wrapper(),
                 value.map(|value| value.into_option_cow_str_wrapper()),
             )
@@ -90,7 +90,7 @@ pub trait RawEl: Sized {
     }
 
     fn prop(self, name: &str, value: &str) -> Self {
-        self.update_dom_builder(|dom_builder| dom_builder.property(name, JsValue::from_str(value)))
+        self.update_dom_builder(|dom_builder| dom_builder.prop(name, JsValue::from_str(value)))
     }
 
     fn prop_signal<'a>(
@@ -99,7 +99,7 @@ pub trait RawEl: Sized {
         value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
     ) -> Self {
         self.update_dom_builder(|dom_builder| {
-            dom_builder.property_signal(
+            dom_builder.prop_signal(
                 name.into_cow_str_wrapper(),
                 value.map(|value| value.into_option_cow_str_wrapper()),
             )
