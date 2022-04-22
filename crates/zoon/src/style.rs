@@ -220,7 +220,7 @@ impl<'a> StyleGroup<'a> {
         self
     }
 
-    /// Add a css property to a specific selector followed by the`!important`
+    /// Add a css property to a specific selector followed by the `!important`
     /// rule. This example shows how to add the rule event if
     /// it is not necessary in this specific case for displaying the correct
     /// background.
@@ -260,6 +260,21 @@ impl<'a> StyleGroup<'a> {
     ) -> Self {
         self.dynamic_css_props
             .insert(name.into_cow_str(), box_css_signal(value));
+        self
+    }
+
+    pub fn class(mut self, class: &'a str) -> Self {
+        self.static_css_classes.insert(class);
+        self
+    }
+
+    pub fn class_signal(
+        mut self,
+        class: impl IntoCowStr<'static>,
+        enabled: impl Signal<Item = bool> + Unpin + 'static,
+    ) -> Self {
+        self.dynamic_css_classes
+            .insert(class.into_cow_str(), Box::new(enabled));
         self
     }
 }
