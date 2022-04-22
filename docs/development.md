@@ -15,7 +15,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
   ```bash
   cargo install cargo-make --no-default-features
-  makers -V # makers 0.35.10
+  makers -V # makers 0.35.11
   ```
   - _Note_: `cargo-make` is needed only for MoonZoon development and running its examples, you don't need it for your apps.
 
@@ -53,6 +53,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/time_tracker/Cargo.toml",
         // "examples/timer/Cargo.toml",
         // "examples/todomvc/Cargo.toml",
+        // "examples/video/Cargo.toml",
         // "examples/viewport/Cargo.toml",
     ],
     "rust-analyzer.diagnostics.disabled": [
@@ -93,6 +94,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   - `time_tracker`
   - `timer`
   - `todomvc`
+  - `video`
   - `viewport`
 
 ```sh
