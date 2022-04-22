@@ -39,6 +39,12 @@ macro_rules! make_event {
             {
                 self.target()?.dyn_into().ok()
             }
+
+            // extra
+            #[inline]
+            pub fn related_target(&self) -> Option<EventTarget> {
+                self.event.related_target()
+            }
         }
     };
 }

@@ -80,32 +80,16 @@ fn artboard() -> impl Element {
                 });
             })
         }))
-        .apply(|this| {
-            let class_id = this.class_id();
-            this.event_handler(move |event: events_extra::PointerLeave| { 
-                // Ignore children.
-                // @TODO I don't know why `*Leave` events fire when moving pointer on descendants.
-                // There should be an abstraction in Zoon to mitigate these strange browser API behaviors.
-                // Ideally gradually improve event handling together with removing Dominator from Zoon.
+        .use_dom_element(|this, dom_element| {
+            let dom_element = dom_element.unchecked_into();
+            this.event_handler(move |event: events_extra::PointerLeave| {
                 if let Some(target) = event.target() {
-                    let leaving_to_child = class_id.map(|id| {
-                        if let Some(id) = id {
-                            return target
-                                .unchecked_into::<web_sys::Element>()
-                                .parent_element()
-                                .unwrap_throw()
-                                .closest(&format!(".{id}"))
-                                .unwrap_throw()
-                                .is_some()
-                        }
-                        false
-                    });
-                    if leaving_to_child {
-                        return;
+                    // we are on leaving from the element itself, not only from its child
+                    if target == dom_element {
+                        pan.set_neq(false);
                     }
                 }
-                pan.set_neq(false);
-            })
+            }) 
         })
         .children(circles())
 }
