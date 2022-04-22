@@ -160,8 +160,8 @@ impl<'a> Style<'a> for Width<'a> {
         group.dynamic_css_props.extend(dynamic_css_props);
 
         let width_mode_class = match width_mode {
-            WidthMode::Exact => "exact_height",
-            WidthMode::Fill => "fill_height",
+            WidthMode::Exact => "exact_width",
+            WidthMode::Fill => "fill_width",
         };
         group.class(width_mode_class)
     }
