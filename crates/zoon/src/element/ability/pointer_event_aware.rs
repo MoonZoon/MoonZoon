@@ -88,31 +88,32 @@ pub trait PointerEventAware: UpdateRawEl + Sized {
     fn on_pointer_leave(self, handler: impl FnOnce() + Clone + 'static) -> Self {
         let handler = move || handler.clone()();
         self.update_raw_el(|raw_el| {
-            let class_id = raw_el.class_id();
+            let dom_element = raw_el.dom_element().unchecked_into();
             raw_el.event_handler(move |event: events_extra::PointerLeave| {
-                let target = event.dyn_target::<web_sys::Element>().unwrap_throw();
-                let classes = target.get_attribute("class").unwrap_throw();
-                class_id.map(|class_id| {
-                    let class_id = class_id.unwrap_throw();
-                    for class in classes.split_ascii_whitespace() {
-                        if class == class_id {
-                            handler();
-                            return;
-                        }
+                if let Some(target) = event.target() {
+                    // we are leaving from the element itself, not only from its child
+                    if target == dom_element {
+                        handler();
                     }
-                });
+                }
             })
         })
     }
 
-    fn pointer_handling(self, handling: PointerHandling) -> Self {
+    fn pointer_handling(self, handling: PointerHandling) -> Self
+    where
+        <Self::RawEl as RawEl>::DomElement: Into<web_sys::HtmlElement>,
+    {
         self.update_raw_el(|raw_el| raw_el.style("pointer-events", handling.pointer_events))
     }
 
     fn pointer_handling_signal(
         self,
         handling: impl Signal<Item = PointerHandling> + Unpin + 'static,
-    ) -> Self {
+    ) -> Self 
+    where
+        <Self::RawEl as RawEl>::DomElement: Into<web_sys::HtmlElement>,
+    {
         self.update_raw_el(|raw_el| {
             raw_el.style_signal(
                 "pointer-events",
@@ -123,8 +124,7 @@ pub trait PointerEventAware: UpdateRawEl + Sized {
 
     fn pointer_handling_svg(self, handling: PointerHandlingSvg) -> Self
     where
-        <Self::RawEl as RawEl>::DomElement:
-            AsRef<web_sys::SvgElement> + Into<web_sys::SvgElement> + Into<web_sys::Node>,
+        <Self::RawEl as RawEl>::DomElement: Into<web_sys::SvgElement>,
     {
         self.update_raw_el(|raw_el| raw_el.style("pointer-events", handling.pointer_events))
     }
@@ -134,8 +134,7 @@ pub trait PointerEventAware: UpdateRawEl + Sized {
         handling: impl Signal<Item = PointerHandlingSvg> + Unpin + 'static,
     ) -> Self
     where
-        <Self::RawEl as RawEl>::DomElement:
-            AsRef<web_sys::SvgElement> + Into<web_sys::SvgElement> + Into<web_sys::Node>,
+        <Self::RawEl as RawEl>::DomElement: Into<web_sys::SvgElement>,
     {
         self.update_raw_el(|raw_el| {
             raw_el.style_signal(
