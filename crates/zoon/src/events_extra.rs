@@ -1,8 +1,8 @@
 use crate::*;
 use dominator::events::MouseButton;
-use web_sys::EventTarget;
 
 // copied from Dominator
+#[macro_export]
 macro_rules! make_event {
     ($name:ident, $type:literal => $event:path) => {
         #[derive(Debug)]
@@ -28,7 +28,7 @@ macro_rules! make_event {
             }
 
             #[inline]
-            pub fn target(&self) -> Option<EventTarget> {
+            pub fn target(&self) -> Option<web_sys::EventTarget> {
                 self.event.target()
             }
 
@@ -38,12 +38,6 @@ macro_rules! make_event {
                 A: JsCast,
             {
                 self.target()?.dyn_into().ok()
-            }
-
-            // extra
-            #[inline]
-            pub fn related_target(&self) -> Option<EventTarget> {
-                self.event.related_target()
             }
         }
     };
