@@ -26,8 +26,4 @@ impl<'a> IntoCowStr<'a> for FontFamily<'a> {
             FontFamily::Custom(family) => ["\"", family.as_ref(), "\""].concat().into(),
         }
     }
-
-    fn take_into_cow_str(&mut self) -> Cow<'a, str> {
-        unimplemented!()
-    }
 }

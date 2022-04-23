@@ -172,8 +172,4 @@ impl<'a> IntoCowStr<'a> for CursorIcon<'a> {
             CursorIcon::Custom(cursor_value) => cursor_value.into(),
         }
     }
-
-    fn take_into_cow_str(&mut self) -> Cow<'a, str> {
-        unimplemented!()
-    }
 }

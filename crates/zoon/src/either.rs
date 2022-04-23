@@ -58,13 +58,6 @@ impl<'a, L: IntoCowStr<'a>, R: IntoCowStr<'a>> IntoCowStr<'a> for Either<L, R> {
             Either::Right(into_cow_str) => into_cow_str.into_cow_str(),
         }
     }
-
-    fn take_into_cow_str(&mut self) -> Cow<'a, str> {
-        match self {
-            Either::Left(into_cow_str) => into_cow_str.take_into_cow_str(),
-            Either::Right(into_cow_str) => into_cow_str.take_into_cow_str(),
-        }
-    }
 }
 
 // -- Signal for Either
