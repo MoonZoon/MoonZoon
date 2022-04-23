@@ -126,8 +126,4 @@ impl<'a> IntoCowStr<'a> for Transition {
     fn into_cow_str(self) -> Cow<'a, str> {
         crate::format!("{} {}ms", self.property, self.duration).into()
     }
-
-    fn take_into_cow_str(&mut self) -> Cow<'a, str> {
-        unimplemented!()
-    }
 }

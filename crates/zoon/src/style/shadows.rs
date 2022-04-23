@@ -230,7 +230,4 @@ impl<'a> IntoCowStr<'a> for Shadow {
         shadow_settings.join(" ").into()
     }
 
-    fn take_into_cow_str(&mut self) -> Cow<'a, str> {
-        unimplemented!()
-    }
 }
