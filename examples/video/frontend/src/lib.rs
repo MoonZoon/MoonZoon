@@ -70,7 +70,6 @@ fn play_button(video_element: Mutable<Option<web_sys::HtmlVideoElement>>) -> imp
 }
 
 fn play_button_icon() -> impl Element {
-    // @TODO HSLuv Display? AsRef<str>?
     macro_rules! make_icon {
         ($name:literal) => {
             $crate::paste! {
@@ -78,8 +77,8 @@ fn play_button_icon() -> impl Element {
                     // Note: Icons downloaded from https://remixicon.com/.
                     RawSvgEl::from_markup(include_str!(concat!("../icons/", $name, ".svg")))
                         .unwrap_throw()
-                        // Note: "Replace" `currentColor` in SVG elements with the selected color.
-                        .style("color", &BLUE_3.into_cow_str())
+                        // Set `currentColor` in SVG elements.
+                        .style("color", &BLUE_3.to_string())
                 }
             }
         };
