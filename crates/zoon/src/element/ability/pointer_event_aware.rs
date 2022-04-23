@@ -110,7 +110,7 @@ pub trait PointerEventAware: UpdateRawEl + Sized {
     fn pointer_handling_signal(
         self,
         handling: impl Signal<Item = PointerHandling> + Unpin + 'static,
-    ) -> Self 
+    ) -> Self
     where
         <Self::RawEl as RawEl>::DomElement: Into<web_sys::HtmlElement>,
     {

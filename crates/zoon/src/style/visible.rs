@@ -9,11 +9,7 @@ pub struct Visible<'a> {
 impl<'a> Visible<'a> {
     pub fn new(visible: bool) -> Self {
         let mut this = Self::default();
-        let value = if visible {
-            "visible"
-        } else {
-            "hidden"
-        };
+        let value = if visible { "visible" } else { "hidden" };
         this.static_css_props.insert("visibility", value);
         this
     }
@@ -22,13 +18,11 @@ impl<'a> Visible<'a> {
         visible: impl Signal<Item = impl Into<Option<bool>>> + Unpin + 'static,
     ) -> Self {
         let mut this = Self::default();
-        let visible = visible.map(|visible| visible.into().map(|visible| {
-            if visible {
-                "visible"
-            } else {
-                "hidden"
-            }
-        }));
+        let visible = visible.map(|visible| {
+            visible
+                .into()
+                .map(|visible| if visible { "visible" } else { "hidden" })
+        });
         this.dynamic_css_props
             .insert("visibility".into(), box_css_signal(visible));
         this
