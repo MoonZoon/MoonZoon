@@ -66,6 +66,7 @@ features = [
   'HtmlParagraphElement',
   'HtmlScriptElement',
   'HtmlTemplateElement',
+  'HtmlVideoElement',
   'Location',
   'PointerEvent',
   'Response',
