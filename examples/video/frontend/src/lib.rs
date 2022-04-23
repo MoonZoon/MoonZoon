@@ -1,9 +1,5 @@
 use zoon::{*, named_color::*, println};
 
-// @TODO Improve `event_handler` API / creating events.
-make_event!(VideoPlay, "play" => web_sys::Event);
-make_event!(VideoPause, "pause" => web_sys::Event);
-
 #[static_ref]
 fn playing() -> &'static Mutable<bool> {
     Default::default()
@@ -23,6 +19,10 @@ fn root() -> impl Element {
 }
 
 fn video(video_element: Mutable<Option<web_sys::HtmlVideoElement>>) -> impl Element {
+    // @TODO Improve `event_handler` API / creating events.
+    make_event!(VideoPlay, "play" => web_sys::Event);
+    make_event!(VideoPause, "pause" => web_sys::Event);
+
     // Note: `RawHtmlEl::new(..)`'s default `DomElement` is `web_sys::HtmlElement`.
     RawHtmlEl::<web_sys::HtmlVideoElement>::new("video")
         .attr("controls", "")
@@ -70,8 +70,29 @@ fn play_button(video_element: Mutable<Option<web_sys::HtmlVideoElement>>) -> imp
 }
 
 fn play_button_icon() -> impl Element {
+    // @TODO HSLuv Display? AsRef<str>?
+    macro_rules! make_icon {
+        ($name:literal) => {
+            $crate::paste! {
+                fn [<icon_ $name>]() -> RawSvgEl<web_sys::SvgsvgElement> {
+                    // Note: Icons downloaded from https://remixicon.com/.
+                    RawSvgEl::from_markup(include_str!(concat!("../icons/", $name, ".svg")))
+                        .unwrap_throw()
+                        // Note: "Replace" `currentColor` in SVG elements with the selected color.
+                        .style("color", &BLUE_3.into_cow_str())
+                }
+            }
+        };
+    }
+    
+    // Tip: You can write a `build.rs` script to automatically generate the lines below 
+    // according to the files in the `icons` folder,
+    // see https://doc.rust-lang.org/cargo/reference/build-scripts.html
+    make_icon!("play-fill");
+    make_icon!("pause-fill");
+
     El::new()
-        .child_signal(playing().signal().map_bool(|| "Pause", || "Play"))
+        .child_signal(playing().signal().map_bool(icon_pause_fill, icon_play_fill))
 }
 
 #[wasm_bindgen(start)]
