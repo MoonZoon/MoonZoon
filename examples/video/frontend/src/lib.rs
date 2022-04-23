@@ -43,7 +43,7 @@ fn play_button(video_element: Mutable<Option<web_sys::HtmlVideoElement>>) -> imp
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let size = 50;
     Button::new()
-        // @TODO .(s) visibility
+        .s(Visible::with_signal(video_element.signal_ref(Option::is_some)))
         .s(Background::new().color_signal(hovered_signal.map_bool(|| BLUE_7, || BLUE_9)))
         .s(Align::new().center_x())
         .s(Width::new(size))
