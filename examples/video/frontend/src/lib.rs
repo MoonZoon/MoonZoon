@@ -1,5 +1,9 @@
 use zoon::{*, named_color::*, println};
 
+// @TODO Improve `event_handler` API / creating events.
+make_event!(VideoPlay, "play" => web_sys::Event);
+make_event!(VideoPause, "pause" => web_sys::Event);
+
 #[static_ref]
 fn playing() -> &'static Mutable<bool> {
     Default::default()
@@ -29,6 +33,8 @@ fn video(video_element: Mutable<Option<web_sys::HtmlVideoElement>>) -> impl Elem
             this
         })
         .after_insert(move |dom_element| video_element.set(Some(dom_element)))
+        .event_handler(|_: VideoPlay| playing().set_neq(true))
+        .event_handler(|_: VideoPause| playing().set_neq(false))
         // Unchecked cast `DomElement` to another type.
         .dom_element_type::<web_sys::HtmlMediaElement>()
 }
