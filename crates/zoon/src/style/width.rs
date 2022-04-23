@@ -14,6 +14,8 @@ enum WidthMode {
     Fill,
 }
 
+// @TODO derive `Default` for `WidthMode` and other enums once possible.
+// https://rust-lang.github.io/rfcs/3107-derive-default-enum.html
 impl Default for WidthMode {
     fn default() -> Self {
         Self::Exact

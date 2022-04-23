@@ -56,6 +56,9 @@ pub use transitions::{Transition, Transitions};
 mod transform;
 pub use transform::Transform;
 
+mod visible;
+pub use visible::Visible;
+
 mod width;
 pub use width::Width;
 
