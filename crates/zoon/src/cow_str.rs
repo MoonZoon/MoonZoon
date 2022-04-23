@@ -24,15 +24,7 @@ pub trait IntoCowStr<'a> {
 
 impl<'a> IntoCowStr<'a> for HSLuv {
     fn into_cow_str(self) -> Cow<'a, str> {
-        let (r, g, b) = self.to_rgb();
-        crate::format!(
-            "rgba({r}% {g}% {b}% / {a}%)",
-            r = r * 100.,
-            g = g * 100.,
-            b = b * 100.,
-            a = self.a()
-        )
-        .into()
+        self.to_string().into()
     }
 
     fn take_into_cow_str(&mut self) -> Cow<'a, str> {

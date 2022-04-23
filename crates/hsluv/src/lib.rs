@@ -1,4 +1,5 @@
 use rust_hsluv::hsluv_to_rgb;
+use std::fmt;
 
 #[cfg(feature = "hsluv_macro")]
 pub use hsluv_macro::hsluv;
@@ -11,6 +12,14 @@ pub struct HSLuv {
     s: f64,
     l: f64,
     a: f64,
+}
+
+impl fmt::Display for HSLuv {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let (r, g, b) = self.to_rgb();
+        let (r, g, b, a) = (r * 100., g * 100., b * 100., self.a);
+        write!(f, "rgba({r}% {g}% {b}% / {a}%)")
+    }
 }
 
 impl HSLuv {
