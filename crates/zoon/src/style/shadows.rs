@@ -229,5 +229,4 @@ impl<'a> IntoCowStr<'a> for Shadow {
         }
         shadow_settings.join(" ").into()
     }
-
 }

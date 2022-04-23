@@ -1,4 +1,4 @@
-use zoon::{*, named_color::*, println};
+use zoon::{named_color::*, println, *};
 
 #[static_ref]
 fn playing() -> &'static Mutable<bool> {
@@ -6,16 +6,16 @@ fn playing() -> &'static Mutable<bool> {
 }
 
 fn root() -> impl Element {
-    let video_element = Mutable::new(None);    
+    let video_element = Mutable::new(None);
     Column::new()
         .s(Padding::all(20))
         .s(Width::fill().max(600))
         .s(Align::center())
         .s(Spacing::new(20))
-        // Note: `web_sys` element (aka `DomElement`) cloning is cheap 
+        // Note: `web_sys` element (aka `DomElement`) cloning is cheap
         // because it clones only a reference to associated Javascript/browser DOM element.
-        .item(video(video_element.clone()))  
-        .item(play_button(video_element))  
+        .item(video(video_element.clone()))
+        .item(play_button(video_element))
 }
 
 fn video(video_element: Mutable<Option<web_sys::HtmlVideoElement>>) -> impl Element {
@@ -28,8 +28,12 @@ fn video(video_element: Mutable<Option<web_sys::HtmlVideoElement>>) -> impl Elem
         .attr("controls", "")
         .use_dom_element(|this, dom_element| {
             // Note: Poster may cause video element height changes (e.g. in Chrome at the time of writing).
-            dom_element.set_poster("https://storage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg");
-            dom_element.set_src("https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4");
+            dom_element.set_poster(
+                "https://storage.googleapis.com/gtv-videos-bucket/sample/images/BigBuckBunny.jpg",
+            );
+            dom_element.set_src(
+                "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+            );
             this
         })
         .after_insert(move |dom_element| video_element.set(Some(dom_element)))
@@ -43,7 +47,9 @@ fn play_button(video_element: Mutable<Option<web_sys::HtmlVideoElement>>) -> imp
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let size = 50;
     Button::new()
-        .s(Visible::with_signal(video_element.signal_ref(Option::is_some)))
+        .s(Visible::with_signal(
+            video_element.signal_ref(Option::is_some),
+        ))
         .s(Background::new().color_signal(hovered_signal.map_bool(|| BLUE_7, || BLUE_9)))
         .s(Align::new().center_x())
         .s(Width::new(size))
@@ -58,7 +64,9 @@ fn play_button(video_element: Mutable<Option<web_sys::HtmlVideoElement>>) -> imp
                     // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/play
                     let play_promise = video.play().expect_throw("failed to play video");
                     Task::start(async {
-                        JsFuture::from(play_promise).await.expect_throw("failed to play video");
+                        JsFuture::from(play_promise)
+                            .await
+                            .expect_throw("failed to play video");
                         println!("Play button clicked and playing!")
                     })
                 } else {
@@ -83,15 +91,13 @@ fn play_button_icon() -> impl Element {
             }
         };
     }
-    
-    // Tip: You can write a `build.rs` script to automatically generate the lines below 
+    // Tip: You can write a `build.rs` script to automatically generate the lines below
     // according to the files in the `icons` folder,
     // see https://doc.rust-lang.org/cargo/reference/build-scripts.html
     make_icon!("play-fill");
     make_icon!("pause-fill");
 
-    El::new()
-        .child_signal(playing().signal().map_bool(icon_pause_fill, icon_play_fill))
+    El::new().child_signal(playing().signal().map_bool(icon_pause_fill, icon_play_fill))
 }
 
 #[wasm_bindgen(start)]

@@ -75,7 +75,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                     .unchecked_ref::<web_sys::Element>()
                     .closest(&ids_selector)
                     .expect_throw("failed to get closest elements")
-                    .is_some() 
+                    .is_some()
                 {
                     return;
                 }
@@ -106,7 +106,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                     .unchecked_ref::<web_sys::Element>()
                     .closest(&ids_selector)
                     .expect_throw("failed to get closest elements")
-                    .is_some() 
+                    .is_some()
                 {
                     return;
                 }
