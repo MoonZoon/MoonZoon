@@ -4,6 +4,40 @@ use std::mem::ManuallyDrop;
 use wasm_bindgen::intern;
 use web_sys::CssStyleDeclaration;
 
+// impl<A> DomBuilderExt for DomBuilder<A>
+// where
+//     A: AsRef<web_sys::Element> + Clone + Into<web_sys::Node> + 'static,
+// {
+//     #[inline]
+//     fn style_signal<B, C, D, E>(self, name: B, value: E) -> Self
+//     where
+//         B: MultiStr + 'static,
+//         C: MultiStr,
+//         D: OptionStr<Output = C>,
+//         E: Signal<Item = D> + 'static,
+//     {
+//         self
+//     }
+
+//     #[inline]
+//     fn style<B, C>(self, name: B, value: C) -> Self
+//     where
+//         B: MultiStr,
+//         C: MultiStr,
+//     {
+//         self
+//     }
+
+//     #[inline]
+//     fn style_important<B, C>(self, name: B, value: C) -> Self
+//     where
+//         B: MultiStr,
+//         C: MultiStr,
+//     {
+//         self
+//     }
+// }
+
 // @TODO remove once .style is callable on SvgElement in Dominator
 // https://github.com/Pauan/rust-dominator/issues/47
 

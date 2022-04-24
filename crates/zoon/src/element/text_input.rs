@@ -502,7 +502,7 @@ impl<
     }
 
     pub fn text(
-        mut self,
+        self,
         text: impl IntoCowStr<'a>,
     ) -> TextInput<
         IdFlag,
@@ -516,13 +516,14 @@ impl<
     >
     where
         TextFlag: FlagNotSet,
+        RE::DomElement: AsRef<web_sys::HtmlInputElement>
     {
-        self.raw_el = self.raw_el.prop("value", &text.into_cow_str());
+        self.raw_el.dom_element().as_ref().set_value(&text.into_cow_str());
         self.into_type()
     }
 
     pub fn text_signal(
-        mut self,
+        self,
         text: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
     ) -> TextInput<
         IdFlag,
@@ -536,10 +537,16 @@ impl<
     >
     where
         TextFlag: FlagNotSet,
+        RE::DomElement: AsRef<web_sys::HtmlInputElement>
     {
         let text = text.map(|text| text.into_option_cow_str().unwrap_or_default());
-        self.raw_el = self.raw_el.prop_signal("value", text);
-        self.into_type()
+        let dom_element = self.raw_el.dom_element();
+        let text_setter = Task::start_droppable(
+            text.for_each_sync(move |text| dom_element.as_ref().set_value(&text))
+        );
+        self
+            .after_remove(move |_| drop(text_setter))
+            .into_type()
     }
 
     pub fn read_only(

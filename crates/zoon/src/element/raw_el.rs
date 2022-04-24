@@ -2,7 +2,6 @@ use crate::*;
 use once_cell::race::OnceBox;
 use std::mem::ManuallyDrop;
 use std::{cell::Cell, mem, rc::Rc};
-use web_sys::{EventTarget, Node};
 
 mod raw_html_el;
 mod raw_svg_el;
@@ -44,16 +43,16 @@ pub trait UpdateRawEl {
 // ------ RawEl ------
 
 pub trait RawEl: Sized {
-    type DomElement: AsRef<Node>
-        + AsRef<EventTarget>
-        + AsRef<JsValue>
+    // Warning: "Global" bounds with `JsValue` or `JsCast` on the associated type break Rust Analyzer.
+    type DomElement: AsRef<web_sys::Node>
+        + AsRef<web_sys::EventTarget>
+        + Into<web_sys::EventTarget>
         + AsRef<web_sys::Element>
         + Into<web_sys::Element>
         + Clone
-        + JsCast
         + 'static;
 
-    fn new(tag: &str) -> Self;
+    fn new(tag: &str) -> Self where Self::DomElement: JsCast;
 
     #[doc(hidden)]
     fn update_dom_builder(
@@ -89,7 +88,9 @@ pub trait RawEl: Sized {
         })
     }
 
-    fn prop(self, name: &str, value: &str) -> Self {
+    fn prop(self, name: &str, value: &str) -> Self 
+        where Self::DomElement: AsRef<JsValue>
+    {
         self.update_dom_builder(|dom_builder| dom_builder.prop(name, JsValue::from_str(value)))
     }
 
@@ -97,7 +98,9 @@ pub trait RawEl: Sized {
         self,
         name: impl IntoCowStr<'static>,
         value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
-    ) -> Self {
+    ) -> Self 
+        where Self::DomElement: AsRef<JsValue>
+    {
         self.update_dom_builder(|dom_builder| {
             dom_builder.prop_signal(
                 name.into_cow_str_wrapper(),
@@ -303,7 +306,9 @@ pub trait RawEl: Sized {
         self.after_remove(move |_| drop(inner_html_updater))
     }
 
-    fn from_markup(markup: impl AsRef<str>) -> Option<Self> {
+    fn from_markup(markup: impl AsRef<str>) -> Option<Self> 
+        where Self::DomElement: JsCast
+    {
         // https://grrr.tech/posts/create-dom-node-from-html-string/
 
         let template: web_sys::HtmlTemplateElement = document()
