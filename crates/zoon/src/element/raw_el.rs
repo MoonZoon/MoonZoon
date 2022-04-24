@@ -1,4 +1,7 @@
-use crate::{*, css_property::{CssPropertyName, CssPropertyValue}};
+use crate::{
+    css_property::{CssPropertyName, CssPropertyValue},
+    *,
+};
 use once_cell::race::OnceBox;
 use std::mem::ManuallyDrop;
 use std::{cell::Cell, mem, rc::Rc};
@@ -52,7 +55,9 @@ pub trait RawEl: Sized {
         + Clone
         + 'static;
 
-    fn new(tag: &str) -> Self where Self::DomElement: JsCast;
+    fn new(tag: &str) -> Self
+    where
+        Self::DomElement: JsCast;
 
     #[doc(hidden)]
     fn update_dom_builder(
@@ -88,8 +93,9 @@ pub trait RawEl: Sized {
         })
     }
 
-    fn prop(self, name: &str, value: &str) -> Self 
-        where Self::DomElement: AsRef<JsValue>
+    fn prop(self, name: &str, value: &str) -> Self
+    where
+        Self::DomElement: AsRef<JsValue>,
     {
         self.update_dom_builder(|dom_builder| dom_builder.prop(name, JsValue::from_str(value)))
     }
@@ -98,8 +104,9 @@ pub trait RawEl: Sized {
         self,
         name: impl IntoCowStr<'static>,
         value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
-    ) -> Self 
-        where Self::DomElement: AsRef<JsValue>
+    ) -> Self
+    where
+        Self::DomElement: AsRef<JsValue>,
     {
         self.update_dom_builder(|dom_builder| {
             dom_builder.prop_signal(
@@ -325,8 +332,9 @@ pub trait RawEl: Sized {
         self.after_remove(move |_| drop(inner_html_updater))
     }
 
-    fn from_markup(markup: impl AsRef<str>) -> Option<Self> 
-        where Self::DomElement: JsCast
+    fn from_markup(markup: impl AsRef<str>) -> Option<Self>
+    where
+        Self::DomElement: JsCast,
     {
         // https://grrr.tech/posts/create-dom-node-from-html-string/
 

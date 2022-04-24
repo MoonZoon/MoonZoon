@@ -27,7 +27,7 @@ pub trait DomBuilderExt {
 
 impl<A> DomBuilderExt for DomBuilder<A>
 where
-    A: Into<web_sys::Element> + Clone +  'static,
+    A: Into<web_sys::Element> + Clone + 'static,
 {
     #[inline]
     fn style_signal<B, C, D, E>(self, name: B, value: E) -> Self
@@ -40,11 +40,13 @@ where
         let element = self.__internal_element().into();
         if element.has_type::<web_sys::HtmlElement>() {
             let builder = DomBuilder::new(element.unchecked_into::<web_sys::HtmlElement>());
-            return self.__internal_transfer_callbacks(builder.style_signal(name, value))
+            return self.__internal_transfer_callbacks(builder.style_signal(name, value));
         }
         if element.has_type::<web_sys::SvgElement>() {
             let builder = DomBuilder::new(element.unchecked_into::<web_sys::SvgElement>());
-            return self.__internal_transfer_callbacks(DomBuilderExtSvg::style_signal(builder, name, value))
+            return self.__internal_transfer_callbacks(DomBuilderExtSvg::style_signal(
+                builder, name, value,
+            ));
         }
         unimplemented!("only `HtmlElement` and `SvgElement` support styling");
     }
@@ -58,11 +60,12 @@ where
         let element = self.__internal_element().into();
         if element.has_type::<web_sys::HtmlElement>() {
             let builder = DomBuilder::new(element.unchecked_into::<web_sys::HtmlElement>());
-            return self.__internal_transfer_callbacks(builder.style(name, value))
+            return self.__internal_transfer_callbacks(builder.style(name, value));
         }
         if element.has_type::<web_sys::SvgElement>() {
             let builder = DomBuilder::new(element.unchecked_into::<web_sys::SvgElement>());
-            return self.__internal_transfer_callbacks(DomBuilderExtSvg::style(builder, name, value))
+            return self
+                .__internal_transfer_callbacks(DomBuilderExtSvg::style(builder, name, value));
         }
         unimplemented!("only `HtmlElement` and `SvgElement` support styling");
     }
@@ -76,11 +79,13 @@ where
         let element = self.__internal_element().into();
         if element.has_type::<web_sys::HtmlElement>() {
             let builder = DomBuilder::new(element.unchecked_into::<web_sys::HtmlElement>());
-            return self.__internal_transfer_callbacks(builder.style_important(name, value))
+            return self.__internal_transfer_callbacks(builder.style_important(name, value));
         }
         if element.has_type::<web_sys::SvgElement>() {
             let builder = DomBuilder::new(element.unchecked_into::<web_sys::SvgElement>());
-            return self.__internal_transfer_callbacks(DomBuilderExtSvg::style_important(builder, name, value))
+            return self.__internal_transfer_callbacks(DomBuilderExtSvg::style_important(
+                builder, name, value,
+            ));
         }
         unimplemented!("only `HtmlElement` and `SvgElement` support styling");
     }

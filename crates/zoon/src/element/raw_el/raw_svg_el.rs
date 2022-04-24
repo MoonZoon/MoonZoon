@@ -77,7 +77,8 @@ where
     type DomElement = DomElement;
 
     fn new(tag: &str) -> Self
-        where DomElement: JsCast,
+    where
+        DomElement: JsCast,
     {
         let class_id = class_id_generator().next_class_id();
 

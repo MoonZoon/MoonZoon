@@ -30,9 +30,8 @@ pub trait MutableViewport: UpdateRawEl + Sized {
     fn viewport_x_signal(self, x: impl Signal<Item = i32> + Unpin + 'static) -> Self {
         self.update_raw_el(|raw_el| {
             let dom_element: web_sys::Element = raw_el.dom_element().into();
-            let scroll_setter = Task::start_droppable(
-                x.for_each_sync(move |x| dom_element.set_scroll_left(x))
-            );
+            let scroll_setter =
+                Task::start_droppable(x.for_each_sync(move |x| dom_element.set_scroll_left(x)));
             raw_el.after_remove(|_| drop(scroll_setter))
         })
     }
@@ -40,9 +39,8 @@ pub trait MutableViewport: UpdateRawEl + Sized {
     fn viewport_y_signal(self, y: impl Signal<Item = i32> + Unpin + 'static) -> Self {
         self.update_raw_el(|raw_el| {
             let dom_element: web_sys::Element = raw_el.dom_element().into();
-            let scroll_setter = Task::start_droppable(
-                y.for_each_sync(move|y| dom_element.set_scroll_top(y))
-            );
+            let scroll_setter =
+                Task::start_droppable(y.for_each_sync(move |y| dom_element.set_scroll_top(y)));
             raw_el.after_remove(|_| drop(scroll_setter))
         })
     }
