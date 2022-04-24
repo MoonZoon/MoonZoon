@@ -93,10 +93,6 @@ use urlencoding::encode as url_encode;
 //             Self::Root => "/".into(),
 //         }
 //     }
-//
-//     fn take_into_cow_str(&mut self) -> std::borrow::Cow<'a, str> {
-//         unimplemented!()
-//     }
 // }
 // ```
 
@@ -286,9 +282,6 @@ fn generate_impl_into_cow_str(routes: &[Route]) -> ItemImpl {
                 match self {
                     #(#match_arms),*
                 }
-            }
-            fn take_into_cow_str(&mut self) -> std::borrow::Cow<'a, str> {
-                unimplemented!()
             }
         }
     )
