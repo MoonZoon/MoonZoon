@@ -39,13 +39,13 @@ static ADJECTIVES: &[&'static str] = &[
 ];
 
 static COLOURS: &[&'static str] = &[
-    "red", "yellow", "blue", "green", "pink", "brown", "purple", "brown",
-    "white", "black", "orange",
+    "red", "yellow", "blue", "green", "pink", "brown", "purple", "brown", "white", "black",
+    "orange",
 ];
 
 static NOUNS: &[&'static str] = &[
-    "table", "chair", "house", "bbq", "desk", "car", "pony", "cookie",
-    "sandwich", "burger", "pizza", "mouse", "keyboard",
+    "table", "chair", "house", "bbq", "desk", "car", "pony", "cookie", "sandwich", "burger",
+    "pizza", "mouse", "keyboard",
 ];
 
 static NEXT_ID: AtomicUsize = AtomicUsize::new(1);
@@ -137,13 +137,15 @@ fn remove_row(id: ID) {
 // ------ ------
 
 fn root() -> impl Element {
-    RawHtmlEl::new("div").attr("class", "container").children(element_vec![
-        jumbotron(),
-        table(),
-        RawHtmlEl::new("span")
-            .attr("class", "preloadicon glyphicon glyphicon-remove")
-            .attr("aria-hidden", ""),
-    ])
+    RawHtmlEl::new("div")
+        .attr("class", "container")
+        .child(jumbotron())
+        .child(table())
+        .child(
+            RawHtmlEl::new("span")
+                .attr("class", "preloadicon glyphicon glyphicon-remove")
+                .attr("aria-hidden", ""),
+        )
 }
 
 fn jumbotron() -> impl Element {
@@ -170,11 +172,7 @@ fn action_buttons() -> impl Element {
     ])
 }
 
-fn action_button(
-    id: &'static str,
-    title: &'static str,
-    on_click: fn(),
-) -> impl Element {
+fn action_button(id: &'static str, title: &'static str, on_click: fn()) -> impl Element {
     RawHtmlEl::new("div")
         .attr("class", "col-sm-6 smallpad")
         .child(
@@ -202,26 +200,19 @@ fn row(row: Arc<Row>) -> impl Element {
     RawHtmlEl::new("tr")
         .attr_signal(
             "class",
-            selected_row().signal_ref(move |selected_id| {
-                ((*selected_id)? == id).then(|| "danger")
-            }),
+            selected_row().signal_ref(move |selected_id| ((*selected_id)? == id).then(|| "danger")),
         )
-        .children(element_vec![
-            row_id(id),
-            row_label(id, row.label.signal_cloned()),
-            row_remove_button(id),
-            RawHtmlEl::new("td").attr("class", "col-md-6"),
-        ])
+        .child(row_id(id))
+        .child(row_label(id, row.label.signal_cloned()))
+        .child(row_remove_button(id))
+        .child(RawHtmlEl::new("td").attr("class", "col-md-6"))
 }
 
 fn row_id(id: ID) -> impl Element {
     RawHtmlEl::new("td").attr("class", "col-md-1").child(id)
 }
 
-fn row_label(
-    id: ID,
-    label: impl Signal<Item = String> + Unpin + 'static,
-) -> impl Element {
+fn row_label(id: ID, label: impl Signal<Item = String> + Unpin + 'static) -> impl Element {
     RawHtmlEl::new("td").attr("class", "col-md-4").child(
         RawHtmlEl::new("a")
             .event_handler(move |_: events::Click| select_row(id))
