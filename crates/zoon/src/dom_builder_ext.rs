@@ -4,42 +4,7 @@ use std::mem::ManuallyDrop;
 use wasm_bindgen::intern;
 use web_sys::CssStyleDeclaration;
 
-// impl<A> DomBuilderExt for DomBuilder<A>
-// where
-//     A: AsRef<web_sys::Element> + Clone + Into<web_sys::Node> + 'static,
-// {
-//     #[inline]
-//     fn style_signal<B, C, D, E>(self, name: B, value: E) -> Self
-//     where
-//         B: MultiStr + 'static,
-//         C: MultiStr,
-//         D: OptionStr<Output = C>,
-//         E: Signal<Item = D> + 'static,
-//     {
-//         self
-//     }
-
-//     #[inline]
-//     fn style<B, C>(self, name: B, value: C) -> Self
-//     where
-//         B: MultiStr,
-//         C: MultiStr,
-//     {
-//         self
-//     }
-
-//     #[inline]
-//     fn style_important<B, C>(self, name: B, value: C) -> Self
-//     where
-//         B: MultiStr,
-//         C: MultiStr,
-//     {
-//         self
-//     }
-// }
-
-// @TODO remove once .style is callable on SvgElement in Dominator
-// https://github.com/Pauan/rust-dominator/issues/47
+// @TODO Remove the file together with Dominator.
 
 pub trait DomBuilderExt {
     fn style_signal<B, C, D, E>(self, name: B, value: E) -> Self
@@ -60,10 +25,93 @@ pub trait DomBuilderExt {
         C: MultiStr;
 }
 
-// https://github.com/Pauan/rust-dominator/blob/e9e9e61ed8bff32d2a3aed3c85e27d9256b76bf5/src/dom.rs
 impl<A> DomBuilderExt for DomBuilder<A>
 where
-    A: AsRef<web_sys::SvgElement> + Clone + Into<web_sys::Node> + 'static,
+    A: Into<web_sys::Element> + Clone +  'static,
+{
+    #[inline]
+    fn style_signal<B, C, D, E>(self, name: B, value: E) -> Self
+    where
+        B: MultiStr + 'static,
+        C: MultiStr,
+        D: OptionStr<Output = C>,
+        E: Signal<Item = D> + 'static,
+    {
+        let element = self.__internal_element().into();
+        if element.has_type::<web_sys::HtmlElement>() {
+            let builder = DomBuilder::new(element.unchecked_into::<web_sys::HtmlElement>());
+            return self.__internal_transfer_callbacks(builder.style_signal(name, value))
+        }
+        if element.has_type::<web_sys::SvgElement>() {
+            let builder = DomBuilder::new(element.unchecked_into::<web_sys::SvgElement>());
+            return self.__internal_transfer_callbacks(DomBuilderExtSvg::style_signal(builder, name, value))
+        }
+        unimplemented!("only `HtmlElement` and `SvgElement` support styling");
+    }
+
+    #[inline]
+    fn style<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr,
+    {
+        let element = self.__internal_element().into();
+        if element.has_type::<web_sys::HtmlElement>() {
+            let builder = DomBuilder::new(element.unchecked_into::<web_sys::HtmlElement>());
+            return self.__internal_transfer_callbacks(builder.style(name, value))
+        }
+        if element.has_type::<web_sys::SvgElement>() {
+            let builder = DomBuilder::new(element.unchecked_into::<web_sys::SvgElement>());
+            return self.__internal_transfer_callbacks(DomBuilderExtSvg::style(builder, name, value))
+        }
+        unimplemented!("only `HtmlElement` and `SvgElement` support styling");
+    }
+
+    #[inline]
+    fn style_important<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr,
+    {
+        let element = self.__internal_element().into();
+        if element.has_type::<web_sys::HtmlElement>() {
+            let builder = DomBuilder::new(element.unchecked_into::<web_sys::HtmlElement>());
+            return self.__internal_transfer_callbacks(builder.style_important(name, value))
+        }
+        if element.has_type::<web_sys::SvgElement>() {
+            let builder = DomBuilder::new(element.unchecked_into::<web_sys::SvgElement>());
+            return self.__internal_transfer_callbacks(DomBuilderExtSvg::style_important(builder, name, value))
+        }
+        unimplemented!("only `HtmlElement` and `SvgElement` support styling");
+    }
+}
+
+// @TODO remove once .style is callable on SvgElement in Dominator
+// https://github.com/Pauan/rust-dominator/issues/47
+
+trait DomBuilderExtSvg {
+    fn style_signal<B, C, D, E>(self, name: B, value: E) -> Self
+    where
+        B: MultiStr + 'static,
+        C: MultiStr,
+        D: OptionStr<Output = C>,
+        E: Signal<Item = D> + 'static;
+
+    fn style<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr;
+
+    fn style_important<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr;
+}
+
+// https://github.com/Pauan/rust-dominator/blob/e9e9e61ed8bff32d2a3aed3c85e27d9256b76bf5/src/dom.rs
+impl<A> DomBuilderExtSvg for DomBuilder<A>
+where
+    A: AsRef<web_sys::SvgElement> + Clone + 'static,
 {
     #[inline]
     fn style_signal<B, C, D, E>(self, name: B, value: E) -> Self
