@@ -16,7 +16,7 @@ fn load_assets_once() -> &'static Mutable<bool> {
 // ------ TextEditor ------
 
 pub struct TextEditor {
-    raw_el: RawHtmlEl,
+    raw_el: RawHtmlEl<web_sys::HtmlElement>,
     controller: Mutable<Option<Arc<js_bridge::QuillController>>>,
 }
 
