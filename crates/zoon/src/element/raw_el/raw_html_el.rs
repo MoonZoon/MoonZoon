@@ -1,5 +1,4 @@
 use super::class_id_generator;
-use crate::css_property::{CssPropertyName, CssPropertyValue};
 use crate::*;
 use std::iter;
 
@@ -69,12 +68,11 @@ impl<DomElement> RawEl for RawHtmlEl<DomElement>
 // Warning: "Global" bounds with `JsValue` or `JsCast` or `AsRef<web_sys::HtmlElement>` break Rust Analyzer.
 where
     DomElement: AsRef<web_sys::Node>
-        + Into<web_sys::HtmlElement>
         + AsRef<web_sys::EventTarget>
         + Into<web_sys::EventTarget>
         + AsRef<web_sys::Element>
         + Into<web_sys::Element>
-        + Into<web_sys::Node>
+        + Into<web_sys::HtmlElement>
         + Clone
         + 'static,
 {
@@ -105,35 +103,6 @@ where
 
     fn dom_element(&self) -> Self::DomElement {
         self.dom_builder.__internal_element()
-    }
-
-    fn style(self, name: &str, value: &str) -> Self {
-        self.update_dom_builder(|dom_builder| {
-            dom_builder.style(CssPropertyName::new(name), CssPropertyValue::new(value))
-        })
-    }
-
-    fn style_important(self, name: &str, value: &str) -> Self {
-        self.update_dom_builder(|dom_builder| {
-            dom_builder.style_important(CssPropertyName::new(name), CssPropertyValue::new(value))
-        })
-    }
-
-    fn style_signal<'a>(
-        self,
-        name: impl IntoCowStr<'static>,
-        value: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
-    ) -> Self {
-        self.update_dom_builder(|dom_builder| {
-            dom_builder.style_signal(
-                name.into_cow_str_wrapper().into_css_property_name(),
-                value.map(|value| {
-                    value
-                        .into_option_cow_str_wrapper()
-                        .map(|cow_str| cow_str.into_css_property_value())
-                }),
-            )
-        })
     }
 
     fn class_id(&self) -> ClassId {
