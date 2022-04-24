@@ -64,22 +64,24 @@ impl<DomElement: Into<web_sys::SvgElement>> IntoIterator for RawSvgEl<DomElement
 // ------ ------
 
 impl<DomElement> RawEl for RawSvgEl<DomElement>
+// Warning: "Global" bounds with `JsValue` or `JsCast` break Rust Analyzer.
 where
     DomElement: AsRef<web_sys::Node>
         + Into<web_sys::SvgElement>
+        + Into<web_sys::EventTarget>
         + AsRef<web_sys::EventTarget>
-        + AsRef<JsValue>
         + AsRef<web_sys::Element>
         + Into<web_sys::Element>
         + AsRef<web_sys::SvgElement>
         + Into<web_sys::Node>
         + Clone
-        + JsCast
         + 'static,
 {
     type DomElement = DomElement;
 
-    fn new(tag: &str) -> Self {
+    fn new(tag: &str) -> Self
+        where DomElement: JsCast,
+    {
         let class_id = class_id_generator().next_class_id();
 
         let mut dom_builder = DomBuilder::new_svg(tag);

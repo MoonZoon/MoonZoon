@@ -65,7 +65,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
             .join(", ");
 
         self.update_raw_el(move |raw_el| {
-            let dom_element = raw_el.dom_element().unchecked_into::<web_sys::Element>();
+            let dom_element: web_sys::Element = raw_el.dom_element().into();
             raw_el.global_event_handler(move |event: events::Click| {
                 let target = event.target().expect_throw("failed to get event target");
                 if dom_element.contains(Some(target.unchecked_ref())) {
@@ -96,7 +96,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
             .join(", ");
 
         self.update_raw_el(move |raw_el| {
-            let dom_element = raw_el.dom_element().unchecked_into::<web_sys::Element>();
+            let dom_element: web_sys::Element = raw_el.dom_element().into();
             raw_el.global_event_handler(move |event: events::Click| {
                 let target = event.target().expect_throw("failed to get event target");
                 if dom_element.contains(Some(target.unchecked_ref())) {

@@ -66,22 +66,23 @@ impl<DomElement: Into<web_sys::HtmlElement>> IntoIterator for RawHtmlEl<DomEleme
 // ------ ------
 
 impl<DomElement> RawEl for RawHtmlEl<DomElement>
+// Warning: "Global" bounds with `JsValue` or `JsCast` or `AsRef<web_sys::HtmlElement>` break Rust Analyzer.
 where
     DomElement: AsRef<web_sys::Node>
         + Into<web_sys::HtmlElement>
         + AsRef<web_sys::EventTarget>
-        + AsRef<JsValue>
+        + Into<web_sys::EventTarget>
         + AsRef<web_sys::Element>
         + Into<web_sys::Element>
-        + AsRef<web_sys::HtmlElement>
         + Into<web_sys::Node>
         + Clone
-        + JsCast
         + 'static,
 {
     type DomElement = DomElement;
 
-    fn new(tag: &str) -> Self {
+    fn new(tag: &str) -> Self 
+        where DomElement: JsCast,
+    {
         let class_id = class_id_generator().next_class_id();
 
         let mut dom_builder = DomBuilder::new_html(tag);

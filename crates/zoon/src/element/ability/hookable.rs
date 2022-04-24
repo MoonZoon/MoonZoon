@@ -6,7 +6,7 @@ pub trait Hookable: UpdateRawEl + Sized {
         handler: impl FnOnce(<Self::RawEl as RawEl>::DomElement) + 'static,
     ) -> Self {
         self.update_raw_el(|raw_el| {
-            raw_el.after_insert(|ws_element| handler(ws_element.unchecked_into()))
+            raw_el.after_insert(handler)
         })
     }
 
@@ -15,7 +15,7 @@ pub trait Hookable: UpdateRawEl + Sized {
         handler: impl FnOnce(<Self::RawEl as RawEl>::DomElement) + 'static,
     ) -> Self {
         self.update_raw_el(|raw_el| {
-            raw_el.after_remove(|ws_element| handler(ws_element.unchecked_into()))
+            raw_el.after_remove(handler)
         })
     }
 }

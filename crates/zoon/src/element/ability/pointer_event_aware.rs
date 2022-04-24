@@ -88,7 +88,7 @@ pub trait PointerEventAware: UpdateRawEl + Sized {
     fn on_pointer_leave(self, handler: impl FnOnce() + Clone + 'static) -> Self {
         let handler = move || handler.clone()();
         self.update_raw_el(|raw_el| {
-            let dom_element = raw_el.dom_element().unchecked_into();
+            let dom_element = raw_el.dom_element().into();
             raw_el.event_handler(move |event: events_extra::PointerLeave| {
                 if let Some(target) = event.target() {
                     // we are leaving from the element itself, not only from its child

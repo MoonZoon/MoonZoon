@@ -219,3 +219,61 @@ pub fn start_app<'a, E: Element, I: IntoIterator<Item = E>>(
         dominator::append_dom(&parent, element.into_raw_element().into_dom());
     }
 }
+
+
+
+
+
+
+// ======== experiment ===============
+
+// struct RawHtmlElT<DomElementT> {
+//     phantom: std::marker::PhantomData<DomElementT>
+// }
+
+// trait RawElT: Sized {
+//     type DomElementT: AsRef<web_sys::Node>
+//     + AsRef<web_sys::EventTarget>
+//     // + AsRef<JsValue>
+//     + AsRef<web_sys::Element>
+//     + Into<web_sys::Element>
+//     + Clone
+//     // + JsCast
+//     + 'static
+//     ;
+
+//     fn new(tag: &str) -> Self;
+//     fn attr(self, name: &str, value: &str) -> Self; 
+// }
+
+// impl<DomElementT> RawElT for RawHtmlElT<DomElementT> 
+// where
+//     DomElementT: AsRef<web_sys::Node>
+//         + Into<web_sys::HtmlElement>
+//         + AsRef<web_sys::EventTarget>
+//         // + AsRef<JsValue>
+//         + AsRef<web_sys::Element>
+//         + Into<web_sys::Element>
+//         + AsRef<web_sys::HtmlElement>
+//         + Into<web_sys::Node>
+//         + Clone
+//         // + JsCast
+//         + 'static,
+// {
+//     type DomElementT = DomElementT;
+
+//     fn new(_tag: &str) -> Self {
+//         Self {
+//             phantom: std::marker::PhantomData
+//         }
+//     }
+
+//     fn attr(self, _name: &str, _value: &str) -> Self {
+//         self
+//     }
+// }
+
+// fn root() {
+//     let el = RawHtmlElT::<web_sys::HtmlVideoElement>::new("video");
+//     // el.a
+// }
