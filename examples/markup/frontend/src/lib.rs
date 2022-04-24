@@ -23,7 +23,7 @@ fn root() -> impl Element {
 // ------ HTML ------
 
 fn html_example() -> impl Element {
-    RawHtmlEl::from_markup(
+    RawHtmlEl::<web_sys::HtmlDivElement>::from_markup(
         r#"
         <div>
             <button id="btn-decrement">-</button>
@@ -69,7 +69,7 @@ fn counter_info() -> impl Element {
 }
 
 fn divider() -> impl Element {
-    RawHtmlEl::from_markup(markdown_to_html("---"))
+    RawHtmlEl::<web_sys::HtmlElement>::from_markup(markdown_to_html("---"))
         .unwrap_throw()
         .style("width", "100%")
 }
