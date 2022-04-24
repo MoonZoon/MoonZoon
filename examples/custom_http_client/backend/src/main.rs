@@ -1,5 +1,7 @@
-use moon::actix_web::{get, HttpResponse, Responder};
-use moon::*;
+use moon::{
+    actix_web::{web, HttpResponse, Responder},
+    *,
+};
 
 async fn frontend() -> Frontend {
     Frontend::new()
@@ -17,7 +19,10 @@ async fn frontend() -> Frontend {
 
 async fn up_msg_handler(_: UpMsgRequest<()>) {}
 
-#[get("_api/moonzoon_stars")]
+// @TODO Actix macros are broken because of
+// https://github.com/actix/actix-web/commit/81ef12a0fd0b982a43e120f2c0afc1b65772a189
+// #[get("/_api/moonzoon_stars")]
+
 async fn moonzoon_stars() -> impl Responder {
     #[derive(Debug, Deserialize)]
     #[serde(crate = "serde")]
@@ -50,7 +55,7 @@ async fn moonzoon_stars() -> impl Responder {
 #[moon::main]
 async fn main() -> std::io::Result<()> {
     start(frontend, up_msg_handler, |cfg| {
-        cfg.service(moonzoon_stars);
+        cfg.route("/_api/moonzoon_stars", web::get().to(moonzoon_stars));
     })
     .await
 }
