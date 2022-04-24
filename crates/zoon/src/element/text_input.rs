@@ -516,9 +516,12 @@ impl<
     >
     where
         TextFlag: FlagNotSet,
-        RE::DomElement: AsRef<web_sys::HtmlInputElement>
+        RE::DomElement: AsRef<web_sys::HtmlInputElement>,
     {
-        self.raw_el.dom_element().as_ref().set_value(&text.into_cow_str());
+        self.raw_el
+            .dom_element()
+            .as_ref()
+            .set_value(&text.into_cow_str());
         self.into_type()
     }
 
@@ -537,16 +540,14 @@ impl<
     >
     where
         TextFlag: FlagNotSet,
-        RE::DomElement: AsRef<web_sys::HtmlInputElement>
+        RE::DomElement: AsRef<web_sys::HtmlInputElement>,
     {
         let text = text.map(|text| text.into_option_cow_str().unwrap_or_default());
         let dom_element = self.raw_el.dom_element();
         let text_setter = Task::start_droppable(
-            text.for_each_sync(move |text| dom_element.as_ref().set_value(&text))
+            text.for_each_sync(move |text| dom_element.as_ref().set_value(&text)),
         );
-        self
-            .after_remove(move |_| drop(text_setter))
-            .into_type()
+        self.after_remove(move |_| drop(text_setter)).into_type()
     }
 
     pub fn read_only(
