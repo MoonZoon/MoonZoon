@@ -29,8 +29,7 @@ fn root() -> impl Element {
         .s(Font::new().size(20))
         .item(
             El::with_tag(Tag::H1)
-                .s(Font::new().size(30).no_wrap().wrap_anywhere())
-                .s(Font::new().size(30))
+                .s(Font::new().size(30).wrap_anywhere())
                 .child("Variables loaded from MoonZoonCustom.toml"),
         )
         .item(
