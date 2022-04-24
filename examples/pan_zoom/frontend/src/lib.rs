@@ -75,6 +75,9 @@ fn artboard() -> impl Element {
                     (dom_rect.width(), dom_rect.height())
                 };
                 view_box.update_mut(|view_box| {
+                    // Warning: `movement_*` fails on iOS / touch screens.
+                    // See workaround in the function `on_pointer_move_event`
+                    // in the ability `PointerEventAware`. 
                     view_box.x -= f64::from(event.movement_x()) * (view_box.width / width);
                     view_box.y -= f64::from(event.movement_y()) * (view_box.height / height);
                 });
