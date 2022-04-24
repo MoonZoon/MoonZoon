@@ -1,15 +1,13 @@
 use moon::{
-    *, 
-    actix_web::{
-        web::ServiceConfig, 
-        http::StatusCode,
-        App,
-        middleware::{Logger, Compat, Condition, ErrorHandlers},
-        get,
-        Responder,
-    },
     actix_cors::Cors,
+    actix_web::{
+        http::StatusCode,
+        middleware::{Compat, Condition, ErrorHandlers, Logger},
+        web::{self, ServiceConfig},
+        App, Responder,
+    },
     config::CONFIG,
+    *,
 };
 
 async fn frontend() -> Frontend {
@@ -35,7 +33,6 @@ async fn frontend() -> Frontend {
 
 async fn up_msg_handler(_: UpMsgRequest<()>) {}
 
-#[get("hello")]
 async fn hello() -> impl Responder {
     "Hello!"
 }
@@ -46,22 +43,23 @@ async fn main() -> std::io::Result<()> {
         let redirect = Redirect::new()
             .http_to_https(CONFIG.https)
             .port(CONFIG.redirect.port, CONFIG.port);
-        
+
         App::new()
-            .wrap(Condition::new(CONFIG.redirect.enabled, Compat::new(redirect)))
+            .wrap(Condition::new(
+                CONFIG.redirect.enabled,
+                Compat::new(redirect),
+            ))
             .wrap(Logger::new("%r %s %D ms %a"))
-            .wrap(Cors::default()
-                .allowed_origin_fn(move |origin, _| {
-                    if CONFIG.cors.origins.contains("*") {
-                        return true;
-                    }
-                    let origin = match origin.to_str() {
-                        Ok(origin) => origin,
-                        Err(_) => return false,
-                    };
-                    CONFIG.cors.origins.contains(origin)
-                })
-            )
+            .wrap(Cors::default().allowed_origin_fn(move |origin, _| {
+                if CONFIG.cors.origins.contains("*") {
+                    return true;
+                }
+                let origin = match origin.to_str() {
+                    Ok(origin) => origin,
+                    Err(_) => return false,
+                };
+                CONFIG.cors.origins.contains(origin)
+            }))
             .wrap(
                 ErrorHandlers::new()
                     .handler(
@@ -70,10 +68,10 @@ async fn main() -> std::io::Result<()> {
                     )
                     .handler(StatusCode::NOT_FOUND, error_handler::not_found),
             )
-    };    
+    };
 
     let service_config = |service_config: &mut ServiceConfig| {
-        service_config.service(hello);
+        service_config.route("/hello", web::get().to(hello));
     };
 
     start_with_app(frontend, up_msg_handler, app, service_config).await
