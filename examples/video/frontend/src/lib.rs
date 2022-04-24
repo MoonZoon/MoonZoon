@@ -24,6 +24,7 @@ fn video(video_element: Mutable<Option<web_sys::HtmlVideoElement>>) -> impl Elem
     make_event!(VideoPause, "pause" => web_sys::Event);
 
     // Note: `RawHtmlEl::new(..)`'s default `DomElement` is `web_sys::HtmlElement`.
+    // Note/Warning: Video element controls and layout behave very differently on phones.
     RawHtmlEl::<web_sys::HtmlVideoElement>::new("video")
         .attr("controls", "")
         .use_dom_element(|this, dom_element| {
