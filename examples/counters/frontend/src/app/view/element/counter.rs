@@ -1,5 +1,5 @@
 use std::marker::PhantomData;
-use std::{rc::Rc, iter};
+use std::{iter, rc::Rc};
 use zoon::*;
 
 // ------ ------
@@ -30,8 +30,8 @@ impl Counter<ValueFlagNotSet, ValueSignalFlagNotSet, OnChangeFlagNotSet, StepFla
     }
 }
 
-fn decrement_button() -> Button<button::LabelFlagSet, button::OnPressFlagNotSet> {
-    Button::new().label("-")
+fn decrement_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
+    Button::new().label("-").on_press(on_press)
 }
 
 fn value_element<'a>(
@@ -40,8 +40,8 @@ fn value_element<'a>(
     El::new().child(Text::with_signal(value))
 }
 
-fn increment_button() -> Button<button::LabelFlagSet, button::OnPressFlagNotSet> {
-    Button::new().label("+")
+fn increment_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
+    Button::new().label("+").on_press(on_press)
 }
 
 fn counter(
@@ -61,9 +61,9 @@ impl<StepFlag> Element for Counter<ValueFlagNotSet, ValueSignalFlagSet, OnChange
         let on_change = self.on_change.unwrap_throw();
         let step = self.step;
         counter(
-            decrement_button().on_press(clone!((on_change) move || on_change(-step))),
+            decrement_button(clone!((on_change) move || on_change(-step))),
             value_element(self.value_signal.unwrap_throw()),
-            increment_button().on_press(move || on_change(step)),
+            increment_button(move || on_change(step)),
         )
     }
 }
@@ -75,11 +75,11 @@ impl<ValueFlag, StepFlag> Element
         let state_value = Rc::new(Mutable::new(self.value));
         let step = self.step;
         counter(
-            decrement_button().on_press(clone!((state_value) move || {
+            decrement_button(clone!((state_value) move || {
                 state_value.update(|value| value - step)
             })),
             value_element(state_value.signal()),
-            increment_button().on_press(move || state_value.update(|value| value + step)),
+            increment_button(move || state_value.update(|value| value + step)),
         )
     }
 }
@@ -92,12 +92,12 @@ impl<ValueFlag, StepFlag> Element
         let on_change = self.on_change.unwrap_throw();
         let step = self.step;
         counter(
-            decrement_button().on_press(clone!((state_value, on_change) move || {
+            decrement_button(clone!((state_value, on_change) move || {
                 state_value.update(|value| value - step);
                 on_change(-step);
             })),
             value_element(state_value.signal()),
-            increment_button().on_press(move || {
+            increment_button(move || {
                 state_value.update(|value| value + step);
                 on_change(step);
             }),
@@ -105,7 +105,9 @@ impl<ValueFlag, StepFlag> Element
     }
 }
 
-impl<ValueFlag, ValueSignal, OnChangeFlag, StepFlag> IntoIterator for Counter<ValueFlag, ValueSignal, OnChangeFlag, StepFlag> {
+impl<ValueFlag, ValueSignal, OnChangeFlag, StepFlag> IntoIterator
+    for Counter<ValueFlag, ValueSignal, OnChangeFlag, StepFlag>
+{
     type Item = Self;
     type IntoIter = iter::Once<Self>;
 

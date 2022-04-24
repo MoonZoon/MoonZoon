@@ -25,7 +25,7 @@
         // "examples/time_tracker/Cargo.toml",
         // "examples/timer/Cargo.toml",
         // "examples/todomvc/Cargo.toml",
-        "examples/video/Cargo.toml",
+        // "examples/video/Cargo.toml",
         // "examples/viewport/Cargo.toml",
     ],
     "rust-analyzer.diagnostics.disabled": [
