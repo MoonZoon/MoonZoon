@@ -441,10 +441,11 @@ TextArea<
     >
         where
             OnChangeFlag: FlagNotSet,
+            RE::DomElement: AsRef<web_sys::HtmlTextAreaElement>,
     {
-        self.raw_el = self.raw_el.event_handler(move |event: events::Input| {
-            #[allow(deprecated)]
-            (on_change.clone())(event.value().unwrap())
+        let dom_element = self.raw_el.dom_element();
+        self.raw_el = self.raw_el.event_handler(move |_: events::Input| {
+            (on_change.clone())(dom_element.as_ref().value())
         });
         self.into_type()
     }
