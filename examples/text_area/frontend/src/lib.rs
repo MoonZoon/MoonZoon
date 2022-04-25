@@ -1,4 +1,4 @@
-use zoon::{*, named_color::*};
+use zoon::{named_color::*, *};
 
 // ------ ------
 //    States
@@ -35,7 +35,11 @@ fn root() -> impl Element {
 fn heading() -> impl Element {
     El::with_tag(Tag::H1)
         .s(Align::new().center_x())
-        .s(Font::new().color(PURPLE_7).size(40).weight(FontWeight::ExtraLight).italic())
+        .s(Font::new()
+            .color(PURPLE_7)
+            .size(40)
+            .weight(FontWeight::ExtraLight)
+            .italic())
         .child("TextArea example")
 }
 

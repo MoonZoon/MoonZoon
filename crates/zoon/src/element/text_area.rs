@@ -1,5 +1,5 @@
-use crate::{*, text_input::PlaceholderText};
-use std::{marker::PhantomData, iter};
+use crate::{text_input::PlaceholderText, *};
+use std::{iter, marker::PhantomData};
 
 // ------ ------
 //    Element
@@ -28,15 +28,15 @@ pub struct TextArea<
 }
 
 impl
-TextArea<
-    IdFlagNotSet,
-    OnChangeFlagNotSet,
-    PlaceholderFlagNotSet,
-    TextFlagNotSet,
-    LabelFlagNotSet,
-    ReadOnlyFlagNotSet,
-    RawHtmlEl<web_sys::HtmlTextAreaElement>,
->
+    TextArea<
+        IdFlagNotSet,
+        OnChangeFlagNotSet,
+        PlaceholderFlagNotSet,
+        TextFlagNotSet,
+        LabelFlagNotSet,
+        ReadOnlyFlagNotSet,
+        RawHtmlEl<web_sys::HtmlTextAreaElement>,
+    >
 {
     pub fn new() -> Self {
         Self {
@@ -47,15 +47,15 @@ TextArea<
 }
 
 impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl + Into<RawElement>> Element
-for TextArea<
-    IdFlagSet,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlagNotSet,
-    ReadOnlyFlag,
-    RE,
->
+    for TextArea<
+        IdFlagSet,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlagNotSet,
+        ReadOnlyFlag,
+        RE,
+    >
 {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
@@ -63,15 +63,15 @@ for TextArea<
 }
 
 impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl + Into<RawElement>> Element
-for TextArea<
-    IdFlagNotSet,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlagSet,
-    ReadOnlyFlag,
-    RE,
->
+    for TextArea<
+        IdFlagNotSet,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlagSet,
+        ReadOnlyFlag,
+        RE,
+    >
 {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
@@ -79,15 +79,7 @@ for TextArea<
 }
 
 impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl + Into<RawElement>> Element
-for TextArea<
-    IdFlagSet,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlagSet,
-    ReadOnlyFlag,
-    RE,
->
+    for TextArea<IdFlagSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagSet, ReadOnlyFlag, RE>
 {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
@@ -95,16 +87,8 @@ for TextArea<
 }
 
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl>
-IntoIterator
-for TextArea<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    ReadOnlyFlag,
-    RE,
->
+    IntoIterator
+    for TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
 {
     type Item = Self;
     type IntoIter = iter::Once<Self>;
@@ -116,16 +100,8 @@ for TextArea<
 }
 
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl>
-UpdateRawEl
-for TextArea<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    ReadOnlyFlag,
-    RE
->
+    UpdateRawEl
+    for TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
 {
     type RawEl = RE;
 
@@ -140,135 +116,52 @@ for TextArea<
 // ------ ------
 
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl>
-Styleable<'_>
-for TextArea<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    ReadOnlyFlag,
-    RE,
->
+    Styleable<'_>
+    for TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl>
-KeyboardEventAware
-for TextArea<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    ReadOnlyFlag,
-    RE,
->
+    KeyboardEventAware
+    for TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
 {
 }
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl>
-Focusable
-for TextArea<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    ReadOnlyFlag,
-    RE,
->
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl> Focusable
+    for TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
 where
     RE::DomElement: AsRef<web_sys::HtmlElement>,
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl>
-MouseEventAware
-for TextArea<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    ReadOnlyFlag,
-    RE,
->
+    MouseEventAware
+    for TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl>
-PointerEventAware
-for TextArea<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    ReadOnlyFlag,
-    RE,
->
+    PointerEventAware
+    for TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl>
-TouchEventAware
-for TextArea<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    ReadOnlyFlag,
-    RE,
->
+    TouchEventAware
+    for TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
+{
+}
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl> Hookable
+    for TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl>
-Hookable
-for TextArea<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    ReadOnlyFlag,
-    RE,
->
+    AddNearbyElement<'_>
+    for TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
+{
+}
+impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl> HasIds
+    for TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
 {
 }
 impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl>
-AddNearbyElement<'_>
-for TextArea<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    ReadOnlyFlag,
-    RE,
->
-{
-}
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl>
-HasIds
-for TextArea<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    ReadOnlyFlag,
-    RE,
->
-{
-}
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl>
-SelectableTextContent
-for TextArea<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    ReadOnlyFlag,
-    RE,
->
+    SelectableTextContent
+    for TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
 {
 }
 
@@ -276,40 +169,15 @@ for TextArea<
 //  Attributes
 // ------ ------
 
-impl<
-    'a,
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    ReadOnlyFlag,
-    RE: RawEl,
->
-TextArea<
-    IdFlag,
-    OnChangeFlag,
-    PlaceholderFlag,
-    TextFlag,
-    LabelFlag,
-    ReadOnlyFlag,
-    RE,
->
+impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl>
+    TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
 {
     pub fn id(
         mut self,
         id: impl IntoCowStr<'a>,
-    ) -> TextArea<
-        IdFlagSet,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlag,
-        ReadOnlyFlag,
-        RE,
-    >
-        where
-            IdFlag: FlagNotSet,
+    ) -> TextArea<IdFlagSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
+    where
+        IdFlag: FlagNotSet,
     {
         self.raw_el = self.raw_el.attr("id", &id.into_cow_str());
         self.into_type()
@@ -318,17 +186,9 @@ TextArea<
     pub fn placeholder(
         mut self,
         placeholder: Placeholder<'a>,
-    ) -> TextArea<
-        IdFlag,
-        OnChangeFlag,
-        PlaceholderFlagSet,
-        TextFlag,
-        LabelFlag,
-        ReadOnlyFlag,
-        RE,
-    >
-        where
-            PlaceholderFlag: FlagNotSet,
+    ) -> TextArea<IdFlag, OnChangeFlag, PlaceholderFlagSet, TextFlag, LabelFlag, ReadOnlyFlag, RE>
+    where
+        PlaceholderFlag: FlagNotSet,
     {
         self.raw_el = match placeholder.text {
             PlaceholderText::Static(text) => self.raw_el.attr("placeholder", &text),
@@ -341,18 +201,10 @@ TextArea<
     pub fn text(
         self,
         text: impl IntoCowStr<'a>,
-    ) -> TextArea<
-        IdFlag,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlagSet,
-        LabelFlag,
-        ReadOnlyFlag,
-        RE,
-    >
-        where
-            TextFlag: FlagNotSet,
-            RE::DomElement: AsRef<web_sys::HtmlTextAreaElement>,
+    ) -> TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlagSet, LabelFlag, ReadOnlyFlag, RE>
+    where
+        TextFlag: FlagNotSet,
+        RE::DomElement: AsRef<web_sys::HtmlTextAreaElement>,
     {
         self.raw_el
             .dom_element()
@@ -364,18 +216,10 @@ TextArea<
     pub fn text_signal(
         self,
         text: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static,
-    ) -> TextArea<
-        IdFlag,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlagSet,
-        LabelFlag,
-        ReadOnlyFlag,
-        RE,
-    >
-        where
-            TextFlag: FlagNotSet,
-            RE::DomElement: AsRef<web_sys::HtmlTextAreaElement>,
+    ) -> TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlagSet, LabelFlag, ReadOnlyFlag, RE>
+    where
+        TextFlag: FlagNotSet,
+        RE::DomElement: AsRef<web_sys::HtmlTextAreaElement>,
     {
         let text = text.map(|text| text.into_option_cow_str().unwrap_or_default());
         let dom_element = self.raw_el.dom_element();
@@ -388,17 +232,9 @@ TextArea<
     pub fn read_only(
         mut self,
         read_only: bool,
-    ) -> TextArea<
-        IdFlag,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlag,
-        ReadOnlyFlagSet,
-        RE,
-    >
-        where
-            ReadOnlyFlag: FlagNotSet,
+    ) -> TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlagSet, RE>
+    where
+        ReadOnlyFlag: FlagNotSet,
     {
         if read_only {
             self.raw_el = self.raw_el.attr("readonly", "");
@@ -409,17 +245,9 @@ TextArea<
     pub fn read_only_signal(
         mut self,
         read_only: impl Signal<Item = bool> + Unpin + 'static,
-    ) -> TextArea<
-        IdFlag,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlag,
-        ReadOnlyFlagSet,
-        RE,
-    >
-        where
-            ReadOnlyFlag: FlagNotSet,
+    ) -> TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlagSet, RE>
+    where
+        ReadOnlyFlag: FlagNotSet,
     {
         self.raw_el = self
             .raw_el
@@ -430,18 +258,10 @@ TextArea<
     pub fn on_change(
         mut self,
         on_change: impl FnOnce(String) + Clone + 'static,
-    ) -> TextArea<
-        IdFlag,
-        OnChangeFlagSet,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlag,
-        ReadOnlyFlag,
-        RE,
-    >
-        where
-            OnChangeFlag: FlagNotSet,
-            RE::DomElement: AsRef<web_sys::HtmlTextAreaElement>,
+    ) -> TextArea<IdFlag, OnChangeFlagSet, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
+    where
+        OnChangeFlag: FlagNotSet,
+        RE::DomElement: AsRef<web_sys::HtmlTextAreaElement>,
     {
         let dom_element = self.raw_el.dom_element();
         self.raw_el = self.raw_el.event_handler(move |_: events::Input| {
@@ -453,17 +273,9 @@ TextArea<
     pub fn label_hidden(
         mut self,
         label: impl IntoCowStr<'a>,
-    ) -> TextArea<
-        IdFlag,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlagSet,
-        ReadOnlyFlag,
-        RE,
-    >
-        where
-            LabelFlag: FlagNotSet,
+    ) -> TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagSet, ReadOnlyFlag, RE>
+    where
+        LabelFlag: FlagNotSet,
     {
         self.raw_el = self.raw_el.attr("aria-label", &label.into_cow_str());
         self.into_type()
@@ -493,6 +305,3 @@ TextArea<
         }
     }
 }
-
-
-
