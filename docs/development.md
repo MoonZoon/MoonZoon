@@ -50,6 +50,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/slider/Cargo.toml",
         // "examples/start_with_app/Cargo.toml",
         // "examples/svg/Cargo.toml",
+        // "examples/text_area/Cargo.toml",
         // "examples/time_tracker/Cargo.toml",
         // "examples/timer/Cargo.toml",
         // "examples/todomvc/Cargo.toml",
@@ -91,6 +92,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   - `slider`
   - `svg`
   - `start_with_app`
+  - `text_area`
   - `time_tracker`
   - `timer`
   - `todomvc`
