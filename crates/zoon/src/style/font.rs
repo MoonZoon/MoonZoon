@@ -160,7 +160,9 @@ impl<'a> Font<'a> {
     }
 
     /// Set the font as Italic.
+    ///
     /// # Example
+    ///
     /// ```no_run
     /// use zoon::*;
     ///
@@ -173,8 +175,10 @@ impl<'a> Font<'a> {
         self
     }
 
-    /// Collapse white space and suppress line breaks.
+    /// Don't wrap the text according to its parent boundaries.
+    ///
     /// # Example
+    ///
     /// ```no_run
     /// use zoon::*;
     ///
@@ -183,13 +187,16 @@ impl<'a> Font<'a> {
     ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```
     pub fn no_wrap(mut self) -> Self {
-        self.static_css_props.insert("white-space", "nowrap");
+        self.static_css_props.insert("white-space", "pre");
         self
     }
 
     /// Set the text to be wrapped withing its element and prevent overflow.
+    ///
     /// More information at <https://developer.mozilla.org/en-US/docs/Web/CSS/word-break>.
+    ///
     /// # Example
+    ///
     /// ```no_run
     /// use zoon::*;
     ///
