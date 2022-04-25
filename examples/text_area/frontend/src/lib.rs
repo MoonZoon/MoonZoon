@@ -1,5 +1,4 @@
-use zoon::{format, *};
-use zoon::named_color::{GRAY_0, PURPLE_7};
+use zoon::{*, named_color::*};
 
 // ------ ------
 //    States
@@ -24,37 +23,43 @@ fn set_content(text: String) {
 
 fn root() -> impl Element {
     Column::new()
-        .s(Height::screen())
+        .s(Align::new().center_x())
+        .s(Width::fill().max(600))
+        .s(Padding::new().top(30).x(20))
+        .s(Spacing::new(30))
         .item(heading())
         .item(text_input())
         .item(text_display())
-        .s(Spacing::new(30))
 }
 
 fn heading() -> impl Element {
-    Row::new()
-        .item(Paragraph::new().content("TextArea example")
-            .s(Font::new().color(PURPLE_7).size(40).weight(FontWeight::ExtraLight).italic()))
+    El::with_tag(Tag::H1)
         .s(Align::new().center_x())
+        .s(Font::new().color(PURPLE_7).size(40).weight(FontWeight::ExtraLight).italic())
+        .child("TextArea example")
 }
 
 fn text_input() -> impl Element {
     TextArea::new()
+        .s(Width::fill())
+        .s(Height::new(200))
+        .s(Padding::all(8))
+        .s(RoundedCorners::all(8).bottom_right(0))
         .placeholder(Placeholder::new("Write something here..."))
-        .s(Height::new(300))
-        .s(Width::new(600))
-        .s(Align::new().center_x())
         .on_change(set_content)
         .label_hidden("Write something...")
 }
 
 fn text_display() -> impl Element {
     Column::new()
-        .s(Height::new(100))
-        .s(Width::new(600))
-        .s(Background::new().color(hsluv!(0,0,100)))
-        .s(Align::new().center_x())
-        .item(Text::with_signal(content().signal_cloned()))
+        .s(Width::fill())
+        .s(Height::default().min(100))
+        .s(Padding::all(8))
+        .s(RoundedCorners::all(8))
+        .s(Background::new().color(GRAY_2))
+        .s(Font::new().wrap_anywhere())
+        .s(Cursor::new(CursorIcon::Default))
+        .item_signal(content().signal_cloned())
 }
 
 // ------ ------

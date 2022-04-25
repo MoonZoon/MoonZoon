@@ -28,7 +28,7 @@ impl<'a> Width<'a> {
     /// ```no_run
     /// use zoon::*;
     ///
-    /// let button = Button::new().s(Width::new(50)).label("Click ne");
+    /// let button = Button::new().s(Width::new(50)).label("Click me");
     /// ```
     pub fn new(width: u32) -> Self {
         let mut this = Self::default();
@@ -89,7 +89,7 @@ impl<'a> Width<'a> {
     /// ```no_run
     /// use zoon::*;
     ///
-    /// let button = Button::new().s(Width::zeros(4)).label("Click ne");
+    /// let button = Button::new().s(Width::zeros(4)).label("Click me");
     /// ```
     pub fn zeros(zeros: u32) -> Self {
         let mut this = Self::default();
@@ -121,7 +121,7 @@ impl<'a> Width<'a> {
     ///
     /// let container = Column::new()
     ///     .s(Width::new(5))
-    ///     .item(Button::new().s(Width::default().min(25)).label("Click ne"));
+    ///     .item(Button::new().s(Width::default().min(25)).label("Click me"));
     /// ```
     pub fn min(mut self, width: u32) -> Self {
         self.static_css_props.insert("min-width", px(width));
@@ -133,7 +133,7 @@ impl<'a> Width<'a> {
     /// ```no_run
     /// use zoon::*;
     ///
-    /// let button = Button::new().s(Width::default().max(25)).label("Click ne");
+    /// let button = Button::new().s(Width::default().max(25)).label("Click me");
     /// ```
     pub fn max(mut self, width: u32) -> Self {
         self.static_css_props.insert("max-width", px(width));

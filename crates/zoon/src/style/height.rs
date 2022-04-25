@@ -93,6 +93,11 @@ impl<'a> Height<'a> {
         this
     }
 
+    pub fn min(mut self, height: u32) -> Self {
+        self.static_css_props.insert("min-height", px(height));
+        self
+    }
+
     /// The element minimum height will be the height of thw device screen or
     /// web browser frame.
     /// # Example
