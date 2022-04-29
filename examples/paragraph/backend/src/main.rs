@@ -1,7 +1,10 @@
 use moon::*;
 
 async fn frontend() -> Frontend {
-    Frontend::new().title("Paragraph example").append_to_head(
+    Frontend::new()
+        .lang("en-US")
+        .title("Paragraph example")
+        .append_to_head(
         "
         <style>
             html {
