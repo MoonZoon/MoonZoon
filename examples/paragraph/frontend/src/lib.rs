@@ -12,6 +12,7 @@ fn root() -> impl Element {
 
 fn title() -> impl Element {
     Paragraph::with_tag(Tag::H1)
+        .lang("en-GB")
         .s(Font::new().size(28).center())
         .content(
             El::new()
