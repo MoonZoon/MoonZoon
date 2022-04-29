@@ -3,6 +3,7 @@ use std::borrow::Cow;
 use tokio::fs;
 
 pub struct Frontend {
+    pub(crate) lang: Cow<'static, str>,
     pub(crate) title: Cow<'static, str>,
     pub(crate) default_styles: bool,
     pub(crate) append_to_head: String,
@@ -12,6 +13,7 @@ pub struct Frontend {
 impl Default for Frontend {
     fn default() -> Self {
         Self {
+            lang: Cow::from("en"),
             title: Cow::from("MoonZoon app"),
             default_styles: true,
             append_to_head: String::new(),
@@ -31,6 +33,11 @@ impl Frontend {
 
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn lang(mut self, lang: impl Into<Cow<'static, str>>) -> Self {
+        self.lang = lang.into();
+        self
     }
 
     pub fn title(mut self, title: impl Into<Cow<'static, str>>) -> Self {
@@ -55,6 +62,7 @@ impl Frontend {
 
     pub async fn into_html(self) -> String {
         let Frontend {
+            lang,
             title,
             default_styles,
             append_to_head,
@@ -86,7 +94,7 @@ impl Frontend {
 
         format!(
             r#"<!DOCTYPE html>
-        <html lang="en">
+        <html lang="{lang}">
         
         <head>
           <meta charset="utf-8" />
