@@ -1,8 +1,7 @@
+use std::{borrow::Cow, fmt};
+
 // ------ Lang ------
-
-use std::borrow::Cow;
-use std::fmt;
-
+// @TODO: Add remaining langs
 #[derive(Clone)]
 pub enum Lang {
     Czech,
@@ -23,7 +22,7 @@ impl Lang {
             Self::Norwegian => "no",
             Self::Spanish => "es",
             Self::Swedish => "sv",
-            Self::Custom(str) => str,
+            Self::Custom(lang) => lang,
         }
     }
 }
