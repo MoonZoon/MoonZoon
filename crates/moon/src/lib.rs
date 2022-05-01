@@ -33,6 +33,7 @@ pub use async_trait::async_trait;
 pub use chashmap;
 pub use enclose::enc as clone;
 pub use futures;
+pub use lang::Lang;
 pub use mime;
 pub use mime_guess;
 pub use moon_entry_macros::{main, test};

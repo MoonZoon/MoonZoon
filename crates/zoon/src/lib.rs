@@ -54,6 +54,7 @@ pub use gensym::gensym;
 pub use hsluv::{hsluv, HSLuv};
 pub use index_generator::IndexGenerator;
 pub use js_sys::{self, JsString, Reflect};
+pub use lang::Lang;
 pub use monotonic_ids::MonotonicIds;
 pub use mutable::Mutable;
 pub use mutable_vec::MutableVec;

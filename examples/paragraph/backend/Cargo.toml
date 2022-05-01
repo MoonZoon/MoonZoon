@@ -11,4 +11,3 @@ edition = "2021"
 
 [dependencies]
 moon = { path = "../../../crates/moon" }
-lang = { path = "../../../crates/lang"}
