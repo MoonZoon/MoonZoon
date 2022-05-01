@@ -42,6 +42,7 @@ qrcode = { version = "0.12.0", default-features = false }
 
 moonlight = { path = "../moonlight", features = ["backend"] }
 moon_entry_macros = { path = "../moon_entry_macros", default_features = false }
+lang = { path = "../lang"}
 
 [dev-dependencies]
 const_format = { version = "0.2.14", default-features = false }

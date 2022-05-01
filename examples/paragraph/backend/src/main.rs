@@ -1,8 +1,9 @@
+use lang::Lang;
 use moon::*;
 
 async fn frontend() -> Frontend {
     Frontend::new()
-        .lang("en")
+        .lang(Lang::Spanish)
         .title("Paragraph example")
         .append_to_head(
             "

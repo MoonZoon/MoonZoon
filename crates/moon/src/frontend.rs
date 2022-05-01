@@ -1,9 +1,10 @@
 use crate::CONFIG;
+use lang::Lang;
 use std::borrow::Cow;
 use tokio::fs;
 
 pub struct Frontend {
-    pub(crate) lang: Cow<'static, str>,
+    pub(crate) lang: Lang<'static>,
     pub(crate) title: Cow<'static, str>,
     pub(crate) default_styles: bool,
     pub(crate) append_to_head: String,
@@ -13,7 +14,7 @@ pub struct Frontend {
 impl Default for Frontend {
     fn default() -> Self {
         Self {
-            lang: Cow::from("en"),
+            lang: Lang::English,
             title: Cow::from("MoonZoon app"),
             default_styles: true,
             append_to_head: String::new(),
@@ -35,8 +36,8 @@ impl Frontend {
         Self::default()
     }
 
-    pub fn lang(mut self, lang: impl Into<Cow<'static, str>>) -> Self {
-        self.lang = lang.into();
+    pub fn lang(mut self, lang: Lang<'static>) -> Self {
+        self.lang = lang;
         self
     }
 
