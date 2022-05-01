@@ -4,6 +4,7 @@ use std::fmt;
 
 #[derive(Copy, Clone)]
 pub enum Lang<'a> {
+    Czech,
     English,
     French,
     Norwegian,
@@ -15,12 +16,13 @@ pub enum Lang<'a> {
 impl<'a> Lang<'a> {
     pub fn as_str(&self) -> &str {
         match self {
-            Lang::English => "en",
-            Lang::French => "fr",
-            Lang::Norwegian => "no",
-            Lang::Spanish => "es",
-            Lang::Swedish => "sv",
-            Lang::Custom(lang) => lang,
+            Self::Czech => "cs",
+            Self::English => "en",
+            Self::French => "fr",
+            Self::Norwegian => "no",
+            Self::Spanish => "es",
+            Self::Swedish => "sv",
+            Self::Custom(lang) => lang,
         }
     }
 }

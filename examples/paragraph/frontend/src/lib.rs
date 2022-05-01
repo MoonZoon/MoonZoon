@@ -1,4 +1,3 @@
-use lang::Lang;
 use zoon::{named_color::*, *};
 
 fn root() -> impl Element {

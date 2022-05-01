@@ -1,4 +1,3 @@
-use lang::Lang;
 use moon::*;
 
 async fn frontend() -> Frontend {
