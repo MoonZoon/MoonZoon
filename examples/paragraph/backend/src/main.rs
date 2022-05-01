@@ -2,17 +2,17 @@ use moon::*;
 
 async fn frontend() -> Frontend {
     Frontend::new()
-        .lang("en-US")
+        .lang("en")
         .title("Paragraph example")
         .append_to_head(
-        "
+            "
         <style>
             html {
                 background-color: black;
                 color: lightgray;
             }
         </style>",
-    )
+        )
 }
 
 async fn up_msg_handler(_: UpMsgRequest<()>) {}

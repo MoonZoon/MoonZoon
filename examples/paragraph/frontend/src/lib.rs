@@ -1,3 +1,4 @@
+use zoon::Lang;
 use zoon::{named_color::*, *};
 
 fn root() -> impl Element {
@@ -12,7 +13,7 @@ fn root() -> impl Element {
 
 fn title() -> impl Element {
     Paragraph::with_tag(Tag::H1)
-        .lang("en-GB")
+        .lang(Lang::Norwegian)
         .s(Font::new().size(28).center())
         .content(
             El::new()
