@@ -77,8 +77,8 @@ pub trait RawEl: Sized {
         self.attr("id", &id.into_cow_str())
     }
 
-    fn lang<'a>(self, lang: Lang) -> Self {
-        self.attr("lang", &lang.as_str())
+    fn lang(self, lang: Lang) -> Self {
+        self.attr("lang", lang.as_str())
     }
 
     fn attr(self, name: &str, value: &str) -> Self {

@@ -1,19 +1,20 @@
 // ------ Lang ------
 
+use std::borrow::Cow;
 use std::fmt;
 
-#[derive(Copy, Clone)]
-pub enum Lang<'a> {
+#[derive(Clone)]
+pub enum Lang {
     Czech,
     English,
     French,
     Norwegian,
     Spanish,
     Swedish,
-    Custom(&'a str),
+    Custom(Cow<'static, str>),
 }
 
-impl<'a> Lang<'a> {
+impl Lang {
     pub fn as_str(&self) -> &str {
         match self {
             Self::Czech => "cs",
@@ -22,12 +23,12 @@ impl<'a> Lang<'a> {
             Self::Norwegian => "no",
             Self::Spanish => "es",
             Self::Swedish => "sv",
-            Self::Custom(lang) => lang,
+            Self::Custom(str) => str,
         }
     }
 }
 
-impl<'a> fmt::Display for Lang<'a> {
+impl fmt::Display for Lang {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.as_str())
     }

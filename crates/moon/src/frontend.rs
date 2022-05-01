@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use tokio::fs;
 
 pub struct Frontend {
-    pub(crate) lang: Lang<'static>,
+    pub(crate) lang: Lang,
     pub(crate) title: Cow<'static, str>,
     pub(crate) default_styles: bool,
     pub(crate) append_to_head: String,
@@ -36,7 +36,7 @@ impl Frontend {
         Self::default()
     }
 
-    pub fn lang(mut self, lang: Lang<'static>) -> Self {
+    pub fn lang(mut self, lang: Lang) -> Self {
         self.lang = lang;
         self
     }
