@@ -40,4 +40,4 @@ mod has_ids;
 pub use has_ids::HasIds;
 
 mod has_lang;
-pub use has_lang::HasLang;
+pub use has_lang::{HasLang, Lang};
