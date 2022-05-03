@@ -264,5 +264,6 @@ macro_rules! make_pointer_event {
 make_pointer_event!(PointerDown, "pointerdown");
 make_pointer_event!(PointerUp, "pointerup");
 make_pointer_event!(PointerMove, "pointermove");
+make_pointer_event!(PointerEnter, "pointerenter");
 make_pointer_event!(PointerLeave, "pointerleave");
 make_pointer_event!(PointerCancel, "pointercancel");
