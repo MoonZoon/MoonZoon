@@ -834,6 +834,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "lang"
+version = "0.1.0"
+
+[[package]]
 name = "language-tags"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -983,6 +987,7 @@ dependencies = [
  "env_logger",
  "envy",
  "futures",
+ "lang",
  "local-ip-address",
  "log",
  "mime",
@@ -2160,6 +2165,7 @@ dependencies = [
  "gensym",
  "hsluv",
  "js-sys",
+ "lang",
  "once_cell",
  "paste",
  "pin-project",

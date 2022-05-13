@@ -165,7 +165,7 @@ fn todo_title(todo: Arc<Todo>) -> impl Element {
         .s(Clip::x())
         .for_input(todo.id.to_string())
         .label_signal(todo.title.signal_cloned())
-        .on_double_click(clone!((todo )move || super::select_todo(Some(todo))))
+        .on_double_click(clone!((todo) move || super::select_todo(Some(todo.clone()))))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .element_on_right_signal(hovered_signal.map_true(move || remove_todo_button(&todo)))
 }

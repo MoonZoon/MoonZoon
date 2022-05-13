@@ -150,12 +150,12 @@ impl<ValueFlag, ValueSignalFlag, OnChangeFlag, StepFlag>
 
     pub fn on_change(
         mut self,
-        on_change: impl FnMut(i32) + 'static,
+        on_change: impl Fn(i32) + 'static,
     ) -> Counter<ValueFlag, ValueSignalFlag, OnChangeFlagSet, StepFlag>
     where
         OnChangeFlag: FlagNotSet,
     {
-        self.on_change = Some(Rc::new(move |value| on_change.clone()(value)));
+        self.on_change = Some(Rc::new(on_change));
         self.into_type()
     }
 
