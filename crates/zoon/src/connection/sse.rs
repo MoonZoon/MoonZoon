@@ -9,7 +9,7 @@ use moonlight::serde::{self, Deserialize};
 
 pub struct SSE {
     reconnecting_event_source: SendWrapper<ReconnectingEventSource>,
-    _down_msg_handler: SendWrapper<Closure<dyn Fn(JsValue)>>,
+    _down_msg_handler: SendWrapper<Closure<dyn FnMut(JsValue)>>,
 }
 
 impl Drop for SSE {
@@ -55,27 +55,25 @@ impl SSE {
 
 #[cfg(feature = "serde")]
 fn down_msg_handler_closure<DMsg: DeserializeOwned>(
-    down_msg_handler: impl FnMut(DMsg, CorId) + 'static,
-) -> Closure<dyn Fn(JsValue)> {
-    let down_msg_handler = move |down_msg, cor_id| (down_msg_handler.clone())(down_msg, cor_id);
+    mut down_msg_handler: impl FnMut(DMsg, CorId) + 'static,
+) -> Closure<dyn FnMut(JsValue)> {
     Closure::wrap(Box::new(
         move |event: JsValue| match down_msg_transporter_from_event(event) {
             Ok(DownMsgTransporterForDe { down_msg, cor_id }) => down_msg_handler(down_msg, cor_id),
             Err(error) => crate::eprintln!("{:?}", error),
         },
-    ) as Box<dyn Fn(JsValue)>)
+    ) as Box<dyn FnMut(JsValue)>)
 }
 #[cfg(feature = "serde-lite")]
 fn down_msg_handler_closure<DMsg: Deserialize>(
-    down_msg_handler: impl FnMut(DMsg, CorId) + 'static,
-) -> Closure<dyn Fn(JsValue)> {
-    let down_msg_handler = move |down_msg, cor_id| (down_msg_handler.clone())(down_msg, cor_id);
+    mut down_msg_handler: impl FnMut(DMsg, CorId) + 'static,
+) -> Closure<dyn FnMut(JsValue)> {
     Closure::wrap(Box::new(
         move |event: JsValue| match down_msg_transporter_from_event(event) {
             Ok(DownMsgTransporterForDe { down_msg, cor_id }) => down_msg_handler(down_msg, cor_id),
             Err(error) => crate::eprintln!("{:?}", error),
         },
-    ) as Box<dyn Fn(JsValue)>)
+    ) as Box<dyn FnMut(JsValue)>)
 }
 
 #[cfg(feature = "serde")]

@@ -4,24 +4,22 @@ use crate::*;
 
 pub struct ResizeObserver {
     observer: native::ResizeObserver,
-    _callback: Closure<dyn Fn(Vec<native::ResizeObserverEntry>)>,
+    _callback: Closure<dyn FnMut(Vec<native::ResizeObserverEntry>)>,
 }
 
 impl ResizeObserver {
     #[must_use]
     pub fn new(
         ws_element: &web_sys::Element,
-        on_resize: impl FnMut(u32, u32) + 'static,
+        mut on_resize: impl FnMut(u32, u32) + 'static,
     ) -> Self {
-        let on_resize = move |width, height| on_resize.clone()(width, height);
-
         let callback = move |entries: Vec<native::ResizeObserverEntry>| {
             let entry = &entries[0];
             let (width, height) = entry_size(&entry);
             on_resize(width, height);
         };
         let callback =
-            Closure::wrap(Box::new(callback) as Box<dyn Fn(Vec<native::ResizeObserverEntry>)>);
+            Closure::wrap(Box::new(callback) as Box<dyn FnMut(Vec<native::ResizeObserverEntry>)>);
 
         let observer = native::ResizeObserver::new(callback.as_ref().unchecked_ref());
         observer.observe(ws_element);

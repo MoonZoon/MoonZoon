@@ -116,9 +116,9 @@ fn client_name(client: Arc<super::Client>) -> impl Element {
         .text_signal(client.name.signal_cloned())
         .on_change(move |text| {
             client.name.set_neq(text);
-            debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+            debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, clone!((client) move || {
                 super::rename_client(client.id, &client.name.lock_ref())
-            })))
+            }))))
         })
 }
 
@@ -156,8 +156,8 @@ fn project_name(project: Arc<super::Project>) -> impl Element {
         .text_signal(project.name.signal_cloned())
         .on_change(move |text| {
             project.name.set_neq(text);
-            debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+            debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, clone!((project) move || {
                 super::rename_project(project.id, &project.name.lock_ref())
-            })))
+            }))))
         })
 }

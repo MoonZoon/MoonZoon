@@ -31,13 +31,12 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned> Connection<UMsg, DMsg> {
 
     pub fn auth_token_getter<IAT>(
         mut self,
-        getter: impl FnMut() -> IAT + Send + Sync + 'static,
+        getter: impl Fn() -> IAT + Send + Sync + 'static,
     ) -> Self
     where
         IAT: Into<Option<AuthToken>>,
     {
-        let getter = move || (getter.clone())().into();
-        self.auth_token_getter = Some(Box::new(getter));
+        self.auth_token_getter = Some(Box::new(move || getter().into()));
         self
     }
 

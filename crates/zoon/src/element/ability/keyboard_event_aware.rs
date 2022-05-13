@@ -11,7 +11,7 @@ pub trait KeyboardEventAware: UpdateRawEl + Sized {
     fn on_key_down_event_with_options(
         self,
         options: EventOptions,
-        handler: impl FnMut(KeyboardEvent) + 'static,
+        mut handler: impl FnMut(KeyboardEvent) + 'static,
     ) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el.event_handler_with_options(options, move |event: events::KeyDown| {
@@ -19,7 +19,7 @@ pub trait KeyboardEventAware: UpdateRawEl + Sized {
                     key: Key::from(event.key()),
                     raw_event: RawKeyboardEvent::KeyDown(event),
                 };
-                (handler.clone())(keyboard_event)
+                handler(keyboard_event);
             })
         })
     }

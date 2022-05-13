@@ -188,9 +188,9 @@ fn time_block_name(time_block: Arc<super::TimeBlock>) -> impl Element {
         .text_signal(time_block.name.signal_cloned())
         .on_change(move |text| {
             time_block.name.set_neq(text);
-            debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+            debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, clone!((time_block) move || {
                 super::rename_time_block(time_block.id, &time_block.name.lock_ref())
-            })))
+            }))))
         })
 }
 
@@ -224,9 +224,9 @@ fn time_block_duration_input(time_block: Arc<super::TimeBlock>) -> impl Element 
             text_duration.set_neq(text);
             if let Ok(hours) = hours {
                 time_block.duration.set_neq(Duration::seconds((hours * 3600.) as i64).into());
-                debounced_set_duration.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+                debounced_set_duration.set(Some(Timer::once(app::DEBOUNCE_MS, clone!((time_block) move || {
                     super::set_time_block_duration(&time_block, time_block.duration.get())
-                })))
+                }))))
             }
         })
 }
@@ -306,9 +306,9 @@ fn invoice_custom_id(invoice: Arc<super::Invoice>) -> impl Element {
                 .text_signal(invoice.custom_id.signal_cloned())
                 .on_change(move |text| {
                     invoice.custom_id.set_neq(text);
-                    debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+                    debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, clone!((invoice) move || {
                         super::set_invoice_custom_id(invoice.id, &invoice.custom_id.lock_ref())
-                    })))
+                    }))))
                 })
         )
 }
@@ -339,9 +339,9 @@ fn invoice_url(invoice: Arc<super::Invoice>) -> impl Element {
                 .text_signal(invoice.url.signal_cloned())
                 .on_change(move |text| {
                     invoice.url.set_neq(text);
-                    debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+                    debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, clone!((invoice) move || {
                         super::set_invoice_url(invoice.id, &invoice.url.lock_ref())
-                    })))
+                    }))))
                 })
         )
 }

@@ -200,14 +200,14 @@ impl<'a, LabelFlag, OnPressFlag, RE: RawEl> Button<LabelFlag, OnPressFlag, RE> {
 
     pub fn on_press(
         mut self,
-        on_press: impl FnMut() + 'static,
+        mut on_press: impl FnMut() + 'static,
     ) -> Button<LabelFlag, OnPressFlagSet, RE>
     where
         OnPressFlag: FlagNotSet,
     {
         self.raw_el = self
             .raw_el
-            .event_handler(move |_: events::Click| (on_press.clone())());
+            .event_handler(move |_: events::Click| on_press());
         self.into_type()
     }
 

@@ -239,9 +239,9 @@ fn time_entry_name(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable
                 .text_signal(time_entry.name.signal_cloned())
                 .on_change(move |text| {
                     time_entry.name.set_neq(text);
-                    debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, move || {
+                    debounced_rename.set(Some(Timer::once(app::DEBOUNCE_MS, clone!((time_entry) move || {
                         super::rename_time_entry(time_entry.id, &time_entry.name.lock_ref())
-                    })))
+                    }))))
                 })
         )
 }
@@ -675,7 +675,7 @@ fn date_time_part_input(
     bold: bool,
     is_active: ReadOnlyMutable<bool>,
     read_only_when_active: bool,
-    on_change: impl FnMut(String) -> Option<()> + 'static,
+    mut on_change: impl FnMut(String) -> Option<()> + 'static,
 ) -> impl Element {
     let max_chars = max_chars.into();
     let (valid, valid_signal) = Mutable::new_and_signal(true);

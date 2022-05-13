@@ -19,6 +19,7 @@ use std::fs::File;
 use std::io::{self, BufReader};
 use std::net::SocketAddr;
 use std::ops::Deref;
+use std::sync::Arc;
 use std::{collections::BTreeSet, future::Future};
 use tokio::fs;
 
@@ -109,10 +110,10 @@ impl Deref for MessageSSE {
 // trait aliases
 trait_set! {
     pub trait FrontBuilderOutput = Future<Output = Frontend> + 'static;
-    pub trait FrontBuilder<FRBO: FrontBuilderOutput> = FnMut() -> FRBO + Send + 'static;
+    pub trait FrontBuilder<FRBO: FrontBuilderOutput> = Fn() -> FRBO + Send + Sync + 'static;
 
     pub trait UpHandlerOutput = Future<Output = ()> + 'static;
-    pub trait UpHandler<UPHO: UpHandlerOutput, UMsg> = FnMut(UpMsgRequest<UMsg>) -> UPHO + Send + 'static;
+    pub trait UpHandler<UPHO: UpHandlerOutput, UMsg> = Fn(UpMsgRequest<UMsg>) -> UPHO + Send + Sync + 'static;
 }
 
 // ------ ------
@@ -124,7 +125,7 @@ trait_set! {
 pub async fn start<FRB, FRBO, UPH, UPHO, UMsg>(
     frontend: FRB,
     up_msg_handler: UPH,
-    service_config: impl FnMut(&mut web::ServiceConfig) + Send + 'static,
+    service_config: impl Fn(&mut web::ServiceConfig) + Send + Sync + 'static,
 ) -> io::Result<()>
 where
     FRB: FrontBuilder<FRBO>,
@@ -172,8 +173,8 @@ where
 pub async fn start_with_app<FRB, FRBO, UPH, UPHO, UMsg, AT, AB, ABE>(
     frontend: FRB,
     up_msg_handler: UPH,
-    app: impl FnMut() -> App<AT> + Send + 'static,
-    service_config: impl FnMut(&mut web::ServiceConfig) + Send + 'static,
+    app: impl Fn() -> App<AT> + Send + Sync + 'static,
+    service_config: impl Fn(&mut web::ServiceConfig) + Send + Sync + 'static,
 ) -> io::Result<()>
 where
     FRB: FrontBuilder<FRBO>,
@@ -212,15 +213,25 @@ where
 
     let mut lazy_message_writer = LazyMessageWriter::new();
 
+    let service_config = Arc::new(service_config);
+    let service_config = move |config: &mut web::ServiceConfig| (service_config.clone())(config);
+
+    let data_frontend = web::Data::new(frontend);
+    let data_up_msg_handler = web::Data::new(up_msg_handler);
+    let data_reload_sse = web::Data::new(reload_sse);
+    let data_message_sse = web::Data::new(message_sse);
+
+    let app = Arc::new(app);
+
     // ------ App ------
 
     let mut server = HttpServer::new(move || {
-        app.clone()()
+        (app.clone())()
             .app_data(web::Data::new(shared_data))
-            .app_data(web::Data::new(frontend.clone()))
-            .app_data(web::Data::new(up_msg_handler.clone()))
-            .app_data(web::Data::new(reload_sse.clone()))
-            .app_data(web::Data::new(message_sse.clone()))
+            .app_data(data_frontend.clone())
+            .app_data(data_up_msg_handler.clone())
+            .app_data(data_reload_sse.clone())
+            .app_data(data_message_sse.clone())
             .configure(service_config.clone())
             .service(
                 Files::new("_api/public", "public").default_handler(web::to(|| async {
@@ -333,7 +344,7 @@ where
         cor_id: parse_cor_id(headers)?,
         auth_token: parse_auth_token(headers)?,
     };
-    up_msg_handler.get_ref().clone()(up_msg_request).await;
+    up_msg_handler.get_ref()(up_msg_request).await;
     Ok(HttpResponse::Ok().finish())
 }
 

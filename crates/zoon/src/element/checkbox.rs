@@ -208,12 +208,11 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl>
 
     pub fn on_change(
         mut self,
-        on_change: impl FnMut(bool) + 'static,
+        mut on_change: impl FnMut(bool) + 'static,
     ) -> Checkbox<IdFlag, OnChangeFlagSet, LabelFlag, IconFlag, CheckedFlag, RE>
     where
         OnChangeFlag: FlagNotSet,
     {
-        let on_change = move |checked| on_change.clone()(checked);
         let on_change_invoker = self.check_state.signal().for_each_sync(move |check_state| {
             if let CheckState::Value(checked) = check_state {
                 on_change(checked);

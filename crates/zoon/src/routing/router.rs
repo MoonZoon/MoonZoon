@@ -55,10 +55,8 @@ impl<R> Drop for Router<R> {
 // ------ helpers -------
 
 fn setup_url_change_handler<R: FromRouteSegments>(
-    on_route_change: impl FnMut(Option<R>) + 'static,
+    mut on_route_change: impl FnMut(Option<R>) + 'static,
 ) -> (UrlChangeSender, TaskHandle) {
-    let on_route_change = move |route: Option<R>| on_route_change.clone()(route);
-
     let (url_change_sender, url_change_receiver) = channel(current_url_segments());
     let url_change_handler = url_change_receiver.for_each_sync(move |segments| {
         let route = segments.and_then(R::from_route_segments);

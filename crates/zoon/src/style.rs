@@ -178,7 +178,7 @@ pub struct StyleGroup<'a> {
     // --- not applicable to global styles (only directly to elements) ---
     pub static_css_classes: StaticCSSClasses<'a>,
     pub dynamic_css_classes: DynamicCSSClasses,
-    pub resize_handlers: Vec<Arc<dyn Fn(U32Width, U32Height)>>,
+    pub resize_handlers: Vec<Box<dyn FnMut(U32Width, U32Height)>>,
 }
 
 impl<'a> StyleGroup<'a> {
@@ -292,10 +292,10 @@ impl<'a> StyleGroup<'a> {
 
     pub fn on_resize(
         mut self,
-        handler: impl FnMut(U32Width, U32Height) + 'static,
+        mut handler: impl FnMut(U32Width, U32Height) + 'static,
     ) -> Self {
-        self.resize_handlers.push(Arc::new(move |width, height| {
-            handler.clone()(width, height)
+        self.resize_handlers.push(Box::new(move |width, height| {
+            handler(width, height)
         }));
         self
     }
