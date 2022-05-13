@@ -6,6 +6,7 @@ use crate::*;
 pub struct Spacing<'a> {
     /// Static css properties used by zoon.
     static_css_props: StaticCSSProps<'a>,
+    dynamic_css_props: DynamicCSSProps,
 }
 
 impl<'a> Spacing<'a> {
@@ -25,12 +26,23 @@ impl<'a> Spacing<'a> {
         this.static_css_props.insert("gap", px(spacing));
         this
     }
+
+    pub fn with_signal(
+        spacing: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
+    ) -> Self {
+        let mut this = Self::default();
+        let spacing = spacing.map(|spacing| spacing.into().map(px));
+        this.dynamic_css_props
+            .insert("gap".into(), box_css_signal(spacing));
+        this
+    }
 }
 
 impl<'a> Style<'a> for Spacing<'a> {
     fn merge_with_group(self, mut group: StyleGroup<'a>) -> StyleGroup<'a> {
-        let Self { static_css_props } = self;
+        let Self { static_css_props, dynamic_css_props } = self;
         group.static_css_props.extend(static_css_props);
+        group.dynamic_css_props.extend(dynamic_css_props);
         group
     }
 }
