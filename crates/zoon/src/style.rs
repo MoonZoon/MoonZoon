@@ -292,7 +292,7 @@ impl<'a> StyleGroup<'a> {
 
     pub fn on_resize(
         mut self,
-        handler: impl FnOnce(U32Width, U32Height) + Clone + 'static,
+        handler: impl FnMut(U32Width, U32Height) + 'static,
     ) -> Self {
         self.resize_handlers.push(Arc::new(move |width, height| {
             handler.clone()(width, height)

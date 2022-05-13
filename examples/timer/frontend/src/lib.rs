@@ -100,11 +100,11 @@ fn sleep_panel() -> impl Element {
         ))
 }
 
-fn start_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
+fn start_button(on_press: impl FnMut() + 'static) -> impl Element {
     button("Start", GREEN_7, GREEN_8, on_press)
 }
 
-fn stop_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
+fn stop_button(on_press: impl FnMut() + 'static) -> impl Element {
     button("Stop", RED_7, RED_8, on_press)
 }
 
@@ -112,7 +112,7 @@ fn button(
     label: &str,
     bg_color_hovered: HSLuv,
     bg_color: HSLuv,
-    on_press: impl FnOnce() + Clone + 'static,
+    on_press: impl FnMut() + 'static,
 ) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()

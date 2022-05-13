@@ -4,14 +4,14 @@ use std::{cell::Cell, rc::Rc};
 // ------ PointerEventAware ------
 
 pub trait PointerEventAware: UpdateRawEl + Sized {
-    fn on_pointer_down(self, handler: impl FnOnce() + Clone + 'static) -> Self {
+    fn on_pointer_down(self, handler: impl FnMut() + 'static) -> Self {
         let handler = move || handler.clone()();
         self.update_raw_el(|raw_el| {
             raw_el.event_handler(move |_: events_extra::PointerDown| handler())
         })
     }
 
-    fn on_pointer_down_event(self, handler: impl FnOnce(PointerEvent) + Clone + 'static) -> Self {
+    fn on_pointer_down_event(self, handler: impl FnMut(PointerEvent) + 'static) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el.event_handler(move |event: events_extra::PointerDown| {
                 let pointer_event = PointerEvent {
@@ -26,14 +26,14 @@ pub trait PointerEventAware: UpdateRawEl + Sized {
         })
     }
 
-    fn on_pointer_up(self, handler: impl FnOnce() + Clone + 'static) -> Self {
+    fn on_pointer_up(self, handler: impl FnMut() + 'static) -> Self {
         let handler = move || handler.clone()();
         self.update_raw_el(|raw_el| {
             raw_el.event_handler(move |_: events_extra::PointerUp| handler())
         })
     }
 
-    fn on_pointer_up_event(self, handler: impl FnOnce(PointerEvent) + Clone + 'static) -> Self {
+    fn on_pointer_up_event(self, handler: impl FnMut(PointerEvent) + 'static) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el.event_handler(move |event: events_extra::PointerUp| {
                 let pointer_event = PointerEvent {
@@ -48,14 +48,14 @@ pub trait PointerEventAware: UpdateRawEl + Sized {
         })
     }
 
-    fn on_pointer_move(self, handler: impl FnOnce() + Clone + 'static) -> Self {
+    fn on_pointer_move(self, handler: impl FnMut() + 'static) -> Self {
         let handler = move || handler.clone()();
         self.update_raw_el(|raw_el| {
             raw_el.event_handler(move |_: events_extra::PointerMove| handler())
         })
     }
 
-    fn on_pointer_move_event(self, handler: impl FnOnce(PointerEvent) + Clone + 'static) -> Self {
+    fn on_pointer_move_event(self, handler: impl FnMut(PointerEvent) + 'static) -> Self {
         // `event.movement_*()` fails on iOS / touch screens (?)
         let previous_x = Rc::new(Cell::new(None));
         let previous_y = Rc::new(Cell::new(None));
@@ -85,7 +85,7 @@ pub trait PointerEventAware: UpdateRawEl + Sized {
         })
     }
 
-    fn on_pointer_leave(self, handler: impl FnOnce() + Clone + 'static) -> Self {
+    fn on_pointer_leave(self, handler: impl FnMut() + 'static) -> Self {
         let handler = move || handler.clone()();
         self.update_raw_el(|raw_el| {
             let dom_element = raw_el.dom_element().into();

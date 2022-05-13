@@ -19,7 +19,7 @@ pub struct Connection<UMsg, DMsg> {
 }
 
 impl<UMsg: Serialize, DMsg: DeserializeOwned> Connection<UMsg, DMsg> {
-    pub fn new(down_msg_handler: impl FnOnce(DMsg, CorId) + Clone + Send + Sync + 'static) -> Self {
+    pub fn new(down_msg_handler: impl FnMut(DMsg, CorId) + Send + Sync + 'static) -> Self {
         let session_id = SessionId::new();
         Self {
             session_id,
@@ -31,7 +31,7 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned> Connection<UMsg, DMsg> {
 
     pub fn auth_token_getter<IAT>(
         mut self,
-        getter: impl FnOnce() -> IAT + Clone + Send + Sync + 'static,
+        getter: impl FnMut() -> IAT + Send + Sync + 'static,
     ) -> Self
     where
         IAT: Into<Option<AuthToken>>,

@@ -4,7 +4,7 @@ use std::convert::TryFrom;
 pub trait MutableViewport: UpdateRawEl + Sized {
     fn on_viewport_location_change(
         self,
-        handler: impl FnOnce(Scene, Viewport) + Clone + 'static,
+        handler: impl FnMut(Scene, Viewport) + 'static,
     ) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el.event_handler(move |event: events::Scroll| {

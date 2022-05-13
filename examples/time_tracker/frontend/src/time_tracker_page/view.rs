@@ -246,7 +246,7 @@ fn time_entry_name(time_entry: Arc<super::TimeEntry>, is_active: ReadOnlyMutable
         )
 }
 
-fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static, is_active: ReadOnlyMutable<bool>) -> impl Element {
+fn delete_entity_button(on_press: impl FnMut() + 'static, is_active: ReadOnlyMutable<bool>) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let background_color = map_ref! {
         let hovered = hovered_signal,
@@ -313,11 +313,11 @@ fn time_entry_times_wide(items: Vec<RawElement>, is_active: ReadOnlyMutable<bool
 
 fn time_entry_date(
     year: impl Signal<Item = i32> + Unpin + 'static, 
-    on_year_change: impl FnOnce(String) -> Option<()> + Clone + 'static,
+    on_year_change: impl FnMut(String) -> Option<()> + 'static,
     month: impl Signal<Item = u32> + Unpin + 'static, 
-    on_month_change: impl FnOnce(String) -> Option<()> + Clone + 'static,
+    on_month_change: impl FnMut(String) -> Option<()> + 'static,
     day: impl Signal<Item = u32> + Unpin + 'static,
-    on_day_change: impl FnOnce(String) -> Option<()> + Clone + 'static,
+    on_day_change: impl FnMut(String) -> Option<()> + 'static,
     is_active: ReadOnlyMutable<bool>,
     read_only_when_active: bool,
 ) -> impl Element {
@@ -360,11 +360,11 @@ fn time_entry_date(
 
 fn time_entry_time(
     hour: impl Signal<Item = u32> + Unpin + 'static, 
-    on_hour_change: impl FnOnce(String) -> Option<()> + Clone + 'static,
+    on_hour_change: impl FnMut(String) -> Option<()> + 'static,
     minute: impl Signal<Item = u32> + Unpin + 'static, 
-    on_minute_change: impl FnOnce(String) -> Option<()> + Clone + 'static,
+    on_minute_change: impl FnMut(String) -> Option<()> + 'static,
     second: impl Signal<Item = u32> + Unpin + 'static,
-    on_second_change: impl FnOnce(String) -> Option<()> + Clone + 'static,
+    on_second_change: impl FnMut(String) -> Option<()> + 'static,
     is_active: ReadOnlyMutable<bool>,
     read_only_when_active: bool,
 ) -> impl Element {
@@ -675,7 +675,7 @@ fn date_time_part_input(
     bold: bool,
     is_active: ReadOnlyMutable<bool>,
     read_only_when_active: bool,
-    on_change: impl FnOnce(String) -> Option<()> + Clone + 'static,
+    on_change: impl FnMut(String) -> Option<()> + 'static,
 ) -> impl Element {
     let max_chars = max_chars.into();
     let (valid, valid_signal) = Mutable::new_and_signal(true);

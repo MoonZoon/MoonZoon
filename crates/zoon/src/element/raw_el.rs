@@ -121,14 +121,14 @@ pub trait RawEl: Sized {
         })
     }
 
-    fn event_handler<E: StaticEvent>(self, handler: impl FnOnce(E) + Clone + 'static) -> Self {
+    fn event_handler<E: StaticEvent>(self, handler: impl FnMut(E) + 'static) -> Self {
         self.event_handler_with_options(EventOptions::default(), handler)
     }
 
     fn event_handler_with_options<E: StaticEvent>(
         self,
         options: EventOptions,
-        handler: impl FnOnce(E) + Clone + 'static,
+        handler: impl FnMut(E) + 'static,
     ) -> Self {
         let handler = move |event: E| handler.clone()(event);
         self.update_dom_builder(|dom_builder| {
@@ -138,7 +138,7 @@ pub trait RawEl: Sized {
 
     fn global_event_handler<E: StaticEvent>(
         self,
-        handler: impl FnOnce(E) + Clone + 'static,
+        handler: impl FnMut(E) + 'static,
     ) -> Self {
         self.global_event_handler_with_options(EventOptions::default(), handler)
     }
@@ -146,7 +146,7 @@ pub trait RawEl: Sized {
     fn global_event_handler_with_options<E: StaticEvent>(
         self,
         options: EventOptions,
-        handler: impl FnOnce(E) + Clone + 'static,
+        handler: impl FnMut(E) + 'static,
     ) -> Self {
         let handler = move |event: E| handler.clone()(event);
         self.update_dom_builder(|dom_builder| {
@@ -299,7 +299,7 @@ pub trait RawEl: Sized {
         })
     }
 
-    fn on_resize(mut self, handler: impl FnOnce(U32Width, U32Height) + Clone + 'static) -> Self {
+    fn on_resize(mut self, handler: impl FnMut(U32Width, U32Height) + 'static) -> Self {
         // @TODO should we create one global ResizeObserver to improve performance?
         // Inspiration: https://gist.github.com/Pauan/d9dcf0b47fc03c7a49b95f29ff8ef3c3
 

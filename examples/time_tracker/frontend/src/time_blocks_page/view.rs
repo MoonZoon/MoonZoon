@@ -348,7 +348,7 @@ fn invoice_url(invoice: Arc<super::Invoice>) -> impl Element {
 
 // --
 
-fn add_entity_button(title: &str, on_press: impl FnOnce() + Clone + 'static) -> impl Element {
+fn add_entity_button(title: &str, on_press: impl FnMut() + 'static) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     El::new()
         .child(
@@ -377,7 +377,7 @@ fn add_entity_button_label(title: &str) -> impl Element {
     )
 }
 
-fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
+fn delete_entity_button(on_press: impl FnMut() + 'static) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(Width::new(40))

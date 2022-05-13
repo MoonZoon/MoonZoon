@@ -22,7 +22,7 @@ impl SSE {
     #[cfg(feature = "serde")]
     pub fn new<DMsg: DeserializeOwned>(
         session_id: SessionId,
-        down_msg_handler: impl FnOnce(DMsg, CorId) + Clone + 'static,
+        down_msg_handler: impl FnMut(DMsg, CorId) + 'static,
     ) -> Self {
         let down_msg_handler = down_msg_handler_closure(down_msg_handler);
 
@@ -38,7 +38,7 @@ impl SSE {
     #[cfg(feature = "serde-lite")]
     pub fn new<DMsg: Deserialize>(
         session_id: SessionId,
-        down_msg_handler: impl FnOnce(DMsg, CorId) + Clone + 'static,
+        down_msg_handler: impl FnMut(DMsg, CorId) + 'static,
     ) -> Self {
         let down_msg_handler = down_msg_handler_closure(down_msg_handler);
 
@@ -55,7 +55,7 @@ impl SSE {
 
 #[cfg(feature = "serde")]
 fn down_msg_handler_closure<DMsg: DeserializeOwned>(
-    down_msg_handler: impl FnOnce(DMsg, CorId) + Clone + 'static,
+    down_msg_handler: impl FnMut(DMsg, CorId) + 'static,
 ) -> Closure<dyn Fn(JsValue)> {
     let down_msg_handler = move |down_msg, cor_id| (down_msg_handler.clone())(down_msg, cor_id);
     Closure::wrap(Box::new(
@@ -67,7 +67,7 @@ fn down_msg_handler_closure<DMsg: DeserializeOwned>(
 }
 #[cfg(feature = "serde-lite")]
 fn down_msg_handler_closure<DMsg: Deserialize>(
-    down_msg_handler: impl FnOnce(DMsg, CorId) + Clone + 'static,
+    down_msg_handler: impl FnMut(DMsg, CorId) + 'static,
 ) -> Closure<dyn Fn(JsValue)> {
     let down_msg_handler = move |down_msg, cor_id| (down_msg_handler.clone())(down_msg, cor_id);
     Closure::wrap(Box::new(

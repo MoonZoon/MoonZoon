@@ -257,7 +257,7 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFla
 
     pub fn on_change(
         mut self,
-        on_change: impl FnOnce(String) + Clone + 'static,
+        on_change: impl FnMut(String) + 'static,
     ) -> TextArea<IdFlag, OnChangeFlagSet, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
     where
         OnChangeFlag: FlagNotSet,

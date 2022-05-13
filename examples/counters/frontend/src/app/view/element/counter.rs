@@ -30,7 +30,7 @@ impl Counter<ValueFlagNotSet, ValueSignalFlagNotSet, OnChangeFlagNotSet, StepFla
     }
 }
 
-fn decrement_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
+fn decrement_button(on_press: impl FnMut() + 'static) -> impl Element {
     Button::new().label("-").on_press(on_press)
 }
 
@@ -40,7 +40,7 @@ fn value_element<'a>(
     El::new().child(Text::with_signal(value))
 }
 
-fn increment_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
+fn increment_button(on_press: impl FnMut() + 'static) -> impl Element {
     Button::new().label("+").on_press(on_press)
 }
 
@@ -150,7 +150,7 @@ impl<ValueFlag, ValueSignalFlag, OnChangeFlag, StepFlag>
 
     pub fn on_change(
         mut self,
-        on_change: impl FnOnce(i32) + Clone + 'static,
+        on_change: impl FnMut(i32) + 'static,
     ) -> Counter<ValueFlag, ValueSignalFlag, OnChangeFlagSet, StepFlag>
     where
         OnChangeFlag: FlagNotSet,

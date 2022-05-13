@@ -596,7 +596,7 @@ impl<
 
     pub fn on_change(
         mut self,
-        on_change: impl FnOnce(String) + Clone + 'static,
+        on_change: impl FnMut(String) + 'static,
     ) -> TextInput<
         IdFlag,
         OnChangeFlagSet,

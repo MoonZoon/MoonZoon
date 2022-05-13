@@ -200,7 +200,7 @@ impl<'a, LabelFlag, OnPressFlag, RE: RawEl> Button<LabelFlag, OnPressFlag, RE> {
 
     pub fn on_press(
         mut self,
-        on_press: impl FnOnce() + Clone + 'static,
+        on_press: impl FnMut() + 'static,
     ) -> Button<LabelFlag, OnPressFlagSet, RE>
     where
         OnPressFlag: FlagNotSet,
