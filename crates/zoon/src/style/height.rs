@@ -105,7 +105,7 @@ impl<'a> Height<'a> {
     /// use zoon::*;
     ///
     /// let button = Button::new()
-    ///     .s(Height::default().min_screen())
+    ///     .s(Height::fill().min_screen())
     ///     .label("Hover this giant button");
     /// ```
     pub fn min_screen(mut self) -> Self {
@@ -119,7 +119,7 @@ impl<'a> Height<'a> {
     /// use zoon::*;
     ///
     /// let button = Button::new()
-    ///     .s(Height::default().max(150))
+    ///     .s(Height::fill().max(150))
     ///     .label("Hover this giant button");
     /// ```
     pub fn max(mut self, height: u32) -> Self {
@@ -133,7 +133,7 @@ impl<'a> Height<'a> {
     /// use zoon::*;
     ///
     /// let button = Button::new()
-    ///     .s(Height::default().max_fill())
+    ///     .s(Height::fill().max_fill())
     ///     .label("Hover this giant button");
     /// ```
     pub fn max_fill(mut self) -> Self {
