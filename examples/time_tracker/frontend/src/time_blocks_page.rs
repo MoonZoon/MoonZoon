@@ -1,7 +1,10 @@
-use zoon::{*, eprintln};
 use crate::connection::connection;
-use shared::{UpMsg, ClientId, TimeBlockId, InvoiceId, time_blocks::{self, TimeBlockStatus}};
+use shared::{
+    time_blocks::{self, TimeBlockStatus},
+    ClientId, InvoiceId, TimeBlockId, UpMsg,
+};
 use std::sync::Arc;
+use zoon::{eprintln, *};
 
 mod view;
 
@@ -68,63 +71,71 @@ pub fn request_clients() {
 
 pub fn convert_and_set_clients(new_clients: Vec<time_blocks::Client>) {
     fn convert_clients(clients: Vec<time_blocks::Client>) -> Vec<Arc<Client>> {
-        clients.into_iter().map(|client| {
-            let time_blocks = MutableVec::new_with_values(convert_time_blocks(client.time_blocks));
-            let stats = Arc::new(Stats {
-                tracked: client.tracked.num_hours() as f64,
-                ..Default::default()
-            });
-            let time_block_change_signal = time_blocks
-                .signal_vec_cloned()
-                .map_signal(|time_block| {
-                    map_ref!{
-                        let _ = time_block.status.signal(),
-                        let _ = time_block.duration.signal() => move {
-                            time_block.clone()
+        clients
+            .into_iter()
+            .map(|client| {
+                let time_blocks =
+                    MutableVec::new_with_values(convert_time_blocks(client.time_blocks));
+                let stats = Arc::new(Stats {
+                    tracked: client.tracked.num_hours() as f64,
+                    ..Default::default()
+                });
+                let time_block_change_signal = time_blocks
+                    .signal_vec_cloned()
+                    .map_signal(|time_block| {
+                        map_ref! {
+                            let _ = time_block.status.signal(),
+                            let _ = time_block.duration.signal() => move {
+                                time_block.clone()
+                            }
                         }
-                    }
-                })
-                .to_signal_cloned()
-                .map(clone!((stats) move |time_blocks| (stats.clone(), time_blocks)));
+                    })
+                    .to_signal_cloned()
+                    .map(clone!((stats) move |time_blocks| (stats.clone(), time_blocks)));
 
-            let time_block_change_handler = time_block_change_signal.for_each_sync(|(stats, time_blocks)| {
-                let mut non_billable = 0.;
-                let mut unpaid = 0.;
-                let mut paid = 0.;
-                for time_block in time_blocks {
-                    let duration = (time_block.duration.get().num_seconds() as f64) / 3600.;
-                    match time_block.status.get() {
-                        TimeBlockStatus::NonBillable => non_billable += duration,
-                        TimeBlockStatus::Unpaid => unpaid += duration,
-                        TimeBlockStatus::Paid => paid += duration,
-                    }
-                }
-                let blocked = non_billable + unpaid + paid;
-                stats.blocked.set_neq(blocked);
-                stats.unpaid.set_neq(unpaid);
-                stats.paid.set_neq(paid);
-                stats.to_block.set_neq(stats.tracked - blocked);
-            });
-            Arc::new(Client {
-                id: client.id,
-                name: client.name,
-                time_blocks,
-                stats,
-                _time_block_change_handler: Task::start_droppable(time_block_change_handler),
+                let time_block_change_handler =
+                    time_block_change_signal.for_each_sync(|(stats, time_blocks)| {
+                        let mut non_billable = 0.;
+                        let mut unpaid = 0.;
+                        let mut paid = 0.;
+                        for time_block in time_blocks {
+                            let duration = (time_block.duration.get().num_seconds() as f64) / 3600.;
+                            match time_block.status.get() {
+                                TimeBlockStatus::NonBillable => non_billable += duration,
+                                TimeBlockStatus::Unpaid => unpaid += duration,
+                                TimeBlockStatus::Paid => paid += duration,
+                            }
+                        }
+                        let blocked = non_billable + unpaid + paid;
+                        stats.blocked.set_neq(blocked);
+                        stats.unpaid.set_neq(unpaid);
+                        stats.paid.set_neq(paid);
+                        stats.to_block.set_neq(stats.tracked - blocked);
+                    });
+                Arc::new(Client {
+                    id: client.id,
+                    name: client.name,
+                    time_blocks,
+                    stats,
+                    _time_block_change_handler: Task::start_droppable(time_block_change_handler),
+                })
             })
-        }).collect()
+            .collect()
     }
     fn convert_time_blocks(time_blocks: Vec<time_blocks::TimeBlock>) -> Vec<Arc<TimeBlock>> {
-        time_blocks.into_iter().map(|time_block| {
-            Arc::new(TimeBlock {
-                id: time_block.id,
-                name: Mutable::new(time_block.name),
-                status: Mutable::new(time_block.status),
-                duration: Mutable::new(time_block.duration),
-                invoice: Mutable::new(time_block.invoice.map(convert_invoice)),
-                is_old: true,
+        time_blocks
+            .into_iter()
+            .map(|time_block| {
+                Arc::new(TimeBlock {
+                    id: time_block.id,
+                    name: Mutable::new(time_block.name),
+                    status: Mutable::new(time_block.status),
+                    duration: Mutable::new(time_block.duration),
+                    invoice: Mutable::new(time_block.invoice.map(convert_invoice)),
+                    is_old: true,
+                })
             })
-        }).collect()
+            .collect()
     }
     fn convert_invoice(invoice: time_blocks::Invoice) -> Arc<Invoice> {
         Arc::new(Invoice {
@@ -134,19 +145,27 @@ pub fn convert_and_set_clients(new_clients: Vec<time_blocks::Client>) {
             is_old: true,
         })
     }
-    clients().lock_mut().replace_cloned(convert_clients(new_clients));
+    clients()
+        .lock_mut()
+        .replace_cloned(convert_clients(new_clients));
 }
 
 // -- time_block --
 
 fn add_time_block(client: &Client) {
     // @TODO send up_msg
-    client.time_blocks.lock_mut().insert_cloned(0, Arc::new(TimeBlock::default()))
+    client
+        .time_blocks
+        .lock_mut()
+        .insert_cloned(0, Arc::new(TimeBlock::default()))
 }
 
 fn delete_time_block(client: &Client, time_block_id: TimeBlockId) {
     // @TODO send up_msg + confirm dialog
-    client.time_blocks.lock_mut().retain(|time_block| time_block.id != time_block_id);
+    client
+        .time_blocks
+        .lock_mut()
+        .retain(|time_block| time_block.id != time_block_id);
 }
 
 fn rename_time_block(time_block_id: TimeBlockId, name: &str) {
@@ -255,7 +274,7 @@ pub fn view() -> RawElement {
 //                     new_var_c(Invoice {
 //                         id: invoice.id,
 //                         custom_id: invoice.custom_id,
-//                         url: invoice.url, 
+//                         url: invoice.url,
 //                         time_block,
 //                     })
 //                 })
@@ -352,7 +371,7 @@ pub fn view() -> RawElement {
 //         status: TimeBlockStatus,
 //         duration: Duration,
 //         invoice: Option<VarC<Invoice>>,
-//         client: Var<Client>, 
+//         client: Var<Client>,
 //     }
 
 //     #[s_var]
@@ -388,7 +407,7 @@ pub fn view() -> RawElement {
 //             client.time_blocks.push(time_block);
 //         });
 //         app::send_up_msg(
-//             true, 
+//             true,
 //             UpMsg::AddTimeBlock(client_id, time_block_id, duration)
 //         );
 //     }
@@ -434,8 +453,8 @@ pub fn view() -> RawElement {
 //     struct Invoice {
 //         id: InvoiceId,
 //         custom_id: String,
-//         url: String, 
-//         time_block: Var<TimeBlock>, 
+//         url: String,
+//         time_block: Var<TimeBlock>,
 //     }
 
 //     #[update]

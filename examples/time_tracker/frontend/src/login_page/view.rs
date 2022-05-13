@@ -1,5 +1,5 @@
-use zoon::*;
 use crate::theme;
+use zoon::*;
 
 pub fn page() -> impl Element {
     Column::new()
@@ -17,7 +17,7 @@ pub fn page() -> impl Element {
                 .item(title())
                 .item(login_fields())
                 .item(error())
-                .item(login_button())
+                .item(login_button()),
         )
 }
 
@@ -43,9 +43,7 @@ fn name_field() -> impl Element {
 }
 
 fn name_label() -> impl Element {
-    Label::new()
-        .for_input("name")
-        .label("Name")
+    Label::new().for_input("name").label("Name")
 }
 
 fn name_input() -> impl Element {
@@ -70,9 +68,7 @@ fn password_field() -> impl Element {
 }
 
 fn password_label() -> impl Element {
-    Label::new()
-        .for_input("password")
-        .label("Password")
+    Label::new().for_input("password").label("Password")
 }
 
 fn password_input() -> impl Element {
@@ -90,18 +86,21 @@ fn password_input() -> impl Element {
 }
 
 fn error() -> impl Element {
-    El::new()
-        .child_signal(super::login_error().signal_cloned())
+    El::new().child_signal(super::login_error().signal_cloned())
 }
 
 fn login_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .s(Background::new().color_signal(hovered_signal.map_bool_signal(
-            || theme::background_3_highlighted(),
-            || theme::background_3(),
-        )))
-        .s(Font::new().color_signal(theme::font_3()).weight(FontWeight::Bold))
+        .s(
+            Background::new().color_signal(hovered_signal.map_bool_signal(
+                || theme::background_3_highlighted(),
+                || theme::background_3(),
+            )),
+        )
+        .s(Font::new()
+            .color_signal(theme::font_3())
+            .weight(FontWeight::Bold))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))

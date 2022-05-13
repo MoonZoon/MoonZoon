@@ -1,7 +1,11 @@
-use zoon::{*, eprintln};
+use crate::{
+    app,
+    connection::connection,
+    router::{previous_route, router, Route},
+};
+use shared::{UpMsg, User};
 use std::borrow::Cow;
-use crate::{app, router::{router, previous_route, Route}, connection::connection};
-use shared::{User, UpMsg};
+use zoon::{eprintln, *};
 
 mod view;
 

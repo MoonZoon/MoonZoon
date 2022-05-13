@@ -1,5 +1,8 @@
+use crate::{
+    router::Route,
+    theme::{self, theme, toggle_theme, Theme},
+};
 use zoon::*;
-use crate::{router::Route, theme::{self, Theme, theme, toggle_theme}};
 
 pub fn root() -> impl Element {
     Column::new()
@@ -23,19 +26,21 @@ fn header() -> impl Element {
         .s(Height::new(64))
         .s(Background::new().color_signal(theme::background_1()))
         .s(Font::new().color_signal(theme::font_1()))
-        .s(Shadows::with_signal(theme::shadow_2().map(|color| vec![
-            Shadow::new().y(8).blur(16).color(color)
-        ])))
+        .s(Shadows::with_signal(
+            theme::shadow_2().map(|color| [Shadow::new().y(8).blur(16).color(color)]),
+        ))
         .s(LayerIndex::new(1))
         .item(logo())
-        .item_signal(super::wide_screen().map_true(|| {
-            Row::new().s(Height::fill()).items(menu_links(false))
-        }))
+        .item_signal(
+            super::wide_screen().map_true(|| Row::new().s(Height::fill()).items(menu_links(false))),
+        )
         .item_signal(super::saving().signal().map_true(|| "Saving..."))
         .item(theme_button())
         .item_signal(super::wide_screen().map_true(auth_controls))
         .item_signal(super::wide_screen().map_false(|| hamburger(hamburger_id)))
-        .element_below(El::new().child_signal(super::show_menu_panel().map_true(|| menu_panel(hamburger_id))))
+        .element_below(
+            El::new().child_signal(super::show_menu_panel().map_true(|| menu_panel(hamburger_id))),
+        )
 }
 
 fn logo() -> impl Element {
@@ -49,23 +54,23 @@ fn logo() -> impl Element {
 
 fn theme_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
-    El::new()
-        .s(Padding::new().x(10))
-        .child(
-            Button::new()
-                .s(Font::new().color_signal(theme::font_5()))
-                .s(Background::new().color_signal(hovered_signal.map_bool_signal(
+    El::new().s(Padding::new().x(10)).child(
+        Button::new()
+            .s(Font::new().color_signal(theme::font_5()))
+            .s(
+                Background::new().color_signal(hovered_signal.map_bool_signal(
                     || theme::background_5_highlighted(),
                     || theme::background_5(),
-                )))
-                .s(Padding::all(5))
-                .s(RoundedCorners::all_max())
-                .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-                .on_press(toggle_theme)
-                .label_signal(theme().signal().map(|theme| match theme {
-                    Theme::Light => "Dark",
-                    Theme::Dark => "Light",
-                }))
+                )),
+            )
+            .s(Padding::all(5))
+            .s(RoundedCorners::all_max())
+            .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+            .on_press(toggle_theme)
+            .label_signal(theme().signal().map(|theme| match theme {
+                Theme::Light => "Dark",
+                Theme::Dark => "Light",
+            })),
     )
 }
 
@@ -75,10 +80,12 @@ fn hamburger(id: &str) -> impl Element {
         .id(id)
         .s(Height::fill())
         .s(Align::new().right())
-        .s(Background::new().color_signal(hovered_signal.map_bool_signal(
-            || theme::background_1_highlighted(),
-            || theme::transparent(),
-        )))
+        .s(
+            Background::new().color_signal(hovered_signal.map_bool_signal(
+                || theme::background_1_highlighted(),
+                || theme::transparent(),
+            )),
+        )
         .s(Font::new().size(25))
         .s(Padding::new().bottom(4))
         .s(Width::new(64))
@@ -87,7 +94,7 @@ fn hamburger(id: &str) -> impl Element {
         .label(
             Row::new()
                 .s(Height::fill())
-                .item_signal(super::menu_opened().signal().map_bool(|| "✕", || "☰"))
+                .item_signal(super::menu_opened().signal().map_bool(|| "✕", || "☰")),
         )
         .class_id(super::set_hamburger_class_id)
 }
@@ -99,9 +106,9 @@ fn menu_panel(hamburger_id: &str) -> impl Element {
         .s(Height::new(250))
         .s(Align::new().right())
         .s(Padding::all(15))
-        .s(Shadows::with_signal(theme::shadow().map(|color| vec![
-            Shadow::new().y(8).blur(16).color(color)
-        ])))
+        .s(Shadows::with_signal(
+            theme::shadow().map(|color| [Shadow::new().y(8).blur(16).color(color)]),
+        ))
         .s(RoundedCorners::new().bottom(10))
         .on_click_outside_with_ids(super::close_menu, [hamburger_id])
         .after_remove(|_| super::close_menu())
@@ -110,15 +117,35 @@ fn menu_panel(hamburger_id: &str) -> impl Element {
         .item(auth_controls())
 }
 
-fn menu_links(in_menu_panel: bool) -> Vec<impl Element> {
-    vec![
-        menu_link(Route::TimeTracker, "Time Tracker", super::PageId::TimeTracker, in_menu_panel),
-        menu_link(Route::ClientsAndProjects, "Clients & Projects", super::PageId::ClientsAndProjects, in_menu_panel),
-        menu_link(Route::TimeBlocks, "Time Blocks", super::PageId::TimeBlocks, in_menu_panel),
+fn menu_links(in_menu_panel: bool) -> impl IntoIterator<Item = impl Element> {
+    [
+        menu_link(
+            Route::TimeTracker,
+            "Time Tracker",
+            super::PageId::TimeTracker,
+            in_menu_panel,
+        ),
+        menu_link(
+            Route::ClientsAndProjects,
+            "Clients & Projects",
+            super::PageId::ClientsAndProjects,
+            in_menu_panel,
+        ),
+        menu_link(
+            Route::TimeBlocks,
+            "Time Blocks",
+            super::PageId::TimeBlocks,
+            in_menu_panel,
+        ),
     ]
 }
 
-fn menu_link(route: Route, label: &str, page_id: super::PageId, in_menu_panel: bool) -> impl Element {
+fn menu_link(
+    route: Route,
+    label: &str,
+    page_id: super::PageId,
+    in_menu_panel: bool,
+) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let hovered_or_selected = map_ref! {
         let hovered = hovered_signal,
@@ -129,15 +156,15 @@ fn menu_link(route: Route, label: &str, page_id: super::PageId, in_menu_panel: b
     Link::new()
         .s(Height::fill())
         .s(Padding::new().x(12))
-        .s(Background::new().color_signal(hovered_or_selected.map_true_signal(
-            move || { 
-                if in_menu_panel { 
+        .s(
+            Background::new().color_signal(hovered_or_selected.map_true_signal(move || {
+                if in_menu_panel {
                     theme::background_2_highlighted().left_either()
-                } else { 
+                } else {
                     theme::background_1_highlighted().right_either()
                 }
-            },
-        )))
+            })),
+        )
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .to(route)
         .label(Row::new().s(Height::fill()).item(label))
@@ -154,11 +181,15 @@ fn auth_controls() -> impl Element {
 fn login_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Link::new()
-        .s(Background::new().color_signal(hovered_signal.map_bool_signal(
-            || theme::background_3_highlighted(),
-            || theme::background_3(),
-        )))
-        .s(Font::new().color_signal(theme::font_3()).weight(FontWeight::Bold))
+        .s(
+            Background::new().color_signal(hovered_signal.map_bool_signal(
+                || theme::background_3_highlighted(),
+                || theme::background_3(),
+            )),
+        )
+        .s(Font::new()
+            .color_signal(theme::font_3())
+            .weight(FontWeight::Bold))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
@@ -169,10 +200,12 @@ fn login_button() -> impl Element {
 fn logout_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .s(Background::new().color_signal(hovered_signal.map_bool_signal(
-            || theme::background_2_highlighted(),
-            || theme::background_2(),
-        )))
+        .s(
+            Background::new().color_signal(hovered_signal.map_bool_signal(
+                || theme::background_2_highlighted(),
+                || theme::background_2(),
+            )),
+        )
         .s(Font::new().color_signal(theme::font_2()))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(4))
@@ -180,8 +213,12 @@ fn logout_button() -> impl Element {
         .on_press(super::log_out)
         .label(
             Row::new()
-                .item(El::new().s(Font::new().weight(FontWeight::SemiBold)).child("Log out "))
-                .item(super::logged_user_name())
+                .item(
+                    El::new()
+                        .s(Font::new().weight(FontWeight::SemiBold))
+                        .child("Log out "),
+                )
+                .item(super::logged_user_name()),
         )
 }
 

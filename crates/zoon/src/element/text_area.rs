@@ -264,9 +264,9 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFla
         RE::DomElement: AsRef<web_sys::HtmlTextAreaElement>,
     {
         let dom_element = self.raw_el.dom_element();
-        self.raw_el = self.raw_el.event_handler(move |_: events::Input| {
-            on_change(dom_element.as_ref().value())
-        });
+        self.raw_el = self
+            .raw_el
+            .event_handler(move |_: events::Input| on_change(dom_element.as_ref().value()));
         self.into_type()
     }
 

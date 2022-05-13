@@ -46,30 +46,30 @@ macro_rules! color {
                 Theme::Dark => $dark_color,
             })
         }
-    }
+    };
 }
 
 // 0) white / black
 color!(background_0 => hsluv!(0, 0, 100), hsluv!(0, 0, 0));
 color!(font_0 => hsluv!(0, 0, 0, 70), hsluv!(0, 0, 100, 70));
 
-// 1) blue / white 
+// 1) blue / white
 color!(background_1 => hsluv!(256.1, 87.8, 49.6), hsluv!(256.1, 87.8, 20));
 color!(background_1_highlighted => hsluv!(257, 92.3, 44.9), hsluv!(257, 92.3, 25));
 color!(font_1 => hsluv!(0, 0, 100, 95), hsluv!(0, 0, 90, 95));
 color!(border_1 => hsluv!(168.3, 100, 75.3), hsluv!(168.3, 100, 24.7));
 
-// 2) light gray / black 
+// 2) light gray / black
 color!(background_2 => hsluv!(0, 0, 96.5), hsluv!(0, 0, 3.5));
 color!(background_2_highlighted => hsluv!(0, 0, 94.5), hsluv!(0, 0, 6));
 color!(font_2 => hsluv!(0, 0, 0, 70), hsluv!(0, 0, 100, 70));
 
-// 3) green / white 
+// 3) green / white
 color!(background_3 => hsluv!(168.3, 100, 75.3), hsluv!(168.3, 100, 40));
 color!(background_3_highlighted => hsluv!(168.5, 100, 71.1), hsluv!(168.5, 100, 45));
 color!(font_3 => hsluv!(0, 0, 100, 95), hsluv!(0, 0, 90, 95));
 
-// 4) yellow / black / blue 
+// 4) yellow / black / blue
 color!(background_4 => hsluv!(69.9, 100, 88.8), hsluv!(69.9, 100, 30));
 color!(background_4_highlighted => hsluv!(69, 100, 87), hsluv!(69, 100, 13));
 color!(font_4 => hsluv!(0, 0, 0, 70), hsluv!(0, 0, 100, 70));

@@ -1,5 +1,5 @@
 use crate::*;
-use std::{rc::Rc, cell::RefCell};
+use std::{cell::RefCell, rc::Rc};
 
 pub trait Focusable: UpdateRawEl + Sized
 where

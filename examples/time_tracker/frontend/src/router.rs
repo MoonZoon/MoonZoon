@@ -1,4 +1,4 @@
-use crate::{*, app::PageId};
+use crate::{app::PageId, *};
 use std::collections::VecDeque;
 use zoon::println;
 

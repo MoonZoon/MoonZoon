@@ -1,5 +1,5 @@
 use crate::*;
-use std::{rc::Rc, cell::RefCell};
+use std::{cell::RefCell, rc::Rc};
 
 // ------ MouseEventAware ------
 
@@ -9,7 +9,9 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         let mouse_leave_handler = mouse_over_handler.clone();
         self.update_raw_el(|raw_el| {
             raw_el
-                .event_handler(move |_: events_extra::MouseOver| mouse_over_handler.borrow_mut()(true))
+                .event_handler(move |_: events_extra::MouseOver| {
+                    mouse_over_handler.borrow_mut()(true)
+                })
                 .event_handler(move |_: events::MouseLeave| mouse_leave_handler.borrow_mut()(false))
         })
     }
@@ -52,10 +54,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         })
     }
 
-    fn on_click_outside<'a>(
-        self,
-        mut handler: impl FnMut() + 'static,
-    ) -> Self {
+    fn on_click_outside<'a>(self, mut handler: impl FnMut() + 'static) -> Self {
         self.update_raw_el(move |raw_el| {
             let dom_element: web_sys::Element = raw_el.dom_element().into();
             raw_el.global_event_handler(move |event: events::Click| {
@@ -67,10 +66,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         })
     }
 
-    fn on_click_outside_event<'a>(
-        self,
-        mut handler: impl FnMut(MouseEvent) + 'static,
-    ) -> Self {
+    fn on_click_outside_event<'a>(self, mut handler: impl FnMut(MouseEvent) + 'static) -> Self {
         self.update_raw_el(move |raw_el| {
             let dom_element: web_sys::Element = raw_el.dom_element().into();
             raw_el.global_event_handler(move |event: events::Click| {
@@ -134,8 +130,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
 // -- Helpers --
 
 fn selector_from_ids<'a>(ids: impl IntoIterator<Item = impl IntoCowStr<'a>>) -> String {
-    ids
-        .into_iter()
+    ids.into_iter()
         .map(|id| crate::format!("#{}", id.into_cow_str()))
         .collect::<Vec<_>>()
         .join(", ")
@@ -146,11 +141,12 @@ fn is_inside(dom_element: &web_sys::Element, event: &events::Click, ids_selector
     if dom_element.contains(Some(target.unchecked_ref())) {
         return true;
     }
-    if not(ids_selector.is_empty()) && target
-        .unchecked_ref::<web_sys::Element>()
-        .closest(&ids_selector)
-        .expect_throw("invalid selector provided")
-        .is_some()
+    if not(ids_selector.is_empty())
+        && target
+            .unchecked_ref::<web_sys::Element>()
+            .closest(&ids_selector)
+            .expect_throw("invalid selector provided")
+            .is_some()
     {
         return true;
     }

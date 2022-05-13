@@ -1,7 +1,7 @@
-use zoon::{*, eprintln};
-use crate::{connection::connection, app};
-use shared::{UpMsg, ClientId, ProjectId, TimeEntryId, time_tracker};
+use crate::{app, connection::connection};
+use shared::{time_tracker, ClientId, ProjectId, TimeEntryId, UpMsg};
 use std::sync::Arc;
+use zoon::{eprintln, *};
 
 mod view;
 
@@ -14,7 +14,7 @@ const TIME_ENTRY_BREAKPOINT: u32 = 660;
 #[derive(Default)]
 struct Client {
     id: ClientId,
-    name:String,
+    name: String,
     projects: Vec<Arc<Project>>,
 }
 
@@ -69,35 +69,48 @@ pub fn request_clients() {
 
 pub fn convert_and_set_clients(new_clients: Vec<time_tracker::Client>) {
     fn convert_clients(clients: Vec<time_tracker::Client>) -> Vec<Arc<Client>> {
-        clients.into_iter().map(|client| {
-            Arc::new(Client {
-                id: client.id,
-                name: client.name,
-                projects: convert_projects(client.projects),
+        clients
+            .into_iter()
+            .map(|client| {
+                Arc::new(Client {
+                    id: client.id,
+                    name: client.name,
+                    projects: convert_projects(client.projects),
+                })
             })
-        }).collect()
+            .collect()
     }
     fn convert_projects(time_blocks: Vec<time_tracker::Project>) -> Vec<Arc<Project>> {
-        time_blocks.into_iter().map(|project| {
-            Arc::new(Project {
-                id: project.id,
-                name: project.name,
-                time_entries: MutableVec::new_with_values(convert_time_entries(project.time_entries)),
+        time_blocks
+            .into_iter()
+            .map(|project| {
+                Arc::new(Project {
+                    id: project.id,
+                    name: project.name,
+                    time_entries: MutableVec::new_with_values(convert_time_entries(
+                        project.time_entries,
+                    )),
+                })
             })
-        }).collect()
+            .collect()
     }
     fn convert_time_entries(time_entries: Vec<time_tracker::TimeEntry>) -> Vec<Arc<TimeEntry>> {
-        time_entries.into_iter().map(|time_entry| {
-            Arc::new(TimeEntry {
-                id: time_entry.id,
-                name: Mutable::new(time_entry.name),
-                started: Mutable::new(Wrapper::new(time_entry.started)),
-                stopped: Mutable::new(time_entry.stopped.map(Wrapper::new)),
-                is_old: true,
+        time_entries
+            .into_iter()
+            .map(|time_entry| {
+                Arc::new(TimeEntry {
+                    id: time_entry.id,
+                    name: Mutable::new(time_entry.name),
+                    started: Mutable::new(Wrapper::new(time_entry.started)),
+                    stopped: Mutable::new(time_entry.stopped.map(Wrapper::new)),
+                    is_old: true,
+                })
             })
-        }).collect()
+            .collect()
     }
-    clients().lock_mut().replace_cloned(convert_clients(new_clients));
+    clients()
+        .lock_mut()
+        .replace_cloned(convert_clients(new_clients));
 }
 
 // -- project --
@@ -108,11 +121,11 @@ fn toggle_tracker(project: &Project) {
         .lock_ref()
         .iter()
         .find(|time_entry| time_entry.stopped.get().is_none())
-        .cloned(); 
+        .cloned();
 
     if let Some(active_time_entry) = active_time_entry {
         return active_time_entry.stopped.set(Some(Local::now().into()));
-    } 
+    }
     add_time_entry(project);
 }
 
@@ -134,7 +147,10 @@ fn add_time_entry(project: &Project) {
 
 fn delete_time_entry(project: &Project, time_entry_id: TimeEntryId) {
     // @TODO send up_msg + confirm dialog
-    project.time_entries.lock_mut().retain(|time_entry| time_entry.id != time_entry_id);
+    project
+        .time_entries
+        .lock_mut()
+        .retain(|time_entry| time_entry.id != time_entry_id);
 }
 
 fn rename_time_entry(time_entry_id: TimeEntryId, name: &str) {
@@ -157,7 +173,10 @@ fn set_time_entry_stopped(time_entry: &TimeEntry, stopped: DateTime<Local>) {
 // ------ ------
 
 fn show_wide_time_entry() -> impl Signal<Item = bool> {
-    app::viewport_width().signal().map(|width| width > TIME_ENTRY_BREAKPOINT).dedupe()
+    app::viewport_width()
+        .signal()
+        .map(|width| width > TIME_ENTRY_BREAKPOINT)
+        .dedupe()
 }
 
 // ------ ------
