@@ -1,4 +1,4 @@
-use crate::*;
+use crate::{*, style::supports_dvx};
 
 /// Styling for height.
 #[derive(Default)]
@@ -88,7 +88,8 @@ impl<'a> Height<'a> {
     /// ```
     pub fn screen() -> Self {
         let mut this = Self::default();
-        this.static_css_props.insert("height", "100vh");
+        this.static_css_props
+            .insert("height", if *supports_dvx() { "100dvh" } else { "100vh" });
         this.height_mode = HeightMode::Exact;
         this
     }
@@ -109,7 +110,10 @@ impl<'a> Height<'a> {
     ///     .label("Hover this giant button");
     /// ```
     pub fn min_screen(mut self) -> Self {
-        self.static_css_props.insert("min-height", "100vh");
+        self.static_css_props.insert(
+            "min-height",
+            if *supports_dvx() { "100dvh" } else { "100vh" },
+        );
         self
     }
 
