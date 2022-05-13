@@ -130,7 +130,6 @@ pub trait RawEl: Sized {
         options: EventOptions,
         handler: impl FnMut(E) + 'static,
     ) -> Self {
-        let handler = move |event: E| handler.clone()(event);
         self.update_dom_builder(|dom_builder| {
             dom_builder.event_with_options(&options.into(), handler)
         })
@@ -148,7 +147,6 @@ pub trait RawEl: Sized {
         options: EventOptions,
         handler: impl FnMut(E) + 'static,
     ) -> Self {
-        let handler = move |event: E| handler.clone()(event);
         self.update_dom_builder(|dom_builder| {
             dom_builder.global_event_with_options(&options.into(), handler)
         })
@@ -241,7 +239,7 @@ pub trait RawEl: Sized {
                 dynamic_css_props,
                 static_css_classes: _,
                 dynamic_css_classes: _,
-                resize_handlers,
+                mut resize_handlers,
             } = group;
 
             for (name, CssPropValue { value, important }) in static_css_props {
@@ -256,7 +254,7 @@ pub trait RawEl: Sized {
             }
             if not(resize_handlers.is_empty()) {
                 self = self.on_resize(move |width, height| {
-                    for handler in resize_handlers {
+                    for handler in &mut resize_handlers {
                         handler(width, height);
                     }
                 });

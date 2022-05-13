@@ -596,7 +596,7 @@ impl<
 
     pub fn on_change(
         mut self,
-        on_change: impl FnMut(String) + 'static,
+        mut on_change: impl FnMut(String) + 'static,
     ) -> TextInput<
         IdFlag,
         OnChangeFlagSet,
@@ -613,7 +613,7 @@ impl<
     {
         let dom_element = self.raw_el.dom_element();
         self.raw_el = self.raw_el.event_handler(move |_: events::Input| {
-            (on_change.clone())(dom_element.as_ref().value())
+            on_change(dom_element.as_ref().value())
         });
         self.into_type()
     }

@@ -1,24 +1,24 @@
 use crate::*;
+use std::{rc::Rc, cell::RefCell};
 
 // ------ MouseEventAware ------
 
 pub trait MouseEventAware: UpdateRawEl + Sized {
     fn on_hovered_change(self, handler: impl FnMut(bool) + 'static) -> Self {
-        let mouse_over_handler = move |hovered| (handler.clone())(hovered);
+        let mouse_over_handler = Rc::new(RefCell::new(handler));
         let mouse_leave_handler = mouse_over_handler.clone();
         self.update_raw_el(|raw_el| {
             raw_el
-                .event_handler(move |_: events_extra::MouseOver| mouse_over_handler(true))
-                .event_handler(move |_: events::MouseLeave| mouse_leave_handler(false))
+                .event_handler(move |_: events_extra::MouseOver| mouse_over_handler.borrow_mut()(true))
+                .event_handler(move |_: events::MouseLeave| mouse_leave_handler.borrow_mut()(false))
         })
     }
 
-    fn on_click(self, handler: impl FnMut() + 'static) -> Self {
-        let handler = move || handler.clone()();
+    fn on_click(self, mut handler: impl FnMut() + 'static) -> Self {
         self.update_raw_el(|raw_el| raw_el.event_handler(move |_: events::Click| handler()))
     }
 
-    fn on_click_event(self, handler: impl FnMut(MouseEvent) + 'static) -> Self {
+    fn on_click_event(self, mut handler: impl FnMut(MouseEvent) + 'static) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el.event_handler(move |event: events::Click| {
                 let mouse_event = MouseEvent {
@@ -28,17 +28,16 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                     movement_y: 0,
                     raw_event: RawMouseEvent::Click(event),
                 };
-                (handler.clone())(mouse_event)
+                handler(mouse_event);
             })
         })
     }
 
-    fn on_double_click(self, handler: impl FnMut() + 'static) -> Self {
-        let handler = move || handler.clone()();
+    fn on_double_click(self, mut handler: impl FnMut() + 'static) -> Self {
         self.update_raw_el(|raw_el| raw_el.event_handler(move |_: events::DoubleClick| handler()))
     }
 
-    fn on_double_click_event(self, handler: impl FnMut(MouseEvent) + 'static) -> Self {
+    fn on_double_click_event(self, mut handler: impl FnMut(MouseEvent) + 'static) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el.event_handler(move |event: events::DoubleClick| {
                 let mouse_event = MouseEvent {
@@ -48,14 +47,14 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                     movement_y: 0,
                     raw_event: RawMouseEvent::DoubleClick(event),
                 };
-                (handler.clone())(mouse_event)
+                handler(mouse_event);
             })
         })
     }
 
     fn on_click_outside<'a>(
         self,
-        handler: impl FnMut() + 'static,
+        mut handler: impl FnMut() + 'static,
     ) -> Self {
         self.update_raw_el(move |raw_el| {
             let dom_element: web_sys::Element = raw_el.dom_element().into();
@@ -63,14 +62,14 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                 if is_inside(&dom_element, &event, "") {
                     return;
                 }
-                (handler.clone())();
+                handler();
             })
         })
     }
 
     fn on_click_outside_event<'a>(
         self,
-        handler: impl FnMut(MouseEvent) + 'static,
+        mut handler: impl FnMut(MouseEvent) + 'static,
     ) -> Self {
         self.update_raw_el(move |raw_el| {
             let dom_element: web_sys::Element = raw_el.dom_element().into();
@@ -85,14 +84,14 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                     movement_y: 0,
                     raw_event: RawMouseEvent::Click(event),
                 };
-                (handler.clone())(mouse_event);
+                handler(mouse_event);
             })
         })
     }
 
     fn on_click_outside_with_ids<'a>(
         self,
-        handler: impl FnMut() + 'static,
+        mut handler: impl FnMut() + 'static,
         ignored_ids: impl IntoIterator<Item = impl IntoCowStr<'a>>,
     ) -> Self {
         let ids_selector = selector_from_ids(ignored_ids);
@@ -102,14 +101,14 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                 if is_inside(&dom_element, &event, &ids_selector) {
                     return;
                 }
-                (handler.clone())();
+                handler();
             })
         })
     }
 
     fn on_click_outside_with_ids_event<'a>(
         self,
-        handler: impl FnMut(MouseEvent) + 'static,
+        mut handler: impl FnMut(MouseEvent) + 'static,
         ignored_ids: impl IntoIterator<Item = impl IntoCowStr<'a>>,
     ) -> Self {
         let ids_selector = selector_from_ids(ignored_ids);
@@ -126,7 +125,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                     movement_y: 0,
                     raw_event: RawMouseEvent::Click(event),
                 };
-                (handler.clone())(mouse_event);
+                handler(mouse_event);
             })
         })
     }
