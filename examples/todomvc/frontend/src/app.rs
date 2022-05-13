@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use zoon::{eprintln, println, *, strum::EnumIter};
+use zoon::{eprintln, println, strum::EnumIter, *};
 
 pub mod view;
 

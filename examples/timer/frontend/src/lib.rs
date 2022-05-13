@@ -85,11 +85,11 @@ fn timeout_panel() -> impl Element {
 fn sleep_panel() -> impl Element {
     let (asleep, asleep_signal) = Mutable::new_and_signal(false);
     let sleep = move || {
-        Task::start(async move {
+        Task::start(clone!((asleep) async move {
             asleep.set_neq(true);
             Timer::sleep(2_000).await;
             asleep.set_neq(false);
-        })
+        }))
     };
     Row::new()
         .s(Spacing::new(20))
