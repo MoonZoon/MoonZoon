@@ -56,6 +56,45 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
     fn on_click_outside<'a>(
         self,
         handler: impl FnOnce() + Clone + 'static,
+    ) -> Self {
+        self.update_raw_el(move |raw_el| {
+            let dom_element: web_sys::Element = raw_el.dom_element().into();
+            raw_el.global_event_handler(move |event: events::Click| {
+                let target = event.target().expect_throw("failed to get event target");
+                if dom_element.contains(Some(target.unchecked_ref())) {
+                    return;
+                }
+                (handler.clone())();
+            })
+        })
+    }
+
+    fn on_click_outside_event<'a>(
+        self,
+        handler: impl FnOnce(MouseEvent) + Clone + 'static,
+    ) -> Self {
+        self.update_raw_el(move |raw_el| {
+            let dom_element: web_sys::Element = raw_el.dom_element().into();
+            raw_el.global_event_handler(move |event: events::Click| {
+                let target = event.target().expect_throw("failed to get event target");
+                if dom_element.contains(Some(target.unchecked_ref())) {
+                    return;
+                }
+                let mouse_event = MouseEvent {
+                    x: event.x(),
+                    y: event.y(),
+                    movement_x: 0,
+                    movement_y: 0,
+                    raw_event: RawMouseEvent::Click(event),
+                };
+                (handler.clone())(mouse_event);
+            })
+        })
+    }
+
+    fn on_click_outside_with_ids<'a>(
+        self,
+        handler: impl FnOnce() + Clone + 'static,
         ignored_ids: impl IntoIterator<Item = impl IntoCowStr<'a>>,
     ) -> Self {
         let ids_selector = ignored_ids
@@ -71,10 +110,10 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                 if dom_element.contains(Some(target.unchecked_ref())) {
                     return;
                 }
-                if target
+                if not(ids_selector.is_empty()) && target
                     .unchecked_ref::<web_sys::Element>()
                     .closest(&ids_selector)
-                    .expect_throw("failed to get closest elements")
+                    .expect_throw("invalid selector provided")
                     .is_some()
                 {
                     return;
@@ -84,7 +123,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         })
     }
 
-    fn on_click_outside_event<'a>(
+    fn on_click_outside_with_ids_event<'a>(
         self,
         handler: impl FnOnce(MouseEvent) + Clone + 'static,
         ignored_ids: impl IntoIterator<Item = impl IntoCowStr<'a>>,
@@ -102,10 +141,10 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                 if dom_element.contains(Some(target.unchecked_ref())) {
                     return;
                 }
-                if target
+                if not(ids_selector.is_empty()) && target
                     .unchecked_ref::<web_sys::Element>()
                     .closest(&ids_selector)
-                    .expect_throw("failed to get closest elements")
+                    .expect_throw("invalid selector provided")
                     .is_some()
                 {
                     return;
