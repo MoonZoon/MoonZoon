@@ -50,11 +50,16 @@ async fn frontend() -> Frontend {
 async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
     println!("{:?}", req);
 
-    let UpMsgRequest { up_msg, cor_id, session_id, auth_token } = req;
+    let UpMsgRequest {
+        up_msg,
+        cor_id,
+        session_id,
+        auth_token,
+    } = req;
 
     let down_msg = match up_msg {
         // ------ Auth ------
-        UpMsg::Login {name, password } => {
+        UpMsg::Login { name, password } => {
             if name != "john@example.com" || password != "Password1" {
                 DownMsg::LoginError("Sorry, invalid name or password.".to_owned())
             } else {
@@ -65,106 +70,99 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
                 };
                 DownMsg::LoggedIn(user)
             }
-
-        },
+        }
         UpMsg::Logout => DownMsg::LoggedOut,
         // ------ Page data ------
-        UpMsg::GetClientsAndProjectsClients => {
-            DownMsg::ClientsAndProjectsClients(vec![
-                shared::clients_and_projects::Client {
-                    id: ClientId::new(),
-                    name: "Client A".to_owned(),
-                    projects: vec![]
-                },
-                shared::clients_and_projects::Client {
-                    id: ClientId::new(),
-                    name: "Client B".to_owned(),
-                    projects: vec![
-                        shared::clients_and_projects::Project {
-                            id: ProjectId::new(),
-                            name: "Project 1".to_owned(),
-                        },
-                        shared::clients_and_projects::Project {
-                            id: ProjectId::new(),
-                            name: "Project 2".to_owned(),
-                        }
-                    ]
-                },
-            ])
-        },
-        UpMsg::GetTimeBlocksClients => {
-            DownMsg::TimeBlocksClients(vec![
-                shared::time_blocks::Client {
-                    id: ClientId::new(),
-                    name: "Client A".to_owned(),
-                    time_blocks: vec![],
-                    tracked: Duration::zero().into(),
-                },
-                shared::time_blocks::Client {
-                    id: ClientId::new(),
-                    name: "Client B".to_owned(),
-                    time_blocks: vec![
-                        shared::time_blocks::TimeBlock {
-                            id: TimeBlockId::new(),
-                            name: "TimeBlock 1".to_owned(),
-                            status: shared::time_blocks::TimeBlockStatus::NonBillable,
-                            duration: Duration::hours(19).into(),
-                            invoice: None,
-                        },
-                        shared::time_blocks::TimeBlock {
-                            id: TimeBlockId::new(),
-                            name: "TimeBlock 2".to_owned(),
-                            status: shared::time_blocks::TimeBlockStatus::Paid,
-                            duration: Duration::hours(21).into(),
-                            invoice: Some(shared::time_blocks::Invoice {
-                                id: InvoiceId::new(),
-                                custom_id: "My Invoice 12345".to_owned(),
-                                url: "http://example.com".to_owned(),
-                            }),
-                        },
-                    ],
-                    tracked: Duration::hours(42).into(),
-                },
-            ])
-        },
-        UpMsg::GetTimeTrackerClients => {
-            DownMsg::TimeTrackerClients(vec![
-                shared::time_tracker::Client {
-                    id: ClientId::new(),
-                    name: "Client A".to_owned(),
-                    projects: vec![],
-                },
-                shared::time_tracker::Client {
-                    id: ClientId::new(),
-                    name: "Client B".to_owned(),
-                    projects: vec![
-                        shared::time_tracker::Project {
-                            id: ProjectId::new(),
-                            name: "Project 1".to_owned(),
-                            time_entries: vec![],
-                        },
-                        shared::time_tracker::Project {
-                            id: ProjectId::new(),
-                            name: "Project 2".to_owned(),
-                            time_entries: vec![
-                                shared::time_tracker::TimeEntry {
-                                    id: TimeEntryId::new(),
-                                    name: "TimeEntry 1".to_owned(),
-                                    started: Local::now().into(),
-                                    stopped: None,
-                                },
-                                shared::time_tracker::TimeEntry {
-                                    id: TimeEntryId::new(),
-                                    name: "TimeEntry 2".to_owned(),
-                                    started: Local::now().into(),
-                                    stopped: Some(Local::now().into()),
-                                },
-                            ],
-                        },
-                    ],
-                },
-            ])
-        },
+        UpMsg::GetClientsAndProjectsClients => DownMsg::ClientsAndProjectsClients(vec![
+            shared::clients_and_projects::Client {
+                id: ClientId::new(),
+                name: "Client A".to_owned(),
+                projects: vec![],
+            },
+            shared::clients_and_projects::Client {
+                id: ClientId::new(),
+                name: "Client B".to_owned(),
+                projects: vec![
+                    shared::clients_and_projects::Project {
+                        id: ProjectId::new(),
+                        name: "Project 1".to_owned(),
+                    },
+                    shared::clients_and_projects::Project {
+                        id: ProjectId::new(),
+                        name: "Project 2".to_owned(),
+                    },
+                ],
+            },
+        ]),
+        UpMsg::GetTimeBlocksClients => DownMsg::TimeBlocksClients(vec![
+            shared::time_blocks::Client {
+                id: ClientId::new(),
+                name: "Client A".to_owned(),
+                time_blocks: vec![],
+                tracked: Duration::zero().into(),
+            },
+            shared::time_blocks::Client {
+                id: ClientId::new(),
+                name: "Client B".to_owned(),
+                time_blocks: vec![
+                    shared::time_blocks::TimeBlock {
+                        id: TimeBlockId::new(),
+                        name: "TimeBlock 1".to_owned(),
+                        status: shared::time_blocks::TimeBlockStatus::NonBillable,
+                        duration: Duration::hours(19).into(),
+                        invoice: None,
+                    },
+                    shared::time_blocks::TimeBlock {
+                        id: TimeBlockId::new(),
+                        name: "TimeBlock 2".to_owned(),
+                        status: shared::time_blocks::TimeBlockStatus::Paid,
+                        duration: Duration::hours(21).into(),
+                        invoice: Some(shared::time_blocks::Invoice {
+                            id: InvoiceId::new(),
+                            custom_id: "My Invoice 12345".to_owned(),
+                            url: "http://example.com".to_owned(),
+                        }),
+                    },
+                ],
+                tracked: Duration::hours(42).into(),
+            },
+        ]),
+        UpMsg::GetTimeTrackerClients => DownMsg::TimeTrackerClients(vec![
+            shared::time_tracker::Client {
+                id: ClientId::new(),
+                name: "Client A".to_owned(),
+                projects: vec![],
+            },
+            shared::time_tracker::Client {
+                id: ClientId::new(),
+                name: "Client B".to_owned(),
+                projects: vec![
+                    shared::time_tracker::Project {
+                        id: ProjectId::new(),
+                        name: "Project 1".to_owned(),
+                        time_entries: vec![],
+                    },
+                    shared::time_tracker::Project {
+                        id: ProjectId::new(),
+                        name: "Project 2".to_owned(),
+                        time_entries: vec![
+                            shared::time_tracker::TimeEntry {
+                                id: TimeEntryId::new(),
+                                name: "TimeEntry 1".to_owned(),
+                                started: Local::now().into(),
+                                stopped: None,
+                            },
+                            shared::time_tracker::TimeEntry {
+                                id: TimeEntryId::new(),
+                                name: "TimeEntry 2".to_owned(),
+                                started: Local::now().into(),
+                                stopped: Some(Local::now().into()),
+                            },
+                        ],
+                    },
+                ],
+            },
+        ]),
         _ => return,
     };
 
@@ -209,7 +207,7 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
     //         let shared_clients_futs = client::by_id().iter().map(|(id, client)| {
     //             async {
     //                 let (name, projects) = join!(
-    //                     client.name(), 
+    //                     client.name(),
     //                     client.projects().then(|projects| {
     //                         join_all(shared_projects_futs(projects))
     //                     }),
@@ -229,7 +227,7 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
     //                 if let Some(invoice) = invoice {
     //                     let (id, custom_id, url) = join!(
     //                         invoice.id(),
-    //                         invoice.custom_id(), 
+    //                         invoice.custom_id(),
     //                         invoice.url(),
     //                     ).await;
     //                     Some(shared::time_blocks::Invoice { id, custom_id, url })
@@ -243,9 +241,9 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
     //             async {
     //                 let (id, name, status, duration, invoice) = join!(
     //                     time_block.id(),
-    //                     time_block.name(), 
-    //                     time_block.status(), 
-    //                     time_block.duration(), 
+    //                     time_block.name(),
+    //                     time_block.status(),
+    //                     time_block.duration(),
     //                     time_block.invoice().then(shared_invoice_fut),
     //                 ).await;
     //                 shared::time_blocks::TimeBlock { id, name, status, duration, invoice }
@@ -255,8 +253,8 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
     //         let shared_clients_futs = client::by_id().iter().map(|(id, client)| {
     //             async {
     //                 let (name, tracked, time_blocks) = join!(
-    //                     client.name(), 
-    //                     client.tracked(), 
+    //                     client.name(),
+    //                     client.tracked(),
     //                     client.time_blocks().then(|time_blocks| {
     //                         join_all(shared_time_blocks_futs(time_blocks))
     //                     }),
@@ -274,8 +272,8 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
     //             async {
     //                 let (id, name, started, stopped) = join!(
     //                     time_entry.id(),
-    //                     time_entry.name(), 
-    //                     time_entry.started(), 
+    //                     time_entry.name(),
+    //                     time_entry.started(),
     //                     time_entry.stopped(),
     //                 );
     //                 shared::time_tracker::TimeEntry { id, name, started, stopped }
@@ -286,7 +284,7 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
     //             async {
     //                 let (id, name, time_entries) = join!(
     //                     project.id(),
-    //                     project.name(), 
+    //                     project.name(),
     //                     project.time_entries().then(|time_entries| {
     //                         join_all(shared_time_entries_futs(time_entries))
     //                     }),
@@ -298,8 +296,8 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
     //         let shared_clients_futs = client::by_id().iter().map(|(id, client)| {
     //             async {
     //                 let (name, projects) = join(
-    //                     client.name(), 
-    //                     client.projects().then(|projects| { 
+    //                     client.name(),
+    //                     client.projects().then(|projects| {
     //                         join_all(shared_projects_futs(projects))
     //                     }),
     //                 ).await;

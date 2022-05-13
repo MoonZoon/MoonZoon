@@ -135,10 +135,7 @@ pub trait RawEl: Sized {
         })
     }
 
-    fn global_event_handler<E: StaticEvent>(
-        self,
-        handler: impl FnMut(E) + 'static,
-    ) -> Self {
+    fn global_event_handler<E: StaticEvent>(self, handler: impl FnMut(E) + 'static) -> Self {
         self.global_event_handler_with_options(EventOptions::default(), handler)
     }
 

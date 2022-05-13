@@ -290,13 +290,9 @@ impl<'a> StyleGroup<'a> {
         self
     }
 
-    pub fn on_resize(
-        mut self,
-        mut handler: impl FnMut(U32Width, U32Height) + 'static,
-    ) -> Self {
-        self.resize_handlers.push(Box::new(move |width, height| {
-            handler(width, height)
-        }));
+    pub fn on_resize(mut self, mut handler: impl FnMut(U32Width, U32Height) + 'static) -> Self {
+        self.resize_handlers
+            .push(Box::new(move |width, height| handler(width, height)));
         self
     }
 }

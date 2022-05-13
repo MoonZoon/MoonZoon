@@ -1,17 +1,16 @@
-use zoon::{*, eprintln};
 use crate::{
-    router::{router, Route},
     connection::connection,
+    router::{router, Route},
 };
+use shared::{UpMsg, User};
 use std::collections::BTreeSet;
-use shared::{User, UpMsg};
+use zoon::{eprintln, *};
 
 mod view;
 
 pub static USER_STORAGE_KEY: &str = "moonzoon-time_tracker-user";
 pub const DEBOUNCE_MS: u32 = 800;
 const MENU_BREAKPOINT: u32 = 760;
-
 
 // ------ ------
 //     Types
@@ -139,7 +138,10 @@ fn set_hamburger_class_id(class_id: ClassId) {
 // ------ ------
 
 fn wide_screen() -> impl Signal<Item = bool> {
-    viewport_width().signal().map(|width| width > MENU_BREAKPOINT).dedupe()
+    viewport_width()
+        .signal()
+        .map(|width| width > MENU_BREAKPOINT)
+        .dedupe()
 }
 
 fn show_menu_panel() -> impl Signal<Item = bool> {
@@ -163,9 +165,7 @@ pub fn root() -> impl Element {
 }
 
 pub fn icon_add() -> impl Element {
-    RawHtmlEl::new("i")
-        .class("eos-icons")
-        .child("add")
+    RawHtmlEl::new("i").class("eos-icons").child("add")
 }
 
 pub fn icon_delete_forever() -> impl Element {
@@ -175,11 +175,8 @@ pub fn icon_delete_forever() -> impl Element {
 }
 
 pub fn icon_open_in_new() -> impl Element {
-    RawHtmlEl::new("i")
-        .class("eos-icons")
-        .child("open_in_new")
+    RawHtmlEl::new("i").class("eos-icons").child("open_in_new")
 }
-
 
 // blocks!{
 //     append_blocks![
@@ -280,7 +277,7 @@ pub fn icon_open_in_new() -> impl Element {
 //     fn view_clicked() {
 //         if !close_menu_on_view_click().inner() {
 //             return close_menu_on_view_click.set(true);
-//         } 
+//         }
 //         close_menu();
 //     }
 
@@ -311,7 +308,7 @@ pub fn icon_open_in_new() -> impl Element {
 //     #[update]
 //     fn send_up_msg(mutation: bool, msg: UpMsg) {
 //         let cor_id = connection().map(move |connection| {
-//             let access_token = user().map(|user| { 
+//             let access_token = user().map(|user| {
 //                 user.map(|user| user.access_token)
 //             });
 //             connection.send_up_msg(msg, access_token);

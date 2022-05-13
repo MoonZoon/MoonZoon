@@ -5,7 +5,7 @@ use crate::*;
 pub struct Client {
     pub id: ClientId,
     pub name: String,
-    pub projects: Vec<Project>
+    pub projects: Vec<Project>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

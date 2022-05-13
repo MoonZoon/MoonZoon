@@ -25,10 +25,7 @@ pub struct User {
 #[serde(crate = "serde")]
 pub enum UpMsg {
     // ------ Auth ------
-    Login {
-        name: String,
-        password: String,
-    },
+    Login { name: String, password: String },
     Logout,
     // ------ Page data ------
     GetClientsAndProjectsClients,
@@ -101,4 +98,3 @@ pub enum DownMsg {
     TimeEntryStartedSet,
     TimeEntryStoppedSet,
 }
-
