@@ -96,7 +96,6 @@ fn hamburger(id: &str) -> impl Element {
                 .s(Height::fill())
                 .item_signal(super::menu_opened().signal().map_bool(|| "✕", || "☰")),
         )
-        .class_id(super::set_hamburger_class_id)
 }
 
 fn menu_panel(hamburger_id: &str) -> impl Element {

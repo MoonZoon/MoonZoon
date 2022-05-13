@@ -1,4 +1,4 @@
-use crate::{*, style::supports_dvx};
+use crate::{style::supports_dvx, *};
 
 /// Styling for height.
 #[derive(Default)]
