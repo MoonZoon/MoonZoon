@@ -56,11 +56,6 @@ pub fn viewport_width() -> &'static Mutable<u32> {
 }
 
 #[static_ref]
-fn hamburger_class_id() -> &'static Mutable<ClassId> {
-    Mutable::new(ClassId::default())
-}
-
-#[static_ref]
 pub fn unfinished_mutations() -> &'static Mutable<BTreeSet<CorId>> {
     Mutable::new(BTreeSet::new())
 }
@@ -127,10 +122,6 @@ fn toggle_menu() {
 
 pub fn close_menu() {
     menu_opened().set_neq(false);
-}
-
-fn set_hamburger_class_id(class_id: ClassId) {
-    hamburger_class_id().set(class_id);
 }
 
 // ------ ------
