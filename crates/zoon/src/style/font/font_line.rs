@@ -66,11 +66,27 @@ impl FontLine<'_> {
 
     pub fn width_signal(
         mut self,
-        width: impl Signal<Item = impl Into<Option<HSLuv>>> + Unpin + 'static,
+        width: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
     ) -> Self {
         let width = width.map(|width| width.into().map(|width| px(width)));
         self.dynamic_css_props
             .insert("text-decoration-thickness".into(), box_css_signal(width));
+        self
+    }
+
+    pub fn offset(mut self, offset: u32) -> Self {
+        self.static_css_props
+            .insert("text-underline-offset", px(offset));
+        self
+    }
+
+    pub fn offset_signal(
+        mut self,
+        offset: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
+    ) -> Self {
+        let offset = offset.map(|offset| offset.into().map(|offset| px(offset)));
+        self.dynamic_css_props
+            .insert("text-underline-offset".into(), box_css_signal(offset));
         self
     }
 
