@@ -208,7 +208,7 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl>
 
     pub fn on_change(
         mut self,
-        on_change: impl FnOnce(bool) + Clone + 'static,
+        on_change: impl FnMut(bool) + 'static,
     ) -> Checkbox<IdFlag, OnChangeFlagSet, LabelFlag, IconFlag, CheckedFlag, RE>
     where
         OnChangeFlag: FlagNotSet,

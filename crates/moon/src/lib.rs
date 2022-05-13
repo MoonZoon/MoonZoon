@@ -109,10 +109,10 @@ impl Deref for MessageSSE {
 // trait aliases
 trait_set! {
     pub trait FrontBuilderOutput = Future<Output = Frontend> + 'static;
-    pub trait FrontBuilder<FRBO: FrontBuilderOutput> = FnOnce() -> FRBO + Clone + Send + 'static;
+    pub trait FrontBuilder<FRBO: FrontBuilderOutput> = FnMut() -> FRBO + Send + 'static;
 
     pub trait UpHandlerOutput = Future<Output = ()> + 'static;
-    pub trait UpHandler<UPHO: UpHandlerOutput, UMsg> = FnOnce(UpMsgRequest<UMsg>) -> UPHO + Clone + Send + 'static;
+    pub trait UpHandler<UPHO: UpHandlerOutput, UMsg> = FnMut(UpMsgRequest<UMsg>) -> UPHO + Send + 'static;
 }
 
 // ------ ------
@@ -124,7 +124,7 @@ trait_set! {
 pub async fn start<FRB, FRBO, UPH, UPHO, UMsg>(
     frontend: FRB,
     up_msg_handler: UPH,
-    service_config: impl FnOnce(&mut web::ServiceConfig) + Clone + Send + 'static,
+    service_config: impl FnMut(&mut web::ServiceConfig) + Send + 'static,
 ) -> io::Result<()>
 where
     FRB: FrontBuilder<FRBO>,
@@ -172,8 +172,8 @@ where
 pub async fn start_with_app<FRB, FRBO, UPH, UPHO, UMsg, AT, AB, ABE>(
     frontend: FRB,
     up_msg_handler: UPH,
-    app: impl FnOnce() -> App<AT> + Clone + Send + 'static,
-    service_config: impl FnOnce(&mut web::ServiceConfig) + Clone + Send + 'static,
+    app: impl FnMut() -> App<AT> + Send + 'static,
+    service_config: impl FnMut(&mut web::ServiceConfig) + Send + 'static,
 ) -> io::Result<()>
 where
     FRB: FrontBuilder<FRBO>,

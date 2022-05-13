@@ -11,7 +11,7 @@ impl ResizeObserver {
     #[must_use]
     pub fn new(
         ws_element: &web_sys::Element,
-        on_resize: impl FnOnce(u32, u32) + Clone + 'static,
+        on_resize: impl FnMut(u32, u32) + 'static,
     ) -> Self {
         let on_resize = move |width, height| on_resize.clone()(width, height);
 

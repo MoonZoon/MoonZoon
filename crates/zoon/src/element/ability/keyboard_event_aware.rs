@@ -4,14 +4,14 @@ use std::borrow::Borrow;
 // ------ KeyboardEventAware ------
 
 pub trait KeyboardEventAware: UpdateRawEl + Sized {
-    fn on_key_down_event(self, handler: impl FnOnce(KeyboardEvent) + Clone + 'static) -> Self {
+    fn on_key_down_event(self, handler: impl FnMut(KeyboardEvent) + 'static) -> Self {
         self.on_key_down_event_with_options(EventOptions::default(), handler)
     }
 
     fn on_key_down_event_with_options(
         self,
         options: EventOptions,
-        handler: impl FnOnce(KeyboardEvent) + Clone + 'static,
+        handler: impl FnMut(KeyboardEvent) + 'static,
     ) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el.event_handler_with_options(options, move |event: events::KeyDown| {

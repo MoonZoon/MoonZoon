@@ -9,7 +9,7 @@ pub struct Timer {
 }
 
 impl Timer {
-    pub fn new(ms: u32, on_tick: impl FnOnce() + Clone + 'static) -> Self {
+    pub fn new(ms: u32, on_tick: impl FnMut() + 'static) -> Self {
         let on_tick = move || (on_tick.clone())();
         let on_tick = Closure::wrap(Box::new(on_tick) as Box<dyn FnMut()>);
         Self {
@@ -18,7 +18,7 @@ impl Timer {
         }
     }
 
-    pub fn new_immediate(ms: u32, on_tick: impl FnOnce() + Clone + 'static) -> Self {
+    pub fn new_immediate(ms: u32, on_tick: impl FnMut() + 'static) -> Self {
         on_tick.clone()();
         Self::new(ms, on_tick)
     }

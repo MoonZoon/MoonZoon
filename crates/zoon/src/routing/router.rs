@@ -14,7 +14,7 @@ pub struct Router<R> {
 }
 
 impl<R: FromRouteSegments> Router<R> {
-    pub fn new(on_route_change: impl FnOnce(Option<R>) + Clone + 'static) -> Self {
+    pub fn new(on_route_change: impl FnMut(Option<R>) + 'static) -> Self {
         let (url_change_sender, _url_change_handle) = setup_url_change_handler(on_route_change);
         Router {
             popstate_listener: setup_popstate_listener(url_change_sender.clone()),
@@ -55,7 +55,7 @@ impl<R> Drop for Router<R> {
 // ------ helpers -------
 
 fn setup_url_change_handler<R: FromRouteSegments>(
-    on_route_change: impl FnOnce(Option<R>) + Clone + 'static,
+    on_route_change: impl FnMut(Option<R>) + 'static,
 ) -> (UrlChangeSender, TaskHandle) {
     let on_route_change = move |route: Option<R>| on_route_change.clone()(route);
 

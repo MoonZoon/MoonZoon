@@ -29,7 +29,7 @@ fn content() -> impl Element {
         .item(clients())
 }
 
-fn add_entity_button(title: &str, on_press: impl FnOnce() + Clone + 'static) -> impl Element {
+fn add_entity_button(title: &str, on_press: impl FnMut() + 'static) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     El::new()
         .child(
@@ -84,7 +84,7 @@ fn client_name_and_delete_button(client: Arc<super::Client>) -> impl Element {
         .item(delete_entity_button(move || super::delete_client(id)))
 }
 
-fn delete_entity_button(on_press: impl FnOnce() + Clone + 'static) -> impl Element {
+fn delete_entity_button(on_press: impl FnMut() + 'static) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(Width::new(40))
