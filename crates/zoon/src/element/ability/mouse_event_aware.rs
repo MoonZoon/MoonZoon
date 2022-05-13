@@ -60,8 +60,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         self.update_raw_el(move |raw_el| {
             let dom_element: web_sys::Element = raw_el.dom_element().into();
             raw_el.global_event_handler(move |event: events::Click| {
-                let target = event.target().expect_throw("failed to get event target");
-                if dom_element.contains(Some(target.unchecked_ref())) {
+                if is_inside(&dom_element, &event, "") {
                     return;
                 }
                 (handler.clone())();
@@ -76,8 +75,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         self.update_raw_el(move |raw_el| {
             let dom_element: web_sys::Element = raw_el.dom_element().into();
             raw_el.global_event_handler(move |event: events::Click| {
-                let target = event.target().expect_throw("failed to get event target");
-                if dom_element.contains(Some(target.unchecked_ref())) {
+                if is_inside(&dom_element, &event, "") {
                     return;
                 }
                 let mouse_event = MouseEvent {
@@ -97,25 +95,11 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         handler: impl FnOnce() + Clone + 'static,
         ignored_ids: impl IntoIterator<Item = impl IntoCowStr<'a>>,
     ) -> Self {
-        let ids_selector = ignored_ids
-            .into_iter()
-            .map(|id| crate::format!("#{}", id.into_cow_str()))
-            .collect::<Vec<_>>()
-            .join(", ");
-
+        let ids_selector = selector_from_ids(ignored_ids);
         self.update_raw_el(move |raw_el| {
             let dom_element: web_sys::Element = raw_el.dom_element().into();
             raw_el.global_event_handler(move |event: events::Click| {
-                let target = event.target().expect_throw("failed to get event target");
-                if dom_element.contains(Some(target.unchecked_ref())) {
-                    return;
-                }
-                if not(ids_selector.is_empty()) && target
-                    .unchecked_ref::<web_sys::Element>()
-                    .closest(&ids_selector)
-                    .expect_throw("invalid selector provided")
-                    .is_some()
-                {
+                if is_inside(&dom_element, &event, &ids_selector) {
                     return;
                 }
                 (handler.clone())();
@@ -128,25 +112,11 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         handler: impl FnOnce(MouseEvent) + Clone + 'static,
         ignored_ids: impl IntoIterator<Item = impl IntoCowStr<'a>>,
     ) -> Self {
-        let ids_selector = ignored_ids
-            .into_iter()
-            .map(|id| crate::format!("#{}", id.into_cow_str()))
-            .collect::<Vec<_>>()
-            .join(", ");
-
+        let ids_selector = selector_from_ids(ignored_ids);
         self.update_raw_el(move |raw_el| {
             let dom_element: web_sys::Element = raw_el.dom_element().into();
             raw_el.global_event_handler(move |event: events::Click| {
-                let target = event.target().expect_throw("failed to get event target");
-                if dom_element.contains(Some(target.unchecked_ref())) {
-                    return;
-                }
-                if not(ids_selector.is_empty()) && target
-                    .unchecked_ref::<web_sys::Element>()
-                    .closest(&ids_selector)
-                    .expect_throw("invalid selector provided")
-                    .is_some()
-                {
+                if is_inside(&dom_element, &event, &ids_selector) {
                     return;
                 }
                 let mouse_event = MouseEvent {
@@ -160,6 +130,32 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
             })
         })
     }
+}
+
+// -- Helpers --
+
+fn selector_from_ids<'a>(ids: impl IntoIterator<Item = impl IntoCowStr<'a>>) -> String {
+    ids
+        .into_iter()
+        .map(|id| crate::format!("#{}", id.into_cow_str()))
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+fn is_inside(dom_element: &web_sys::Element, event: &events::Click, ids_selector: &str) -> bool {
+    let target = event.target().expect_throw("failed to get event target");
+    if dom_element.contains(Some(target.unchecked_ref())) {
+        return true;
+    }
+    if not(ids_selector.is_empty()) && target
+        .unchecked_ref::<web_sys::Element>()
+        .closest(&ids_selector)
+        .expect_throw("invalid selector provided")
+        .is_some()
+    {
+        return true;
+    }
+    false
 }
 
 // ------ MouseEvent ------
