@@ -64,6 +64,12 @@ pub use width::Width;
 
 // --
 
+// @TODO Remove once https://caniuse.com/viewport-unit-variants are supported.
+#[static_ref]
+pub(crate) fn supports_dvx() -> &'static bool {
+    web_sys::css::supports_with_value("height", "100dvh").expect_throw("CSS.supports failed")
+}
+
 pub type U32Width = u32;
 pub type U32Height = u32;
 

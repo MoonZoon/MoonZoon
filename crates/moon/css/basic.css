@@ -23,12 +23,13 @@ body * {
 #app {
     display: flex;
     flex-direction: column;
-    min-height: 100vh;
+    height: 100vh;
 }
 
-@supports (min-height: 100dvh) { 
+@supports (height: 100dvh) { 
     #app {
-        min-height: 100dvh; 
+        /* @TODO Move to #app block once https://caniuse.com/viewport-unit-variants are supported. */
+        height: 100dvh; 
     }
 }
 
