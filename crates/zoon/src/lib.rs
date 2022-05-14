@@ -126,9 +126,20 @@ pub use thiserror;
 #[cfg(feature = "chrono")]
 pub use chrono::{self, prelude::*, Duration};
 
-// -- statics --
+// -- public_url --
 
 pub static PUBLIC_URL: &str = "/_api/public/";
+
+pub fn public_url(path: impl AsRef<str>) -> String {
+    format!("{PUBLIC_URL}{}", path.as_ref())
+}
+
+#[macro_export]
+macro_rules! public_url {
+    ($($arg:tt)*) => {{
+        $crate::public_url($crate::format!($($arg)*))
+    }}
+}
 
 // ------ format! ------
 
