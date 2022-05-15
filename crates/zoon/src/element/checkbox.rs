@@ -234,6 +234,17 @@ impl<'a, IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl>
         self.into_type()
     }
 
+    pub fn label_hidden_signal(
+        mut self,
+        label: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
+    ) -> Checkbox<IdFlag, OnChangeFlag, LabelFlagSet, IconFlag, CheckedFlag, RE>
+    where
+        LabelFlag: FlagNotSet,
+    {
+        self.raw_el = self.raw_el.attr_signal("aria-label", label);
+        self.into_type()
+    }
+
     pub fn icon<IE: IntoElement<'a> + 'a>(
         mut self,
         icon: impl FnOnce(Mutable<bool>) -> IE,

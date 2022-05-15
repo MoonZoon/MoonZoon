@@ -638,6 +638,26 @@ impl<
         self.into_type()
     }
 
+    pub fn label_hidden_signal(
+        mut self,
+        label: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
+    ) -> TextInput<
+        IdFlag,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlagSet,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE,
+    >
+    where
+        LabelFlag: FlagNotSet,
+    {
+        self.raw_el = self.raw_el.attr_signal("aria-label", label);
+        self.into_type()
+    }
+
     fn into_type<
         NewIdFlag,
         NewOnChangeFlag,
