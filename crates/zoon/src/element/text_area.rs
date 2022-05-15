@@ -281,6 +281,17 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFla
         self.into_type()
     }
 
+    pub fn label_hidden_signal(
+        mut self,
+        label: impl Signal<Item = impl IntoOptionCowStr<'a>> + Unpin + 'static,
+    ) -> TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagSet, ReadOnlyFlag, RE>
+    where
+        LabelFlag: FlagNotSet,
+    {
+        self.raw_el = self.raw_el.attr_signal("aria-label", label);
+        self.into_type()
+    }
+
     fn into_type<
         NewIdFlag,
         NewOnChangeFlag,
