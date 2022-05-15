@@ -6,7 +6,7 @@ use std::borrow::Cow;
 #[derive(Default)]
 pub struct Transform {
     /// Vector to chain transformations.
-    transformations: Vec<String>,
+    transformations: Vec<Cow<'static, str>>,
     self_signal: Option<Box<dyn Signal<Item = Option<Self>> + Unpin>>,
 }
 
@@ -50,8 +50,10 @@ impl Transform {
     /// );
     /// ```
     pub fn move_up(mut self, distance: impl Into<f64>) -> Self {
-        self.transformations
-            .push(crate::format!("translateY(-{}px)", distance.into()));
+        self.transformations.push(Cow::from(crate::format!(
+            "translateY(-{}px)",
+            distance.into()
+        )));
         self
     }
 
@@ -68,8 +70,10 @@ impl Transform {
     /// );
     /// ```
     pub fn move_down(mut self, distance: impl Into<f64>) -> Self {
-        self.transformations
-            .push(crate::format!("translateY({}px)", distance.into()));
+        self.transformations.push(Cow::from(crate::format!(
+            "translateY({}px)",
+            distance.into()
+        )));
         self
     }
 
@@ -86,8 +90,10 @@ impl Transform {
     /// );
     /// ```
     pub fn move_left(mut self, distance: impl Into<f64>) -> Self {
-        self.transformations
-            .push(crate::format!("translateX(-{}px)", distance.into()));
+        self.transformations.push(Cow::from(crate::format!(
+            "translateX(-{}px)",
+            distance.into()
+        )));
         self
     }
 
@@ -104,8 +110,10 @@ impl Transform {
     /// );
     /// ```
     pub fn move_right(mut self, distance: impl Into<f64>) -> Self {
-        self.transformations
-            .push(crate::format!("translateX({}px)", distance.into()));
+        self.transformations.push(Cow::from(crate::format!(
+            "translateX({}px)",
+            distance.into()
+        )));
         self
     }
 
@@ -123,7 +131,7 @@ impl Transform {
     /// ```
     pub fn rotate(mut self, degrees: impl Into<f64>) -> Self {
         self.transformations
-            .push(crate::format!("rotateZ({}deg)", degrees.into()));
+            .push(Cow::from(crate::format!("rotateZ({}deg)", degrees.into())));
         self
     }
 
@@ -154,13 +162,25 @@ impl Transform {
     /// );
     /// ```
     pub fn scale(mut self, percent: impl Into<f64>) -> Self {
-        self.transformations
-            .push(crate::format!("scale({})", percent.into() / 100.));
+        self.transformations.push(Cow::from(crate::format!(
+            "scale({})",
+            percent.into() / 100.
+        )));
+        self
+    }
+
+    pub fn flip_horizontal(mut self) -> Self {
+        self.transformations.push(Cow::from("rotateY(180deg)"));
+        self
+    }
+
+    pub fn flip_vertical(mut self) -> Self {
+        self.transformations.push(Cow::from("rotateX(180deg)"));
         self
     }
 }
 
-fn transformations_into_value(transformations: Vec<String>) -> Cow<'static, str> {
+fn transformations_into_value(transformations: Vec<Cow<'static, str>>) -> Cow<'static, str> {
     if transformations.is_empty() {
         return "none".into();
     }
