@@ -8,7 +8,7 @@ edition = "2021"
 wasm-bindgen = { version = "0.2.76", default-features = false }
 wasm-bindgen-futures = { version = "0.4.26", default-features = false }
 js-sys = { version = "0.3.53", default-features = false }
-futures-signals = { version = "0.3.23", default-features = false }
+futures-signals = { version = "0.3.28", default-features = false }
 futures-util = { version = "0.3.15", default-features = false }
 futures-channel = { version = "0.3.17", default-features = false }
 dominator = { version = "0.5.22", default-features = false }

@@ -134,9 +134,32 @@ impl<'a, EmptyFlag, MultilineFlag, RE: RawEl> Row<EmptyFlag, MultilineFlag, RE> 
     where
         MultilineFlag: FlagNotSet,
     {
-        self.raw_el = self.raw_el.style("flex-wrap", "wrap");
-        self.raw_el = self.raw_el.style("flex-basis", "0");
-        self.raw_el = self.raw_el.style("flex-grow", "1");
+        self.raw_el = self
+            .raw_el
+            .style("flex-wrap", "wrap")
+            .style("flex-basis", "0")
+            .style("flex-grow", "1");
+
+        self.into_type()
+    }
+
+    pub fn multiline_signal(
+        mut self,
+        multiline: impl Signal<Item = impl Into<Option<bool>>> + 'static,
+    ) -> Row<EmptyFlag, MultilineFlagSet, RE>
+    where
+        MultilineFlag: FlagNotSet,
+    {
+        let multiline = multiline
+            .map(|multiline| multiline.into().unwrap_or_default())
+            .broadcast();
+
+        self.raw_el = self
+            .raw_el
+            .style_signal("flex-wrap", multiline.signal().map_true(|| "wrap"))
+            .style_signal("flex-basis", multiline.signal().map_true(|| "0"))
+            .style_signal("flex-grow", multiline.signal().map_true(|| "1"));
+
         self.into_type()
     }
 
