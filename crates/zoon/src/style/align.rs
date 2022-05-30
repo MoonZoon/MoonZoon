@@ -47,7 +47,7 @@ impl Align {
     pub fn new() -> Self {
         Self::default()
     }
-    
+
     /// Set the alignment depending on Signal's state.
     /// # Example
     /// ```no_run

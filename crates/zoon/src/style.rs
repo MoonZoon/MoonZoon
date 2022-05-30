@@ -74,8 +74,23 @@ pub type U32Width = u32;
 pub type U32Height = u32;
 
 pub struct CssPropValue<'a> {
-    pub(crate) value: Cow<'a, str>,
-    pub(crate) important: bool,
+    pub value: Cow<'a, str>,
+    pub important: bool,
+}
+
+impl<'a> CssPropValue<'a> {
+    pub fn new(value: impl IntoCowStr<'a>) -> Self {
+        Self {
+            value: value.into_cow_str(),
+            important: false,
+        }
+    }
+
+    pub fn new_important(value: impl IntoCowStr<'a>) -> Self {
+        let mut this = Self::new(value);
+        this.important = true;
+        this
+    }
 }
 
 // ------ StaticCSSProps ------
@@ -85,23 +100,11 @@ pub struct StaticCSSProps<'a>(BTreeMap<&'a str, CssPropValue<'a>>);
 
 impl<'a> StaticCSSProps<'a> {
     pub fn insert(&mut self, name: &'a str, value: impl IntoCowStr<'a>) {
-        self.0.insert(
-            name,
-            CssPropValue {
-                value: value.into_cow_str(),
-                important: false,
-            },
-        );
+        self.0.insert(name, CssPropValue::new(value));
     }
 
     pub fn insert_important(&mut self, name: &'a str, value: impl IntoCowStr<'a>) {
-        self.0.insert(
-            name,
-            CssPropValue {
-                value: value.into_cow_str(),
-                important: true,
-            },
-        );
+        self.0.insert(name, CssPropValue::new_important(value));
     }
 
     pub fn remove(&mut self, name: &'a str) -> Option<CssPropValue> {

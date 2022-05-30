@@ -1,24 +1,38 @@
 use crate::*;
+use std::{cell::Cell, collections::BTreeMap};
+use strum::{EnumIter, IntoEnumIterator, IntoStaticStr};
 
 #[derive(Default)]
 pub struct Width<'a> {
-    /// Static css properties used by zoon.
-    static_css_props: StaticCSSProps<'a>,
-    /// Customizable css properties which can be added.
-    dynamic_css_props: DynamicCSSProps,
+    css_props: BTreeMap<CssName, Cell<Option<CssPropValue<'a>>>>,
     width_mode: WidthMode,
+    self_signal: Option<Box<dyn Signal<Item = Option<Self>> + Unpin>>,
 }
 
+fn into_prop_value<'a>(value: impl IntoCowStr<'a>) -> Cell<Option<CssPropValue<'a>>> {
+    Cell::new(Some(CssPropValue::new(value)))
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
+#[strum(serialize_all = "kebab-case")]
+enum CssName {
+    MinWidth,
+    Width,
+    MaxWidth,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
+#[strum(serialize_all = "snake_case")]
 enum WidthMode {
-    Exact,
-    Fill,
+    ExactWidth,
+    FillWidth,
 }
 
 // @TODO derive `Default` for `WidthMode` and other enums once possible.
 // https://rust-lang.github.io/rfcs/3107-derive-default-enum.html
 impl Default for WidthMode {
     fn default() -> Self {
-        Self::Exact
+        Self::ExactWidth
     }
 }
 
@@ -32,8 +46,9 @@ impl<'a> Width<'a> {
     /// ```
     pub fn exact(width: u32) -> Self {
         let mut this = Self::default();
-        this.static_css_props.insert("width", px(width));
-        this.width_mode = WidthMode::Exact;
+        this.css_props
+            .insert(CssName::Width, into_prop_value(px(width)));
+        this.width_mode = WidthMode::ExactWidth;
         this
     }
 
@@ -75,11 +90,15 @@ impl<'a> Width<'a> {
     pub fn exact_signal(
         width: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
     ) -> Self {
+        Self::with_signal(width.map(|width| width.into().map(Width::exact)))
+    }
+
+    pub fn with_signal(
+        width: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
+    ) -> Self {
         let mut this = Self::default();
-        let width = width.map(|width| width.into().map(px));
-        this.dynamic_css_props
-            .insert("width".into(), box_css_signal(width));
-        this.width_mode = WidthMode::Exact;
+        let width = width.map(|width| width.into());
+        this.self_signal = Some(Box::new(width));
         this
     }
 
@@ -93,8 +112,9 @@ impl<'a> Width<'a> {
     /// ```
     pub fn zeros(zeros: u32) -> Self {
         let mut this = Self::default();
-        this.static_css_props.insert("width", ch(zeros));
-        this.width_mode = WidthMode::Exact;
+        this.css_props
+            .insert(CssName::Width, into_prop_value(ch(zeros)));
+        this.width_mode = WidthMode::ExactWidth;
         this
     }
 
@@ -109,8 +129,9 @@ impl<'a> Width<'a> {
     /// ```
     pub fn fill() -> Self {
         let mut this = Self::default();
-        this.static_css_props.insert("width", "100%");
-        this.width_mode = WidthMode::Fill;
+        this.css_props
+            .insert(CssName::Width, into_prop_value("100%"));
+        this.width_mode = WidthMode::FillWidth;
         this
     }
 
@@ -124,7 +145,8 @@ impl<'a> Width<'a> {
     ///     .item(Button::new().s(Width::fill().min(25)).label("Click me"));
     /// ```
     pub fn min(mut self, width: u32) -> Self {
-        self.static_css_props.insert("min-width", px(width));
+        self.css_props
+            .insert(CssName::MinWidth, into_prop_value(px(width)));
         self
     }
 
@@ -136,7 +158,8 @@ impl<'a> Width<'a> {
     /// let button = Button::new().s(Width::fill().max(25)).label("Click me");
     /// ```
     pub fn max(mut self, width: u32) -> Self {
-        self.static_css_props.insert("max-width", px(width));
+        self.css_props
+            .insert(CssName::MaxWidth, into_prop_value(px(width)));
         self
     }
 
@@ -150,25 +173,54 @@ impl<'a> Width<'a> {
     ///     .label("Hover this giant button");
     /// ```
     pub fn max_fill(mut self) -> Self {
-        self.static_css_props.insert("max-width", "100%");
+        self.css_props
+            .insert(CssName::MaxWidth, into_prop_value("100%"));
         self
     }
 }
 
-impl<'a> Style<'a> for Width<'a> {
+impl<'a> Style<'a> for Width<'static> {
     fn merge_with_group(self, mut group: StyleGroup<'a>) -> StyleGroup<'a> {
         let Self {
-            static_css_props,
-            dynamic_css_props,
+            css_props,
             width_mode,
+            self_signal,
         } = self;
-        group.static_css_props.extend(static_css_props);
-        group.dynamic_css_props.extend(dynamic_css_props);
 
-        let width_mode_class = match width_mode {
-            WidthMode::Exact => "exact_width",
-            WidthMode::Fill => "fill_width",
-        };
-        group.class(width_mode_class)
+        if let Some(self_signal) = self_signal {
+            let self_signal = self_signal.broadcast();
+
+            for name in CssName::iter() {
+                group = group.style_signal(
+                    <&str>::from(name),
+                    self_signal.signal_ref(move |this| {
+                        this.as_ref().and_then(|this| {
+                            this.css_props
+                                .get(&name)
+                                .and_then(|value| value.take().map(|value| value.value))
+                        })
+                    }),
+                );
+            }
+
+            for mode in WidthMode::iter() {
+                group = group.class_signal(
+                    <&str>::from(mode),
+                    self_signal.signal_ref(move |this| {
+                        this.as_ref()
+                            .map(|this| this.width_mode == mode)
+                            .unwrap_or_default()
+                    }),
+                );
+            }
+            group
+        } else {
+            group.static_css_props.extend(
+                css_props
+                    .into_iter()
+                    .map(|(name, value)| (name.into(), value.take().unwrap_throw())),
+            );
+            group.class(width_mode.into())
+        }
     }
 }

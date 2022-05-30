@@ -1,4 +1,4 @@
-use zoon::{*, named_color::*};
+use zoon::{named_color::*, *};
 
 #[static_ref]
 fn drag_rectangle() -> &'static Mutable<bool> {
@@ -30,15 +30,16 @@ fn root() -> impl Element {
         })
         .on_pointer_move_event(|event| {
             if drag_rectangle().get() {
-                rectangle_offset().update(|(x, y)| {
-                    (x + event.movement_x(), y + event.movement_y())
-                });
-            }
-            else if drag_handle().get() {
+                rectangle_offset()
+                    .update(|(x, y)| (x + event.movement_x(), y + event.movement_y()));
+            } else if drag_handle().get() {
                 rectangle_size().update(|(width, height)| {
                     let new_width = width as i32 + event.movement_x();
                     let new_height = height as i32 + event.movement_y();
-                    (u32::try_from(new_width).unwrap_or_default(), u32::try_from(new_height).unwrap_or_default())
+                    (
+                        u32::try_from(new_width).unwrap_or_default(),
+                        u32::try_from(new_height).unwrap_or_default(),
+                    )
                 });
             }
         })
@@ -48,19 +49,24 @@ fn root() -> impl Element {
 
 fn rectangle() -> impl Element {
     Stack::new()
-        .s(Width::exact_signal(rectangle_size().signal().map(|(width, _)| width).dedupe()))
-        .s(Height::exact_signal(rectangle_size().signal().map(|(_, height)| height).dedupe()))
-        .s(Background::new().color_signal(drag_rectangle().signal().map_bool(
-            || GREEN_9,
-            || GRAY_5, 
-        )))
-        .s(Transform::with_signal(rectangle_offset().signal().map(|(x, y)| {
-            Transform::new().move_right(x).move_down(y)
-        })))
-        .s(Cursor::with_signal(drag_rectangle().signal().map_bool(
-            || CursorIcon::Grabbing, 
-            || CursorIcon::Grab, 
-        )))
+        .s(Width::exact_signal(
+            rectangle_size().signal().map(|(width, _)| width).dedupe(),
+        ))
+        .s(Height::exact_signal(
+            rectangle_size().signal().map(|(_, height)| height).dedupe(),
+        ))
+        .s(Background::new()
+            .color_signal(drag_rectangle().signal().map_bool(|| GREEN_9, || GRAY_5)))
+        .s(Transform::with_signal(
+            rectangle_offset()
+                .signal()
+                .map(|(x, y)| Transform::new().move_right(x).move_down(y)),
+        ))
+        .s(Cursor::with_signal(
+            drag_rectangle()
+                .signal()
+                .map_bool(|| CursorIcon::Grabbing, || CursorIcon::Grab),
+        ))
         .touch_native_handling(TouchHandling::none())
         .layer(rectangle_content())
         .layer(handle())
@@ -81,22 +87,22 @@ fn rectangle_attributes() -> impl Element {
         .item(
             Row::new()
                 .item("offset X: ")
-                .item_signal(rectangle_offset().signal().map(|(x, _)| x).dedupe())
+                .item_signal(rectangle_offset().signal().map(|(x, _)| x).dedupe()),
         )
         .item(
             Row::new()
                 .item("offset Y: ")
-                .item_signal(rectangle_offset().signal().map(|(_, y)| y).dedupe())
+                .item_signal(rectangle_offset().signal().map(|(_, y)| y).dedupe()),
         )
         .item(
             Row::new()
                 .item("width: ")
-                .item_signal(rectangle_size().signal().map(|(width, _)| width).dedupe())
+                .item_signal(rectangle_size().signal().map(|(width, _)| width).dedupe()),
         )
         .item(
             Row::new()
                 .item("height: ")
-                .item_signal(rectangle_size().signal().map(|(_, height)| height).dedupe())
+                .item_signal(rectangle_size().signal().map(|(_, height)| height).dedupe()),
         )
 }
 
@@ -105,10 +111,10 @@ fn handle() -> impl Element {
         .s(Width::exact(40))
         .s(Height::exact(40))
         .s(Align::new().bottom().right())
-        .s(Background::new().color_signal(drag_handle().signal().map_bool(
-            || YELLOW_4, 
-            || GREEN_5,
-        )))
+        .s(
+            Background::new()
+                .color_signal(drag_handle().signal().map_bool(|| YELLOW_4, || GREEN_5)),
+        )
         .s(Transform::new().move_down(10).move_right(10))
         .s(RoundedCorners::all_max())
         .s(Cursor::new(CursorIcon::UpLeftDownRightArrow))
