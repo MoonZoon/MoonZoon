@@ -28,9 +28,9 @@ impl<'a> Width<'a> {
     /// ```no_run
     /// use zoon::*;
     ///
-    /// let button = Button::new().s(Width::new(50)).label("Click me");
+    /// let button = Button::new().s(Width::exact(50)).label("Click me");
     /// ```
-    pub fn new(width: u32) -> Self {
+    pub fn exact(width: u32) -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("width", px(width));
         this.width_mode = WidthMode::Exact;
@@ -51,7 +51,7 @@ impl<'a> Width<'a> {
     ///     .s(Background::new().color(BLUE_4))
     ///     .s(Borders::all(Border::new().color(BLUE_8).width(3)))
     ///     .s(Spacing::new(20))
-    ///     .s(Width::with_signal(
+    ///     .s(Width::exact_signal(
     ///         container_width_broadcaster.signal().map(|width| {
     ///             if width > 1000 {
     ///                 return width / 2;
@@ -72,7 +72,7 @@ impl<'a> Width<'a> {
     ///     .on_viewport_size_change(move |width, _| container_width.set_neq(width))
     ///     .child(button);
     /// ```
-    pub fn with_signal(
+    pub fn exact_signal(
         width: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
     ) -> Self {
         let mut this = Self::default();

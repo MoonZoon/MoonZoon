@@ -29,9 +29,9 @@ impl<'a> Height<'a> {
     /// ```no_run
     /// use zoon::*;
     ///
-    /// let button = Button::new().s(Height::new(50)).label("Click me");
+    /// let button = Button::new().s(Height::exact(50)).label("Click me");
     /// ```
-    pub fn new(height: u32) -> Self {
+    pub fn exact(height: u32) -> Self {
         let mut this = Self::default();
         this.static_css_props.insert("height", px(height));
         this.height_mode = HeightMode::Exact;
@@ -45,11 +45,11 @@ impl<'a> Height<'a> {
     ///
     /// let (is_hovered, hover_signal) = Mutable::new_and_signal(false);
     /// let button = Button::new()
-    ///     .s(Height::with_signal(hover_signal.map_bool(|| 50, || 100)))
+    ///     .s(Height::exact_signal(hover_signal.map_bool(|| 50, || 100)))
     ///     .on_hovered_change(move |hover| is_hovered.set(hover))
     ///     .label("hover me");
     /// ```
-    pub fn with_signal(
+    pub fn exact_signal(
         height: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
     ) -> Self {
         let mut this = Self::default();
