@@ -510,6 +510,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "easy-cast"
+version = "0.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4bd102ee8c418348759919b83b81cdbdc933ffe29740b903df448b4bafaa348e"
+
+[[package]]
 name = "enclose"
 version = "1.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -632,14 +638,15 @@ dependencies = [
 
 [[package]]
 name = "futures-signals"
-version = "0.3.23"
+version = "0.3.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "402d707a810e5fddfb1d5ff44174ffa96c6c1b136e7019cef5c9ef87c8977592"
+checksum = "633f5e17d6fb8d3cfa0710087d0cbe708d07cc416ca6c4682ce876aa7839c09d"
 dependencies = [
  "discard",
  "futures-channel",
  "futures-core",
  "futures-util",
+ "log",
  "pin-project",
  "serde",
 ]
@@ -2232,6 +2239,7 @@ dependencies = [
  "chrono",
  "console_error_panic_hook",
  "dominator",
+ "easy-cast",
  "enclose",
  "futures-channel",
  "futures-signals",

@@ -20,6 +20,10 @@ pub struct Font<'a> {
 }
 
 impl<'a> Font<'a> {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Define the font weight.
     /// # Example
     /// ```no_run

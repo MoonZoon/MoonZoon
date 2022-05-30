@@ -163,11 +163,7 @@ pub fn ch<'a>(ch: impl IntoCowStr<'a>) -> Cow<'a, str> {
 /// Every `struct` such as [Align] and [Background] needs to implement
 /// this trait so they can be used by [Styleable] implementations with
 /// the `s()` method within a `Zoon` element.
-pub trait Style<'a>: Default {
-    fn new() -> Self {
-        Self::default()
-    }
-
+pub trait Style<'a> {
     fn merge_with_group(self, group: StyleGroup<'a>) -> StyleGroup<'a>;
 }
 

@@ -17,6 +17,10 @@ pub struct Background<'a> {
 }
 
 impl<'a> Background<'a> {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Set a given color to the background with HSLuv.
     /// # Example
     /// ```no_run
