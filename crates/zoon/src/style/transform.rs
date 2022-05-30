@@ -11,6 +11,10 @@ pub struct Transform {
 }
 
 impl Transform {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Apply transformations depending of signal's state.
     /// # Example
     /// ```no_run
