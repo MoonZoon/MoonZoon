@@ -1,25 +1,39 @@
 use crate::{style::supports_dvx, *};
+use std::{cell::Cell, collections::BTreeMap};
+use strum::{EnumIter, IntoEnumIterator, IntoStaticStr};
 
 /// Styling for height.
 #[derive(Default)]
 pub struct Height<'a> {
-    /// Static css properties used by zoon.
-    static_css_props: StaticCSSProps<'a>,
-    /// Customizable css properties which can be added.
-    dynamic_css_props: DynamicCSSProps,
+    css_props: BTreeMap<CssName, Cell<Option<CssPropValue<'a>>>>,
     height_mode: HeightMode,
+    self_signal: Option<Box<dyn Signal<Item = Option<Self>> + Unpin>>,
 }
 
+fn into_prop_value<'a>(value: impl IntoCowStr<'a>) -> Cell<Option<CssPropValue<'a>>> {
+    Cell::new(Some(CssPropValue::new(value)))
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
+#[strum(serialize_all = "kebab-case")]
+enum CssName {
+    MinHeight,
+    Height,
+    MaxHeight,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
+#[strum(serialize_all = "snake_case")]
 enum HeightMode {
-    Exact,
-    Fill,
+    ExactHeight,
+    FillHeight,
 }
 
 // @TODO remove (in the entire codebase) once `derive_default_enum` is stable
 // https://github.com/rust-lang/rust/issues/87517
 impl Default for HeightMode {
     fn default() -> Self {
-        Self::Exact
+        Self::ExactHeight
     }
 }
 
@@ -33,8 +47,9 @@ impl<'a> Height<'a> {
     /// ```
     pub fn exact(height: u32) -> Self {
         let mut this = Self::default();
-        this.static_css_props.insert("height", px(height));
-        this.height_mode = HeightMode::Exact;
+        this.css_props
+            .insert(CssName::Height, into_prop_value(px(height)));
+        this.height_mode = HeightMode::ExactHeight;
         this
     }
 
@@ -52,11 +67,15 @@ impl<'a> Height<'a> {
     pub fn exact_signal(
         height: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
     ) -> Self {
+        Self::with_signal(height.map(|height| height.into().map(Height::exact)))
+    }
+
+    pub fn with_signal(
+        height: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
+    ) -> Self {
         let mut this = Self::default();
-        let height = height.map(|height| height.into().map(px));
-        this.dynamic_css_props
-            .insert("height".into(), box_css_signal(height));
-        this.height_mode = HeightMode::Exact;
+        let height = height.map(|height| height.into());
+        this.self_signal = Some(Box::new(height));
         this
     }
 
@@ -71,8 +90,9 @@ impl<'a> Height<'a> {
     /// ```
     pub fn fill() -> Self {
         let mut this = Self::default();
-        this.static_css_props.insert("height", "100%");
-        this.height_mode = HeightMode::Fill;
+        this.css_props
+            .insert(CssName::Height, into_prop_value("100%"));
+        this.height_mode = HeightMode::FillHeight;
         this
     }
 
@@ -88,14 +108,17 @@ impl<'a> Height<'a> {
     /// ```
     pub fn screen() -> Self {
         let mut this = Self::default();
-        this.static_css_props
-            .insert("height", if *supports_dvx() { "100dvh" } else { "100vh" });
-        this.height_mode = HeightMode::Exact;
+        this.css_props.insert(
+            CssName::Height,
+            into_prop_value(if *supports_dvx() { "100dvh" } else { "100vh" }),
+        );
+        this.height_mode = HeightMode::ExactHeight;
         this
     }
 
     pub fn min(mut self, height: u32) -> Self {
-        self.static_css_props.insert("min-height", px(height));
+        self.css_props
+            .insert(CssName::MinHeight, into_prop_value(px(height)));
         self
     }
 
@@ -110,9 +133,9 @@ impl<'a> Height<'a> {
     ///     .label("Hover this giant button");
     /// ```
     pub fn min_screen(mut self) -> Self {
-        self.static_css_props.insert(
-            "min-height",
-            if *supports_dvx() { "100dvh" } else { "100vh" },
+        self.css_props.insert(
+            CssName::MinHeight,
+            into_prop_value(if *supports_dvx() { "100dvh" } else { "100vh" }),
         );
         self
     }
@@ -127,7 +150,8 @@ impl<'a> Height<'a> {
     ///     .label("Hover this giant button");
     /// ```
     pub fn max(mut self, height: u32) -> Self {
-        self.static_css_props.insert("max-height", px(height));
+        self.css_props
+            .insert(CssName::MaxHeight, into_prop_value(px(height)));
         self
     }
 
@@ -141,25 +165,54 @@ impl<'a> Height<'a> {
     ///     .label("Hover this giant button");
     /// ```
     pub fn max_fill(mut self) -> Self {
-        self.static_css_props.insert("max-height", "100%");
+        self.css_props
+            .insert(CssName::MaxHeight, into_prop_value("100%"));
         self
     }
 }
 
-impl<'a> Style<'a> for Height<'a> {
+impl<'a> Style<'a> for Height<'static> {
     fn merge_with_group(self, mut group: StyleGroup<'a>) -> StyleGroup<'a> {
         let Self {
-            static_css_props,
-            dynamic_css_props,
+            css_props,
             height_mode,
+            self_signal,
         } = self;
-        group.static_css_props.extend(static_css_props);
-        group.dynamic_css_props.extend(dynamic_css_props);
 
-        let height_mode_class = match height_mode {
-            HeightMode::Exact => "exact_height",
-            HeightMode::Fill => "fill_height",
-        };
-        group.class(height_mode_class)
+        if let Some(self_signal) = self_signal {
+            let self_signal = self_signal.broadcast();
+
+            for name in CssName::iter() {
+                group = group.style_signal(
+                    <&str>::from(name),
+                    self_signal.signal_ref(move |this| {
+                        this.as_ref().and_then(|this| {
+                            this.css_props
+                                .get(&name)
+                                .and_then(|value| value.take().map(|value| value.value))
+                        })
+                    }),
+                );
+            }
+
+            for mode in HeightMode::iter() {
+                group = group.class_signal(
+                    <&str>::from(mode),
+                    self_signal.signal_ref(move |this| {
+                        this.as_ref()
+                            .map(|this| this.height_mode == mode)
+                            .unwrap_or_default()
+                    }),
+                );
+            }
+            group
+        } else {
+            group.static_css_props.extend(
+                css_props
+                    .into_iter()
+                    .map(|(name, value)| (name.into(), value.take().unwrap_throw())),
+            );
+            group.class(height_mode.into())
+        }
     }
 }
