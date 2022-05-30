@@ -48,8 +48,8 @@ fn root() -> impl Element {
 
 fn rectangle() -> impl Element {
     Stack::new()
-        .s(Width::with_signal(rectangle_size().signal().map(|(width, _)| width).dedupe()))
-        .s(Height::with_signal(rectangle_size().signal().map(|(_, height)| height).dedupe()))
+        .s(Width::exact_signal(rectangle_size().signal().map(|(width, _)| width).dedupe()))
+        .s(Height::exact_signal(rectangle_size().signal().map(|(_, height)| height).dedupe()))
         .s(Background::new().color_signal(drag_rectangle().signal().map_bool(
             || GREEN_9,
             || GRAY_5, 
@@ -102,8 +102,8 @@ fn rectangle_attributes() -> impl Element {
 
 fn handle() -> impl Element {
     El::new()
-        .s(Width::new(40))
-        .s(Height::new(40))
+        .s(Width::exact(40))
+        .s(Height::exact(40))
         .s(Align::new().bottom().right())
         .s(Background::new().color_signal(drag_handle().signal().map_bool(
             || YELLOW_4, 
