@@ -10,6 +10,10 @@ pub struct Padding<'a> {
 }
 
 impl<'a> Padding<'a> {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Set all paddings, e.g top, right, bottom and left for an element.
     /// # Example
     /// ```no_run

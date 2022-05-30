@@ -13,6 +13,10 @@ pub struct Borders<'a> {
 }
 
 impl<'a> Borders<'a> {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Set properties for bottom, left, right and top borders together.
     ///
     /// ```no_run

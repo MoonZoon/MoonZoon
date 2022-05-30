@@ -91,6 +91,10 @@ pub struct RoundedCorners {
 }
 
 impl RoundedCorners {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
     /// Set radius for top and bottom corners.
     /// # Example
     /// ```no_run
