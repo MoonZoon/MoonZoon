@@ -14,7 +14,7 @@ pub fn root() -> impl Element {
 
 fn content() -> impl Element {
     Column::new()
-        .s(Width::new(300))
+        .s(Width::exact(300))
         .s(Height::fill())
         .s(Align::new().center_x())
         .s(Spacing::new(20))
@@ -63,7 +63,7 @@ fn message_text_to_contents(text: &str) -> impl Iterator<Item = RawElement> + '_
 
 fn emoji(name: &str) -> impl Element {
     Image::new()
-        .s(Height::new(17))
+        .s(Height::exact(17))
         .s(Transform::new().scale(230).move_down(2))
         .s(Padding::new().x(5))
         .url([PUBLIC_URL, "emoji/", name, ".png"].concat())

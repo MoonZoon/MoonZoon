@@ -423,8 +423,8 @@ fn add_entity_button_label(title: &str) -> impl Element {
 fn delete_entity_button(on_press: impl FnMut() + 'static) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .s(Width::new(40))
-        .s(Height::new(40))
+        .s(Width::exact(40))
+        .s(Height::exact(40))
         .s(Align::center())
         .s(
             Background::new().color_signal(hovered_signal.map_bool_signal(
@@ -444,8 +444,8 @@ fn delete_entity_button(on_press: impl FnMut() + 'static) -> impl Element {
 fn link_button(invoice: Arc<super::Invoice>) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Link::new()
-        .s(Width::new(40))
-        .s(Height::new(40))
+        .s(Width::exact(40))
+        .s(Height::exact(40))
         .s(Align::center())
         .s(
             Background::new().color_signal(hovered_signal.map_bool_signal(

@@ -23,7 +23,7 @@ pub fn content() -> impl Element {
 fn header() -> impl Element {
     let hamburger_id = "hamburger";
     Row::with_tag(Tag::Nav)
-        .s(Height::new(64))
+        .s(Height::exact(64))
         .s(Background::new().color_signal(theme::background_1()))
         .s(Font::new().color_signal(theme::font_1()))
         .s(Shadows::with_signal(
@@ -88,7 +88,7 @@ fn hamburger(id: &str) -> impl Element {
         )
         .s(Font::new().size(25))
         .s(Padding::new().bottom(4))
-        .s(Width::new(64))
+        .s(Width::exact(64))
         .on_press(super::toggle_menu)
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .label(
@@ -102,7 +102,7 @@ fn menu_panel(hamburger_id: &str) -> impl Element {
     Column::new()
         .s(Background::new().color_signal(theme::background_0()))
         .s(Font::new().color_signal(theme::font_0()))
-        .s(Height::new(250))
+        .s(Height::exact(250))
         .s(Align::new().right())
         .s(Padding::all(15))
         .s(Shadows::with_signal(
@@ -112,7 +112,7 @@ fn menu_panel(hamburger_id: &str) -> impl Element {
         .on_click_outside_with_ids(super::close_menu, [hamburger_id])
         .after_remove(|_| super::close_menu())
         .items(menu_links(true))
-        .item(El::new().s(Height::new(10)))
+        .item(El::new().s(Height::exact(10)))
         .item(auth_controls())
 }
 

@@ -60,8 +60,8 @@ fn rectangle() -> impl Element {
     El::new()
         .s(Align::center())
         .s(Background::new().color(GREEN_8))
-        .s(Width::new(150))
-        .s(Height::new(150))
+        .s(Width::exact(150))
+        .s(Height::exact(150))
         .s(RoundedCorners::all_signal(radius_signal()))
 }
 
