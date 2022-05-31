@@ -49,8 +49,8 @@ make_flags!(Label, OnPress);
 /// let (hovered, hover_signal) = Mutable::new_and_signal(false);
 ///
 /// let button = Button::new()
-///     .s(Width::new(40))
-///     .s(Height::new(40))
+///     .s(Width::exact(40))
+///     .s(Height::exact(40))
 ///     .s(Font::new().size(30).center().color_signal(
 ///         hover_signal
 ///             .map_bool(|| hsluv!(10.5, 37.7, 48.8), || hsluv!(12.2, 34.7, 68.2)),

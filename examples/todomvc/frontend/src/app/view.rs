@@ -40,7 +40,7 @@ fn header() -> impl Element {
     El::with_tag(Tag::Header)
         .s(Padding::new().top(10))
         .s(Align::new().center_x())
-        .s(Height::new(130))
+        .s(Height::exact(130))
         .s(Font::new()
             .size(100)
             .color(hsluv!(10.5, 62.8, 44.5, 15))
@@ -93,7 +93,7 @@ fn todos() -> impl Element {
 
 fn toggle_all_checkbox() -> impl Element {
     Checkbox::new()
-        .s(Width::new(60))
+        .s(Width::exact(60))
         .s(Height::fill())
         .checked_signal(super::are_all_completed().signal())
         .on_click(super::check_or_uncheck_all_todos)
@@ -106,7 +106,7 @@ fn toggle_all_checkbox() -> impl Element {
                         .map_bool(|| hsluv!(0, 0, 48.4), || hsluv!(0, 0, 91.3)),
                 ))
                 .s(Transform::new().rotate(90).move_up(18))
-                .s(Height::new(34))
+                .s(Height::exact(34))
                 .s(Padding::new().x(27).y(6))
                 .child("❯")
         })
@@ -142,8 +142,8 @@ fn todo_checkbox(todo: Arc<Todo>) -> impl Element {
         .on_change(move |checked| super::set_todo_completed(&todo, checked))
         .icon(|checked| {
             El::new()
-                .s(Width::new(40))
-                .s(Height::new(40))
+                .s(Width::exact(40))
+                .s(Height::exact(40))
                 .s(Background::new()
                     .url_signal(checked.signal().map_bool(|| COMPLETED_ICON, || ACTIVE_ICON)))
         })
@@ -174,8 +174,8 @@ fn remove_todo_button(todo: &Todo) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let id = todo.id;
     Button::new()
-        .s(Width::new(40))
-        .s(Height::new(40))
+        .s(Width::exact(40))
+        .s(Height::exact(40))
         .s(Transform::new().move_left(50).move_down(14))
         .s(Font::new().size(30).center().color_signal(
             hovered_signal.map_bool(|| hsluv!(10.5, 37.7, 48.8), || hsluv!(12.2, 34.7, 68.2)),
@@ -188,7 +188,7 @@ fn remove_todo_button(todo: &Todo) -> impl Element {
 fn editing_todo_title(todo: Arc<Todo>) -> impl Element {
     let text_signal = todo.edited_title.signal_cloned().map(Option::unwrap_throw);
     TextInput::new()
-        .s(Width::new(506))
+        .s(Width::exact(506))
         .s(Padding::all(17).bottom(16))
         .s(Align::new().right())
         .s(Borders::all(Border::new().color(hsluv!(0, 0, 63.2))))

@@ -141,7 +141,7 @@ impl<'a> Width<'a> {
     /// use zoon::*;
     ///
     /// let container = Column::new()
-    ///     .s(Width::new(5))
+    ///     .s(Width::exact(5))
     ///     .item(Button::new().s(Width::fill().min(25)).label("Click me"));
     /// ```
     pub fn min(mut self, width: u32) -> Self {

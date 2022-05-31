@@ -51,8 +51,8 @@ fn bring_to_front(rectangle: Rectangle) {
 fn root() -> impl Element {
     Stack::new()
         .s(Align::center())
-        .s(Width::new(180))
-        .s(Height::new(180))
+        .s(Width::exact(180))
+        .s(Height::exact(180))
         .layers_signal_vec(rectangles().signal_vec().map(rectangle))
 }
 
@@ -64,8 +64,8 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
 
     El::new()
         .update_raw_el(|el| el.class("rectangle"))
-        .s(Width::new(100))
-        .s(Height::new(100))
+        .s(Width::exact(100))
+        .s(Height::exact(100))
         .s(RoundedCorners::all(15))
         .s(Cursor::new(CursorIcon::Pointer))
         .s(Shadows::new([Shadow::new().blur(20).color(GRAY_8)]))

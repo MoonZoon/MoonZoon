@@ -46,7 +46,7 @@ fn heading() -> impl Element {
 fn text_input() -> impl Element {
     TextArea::new()
         .s(Width::fill())
-        .s(Height::new(200))
+        .s(Height::exact(200))
         .s(Padding::all(8))
         .s(RoundedCorners::all(8).bottom_right(0))
         .placeholder(Placeholder::new("Write something here..."))

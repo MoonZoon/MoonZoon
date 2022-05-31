@@ -3,8 +3,8 @@ use zoon::{named_color::*, *};
 fn root() -> impl Element {
     El::new()
         .s(Borders::all(Border::new().color(GRAY_0)))
-        .s(Width::new(320))
-        .s(Height::new(320))
+        .s(Width::exact(320))
+        .s(Height::exact(320))
         .s(Align::center())
         .child(artboard())
 }

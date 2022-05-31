@@ -270,8 +270,8 @@ fn delete_entity_button(
     }
     .flatten();
     Button::new()
-        .s(Width::new(40))
-        .s(Height::new(40))
+        .s(Width::exact(40))
+        .s(Height::exact(40))
         .s(Align::new().top().right())
         .s(Background::new().color_signal(background_color))
         .s(Font::new()

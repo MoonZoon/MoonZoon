@@ -19,8 +19,8 @@ impl<'a> Scrollbars<'a> {
     /// consectetur adipiscing elit. Donec placerat lacus in commodo molestie.",
     ///     )
     ///     .s(Scrollbars::both())
-    ///     .s(Height::new(100))
-    ///     .s(Width::new(50));
+    ///     .s(Height::exact(100))
+    ///     .s(Width::exact(50));
     /// ```
     pub fn both() -> Self {
         let mut this = Self::default();
@@ -40,8 +40,8 @@ impl<'a> Scrollbars<'a> {
     /// consectetur adipiscing elit. Donec placerat lacus in commodo molestie.",
     ///     )
     ///     .s(Scrollbars::x_and_clip_y())
-    ///     .s(Height::new(100))
-    ///     .s(Width::new(50));
+    ///     .s(Height::exact(100))
+    ///     .s(Width::exact(50));
     /// ```
     pub fn x_and_clip_y() -> Self {
         let mut this = Self::default();
@@ -62,8 +62,8 @@ impl<'a> Scrollbars<'a> {
     /// consectetur adipiscing elit. Donec placerat lacus in commodo molestie.",
     ///     )
     ///     .s(Scrollbars::y_and_clip_x())
-    ///     .s(Height::new(100))
-    ///     .s(Width::new(50));
+    ///     .s(Height::exact(100))
+    ///     .s(Width::exact(50));
     /// ```
     pub fn y_and_clip_x() -> Self {
         let mut this = Self::default();

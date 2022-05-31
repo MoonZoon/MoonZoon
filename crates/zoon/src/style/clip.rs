@@ -18,8 +18,8 @@ impl<'a> Clip<'a> {
     ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     ///
     ///  let parent_element =  Column::new()
-    ///         .s(Width::new(50))
-    ///         .s(Height::new(50))
+    ///         .s(Width::exact(50))
+    ///         .s(Height::exact(50))
     ///         .s(Background::new().color(BLUE_9))
     ///         .item(paragraph);
     /// ```
@@ -41,8 +41,8 @@ impl<'a> Clip<'a> {
     ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     ///
     ///  let parent_element =  Column::new()
-    ///         .s(Width::new(50))
-    ///         .s(Height::new(50))
+    ///         .s(Width::exact(50))
+    ///         .s(Height::exact(50))
     ///         .s(Background::new().color(BLUE_9))
     ///         .item(paragraph);
     /// ```
@@ -63,8 +63,8 @@ impl<'a> Clip<'a> {
     ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     ///
     ///  let parent_element =  Column::new()
-    ///         .s(Width::new(50))
-    ///         .s(Height::new(50))
+    ///         .s(Width::exact(50))
+    ///         .s(Height::exact(50))
     ///         .s(Background::new().color(BLUE_9))
     ///         .item(paragraph);
     /// ```

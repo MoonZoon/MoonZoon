@@ -26,8 +26,8 @@ impl<'a> Shadows<'a> {
     ///         .y(10)
     ///         .x(10)
     ///         .blur(5)]))
-    ///     .s(Width::new(50))
-    ///     .s(Height::new(50))
+    ///     .s(Width::exact(50))
+    ///     .s(Height::exact(50))
     ///     .label("Click me");
     /// ```
     pub fn new(shadows: impl IntoIterator<Item = Shadow>) -> Self {
@@ -53,8 +53,8 @@ impl<'a> Shadows<'a> {
     ///         || [Shadow::new().color(RED_8).y(10).x(10)],
     ///         || [Shadow::new().color(RED_3).y(10).x(10).blur(5)],
     ///     )))
-    ///     .s(Width::new(50))
-    ///     .s(Height::new(50))
+    ///     .s(Width::exact(50))
+    ///     .s(Height::exact(50))
     ///     .on_hovered_change(move |h| hovered.set(h))
     ///     .label("Click me");
     /// ```
@@ -119,8 +119,8 @@ impl Shadow {
     ///         .inner()
     ///         .y(10)
     ///         .x(10)]))
-    ///     .s(Width::new(50))
-    ///     .s(Height::new(50))
+    ///     .s(Width::exact(50))
+    ///     .s(Height::exact(50))
     ///     .label("Click me");
     /// ```
     pub fn inner(mut self) -> Self {
@@ -135,8 +135,8 @@ impl Shadow {
     ///
     /// let button = Button::new()
     ///     .s(Shadows::new([Shadow::new().color(RED_3).inner().x(10)]))
-    ///     .s(Width::new(50))
-    ///     .s(Height::new(50))
+    ///     .s(Width::exact(50))
+    ///     .s(Height::exact(50))
     ///     .label("Click me");
     /// ```
     pub fn x(mut self, x: i32) -> Self {
@@ -151,8 +151,8 @@ impl Shadow {
     ///
     /// let button = Button::new()
     ///     .s(Shadows::new([Shadow::new().color(RED_3).y(10)]))
-    ///     .s(Width::new(50))
-    ///     .s(Height::new(50))
+    ///     .s(Width::exact(50))
+    ///     .s(Height::exact(50))
     ///     .label("Click me");
     /// ```
     pub fn y(mut self, y: i32) -> Self {
@@ -169,8 +169,8 @@ impl Shadow {
     ///
     /// let button = Button::new()
     ///     .s(Shadows::new([Shadow::new().color(RED_3).spread(10)]))
-    ///     .s(Width::new(50))
-    ///     .s(Height::new(50))
+    ///     .s(Width::exact(50))
+    ///     .s(Height::exact(50))
     ///     .label("Click me");
     /// ```
     pub fn spread(mut self, spread: i32) -> Self {
@@ -185,8 +185,8 @@ impl Shadow {
     ///
     /// let button = Button::new()
     ///     .s(Shadows::new([Shadow::new().color(RED_3).blur(10)]))
-    ///     .s(Width::new(50))
-    ///     .s(Height::new(50))
+    ///     .s(Width::exact(50))
+    ///     .s(Height::exact(50))
     ///     .label("Click me");
     /// ```
     pub fn blur(mut self, blur: u32) -> Self {
@@ -205,8 +205,8 @@ impl Shadow {
     ///         .inner()
     ///         .x(10)
     ///         .y(10)]))
-    ///     .s(Width::new(50))
-    ///     .s(Height::new(50))
+    ///     .s(Width::exact(50))
+    ///     .s(Height::exact(50))
     ///     .label("Click me");
     /// ```
     pub fn color(mut self, color: impl Into<Option<HSLuv>>) -> Self {

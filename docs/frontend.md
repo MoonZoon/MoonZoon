@@ -414,7 +414,7 @@ fn element_with_raw_styles() -> impl Element {
 ```rust
 fn sidebar() -> impl Element {
     Column::new()
-        .s(Width::with_signal(sidebar_expanded().signal().map_bool(|| 180, || 48)))
+        .s(Width::exact_signal(sidebar_expanded().signal().map_bool(|| 180, || 48)))
         .s(Transitions::new([Transition::width().duration(500)]))
         .s(Clip::both())
         .item(toggle_button())

@@ -20,8 +20,8 @@ pub trait Styleable<'a>: UpdateRawEl + Sized {
     ///
     /// let button = Button::new()
     ///     .s(Align::center())
-    ///     .s(Width::new(140))
-    ///     .s(Height::new(140))
+    ///     .s(Width::exact(140))
+    ///     .s(Height::exact(140))
     ///     .s(Font::new().size(30).center())
     ///     .s(Background::new().color_signal(hover_signal.map_bool(|| GREEN_2, || GREEN_1)))
     ///     .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
@@ -39,8 +39,8 @@ pub trait Styleable<'a>: UpdateRawEl + Sized {
     ///
     /// let button = Button::new()
     ///     .s(Align::center())
-    ///     .s(Width::new(140))
-    ///     .s(Height::new(140))
+    ///     .s(Width::exact(140))
+    ///     .s(Height::exact(140))
     ///     .s(Font::new()
     ///         .size(30)
     ///         .center()

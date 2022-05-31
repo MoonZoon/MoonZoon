@@ -50,8 +50,8 @@ fn set_rectangle_alignment(alignment: RectangleAlignment) {
 fn root() -> impl Element {
     Stack::new()
         .s(Align::center())
-        .s(Width::new(200))
-        .s(Height::new(200))
+        .s(Width::exact(200))
+        .s(Height::exact(200))
         .s(Borders::all(Border::new().color(GRAY_5).width(3)))
         .s(RoundedCorners::all(15))
         .layer(rectangle())
@@ -72,8 +72,8 @@ fn button(rectangle_alignment: RectangleAlignment) -> impl Element {
 
 fn rectangle() -> impl Element {
     El::new()
-        .s(Width::new(70))
-        .s(Height::new(70))
+        .s(Width::exact(70))
+        .s(Height::exact(70))
         .s(Background::new().color(GREEN_7))
         .s(RoundedCorners::all(10))
         .s(Align::with_signal(rectangle_alignment().signal_ref(

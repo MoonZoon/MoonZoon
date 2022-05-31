@@ -569,8 +569,8 @@ fn compute_radii(
 // fn test_a() -> impl Element {
 //     El::new()
 //         .s(Align::center())
-//         .s(Width::new(100))
-//         .s(Height::new(100))
+//         .s(Width::exact(100))
+//         .s(Height::exact(100))
 //         .s(Background::new().color(hsl(256.1, 87.8, 49.6)))
 //         .s(RoundedCorners::new().top_left_max().right_max())
 // }
@@ -578,8 +578,8 @@ fn compute_radii(
 // fn test_a2() -> impl Element {
 //     El::new()
 //         .s(Align::center())
-//         .s(Width::new(100))
-//         .s(Height::new(100))
+//         .s(Width::exact(100))
+//         .s(Height::exact(100))
 //         .s(Background::new().color(hsl(256.1, 87.8, 49.6)))
 //         .s(RoundedCorners::new().top_left_max().right_max().bottom_left(20))
 // }
@@ -587,8 +587,8 @@ fn compute_radii(
 // fn test_b() -> impl Element {
 //     El::new()
 //         .s(Align::center())
-//         .s(Width::new(200))
-//         .s(Height::new(100))
+//         .s(Width::exact(200))
+//         .s(Height::exact(100))
 //         .s(Background::new().color(hsl(256.1, 87.8, 49.6)))
 //         .s(RoundedCorners::new().top_left_max().right_max())
 // }
@@ -596,8 +596,8 @@ fn compute_radii(
 // fn test_c() -> impl Element {
 //     El::new()
 //         .s(Align::center())
-//         .s(Width::new(200))
-//         .s(Height::new(100))
+//         .s(Width::exact(200))
+//         .s(Height::exact(100))
 //         .s(Background::new().color(hsl(256.1, 87.8, 49.6)))
 //         .s(RoundedCorners::new().top_max())
 // }
@@ -605,8 +605,8 @@ fn compute_radii(
 // fn test_d() -> impl Element {
 //     El::new()
 //         .s(Align::center())
-//         .s(Width::new(100))
-//         .s(Height::new(200))
+//         .s(Width::exact(100))
+//         .s(Height::exact(200))
 //         .s(Background::new().color(hsl(256.1, 87.8, 49.6)))
 //         .s(RoundedCorners::new().top_left_max().right_max())
 // }
@@ -614,8 +614,8 @@ fn compute_radii(
 // fn test_e() -> impl Element {
 //     El::new()
 //         .s(Align::center())
-//         .s(Width::new(100))
-//         .s(Height::new(300))
+//         .s(Width::exact(100))
+//         .s(Height::exact(300))
 //         .s(Background::new().color(hsl(256.1, 87.8, 49.6)))
 //         .s(RoundedCorners::new().right_max())
 // }
@@ -623,8 +623,8 @@ fn compute_radii(
 // fn test_f() -> impl Element {
 //     El::new()
 //         .s(Align::center())
-//         .s(Width::new(100))
-//         .s(Height::new(100))
+//         .s(Width::exact(100))
+//         .s(Height::exact(100))
 //         .s(Background::new().color(hsl(256.1, 87.8, 49.6)))
 //         .s(RoundedCorners::new().bottom_left_max().top_right_max())
 // }
@@ -632,8 +632,8 @@ fn compute_radii(
 // fn test_g() -> impl Element {
 //     El::new()
 //         .s(Align::center())
-//         .s(Width::new(200))
-//         .s(Height::new(100))
+//         .s(Width::exact(200))
+//         .s(Height::exact(100))
 //         .s(Background::new().color(hsl(256.1, 87.8, 49.6)))
 //         .s(
 //             RoundedCorners::new()

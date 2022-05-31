@@ -58,7 +58,7 @@ impl<'a> Borders<'a> {
     /// use zoon::{named_color::*, *};
     /// let button = Button::new()
     ///     .s(Borders::new().x(Border::new().color(GREEN_7)))
-    ///     .s(Width::new(50))
+    ///     .s(Width::exact(50))
     ///     .s(Background::new().color(BLUE_9))
     ///     .label("I have four borders");
     /// ```
@@ -93,7 +93,7 @@ impl<'a> Borders<'a> {
     /// use zoon::{named_color::*, *};
     /// let button = Button::new()
     ///     .s(Borders::new().y(Border::new().color(GREEN_7)))
-    ///     .s(Width::new(50))
+    ///     .s(Width::exact(50))
     ///     .s(Background::new().color(BLUE_9))
     ///     .label("I have four borders");
     /// ```
@@ -128,7 +128,7 @@ impl<'a> Borders<'a> {
     /// use zoon::{named_color::*, *};
     /// let button = Button::new()
     ///     .s(Borders::new().top(Border::new().color(GREEN_7)))
-    ///     .s(Width::new(50))
+    ///     .s(Width::exact(50))
     ///     .s(Background::new().color(BLUE_9))
     ///     .label("I have four borders");
     /// ```
@@ -165,7 +165,7 @@ impl<'a> Borders<'a> {
     /// use zoon::{named_color::*, *};
     /// let button = Button::new()
     ///     .s(Borders::new().bottom(Border::new().color(GREEN_7)))
-    ///     .s(Width::new(50))
+    ///     .s(Width::exact(50))
     ///     .s(Background::new().color(BLUE_9))
     ///     .label("I have four borders");
     /// ```
@@ -202,7 +202,7 @@ impl<'a> Borders<'a> {
     /// use zoon::{named_color::*, *};
     /// let button = Button::new()
     ///     .s(Borders::new().right(Border::new().color(GREEN_7)))
-    ///     .s(Width::new(50))
+    ///     .s(Width::exact(50))
     ///     .s(Background::new().color(BLUE_9))
     ///     .label("I have four borders");
     /// ```
@@ -239,7 +239,7 @@ impl<'a> Borders<'a> {
     /// use zoon::{named_color::*, *};
     /// let button = Button::new()
     ///     .s(Borders::new().left(Border::new().color(GREEN_7)))
-    ///     .s(Width::new(50))
+    ///     .s(Width::exact(50))
     ///     .s(Background::new().color(BLUE_9))
     ///     .label("I have four borders");
     /// ```

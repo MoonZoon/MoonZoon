@@ -205,7 +205,7 @@ impl<'a> Font<'a> {
     /// use zoon::*;
     ///
     ///  let paragraph =  Paragraph::new()
-    ///     .s(Width::new(50))
+    ///     .s(Width::exact(50))
     ///     .s(Font::new().wrap_anywhere())
     ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```

@@ -54,8 +54,8 @@ fn root() -> impl Element {
 
 fn rectangles() -> impl Element {
     Column::new()
-        .s(Width::new(150))
-        .s(Height::new(200))
+        .s(Width::exact(150))
+        .s(Height::exact(200))
         .s(Spacing::new(20))
         .s(Padding::all(15))
         .s(Background::new().color(GRAY_8))
@@ -68,8 +68,8 @@ fn rectangles() -> impl Element {
 
 fn rectangle() -> impl Element {
     El::new()
-        .s(Width::new(150))
-        .s(Height::new(50))
+        .s(Width::exact(150))
+        .s(Height::exact(50))
         .s(Background::new().color(RED_8))
 }
 
