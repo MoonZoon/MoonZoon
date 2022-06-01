@@ -10,13 +10,13 @@ use std::path::PathBuf;
 use tar::Archive;
 use tokio::process::Command;
 
-const VERSION: &str = "0.10.1";
+const VERSION: &str = "0.2.80";
 
 // -- public --
 
 #[throws]
-pub async fn check_or_install_wasm_pack() {
-    if check_wasm_pack().await.is_ok() {
+pub async fn check_or_install_wasm_bindgen() {
+    if check_wasm_bindgen().await.is_ok() {
         return;
     }
 
@@ -29,38 +29,37 @@ pub async fn check_or_install_wasm_pack() {
         } else if #[cfg(target_os = "linux")] {
             const NEAREST_TARGET: &str = "x86_64-unknown-linux-musl";
         } else {
-            compile_error!("wasm-pack pre-compiled binary hasn't been found for the target platform '{}'", TARGET);
+            compile_error!("wasm-bindgen pre-compiled binary hasn't been found for the target platform '{}'", TARGET);
         }
     }
     const DOWNLOAD_URL: &str = formatcp!(
-        "https://github.com/rustwasm/wasm-pack/releases/download/v{version}/wasm-pack-v{version}-{target}.tar.gz",
+        "https://github.com/rustwasm/wasm-bindgen/releases/download/{version}/wasm-bindgen-{version}-{target}.tar.gz",
         version = VERSION,
         target = NEAREST_TARGET,
     );
 
-    println!("Installing wasm-pack...");
+    println!("Installing wasm-bindgen...");
     if TARGET != NEAREST_TARGET {
         println!(
-            "Pre-compiled wasm-pack binary '{}' will be used for the target platform '{}'",
+            "Pre-compiled wasm-bindgen binary '{}' will be used for the target platform '{}'",
             NEAREST_TARGET, TARGET
         );
     }
     download(DOWNLOAD_URL)
         .await
         .context(formatcp!(
-            "Failed to download wasm-pack from the url '{}'",
+            "Failed to download wasm-bindgen from the url '{}'",
             DOWNLOAD_URL
         ))?
-        .apply(unpack_wasm_pack)
-        .context("Failed to unpack wasm-pack")?;
-    println!("wasm-pack installed");
+        .apply(unpack_wasm_bindgen)
+        .context("Failed to unpack wasm-bindgen")?;
+    println!("wasm-bindgen installed");
 }
 
 #[throws]
-pub async fn build_with_wasm_pack(release: bool) {
+pub async fn build_with_wasm_bindgen(release: bool) {
+    // https://rustwasm.github.io/wasm-bindgen/reference/cli.html
     let mut args = vec![
-        "--log-level",
-        "warn",
         "build",
         "frontend",
         "--target",
@@ -70,7 +69,7 @@ pub async fn build_with_wasm_pack(release: bool) {
     if !release {
         args.push("--dev");
     }
-    Command::new("frontend/wasm-pack")
+    Command::new("frontend/wasm-bindgen")
         .args(&args)
         .status()
         .await
@@ -82,10 +81,10 @@ pub async fn build_with_wasm_pack(release: bool) {
 // -- private --
 
 #[throws]
-async fn check_wasm_pack() {
-    const EXPECTED_VERSION_OUTPUT: &[u8] = concatcp!("wasm-pack ", VERSION, "\n").as_bytes();
+async fn check_wasm_bindgen() {
+    const EXPECTED_VERSION_OUTPUT: &[u8] = concatcp!("wasm-bindgen ", VERSION, "\n").as_bytes();
 
-    let version = Command::new("frontend/wasm-pack")
+    let version = Command::new("frontend/wasm-bindgen")
         .args(&["-V"])
         .output()
         .await?
@@ -93,14 +92,14 @@ async fn check_wasm_pack() {
 
     if version != EXPECTED_VERSION_OUTPUT {
         Err(anyhow!(concatcp!(
-            "wasm-pack's expected version is ",
+            "wasm-bindgen's expected version is ",
             VERSION
         )))?;
     }
 }
 
 #[throws]
-fn unpack_wasm_pack(tar_gz: Vec<u8>) {
+fn unpack_wasm_bindgen(tar_gz: Vec<u8>) {
     let tar = GzDecoder::new(tar_gz.as_slice());
     let mut archive = Archive::new(tar);
 
@@ -110,7 +109,7 @@ fn unpack_wasm_pack(tar_gz: Vec<u8>) {
         let file_stem = path
             .file_stem()
             .ok_or(anyhow!("Entry without a file name"))?;
-        if file_stem != "wasm-pack" {
+        if file_stem != "wasm-bindgen" {
             continue;
         }
         let mut destination = PathBuf::from("frontend");
@@ -119,6 +118,6 @@ fn unpack_wasm_pack(tar_gz: Vec<u8>) {
         return;
     }
     Err(anyhow!(
-        "Failed to find wasm-pack in the downloaded archive"
+        "Failed to find wasm-bindgen in the downloaded archive"
     ))?;
 }

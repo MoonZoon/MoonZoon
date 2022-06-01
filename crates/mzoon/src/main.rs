@@ -9,7 +9,7 @@ mod config;
 mod helper;
 mod run_backend;
 mod set_env_vars;
-mod wasm_pack;
+mod wasm_bindgen;
 mod watcher;
 
 #[derive(Debug, StructOpt)]

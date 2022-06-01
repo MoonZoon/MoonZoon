@@ -1,2 +1,2 @@
 target
-frontend/wasm-pack*
+frontend/wasm-bindgen*
