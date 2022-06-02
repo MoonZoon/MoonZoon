@@ -89,15 +89,15 @@ pub async fn build_with_wasm_bindgen(build_mode: BuildMode) {
 
 #[throws]
 async fn check_wasm_bindgen() {
-    const EXPECTED_VERSION_OUTPUT: &[u8] = concatcp!("wasm-bindgen ", VERSION, "\n").as_bytes();
+    const EXPECTED_VERSION_OUTPUT_START: &[u8] = concatcp!("wasm-bindgen ", VERSION).as_bytes();
 
-    let version = Command::new("frontend/wasm-bindgen")
+    let version_output = Command::new("frontend/wasm-bindgen")
         .args(&["-V"])
         .output()
         .await?
         .stdout;
 
-    if version != EXPECTED_VERSION_OUTPUT {
+    if !version_output.starts_with(EXPECTED_VERSION_OUTPUT_START) {
         Err(anyhow!(concatcp!(
             "wasm-bindgen's expected version is ",
             VERSION
