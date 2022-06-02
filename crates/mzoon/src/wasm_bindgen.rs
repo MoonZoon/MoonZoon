@@ -66,9 +66,11 @@ pub async fn build_with_wasm_bindgen(build_mode: BuildMode) {
         "--no-typescript",
         "--reference-types",
         "--weak-refs",
+        "--out-dir",
+        "frontend/pkg"
     ];
     match build_mode {
-        BuildMode::Dev => args.extend(["--debug", "--keep-debug"]),
+        BuildMode::Dev => args.extend(["--debug"]),
         BuildMode::Profiling => (),
         BuildMode::Release => args.push("--no-demangle"),
     }
