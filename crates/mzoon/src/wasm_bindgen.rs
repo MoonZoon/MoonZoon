@@ -29,27 +29,23 @@ pub async fn check_or_install_wasm_bindgen() {
         } else if #[cfg(target_os = "linux")] {
             const NEAREST_TARGET: &str = "x86_64-unknown-linux-musl";
         } else {
-            compile_error!("wasm-bindgen pre-compiled binary hasn't been found for the target platform '{}'", TARGET);
+            compile_error!("wasm-bindgen pre-compiled binary hasn't been found for the target platform '{TARGET}'");
         }
     }
     const DOWNLOAD_URL: &str = formatcp!(
-        "https://github.com/rustwasm/wasm-bindgen/releases/download/{version}/wasm-bindgen-{version}-{target}.tar.gz",
-        version = VERSION,
-        target = NEAREST_TARGET,
+        "https://github.com/rustwasm/wasm-bindgen/releases/download/{VERSION}/wasm-bindgen-{VERSION}-{NEAREST_TARGET}.tar.gz"
     );
 
     println!("Installing wasm-bindgen...");
     if TARGET != NEAREST_TARGET {
         println!(
-            "Pre-compiled wasm-bindgen binary '{}' will be used for the target platform '{}'",
-            NEAREST_TARGET, TARGET
+            "Pre-compiled wasm-bindgen binary '{NEAREST_TARGET}' will be used for the target platform '{TARGET}'"
         );
     }
     download(DOWNLOAD_URL)
         .await
         .context(formatcp!(
-            "Failed to download wasm-bindgen from the url '{}'",
-            DOWNLOAD_URL
+            "Failed to download wasm-bindgen from the url '{DOWNLOAD_URL}'"
         ))?
         .apply(unpack_wasm_bindgen)
         .context("Failed to unpack wasm-bindgen")?;
@@ -64,7 +60,8 @@ pub async fn build_with_wasm_bindgen(build_mode: BuildMode) {
         "--target",
         "web",
         "--no-typescript",
-        "--reference-types",
+        // @TODO/NOTE Fails in runtime even with `wasm-opt --enable-reference-types` (v.108). 
+        // "--reference-types",
         "--weak-refs",
         "--out-dir",
         "frontend/pkg"

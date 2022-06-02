@@ -1,3 +1,4 @@
 target
 frontend/wasm-bindgen*
-pkg
+frontend/wasm-opt*
+frontend/pkg

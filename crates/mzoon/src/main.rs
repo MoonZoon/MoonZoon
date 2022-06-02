@@ -10,6 +10,7 @@ mod helper;
 mod run_backend;
 mod set_env_vars;
 mod wasm_bindgen;
+mod wasm_opt;
 mod watcher;
 
 /// MoonZoon CLI <http://MoonZoon.rs>
