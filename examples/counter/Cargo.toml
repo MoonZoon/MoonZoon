@@ -14,3 +14,6 @@ opt-level = 's'
 
 [profile.release.package.backend]
 opt-level = 3
+
+[profile.profiling]
+inherits = "release"
