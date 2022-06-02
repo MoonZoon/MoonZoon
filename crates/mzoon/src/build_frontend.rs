@@ -45,7 +45,6 @@ pub async fn compile_with_cargo(build_mode: BuildMode) {
         "--target",
         "wasm32-unknown-unknown",
     ];
-    // @TODO
     match build_mode {
         BuildMode::Dev => (),
         BuildMode::Profiling => args.extend(["--profile", "profiling"]),
