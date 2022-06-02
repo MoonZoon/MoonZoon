@@ -61,15 +61,14 @@ async fn build_run_and_watch_backend(
     BackendWatcher::start(&config, build_mode, DEBOUNCE_TIME, server).await?
 }
 
-async fn build_and_run_backend(config: &Config, build_mode: BuildMode, server: &Mutex<Option<Child>>) -> Child {
+async fn build_and_run_backend(config: &Config, build_mode: BuildMode, server: &Mutex<Option<Child>>) {
     if let Err(error) = build_backend(build_mode, config.https).await {
         eprintln!("{error:#}");
-        None?;
+        return;
     }
     match run_backend(build_mode) {
         Err(error) => {
             eprintln!("{error:#}");
-            None?
         }
         Ok(server_process) => {
             *server.lock() = Some(server_process);
@@ -86,10 +85,4 @@ fn open_in_browser(config: &Config) {
     );
     println!("Open {url} in the default web browser");
     open::that(url).context("Failed to open the URL in the browser")?;
-}
-
-fn server_url(config: &Config) -> String {
-    let protocol = if config.https { "https" } else { "http" };
-    let port = config.port;
-    format!("{protocol}://localhost:{port}")
 }
