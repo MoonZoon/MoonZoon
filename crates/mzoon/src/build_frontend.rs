@@ -2,6 +2,7 @@ use crate::helper::{
     visit_files, AsyncReadToVec, BrotliFileCompressor, FileCompressor, GzipFileCompressor,
 };
 use crate::wasm_bindgen::{build_with_wasm_bindgen, check_or_install_wasm_bindgen};
+use crate::wasm_opt::{optimize_with_wasm_opt, check_or_install_wasm_opt};
 use crate::BuildMode;
 use anyhow::{anyhow, Context, Error};
 use bool_ext::BoolExt;
@@ -18,9 +19,16 @@ use uuid::Uuid;
 pub async fn build_frontend(build_mode: BuildMode, cache_busting: bool) {
     println!("Building frontend...");
     compile_with_cargo(build_mode).await?;
-    check_or_install_wasm_bindgen().await?;
+
     remove_pkg().await?;
+
+    check_or_install_wasm_bindgen().await?;
     build_with_wasm_bindgen(build_mode).await?;
+
+    if build_mode.is_not_dev() {
+        check_or_install_wasm_opt().await?;
+        optimize_with_wasm_opt(build_mode).await?;
+    }
 
     let build_id = Uuid::new_v4().as_u128();
     let (wasm_file_path, js_file_path, _) = try_join!(
