@@ -3,15 +3,13 @@ use crate::helper::{
 };
 use crate::wasm_bindgen::{build_with_wasm_bindgen, check_or_install_wasm_bindgen};
 use crate::BuildMode;
-use anyhow::{Context, Error};
+use anyhow::{anyhow, Context, Error};
+use bool_ext::BoolExt;
 use const_format::concatcp;
 use fehler::throws;
 use futures::TryStreamExt;
-use std::borrow::Cow;
-use std::path::Path;
-use std::sync::Arc;
-use tokio::fs;
-use tokio::try_join;
+use std::{borrow::Cow, path::Path, sync::Arc};
+use tokio::{fs, try_join, process::Command};
 use uuid::Uuid;
 
 // -- public --
@@ -19,6 +17,7 @@ use uuid::Uuid;
 #[throws]
 pub async fn build_frontend(build_mode: BuildMode, cache_busting: bool) {
     println!("Building frontend...");
+    build_with_cargo(build_mode).await?;
     check_or_install_wasm_bindgen().await?;
     remove_pkg().await?;
     build_with_wasm_bindgen(build_mode).await?;
@@ -36,6 +35,31 @@ pub async fn build_frontend(build_mode: BuildMode, cache_busting: bool) {
 }
 
 // -- private --
+
+#[throws]
+pub async fn build_with_cargo(build_mode: BuildMode) {
+    let args = vec![
+        "build",
+        "--package",
+        "frontend",
+        "--target",
+        "wasm32-unknown-unknown",
+    ];
+    // @TODO
+    match build_mode {
+        BuildMode::Dev => (),
+        BuildMode::Profiling => (),
+        BuildMode::Release => (),
+    }
+    Command::new("cargo")
+        .args(&args)
+        .status()
+        .await
+        .context("Failed to get frontend build status")?
+        .success()
+        .err(anyhow!("Failed to build frontend with Cargo"))?;
+}
+   
 
 #[throws]
 async fn remove_pkg() {
