@@ -35,7 +35,6 @@ fn _root() -> impl Element {
 }
 // ---------- // -----------
 
-#[wasm_bindgen(start)]
-pub fn start() {
+fn main() {
     start_app("app", root);
 }

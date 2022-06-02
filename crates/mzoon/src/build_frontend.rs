@@ -17,7 +17,7 @@ use uuid::Uuid;
 #[throws]
 pub async fn build_frontend(build_mode: BuildMode, cache_busting: bool) {
     println!("Building frontend...");
-    build_with_cargo(build_mode).await?;
+    compile_with_cargo(build_mode).await?;
     check_or_install_wasm_bindgen().await?;
     remove_pkg().await?;
     build_with_wasm_bindgen(build_mode).await?;
@@ -37,10 +37,10 @@ pub async fn build_frontend(build_mode: BuildMode, cache_busting: bool) {
 // -- private --
 
 #[throws]
-pub async fn build_with_cargo(build_mode: BuildMode) {
-    let args = vec![
+pub async fn compile_with_cargo(build_mode: BuildMode) {
+    let mut args = vec![
         "build",
-        "--package",
+        "--bin",
         "frontend",
         "--target",
         "wasm32-unknown-unknown",
@@ -48,16 +48,16 @@ pub async fn build_with_cargo(build_mode: BuildMode) {
     // @TODO
     match build_mode {
         BuildMode::Dev => (),
-        BuildMode::Profiling => (),
-        BuildMode::Release => (),
+        BuildMode::Profiling => args.extend(["--profile", "profiling"]),
+        BuildMode::Release => args.push("--release"),
     }
     Command::new("cargo")
         .args(&args)
         .status()
         .await
-        .context("Failed to get frontend build status")?
+        .context("Failed to get frontend compilation status")?
         .success()
-        .err(anyhow!("Failed to build frontend with Cargo"))?;
+        .err(anyhow!("Failed to compile frontend"))?;
 }
    
 

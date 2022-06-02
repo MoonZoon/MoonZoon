@@ -72,10 +72,17 @@ pub async fn build_with_wasm_bindgen(build_mode: BuildMode) {
     match build_mode {
         BuildMode::Dev => args.extend(["--debug"]),
         BuildMode::Profiling => (),
-        BuildMode::Release => args.push("--no-demangle"),
+        BuildMode::Release => (),
     }
-    // @TODO
-    args.push("target/wasm32-unknown-unknown/debug/frontend.wasm");
+    
+    let target_profile_folder = match build_mode {
+        BuildMode::Dev => "debug",
+        BuildMode::Profiling => "profiling",
+        BuildMode::Release => "release",
+    };
+    let wasm_path = format!("target/wasm32-unknown-unknown/{target_profile_folder}/frontend.wasm");
+    args.push(&wasm_path);
+
     Command::new("frontend/wasm-bindgen")
         .args(&args)
         .status()
