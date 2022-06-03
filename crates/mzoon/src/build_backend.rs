@@ -19,17 +19,27 @@ pub async fn build_backend(build_mode: BuildMode, https: bool) {
         write_new_certificate_if_not_present().await?;
     }
 
-    let mut args = vec!["build", "--package", "backend"];
-    let mut envs = vec![];
+    let mut args = vec!["build", "--bin", "backend"];
     match build_mode {
-        BuildMode::Release => args.push("--release"),
-        BuildMode::Profiling => {
-            args.push("--release");
-            // https://doc.rust-lang.org/rustc/command-line-arguments.html#-g-include-debug-information
-            envs.push(("RUSTFLAGS", "-g"));
-        }
         BuildMode::Dev => (),
+        BuildMode::Profiling => args.extend(["--profile", "profiling"]),
+        BuildMode::Release => args.push("--release"),
     }
+
+    // https://doc.rust-lang.org/cargo/reference/environment-variables.html#configuration-environment-variables
+    let mut cargo_configs = Vec::new();
+    if build_mode.is_not_dev() {
+        cargo_configs.extend([("OPT_LEVEL", "3"), ("CODEGEN_UNITS", "1"), ("LTO", "true")]);
+    }
+    if let BuildMode::Profiling = build_mode {
+        cargo_configs.extend([("DEBUG", "true"), ("INHERITS", "release")]);
+    } 
+
+    let profile_env_name = build_mode.env_name();
+    let envs = cargo_configs
+        .into_iter()
+        .map(|(key, value)| (format!("CARGO_PROFILE_{profile_env_name}_{key}"), value)); 
+
     Command::new("cargo")
         .args(&args)
         .envs(envs)

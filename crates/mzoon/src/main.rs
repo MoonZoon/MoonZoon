@@ -41,8 +41,8 @@ enum Args {
 #[derive(Debug, Copy, Clone)]
 pub enum BuildMode {
     Dev,
-    Release,
     Profiling,
+    Release,
 }
 
 impl BuildMode {
@@ -60,6 +60,14 @@ impl BuildMode {
 
     fn is_not_dev(&self) -> bool {
         !self.is_dev()
+    }
+
+    fn env_name(&self) -> &str {
+        match self {
+            Self::Dev => "DEV",
+            Self::Profiling => "PROFILING",
+            Self::Release => "RELEASE",
+        }
     }
 }
 
