@@ -2,7 +2,7 @@ use crate::helper::{
     visit_files, AsyncReadToVec, BrotliFileCompressor, FileCompressor, GzipFileCompressor,
 };
 use crate::wasm_bindgen::{build_with_wasm_bindgen, check_or_install_wasm_bindgen};
-use crate::wasm_opt::{optimize_with_wasm_opt, check_or_install_wasm_opt};
+use crate::wasm_opt::{check_or_install_wasm_opt, optimize_with_wasm_opt};
 use crate::BuildMode;
 use anyhow::{anyhow, Context, Error};
 use bool_ext::BoolExt;
@@ -10,7 +10,7 @@ use const_format::concatcp;
 use fehler::throws;
 use futures::TryStreamExt;
 use std::{borrow::Cow, path::Path, sync::Arc};
-use tokio::{fs, try_join, process::Command};
+use tokio::{fs, process::Command, try_join};
 use uuid::Uuid;
 
 // -- public --
@@ -66,12 +66,12 @@ pub async fn compile_with_cargo(build_mode: BuildMode) {
     }
     if let BuildMode::Profiling = build_mode {
         cargo_configs.extend([("DEBUG", "true"), ("INHERITS", "release")]);
-    } 
+    }
 
     let profile_env_name = build_mode.env_name();
     let envs = cargo_configs
         .into_iter()
-        .map(|(key, value)| (format!("CARGO_PROFILE_{profile_env_name}_{key}"), value));   
+        .map(|(key, value)| (format!("CARGO_PROFILE_{profile_env_name}_{key}"), value));
 
     Command::new("cargo")
         .args(&args)
@@ -82,7 +82,6 @@ pub async fn compile_with_cargo(build_mode: BuildMode) {
         .success()
         .err(anyhow!("Failed to compile frontend"))?;
 }
-   
 
 #[throws]
 async fn remove_pkg() {

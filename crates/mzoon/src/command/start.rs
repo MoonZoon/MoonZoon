@@ -19,9 +19,10 @@ pub async fn start(build_mode: BuildMode, open: bool) {
     set_env_vars(&config, build_mode);
 
     let server = Arc::new(Mutex::new(None));
-    
+
     let frontend_watcher = build_and_watch_frontend(&config, build_mode).await?;
-    let backend_watcher = build_run_and_watch_backend(&config, build_mode, open, Arc::clone(&server)).await?;
+    let backend_watcher =
+        build_run_and_watch_backend(&config, build_mode, open, Arc::clone(&server)).await?;
 
     signal::ctrl_c().await?;
 
@@ -61,7 +62,11 @@ async fn build_run_and_watch_backend(
     BackendWatcher::start(&config, build_mode, DEBOUNCE_TIME, server).await?
 }
 
-async fn build_and_run_backend(config: &Config, build_mode: BuildMode, server: &Mutex<Option<Child>>) {
+async fn build_and_run_backend(
+    config: &Config,
+    build_mode: BuildMode,
+    server: &Mutex<Option<Child>>,
+) {
     if let Err(error) = build_backend(build_mode, config.https).await {
         eprintln!("{error:#}");
         return;

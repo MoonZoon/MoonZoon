@@ -60,16 +60,16 @@ pub async fn build_with_wasm_bindgen(build_mode: BuildMode) {
         "--target",
         "web",
         "--no-typescript",
-        // @TODO/NOTE Fails in runtime even with `wasm-opt --enable-reference-types` (v.108). 
+        // @TODO/NOTE Fails in runtime even with `wasm-opt --enable-reference-types` (v.108).
         // "--reference-types",
         "--weak-refs",
         "--out-dir",
-        "frontend/pkg"
+        "frontend/pkg",
     ];
     if build_mode.is_dev() {
         args.push("--debug");
     }
-    
+
     let target_profile_folder = match build_mode {
         BuildMode::Dev => "debug",
         BuildMode::Profiling => "profiling",
