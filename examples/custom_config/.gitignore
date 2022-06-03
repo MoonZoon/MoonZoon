@@ -1,6 +1,7 @@
 target
-frontend/wasm-pack*
-
+frontend/wasm-bindgen*
+frontend/wasm-opt*
+frontend/pkg
 
 # The line below commented out for the example purposes.
 # You want to create `MoonZoonCustom.toml` by yourself from `MoonZoonCustom.ex.toml`

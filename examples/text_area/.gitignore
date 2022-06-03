@@ -1,6 +1,5 @@
 target
-cargo_install_root
-mzoon
-mzoon.exe
-frontend/wasm-pack*
-.idea
+frontend/wasm-bindgen*
+frontend/wasm-opt*
+frontend/pkg
+MoonZoonCustom.toml

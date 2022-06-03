@@ -10,6 +10,7 @@ use std::path::PathBuf;
 use tar::Archive;
 use tokio::process::Command;
 
+// NOTE: Sync with zoon's wasm-bindgen version.
 const VERSION: &str = "0.2.80";
 
 // -- public --

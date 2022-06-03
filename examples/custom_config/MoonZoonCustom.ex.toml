@@ -4,7 +4,7 @@
 
 my_api = "example.com/api"
 pi = 3.14
-favorite_languages = ["Xxxx",["Xxxxx"]]
+favorite_languages = ["Xxxx", ["Xxxxx"]]
 is_pig_pink = true
 birthday = 0000-01-01T00:00:00+00:00
 

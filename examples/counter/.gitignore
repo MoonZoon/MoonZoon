@@ -2,3 +2,4 @@ target
 frontend/wasm-bindgen*
 frontend/wasm-opt*
 frontend/pkg
+MoonZoonCustom.toml

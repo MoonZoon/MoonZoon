@@ -9,7 +9,6 @@ license = "MIT"
 readme = "../README.md"
 edition = "2021"
 
-
 [dependencies]
  # @TODO add "fmt" feature back in the future
 zoon = { path = "../../../../crates/zoon", features = ["static_ref"], default-features = false }
