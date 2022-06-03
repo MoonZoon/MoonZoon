@@ -6,12 +6,3 @@ members = [
     "shared",
 ]
 
-[profile.release]
-lto = true
-codegen-units = 1
-
-[profile.release.package.frontend]
-opt-level = 's'
-
-[profile.release.package.backend]
-opt-level = 3
