@@ -114,7 +114,5 @@ fn unpack_wasm_opt(tar_gz: Vec<u8>) {
         entry.unpack(destination)?;
         return;
     }
-    Err(anyhow!(
-        "Failed to find wasm-opt in the downloaded archive"
-    ))?;
+    Err(anyhow!("Failed to find wasm-opt in the downloaded archive"))?;
 }

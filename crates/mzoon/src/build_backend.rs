@@ -33,12 +33,12 @@ pub async fn build_backend(build_mode: BuildMode, https: bool) {
     }
     if let BuildMode::Profiling = build_mode {
         cargo_configs.extend([("DEBUG", "true"), ("INHERITS", "release")]);
-    } 
+    }
 
     let profile_env_name = build_mode.env_name();
     let envs = cargo_configs
         .into_iter()
-        .map(|(key, value)| (format!("CARGO_PROFILE_{profile_env_name}_{key}"), value)); 
+        .map(|(key, value)| (format!("CARGO_PROFILE_{profile_env_name}_{key}"), value));
 
     Command::new("cargo")
         .args(&args)
