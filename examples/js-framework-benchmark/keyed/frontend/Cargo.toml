@@ -9,8 +9,6 @@ license = "MIT"
 readme = "../README.md"
 edition = "2021"
 
-[lib]
-crate-type = ["cdylib"]
 
 [dependencies]
  # @TODO add "fmt" feature back in the future
@@ -18,5 +16,3 @@ zoon = { path = "../../../../crates/zoon", features = ["static_ref"], default-fe
 rand = { version = "0.8.3", features = ["small_rng", "getrandom"], default-features = false }
 getrandom = { version = "0.2", features = ["js"], default-features = false }
 
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = ['-Os']

@@ -9,8 +9,6 @@ license = "MIT"
 readme = "../README.md"
 edition = "2021"
 
-[lib]
-crate-type = ["cdylib"]
 
 [dependencies]
 zoon = { path = "../../../crates/zoon" }

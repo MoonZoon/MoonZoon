@@ -9,8 +9,6 @@ license = "MIT"
 readme = "../README.md"
 edition = "2021"
 
-[lib]
-crate-type = ["cdylib"]
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.19"
@@ -20,5 +18,3 @@ zoon = { path = "../../../crates/zoon" }
 pulldown-cmark = "0.9.1"
 maud = "0.23.0"
 
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = ['-Os']
