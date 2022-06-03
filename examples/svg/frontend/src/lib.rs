@@ -1,5 +1,8 @@
 use std::{collections::VecDeque, iter::FromIterator};
-use zoon::{*, strum::{EnumIter, IntoEnumIterator, IntoStaticStr}};
+use zoon::{
+    strum::{EnumIter, IntoEnumIterator, IntoStaticStr},
+    *,
+};
 
 // ------ ------
 //    Types
@@ -60,10 +63,8 @@ fn root() -> impl Element {
     let width = "100";
     let height = "300";
 
-    El::new()
-        .s(Align::center())
-        .child(
-            RawSvgEl::new("svg")
+    El::new().s(Align::center()).child(
+        RawSvgEl::new("svg")
             .style("cursor", "pointer")
             .attr("width", width)
             .attr("height", height)
@@ -80,15 +81,14 @@ fn root() -> impl Element {
                     .attr_signal("cy", cy_attr_signal())
                     .attr("r", "40")
                     .attr_signal("fill", color_attr_signal()),
-            )
-        )
+            ),
+    )
 }
 
 // ------ ------
 //    Start
 // ------ ------
 
-#[wasm_bindgen(start)]
-pub fn start() {
+fn main() {
     start_app("app", root);
 }
