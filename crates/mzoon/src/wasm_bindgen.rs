@@ -66,10 +66,8 @@ pub async fn build_with_wasm_bindgen(build_mode: BuildMode) {
         "--out-dir",
         "frontend/pkg"
     ];
-    match build_mode {
-        BuildMode::Dev => args.extend(["--debug"]),
-        BuildMode::Profiling => (),
-        BuildMode::Release => (),
+    if build_mode.is_dev() {
+        args.push("--debug");
     }
     
     let target_profile_folder = match build_mode {

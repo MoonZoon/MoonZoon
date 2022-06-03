@@ -59,14 +59,13 @@ pub async fn optimize_with_wasm_opt(build_mode: BuildMode) {
         "frontend/pkg/frontend_bg.wasm",
         "--output",
         "frontend/pkg/frontend_bg.wasm",
-        "-Os",
     ];
-    match build_mode {
-        BuildMode::Dev => (),
-        BuildMode::Profiling => args.push("--debuginfo"),
-        BuildMode::Release => (),
+    if build_mode.is_not_dev() {
+        args.push("-Oz");
     }
-
+    if let BuildMode::Profiling = build_mode {
+        args.push("--debuginfo");
+    }
     Command::new("frontend/wasm-opt")
         .args(&args)
         .status()

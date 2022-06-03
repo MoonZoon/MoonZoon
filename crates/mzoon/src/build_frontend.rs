@@ -58,8 +58,24 @@ pub async fn compile_with_cargo(build_mode: BuildMode) {
         BuildMode::Profiling => args.extend(["--profile", "profiling"]),
         BuildMode::Release => args.push("--release"),
     }
+
+    // https://doc.rust-lang.org/cargo/reference/environment-variables.html#configuration-environment-variables
+    let mut cargo_configs = Vec::new();
+    if build_mode.is_not_dev() {
+        cargo_configs.extend([("OPT_LEVEL", "z"), ("CODEGEN_UNITS", "1"), ("LTO", "true")]);
+    }
+    if let BuildMode::Profiling = build_mode {
+        cargo_configs.extend([("DEBUG", "true"), ("INHERITS", "release")]);
+    } 
+
+    let profile_env_name = build_mode.env_name();
+    let envs = cargo_configs
+        .into_iter()
+        .map(|(key, value)| (format!("CARGO_PROFILE_{profile_env_name}_{key}"), value));   
+
     Command::new("cargo")
         .args(&args)
+        .envs(envs)
         .status()
         .await
         .context("Failed to get frontend compilation status")?
