@@ -16,7 +16,7 @@ use uuid::Uuid;
 // -- public --
 
 #[throws]
-pub async fn build_frontend(build_mode: BuildMode, cache_busting: bool) {
+pub async fn build_frontend(build_mode: BuildMode, cache_busting: bool, frontend_dist: bool) {
     println!("Building frontend...");
     compile_with_cargo(build_mode).await?;
 
@@ -36,7 +36,7 @@ pub async fn build_frontend(build_mode: BuildMode, cache_busting: bool) {
         rename_js_file(build_id, cache_busting),
         write_build_id(build_id),
     )?;
-    if build_mode.is_not_dev() {
+    if build_mode.is_not_dev() && !frontend_dist {
         compress_pkg(wasm_file_path.as_ref(), js_file_path.as_ref()).await?;
     }
     println!("Frontend built");

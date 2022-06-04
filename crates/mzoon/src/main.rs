@@ -6,6 +6,7 @@ mod build_backend;
 mod build_frontend;
 mod command;
 mod config;
+mod frontend_dist;
 mod helper;
 mod run_backend;
 mod set_env_vars;
@@ -35,6 +36,10 @@ enum Args {
         release: bool,
         #[clap(short, long)]
         profiling: bool,
+        // @TODO `short = "-fb" once possible:
+        // https://github.com/clap-rs/clap/issues/1210
+        #[clap(short, long)]
+        frontend_dist: bool,
     },
 }
 
@@ -84,8 +89,10 @@ async fn main() {
             profiling,
             open,
         } => command::start(BuildMode::new(release, profiling), open).await?,
-        Args::Build { release, profiling } => {
-            command::build(BuildMode::new(release, profiling)).await?
-        }
+        Args::Build {
+            release,
+            profiling,
+            frontend_dist,
+        } => command::build(BuildMode::new(release, profiling), frontend_dist).await?,
     }
 }
