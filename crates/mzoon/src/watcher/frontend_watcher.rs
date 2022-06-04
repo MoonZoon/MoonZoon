@@ -70,7 +70,7 @@ async fn on_change(
 }
 
 async fn build_and_reload(reload_url: Arc<String>, build_mode: BuildMode, cache_busting: bool) {
-    if let Err(error) = build_frontend(build_mode, cache_busting).await {
+    if let Err(error) = build_frontend(build_mode, cache_busting, false).await {
         return eprintln!("{}", error);
     }
     println!("Reload frontend");
