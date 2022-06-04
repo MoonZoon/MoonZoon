@@ -66,7 +66,7 @@ fn emoji(name: &str) -> impl Element {
         .s(Height::exact(17))
         .s(Transform::new().scale(230).move_down(2))
         .s(Padding::new().x(5))
-        .url([PUBLIC_URL, "emoji/", name, ".png"].concat())
+        .url(public_url!("emoji/{name}.png"))
         .description(name)
 }
 

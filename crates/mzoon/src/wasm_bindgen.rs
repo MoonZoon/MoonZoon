@@ -37,7 +37,7 @@ pub async fn check_or_install_wasm_bindgen() {
         "https://github.com/rustwasm/wasm-bindgen/releases/download/{VERSION}/wasm-bindgen-{VERSION}-{NEAREST_TARGET}.tar.gz"
     );
 
-    println!("Installing wasm-bindgen...");
+    println!("Downloading & Installing wasm-bindgen...");
     if TARGET != NEAREST_TARGET {
         println!(
             "Pre-compiled wasm-bindgen binary '{NEAREST_TARGET}' will be used for the target platform '{TARGET}'"

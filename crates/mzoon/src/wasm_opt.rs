@@ -38,7 +38,7 @@ pub async fn check_or_install_wasm_opt() {
         "https://github.com/WebAssembly/binaryen/releases/download/version_{VERSION}/binaryen-version_{VERSION}-{ARCHIVE_PLATFORM}.tar.gz",
     );
 
-    println!("Installing wasm-opt...");
+    println!("Downloading & Installing wasm-opt...");
     println!(
         "Pre-compiled wasm-opt binary '{ARCHIVE_PLATFORM}' will be used for the target platform '{TARGET}'"
     );
