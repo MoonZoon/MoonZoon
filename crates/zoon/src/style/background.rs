@@ -87,8 +87,8 @@ impl<'a> Background<'a> {
     ///
     /// let element = El::new()
     ///     .s(Background::new().url_signal(travel_to_space.map_bool(
-    ///         || format!("{PUBLIC_URL}images/stars.png"),
-    ///         || format!("{PUBLIC_URL}images/launch_pad.png"),
+    ///         || public_url!("images/stars.png"),
+    ///         || public_url!("images/launch_pad.png"),
     ///     )))
     ///     .child("Travel to space")
     ///     .on_click(move || traveling.update(not));

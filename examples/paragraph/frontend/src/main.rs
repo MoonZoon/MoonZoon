@@ -57,7 +57,7 @@ fn paragraph() -> impl Element {
                 .s(Align::new().right())
                 .s(RoundedCorners::all(20))
                 .s(Padding::all(15))
-                .url([PUBLIC_URL, "lorem_picsum_1039-200x200.jpg"].concat())
+                .url(public_url("lorem_picsum_1039-200x200.jpg"))
                 .description("paragraph image")
         )
         .content(" Aliquam in lorem sit amet leo accumsan lacinia. Pellentesque sapien. Donec ipsum massa, ullamcorper in, auctor et, scelerisque sed, est. Integer tempor. Aliquam erat volutpat. Phasellus enim erat, vestibulum vel, aliquam a, posuere eu, velit. Aliquam erat volutpat. Etiam commodo dui eget wisi.")
