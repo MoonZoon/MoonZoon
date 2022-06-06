@@ -3,3 +3,5 @@ frontend/wasm-bindgen*
 frontend/wasm-opt*
 frontend/pkg
 MoonZoonCustom.toml
+frontend_dist/_api
+frontend_dist/index.html
