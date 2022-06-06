@@ -39,7 +39,14 @@ enum Args {
         /// Prepare for frontend-only deploy; You can test it with https://crates.io/crates/microserver
         #[clap(short, long)]
         frontend_dist: bool,
+        #[clap(arg_enum)]
+        hosting: Option<Hosting>,
     },
+}
+
+#[derive(clap::ArgEnum, Clone, Copy, Debug)]
+pub enum Hosting {
+    Netlify,
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -100,6 +107,7 @@ async fn main() {
             release,
             profiling,
             frontend_dist,
-        } => command::build(BuildMode::new(release, profiling), frontend_dist).await?,
+            hosting,
+        } => command::build(BuildMode::new(release, profiling), frontend_dist, hosting).await?,
     }
 }

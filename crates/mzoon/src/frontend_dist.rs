@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::helper::{download, localhost_url};
 use crate::run_backend::run_backend;
-use crate::BuildMode;
+use crate::{BuildMode, Hosting};
 use anyhow::Error;
 use const_format::concatcp;
 use fehler::throws;
@@ -14,12 +14,19 @@ const API_DIR: &str = concatcp!(FRONTEND_DIST_DIR, "/_api");
 // -- public --
 
 #[throws]
-pub async fn create_frontend_dist(build_mode: BuildMode, config: &Config) {
+pub async fn create_frontend_dist(
+    build_mode: BuildMode,
+    config: &Config,
+    hosting: Option<Hosting>,
+) {
     println!("Creating frontend_dist...");
 
     recreate_api_dir_with_frontend_dist().await?;
     recreate_index_html(build_mode, config).await?;
     task::spawn_blocking(copy_pkg_public_sync).await??;
+    if let Some(hosting) = hosting {
+        create_hosting_files(hosting).await?;
+    }
 
     println!("frontend_dist created");
 }
@@ -49,4 +56,21 @@ fn copy_pkg_public_sync() {
 
     dir::copy("frontend/pkg", API_DIR, &copy_options)?;
     dir::copy("public", API_DIR, &copy_options)?;
+}
+
+#[throws]
+async fn create_hosting_files(hosting: Hosting) {
+    match hosting {
+        Hosting::Netlify => {
+            const NETLIFY_ROUTER: &str = concatcp!(FRONTEND_DIST_DIR, "/netlify.toml");
+            if fs::metadata(NETLIFY_ROUTER).await.is_err() {
+                fs::write(
+                    NETLIFY_ROUTER,
+                    include_str!("../hosting_configs/netlify.toml"),
+                )
+                .await?;
+                println!("netlify.toml added to frontend_dist");
+            }
+        }
+    }
 }
