@@ -16,6 +16,6 @@ pub async fn build(build_mode: BuildMode, frontend_dist: bool) {
     build_backend(build_mode, config.https).await?;
 
     if frontend_dist {
-        create_frontend_dist().await?;
+        create_frontend_dist(build_mode, &config).await?;
     }
 }

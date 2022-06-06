@@ -12,15 +12,10 @@ pub fn run_backend(build_mode: BuildMode) -> Child {
         .no_deps()
         .exec()?
         .target_directory
-        .also(|directory| {
-            directory.push(if build_mode.is_dev() {
-                "debug"
-            } else {
-                "release"
-            })
-        })
+        .also(|directory| directory.push(build_mode.target_profile_folder()))
         .also(|directory| directory.push("backend"))
         .apply(Command::new)
+        .kill_on_drop(true)
         .spawn()
         .context("Failed to run backend")?
 }
