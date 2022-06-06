@@ -10,7 +10,7 @@ use fehler::throws;
 #[throws]
 pub async fn build(build_mode: BuildMode, frontend_dist: bool) {
     let config = Config::load_from_moonzoon_tomls().await?;
-    set_env_vars(&config, build_mode);
+    set_env_vars(&config, build_mode, frontend_dist);
 
     build_frontend(build_mode, config.cache_busting, frontend_dist).await?;
     build_backend(build_mode, config.https).await?;

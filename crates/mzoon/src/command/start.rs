@@ -17,7 +17,7 @@ const DEBOUNCE_TIME: Duration = Duration::from_millis(100);
 #[throws]
 pub async fn start(build_mode: BuildMode, open: bool) {
     let config = Config::load_from_moonzoon_tomls().await?;
-    set_env_vars(&config, build_mode);
+    set_env_vars(&config, build_mode, false);
 
     let server = Arc::new(Mutex::new(None));
 

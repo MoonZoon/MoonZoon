@@ -282,7 +282,9 @@ where
     // ------ Run ------
 
     let server = server.run();
-    lazy_message_writer.write_all()?;
+    if not(CONFIG.frontend_dist) {
+        lazy_message_writer.write_all()?;
+    }
     server.await?;
 
     Ok(println!("Stop Moon"))
