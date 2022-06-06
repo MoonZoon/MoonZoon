@@ -1,0 +1,4 @@
+[package]
+version = "0.1.0"
+name = "shared"
+edition = "2021"
