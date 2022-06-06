@@ -1,6 +1,7 @@
 use crate::build_backend::build_backend;
 use crate::build_frontend::build_frontend;
 use crate::config::Config;
+use crate::helper::localhost_url;
 use crate::run_backend::run_backend;
 use crate::set_env_vars::set_env_vars;
 use crate::watcher::{BackendWatcher, FrontendWatcher};
@@ -83,11 +84,7 @@ async fn build_and_run_backend(
 
 #[throws]
 fn open_in_browser(config: &Config) {
-    let url = format!(
-        "{protocol}://localhost:{port}",
-        protocol = if config.https { "https" } else { "http" },
-        port = config.port
-    );
+    let url = localhost_url(config);
     println!("Open {url} in the default web browser");
     open::that(url).context("Failed to open the URL in the browser")?;
 }

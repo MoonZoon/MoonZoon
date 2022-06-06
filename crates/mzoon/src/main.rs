@@ -36,8 +36,7 @@ enum Args {
         release: bool,
         #[clap(short, long)]
         profiling: bool,
-        // @TODO `short = "-fb" once possible:
-        // https://github.com/clap-rs/clap/issues/1210
+        /// Prepare for frontend-only deploy; You can test it with https://crates.io/crates/microserver
         #[clap(short, long)]
         frontend_dist: bool,
     },
@@ -72,6 +71,14 @@ impl BuildMode {
             Self::Dev => "DEV",
             Self::Profiling => "PROFILING",
             Self::Release => "RELEASE",
+        }
+    }
+
+    fn target_profile_folder(&self) -> &str {
+        match self {
+            Self::Dev => "debug",
+            Self::Profiling => "profiling",
+            Self::Release => "release",
         }
     }
 }

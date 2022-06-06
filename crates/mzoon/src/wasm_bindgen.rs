@@ -2,6 +2,7 @@ use crate::{helper::download, BuildMode};
 use anyhow::{anyhow, Context, Error};
 use apply::Apply;
 use bool_ext::BoolExt;
+use cargo_metadata::MetadataCommand;
 use cfg_if::cfg_if;
 use const_format::{concatcp, formatcp};
 use fehler::throws;
@@ -71,12 +72,10 @@ pub async fn build_with_wasm_bindgen(build_mode: BuildMode) {
         args.push("--debug");
     }
 
-    let target_profile_folder = match build_mode {
-        BuildMode::Dev => "debug",
-        BuildMode::Profiling => "profiling",
-        BuildMode::Release => "release",
-    };
-    let wasm_path = format!("target/wasm32-unknown-unknown/{target_profile_folder}/frontend.wasm");
+    let target_path = MetadataCommand::new().no_deps().exec()?.target_directory;
+    let target_profile_folder = build_mode.target_profile_folder();
+    let wasm_path =
+        format!("{target_path}/wasm32-unknown-unknown/{target_profile_folder}/frontend.wasm");
     args.push(&wasm_path);
 
     Command::new("frontend/wasm-bindgen")
