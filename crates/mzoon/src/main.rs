@@ -1,6 +1,7 @@
 use anyhow::Error;
 use clap::Parser;
 use fehler::throws;
+use std::path::PathBuf;
 
 mod build_backend;
 mod build_frontend;
@@ -19,9 +20,7 @@ mod watcher;
 #[clap(author, version, about, long_about = None)]
 enum Args {
     New {
-        project_name: String,
-        #[clap(short, long)]
-        here: bool,
+        path: PathBuf,
     },
     Start {
         #[clap(short, long)]
@@ -97,7 +96,7 @@ async fn main() {
     println!("{:?}", args);
 
     match args {
-        Args::New { project_name, here } => command::new(project_name, here).await?,
+        Args::New { path } => command::new(path).await?,
         Args::Start {
             release,
             profiling,
