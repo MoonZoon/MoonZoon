@@ -89,9 +89,19 @@ impl Frontend {
             ""
         };
 
-        let reconnecting_event_source_js_code =
-            include_str!("../js/ReconnectingEventSource.min.js");
-        let sse_js_code = include_str!("../js/sse.js");
+        let scripts = if CONFIG.frontend_dist {
+            String::new()
+        } else {
+            let reconnecting_event_source_js_code =
+                include_str!("../js/ReconnectingEventSource.min.js");
+            let sse_js_code = include_str!("../js/sse.js");
+            format!(
+                r#"<script type="text/javascript">
+                    {reconnecting_event_source_js_code}
+                    {sse_js_code}
+                </script>"#
+            )
+        };
 
         format!(
             r#"<!DOCTYPE html>
@@ -110,10 +120,7 @@ impl Frontend {
         <body>
           {body_content}
     
-          <script type="text/javascript">
-            {reconnecting_event_source_js_code}
-            {sse_js_code}
-          </script>
+          {scripts}
     
           <script type="module">
             import init from '/_api/pkg/frontend{cache_busting_string}.js';
