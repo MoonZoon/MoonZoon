@@ -21,7 +21,10 @@ pub fn set_env_vars(config: &Config, build_mode: BuildMode, frontend_dist: bool)
     // origins = ["*", "https://example.com"]
     env::set_var("CORS_ORIGINS", config.cors.origins.join(","));
 
-    env::set_var("COMPRESSED_PKG", build_mode.is_not_dev().to_string());
+    env::set_var(
+        "COMPRESSED_PKG",
+        (build_mode.is_not_dev() && !frontend_dist).to_string(),
+    );
 
     env::set_var("FRONTEND_DIST", frontend_dist.to_string());
 
