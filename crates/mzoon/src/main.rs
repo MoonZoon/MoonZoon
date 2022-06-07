@@ -20,7 +20,11 @@ mod watcher;
 #[clap(author, version, about, long_about = None)]
 enum Args {
     New {
+        /// Project files destination - e.g. my_project or . (here)
         path: PathBuf,
+        /// Local paths to Moon & Zoon in Cargo.toml
+        #[clap(short, long)]
+        local_deps: bool,
     },
     Start {
         #[clap(short, long)]
@@ -96,7 +100,7 @@ async fn main() {
     println!("{:?}", args);
 
     match args {
-        Args::New { path } => command::new(path).await?,
+        Args::New { path, local_deps } => command::new(path, local_deps).await?,
         Args::Start {
             release,
             profiling,
