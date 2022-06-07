@@ -423,3 +423,9 @@ Other related articles:
    - I try to respect Gall’s Law - "A complex system that works is invariably found to have evolved from a simple system that worked."
    - So let's start with a single server, simple implementation and minimum features.
    - There are research papers about virtual actors and things like transactions. It will take time but the architecture will allow to add many new features when needed.
+
+1. _"How can I change the port number or enable HTTPS?"_
+
+   - _For development_: Update settings in `MoonZoon.toml` (see `MoonZoon.toml` above or `/examples/counter/MoonZoon.toml`)
+
+   - _For production_: Set environment variables (see `/crates/moon/src/config.rs`)

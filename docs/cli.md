@@ -5,16 +5,14 @@
 
 _
 
-You'll be able to install `mzoon` with _Cargo_: 
 ```sh
-cargo install --locked mzoon
+cargo install mzoon --git https://github.com/MoonZoon/MoonZoon --locked
 ```
 
-and faster installation methods with pre-compiled binaries will follow.
-
-- Notes:
-   - You can use the [demo](https://github.com/MoonZoon/demo) as a template for your new project for now.
-   - Why [_--locked_?](https://github.com/rust-lang/cargo/issues/7169)
+_Notes:_ 
+   - Why [_--locked_](https://github.com/rust-lang/cargo/issues/7169) ?
+   - `mzoon` hasn't been published to [crates.io](https://crates.io/) yet.
+   - Faster installation methods with pre-compiled binaries will be added later.
 
 ---
 
@@ -22,14 +20,14 @@ and faster installation methods with pre-compiled binaries will follow.
 
 ### 1. `new`
 
-- Example: `mzoon new my_project` 
-- Creates a new directory with a new MoonZoon project.
+- Example A: `mzoon new my_project` 
+   - Creates a new directory with a new MoonZoon project.
+- Example B: `mzoon new .` 
+   - The new project files will be created in the current directory.
 - Optional parameters:
-   1. **`--here` / `-h`**
-      - Example: `mzoon new my_project --here`
-      - Creates the project in the current directory.
-- _Question:_ Do you think a [code tour](https://github.com/microsoft/codetour) would be useful for you?
-- _Note:_ Not implemented yet, use [MoonZoon/demo](https://github.com/MoonZoon/demo) as a starting project.
+   1. **`--local-deps` / `-l`**
+      - Example: `mzoon new my_project --local-deps`
+      - `moon` and `zoon` dependencies in `Cargo.toml`s will be defined with `path` instead of `version`. It's useful especially for MoonZoon development.
 
 ### 2. `start`
 
@@ -37,10 +35,14 @@ and faster installation methods with pre-compiled binaries will follow.
 - Compiles the app in the debug mode and then starts the Moon's server.
 - Both Moon and Zoon apps are automatically recompiled on a file change.
 - The Moon app auto-reloads the Zoon app on a change.
+- You can scan a generated QR code to open the app on your phone.
 - Optional parameters:
    1. **`--release` / `-r`**
       - Example: `mzoon start --release`
       - Compiles in the release mode and compresses frontend files.
+   1. **`--profiling` / `-p`**
+      - Example: `mzoon start --profiling`
+      - The same as the release mode but debugging info isn't removed from the binary.
    1. **`--open` / `-o`**
       - Example: `mzoon start --open`
       - Opens the Zoon's URL in a new browser tab (e.g. `localhost:8080`)
@@ -53,50 +55,19 @@ and faster installation methods with pre-compiled binaries will follow.
    1. **`--release` / `-r`**
       - Example: `mzoon build --release`
       - Compiles in the release mode and compresses frontend files.
----
-
-## MoonZoon.toml
-
-- The configuration file located in the app root directory.
-
-```toml
-port = 8080
-# port = 8443
-https = false
-cache_busting = true # add UUID to file names - e.g. `frontend_bg_[uuid].wasm`
-backend_log_level = "warn" # "error" / "warn" / "info" / "debug" / "trace"
-
-[redirect] # useful for HTTP -> HTTPS redirect
-port = 8081
-enabled = false
-
-[watch]
-frontend = [
-    "frontend/Cargo.toml",
-    "frontend/src",
-]
-backend = [
-    "backend/Cargo.toml",
-    "backend/src",
-]
-```
-
+   1. **`--profiling` / `-p`**
+      - Example: `mzoon build --profiling`
+      - The same as the release mode but debugging info isn't removed from the binary.
+   1. **`--frontend-dist` / `-f`**
+      - Example: `mzoon build --release --frontend-dist`
+      - Generates a new folder `frontend_dist` in the project root.
+      - You can deploy the content of the `frontend_dist` folder to your favorite frontend hosting.
+      - You can also generate some hosting-specific files with the `mzoon` argument `<HOSTING>`
+         - Example: `mzoon build -r -f netlify`
 ---
 
 ## FAQ
 1. _"What about other commands like `deploy` and `test`?"_
    - Other commands will be added later.
-   - You can use standard `cargo test` for testing the backend side.
-   - `mzoon build` automatically installs `wasm-pack` in the `frontend` directory. So you can use `wasm-pack` directly for testing.
-
-1. _"How can I change the port number or enable HTTPS?"_
-
-   - _For development_: Update settings in `MoonZoon.toml` (see `MoonZoon.toml` above or `/examples/counter/MoonZoon.toml`)
-
-   - _For production_: Set environment variables (see `/crates/moon/src/config.rs`)
-
-1. _"Some commands or parameters mentioned above don't work!"_
-   - They are probably not implemented yet.
-
-1. _"What is a new project file structure?"_
-   - See the content of [MoonZoon/demo](https://github.com/MoonZoon/demo) to have an idea.
+   - You should be able to use the standard `cargo test` until there is a native `mzoon` support.
+   - Write your ideas on the MoonZoon [Discord](https://discord.gg/eGduTxK2Es), please.
