@@ -72,40 +72,13 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 
 ## 3. Start example
 
-- Runnable examples (the list is continuously updated):
-  - `alignment`
-  - `canvas`
-  - `chat`
-  - `counter`
-  - `counters`
-  - `custom_config`
-  - `custom_http_client`
-  - `js_text_editor`
-  - `js-framework-benchmark/keyed`
-  - `keyboard`
-  - `layers`
-  - `markup`
-  - `pages`
-  - `pan_zoom`
-  - `paragraph`
-  - `resize_drag`
-  - `slider`
-  - `svg`
-  - `start_with_app`
-  - `text_area`
-  - `time_tracker`
-  - `timer`
-  - `todomvc`
-  - `video`
-  - `viewport`
-
 ```sh
 cd examples
-cd chat # or another example
+cd chat # or another example from the `examples` directory
 makers mzoon start -o # add -r for the release mode
 ```
 
-## 5. Have fun!
+## 4. Have fun!
 
 --
 
