@@ -29,8 +29,7 @@ fn root() -> impl Element {
         .item(Button::new().label("+").on_press(increment))
 }
 
-#[wasm_bindgen(start)]
-pub fn start() {
+fn main() {
     start_app("app", root);
 }
 ```
@@ -52,15 +51,14 @@ fn root() -> impl Element {
         .item(Button::new().label("+").on_press(move || on_press(1)))
 }
 
-#[wasm_bindgen(start)]
-pub fn start() {
+fn main() {
     start_app("app", root);
 }
 ```
 
 ### 1. The App Initialization
 
-1. The function `start` is invoked automatically from the Javascript code.
+1. The function `main` is invoked automatically.
 1. Zoon's function `start_app` appends the element returned from the `root` function to the element with the id `app`.
 
     - You can also pass the value `None` instead of `"app"` to mount directly to `body` but it's not recommended.
@@ -86,7 +84,7 @@ pub fn start() {
 _Notes:_
 
 - Read the excellent [tutorial](https://docs.rs/futures-signals/0.3.22/futures_signals/tutorial/index.html) for `Mutable` and signals in the `futures_signals` crate.
-- `zoon::*` reimports most needed types and you can access some of Zoon's dependencies by `zoon::library` like `zoon::futures_signals`.
+- `zoon::*` reimports most needed types and you can access some of Zoon's dependencies by `zoon::[library]` like `zoon::futures_signals`.
 - `clone!` is a type alias for [enclose::enc](https://docs.rs/enclose/1.1.8/enclose/macro.enc.html).
 - `static_ref`, `clone!` and other things can be disabled or set by Zoon's [features](https://doc.rust-lang.org/cargo/reference/features.html).
 
@@ -100,13 +98,17 @@ A **Counter** example part:
 Button::new().label("-").on_press(decrement)
 ```
 
-We'll look at the `Button` element code (`crates/zoon/src/element/button.rs`). `Button` is a Zoon element, but you can create custom ones the same way.
+We'll look at the `Button` element code (`crates/zoon/src/element/button.rs`). `Button` is a native Zoon element.
+
+You can create custom ones the same way. However, you'll probably don't need to write your own elements at all in practice.
 
 There are three sections: `Element`, `Abilities` and `Attributes`.
 
+**`Element`:**
+
 ```rust
-use crate::{web_sys::HtmlDivElement, *}; // `crate` == `zoon`
-use std::marker::PhantomData;
+use crate::*; // `crate` == `zoon`
+use std::{iter, marker::PhantomData};
 
 // ------ ------
 //    Element 
@@ -114,124 +116,109 @@ use std::marker::PhantomData;
 
 make_flags!(Label, OnPress);
 
-pub struct Button<LabelFlag, OnPressFlag> {
-    raw_el: RawHtmlEl,
+pub struct Button<LabelFlag, OnPressFlag, RE: RawEl> {
+    raw_el: RE,
     flags: PhantomData<(LabelFlag, OnPressFlag)>,
 }
 
 impl Button<LabelFlagNotSet, OnPressFlagNotSet> {
     pub fn new() -> Self {
+        run_once!(|| {
+            global_styles()
+                .style_group(
+                    StyleGroup::new(".button > *")
+                        .style("margin-top", "auto")
+                        .style("margin-bottom", "auto"),
+                )
+                // ...
+        });
         Self {
-            raw_el: RawHtmlEl::new("div")
+            raw_el: RawHtmlEl::<web_sys::HtmlDivElement>::new("div")
                 .class("button")
                 .attr("role", "button")
                 .attr("tabindex", "0")
                 .style("cursor", "pointer")
-                .style("user-select", "none")
-                .style("text-align", "center"),
+                // ...
             flags: PhantomData,
         }
     }
 }
 
-impl<OnPressFlag> Element for Button<LabelFlagSet, OnPressFlag> {
+impl<OnPressFlag, RE: RawEl + Into<RawElement>> Element for Button<LabelFlagSet, OnPressFlag, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
 }
 
-impl<LabelFlag, OnPressFlag> UpdateRawEl<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {
-    fn update_raw_el(mut self, updater: impl FnOnce(RawHtmlEl) -> RawHtmlEl) -> Self {
+impl<LabelFlag, OnPressFlag, RE: RawEl> IntoIterator for Button<LabelFlag, OnPressFlag, RE> {
+    // ...
+}
+
+impl<LabelFlag, OnPressFlag, RE: RawEl> UpdateRawEl for Button<LabelFlag, OnPressFlag, RE> {
+    type RawEl = RE;
+
+    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
         self.raw_el = updater(self.raw_el);
         self
     }
 }
 ```
-- The macro `make_flags!` will be explained later.
 - The element has to implement the trait `Element`.
-- It's recommended to implement `UpdateRawEl` to allow users to customize the element and it's required for _abilities_.
-- `RawHtmlEl::style` automatically add vendor prefixes for CSS property names when required. E.g. `"user-select"` will be replaced with `"-webkit-user-select"` on Safari and browsers on iOS. (Values aren't prefixed, let us know when it becomes a show-stopper for you.)
+- It's strongly recommended to implement `UpdateRawEl` and `IntoIterator` to allow users to customize the element and use its _abilities_ and to use some Zoon helpers.
+- `RawHtmlEl::style` automatically adds vendor prefixes for CSS property names and values where required. E.g. `"user-select"` will be replaced with `"-webkit-user-select"` on Safari and browsers on iOS.
+- `make_flags!`, `run_once` and `global_styles` will be explained later.
+
+**`Abilities`:**
 
 ```rust
 // ------ ------
 //   Abilities
 // ------ ------
 
-impl<LabelFlag, OnPressFlag> Styleable<'_, RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
-impl<LabelFlag, OnPressFlag> KeyboardEventAware<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
-impl<LabelFlag, OnPressFlag> Focusable for Button<LabelFlag, OnPressFlag> {}
-impl<LabelFlag, OnPressFlag> MouseEventAware<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {}
-impl<LabelFlag, OnPressFlag> Hookable<RawHtmlEl> for Button<LabelFlag, OnPressFlag> {
-    type WSElement = HtmlDivElement;
-}
-impl<LabelFlag, OnPressFlag> AddNearbyElement<'_> for Button<LabelFlag, OnPressFlag> {}
+impl<LabelFlag, OnPressFlag, RE: RawEl> Styleable<'_> for Button<LabelFlag, OnPressFlag, RE> {}
+impl<LabelFlag, OnPressFlag, RE: RawEl> KeyboardEventAware for Button<LabelFlag, OnPressFlag, RE> {}
+// ...
 ```
-Abilities are basically simple traits. For example when you implement `Styleable` then users can call the `.s(...)` method on your element:
+Abilities are traits where all functions have a default implementation. Only elements should implement abilities. Example: When you implement `Styleable` for your element, then users can call the `.s(...)` method on your element:
 
 ```rust
 MyElement::new().s(Padding::new().all(6))
 ``` 
 
-You can find all built-in abilities in `crates/zoon/src/element/ability/styleable.rs`. The `Styleable` ability:
+You can find all built-in abilities in `crates/zoon/src/element/ability.rs`. The `Styleable` ability implementation:
 
 ```rust
-pub trait Styleable<'a, T: RawEl>: UpdateRawEl<T> + Sized {
+pub trait Styleable<'a>: UpdateRawEl + Sized {
     fn s(self, style: impl Style<'a>) -> Self {
-        self.update_raw_el(|raw_el| style.update_raw_el_styles(raw_el))
+        self.update_raw_el(|raw_el| {
+            raw_el.style_group(style.merge_with_group(StyleGroup::default()))
+        })
     }
 }
 ```
 
-_Note_: You can also implement your custom abilities.
+**`Attributes`:**
 
 ```rust
 // ------ ------
 //  Attributes
 // ------ ------
 
-impl<'a, LabelFlag, OnPressFlag> Button<LabelFlag, OnPressFlag> {
-    pub fn label(mut self, label: impl IntoElement<'a> + 'a) -> Button<LabelFlagSet, OnPressFlag>
+impl<'a, LabelFlag, OnPressFlag, RE: RawEl> Button<LabelFlag, OnPressFlag, RE> {
+    pub fn label(
+        mut self,
+        label: impl IntoElement<'a> + 'a,
+    ) -> Button<LabelFlagSet, OnPressFlag, RE>
     where
         LabelFlag: FlagNotSet,
     {
         self.raw_el = self.raw_el.child(label);
         self.into_type()
     }
-
-    pub fn label_signal(
-        mut self,
-        label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static,
-    ) -> Button<LabelFlagSet, OnPressFlag>
-    where
-        LabelFlag: FlagNotSet,
-    {
-        self.raw_el = self.raw_el.child_signal(label);
-        self.into_type()
-    }
-
-    pub fn on_press(
-        mut self,
-        on_press: impl FnOnce() + Clone + 'static,
-    ) -> Button<LabelFlag, OnPressFlagSet>
-    where
-        OnPressFlag: FlagNotSet,
-    {
-        self.raw_el = self
-            .raw_el
-            .event_handler(move |_: events::Click| (on_press.clone())());
-        self.into_type()
-    }
-
-    fn into_type<NewLabelFlag, NewOnPressFlag>(self) -> Button<NewLabelFlag, NewOnPressFlag> {
-        Button {
-            raw_el: self.raw_el,
-            flags: PhantomData,
-        }
-    }
-}
+    // ...
 ```
 
-_Note_: Attribute implementations look a bit verbose because of long types and generics but it's a trade-off for the user's comfort and safety. Also we will improve it once stable Rust has better support for const generics and other things. And you can always write your custom elements without generics to make the code simpler.
+_Note_: Attribute implementations look a bit verbose because of long types and generics but it's a trade-off for the user comfort and safety. Also we will improve it as soon as stable Rust has better support for const generics and other things.
 
 --
 
@@ -273,7 +260,7 @@ error[E0277]: the trait bound `LabelFlagSet: FlagNotSet` is not satisfied
 **Canvas** example parts:
 
 ```rust
-use zoon::{*, web_sys::{CanvasRenderingContext2d, HtmlCanvasElement}};
+use zoon::{web_sys::{CanvasRenderingContext2d, HtmlCanvasElement}, /*...*/ };
 
 #[static_ref]
 fn canvas_context() -> &'static Mutable<Option<SendWrapper<CanvasRenderingContext2d>>> {
@@ -303,37 +290,37 @@ fn canvas() -> impl Element {
 }
 ```
 
-- You can call methods (_hooks_) `after_insert` and `after_remove` on all _elements_ that implement the _ability_ `Hookable`.
+- You can call methods (_hooks_) `after_insert` and `after_remove` on all _elements_ implementing the _ability_ `Hookable`.
 
-- Hooks allow you to access the DOM nodes directly. It may be quite verbose but you have the full power of the crate [web_sys](https://docs.rs/web-sys/) under your hands.
+- Hooks allow you to access the DOM node directly through their function argument. The code calling native DOM APIs may become quite verbose but you have the full power of the crate [web_sys](https://docs.rs/web-sys/) under your hands.
 
-- [SendWrapper](https://docs.rs/send_wrapper/0.5.0/send_wrapper/struct.SendWrapper.html) allows you to store non-`Send` types (e.g. `web_sys` elements) to statics. 
-  - _Note:_ The Hooks API will be probably revisited once Wasm fully support multithreading and we know more use-cases.
+- [SendWrapper](https://docs.rs/send_wrapper/latest/send_wrapper/struct.SendWrapper.html) allows you to store non-`Send` types (e.g. `web_sys` elements) to statics. 
+  - _Note:_ The API will be probably revisited once Wasm fully supports multithreading. One idea is to introduce lightweight _actors_ as an alternative to `#[static_ref]` functions. 
 
 The `Hookable` ability / trait:
 
 ```rust
-pub trait Hookable<T: RawEl>: UpdateRawEl<T> + Sized {
-    type WSElement: JsCast;
-
-    fn after_insert(self, handler: impl FnOnce(Self::WSElement) + Clone + 'static) -> Self {
-        // ...
+pub trait Hookable: UpdateRawEl + Sized {
+    fn after_insert(
+        self,
+        handler: impl FnOnce(<Self::RawEl as RawEl>::DomElement) + 'static,
+    ) -> Self {
+        self.update_raw_el(|raw_el| raw_el.after_insert(handler))
     }
 
-    fn after_remove(self, handler: impl FnOnce(Self::WSElement) + Clone + 'static) -> Self {
-        // ...
+    fn after_remove(
+        self,
+        handler: impl FnOnce(<Self::RawEl as RawEl>::DomElement) + 'static,
+    ) -> Self {
+        self.update_raw_el(|raw_el| raw_el.after_remove(handler))
     }
 }
 ```
-and the implementation for `Canvas`:
+and its implementation for `Canvas`:
 ```rust
-impl<WidthFlag, HeightFlag> Hookable<RawHtmlEl> for Canvas<WidthFlag, HeightFlag> {
-    type WSElement = HtmlCanvasElement;
-}
+impl<WidthFlag, HeightFlag, RE: RawEl> Hookable for Canvas<WidthFlag, HeightFlag, RE> {}
 ```
-- It means hooks invoke your callbacks with a specific `web_sys` element defined in the implementation.
-   - In most cases it would be [HtmlDivElement](https://docs.rs/web-sys/0.3.51/web_sys/struct.HtmlDivElement.html).
-   - All `web_sys` elements implement [JsCast](https://docs.rs/wasm-bindgen/0.2.74/wasm_bindgen/trait.JsCast.html). It allows you to "convert" for instance `HtmlDivElement` to `HtmlElement` with `div.unchecked_ref::<HtmlElement>()`.
+- `DomElement` is one of the `web_sys` / DOM elements. It's [web_sys::HtmlCanvasElement](https://docs.rs/web-sys/latest/web_sys/struct.HtmlCanvasElement.html) in this case (as defined in `crates/zoon/src/element/canvas.rs`).
 
 ---
 
@@ -345,53 +332,56 @@ A **TodoMVC** example part:
 fn new_todo_title() -> impl Element {
     TextInput::new()
         .s(Padding::new().y(19).left(60).right(16))
-        .s(Font::new().size(24).color(hsl(0, 0, 32.7)))
-        .s(Background::new().color(hsla(0, 0, 0, 0.3)))
-        .s(Shadows::new(vec![
-            Shadow::new().inner().y(-2).blur(1).color(hsla(0, 0, 0, 3))
-        ]))
+        .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
+        .s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
+        .s(Shadows::new(vec![Shadow::new()
+            .inner()
+            .y(-2)
+            .blur(1)
+            .color(hsluv!(0, 0, 0, 3))]))
         .focus(true)
         .on_change(super::set_new_todo_title)
         .label_hidden("What needs to be done?")
         .placeholder(
             Placeholder::new("What needs to be done?")
-                .s(Font::new().italic().color(hsl(0, 0, 91.3))),
+                .s(Font::new().italic().color(hsluv!(0, 0, 91.3))),
         )
         .on_key_down_event(|event| event.if_key(Key::Enter, super::add_todo))
         .text_signal(super::new_todo_title().signal_cloned())
 }
 ```
 
-- CSS concepts / events like _focus_, _hover_ and _breakpoints_ are handled directly by Rust / Zoon _elements_.
+- CSS concepts / events like _focus_, _hover_ and _breakpoints_ are handled directly by Rust / Zoon elements.
 
-- There is no such thing as CSS _margins_ or _selectors_ in built-in element APIs. Padding and declarative layout (columns, rows, nearby elements, spacing, etc.) are more natural alternatives.
+- There is no such thing as CSS _margins_ or _selectors_ in Zoon element APIs. Padding and declarative layout (columns, rows, nearby elements, spacing, etc.) are more natural alternatives.
 
 ### Global styles
 
 A **Paragraph** element part:
 
 ```rust
-pub fn new() -> Self {
-    run_once!(|| {
-        global_styles()
-            .style_group(StyleGroup::new(".paragraph > *").style("display", "inline"))
-            .style_group(StyleGroup::new(".paragraph > .align_left").style("float", "left"))
-            .style_group(StyleGroup::new(".paragraph > .align_right").style("float", "right"));
-    });
-    Self {
-        raw_el: RawHtmlEl::new("p").class("paragraph"),
-        flags: PhantomData,
+impl ChoosableTag for Paragraph<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
+    fn with_tag(tag: Tag) -> Self {
+        run_once!(|| {
+            global_styles()
+                .style_group(StyleGroup::new(".paragraph > *").style_important("display", "inline"))
+                .style_group(StyleGroup::new(".paragraph > .align_left").style("float", "left"))
+                .style_group(StyleGroup::new(".paragraph > .align_right").style("float", "right"));
+        });
+        Self {
+            raw_el: RawHtmlEl::new(tag.as_str()).class("paragraph"),
+            flags: PhantomData,
+        }
     }
 }
 ```
 - `run_once!` is a Zoon's macro leveraging [std::sync::Once](https://doc.rust-lang.org/std/sync/struct.Once.html).
 - `global_styles()` returns `&'static GlobalStyles` with two public methods: `style_group` and `style_group_droppable`.
-- `StyleGroup` has 3 methods: `new`, `style` and `style_signal`.
 - Global styles are stored in one dedicated `<style>` element appended to the `<head>`.
 - `StyleGroup` selector and styles are validated in the runtime - invalid ones trigger `panic!`.
-- Vendor prefixes are automatically attached to CSS property names when needed.
+- Vendor prefixes are automatically attached to CSS property names and values when needed.
 
-### Raw styles
+### Raw element styles
 
 ```rust
 fn element_with_raw_styles() -> impl Element {
@@ -405,11 +395,13 @@ fn element_with_raw_styles() -> impl Element {
     })
 }
 ```
-- `raw_el` is either `RawHtmlEl` or `RawSvgEl` with many useful methods, including `style` and `style_group`.
+- `raw_el` is either `RawHtmlEl` or `RawSvgEl` with many useful methods including `style` and `style_group`.
 - `StyleGroup` selector is prefixed by a unique element _class id_ - e.g. `._13:hover .icon`.
 - `StyleGroup`s are stored among the global styles and dropped when the associated element is removed from the DOM.
 
 ### Animated styles
+
+_Note_: Zoon Animation API is in development but you can use `Transitions` as a less powerful alternative (`Transitions` are Rust wrappers for [CSS transition](https://developer.mozilla.org/en-US/docs/Web/CSS/transition), explained below).
 
 ```rust
 fn sidebar() -> impl Element {
@@ -478,6 +470,8 @@ That's why Zoon uses only HSLuv, represented in the code as `hsluv!(h, s, l)` or
 - `a` ;  _alpha channel / opacity_ ; 0 (transparent) - 100 (opaque)
 
 The macro `hsluv!` creates an `HSLuv` instance and all color components are checked during compilation.
+
+_Notes/Update_: There is a new color system - [OKLCH](https://oklch.evilmartians.io/). It's similar to `HSLuv` but it should be a bit better. Also a color palette generator together with system-agnostic API could be introduced into Zoon in the nearer future. See the [related issue](https://github.com/MoonZoon/MoonZoon/issues/98).   
 
 <details>
 <summary>Other examples why color theory and design in general are difficult</summary>
@@ -604,6 +598,7 @@ The concept of `Scene` + `Viewport` has been "stolen" from the Elm world. Just l
 fn connection() -> &'static Connection<UpMsg, DownMsg> {
     Connection::new(|DownMsg::MessageReceived(message), _cor_id| {
         messages().lock_mut().push_cloned(message);
+        jump_to_bottom();
     })
     // .auth_token_getter(|| AuthToken::new("my_auth_token"))
 }
@@ -627,7 +622,7 @@ fn send_message() {
 ### Timer
  
 - Could be used as a timeout or stopwatch (to set an interval between callback calls).
-- `Timer` has methods `new`, `new_immediate`, `once` and `sleep`.
+- `Timer` has methods `new`, `new_immediate`, `once` and `sleep` (async).
 - `Timer` is stopped on drop.
 - See `examples/timer` for the entire code.
 
@@ -777,6 +772,7 @@ Exceptions when the link click isn't intercepted even if its `href` starts with 
 static STORAGE_KEY: &str = "todomvc-zoon";
 
 #[derive(Deserialize, Serialize)]
+#[serde(crate = "serde")]
 struct Todo {
     id: TodoId,
     title: Mutable<String>,
@@ -799,19 +795,27 @@ fn save_todos() {
 }
 ```
 
-- All items implementing [serde-lite](https://crates.io/crates/serde-lite)'s `Deserialize` and `Serialize` can be stored in the local or session storage.
+- All items implementing [serde](https://serde.rs/) / [serde-lite](https://crates.io/crates/serde-lite)'s `Deserialize` and `Serialize` can be stored in the local or session storage.
+- `#[serde(crate = "serde")]` is needed because Rust macros often doesn't work as expected when reimported (from `zoon` in this case).
 - See `examples/todomvc` or `crates/zoon/src/web_storage.rs` for more info.
 
 ---
 
 ## SEO
 
-- When the request comes from a robot (e.g. _Googlebot_), then MoonZoon renders elements to a HTML string and sends it back to the robot. (It's basically a limited _Server-Side Rendering_ / [_Dynamic Rendering_](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering).)  
+- When the request comes from a robot (e.g. _Googlebot_), then MoonZoon renders elements to a HTML string and sends it back to the robot. (It's basically a limited _Server-Side Rendering_ / [_Dynamic Rendering_](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering).) [Not implemented yet]
 
-- You'll be able to configure the default page title, _The Open Graph Metadata_ and other things in the Moon app. The example below will be continuously updated.
+- You can configure the default page title, _The Open Graph Metadata_ and other things in the Moon app.
     ```rust
     async fn frontend() -> Frontend {
-        Frontend::new().title("Time Tracker example")
+        Frontend::new().title("Chat example").append_to_head(
+            "
+            <style>
+                html {
+                    background-color: black;
+                }
+            </style>",
+        )
     }
     ```
 
@@ -826,10 +830,10 @@ fn save_todos() {
 
         - I'm not brave enough to write apps and merge pull requests written in a dynamic language.
         - I'm tired of configuring Webpack-like bundlers and fixing bugs caused by incorrectly typed JS libraries to Typescript.
-        - I want to share code between the client and server and I want server-side rendering and I don't want to switch context (language, ecosystem, best practices, etc.) while I'm writing both frontend and server.
-        - I don't want to read the entire stackoverflow.com and MDN docs to find out why my image on the website has incorrect size.
+        - I want to share code between the client and server and I want good SEO and I don't want to switch context (language, ecosystem, best practices, etc.) while I'm writing both frontend and server.
+        - I don't want to read the entire stackoverflow.com and MDN docs to find out why my image has incorrect size on the website.
         - I don't want to be afraid to refactor styles.
-        - I don't want to write code on the backend instead on the frontend because frontend is just too slow.
+        - I don't want to write backend code instead of the frontend code just because the frontend is too slow.
         - Who have time and energy to properly learn, write and constantly think about accessibility and write unit tests that take into account weird things like `null` or `undefined`?
         - I'm tired of searching for missing semicolons and brackets in HTML and CSS when it silently fails in the runtime.
         - I don't want to choose a CSS framework, bundler, state manager, router, bundler plugins, CSS preprocessor plugins, test framework and debug their incompatibilities and learn new apis everytime I want to create a new web project.
@@ -842,7 +846,7 @@ fn save_todos() {
         </details>
         
 1. _"How are we taking care of animations?"_ (by None on [chat](https://discord.gg/eGduTxK2Es))
-   - The API for advanced animations haven't been designed yet. See the sub-section `Animated styles` for basic examples.
+   - The API for advanced animations is in development. 
    - Inspiration:
       - [react-spring](https://www.react-spring.io/)
       - [Framer Motion](https://www.framer.com/motion/)
@@ -852,28 +856,10 @@ fn save_todos() {
       - [rust-dominator/examples/animation](https://github.com/Pauan/rust-dominator/blob/master/examples/animation/src/lib.rs)
 
 1. _"Hey Martin, what about [Seed](https://seed-rs.org/)?"_
-   - Zoon and Seed have very different features and goals. I assume we will be able to implement some interesting features inspired by Zoon in Seed, if needed. I'll maintain Seed as usual.
+   - Zoon and Seed have very different features and goals. I no longer actively maintain Seed.
 
-1. _"How do I get a standalone html+wasm output? I previously used Yew + Trunk."_ (by `@Noir` on the MZ Discord)
+1. _"How do I get a standalone html+wasm output? I previously used Yew + Trunk."_ (by `@Noir` on [chat](https://discord.gg/eGduTxK2Es))
 
-    <details>
-
-    <summary>Longer answer with explanation</summary>
-
-    It's possible, I have to do that to make js-framework-benchmark work: https://github.com/MartinKavik/js-framework-benchmark/tree/framework/moonzoon/frameworks/keyed/moonzoon. 
-
-    You have to create `index.html` similar to the HTML output from the Moon app. You can also disable `cache_busting` in your `MoonZoon.toml` to disable file name suffix generator for wasm and js files. 
-
-    `mzoon` uses wasm-pack under the hood so you'll find your "dist files" in `pkg` folder (https://github.com/MartinKavik/js-framework-benchmark/tree/framework/moonzoon/frameworks/keyed/moonzoon/frontend/pkg). Trunk uses wasm-bindgen directly (instead of indirectly through wasm-pack) so Trunk moves the files to `dist`.
-
-    I can imagine you want to use a standalone Zoon app for deploying to Netlify / Render / Azure Static Web Apps / DO App Platform for free or to use it with your custom server. It makes sense and I have an official support for standalone Zoon app on my roadmap, but there are some problems:
-    - Custom server integration is a Pandora's box:
-        - We need to take into account CORS and other security settings for communication with the backend. 
-        - There is a chance you need to change base url or use hash routing to mitigate url conflicts with the server.
-        - You have to be able to change urls for requests and SSE. Or disable SSE. Or many services don't support SSE at all or only Websockets - so we would need to resolve it somehow.
-        - You need prerendering or SSR for SEO. 
-        - And other problems that I had to resolve during the Seed development.
-        - There will be also conflicts between HTML generated from Moon and what Trunk expects. We need "adapters" for such cases.
-    - And non-technical problems - I have some sponsors but I have to follow money to pay my rent - I hope MoonZoon Cloud or a business based on MZ will cover my expenses. It means I don't have a reason to work on standalone Zoon apps personally for now.
-
-    </details>
+    ```sh
+    mzoon build --release --frontend-dist netlify
+    ```
