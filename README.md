@@ -8,9 +8,7 @@
   </a>
 </p>
 
-### [moonzoon.rs](http://moonzoon.rs)* | [martin@moonzoon.rs](mailto:martin@moonzoon.rs) | [Discord](https://discord.gg/eGduTxK2Es)
-
-\* redirects to this repo until ready
+### [moonzoon.rs](http://moonzoon.rs) | [martin@moonzoon.rs](mailto:martin@moonzoon.rs) | [Discord](https://discord.gg/eGduTxK2Es)
 
 ---
 
@@ -55,47 +53,61 @@
 
 # Demos
 
-## TodoMVC
+## New Project Template [on Netlify](https://moonzoon-new-project.netlify.app/) | [Template](https://github.com/MoonZoon/MoonZoon/tree/main/crates/mzoon/new_project)
+   - Used by the command `mzoon new` (see the section [Create & Run project](#create--run-project) below)
 
-- Live demo: [moonzoon-todomvc.herokuapp.com](https://moonzoon-todomvc.herokuapp.com/)
-   - Heroku dyno slow cold starts may occur.
-- Repo: [github.com/MoonZoon/todomvc](https://github.com/MoonZoon/todomvc)
+## TodoMVC [on Heroku](https://moonzoon-todomvc.herokuapp.com/) | [Repo](https://github.com/MoonZoon/todomvc)
+   - Up-to-date alternative in this repo: [examples/todomvc](examples/todomvc)
 
-## Chat
+## GUI Benchmark [on Heroku](https://moonzoon-demo.herokuapp.com/) | [Repo](https://github.com/MoonZoon/demo)
+   - Up-to-date alternative in this repo: [examples/js-framework-benchmark/keyed](examples/js-framework-benchmark/keyed)
 
- - Live demo: [mz-chat-example.mzoon.app](https://mz-chat-example.mzoon.app/)
- - Repo will be available when [MoonZoon Cloud](docs/cloud.md) is stable enough.
-    - It's based on the older version of [examples/chat](examples/chat).
-    - Related blog post: _"Chat example, MoonZoon Cloud [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-5-chat-example-moonzoon-cloud-5de4) / [MD](docs/articles/dev_news_5.md)]_.
+## [Production apps in development]
+   - @TODO
 
-![Chat example](docs/images/chat_example.gif)
+## Chat [on Clever Cloud](https://mz-chat-example.mzoon.app/)
+   - Up-to-date alternative in this repo: [examples/chat](examples/chat)
+   - Related blog post: _"Chat example, MoonZoon Cloud [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-5-chat-example-moonzoon-cloud-5de4) / [MD](docs/articles/dev_news_5.md)]_.
 
-## GUI Benchmark
-
-- Live demo: [moonzoon-demo.herokuapp.com](https://moonzoon-demo.herokuapp.com/)
-   - Heroku dyno slow cold starts may occur.
-- Repo: [github.com/MoonZoon/demo](https://github.com/MoonZoon/demo)
-   - You can use the repo as a template for your new project for now.
+      ![Chat example](docs/images/chat_example.gif)
 
 ---
 
-# Create a New project
+# Create & Run project
 
-1. Click the green button `Use this template`: [github.com/MoonZoon/demo](https://github.com/MoonZoon/demo)
-2. Follow the `demo`'s README.
+1. Install the latest stable [Rust](https://www.rust-lang.org/tools/install). (Or upgrade with `rustup update stable`.)
+1. `cargo install mzoon --git https://github.com/MoonZoon/MoonZoon --locked`
+1. `mzoon new my_counter`
+1. `cd my_counter`
+1. `mzoon start --open`
 
-(_Note:_ There will be better project templates and better ways to create your new projects.)
+   ![mzoon start --open](docs/images/mzoon_start_open.png)
+
+---
+
+# Deploy project
+
+## Both Frontend & Backend
+
+MoonZoon apps have been deployed to [Heroku](https://www.heroku.com/) ([buildpack](https://github.com/MoonZoon/heroku-buildpack-moonzoon)), [Clever Cloud](https://www.clever-cloud.com/) and [CapRover](https://www.clever-cloud.com/). [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform) is planned. However, no solution was simple enough. That's why we need [MoonZoon Cloud](docs/cloud.md). But I plan to include `Dockerfile` soon so we have other options in the meantime. Please, write to [chat](https://discord.gg/eGduTxK2Es) when you have some questions regarding deployment.
+
+## Frontend-only
+
+1. `mzoon build --release --frontend-dist netlify` 
+   - Hosting name (`netlify`) is optional.
+2. Drag & drop the `frontend_dist` directory to [Netlify](https://www.netlify.com/). 
+
+   ![moonzoon-new-project on Netlify](docs/images/moonzoon-new-project_netlify.png)
 
 ---
 
 # Examples
 
-- [Examples](examples) in the repo. 
-   - See [development.md](docs/development.md) for instructions how to run them.
+- [**Examples**](examples) in the repo [See [development.md](docs/development.md) for instructions how to run them.]
 
-- [Raytracer on MoonZoon](https://github.com/MartinKavik/ray_tracer)
+- [Raytracer on MoonZoon](https://github.com/MartinKavik/ray_tracer) [Not maintained)
 
-- [Voting system](https://github.com/MartinKavik/voting-solana-moonzoon) on the [Solana](https://solana.com/) blockchain.
+- [Voting system](https://github.com/MartinKavik/voting-solana-moonzoon) on the [Solana](https://solana.com/) blockchain. [Not maintained)
 
    ![Voting system example](docs/images/voting_system_example.png)
 
@@ -149,49 +161,19 @@
 
 # FAQ
 
-1. _"Is it production-ready?"_
-   - No, it's in the early development phase now, but you can subscribe to `#news` channel on our [Discord server](https://discord.gg/eGduTxK2Es) to don't miss the announcement. 
-   - MoonZoon will be battle-tested during the [MoonZoon Cloud](docs/cloud.md), [OpenHope](http://openhope.net) and other projects development.
-   - [Sponsor](https://github.com/sponsors/MartinKavik) me if you want to speed up the development and get some other benefits.
-
 1. _"Why another framework? Are you mad??"_
    - I want to write products. Reliable products. Quickly. I want to enjoy the development. I don't want to play endlessly with tools, protocols and config files.
 
-1. _"Why Rust?"_
-   - It's the best language. 
-        <details>
-        <summary>Longer explanation</summary>
+1. _"Is it production-ready? / What's the current progress?"_
+   
+   - The frontend part is almost ready. If you have a custom backend or don't need backend at all then you can start writing your new frontend app right now! And then deploy it wherever you want. I assume there'll be two bigger breaking changes - to improve color system (related [issue](https://github.com/MoonZoon/MoonZoon/issues/98)) and to improve event handlers - but the Rust compiler should make the future migration simple.
+   
+   - Realtime communication between frontend and backend works but neither virtual actors nor native database adapters have been implemented yet. However, [Actix](https://actix.rs/) API has been exposed to overcome these current limitations so you can treat the MoonZoon backend API as Actix with realtime messaging. I've successfully integrated Postgres (through [SeaORM](https://www.sea-ql.org/SeaORM/)) into a MoonZoon app developed for my client and I plan to integrate [BonsaiDb](https://bonsaidb.io/) to my another production app. Bonsai could be integrated as a scalable database and file storage into MoonZoon when I'll find it a suitable choice.  
 
-        I've written commercial or hobby projects in multiple languages (Js, CoffeeScript, TS, Elm, Elixir, PHP, C, C++, C#, Go, ..). However I want to write only in Rust. 
-
-        Rust is hard to learn even for experienced developers, because they have to unlearn many things and adapt thought process to Rust concepts and best practices. However once you stop fighting the compiler, Rust takes your hand and push you to correct and efficient solutions. 
-
-        I had similar feeling when I was learning to drive a car - it seems pretty hard/strange from the start but once you get used to it, you know that each control / button / pedal has it's specific place and purpose for a good reason. And it makes even more sense once you learn low-level stuff - e.g. how the transmission and a clutch work.
-
-        However steep learning curve isn't bad: 
-        - It means that Rust doesn't hide real complexity behind too simple models.
-        - It's almost impossible for complete beginners to publish incomplete/buggy libraries. 
-        
-        _
-
-        Rust is designed so well that I feel nervous while I'm writing in other languages - I have to do compiler's work again in my head and think about weird things like typos in code, `null`s, `undefined`s, memory leaks, accidental mutations, how to write fast code without mutability, etc. It generates significant cognitive load so I can't focus so much on business logic and other important stuff.
-
-        I don't believe that you should use the most suitable language for a specific domain or problem at all costs. I think consistency among your / company projects, productivity and simplicity should have the highest priority. And Rust is a very universal language so I think it's a good choice for almost all cases.
-
-        There are also things that should be improved (and are improving):
-        1. Compilation is still slow, but it's not so frustrating now.
-        1. IDE support still isn't very good because of Rust complex types and macros but thanks to [Rust Analyzer](https://rust-analyzer.github.io/) it's getting better every day.
-        1. `target` folder (it's something like `node_modules`) can be pretty big.
-
-        </details>
-
-1. _"The API looks weird!"_
-   - I would like to make it compilable on the stable Rust so I can't use some unstable features that would make the API a bit better. 
-   - Or I wasn't able to find a simpler and nicer API - please let me know why and how do you want to improve it. 
-   - Or we have just different experience and feel for graphic stuff.
+   - Subscribe to `#news` channel on our [Discord server](https://discord.gg/eGduTxK2Es) to find out when MoonZoon is ready for your project. Or just let us know what blocks you from starting to develop with MZ. 
 
 1. _"Who is developing it?"_
-   - Martin Kavík (a [Seed](https://seed-rs.org/) maintainer, Rust freelance developer) with the help of the awesome community.
+   - Martin Kavík (a former [Seed](https://seed-rs.org/) maintainer, Rust freelance developer) with the help of the awesome community.
    - [An interview with Martin Kavík](https://blog.abor.dev/p/moonzoon)
 
 1. _"Could I help somehow? / Where can I find more information?_"
@@ -200,9 +182,39 @@
     - If you think MoonZoon will be useful for your project, I want to know that! (Use [chat](https://discord.gg/eGduTxK2Es) or [martin@moonzoon.rs](mailto:martin@moonzoon.rs)).
     - Don't hesitate to tell your friends about MoonZoon and feel free to share the link ([http://moonzoon.rs](http://moonzoon.rs)) on social platforms / forums / blogs / newsletters. 
 
-1. _"My only concern is the “no SQL” comment. Will it be possible to use MZ with something like SQLx if I prefer?"_ (by [@duspom](https://twitter.com/duspom/status/1362934142770450433))
-    - From the [Philosophy & Non-Goals](docs/philosophy_and_non_goals.md) section: "E) Don't build artificial barriers for MoonZoon users - if they want to use REST, CSS or SQL, don't try to stop them."
-    - You don't have to use built-in persistent variables in actors. Or you can use them and query the persistent store (e.g. Postgre) directly.
+1. _"Why Rust?"_
+   - It's the best language.
+        <details>
+        <summary>Longer explanation</summary>
+
+        I've written commercial or hobby projects in multiple languages (Js, CoffeeScript, TS, Elm, Elixir, PHP, C, C++, C#, Go, ..). However I want to write only in Rust. 
+
+        Rust is hard to learn even for experienced developers because they have to unlearn many things and adapt thought process to Rust concepts and best practices. However, once you stop fighting the compiler, Rust takes your hand and push you to correct and efficient solutions. 
+
+        I had similar feeling when I was learning to drive a car - it seems to be pretty difficult/strange from the start but once you get used to it, you know that each control / button / pedal has it's specific place and purpose for a good reason. And it makes even more sense when you learn low-level stuff - e.g. how the transmission and a clutch work.
+
+        Steep learning curve also brings some benefits: 
+        - It means that Rust doesn't hide real complexity behind too simple models.
+        - It's almost impossible for complete beginners to publish incomplete/buggy libraries. 
+        
+        _
+
+        Rust is designed so well that I feel nervous while I'm writing in other languages - I have to do compiler's work again in my head and think about weird things like typos in code, `null`s, `undefined`s, memory leaks, accidental mutations, how to write fast code without mutability, etc. It generates significant cognitive load so I can't focus so much on business logic and other important stuff.
+
+        I don't believe you should use the most suitable language for a specific domain or problem at all costs. I think consistency among your / company projects, productivity and simplicity should have the highest priority. And Rust is a very universal language so I think it's a good choice for almost all cases.
+
+        There are also things that should be improved (and are improving):
+        1. Compilation is still slow, but it's not so frustrating now.
+        1. IDE support still isn't very good because of Rust complex types and macros but thanks to [Rust Analyzer](https://rust-analyzer.github.io/) it's getting better every day.
+        1. `target` folder (it's something like `node_modules`) can be pretty big.
+        1. It's a bit difficult to combine sync and async world in some cases and choose the best async runtime and error handling libraries. Also async drop would be nice.
+        1. `#[derive(xx)]` and `cargo install` may have a bit surprising behavior.
+        1. It may be a bit difficult to pick compatible dependencies.
+
+        So there is still room for improvements but even now I'm the most productive in Rust.
+
+        </details>
+
 ---
 
 Thank you for reading! We are waiting for you on [Discord](https://discord.gg/eGduTxK2Es).
