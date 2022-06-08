@@ -11,8 +11,10 @@ use moon::{
 };
 
 async fn frontend() -> Frontend {
-    Frontend::new().title("Counter example").append_to_head(
-        "
+    Frontend::new()
+        .title("start_with_app example")
+        .append_to_head(
+            "
         <style>
             html {
                 background-color: black;
@@ -28,7 +30,7 @@ async fn frontend() -> Frontend {
                 background-color: green;
             }
         </style>",
-    )
+        )
 }
 
 async fn up_msg_handler(_: UpMsgRequest<()>) {}
