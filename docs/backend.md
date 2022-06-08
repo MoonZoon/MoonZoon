@@ -432,6 +432,10 @@ Other related articles:
    - So let's start with a single server, simple implementation and minimum features.
    - There are research papers about virtual actors and things like transactions. It will take time but the architecture will allow to add many new features when needed.
 
+1. _"My only concern is the “no SQL” comment. Will it be possible to use MZ with something like SQLx if I prefer?"_ (by [@duspom](https://twitter.com/duspom/status/1362934142770450433))
+    - From the [Philosophy & Non-Goals](docs/philosophy_and_non_goals.md) section: "E) Don't build artificial barriers for MoonZoon users - if they want to use REST, CSS or SQL, don't try to stop them."
+    - You don't have to use built-in persistent variables in actors. Or you can use them and query the persistent store (e.g. Postgre) directly.
+
 1. _"How can I change the port number or enable HTTPS?"_
 
    - _For development_: Update settings in `MoonZoon.toml` (see `/examples/counter/MoonZoon.toml`)
