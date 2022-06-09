@@ -40,7 +40,7 @@ async fn main() -> std::io::Result<()> {
 
 1. The function `main` is invoked.
 
-1. The `frontend` function returns HTML similar to a usual `index.html` with scripts for starting the frontend app back to the web browser.
+1. The `frontend` function returns HTML similar to a standard `index.html` with scripts for starting the frontend app back to the web browser.
    - Requests with the url path starting with `_api` won't trigger the function.
 
 1. The function `up_msg_handler` handles message requests from the Zoon. Zoon sends in the `UpMsgRequest`:
