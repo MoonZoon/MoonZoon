@@ -81,9 +81,9 @@ fn stats(client: Arc<super::Client>) -> impl Element {
             Column::new()
                 .s(Spacing::new(5))
                 .s(Padding::all(10))
-                .s(Shadows::with_signal(theme::shadow().map(|color| {
-                    vec![Shadow::new().y(8).blur(16).color(color)]
-                })))
+                .s(Shadows::with_signal(
+                    theme::shadow().map(|color| [Shadow::new().y(8).blur(16).color(color)]),
+                ))
                 .s(RoundedCorners::all(10))
                 .s(Align::new().right())
                 .item(
@@ -112,9 +112,9 @@ fn stats(client: Arc<super::Client>) -> impl Element {
             Column::new()
                 .s(Spacing::new(5))
                 .s(Padding::all(10))
-                .s(Shadows::with_signal(theme::shadow().map(|color| {
-                    vec![Shadow::new().y(8).blur(16).color(color)]
-                })))
+                .s(Shadows::with_signal(
+                    theme::shadow().map(|color| [Shadow::new().y(8).blur(16).color(color)]),
+                ))
                 .s(RoundedCorners::all(10))
                 .s(Align::new().right())
                 .item(

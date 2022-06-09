@@ -12,7 +12,7 @@ pub fn root() -> impl Element {
             .size(14)
             .color(hsluv!(0, 0, 5.1))
             .weight(FontWeight::Light)
-            .family(vec![
+            .family([
                 FontFamily::new("Helvetica Neue"),
                 FontFamily::new("Helvetica"),
                 FontFamily::new("Arial"),
@@ -50,7 +50,7 @@ fn header() -> impl Element {
 
 fn panel() -> impl Element {
     Column::with_tag(Tag::Section)
-        .s(Shadows::new(vec![
+        .s(Shadows::new([
             Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
             Shadow::new().y(25).blur(50).color(hsluv!(0, 0, 0, 10)),
         ]))
@@ -66,7 +66,7 @@ fn new_todo_title() -> impl Element {
         .s(Padding::new().y(19).left(60).right(16))
         .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
         .s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
-        .s(Shadows::new(vec![Shadow::new()
+        .s(Shadows::new([Shadow::new()
             .inner()
             .y(-2)
             .blur(1)
@@ -192,7 +192,7 @@ fn editing_todo_title(todo: Arc<Todo>) -> impl Element {
         .s(Padding::all(17).bottom(16))
         .s(Align::new().right())
         .s(Borders::all(Border::new().color(hsluv!(0, 0, 63.2))))
-        .s(Shadows::new(vec![Shadow::new()
+        .s(Shadows::new([Shadow::new()
             .inner()
             .y(-1)
             .blur(5)
@@ -216,7 +216,7 @@ fn panel_footer() -> impl Element {
         .s(Padding::new().x(15).y(8))
         .s(Font::new().color(hsluv!(0, 0, 50)))
         .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
-        .s(Shadows::new(vec![
+        .s(Shadows::new([
             Shadow::new().y(1).blur(1).color(hsluv!(0, 0, 0, 20)),
             Shadow::new().y(8).spread(-3).color(hsluv!(0, 0, 96.9)),
             Shadow::new()

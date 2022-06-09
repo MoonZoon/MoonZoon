@@ -334,7 +334,7 @@ fn new_todo_title() -> impl Element {
         .s(Padding::new().y(19).left(60).right(16))
         .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
         .s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
-        .s(Shadows::new(vec![Shadow::new()
+        .s(Shadows::new([Shadow::new()
             .inner()
             .y(-2)
             .blur(1)
@@ -430,7 +430,7 @@ fn sidebar() -> impl Element {
 
 .s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
 
-.s(Shadows::new(vec![
+.s(Shadows::new([
     Shadow::new().inner().y(-2).blur(1).color(hsluv!(0, 0, 0, 3))
 ]))
 
@@ -444,7 +444,7 @@ The most commonly used color code systems are:
 
 _
 
-However when you want to:
+However, when you want to:
 - create color palettes and themes
 - make sure the button is slightly lighter or darker on hover
 - make the text more readable
