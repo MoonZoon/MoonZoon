@@ -60,7 +60,7 @@
    - Up-to-date alternative in this repo: [examples/todomvc](examples/todomvc)
 
 ## GUI Benchmark [on Heroku](https://moonzoon-demo.herokuapp.com/) | [Repo](https://github.com/MoonZoon/demo)
-   - Up-to-date alternative in this repo: [examples/js-framework-benchmark/keyed](examples/js-framework-benchmark/keyed)
+   - Up-to-date alternative in this repo: [examples/js_framework_benchmark](examples/js_framework_benchmark)
 
 ## [Production apps in development]
    - @TODO
