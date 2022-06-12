@@ -163,6 +163,16 @@ impl<'a> Font<'a> {
         self
     }
 
+    pub fn line_height_signal(
+        mut self,
+        line_height: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
+    ) -> Self {
+        let line_height = line_height.map(|line_height| line_height.into().map(px));
+        self.dynamic_css_props
+            .insert("line-height".into(), box_css_signal(line_height));
+        self
+    }
+
     /// Set the font as Italic.
     ///
     /// # Example
