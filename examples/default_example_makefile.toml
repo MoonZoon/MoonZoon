@@ -1,0 +1,32 @@
+[config]
+default_to_workspace = false
+min_version = "0.35.13"
+unstable_features = ["CTRL_C_HANDLING"]
+skip_core_tasks = true
+
+[config.modify_core_tasks]
+private = true
+namespace = "default"
+
+[tasks.mzoon]
+description = "Run MZoon"
+command = "cargo"
+args = ["run", "--manifest-path", "${ROOT_PATH}/crates/mzoon/Cargo.toml", "${@}"]
+dependencies = ["set_root_path"]
+
+[tasks.set_root_path]
+private = true
+script_runner = "@duckscript"
+script = '''
+if is_empty ${ROOT_PATH}
+    root_path = get_env CARGO_MAKE_WORKING_DIRECTORY
+    mzoon_path = join_path ${root_path} /crates/mzoon
+
+    while not is_path_exists ${mzoon_path}
+        root_path = dirname ${root_path}
+        mzoon_path = join_path ${root_path} /crates/mzoon
+    end
+
+    set_env ROOT_PATH ${root_path}
+end
+'''
