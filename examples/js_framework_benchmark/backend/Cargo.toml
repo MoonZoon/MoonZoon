@@ -10,4 +10,4 @@ readme = "../README.md"
 edition = "2021"
 
 [dependencies]
-moon = { path = "../../../../crates/moon" }
+moon = { path = "../../../crates/moon" }
