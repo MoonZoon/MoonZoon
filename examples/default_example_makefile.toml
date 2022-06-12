@@ -1,12 +1,4 @@
-[config]
-default_to_workspace = false
-min_version = "0.35.13"
-unstable_features = ["CTRL_C_HANDLING"]
-skip_core_tasks = true
-
-[config.modify_core_tasks]
-private = true
-namespace = "default"
+extend = "../default_makefile.toml"
 
 [tasks.mzoon]
 description = "Run MZoon"
