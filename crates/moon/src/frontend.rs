@@ -5,6 +5,7 @@ use tokio::fs;
 
 pub struct Frontend {
     pub(crate) lang: Lang,
+    pub(crate) index_by_robots: bool,
     pub(crate) title: Cow<'static, str>,
     pub(crate) default_styles: bool,
     pub(crate) append_to_head: String,
@@ -15,6 +16,7 @@ impl Default for Frontend {
     fn default() -> Self {
         Self {
             lang: Lang::English,
+            index_by_robots: true,
             title: Cow::from("MoonZoon app"),
             default_styles: true,
             append_to_head: String::new(),
@@ -41,6 +43,11 @@ impl Frontend {
         self
     }
 
+    pub fn index_by_robots(mut self, allow: bool) -> Self {
+        self.index_by_robots = allow;
+        self
+    }
+
     pub fn title(mut self, title: impl Into<Cow<'static, str>>) -> Self {
         self.title = title.into();
         self
@@ -64,6 +71,7 @@ impl Frontend {
     pub async fn into_html(self) -> String {
         let Frontend {
             lang,
+            index_by_robots,
             title,
             default_styles,
             append_to_head,
@@ -74,6 +82,12 @@ impl Frontend {
             Cow::from(format!("_{}", Self::build_id().await))
         } else {
             Cow::from("")
+        };
+
+        let meta_robots = if index_by_robots {
+            ""
+        } else {
+            r#"<meta name="robots" content="noindex">"#
         };
 
         let default_styles = if default_styles {
@@ -110,6 +124,7 @@ impl Frontend {
         <head>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+          {meta_robots}
           <title>{title}</title>
           <link rel="preload" href="/_api/pkg/frontend_bg{cache_busting_string}.wasm" as="fetch" type="application/wasm" crossorigin>
           <link rel="modulepreload" href="/_api/pkg/frontend{cache_busting_string}.js" crossorigin>
