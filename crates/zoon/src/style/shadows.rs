@@ -67,6 +67,7 @@ impl<'a> Shadows<'a> {
                 .map(|shadow| shadow.into_cow_str())
                 .collect::<Cow<_>>()
                 .join(", ")
+                .apply(|shadow_style| not(shadow_style.is_empty()).then(|| shadow_style))
         });
         let mut this = Self::default();
         this.dynamic_css_props
