@@ -49,8 +49,7 @@ impl TextEditor {
                 .expect_throw("failed to parse Quill contents");
             on_change(json)
         };
-
-        let closure = Closure::wrap(Box::new(callback) as Box<dyn Fn(JsString)>);
+        let closure = Closure::new(callback);
 
         let on_change_setter =
             Task::start_droppable(self.controller.signal_cloned().for_each_sync(
