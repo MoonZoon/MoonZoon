@@ -57,23 +57,23 @@ impl SSE {
 fn down_msg_handler_closure<DMsg: DeserializeOwned>(
     mut down_msg_handler: impl FnMut(DMsg, CorId) + 'static,
 ) -> Closure<dyn FnMut(JsValue)> {
-    Closure::wrap(Box::new(
+    Closure::new(
         move |event: JsValue| match down_msg_transporter_from_event(event) {
             Ok(DownMsgTransporterForDe { down_msg, cor_id }) => down_msg_handler(down_msg, cor_id),
             Err(error) => crate::eprintln!("{:?}", error),
         },
-    ) as Box<dyn FnMut(JsValue)>)
+    )
 }
 #[cfg(feature = "serde-lite")]
 fn down_msg_handler_closure<DMsg: Deserialize>(
     mut down_msg_handler: impl FnMut(DMsg, CorId) + 'static,
 ) -> Closure<dyn FnMut(JsValue)> {
-    Closure::wrap(Box::new(
+    Closure::new(
         move |event: JsValue| match down_msg_transporter_from_event(event) {
             Ok(DownMsgTransporterForDe { down_msg, cor_id }) => down_msg_handler(down_msg, cor_id),
             Err(error) => crate::eprintln!("{:?}", error),
         },
-    ) as Box<dyn FnMut(JsValue)>)
+    )
 }
 
 #[cfg(feature = "serde")]

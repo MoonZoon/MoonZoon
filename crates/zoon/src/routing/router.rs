@@ -112,11 +112,11 @@ fn current_url_segments() -> Option<Vec<String>> {
 }
 
 fn setup_popstate_listener(url_change_sender: UrlChangeSender) -> SendWrapper<Closure<dyn Fn()>> {
-    let closure = Closure::wrap(Box::new(move || {
+    let closure = Closure::new(move || {
         url_change_sender
             .send(current_url_segments())
             .unwrap_throw();
-    }) as Box<dyn Fn()>);
+    });
 
     window()
         .add_event_listener_with_callback("popstate", closure.as_ref().unchecked_ref())
@@ -128,9 +128,9 @@ fn setup_popstate_listener(url_change_sender: UrlChangeSender) -> SendWrapper<Cl
 fn setup_link_interceptor(
     url_change_sender: UrlChangeSender,
 ) -> SendWrapper<Closure<dyn Fn(MouseEvent)>> {
-    let closure = Closure::wrap(Box::new(move |event| {
+    let closure = Closure::new(move |event| {
         link_click_handler(event, &url_change_sender);
-    }) as Box<dyn Fn(MouseEvent)>);
+    });
 
     document()
         .add_event_listener_with_callback("click", closure.as_ref().unchecked_ref())
