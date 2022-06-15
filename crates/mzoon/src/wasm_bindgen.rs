@@ -62,7 +62,8 @@ pub async fn build_with_wasm_bindgen(build_mode: BuildMode) {
         "--target",
         "web",
         "--no-typescript",
-        // @TODO/NOTE Fails in runtime even with `wasm-opt --enable-reference-types` (v.109).
+        // @TODO enable once the wasm-opt version 110 is out
+        // @TODO uncomment the related wasm-opt parameter, too
         // "--reference-types",
         "--weak-refs",
         "--out-dir",
