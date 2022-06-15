@@ -10,7 +10,7 @@ use std::path::PathBuf;
 use tar::Archive;
 use tokio::process::Command;
 
-const VERSION: &str = "108";
+const VERSION: &str = "109";
 
 // -- public --
 
@@ -38,7 +38,7 @@ pub async fn check_or_install_wasm_opt() {
         "https://github.com/WebAssembly/binaryen/releases/download/version_{VERSION}/binaryen-version_{VERSION}-{ARCHIVE_PLATFORM}.tar.gz",
     );
 
-    println!("Downloading & Installing wasm-opt...");
+    println!("Downloading & Installing wasm-opt {VERSION} ...");
     println!(
         "Pre-compiled wasm-opt binary '{ARCHIVE_PLATFORM}' will be used for the target platform '{TARGET}'"
     );
