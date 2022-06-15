@@ -59,6 +59,9 @@ pub async fn optimize_with_wasm_opt(build_mode: BuildMode) {
         "frontend/pkg/frontend_bg.wasm",
         "--output",
         "frontend/pkg/frontend_bg.wasm",
+        // @TODO enable once the version 110 is out
+        // @TODO uncomment the related wasm-bindgen parameter, too
+        // "--enable-reference-types",
     ];
     if build_mode.is_not_dev() {
         args.push("-Oz");

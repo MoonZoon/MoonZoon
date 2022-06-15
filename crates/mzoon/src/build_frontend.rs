@@ -138,11 +138,18 @@ async fn rename_js_file(build_id: u128, cache_busting: bool) -> Cow<'static, str
 
 #[throws]
 async fn compress_pkg(wasm_file_path: impl AsRef<Path>, js_file_path: impl AsRef<Path>) {
+    static SNIPPETS_PATH: &str = "frontend/pkg/snippets";
     try_join!(
         create_compressed_files(wasm_file_path),
         create_compressed_files(js_file_path),
-        visit_files("frontend/pkg/snippets")
-            .try_for_each_concurrent(None, |file| create_compressed_files(file.path()))
+        async {
+            if fs::metadata(SNIPPETS_PATH).await.is_ok() {
+                visit_files(SNIPPETS_PATH)
+                    .try_for_each_concurrent(None, |file| create_compressed_files(file.path()))
+                    .await?;
+            }
+            Ok(())
+        }
     )?
 }
 
