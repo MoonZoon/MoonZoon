@@ -12,7 +12,7 @@ use tar::Archive;
 use tokio::process::Command;
 
 // NOTE: Sync with zoon's wasm-bindgen version.
-const VERSION: &str = "0.2.80";
+const VERSION: &str = "0.2.81";
 
 // -- public --
 
@@ -38,7 +38,7 @@ pub async fn check_or_install_wasm_bindgen() {
         "https://github.com/rustwasm/wasm-bindgen/releases/download/{VERSION}/wasm-bindgen-{VERSION}-{NEAREST_TARGET}.tar.gz"
     );
 
-    println!("Downloading & Installing wasm-bindgen...");
+    println!("Downloading & Installing wasm-bindgen {VERSION} ...");
     if TARGET != NEAREST_TARGET {
         println!(
             "Pre-compiled wasm-bindgen binary '{NEAREST_TARGET}' will be used for the target platform '{TARGET}'"
@@ -62,7 +62,7 @@ pub async fn build_with_wasm_bindgen(build_mode: BuildMode) {
         "--target",
         "web",
         "--no-typescript",
-        // @TODO/NOTE Fails in runtime even with `wasm-opt --enable-reference-types` (v.108).
+        // @TODO/NOTE Fails in runtime even with `wasm-opt --enable-reference-types` (v.109).
         // "--reference-types",
         "--weak-refs",
         "--out-dir",
