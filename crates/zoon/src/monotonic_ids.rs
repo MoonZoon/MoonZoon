@@ -22,7 +22,7 @@ impl MonotonicIds {
     /// usize is index
     pub fn remove_id(&self, id: u32) -> (usize, MutexGuard<Vec<u32>>) {
         let mut ids = self.ids.lock().unwrap_throw();
-        self.generator.remove_index(id);
+        self.generator.free_index(id);
         let index = ids.binary_search(&id).unwrap_throw();
         ids.remove(index);
         (index, ids)
