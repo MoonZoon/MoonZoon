@@ -33,7 +33,7 @@ impl ClassIdGenerator {
     fn remove_class_id(&self, class_id: ClassId) {
         let class_id = class_id.take().unwrap_throw();
         self.index_generator
-            .remove_index(class_id[1..].parse().unwrap_throw());
+            .free_index(class_id[1..].parse().unwrap_throw());
     }
 }
 
