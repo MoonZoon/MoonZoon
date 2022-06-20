@@ -1,15 +1,5 @@
 use crate::*;
 
-// ------ InputTypeTrait ------
-
-pub trait InputTypeTrait: Sized {
-    const TYPE: &'static str;
-
-    fn apply_to_raw_el<E: RawEl>(self, raw_el: E) -> E {
-        raw_el
-    }
-}
-
 // ------ InputTypeText ------
 
 #[derive(Default)]
@@ -24,14 +14,9 @@ impl InputTypeText {
     }
 }
 
-impl InputTypeTrait for InputTypeText {
-    const TYPE: &'static str = "text";
-
-    fn apply_to_raw_el<E: RawEl>(self, mut raw_el: E) -> E {
-        if let Some(max_chars) = self.max_chars {
-            raw_el = raw_el.attr("maxlength", &max_chars.to_string())
-        }
-        raw_el
+impl From<InputTypeText> for InputType {
+    fn from(input_type_text: InputTypeText) -> Self {
+        InputType::Text(input_type_text)
     }
 }
 
@@ -49,14 +34,9 @@ impl InputTypePassword {
     }
 }
 
-impl InputTypeTrait for InputTypePassword {
-    const TYPE: &'static str = "password";
-
-    fn apply_to_raw_el<E: RawEl>(self, mut raw_el: E) -> E {
-        if let Some(max_chars) = self.max_chars {
-            raw_el = raw_el.attr("maxlength", &max_chars.to_string())
-        }
-        raw_el
+impl From<InputTypePassword> for InputType {
+    fn from(input_type_password: InputTypePassword) -> Self {
+        InputType::Password(input_type_password)
     }
 }
 
@@ -74,29 +54,19 @@ impl InputTypeNumber {
     }
 }
 
-impl InputTypeTrait for InputTypeNumber {
-    const TYPE: &'static str = "number";
-
-    fn apply_to_raw_el<E: RawEl>(self, mut raw_el: E) -> E {
-        if self.hide_arrows {
-            let webkit_outer_button_group =
-                StyleGroup::new("::-webkit-outer-spin-button").style("margin", "0");
-
-            let webkit_inner_button_group =
-                StyleGroup::new("::-webkit-inner-spin-button").style("margin", "0");
-
-            raw_el = raw_el
-                .style_group(webkit_outer_button_group)
-                .style_group(webkit_inner_button_group)
-                .style("appearance", "textfield")
-        }
-        raw_el
+impl From<InputTypeNumber> for InputType {
+    fn from(input_type_number: InputTypeNumber) -> Self {
+        InputType::Number(input_type_number)
     }
 }
 
 // ------ InputType ------
 
-pub struct InputType;
+pub enum InputType {
+    Text(InputTypeText),
+    Password(InputTypePassword),
+    Number(InputTypeNumber),
+}
 
 impl InputType {
     pub fn text() -> InputTypeText {
@@ -109,5 +79,43 @@ impl InputType {
 
     pub fn number() -> InputTypeNumber {
         InputTypeNumber::default()
+    }
+
+    pub fn dom_type(&self) -> &'static str {
+        match self {
+            Self::Text(_) => "text",
+            Self::Password(_) => "password",
+            Self::Number(_) => "number",
+        }
+    }
+
+    pub fn apply_to_raw_el<E: RawEl>(self, mut raw_el: E) -> E {
+        match self {
+            Self::Text(input_type_text) => {
+                if let Some(max_chars) = input_type_text.max_chars {
+                    raw_el = raw_el.attr("maxlength", &max_chars.to_string())
+                }
+            }
+            Self::Password(input_type_password) => {
+                if let Some(max_chars) = input_type_password.max_chars {
+                    raw_el = raw_el.attr("maxlength", &max_chars.to_string())
+                }
+            }
+            Self::Number(input_type_number) => {
+                if input_type_number.hide_arrows {
+                    let webkit_outer_button_group =
+                        StyleGroup::new("::-webkit-outer-spin-button").style("margin", "0");
+
+                    let webkit_inner_button_group =
+                        StyleGroup::new("::-webkit-inner-spin-button").style("margin", "0");
+
+                    raw_el = raw_el
+                        .style_group(webkit_outer_button_group)
+                        .style_group(webkit_inner_button_group)
+                        .style("appearance", "textfield")
+                }
+            }
+        }
+        raw_el
     }
 }
