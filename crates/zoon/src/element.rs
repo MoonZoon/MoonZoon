@@ -43,7 +43,7 @@ pub mod text_area;
 pub use text_area::TextArea;
 
 pub mod text_input;
-pub use text_input::{InputType, InputTypeTrait, Placeholder, TextInput};
+pub use text_input::{InputType, Placeholder, TextInput};
 
 // --
 

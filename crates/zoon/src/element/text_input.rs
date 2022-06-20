@@ -480,9 +480,9 @@ impl<
         self.into_type()
     }
 
-    pub fn input_type<T: InputTypeTrait>(
+    pub fn input_type(
         mut self,
-        input_type: T,
+        input_type: impl Into<InputType>,
     ) -> TextInput<
         IdFlag,
         OnChangeFlag,
@@ -496,7 +496,8 @@ impl<
     where
         InputTypeFlag: FlagNotSet,
     {
-        self.raw_el = self.raw_el.attr("type", T::TYPE);
+        let input_type = input_type.into();
+        self.raw_el = self.raw_el.attr("type", input_type.dom_type());
         self.raw_el = input_type.apply_to_raw_el(self.raw_el);
         self.into_type()
     }
