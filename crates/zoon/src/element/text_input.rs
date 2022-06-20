@@ -496,9 +496,7 @@ impl<
     where
         InputTypeFlag: FlagNotSet,
     {
-        let input_type = input_type.into();
-        self.raw_el = self.raw_el.attr("type", input_type.dom_type());
-        self.raw_el = input_type.apply_to_raw_el(self.raw_el);
+        self.raw_el = input_type.into().apply_to_raw_el(self.raw_el);
         self.into_type()
     }
 

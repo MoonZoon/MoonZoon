@@ -1,4 +1,5 @@
 use crate::*;
+use std::pin::Pin;
 
 // ------ InputTypeText ------
 
@@ -25,11 +26,20 @@ impl From<InputTypeText> for InputType {
 #[derive(Default)]
 pub struct InputTypePassword {
     max_chars: Option<u32>,
+    mask_signal: Option<Pin<Box<dyn Signal<Item = Option<bool>>>>>,
 }
 
 impl InputTypePassword {
     pub fn max_chars(mut self, max_chars: impl Into<Option<u32>>) -> Self {
         self.max_chars = max_chars.into();
+        self
+    }
+
+    pub fn mask_signal(
+        mut self,
+        mask: impl Signal<Item = impl Into<Option<bool>>> + 'static,
+    ) -> Self {
+        self.mask_signal = Some(mask.map(|mask| mask.into()).boxed_local());
         self
     }
 }
@@ -81,28 +91,32 @@ impl InputType {
         InputTypeNumber::default()
     }
 
-    pub fn dom_type(&self) -> &'static str {
-        match self {
-            Self::Text(_) => "text",
-            Self::Password(_) => "password",
-            Self::Number(_) => "number",
-        }
-    }
-
     pub fn apply_to_raw_el<E: RawEl>(self, mut raw_el: E) -> E {
         match self {
-            Self::Text(input_type_text) => {
-                if let Some(max_chars) = input_type_text.max_chars {
+            Self::Text(InputTypeText { max_chars }) => {
+                if let Some(max_chars) = max_chars {
                     raw_el = raw_el.attr("maxlength", &max_chars.to_string())
                 }
+                raw_el
             }
-            Self::Password(input_type_password) => {
-                if let Some(max_chars) = input_type_password.max_chars {
+            Self::Password(InputTypePassword {
+                max_chars,
+                mask_signal,
+            }) => {
+                if let Some(max_chars) = max_chars {
                     raw_el = raw_el.attr("maxlength", &max_chars.to_string())
                 }
+                if let Some(mask_signal) = mask_signal {
+                    let mask_signal = mask_signal
+                        .map(|mask| mask.map(|mask| if mask { "password" } else { "text" }));
+                    // @TODO replace with `input-security` once possible
+                    // https://github.com/Fyrd/caniuse/issues/2297
+                    return raw_el.attr_signal("type", mask_signal);
+                }
+                raw_el.attr("type", "password")
             }
-            Self::Number(input_type_number) => {
-                if input_type_number.hide_arrows {
+            Self::Number(InputTypeNumber { hide_arrows }) => {
+                if hide_arrows {
                     let webkit_outer_button_group =
                         StyleGroup::new("::-webkit-outer-spin-button").style("margin", "0");
 
@@ -114,8 +128,8 @@ impl InputType {
                         .style_group(webkit_inner_button_group)
                         .style("appearance", "textfield")
                 }
+                raw_el.attr("type", "number")
             }
         }
-        raw_el
     }
 }
