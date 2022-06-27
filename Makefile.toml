@@ -10,22 +10,14 @@ script = [
 '''
 #!@duckscript
 handle = glob_array examples/*/Makefile.toml
+
+args = array ${1} ${2} ${3} ${4} ${5}
+args_string = array_join ${args} " "
+
 for path in ${handle}
     example_root = dirname ${path}
     echo Example root: ${example_root}
-    if is_defined 5
-        exec --fail-on-error makers --cwd ${example_root} ${1} ${2} ${3} ${4} ${5}
-    elseif is_defined 4
-        exec --fail-on-error makers --cwd ${example_root} ${1} ${2} ${3} ${4}
-    elseif is_defined 3
-        exec --fail-on-error makers --cwd ${example_root} ${1} ${2} ${3}
-    elseif is_defined 2
-        exec --fail-on-error makers --cwd ${example_root} ${1} ${2}
-    elseif is_defined 1
-        exec --fail-on-error makers --cwd ${example_root} ${1}
-    else
-        exec --fail-on-error makers --cwd ${example_root}
-    end
+    exec --fail-on-error makers --cwd ${example_root} %{args_string}
 end
 '''
 ]
