@@ -1,5 +1,6 @@
 extend = "./default_makefile.toml"
 
+# @TODO refactor once https://github.com/sagiegurari/cargo-make/issues/667 is resolved
 [tasks.in_examples]
 description = '''
 Run chosen task for each example in its root.
