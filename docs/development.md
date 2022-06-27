@@ -78,7 +78,14 @@ cd chat # or another example from the `examples` directory
 makers mzoon start -o # add -r for the release mode
 ```
 
-## 4. Have fun!
+## 4. Rebuild all examples
+
+```sh
+makers in_examples clean
+makers in_examples mzoon build
+```
+
+## 5. Have fun!
 
 --
 
