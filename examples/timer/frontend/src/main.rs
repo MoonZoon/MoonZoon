@@ -128,6 +128,6 @@ fn button(
 //     Start
 // ------ ------
 
-fn start() {
+fn main() {
     start_app("app", root);
 }
