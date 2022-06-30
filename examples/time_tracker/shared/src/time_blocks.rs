@@ -19,18 +19,13 @@ pub struct TimeBlock {
     pub invoice: Option<Invoice>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Copy, Clone, PartialEq, Eq)]
+#[derive(Default, Debug, Serialize, Deserialize, Copy, Clone, PartialEq, Eq)]
 #[serde(crate = "serde")]
 pub enum TimeBlockStatus {
     NonBillable,
+    #[default]
     Unpaid,
     Paid,
-}
-
-impl Default for TimeBlockStatus {
-    fn default() -> Self {
-        Self::Unpaid
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
