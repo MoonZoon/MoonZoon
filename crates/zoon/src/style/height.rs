@@ -22,19 +22,12 @@ enum CssName {
     MaxHeight,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
 #[strum(serialize_all = "snake_case")]
 enum HeightMode {
+    #[default]
     ExactHeight,
     FillHeight,
-}
-
-// @TODO remove (in the entire codebase) once `derive_default_enum` is stable
-// https://github.com/rust-lang/rust/issues/87517
-impl Default for HeightMode {
-    fn default() -> Self {
-        Self::ExactHeight
-    }
 }
 
 impl<'a> Height<'a> {
