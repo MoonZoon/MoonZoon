@@ -76,6 +76,7 @@
 # Create & Run project
 
 1. Install the latest stable [Rust](https://www.rust-lang.org/tools/install). (Or upgrade with `rustup update stable`.)
+1. Install the web assembly target `rustup target add wasm32-unknown-unknown`
 1. `cargo install mzoon --git https://github.com/MoonZoon/MoonZoon --locked`
 1. `mzoon new my_counter`
 1. `cd my_counter`
