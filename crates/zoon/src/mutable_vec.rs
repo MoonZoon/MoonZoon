@@ -8,6 +8,12 @@ use std::ops::Deref;
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct MutableVec<T>(FSMutableVec<T>);
 
+impl<T> Clone for MutableVec<T> {
+    fn clone(&self) -> Self {
+        MutableVec(self.0.clone())
+    }
+}
+
 impl<T> MutableVec<T> {
     pub fn new() -> Self {
         Self(FSMutableVec::new())
