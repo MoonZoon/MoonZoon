@@ -243,6 +243,16 @@ impl<'a> Font<'a> {
         self
     }
 
+    pub fn left(mut self) -> Self {
+        self.static_css_props.insert("text-align", "left");
+        self
+    }
+
+    pub fn right(mut self) -> Self {
+        self.static_css_props.insert("text-align", "right");
+        self
+    }
+
     /// Set the family font with an array of [FontFamily].
     /// It is recommended to have few family fonts as
     /// fallback if the first ones are not available for web
