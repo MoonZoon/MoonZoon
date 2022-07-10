@@ -1,9 +1,22 @@
 use shared::{DownMsg, UpMsg};
-use zoon::{eprintln, *};
+use zoon::{eprintln, named_color::*, *};
 
 // ------ ------
 //    States
 // ------ ------
+
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(crate = "serde")]
+pub struct ItemData {
+    name: String,
+    item_type: String
+}
+
+#[static_ref]
+fn items_list() -> &'static MutableVec<ItemData> {
+    MutableVec::new()
+}
 
 #[static_ref]
 fn favorite_languages() -> &'static Mutable<String> {
@@ -17,11 +30,62 @@ pub fn connection() -> &'static Connection<UpMsg, DownMsg> {
     })
 }
 
+fn create_item_list(){
+    let mut data_list : Vec<ItemData> = Vec::new();
+    for i in 0..10 {
+        eprintln!("{i}");
+        data_list.push(ItemData{ name: format!("user_{i}"), item_type: format!("data_{i}") })
+
+    }
+    items_list().lock_mut().replace_cloned(data_list)
+}
 // ------ ------
 //     View
 // ------ ------
 
+
+fn item_list_display() -> impl Element {
+    El::new().s(Align::center()).child(
+        Row::new()
+            .s(Align::center())
+            .s(Spacing::new(10))
+            .multiline()
+            // .update_raw_el(|el| el.style("justify-content", "center"))
+            .items_signal_vec(
+                items_list()
+                    .signal_vec_cloned()
+                    .map(item_data_display),
+            ),
+    )
+}
+
+fn item_name(name: &String) -> impl Element {
+    El::new()
+        .s(Align::new().center_x())
+
+        .s(Font::new().size(25).weight(FontWeight::SemiBold).color(GREEN_2))
+        .child(name)
+}
+
+fn item_data_display(item_data: ItemData) -> impl Element {
+
+    Column::new()
+        .s(Padding::all(20))
+        .s(RoundedCorners::all(10))
+        .s(Background::new().color(BLUE_3))
+        .s(Padding::new().y(10))
+        .s(Shadows::new([Shadow::new().y(6).blur(16)]))
+        .item(Row::new()
+            .s(Spacing::new(10))
+            .item(item_name(&item_data.name))
+            .item(item_name(&item_data.item_type))
+        )
+
+}
+
+
 fn root() -> impl Element {
+    create_item_list();
     Column::new()
         .s(Align::center())
         .s(Padding::all(10))
@@ -63,7 +127,7 @@ fn root() -> impl Element {
                         .s(Font::new().italic())
                         .child("(loaded at runtime)"),
                 ),
-        )
+        ).item( item_list_display())
 }
 
 // ------ ------
