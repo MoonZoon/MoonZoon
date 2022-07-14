@@ -1,5 +1,5 @@
 use crate::*;
-use std::{iter, marker::PhantomData};
+use std::{cell::RefCell, iter, marker::PhantomData, rc::Rc};
 
 // ------ ------
 //    Element
@@ -198,17 +198,17 @@ impl<'a, LabelFlag, OnPressFlag, RE: RawEl> Button<LabelFlag, OnPressFlag, RE> {
         self.into_type()
     }
 
-    pub fn on_press(
-        mut self,
-        mut on_press: impl FnMut() + 'static,
-    ) -> Button<LabelFlag, OnPressFlagSet, RE>
+    pub fn on_press(self, on_press: impl FnMut() + 'static) -> Button<LabelFlag, OnPressFlagSet, RE>
     where
         OnPressFlag: FlagNotSet,
     {
-        self.raw_el = self
-            .raw_el
-            .event_handler(move |_: events::Click| on_press());
-        self.into_type()
+        let on_click = Rc::new(RefCell::new(on_press));
+        let on_enter_down = on_click.clone();
+        self.on_click(move || on_click.borrow_mut()())
+            .on_key_down_event(move |event| {
+                event.if_key(Key::Enter, || on_enter_down.borrow_mut()())
+            })
+            .into_type()
     }
 
     fn into_type<NewLabelFlag, NewOnPressFlag>(self) -> Button<NewLabelFlag, NewOnPressFlag, RE> {
