@@ -714,8 +714,10 @@ impl<'a> Placeholder<'a> {
         }
     }
 
-    pub fn s(mut self, style: impl Style<'a> + 'a) -> Self {
-        self.style_group = style.merge_with_group(self.style_group);
+    pub fn s<S: Style<'a>>(mut self, style: impl Into<Option<S>>) -> Self {
+        if let Some(style) = style.into() {
+            self.style_group = style.merge_with_group(self.style_group);
+        }
         self
     }
 }
