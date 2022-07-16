@@ -89,6 +89,14 @@ impl<'a> Height<'a> {
         this
     }
 
+    pub fn growable() -> Self {
+        let mut this = Self::default();
+        this.css_props
+            .insert(CssName::Height, into_prop_value("auto"));
+        this.height_mode = HeightMode::FillHeight;
+        this
+    }
+
     /// The element height will be the height of the device screen or web
     /// browser frame.
     /// # Example

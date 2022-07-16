@@ -128,6 +128,14 @@ impl<'a> Width<'a> {
         this
     }
 
+    pub fn growable() -> Self {
+        let mut this = Self::default();
+        this.css_props
+            .insert(CssName::Width, into_prop_value("auto"));
+        this.width_mode = WidthMode::FillWidth;
+        this
+    }
+
     /// Set the element minimum width.
     /// # Example
     /// ```no_run
