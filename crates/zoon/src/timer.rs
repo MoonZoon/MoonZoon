@@ -10,7 +10,7 @@ pub struct Timer {
 
 impl Timer {
     pub fn new(ms: u32, on_tick: impl FnMut() + 'static) -> Self {
-        let on_tick = Closure::wrap(Box::new(on_tick) as Box<dyn FnMut()>);
+        let on_tick = Closure::new(on_tick);
         Self {
             handle: Some(JsHandle::Interval(set_interval(&on_tick, ms))),
             on_tick: SendWrapper::new(on_tick),

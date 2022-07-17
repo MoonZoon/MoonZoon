@@ -480,9 +480,9 @@ impl<
         self.into_type()
     }
 
-    pub fn input_type<T: InputTypeTrait>(
+    pub fn input_type(
         mut self,
-        input_type: T,
+        input_type: impl Into<InputType>,
     ) -> TextInput<
         IdFlag,
         OnChangeFlag,
@@ -496,8 +496,7 @@ impl<
     where
         InputTypeFlag: FlagNotSet,
     {
-        self.raw_el = self.raw_el.attr("type", T::TYPE);
-        self.raw_el = input_type.apply_to_raw_el(self.raw_el);
+        self.raw_el = input_type.into().apply_to_raw_el(self.raw_el);
         self.into_type()
     }
 
@@ -715,8 +714,10 @@ impl<'a> Placeholder<'a> {
         }
     }
 
-    pub fn s(mut self, style: impl Style<'a> + 'a) -> Self {
-        self.style_group = style.merge_with_group(self.style_group);
+    pub fn s<S: Style<'a>>(mut self, style: impl Into<Option<S>>) -> Self {
+        if let Some(style) = style.into() {
+            self.style_group = style.merge_with_group(self.style_group);
+        }
         self
     }
 }

@@ -76,6 +76,7 @@
 # Create & Run project
 
 1. Install the latest stable [Rust](https://www.rust-lang.org/tools/install). (Or upgrade with `rustup update stable`.)
+1. Install the web assembly target `rustup target add wasm32-unknown-unknown`
 1. `cargo install mzoon --git https://github.com/MoonZoon/MoonZoon --locked`
 1. `mzoon new my_counter`
 1. `cd my_counter`
@@ -118,6 +119,8 @@ MoonZoon apps have been deployed to [Heroku](https://www.heroku.com/) ([buildpac
 - Cure for Web Development [[Medium](https://martinkavik.medium.com/cure-for-web-development-65003afb701f) / [dev.to](https://dev.to/martinkavik/cure-for-web-development-nnn) / [MD](docs/articles/cure_for_web_development.md)]
 
 - Rust on the Frontend and Backend [[Always Bet on Rust](https://blog.abor.dev/p/moonzoon)]
+
+- Interview with Martin about MoonZoon [[console.substack.com](https://console.substack.com/p/console-114)]
 
 ### Dev News
 

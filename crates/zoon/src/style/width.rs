@@ -21,19 +21,12 @@ enum CssName {
     MaxWidth,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
+#[derive(Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
 #[strum(serialize_all = "snake_case")]
 enum WidthMode {
+    #[default]
     ExactWidth,
     FillWidth,
-}
-
-// @TODO derive `Default` for `WidthMode` and other enums once possible.
-// https://rust-lang.github.io/rfcs/3107-derive-default-enum.html
-impl Default for WidthMode {
-    fn default() -> Self {
-        Self::ExactWidth
-    }
 }
 
 impl<'a> Width<'a> {
@@ -131,6 +124,14 @@ impl<'a> Width<'a> {
         let mut this = Self::default();
         this.css_props
             .insert(CssName::Width, into_prop_value("100%"));
+        this.width_mode = WidthMode::FillWidth;
+        this
+    }
+
+    pub fn growable() -> Self {
+        let mut this = Self::default();
+        this.css_props
+            .insert(CssName::Width, into_prop_value("auto"));
         this.width_mode = WidthMode::FillWidth;
         this
     }

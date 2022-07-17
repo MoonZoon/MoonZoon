@@ -9,13 +9,13 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 - [Rust](https://www.rust-lang.org/)
   ```bash
   rustup update stable
-  rustc -V # rustc 1.61.0 (fe5b13d68 2022-05-18)
+  rustc -V # rustc 1.62.0 (a8314ef7d 2022-06-27)
   ```
 
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
   ```bash
   cargo install cargo-make --no-default-features
-  makers -V # makers 0.35.12
+  makers -V # makers 0.35.13
   ```
   - _Note_: `cargo-make` is needed only for MoonZoon development and running its examples, you don't need it for your apps.
 
@@ -43,6 +43,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/keyboard/Cargo.toml",
         // "examples/layers/Cargo.toml",
         // "examples/markup/Cargo.toml",
+        // "examples/minesweeper/Cargo.toml",
         // "examples/pages/Cargo.toml",
         // "examples/pan_zoom/Cargo.toml",
         // "examples/paragraph/Cargo.toml",
@@ -78,7 +79,14 @@ cd chat # or another example from the `examples` directory
 makers mzoon start -o # add -r for the release mode
 ```
 
-## 4. Have fun!
+## 4. Rebuild all examples
+
+```sh
+makers in_examples clean
+makers in_examples mzoon build
+```
+
+## 5. Have fun!
 
 --
 

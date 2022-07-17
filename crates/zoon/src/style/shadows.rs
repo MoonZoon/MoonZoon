@@ -34,10 +34,13 @@ impl<'a> Shadows<'a> {
         let shadows = shadows
             .into_iter()
             .map(|shadow| shadow.into_cow_str())
-            .collect::<Cow<_>>()
-            .join(", ");
+            .collect::<Cow<_>>();
         let mut this = Self::default();
-        this.static_css_props.insert("box-shadow", shadows);
+        if shadows.is_empty() {
+            return this;
+        }
+        this.static_css_props
+            .insert("box-shadow", shadows.join(", "));
         this
     }
     /// Add new shadows depending of signal's state.
@@ -62,11 +65,15 @@ impl<'a> Shadows<'a> {
         shadows: impl Signal<Item = impl IntoIterator<Item = Shadow>> + Unpin + 'static,
     ) -> Self {
         let shadows = shadows.map(|shadows| {
-            shadows
+            let shadow_style = shadows
                 .into_iter()
                 .map(|shadow| shadow.into_cow_str())
                 .collect::<Cow<_>>()
-                .join(", ")
+                .join(", ");
+            if shadow_style.is_empty() {
+                None?;
+            }
+            Some(shadow_style)
         });
         let mut this = Self::default();
         this.dynamic_css_props

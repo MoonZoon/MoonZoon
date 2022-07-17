@@ -100,9 +100,9 @@ Button::new().label("-").on_press(decrement)
 
 We'll look at the `Button` element code (`crates/zoon/src/element/button.rs`). `Button` is a native Zoon element.
 
-You can create custom ones the same way. However, you probably won't have to write your own elements at all in practice.
+You can create custom ones the same way or make similar ones but simpler - it always depends on your requirements.
 
-There are three sections: `Element`, `Abilities` and `Attributes`.
+There are three sections: `Element`, `Abilities` and `Attributes` in `Button`'s code.
 
 **`Element`:**
 

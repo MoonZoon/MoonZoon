@@ -1,1 +1,23 @@
-extend = "../default_makefile.toml"
+extend = "./default_makefile.toml"
+
+# @TODO refactor once https://github.com/sagiegurari/cargo-make/issues/667 is resolved
+[tasks.in_examples]
+description = '''
+Run chosen task for each example in its root.
+Ex: 'makers in_examples mzoon -- -V' or `makers in_examples mzoon build"
+'''
+script = [
+'''
+#!@duckscript
+handle = glob_array examples/*/Makefile.toml
+
+args = array ${1} ${2} ${3} ${4} ${5}
+args_string = array_join ${args} " "
+
+for path in ${handle}
+    example_root = dirname ${path}
+    echo Example root: ${example_root}
+    exec --fail-on-error makers --cwd ${example_root} %{args_string}
+end
+'''
+]

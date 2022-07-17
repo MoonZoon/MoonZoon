@@ -6,6 +6,14 @@ command = "cargo"
 args = ["run", "--manifest-path", "${ROOT_PATH}/crates/mzoon/Cargo.toml", "${@}"]
 dependencies = ["set_root_path"]
 
+[tasks.clean]
+description = "Delete target and Cargo.lock"
+script_runner = "@duckscript"
+script = '''
+rm -r ./target ./Cargo.lock
+echo "target and Cargo.lock deleted"
+'''
+
 [tasks.set_root_path]
 private = true
 script_runner = "@duckscript"
