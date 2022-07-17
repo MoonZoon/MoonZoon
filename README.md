@@ -120,6 +120,8 @@ MoonZoon apps have been deployed to [Heroku](https://www.heroku.com/) ([buildpac
 
 - Rust on the Frontend and Backend [[Always Bet on Rust](https://blog.abor.dev/p/moonzoon)]
 
+- Interview with Martin about MoonZoon [[console.substack.com](https://console.substack.com/p/console-114)]
+
 ### Dev News
 
 1. CLI, Build pipeline, Live-reload, HTTPS [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-1-cli-build-pipeline-live-reload-https-1ba6) / [MD](docs/articles/dev_news_1.md)]
