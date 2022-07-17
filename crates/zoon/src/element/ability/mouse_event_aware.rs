@@ -8,11 +8,19 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         let mouse_over_handler = Rc::new(RefCell::new(handler));
         let mouse_leave_handler = mouse_over_handler.clone();
         self.update_raw_el(|raw_el| {
+            let dom_element = raw_el.dom_element().into();
             raw_el
                 .event_handler(move |_: events_extra::MouseOver| {
                     mouse_over_handler.borrow_mut()(true)
                 })
-                .event_handler(move |_: events::MouseLeave| mouse_leave_handler.borrow_mut()(false))
+                .event_handler(move |event: events::MouseLeave| {
+                    if let Some(target) = event.target() {
+                        // we are leaving from the element itself, not only from its child
+                        if target == dom_element {
+                            mouse_leave_handler.borrow_mut()(false)
+                        }
+                    }
+                })
         })
     }
 
