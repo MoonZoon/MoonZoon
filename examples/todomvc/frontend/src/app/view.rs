@@ -314,7 +314,7 @@ fn author_link() -> impl Element {
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .label("Martin Kavík")
         .to("https://github.com/MartinKavik")
-        .new_tab()
+        .new_tab(NewTab::new())
 }
 
 fn todomvc_link() -> impl Element {
@@ -324,5 +324,5 @@ fn todomvc_link() -> impl Element {
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .label("TodoMVC")
         .to("http://todomvc.com")
-        .new_tab()
+        .new_tab(NewTab::new())
 }

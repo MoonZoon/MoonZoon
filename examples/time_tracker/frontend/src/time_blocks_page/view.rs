@@ -459,6 +459,6 @@ fn link_button(invoice: Arc<super::Invoice>) -> impl Element {
         .s(RoundedCorners::all_max())
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .to_signal(invoice.url.signal_cloned())
-        .new_tab()
+        .new_tab(NewTab::new())
         .label(app::icon_open_in_new())
 }
