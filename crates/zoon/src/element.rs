@@ -25,7 +25,7 @@ pub mod label;
 pub use label::Label;
 
 pub mod link;
-pub use link::Link;
+pub use link::{Link, NewTab};
 
 pub mod paragraph;
 pub use paragraph::Paragraph;

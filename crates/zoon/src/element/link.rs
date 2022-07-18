@@ -7,6 +7,28 @@ use std::{iter, marker::PhantomData};
 
 make_flags!(Label, To);
 
+pub struct NewTab {
+    refer: bool,
+    follow: bool,
+}
+
+impl NewTab {
+    pub fn new() -> Self {
+        Self {
+            refer: false,
+            follow: true,
+        }
+    }
+
+    pub fn refer(&mut self, value: bool) {
+        self.refer = value;
+    }
+
+    pub fn follow(&mut self, value: bool) {
+        self.follow = value;
+    }
+}
+
 pub struct Link<LabelFlag, ToFlag, RE: RawEl> {
     raw_el: RE,
     flags: PhantomData<(LabelFlag, ToFlag)>,
@@ -131,9 +153,20 @@ impl<'a, LabelFlag, ToFlag, RE: RawEl> Link<LabelFlag, ToFlag, RE> {
         self.into_type()
     }
 
-    pub fn new_tab(mut self) -> Link<LabelFlag, ToFlag, RE> {
-        self.raw_el = self.raw_el.attr("target", "_blank")
-            .attr("rel", "noopener noreferrer");
+    pub fn new_tab(mut self, new_tab: NewTab) -> Link<LabelFlag, ToFlag, RE> {
+        // @TODO remove 'noopener' once all browsers add it implicitly with '_blank'
+        let mut rel = vec!["noopener"];
+        if !new_tab.refer {
+            rel.push("noreferrer");
+        }
+        if !new_tab.follow {
+            rel.push("nofollow");
+        }
+
+        self.raw_el = self
+            .raw_el
+            .attr("target", "_blank")
+            .attr("rel", rel.join(" ").as_str());
         self.into_type()
     }
 
