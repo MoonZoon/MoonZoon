@@ -132,7 +132,8 @@ impl<'a, LabelFlag, ToFlag, RE: RawEl> Link<LabelFlag, ToFlag, RE> {
     }
 
     pub fn new_tab(mut self) -> Link<LabelFlag, ToFlag, RE> {
-        self.raw_el = self.raw_el.attr("target", "_blank");
+        self.raw_el = self.raw_el.attr("target", "_blank")
+            .attr("rel", "noopener noreferrer");
         self.into_type()
     }
 
