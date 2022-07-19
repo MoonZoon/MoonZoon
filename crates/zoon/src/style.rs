@@ -190,8 +190,53 @@ pub fn ch<'a>(ch: impl IntoCowStr<'a>) -> Cow<'a, str> {
 /// Every `struct` such as [Align] and [Background] needs to implement
 /// this trait so they can be used by [Styleable] implementations with
 /// the `s()` method within a `Zoon` element.
-pub trait Style<'a> {
-    fn merge_with_group(self, group: StyleGroup<'a>) -> StyleGroup<'a>;
+pub trait Style<'a>
+where
+    Self: Sized,
+{
+    fn move_to_groups(self, groups: &mut StyleGroups<'a>);
+}
+
+// ------ StyleGroups ------
+
+#[derive(Default)]
+pub struct StyleGroups<'a>(Vec<Option<StyleGroup<'a>>>);
+
+impl<'a> StyleGroups<'a> {
+    pub fn new(groups: impl IntoIterator<Item = StyleGroup<'a>>) -> Self {
+        Self(groups.into_iter().map(Option::Some).collect())
+    }
+
+    pub fn update_first(&mut self, f: impl FnOnce(StyleGroup<'a>) -> StyleGroup<'a>) {
+        if let Some(first_group) = self.0.first_mut() {
+            let group = mem::take(first_group).unwrap_throw();
+            mem::swap(first_group, &mut Some(f(group)));
+        } else {
+            let group = StyleGroup::new("");
+            self.0.push(Some(f(group)));
+        }
+    }
+    pub fn update_with_selector(
+        &mut self,
+        selector: &'a str,
+        f: impl FnOnce(StyleGroup<'a>) -> StyleGroup<'a>,
+    ) {
+        if let Some(index) = self
+            .0
+            .iter()
+            .position(|group| group.as_ref().unwrap_throw().selector == selector)
+        {
+            let group = mem::take(&mut self.0[index]).unwrap_throw();
+            mem::swap(&mut self.0[index], &mut Some(f(group)));
+        } else {
+            let group = StyleGroup::new(selector);
+            self.0.push(Some(f(group)));
+        }
+    }
+
+    pub fn into_groups(self) -> impl Iterator<Item = StyleGroup<'a>> {
+        self.0.into_iter().map(|group| group.unwrap_throw())
+    }
 }
 
 // ------ StyleGroup ------

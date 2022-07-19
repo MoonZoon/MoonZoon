@@ -476,7 +476,9 @@ impl<
             PlaceholderText::Static(text) => self.raw_el.attr("placeholder", &text),
             PlaceholderText::Dynamic(text) => self.raw_el.attr_signal("placeholder", text),
         };
-        self.raw_el = self.raw_el.style_group(placeholder.style_group);
+        for style_group in placeholder.style_groups.into_groups() {
+            self.raw_el = self.raw_el.style_group(style_group);
+        }
         self.into_type()
     }
 
@@ -693,14 +695,14 @@ pub(crate) enum PlaceholderText<'a> {
 
 pub struct Placeholder<'a> {
     pub(crate) text: PlaceholderText<'a>,
-    pub(crate) style_group: StyleGroup<'a>,
+    pub(crate) style_groups: StyleGroups<'a>,
 }
 
 impl<'a> Placeholder<'a> {
     pub fn new(text: impl IntoCowStr<'a>) -> Self {
         Placeholder {
             text: PlaceholderText::Static(text.into_cow_str()),
-            style_group: StyleGroup::new("::placeholder"),
+            style_groups: StyleGroups::new([StyleGroup::new("::placeholder")]),
         }
     }
 
@@ -710,13 +712,13 @@ impl<'a> Placeholder<'a> {
         let text = text.map(|text| Box::new(text) as Box<dyn IntoOptionCowStr<'static>>);
         Placeholder {
             text: PlaceholderText::Dynamic(Box::new(text)),
-            style_group: StyleGroup::new("::placeholder"),
+            style_groups: StyleGroups::new([StyleGroup::new("::placeholder")]),
         }
     }
 
     pub fn s<S: Style<'a>>(mut self, style: impl Into<Option<S>>) -> Self {
         if let Some(style) = style.into() {
-            self.style_group = style.merge_with_group(self.style_group);
+            style.move_to_groups(&mut self.style_groups);
         }
         self
     }

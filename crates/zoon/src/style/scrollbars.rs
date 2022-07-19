@@ -1,10 +1,19 @@
 use crate::*;
 
 /// Style an element with scrollbars.
-#[derive(Default)]
 pub struct Scrollbars<'a> {
     /// Static css properties used by zoon.
     static_css_props: StaticCSSProps<'a>,
+    visible: bool,
+}
+
+impl<'a> Default for Scrollbars<'a> {
+    fn default() -> Self {
+        Self {
+            static_css_props: StaticCSSProps::default(),
+            visible: true,
+        }
+    }
 }
 
 impl<'a> Scrollbars<'a> {
@@ -71,12 +80,32 @@ impl<'a> Scrollbars<'a> {
         this.static_css_props.insert("overflow-x", "hidden");
         this
     }
+
+    pub fn visible(mut self, visible: bool) -> Self {
+        self.visible = visible;
+        self
+    }
 }
 
 impl<'a> Style<'a> for Scrollbars<'a> {
-    fn merge_with_group(self, mut group: StyleGroup<'a>) -> StyleGroup<'a> {
-        let Self { static_css_props } = self;
-        group.static_css_props.extend(static_css_props);
-        group
+    fn move_to_groups(self, groups: &mut StyleGroups<'a>) {
+        let Self {
+            static_css_props,
+            visible,
+        } = self;
+        groups.update_first(|mut group| {
+            group.static_css_props.extend(static_css_props);
+            if not(visible) {
+                group = group
+                    .style_unchecked("overflow-style", "none")
+                    .style_unchecked("scrollbar-width", "none")
+            }
+            group
+        });
+        if not(visible) {
+            groups.update_with_selector("::-webkit-scrollbar", |group| {
+                group.style_unchecked("display", "none")
+            });
+        }
     }
 }

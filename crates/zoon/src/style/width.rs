@@ -181,47 +181,49 @@ impl<'a> Width<'a> {
 }
 
 impl<'a> Style<'a> for Width<'static> {
-    fn merge_with_group(self, mut group: StyleGroup<'a>) -> StyleGroup<'a> {
-        let Self {
-            css_props,
-            width_mode,
-            self_signal,
-        } = self;
+    fn move_to_groups(self, groups: &mut StyleGroups<'a>) {
+        groups.update_first(|mut group| {
+            let Self {
+                css_props,
+                width_mode,
+                self_signal,
+            } = self;
 
-        if let Some(self_signal) = self_signal {
-            let self_signal = self_signal.broadcast();
+            if let Some(self_signal) = self_signal {
+                let self_signal = self_signal.broadcast();
 
-            for name in CssName::iter() {
-                group = group.style_signal(
-                    <&str>::from(name),
-                    self_signal.signal_ref(move |this| {
-                        this.as_ref().and_then(|this| {
-                            this.css_props
-                                .get(&name)
-                                .and_then(|value| value.take().map(|value| value.value))
-                        })
-                    }),
+                for name in CssName::iter() {
+                    group = group.style_signal(
+                        <&str>::from(name),
+                        self_signal.signal_ref(move |this| {
+                            this.as_ref().and_then(|this| {
+                                this.css_props
+                                    .get(&name)
+                                    .and_then(|value| value.take().map(|value| value.value))
+                            })
+                        }),
+                    );
+                }
+
+                for mode in WidthMode::iter() {
+                    group = group.class_signal(
+                        <&str>::from(mode),
+                        self_signal.signal_ref(move |this| {
+                            this.as_ref()
+                                .map(|this| this.width_mode == mode)
+                                .unwrap_or_default()
+                        }),
+                    );
+                }
+                group
+            } else {
+                group.static_css_props.extend(
+                    css_props
+                        .into_iter()
+                        .map(|(name, value)| (name.into(), value.take().unwrap_throw())),
                 );
+                group.class(width_mode.into())
             }
-
-            for mode in WidthMode::iter() {
-                group = group.class_signal(
-                    <&str>::from(mode),
-                    self_signal.signal_ref(move |this| {
-                        this.as_ref()
-                            .map(|this| this.width_mode == mode)
-                            .unwrap_or_default()
-                    }),
-                );
-            }
-            group
-        } else {
-            group.static_css_props.extend(
-                css_props
-                    .into_iter()
-                    .map(|(name, value)| (name.into(), value.take().unwrap_throw())),
-            );
-            group.class(width_mode.into())
-        }
+        });
     }
 }

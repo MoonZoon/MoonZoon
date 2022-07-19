@@ -208,13 +208,15 @@ impl Align {
 }
 
 impl<'a> Style<'a> for Align {
-    fn merge_with_group(self, mut group: StyleGroup<'a>) -> StyleGroup<'a> {
-        for alignment in self.alignments {
-            group = group.class(alignment.into());
-        }
-        for (alignment, enabled) in self.dynamic_alignments {
-            group = group.class_signal(<&str>::from(alignment), enabled);
-        }
-        group
+    fn move_to_groups(self, groups: &mut StyleGroups<'a>) {
+        groups.update_first(|mut group| {
+            for alignment in self.alignments {
+                group = group.class(alignment.into());
+            }
+            for (alignment, enabled) in self.dynamic_alignments {
+                group = group.class_signal(<&str>::from(alignment), enabled);
+            }
+            group
+        });
     }
 }

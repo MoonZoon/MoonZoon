@@ -197,21 +197,24 @@ fn transformations_into_value(transformations: Vec<Cow<'static, str>>) -> Cow<'s
 }
 
 impl<'a> Style<'a> for Transform {
-    fn merge_with_group(self, group: StyleGroup<'a>) -> StyleGroup<'a> {
-        let Self {
-            transformations,
-            self_signal,
-        } = self;
+    fn move_to_groups(self, groups: &mut StyleGroups<'a>) {
+        groups.update_first(|group| {
+            let Self {
+                transformations,
+                self_signal,
+            } = self;
 
-        if let Some(self_signal) = self_signal {
-            group.style_signal(
-                "transform",
-                self_signal.map(|transform| {
-                    transform.map(|transform| transformations_into_value(transform.transformations))
-                }),
-            )
-        } else {
-            group.style("transform", transformations_into_value(transformations))
-        }
+            if let Some(self_signal) = self_signal {
+                group.style_signal(
+                    "transform",
+                    self_signal.map(|transform| {
+                        transform
+                            .map(|transform| transformations_into_value(transform.transformations))
+                    }),
+                )
+            } else {
+                group.style("transform", transformations_into_value(transformations))
+            }
+        });
     }
 }

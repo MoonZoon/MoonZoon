@@ -194,7 +194,9 @@ impl<'a, IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFla
             PlaceholderText::Static(text) => self.raw_el.attr("placeholder", &text),
             PlaceholderText::Dynamic(text) => self.raw_el.attr_signal("placeholder", text),
         };
-        self.raw_el = self.raw_el.style_group(placeholder.style_group);
+        for style_group in placeholder.style_groups.into_groups() {
+            self.raw_el = self.raw_el.style_group(style_group);
+        }
         self.into_type()
     }
 

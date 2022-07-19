@@ -53,8 +53,13 @@ pub trait Styleable<'a>: UpdateRawEl + Sized {
     /// ```
     fn s<S: Style<'a>>(self, style: impl Into<Option<S>>) -> Self {
         if let Some(style) = style.into() {
-            return self.update_raw_el(|raw_el| {
-                raw_el.style_group(style.merge_with_group(StyleGroup::default()))
+            return self.update_raw_el(|mut raw_el| {
+                let mut groups = StyleGroups::default();
+                style.move_to_groups(&mut groups);
+                for group in groups.into_groups() {
+                    raw_el = raw_el.style_group(group);
+                }
+                raw_el
             });
         }
         self

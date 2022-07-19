@@ -412,29 +412,31 @@ impl RoundedCorners {
 }
 
 impl<'a> Style<'a> for RoundedCorners {
-    fn merge_with_group(self, group: StyleGroup<'a>) -> StyleGroup<'a> {
-        let (size_sender, size_receiver) = channel((0, 0));
+    fn move_to_groups(self, groups: &mut StyleGroups<'a>) {
+        groups.update_first(|group| {
+            let (size_sender, size_receiver) = channel((0, 0));
 
-        let border_radius_signal = map_ref! {
-            let top_left = self.top_left.0,
-            let top_right = self.top_right.0,
-            let bottom_left = self.bottom_left.0,
-            let bottom_right = self.bottom_right.0,
-            let (width, height) = size_receiver =>
-            compute_radii(
-                top_left.unwrap_or_default(),
-                top_right.unwrap_or_default(),
-                bottom_left.unwrap_or_default(),
-                bottom_right.unwrap_or_default(),
-                *width,
-                *height,
-            )
-        };
-        group
-            .on_resize(move |width, height| {
-                size_sender.send((width, height)).unwrap_throw();
-            })
-            .style_signal("border-radius", border_radius_signal)
+            let border_radius_signal = map_ref! {
+                let top_left = self.top_left.0,
+                let top_right = self.top_right.0,
+                let bottom_left = self.bottom_left.0,
+                let bottom_right = self.bottom_right.0,
+                let (width, height) = size_receiver =>
+                compute_radii(
+                    top_left.unwrap_or_default(),
+                    top_right.unwrap_or_default(),
+                    bottom_left.unwrap_or_default(),
+                    bottom_right.unwrap_or_default(),
+                    *width,
+                    *height,
+                )
+            };
+            group
+                .on_resize(move |width, height| {
+                    size_sender.send((width, height)).unwrap_throw();
+                })
+                .style_signal("border-radius", border_radius_signal)
+        });
     }
 }
 
