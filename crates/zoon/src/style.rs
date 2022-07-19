@@ -76,6 +76,7 @@ pub type U32Height = u32;
 pub struct CssPropValue<'a> {
     pub value: Cow<'a, str>,
     pub important: bool,
+    pub checked: bool,
 }
 
 impl<'a> CssPropValue<'a> {
@@ -83,12 +84,26 @@ impl<'a> CssPropValue<'a> {
         Self {
             value: value.into_cow_str(),
             important: false,
+            checked: true,
         }
+    }
+
+    pub fn new_unchecked(value: impl IntoCowStr<'a>) -> Self {
+        let mut this = Self::new(value);
+        this.checked = false;
+        this
     }
 
     pub fn new_important(value: impl IntoCowStr<'a>) -> Self {
         let mut this = Self::new(value);
         this.important = true;
+        this
+    }
+
+    pub fn new_important_unchecked(value: impl IntoCowStr<'a>) -> Self {
+        let mut this = Self::new(value);
+        this.important = true;
+        this.checked = false;
         this
     }
 }
@@ -103,8 +118,17 @@ impl<'a> StaticCSSProps<'a> {
         self.0.insert(name, CssPropValue::new(value));
     }
 
+    pub fn insert_unchecked(&mut self, name: &'a str, value: impl IntoCowStr<'a>) {
+        self.0.insert(name, CssPropValue::new_unchecked(value));
+    }
+
     pub fn insert_important(&mut self, name: &'a str, value: impl IntoCowStr<'a>) {
         self.0.insert(name, CssPropValue::new_important(value));
+    }
+
+    pub fn insert_important_unchecked(&mut self, name: &'a str, value: impl IntoCowStr<'a>) {
+        self.0
+            .insert(name, CssPropValue::new_important_unchecked(value));
     }
 
     pub fn remove(&mut self, name: &'a str) -> Option<CssPropValue> {
@@ -237,6 +261,11 @@ impl<'a> StyleGroup<'a> {
         self
     }
 
+    pub fn style_unchecked(mut self, name: &'a str, value: impl Into<Cow<'a, str>>) -> Self {
+        self.static_css_props.insert_unchecked(name, value.into());
+        self
+    }
+
     /// Add a css property to a specific selector followed by the `!important`
     /// rule. This example shows how to add the rule event if
     /// it is not necessary in this specific case for displaying the correct
@@ -252,6 +281,16 @@ impl<'a> StyleGroup<'a> {
     ///         .label("Click me");
     pub fn style_important(mut self, name: &'a str, value: impl Into<Cow<'a, str>>) -> Self {
         self.static_css_props.insert_important(name, value.into());
+        self
+    }
+
+    pub fn style_important_unchecked(
+        mut self,
+        name: &'a str,
+        value: impl Into<Cow<'a, str>>,
+    ) -> Self {
+        self.static_css_props
+            .insert_important_unchecked(name, value.into());
         self
     }
 

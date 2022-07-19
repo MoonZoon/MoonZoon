@@ -19,7 +19,17 @@ pub trait DomBuilderExt {
         B: MultiStr,
         C: MultiStr;
 
+    fn style_unchecked<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr;
+
     fn style_important<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr;
+
+    fn style_important_unchecked<B, C>(self, name: B, value: C) -> Self
     where
         B: MultiStr,
         C: MultiStr;
@@ -71,6 +81,28 @@ where
     }
 
     #[inline]
+    fn style_unchecked<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr,
+    {
+        let element = self.__internal_element().into();
+        if element.has_type::<web_sys::HtmlElement>() {
+            let builder = DomBuilder::new(element.unchecked_into::<web_sys::HtmlElement>());
+            return self.__internal_transfer_callbacks(DomBuilderExtHtml::style_unchecked(
+                builder, name, value,
+            ));
+        }
+        if element.has_type::<web_sys::SvgElement>() {
+            let builder = DomBuilder::new(element.unchecked_into::<web_sys::SvgElement>());
+            return self.__internal_transfer_callbacks(DomBuilderExtSvg::style_unchecked(
+                builder, name, value,
+            ));
+        }
+        unimplemented!("only `HtmlElement` and `SvgElement` support styling");
+    }
+
+    #[inline]
     fn style_important<B, C>(self, name: B, value: C) -> Self
     where
         B: MultiStr,
@@ -89,10 +121,31 @@ where
         }
         unimplemented!("only `HtmlElement` and `SvgElement` support styling");
     }
+
+    #[inline]
+    fn style_important_unchecked<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr,
+    {
+        let element = self.__internal_element().into();
+        if element.has_type::<web_sys::HtmlElement>() {
+            let builder = DomBuilder::new(element.unchecked_into::<web_sys::HtmlElement>());
+            return self.__internal_transfer_callbacks(
+                DomBuilderExtHtml::style_important_unchecked(builder, name, value),
+            );
+        }
+        if element.has_type::<web_sys::SvgElement>() {
+            let builder = DomBuilder::new(element.unchecked_into::<web_sys::SvgElement>());
+            return self.__internal_transfer_callbacks(
+                DomBuilderExtSvg::style_important_unchecked(builder, name, value),
+            );
+        }
+        unimplemented!("only `HtmlElement` and `SvgElement` support styling");
+    }
 }
 
-// @TODO remove once .style is callable on SvgElement in Dominator
-// https://github.com/Pauan/rust-dominator/issues/47
+// ------ DomBuilderExtSvg ------
 
 trait DomBuilderExtSvg {
     fn style_signal<B, C, D, E>(self, name: B, value: E) -> Self
@@ -107,7 +160,17 @@ trait DomBuilderExtSvg {
         B: MultiStr,
         C: MultiStr;
 
+    fn style_unchecked<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr;
+
     fn style_important<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr;
+
+    fn style_important_unchecked<B, C>(self, name: B, value: C) -> Self
     where
         B: MultiStr,
         C: MultiStr;
@@ -143,7 +206,7 @@ where
             match value {
                 Some(value) => {
                     // TODO should this intern or not ?
-                    set_style(&style, &name, value, false);
+                    set_style(&style, &name, value, false, true);
                 }
                 None => {
                     name.each(|name| {
@@ -169,6 +232,23 @@ where
             &name,
             value,
             false,
+            true,
+        );
+        self
+    }
+
+    #[inline]
+    fn style_unchecked<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr,
+    {
+        set_style(
+            &self.__internal_element().as_ref().style(),
+            &name,
+            value,
+            false,
+            false,
         );
         self
     }
@@ -184,12 +264,172 @@ where
             &name,
             value,
             true,
+            true,
+        );
+        self
+    }
+
+    #[inline]
+    fn style_important_unchecked<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr,
+    {
+        set_style(
+            &self.__internal_element().as_ref().style(),
+            &name,
+            value,
+            true,
+            false,
         );
         self
     }
 }
 
-fn set_style<A, B>(style: &CssStyleDeclaration, name: &A, value: B, important: bool)
+// ------ DomBuilderExtSvg ------
+
+trait DomBuilderExtHtml {
+    fn style_signal<B, C, D, E>(self, name: B, value: E) -> Self
+    where
+        B: MultiStr + 'static,
+        C: MultiStr,
+        D: OptionStr<Output = C>,
+        E: Signal<Item = D> + 'static;
+
+    fn style<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr;
+
+    fn style_unchecked<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr;
+
+    fn style_important<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr;
+
+    fn style_important_unchecked<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr;
+}
+
+// https://github.com/Pauan/rust-dominator/blob/e9e9e61ed8bff32d2a3aed3c85e27d9256b76bf5/src/dom.rs
+impl<A> DomBuilderExtHtml for DomBuilder<A>
+where
+    A: AsRef<web_sys::HtmlElement> + Clone + 'static,
+{
+    #[inline]
+    fn style_signal<B, C, D, E>(self, name: B, value: E) -> Self
+    where
+        B: MultiStr + 'static,
+        C: MultiStr,
+        D: OptionStr<Output = C>,
+        E: Signal<Item = D> + 'static,
+    {
+        let style = self.__internal_element().as_ref().style();
+        let mut is_set = false;
+
+        let set_style_task = Task::start_droppable(value.for_each_sync(move |value| {
+            let value = value.into_option();
+
+            if value.is_some() {
+                is_set = true;
+            } else if is_set {
+                is_set = false;
+            } else {
+                return;
+            }
+
+            match value {
+                Some(value) => {
+                    // TODO should this intern or not ?
+                    set_style(&style, &name, value, false, true);
+                }
+                None => {
+                    name.each(|name| {
+                        // TODO handle browser prefixes ?
+                        bindings::remove_style(&style, intern(name));
+                    });
+                }
+            }
+        }));
+
+        let set_style_task = ManuallyDrop::new(set_style_task);
+        self.after_removed(move |_| drop(ManuallyDrop::into_inner(set_style_task)))
+    }
+
+    #[inline]
+    fn style<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr,
+    {
+        set_style(
+            &self.__internal_element().as_ref().style(),
+            &name,
+            value,
+            false,
+            true,
+        );
+        self
+    }
+
+    #[inline]
+    fn style_unchecked<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr,
+    {
+        set_style(
+            &self.__internal_element().as_ref().style(),
+            &name,
+            value,
+            false,
+            false,
+        );
+        self
+    }
+
+    #[inline]
+    fn style_important<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr,
+    {
+        set_style(
+            &self.__internal_element().as_ref().style(),
+            &name,
+            value,
+            true,
+            true,
+        );
+        self
+    }
+
+    #[inline]
+    fn style_important_unchecked<B, C>(self, name: B, value: C) -> Self
+    where
+        B: MultiStr,
+        C: MultiStr,
+    {
+        set_style(
+            &self.__internal_element().as_ref().style(),
+            &name,
+            value,
+            true,
+            false,
+        );
+        self
+    }
+}
+
+// ------ Helpers ------
+
+fn set_style<A, B>(style: &CssStyleDeclaration, name: &A, value: B, important: bool, check: bool)
 where
     A: MultiStr,
     B: MultiStr,
@@ -232,15 +472,17 @@ where
         })
     });
 
-    if let None = okay {
-        if cfg!(debug_assertions) {
-            // TODO maybe make this configurable
-            // @TODO nicer error
-            panic!(
-                "style is incorrect:\n  names: {}\n  values: {}",
-                names.join(", "),
-                values.join(", ")
-            );
+    if check {
+        if let None = okay {
+            if cfg!(debug_assertions) {
+                // TODO maybe make this configurable
+                // @TODO nicer error
+                panic!(
+                    "style is incorrect:\n  names: {}\n  values: {}",
+                    names.join(", "),
+                    values.join(", ")
+                );
+            }
         }
     }
 }
