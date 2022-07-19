@@ -76,9 +76,11 @@ impl<'a> Clip<'a> {
 }
 
 impl<'a> Style<'a> for Clip<'a> {
-    fn merge_with_group(self, mut group: StyleGroup<'a>) -> StyleGroup<'a> {
-        let Self { static_css_props } = self;
-        group.static_css_props.extend(static_css_props);
-        group
+    fn move_to_groups(self, groups: &mut StyleGroups<'a>) {
+        groups.update_first(|mut group| {
+            let Self { static_css_props } = self;
+            group.static_css_props.extend(static_css_props);
+            group
+        });
     }
 }
