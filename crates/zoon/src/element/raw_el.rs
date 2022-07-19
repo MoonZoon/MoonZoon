@@ -198,9 +198,22 @@ pub trait RawEl: Sized {
         })
     }
 
+    fn style_unchecked(self, name: &str, value: &str) -> Self {
+        self.update_dom_builder(|dom_builder| {
+            dom_builder.style_unchecked(CssPropertyName::new(name), CssPropertyValue::new(value))
+        })
+    }
+
     fn style_important(self, name: &str, value: &str) -> Self {
         self.update_dom_builder(|dom_builder| {
             dom_builder.style_important(CssPropertyName::new(name), CssPropertyValue::new(value))
+        })
+    }
+
+    fn style_important_unchecked(self, name: &str, value: &str) -> Self {
+        self.update_dom_builder(|dom_builder| {
+            dom_builder
+                .style_important_unchecked(CssPropertyName::new(name), CssPropertyValue::new(value))
         })
     }
 
@@ -239,11 +252,20 @@ pub trait RawEl: Sized {
                 mut resize_handlers,
             } = group;
 
-            for (name, CssPropValue { value, important }) in static_css_props {
-                if important {
-                    self = self.style_important(name, &value);
-                } else {
-                    self = self.style(name, &value);
+            for (
+                name,
+                CssPropValue {
+                    value,
+                    important,
+                    checked,
+                },
+            ) in static_css_props
+            {
+                match (important, checked) {
+                    (false, true) => self = self.style(name, &value),
+                    (true, true) => self = self.style_important(name, &value),
+                    (false, false) => self = self.style_unchecked(name, &value),
+                    (true, false) => self = self.style_important_unchecked(name, &value),
                 }
             }
             for (name, value) in dynamic_css_props {
