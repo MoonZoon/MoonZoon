@@ -36,9 +36,9 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
     }
 
     fn on_click_event_with_options(
-        self, 
-        options: EventOptions, 
-        mut handler: impl FnMut(MouseEvent) + 'static
+        self,
+        options: EventOptions,
+        mut handler: impl FnMut(MouseEvent) + 'static,
     ) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el.event_handler_with_options(options, move |event: events::Click| {
