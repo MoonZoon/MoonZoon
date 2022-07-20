@@ -101,13 +101,13 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet, RawHtmlEl<web_sys::HtmlDivElemen
                 .style_group(
                     StyleGroup::new(".button > .align_top")
                         .style("margin-bottom", "auto")
-                        .style("margin-top", "0")
-                    )
+                        .style("margin-top", "0"),
+                )
                 .style_group(
                     StyleGroup::new(".button > .align_bottom")
                         .style("margin-top", "auto")
-                        .style("margin-bottom", "0")
-                    )
+                        .style("margin-bottom", "0"),
+                )
                 .style_group(
                     StyleGroup::new(".button > .align_left").style("align-self", "flex-start"),
                 )
@@ -219,33 +219,36 @@ impl<'a, LabelFlag, OnPressFlag, RE: RawEl> Button<LabelFlag, OnPressFlag, RE> {
             .into_type()
     }
 
-    pub fn on_press_event(self, on_press: impl FnMut(ButtonPressEvent) + 'static) -> Button<LabelFlag, OnPressFlagSet, RE>
+    pub fn on_press_event(
+        self,
+        on_press: impl FnMut(ButtonPressEvent) + 'static,
+    ) -> Button<LabelFlag, OnPressFlagSet, RE>
     where
         OnPressFlag: FlagNotSet,
     {
         let on_click = Rc::new(RefCell::new(on_press));
         let on_enter_down = on_click.clone();
         self.on_click_event(move |event| {
-                let event = ButtonPressEvent::OnClick(event);
-                on_click.borrow_mut()(event);
+            let event = ButtonPressEvent::OnClick(event);
+            on_click.borrow_mut()(event);
+        })
+        .on_key_down_event(move |event| {
+            event.if_key(Key::Enter, {
+                let event = event.clone();
+                let on_enter_down = on_enter_down.clone();
+                move || {
+                    let event = ButtonPressEvent::OnEnterDown(event);
+                    on_enter_down.borrow_mut()(event);
+                }
             })
-            .on_key_down_event(move |event| {
-                event.if_key(Key::Enter, {
-                    let event = event.clone();
-                    let on_enter_down = on_enter_down.clone();
-                    move || {
-                        let event = ButtonPressEvent::OnEnterDown(event);
-                        on_enter_down.borrow_mut()(event);
-                    }
-                })
-            })
-            .into_type()
+        })
+        .into_type()
     }
 
     pub fn on_press_event_with_options(
         self,
         options: EventOptions,
-        on_press: impl FnMut(ButtonPressEvent) + 'static
+        on_press: impl FnMut(ButtonPressEvent) + 'static,
     ) -> Button<LabelFlag, OnPressFlagSet, RE>
     where
         OnPressFlag: FlagNotSet,
@@ -253,20 +256,20 @@ impl<'a, LabelFlag, OnPressFlag, RE: RawEl> Button<LabelFlag, OnPressFlag, RE> {
         let on_click = Rc::new(RefCell::new(on_press));
         let on_enter_down = on_click.clone();
         self.on_click_event_with_options(options, move |event| {
-                let event = ButtonPressEvent::OnClick(event);
-                on_click.borrow_mut()(event);
+            let event = ButtonPressEvent::OnClick(event);
+            on_click.borrow_mut()(event);
+        })
+        .on_key_down_event_with_options(options, move |event| {
+            event.if_key(Key::Enter, {
+                let event = event.clone();
+                let on_enter_down = on_enter_down.clone();
+                move || {
+                    let event = ButtonPressEvent::OnEnterDown(event);
+                    on_enter_down.borrow_mut()(event);
+                }
             })
-            .on_key_down_event_with_options(options, move |event| {
-                event.if_key(Key::Enter, {
-                    let event = event.clone();
-                    let on_enter_down = on_enter_down.clone();
-                    move || {
-                        let event = ButtonPressEvent::OnEnterDown(event);
-                        on_enter_down.borrow_mut()(event);
-                    }
-                })
-            })
-            .into_type()
+        })
+        .into_type()
     }
 
     fn into_type<NewLabelFlag, NewOnPressFlag>(self) -> Button<NewLabelFlag, NewOnPressFlag, RE> {
