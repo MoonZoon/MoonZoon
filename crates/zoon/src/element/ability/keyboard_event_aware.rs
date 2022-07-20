@@ -43,6 +43,10 @@ impl KeyboardEvent {
             f()
         }
     }
+
+    pub fn pass_to_parent(&self, pass: bool) {
+        self.raw_event.pass_to_parent(pass);
+    }
 }
 
 // ------ RawKeyboardEvent ------
@@ -50,6 +54,16 @@ impl KeyboardEvent {
 #[derive(Clone)]
 pub enum RawKeyboardEvent {
     KeyDown(Arc<events::KeyDown>),
+}
+
+impl RawKeyboardEvent {
+    pub fn pass_to_parent(&self, pass: bool) {
+        if not(pass) {
+            match self {
+                Self::KeyDown(event) => event.stop_propagation(),
+            }
+        }
+    }
 }
 
 // ------ Key ------
