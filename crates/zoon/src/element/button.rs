@@ -98,8 +98,16 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet, RawHtmlEl<web_sys::HtmlDivElemen
                         .style("margin-top", "auto")
                         .style("margin-bottom", "auto"),
                 )
-                .style_group(StyleGroup::new(".button > .align_top").style("margin-bottom", "auto"))
-                .style_group(StyleGroup::new(".button > .align_bottom").style("margin-top", "auto"))
+                .style_group(
+                    StyleGroup::new(".button > .align_top")
+                        .style("margin-bottom", "auto")
+                        .style("margin-top", "0")
+                    )
+                .style_group(
+                    StyleGroup::new(".button > .align_bottom")
+                        .style("margin-top", "auto")
+                        .style("margin-bottom", "0")
+                    )
                 .style_group(
                     StyleGroup::new(".button > .align_left").style("align-self", "flex-start"),
                 )
