@@ -1,6 +1,8 @@
+use crate::*;
+
 #[derive(Copy, Clone, Debug, Default)]
 pub struct EventOptions {
-    bubbles: bool,
+    parents_first: bool,
     preventable: bool,
 }
 
@@ -9,8 +11,8 @@ impl EventOptions {
         Self::default()
     }
 
-    pub fn bubbles(mut self) -> Self {
-        self.bubbles = true;
+    pub fn parents_first(mut self) -> Self {
+        self.parents_first = true;
         self
     }
 
@@ -23,7 +25,7 @@ impl EventOptions {
 impl From<EventOptions> for dominator::EventOptions {
     fn from(options: EventOptions) -> Self {
         Self {
-            bubbles: options.bubbles,
+            bubbles: not(options.parents_first),
             preventable: options.preventable,
         }
     }
