@@ -242,6 +242,33 @@ impl<'a, LabelFlag, OnPressFlag, RE: RawEl> Button<LabelFlag, OnPressFlag, RE> {
             .into_type()
     }
 
+    pub fn on_press_event_with_options(
+        self,
+        options: EventOptions,
+        on_press: impl FnMut(ButtonPressEvent) + 'static
+    ) -> Button<LabelFlag, OnPressFlagSet, RE>
+    where
+        OnPressFlag: FlagNotSet,
+    {
+        let on_click = Rc::new(RefCell::new(on_press));
+        let on_enter_down = on_click.clone();
+        self.on_click_event_with_options(options, move |event| {
+                let event = ButtonPressEvent::OnClick(event);
+                on_click.borrow_mut()(event);
+            })
+            .on_key_down_event_with_options(options, move |event| {
+                event.if_key(Key::Enter, {
+                    let event = event.clone();
+                    let on_enter_down = on_enter_down.clone();
+                    move || {
+                        let event = ButtonPressEvent::OnEnterDown(event);
+                        on_enter_down.borrow_mut()(event);
+                    }
+                })
+            })
+            .into_type()
+    }
+
     fn into_type<NewLabelFlag, NewOnPressFlag>(self) -> Button<NewLabelFlag, NewOnPressFlag, RE> {
         Button {
             raw_el: self.raw_el,
@@ -255,4 +282,13 @@ impl<'a, LabelFlag, OnPressFlag, RE: RawEl> Button<LabelFlag, OnPressFlag, RE> {
 pub enum ButtonPressEvent {
     OnClick(MouseEvent),
     OnEnterDown(KeyboardEvent),
+}
+
+impl ButtonPressEvent {
+    pub fn pass_to_parent(&self, pass: bool) {
+        match self {
+            Self::OnClick(event) => event.pass_to_parent(pass),
+            Self::OnEnterDown(event) => event.pass_to_parent(pass),
+        }
+    }
 }

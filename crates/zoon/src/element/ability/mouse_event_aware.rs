@@ -35,6 +35,25 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         })
     }
 
+    fn on_click_event_with_options(
+        self, 
+        options: EventOptions, 
+        mut handler: impl FnMut(MouseEvent) + 'static
+    ) -> Self {
+        self.update_raw_el(|raw_el| {
+            raw_el.event_handler_with_options(options, move |event: events::Click| {
+                let mouse_event = MouseEvent {
+                    x: event.x(),
+                    y: event.y(),
+                    movement_x: 0,
+                    movement_y: 0,
+                    raw_event: RawMouseEvent::Click(Arc::new(event)),
+                };
+                handler(mouse_event);
+            })
+        })
+    }
+
     fn on_double_click(self, mut handler: impl FnMut() + 'static) -> Self {
         self.update_raw_el(|raw_el| raw_el.event_handler(move |_: events::DoubleClick| handler()))
     }
@@ -180,6 +199,10 @@ impl MouseEvent {
     pub fn movement_y(&self) -> i32 {
         self.movement_y
     }
+
+    pub fn pass_to_parent(&self, pass: bool) {
+        self.raw_event.pass_to_parent(pass);
+    }
 }
 
 // ------ RawMouseEvent ------
@@ -188,4 +211,15 @@ impl MouseEvent {
 pub enum RawMouseEvent {
     Click(Arc<events::Click>),
     DoubleClick(Arc<events::DoubleClick>),
+}
+
+impl RawMouseEvent {
+    pub fn pass_to_parent(&self, pass: bool) {
+        if not(pass) {
+            match self {
+                Self::Click(event) => event.stop_propagation(),
+                Self::DoubleClick(event) => event.stop_propagation(),
+            }
+        }
+    }
 }
