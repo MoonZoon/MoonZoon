@@ -1,5 +1,5 @@
 use crate::*;
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, rc::Rc, sync::Arc};
 
 // ------ MouseEventAware ------
 
@@ -28,7 +28,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                     y: event.y(),
                     movement_x: 0,
                     movement_y: 0,
-                    raw_event: RawMouseEvent::Click(event),
+                    raw_event: RawMouseEvent::Click(Arc::new(event)),
                 };
                 handler(mouse_event);
             })
@@ -47,7 +47,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                     y: event.y(),
                     movement_x: 0,
                     movement_y: 0,
-                    raw_event: RawMouseEvent::DoubleClick(event),
+                    raw_event: RawMouseEvent::DoubleClick(Arc::new(event)),
                 };
                 handler(mouse_event);
             })
@@ -78,7 +78,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                     y: event.y(),
                     movement_x: 0,
                     movement_y: 0,
-                    raw_event: RawMouseEvent::Click(event),
+                    raw_event: RawMouseEvent::Click(Arc::new(event)),
                 };
                 handler(mouse_event);
             })
@@ -119,7 +119,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
                     y: event.y(),
                     movement_x: 0,
                     movement_y: 0,
-                    raw_event: RawMouseEvent::Click(event),
+                    raw_event: RawMouseEvent::Click(Arc::new(event)),
                 };
                 handler(mouse_event);
             })
@@ -155,6 +155,7 @@ fn is_inside(dom_element: &web_sys::Element, event: &events::Click, ids_selector
 
 // ------ MouseEvent ------
 
+#[derive(Clone)]
 pub struct MouseEvent {
     x: i32,
     y: i32,
@@ -183,7 +184,8 @@ impl MouseEvent {
 
 // ------ RawMouseEvent ------
 
+#[derive(Clone)]
 pub enum RawMouseEvent {
-    Click(events::Click),
-    DoubleClick(events::DoubleClick),
+    Click(Arc<events::Click>),
+    DoubleClick(Arc<events::DoubleClick>),
 }

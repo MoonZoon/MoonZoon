@@ -1,5 +1,5 @@
 use crate::*;
-use std::borrow::Borrow;
+use std::{borrow::Borrow, sync::Arc};
 
 // ------ KeyboardEventAware ------
 
@@ -17,7 +17,7 @@ pub trait KeyboardEventAware: UpdateRawEl + Sized {
             raw_el.event_handler_with_options(options, move |event: events::KeyDown| {
                 let keyboard_event = KeyboardEvent {
                     key: Key::from(event.key()),
-                    raw_event: RawKeyboardEvent::KeyDown(event),
+                    raw_event: RawKeyboardEvent::KeyDown(Arc::new(event)),
                 };
                 handler(keyboard_event);
             })
@@ -27,6 +27,7 @@ pub trait KeyboardEventAware: UpdateRawEl + Sized {
 
 // ------ KeyboardEvent ------
 
+#[derive(Clone)]
 pub struct KeyboardEvent {
     key: Key,
     pub raw_event: RawKeyboardEvent,
@@ -46,13 +47,14 @@ impl KeyboardEvent {
 
 // ------ RawKeyboardEvent ------
 
+#[derive(Clone)]
 pub enum RawKeyboardEvent {
-    KeyDown(events::KeyDown),
+    KeyDown(Arc<events::KeyDown>),
 }
 
 // ------ Key ------
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub enum Key {
     Enter,
     Escape,

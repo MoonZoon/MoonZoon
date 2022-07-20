@@ -4,7 +4,7 @@ use std::iter;
 // -- modules --
 
 pub mod button;
-pub use button::Button;
+pub use button::{Button, ButtonPressEvent};
 
 pub mod canvas;
 pub use canvas::Canvas;
