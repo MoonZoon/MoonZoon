@@ -20,12 +20,14 @@ impl NewTab {
         }
     }
 
-    pub fn refer(&mut self, value: bool) {
+    pub fn refer(mut self, value: bool) -> Self {
         self.refer = value;
+        self
     }
 
-    pub fn follow(&mut self, value: bool) {
+    pub fn follow(mut self, value: bool) -> Self {
         self.follow = value;
+        self
     }
 }
 
