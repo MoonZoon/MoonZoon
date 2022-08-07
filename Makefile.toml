@@ -1,6 +1,5 @@
 extend = "./default_makefile.toml"
 
-# @TODO refactor once https://github.com/sagiegurari/cargo-make/issues/667 is resolved
 [tasks.in_examples]
 description = '''
 Run chosen task for each example in its root.
@@ -10,9 +9,7 @@ script = [
 '''
 #!@duckscript
 handle = glob_array examples/*/Makefile.toml
-
-args = array ${1} ${2} ${3} ${4} ${5}
-args_string = array_join ${args} " "
+args_string = array_join ${@} " "
 
 for path in ${handle}
     example_root = dirname ${path}
