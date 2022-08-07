@@ -272,12 +272,35 @@ impl<'a> Font<'a> {
     ///    .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```
     pub fn family(mut self, family: impl IntoIterator<Item = FontFamily<'a>>) -> Self {
-        let font_family = family
+        let family = family
             .into_iter()
             .map(|family| family.into_cow_str())
             .collect::<Cow<_>>()
             .join(", ");
-        self.static_css_props.insert("font-family", font_family);
+        if family.is_empty() {
+            return self;
+        }
+        self.static_css_props.insert("font-family", family);
+        self
+    }
+
+    pub fn family_signal(
+        mut self,
+        family: impl Signal<Item = impl IntoIterator<Item = FontFamily<'a>>> + Unpin + 'static,
+    ) -> Self {
+        let family = family.map(|family| {
+            let family_style = family
+                .into_iter()
+                .map(|family| family.into_cow_str())
+                .collect::<Cow<_>>()
+                .join(", ");
+            if family_style.is_empty() {
+                None?;
+            }
+            Some(family_style)
+        });
+        self.dynamic_css_props
+            .insert("font-family".into(), box_css_signal(family));
         self
     }
 
