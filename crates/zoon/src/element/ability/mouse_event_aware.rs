@@ -77,7 +77,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         self.update_raw_el(move |raw_el| {
             let dom_element: web_sys::Element = raw_el.dom_element().into();
             raw_el.global_event_handler(move |event: events::Click| {
-                if is_inside(&dom_element, &event, "") {
+                if is_inside_or_removed_from_dom(&dom_element, &event, "") {
                     return;
                 }
                 handler();
@@ -89,7 +89,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         self.update_raw_el(move |raw_el| {
             let dom_element: web_sys::Element = raw_el.dom_element().into();
             raw_el.global_event_handler(move |event: events::Click| {
-                if is_inside(&dom_element, &event, "") {
+                if is_inside_or_removed_from_dom(&dom_element, &event, "") {
                     return;
                 }
                 let mouse_event = MouseEvent {
@@ -113,7 +113,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         self.update_raw_el(move |raw_el| {
             let dom_element: web_sys::Element = raw_el.dom_element().into();
             raw_el.global_event_handler(move |event: events::Click| {
-                if is_inside(&dom_element, &event, &ids_selector) {
+                if is_inside_or_removed_from_dom(&dom_element, &event, &ids_selector) {
                     return;
                 }
                 handler();
@@ -130,7 +130,7 @@ pub trait MouseEventAware: UpdateRawEl + Sized {
         self.update_raw_el(move |raw_el| {
             let dom_element: web_sys::Element = raw_el.dom_element().into();
             raw_el.global_event_handler(move |event: events::Click| {
-                if is_inside(&dom_element, &event, &ids_selector) {
+                if is_inside_or_removed_from_dom(&dom_element, &event, &ids_selector) {
                     return;
                 }
                 let mouse_event = MouseEvent {
@@ -155,18 +155,28 @@ fn selector_from_ids<'a>(ids: impl IntoIterator<Item = impl IntoCowStr<'a>>) -> 
         .join(", ")
 }
 
-fn is_inside(dom_element: &web_sys::Element, event: &events::Click, ids_selector: &str) -> bool {
-    let target = event.target().expect_throw("failed to get event target");
-    if dom_element.contains(Some(target.unchecked_ref())) {
+fn is_inside_or_removed_from_dom(
+    dom_element: &web_sys::Element,
+    event: &events::Click,
+    ids_selector: &str,
+) -> bool {
+    let target = event
+        .target()
+        .expect_throw("failed to get event target")
+        .unchecked_into::<web_sys::Element>();
+    if dom_element.contains(Some(&target)) {
         return true;
     }
-    if not(ids_selector.is_empty())
-        && target
-            .unchecked_ref::<web_sys::Element>()
-            .closest(&ids_selector)
-            .expect_throw("invalid selector provided")
-            .is_some()
-    {
+    if ids_selector.is_empty() {
+        return false;
+    }
+    if !document().contains(Some(&target)) {
+        return true;
+    }
+    let closest = target
+        .closest(&ids_selector)
+        .expect_throw("invalid selector provided");
+    if closest.is_some() {
         return true;
     }
     false
