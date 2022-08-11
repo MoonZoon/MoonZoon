@@ -1,4 +1,8 @@
 use crate::*;
+use once_cell::sync::Lazy;
+
+static NEARBY_ELEMENTS_Z_INDEX: Lazy<String> =
+    Lazy::new(|| LayerIndex::NEARBY_ELEMENTS.to_string());
 
 pub trait AddNearbyElement<'a>: UpdateRawEl + Sized {
     fn element_above(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
@@ -61,7 +65,7 @@ fn element_above_container() -> RawHtmlEl<web_sys::HtmlElement> {
         .style("left", "0")
         .style("width", "100%")
         .style("pointer-events", "none")
-        .style("z-index", "20")
+        .style("z-index", &NEARBY_ELEMENTS_Z_INDEX)
 }
 
 fn element_below_container() -> RawHtmlEl<web_sys::HtmlElement> {
@@ -77,7 +81,7 @@ fn element_below_container() -> RawHtmlEl<web_sys::HtmlElement> {
         .style("left", "0")
         .style("width", "100%")
         .style("pointer-events", "none")
-        .style("z-index", "20")
+        .style("z-index", &NEARBY_ELEMENTS_Z_INDEX)
 }
 
 fn element_on_left_container() -> RawHtmlEl<web_sys::HtmlElement> {
@@ -94,7 +98,7 @@ fn element_on_left_container() -> RawHtmlEl<web_sys::HtmlElement> {
         .style("top", "0")
         .style("height", "100%")
         .style("pointer-events", "none")
-        .style("z-index", "20")
+        .style("z-index", &NEARBY_ELEMENTS_Z_INDEX)
 }
 
 fn element_on_right_container() -> RawHtmlEl<web_sys::HtmlElement> {
@@ -111,5 +115,5 @@ fn element_on_right_container() -> RawHtmlEl<web_sys::HtmlElement> {
         .style("top", "0")
         .style("height", "100%")
         .style("pointer-events", "none")
-        .style("z-index", "20")
+        .style("z-index", &NEARBY_ELEMENTS_Z_INDEX)
 }

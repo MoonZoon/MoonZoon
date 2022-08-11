@@ -3,7 +3,7 @@ use crate::{
     *,
 };
 use lang::Lang;
-use once_cell::race::OnceBox;
+use once_cell::sync::Lazy;
 use std::mem::ManuallyDrop;
 use std::{cell::Cell, mem, rc::Rc};
 
@@ -15,10 +15,7 @@ pub use raw_svg_el::RawSvgEl;
 
 // ------ class_ids ------
 
-fn class_id_generator() -> &'static ClassIdGenerator {
-    static GLOBAL_STYLES: OnceBox<ClassIdGenerator> = OnceBox::new();
-    GLOBAL_STYLES.get_or_init(|| Box::new(ClassIdGenerator::default()))
-}
+static CLASS_ID_GENERATOR: Lazy<ClassIdGenerator> = Lazy::new(ClassIdGenerator::default);
 
 #[derive(Default)]
 struct ClassIdGenerator {

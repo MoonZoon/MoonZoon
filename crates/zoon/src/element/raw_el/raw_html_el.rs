@@ -1,4 +1,4 @@
-use super::class_id_generator;
+use super::CLASS_ID_GENERATOR;
 use crate::*;
 use std::iter;
 
@@ -82,7 +82,7 @@ where
     where
         DomElement: JsCast,
     {
-        let class_id = class_id_generator().next_class_id();
+        let class_id = CLASS_ID_GENERATOR.next_class_id();
 
         let mut dom_builder = DomBuilder::new_html(tag);
         dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
@@ -90,7 +90,7 @@ where
         Self {
             class_id: class_id.clone(),
             dom_builder: dom_builder
-                .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
+                .after_removed(move |_| CLASS_ID_GENERATOR.remove_class_id(class_id)),
         }
     }
 
@@ -113,13 +113,13 @@ where
     fn from_dom_element(dom_element: Self::DomElement) -> Self {
         let mut dom_builder = DomBuilder::new(dom_element);
 
-        let class_id = class_id_generator().next_class_id();
+        let class_id = CLASS_ID_GENERATOR.next_class_id();
         dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
 
         Self {
             class_id: class_id.clone(),
             dom_builder: dom_builder
-                .after_removed(move |_| class_id_generator().remove_class_id(class_id)),
+                .after_removed(move |_| CLASS_ID_GENERATOR.remove_class_id(class_id)),
         }
     }
 
