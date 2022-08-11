@@ -15,6 +15,7 @@ impl<'a> LayerIndex<'a> {
     const MAX_VALUE_OFFSET: i32 = 9;
     pub const MIN_VALUE: i32 = i32::MIN + Self::MAX_VALUE_OFFSET;
     pub const MAX_VALUE: i32 = i32::MAX - Self::MAX_VALUE_OFFSET;
+    pub const NEARBY_ELEMENTS: i32 = 20;
 
     /// Set the layer index for an element.
     /// # Example
