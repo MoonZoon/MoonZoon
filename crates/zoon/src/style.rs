@@ -176,12 +176,16 @@ pub type DynamicCSSClasses = BTreeMap<Cow<'static, str>, Box<dyn Signal<Item = b
 
 // ------ units ------
 
-pub fn px<'a>(px: impl IntoCowStr<'a>) -> Cow<'a, str> {
-    [&px.into_cow_str(), "px"].concat().into()
+pub fn px<'a>(pixels: impl IntoCowStr<'a>) -> Cow<'a, str> {
+    [&pixels.into_cow_str(), "px"].concat().into()
 }
 
-pub fn ch<'a>(ch: impl IntoCowStr<'a>) -> Cow<'a, str> {
-    [&ch.into_cow_str(), "ch"].concat().into()
+pub fn ch<'a>(chars: impl IntoCowStr<'a>) -> Cow<'a, str> {
+    [&chars.into_cow_str(), "ch"].concat().into()
+}
+
+pub fn pct<'a>(percent: impl IntoCowStr<'a>) -> Cow<'a, str> {
+    [&percent.into_cow_str(), "%"].concat().into()
 }
 
 // ------ Style ------
