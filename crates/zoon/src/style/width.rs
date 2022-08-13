@@ -111,6 +111,20 @@ impl<'a> Width<'a> {
         this
     }
 
+    pub fn percent(percent: impl Into<f64>) -> Self {
+        let mut this = Self::default();
+        this.css_props
+            .insert(CssName::Width, into_prop_value(pct(percent.into())));
+        this.width_mode = WidthMode::ExactWidth;
+        this
+    }
+
+    pub fn percent_signal<T: Into<f64>>(
+        width: impl Signal<Item = impl Into<Option<T>>> + Unpin + 'static,
+    ) -> Self {
+        Self::with_signal(width.map(|width| width.into().map(|width| Width::percent(width.into()))))
+    }
+
     /// Set the element width to fill its container.
     /// # Example
     /// ```no_run
