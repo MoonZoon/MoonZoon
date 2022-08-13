@@ -100,7 +100,7 @@ fn flag_field(field: &Field) {
 fn root() -> impl Element {
     Column::new()
         .s(Align::center())
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .item(grid())
         .item(flagged_counter())
         .item(reset_button())
@@ -125,7 +125,7 @@ fn reset_button() -> impl Element {
 }
 
 fn grid() -> impl Element {
-    let spacing = || Spacing::new(10);
+    let spacing = || Gap::both(10);
     Column::new()
         .s(spacing())
         .items_signal_vec(

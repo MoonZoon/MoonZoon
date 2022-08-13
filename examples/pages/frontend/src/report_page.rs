@@ -75,7 +75,7 @@ fn frequency_for_link() -> impl Signal<Item = Frequency> {
 
 pub fn page() -> impl Element {
     Column::new()
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .item(greeting())
         .item(switch_frequency_link())
 }

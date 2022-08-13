@@ -654,7 +654,7 @@ fn sleep_panel() -> impl Element {
         })
     };
     Row::new()
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .item("2s Async Sleep")
         .item_signal(asleep_signal.map_bool(
             || El::new().child("zZZ...").left_either(),

@@ -7,7 +7,7 @@ use zoon::{named_color::*, *};
 
 pub fn header() -> impl Element {
     Row::new()
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .item(back_button())
         .item(link("Home", Route::Root))
         .item(link("Report", Route::ReportRoot))

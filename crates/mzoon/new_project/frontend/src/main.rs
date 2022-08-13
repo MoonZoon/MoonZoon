@@ -13,7 +13,7 @@ fn root() -> impl Element {
     Row::new()
         .s(Align::center())
         .s(Transform::new().move_up(20))
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .s(Font::new().color(GRAY_0).size(30))
         .item(increment_button())
         .item_signal(counter().signal())

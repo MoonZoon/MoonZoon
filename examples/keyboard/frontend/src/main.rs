@@ -7,7 +7,7 @@ use zoon::{println, *};
 fn root() -> impl Element {
     Column::new()
         .s(Padding::all(30))
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .item("Open dev console, write something and press Shift + Tab")
         .item(text_field())
         .item(div_with_global_event())

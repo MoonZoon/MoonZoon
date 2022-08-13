@@ -47,8 +47,8 @@ pub use scrollbars::Scrollbars;
 mod shadows;
 pub use shadows::{Shadow, Shadows};
 
-mod spacing;
-pub use spacing::Spacing;
+mod gap;
+pub use gap::Gap;
 
 mod transitions;
 pub use transitions::{Transition, Transitions};

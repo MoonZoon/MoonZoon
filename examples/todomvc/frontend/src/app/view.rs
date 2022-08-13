@@ -30,7 +30,7 @@ fn content() -> impl Element {
         .item(
             Column::new()
                 .s(Width::fill())
-                .s(Spacing::new(65))
+                .s(Gap::both(65))
                 .item(panel())
                 .item(footer()),
         )
@@ -86,7 +86,7 @@ fn todos() -> impl Element {
     Column::new()
         .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
         .s(Background::new().color(hsluv!(0, 0, 93.7)))
-        .s(Spacing::new(1))
+        .s(Gap::both(1))
         .items_signal_vec(super::filtered_todos().map(todo))
         .element_above(toggle_all_checkbox())
 }
@@ -116,7 +116,7 @@ fn todo(todo: Arc<Todo>) -> impl Element {
     Row::new()
         .s(Width::fill())
         .s(Background::new().color(hsluv!(0, 0, 100)))
-        .s(Spacing::new(5))
+        .s(Gap::both(5))
         .s(Font::new().size(24))
         .items_signal_vec(
             super::is_todo_selected(todo.id)
@@ -248,7 +248,7 @@ fn active_items_count() -> impl Element {
 
 fn filters() -> impl Element {
     Row::new()
-        .s(Spacing::new(10))
+        .s(Gap::both(10))
         .items(Filter::iter().map(filter))
 }
 
@@ -296,7 +296,7 @@ fn clear_completed_button() -> impl Element {
 
 fn footer() -> impl Element {
     Column::with_tag(Tag::Footer)
-        .s(Spacing::new(9))
+        .s(Gap::both(9))
         .s(Font::new().size(10).color(hsluv!(0, 0, 77.3)).center())
         .item(Paragraph::new().content("Double-click to edit a todo"))
         .item(

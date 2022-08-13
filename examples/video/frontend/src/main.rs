@@ -11,7 +11,7 @@ fn root() -> impl Element {
         .s(Padding::all(20))
         .s(Width::fill().max(600))
         .s(Align::center())
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         // Note: `web_sys` element (aka `DomElement`) cloning is cheap
         // because it clones only a reference to associated Javascript/browser DOM element.
         .item(video(video_element.clone()))

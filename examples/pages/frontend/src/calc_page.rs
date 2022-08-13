@@ -82,21 +82,21 @@ pub fn set_expression(new_expression: Expression) {
 
 pub fn page() -> impl Element {
     Column::new()
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .item(result())
         .item(expressions())
 }
 
 fn result() -> impl Element {
     Row::new()
-        .s(Spacing::new(15))
+        .s(Gap::both(15))
         .item(El::new().child("Result:"))
         .item_signal(result_signal())
 }
 
 fn expressions() -> impl Element {
     Row::new()
-        .s(Spacing::new(35))
+        .s(Gap::both(35))
         .item(expression_link(Expression::new(3, '+', 7)))
         .item(expression_link(Expression::new(2, '^', 8)))
         .item(expression_link(Expression::new(10, '%', 3)))

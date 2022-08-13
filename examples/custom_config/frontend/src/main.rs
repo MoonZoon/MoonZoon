@@ -25,7 +25,7 @@ fn root() -> impl Element {
     Column::new()
         .s(Align::center())
         .s(Padding::all(10))
-        .s(Spacing::new(60))
+        .s(Gap::both(60))
         .s(Font::new().size(20))
         .item(
             El::with_tag(Tag::H1)
@@ -34,7 +34,7 @@ fn root() -> impl Element {
         )
         .item(
             Row::new()
-                .s(Spacing::new(20))
+                .s(Gap::both(20))
                 .multiline()
                 .item(El::new().child("my_api / MY_API:"))
                 .item(
@@ -50,7 +50,7 @@ fn root() -> impl Element {
         )
         .item(
             Row::new()
-                .s(Spacing::new(20))
+                .s(Gap::both(20))
                 .multiline()
                 .item(El::new().child("favorite_languages / FAVORITE_LANGUAGES:"))
                 .item(

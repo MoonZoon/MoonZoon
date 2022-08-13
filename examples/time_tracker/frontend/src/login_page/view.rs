@@ -10,9 +10,9 @@ pub fn page() -> impl Element {
                 .s(Background::new().color_signal(theme::background_1()))
                 .s(Align::center())
                 .s(Font::new().color_signal(theme::font_1()))
-                .s(Spacing::new(10))
+                .s(Gap::both(10))
                 .s(Padding::all(30))
-                .s(Spacing::new(20))
+                .s(Gap::both(20))
                 .s(RoundedCorners::all(25))
                 .item(title())
                 .item(login_fields())
@@ -30,14 +30,14 @@ fn title() -> impl Element {
 
 fn login_fields() -> impl Element {
     Column::new()
-        .s(Spacing::new(15))
+        .s(Gap::both(15))
         .item(name_field())
         .item(password_field())
 }
 
 fn name_field() -> impl Element {
     Column::new()
-        .s(Spacing::new(5))
+        .s(Gap::both(5))
         .item(name_label())
         .item(name_input())
 }
@@ -62,7 +62,7 @@ fn name_input() -> impl Element {
 
 fn password_field() -> impl Element {
     Column::new()
-        .s(Spacing::new(5))
+        .s(Gap::both(5))
         .item(password_label())
         .item(password_input())
 }

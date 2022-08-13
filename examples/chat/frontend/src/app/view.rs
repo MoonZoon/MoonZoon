@@ -17,7 +17,7 @@ fn content() -> impl Element {
         .s(Width::exact(300))
         .s(Height::fill())
         .s(Align::new().center_x())
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .item(received_messages())
         .item(new_message_panel())
         .item(username_panel())
@@ -40,7 +40,7 @@ fn received_messages() -> impl Element {
 fn received_message(message: super::Message) -> impl Element {
     Column::new()
         .s(Padding::all(10))
-        .s(Spacing::new(6))
+        .s(Gap::both(6))
         .item(
             El::new()
                 .s(Font::new().weight(FontWeight::Bold).color(GRAY_0).size(17))
@@ -107,7 +107,7 @@ fn send_button() -> impl Element {
 fn username_panel() -> impl Element {
     let id = "username_input";
     Row::new()
-        .s(Spacing::new(15))
+        .s(Gap::both(15))
         .item(username_input_label(id))
         .item(username_input(id))
 }

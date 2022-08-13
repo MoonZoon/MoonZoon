@@ -26,7 +26,7 @@ fn root() -> impl Element {
         .s(Align::new().center_x())
         .s(Width::fill().max(600))
         .s(Padding::new().top(30).x(20))
-        .s(Spacing::new(30))
+        .s(Gap::both(30))
         .item(heading())
         .item(text_input())
         .item(text_display())

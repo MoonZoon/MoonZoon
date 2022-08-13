@@ -6,7 +6,7 @@ pub fn page() -> impl Element {
         Column::new()
             .s(Align::center())
             .s(Font::new().color_signal(theme::font_0()))
-            .s(Spacing::new(10))
+            .s(Gap::both(10))
             .item(title())
             .item(moonzoon_link())
             .item(time_tracker_link()),

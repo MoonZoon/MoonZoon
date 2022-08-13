@@ -42,7 +42,7 @@ fn on_viewport_change(_scene: Scene, viewport: Viewport) {
 
 fn root() -> impl Element {
     Column::new()
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .s(Padding::all(20))
         .item(rectangles())
         .item(viewport_info())
@@ -56,7 +56,7 @@ fn rectangles() -> impl Element {
     Column::new()
         .s(Width::exact(150))
         .s(Height::exact(200))
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .s(Padding::all(15))
         .s(Background::new().color(GRAY_8))
         .s(Scrollbars::both())
@@ -86,7 +86,7 @@ fn viewport_info_row(
     value: impl Signal<Item = i32> + Unpin + 'static,
 ) -> impl Element {
     Row::new()
-        .s(Spacing::new(12))
+        .s(Gap::both(12))
         .item(El::new().child(label))
         .item(Text::with_signal(value))
 }
