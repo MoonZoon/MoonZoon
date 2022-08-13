@@ -20,7 +20,7 @@ fn title() -> impl Element {
 
 fn content() -> impl Element {
     Column::new()
-        .s(Spacing::new(35))
+        .s(Gap::both(35))
         .s(Padding::new().x(10).bottom(10))
         .item(clients())
 }
@@ -29,7 +29,7 @@ fn content() -> impl Element {
 
 fn clients() -> impl Element {
     Column::new()
-        .s(Spacing::new(35))
+        .s(Gap::both(35))
         .s(Align::new().center_x())
         .items_signal_vec(super::clients().signal_vec_cloned().map(client))
 }
@@ -39,7 +39,7 @@ fn client(client: Arc<super::Client>) -> impl Element {
         .s(Background::new().color_signal(theme::background_1()))
         .s(RoundedCorners::all(10))
         .s(Padding::all(15))
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .item(client_name_and_stats(client.clone()))
         .item(add_entity_button(
             "Add Time Block",
@@ -50,7 +50,7 @@ fn client(client: Arc<super::Client>) -> impl Element {
 
 fn client_name_and_stats(client: Arc<super::Client>) -> impl Element {
     Row::new()
-        .s(Spacing::new(10))
+        .s(Gap::both(10))
         .item(client_name(client.clone()))
         .item(stats(client))
 }
@@ -74,12 +74,12 @@ fn stats(client: Arc<super::Client>) -> impl Element {
 
     Row::new()
         .s(Font::new().color_signal(theme::font_1()))
-        .s(Spacing::new(5))
+        .s(Gap::both(5))
         .s(Align::new().right())
         .multiline()
         .item(
             Column::new()
-                .s(Spacing::new(5))
+                .s(Gap::both(5))
                 .s(Padding::all(10))
                 .s(Shadows::with_signal(
                     theme::shadow().map(|color| [Shadow::new().y(8).blur(16).color(color)]),
@@ -88,7 +88,7 @@ fn stats(client: Arc<super::Client>) -> impl Element {
                 .s(Align::new().right())
                 .item(
                     Row::new()
-                        .s(Spacing::new(10))
+                        .s(Gap::both(10))
                         .item("Blocked")
                         .item(El::new().s(Align::new().right()).child_signal(blocked)),
                 )
@@ -96,13 +96,13 @@ fn stats(client: Arc<super::Client>) -> impl Element {
                     Column::new()
                         .item(
                             Row::new()
-                                .s(Spacing::new(10))
+                                .s(Gap::both(10))
                                 .item("Unpaid")
                                 .item(El::new().s(Align::new().right()).child_signal(unpaid)),
                         )
                         .item(
                             Row::new()
-                                .s(Spacing::new(10))
+                                .s(Gap::both(10))
                                 .item("Paid")
                                 .item(El::new().s(Align::new().right()).child_signal(paid)),
                         ),
@@ -110,7 +110,7 @@ fn stats(client: Arc<super::Client>) -> impl Element {
         )
         .item(
             Column::new()
-                .s(Spacing::new(5))
+                .s(Gap::both(5))
                 .s(Padding::all(10))
                 .s(Shadows::with_signal(
                     theme::shadow().map(|color| [Shadow::new().y(8).blur(16).color(color)]),
@@ -119,13 +119,13 @@ fn stats(client: Arc<super::Client>) -> impl Element {
                 .s(Align::new().right())
                 .item(
                     Row::new()
-                        .s(Spacing::new(10))
+                        .s(Gap::both(10))
                         .item("Tracked")
                         .item(El::new().s(Align::new().right()).child(tracked)),
                 )
                 .item(
                     Row::new()
-                        .s(Spacing::new(10))
+                        .s(Gap::both(10))
                         .s(Font::new().no_wrap())
                         .item("To Block")
                         .item(El::new().s(Align::new().right()).child_signal(to_block)),
@@ -136,7 +136,7 @@ fn stats(client: Arc<super::Client>) -> impl Element {
 // -- time blocks --
 
 fn time_blocks(client: Arc<super::Client>) -> impl Element {
-    Column::new().s(Spacing::new(20)).items_signal_vec(
+    Column::new().s(Gap::both(20)).items_signal_vec(
         client
             .time_blocks
             .signal_vec_cloned()
@@ -148,7 +148,7 @@ fn time_block(client: Arc<super::Client>, time_block: Arc<super::TimeBlock>) -> 
     Column::new()
         .s(Background::new().color_signal(theme::background_0()))
         .s(RoundedCorners::new().left(10).right(40 / 2))
-        .s(Spacing::new(5))
+        .s(Gap::both(5))
         .item(timeblock_name_duration_and_delete_button(
             client,
             time_block.clone(),
@@ -174,7 +174,7 @@ fn timeblock_name_duration_and_delete_button(
 ) -> impl Element {
     let id = time_block.id;
     Row::new()
-        .s(Spacing::new(10))
+        .s(Gap::both(10))
         .s(Padding::new().left(8))
         .item(time_block_name(time_block.clone()))
         .item(time_block_duration(time_block.clone()))

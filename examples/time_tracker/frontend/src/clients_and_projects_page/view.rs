@@ -19,7 +19,7 @@ fn title() -> impl Element {
 
 fn content() -> impl Element {
     Column::new()
-        .s(Spacing::new(35))
+        .s(Gap::both(35))
         .s(Padding::new().x(10).bottom(10))
         .item(add_entity_button("Add Client", super::add_client))
         .item(clients())
@@ -55,7 +55,7 @@ fn add_entity_button_label(title: &str) -> impl Element {
 
 fn clients() -> impl Element {
     Column::new()
-        .s(Spacing::new(35))
+        .s(Gap::both(35))
         .s(Align::new().center_x())
         .items_signal_vec(super::clients().signal_vec_cloned().map(client))
 }
@@ -65,7 +65,7 @@ fn client(client: Arc<super::Client>) -> impl Element {
         .s(Background::new().color_signal(theme::background_1()))
         .s(RoundedCorners::all(10))
         .s(Padding::all(15))
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .item(client_name_and_delete_button(client.clone()))
         .item(add_entity_button(
             "Add Project",
@@ -77,7 +77,7 @@ fn client(client: Arc<super::Client>) -> impl Element {
 fn client_name_and_delete_button(client: Arc<super::Client>) -> impl Element {
     let id = client.id;
     Row::new()
-        .s(Spacing::new(10))
+        .s(Gap::both(10))
         .item(client_name(client.clone()))
         .item(delete_entity_button(move || super::delete_client(id)))
 }
@@ -126,7 +126,7 @@ fn client_name(client: Arc<super::Client>) -> impl Element {
 }
 
 fn projects(client: Arc<super::Client>) -> impl Element {
-    Column::new().s(Spacing::new(20)).items_signal_vec(
+    Column::new().s(Gap::both(20)).items_signal_vec(
         client
             .projects
             .signal_vec_cloned()
@@ -139,7 +139,7 @@ fn project(client: Arc<super::Client>, project: Arc<super::Project>) -> impl Ele
     Row::new()
         .s(Background::new().color_signal(theme::background_0()))
         .s(RoundedCorners::new().left(10).right_max())
-        .s(Spacing::new(10))
+        .s(Gap::both(10))
         .s(Padding::new().left(8))
         .item(project_name(project.clone()))
         .item(delete_entity_button(move || {

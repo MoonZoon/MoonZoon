@@ -19,7 +19,7 @@ fn title() -> impl Element {
 
 fn content() -> impl Element {
     Column::new()
-        .s(Spacing::new(35))
+        .s(Gap::both(35))
         .s(Padding::new().x(10).bottom(10))
         .item(clients())
 }
@@ -28,7 +28,7 @@ fn content() -> impl Element {
 
 fn clients() -> impl Element {
     Column::new()
-        .s(Spacing::new(35))
+        .s(Gap::both(35))
         .s(Align::new().center_x())
         .items_signal_vec(super::clients().signal_vec_cloned().map(client))
 }
@@ -38,7 +38,7 @@ fn client(client: Arc<super::Client>) -> impl Element {
         .s(Background::new().color_signal(theme::background_1()))
         .s(RoundedCorners::all(10))
         .s(Padding::all(15))
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .item(client_name(client.clone()))
         .item(projects(client))
 }
@@ -56,7 +56,7 @@ fn client_name(client: Arc<super::Client>) -> impl Element {
 
 fn projects(client: Arc<super::Client>) -> impl Element {
     Column::new()
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .items(client.projects.iter().map(|p| project(p.clone())))
 }
 
@@ -64,7 +64,7 @@ fn project(project: Arc<super::Project>) -> impl Element {
     Column::new()
         .s(Background::new().color_signal(theme::background_0()))
         .s(RoundedCorners::all(10))
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .s(Padding::all(10))
         .item(project_name_and_start_stop_button(project.clone()))
         .item(time_entries(project))
@@ -133,7 +133,7 @@ fn start_stop_button(project: Arc<super::Project>) -> impl Element {
 // -- time_entries --
 
 fn time_entries(project: Arc<super::Project>) -> impl Element {
-    Column::new().s(Spacing::new(20)).items_signal_vec(
+    Column::new().s(Gap::both(20)).items_signal_vec(
         project
             .time_entries
             .signal_vec_cloned()
@@ -326,7 +326,7 @@ fn time_entry_times_wide(items: Vec<RawElement>, is_active: ReadOnlyMutable<bool
                 .map_bool_signal(|| theme::font_4(), || theme::font_1()),
         ))
         .s(Padding::new().x(10))
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .items(items)
 }
 
@@ -342,7 +342,7 @@ fn time_entry_date(
 ) -> impl Element {
     Row::new()
         .s(Align::new().center_x())
-        .s(Spacing::new(2))
+        .s(Gap::both(2))
         .item(date_time_part_input(
             year,
             4,
@@ -383,7 +383,7 @@ fn time_entry_time(
 ) -> impl Element {
     Row::new()
         .s(Align::new().center_x())
-        .s(Spacing::new(2))
+        .s(Gap::both(2))
         .item(date_time_part_input(
             hour.map(|hour| i32::try_from(hour).unwrap_throw()),
             2,
@@ -418,7 +418,7 @@ fn time_entry_started(
 ) -> impl Element {
     Row::new()
         .s(Padding::all(5))
-        .s(Spacing::new(15))
+        .s(Gap::both(15))
         .item(time_entry_started_date(
             time_entry.clone(),
             is_active.clone(),
@@ -504,11 +504,11 @@ fn time_entry_duration(
     Row::new()
         .s(Align::new().center_x())
         .s(Padding::all(5))
-        .s(Spacing::new(10))
+        .s(Gap::both(10))
         .after_remove(move |_| drop(duration_updater))
         .item(
             Row::new()
-                .s(Spacing::new(2))
+                .s(Gap::both(2))
                 .item(
                     date_time_part_input(
                         hours,
@@ -528,7 +528,7 @@ fn time_entry_duration(
                 .item("h"))
         .item(
             Row::new()
-                .s(Spacing::new(2))
+                .s(Gap::both(2))
                 .item(
                     date_time_part_input(
                         minutes,
@@ -551,7 +551,7 @@ fn time_entry_duration(
                 .item("m"))
         .item(
             Row::new()
-                .s(Spacing::new(2))
+                .s(Gap::both(2))
                 .item(
                     date_time_part_input(
                         seconds,
@@ -580,7 +580,7 @@ fn time_entry_stopped(
 ) -> impl Element {
     Row::new()
         .s(Padding::all(5))
-        .s(Spacing::new(15))
+        .s(Gap::both(15))
         .item(time_entry_stopped_date(
             time_entry.clone(),
             is_active.clone(),

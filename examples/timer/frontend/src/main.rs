@@ -55,7 +55,7 @@ fn stop_timeout() {
 fn root() -> impl Element {
     Column::new()
         .s(Align::center())
-        .s(Spacing::new(30))
+        .s(Gap::both(30))
         .item(stopwatch_panel())
         .item(timeout_panel())
         .item(sleep_panel())
@@ -63,7 +63,7 @@ fn root() -> impl Element {
 
 fn stopwatch_panel() -> impl Element {
     Row::new()
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .item("Seconds: ")
         .item(Text::with_signal(seconds().signal()))
         .item_signal(stopwatch_enabled().map_bool(
@@ -74,7 +74,7 @@ fn stopwatch_panel() -> impl Element {
 
 fn timeout_panel() -> impl Element {
     Row::new()
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .item("2s Timeout")
         .item_signal(timeout_enabled().map_bool(
             || stop_button(stop_timeout).left_either(),
@@ -92,7 +92,7 @@ fn sleep_panel() -> impl Element {
         }))
     };
     Row::new()
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .item("2s Async Sleep")
         .item_signal(asleep_signal.map_bool(
             || El::new().child("zZZ...").left_either(),

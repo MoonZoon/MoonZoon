@@ -5,7 +5,7 @@ fn root() -> impl Element {
         .s(Padding::all(20))
         .s(Width::fill().max(500))
         .s(Align::center())
-        .s(Spacing::new(30))
+        .s(Gap::both(30))
         .item(title())
         .item(paragraph())
 }

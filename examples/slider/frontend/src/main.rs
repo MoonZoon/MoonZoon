@@ -49,7 +49,7 @@ fn radius_signal() -> impl Signal<Item = Radius> {
 fn root() -> impl Element {
     Column::new()
         .s(Align::center())
-        .s(Spacing::new(20))
+        .s(Gap::both(20))
         .item(rectangle())
         .item(rectangle_radius())
         .item(slider())
@@ -95,7 +95,7 @@ fn max_panel() -> impl Element {
     let checkbox_id = "max_checkbox";
     Row::new()
         .s(Align::new().center_x())
-        .s(Spacing::new(5))
+        .s(Gap::both(5))
         .item(max_label(checkbox_id))
         .item(max_checkbox(checkbox_id))
 }

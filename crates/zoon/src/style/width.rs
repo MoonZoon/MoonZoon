@@ -58,7 +58,7 @@ impl<'a> Width<'a> {
     ///     .s(Font::new().color(GRAY_8))
     ///     .s(Background::new().color(BLUE_4))
     ///     .s(Borders::all(Border::new().color(BLUE_8).width(3)))
-    ///     .s(Spacing::new(20))
+    ///     .s(Gap::both(20))
     ///     .s(Width::exact_signal(
     ///         container_width_broadcaster.signal().map(|width| {
     ///             if width > 1000 {
