@@ -89,6 +89,22 @@ impl<'a> Height<'a> {
         this
     }
 
+    pub fn percent(percent: impl Into<f64>) -> Self {
+        let mut this = Self::default();
+        this.css_props
+            .insert(CssName::Height, into_prop_value(pct(percent.into())));
+        this.height_mode = HeightMode::ExactHeight;
+        this
+    }
+
+    pub fn percent_signal<T: Into<f64>>(
+        height: impl Signal<Item = impl Into<Option<T>>> + Unpin + 'static,
+    ) -> Self {
+        Self::with_signal(
+            height.map(|height| height.into().map(|height| Height::percent(height.into()))),
+        )
+    }
+
     pub fn growable() -> Self {
         let mut this = Self::default();
         this.css_props
