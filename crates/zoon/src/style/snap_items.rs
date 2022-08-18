@@ -1,15 +1,8 @@
 use crate::*;
 
+#[derive(Default)]
 pub struct SnapItems<'a> {
     static_css_props: StaticCSSProps<'a>,
-}
-
-impl<'a> Default for SnapItems<'a> {
-    fn default() -> Self {
-        Self {
-            static_css_props: StaticCSSProps::default(),
-        }
-    }
 }
 
 impl<'a> SnapItems<'a> {
