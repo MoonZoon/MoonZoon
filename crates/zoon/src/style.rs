@@ -47,6 +47,9 @@ pub use scrollbars::Scrollbars;
 mod shadows;
 pub use shadows::{Shadow, Shadows};
 
+mod snap_items;
+pub use snap_items::SnapItems;
+
 mod gap;
 pub use gap::Gap;
 
