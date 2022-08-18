@@ -1,15 +1,8 @@
 use crate::*;
 
+#[derive(Default)]
 pub struct SnapAlign<'a> {
     static_css_props: StaticCSSProps<'a>,
-}
-
-impl<'a> Default for SnapAlign<'a> {
-    fn default() -> Self {
-        Self {
-            static_css_props: StaticCSSProps::default(),
-        }
-    }
 }
 
 impl<'a> SnapAlign<'a> {
