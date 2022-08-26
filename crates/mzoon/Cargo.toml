@@ -16,7 +16,7 @@ notify = { version = "=5.0.0-pre.9", default-features = false }
 reqwest = { version = "0.11.3", features = ["default-tls"], default-features = false }
 rcgen = { version = "0.8.9", features = ["pem"], default-features = false }
 open = { version = "1.7.0", default-features = false }
-uuid = { version = "0.8", features = ["v4"], default-features = false }
+uuid = { version = "1.1.2", features = ["v4"], default-features = false }
 tokio = { version = "1.6.1", features = ["rt-multi-thread", "macros", "fs", "signal", "sync", "time", "io-util", "process"], default-features = false }
 anyhow = { version = "1.0.40", features = ["std"], default-features = false }
 cargo_metadata = { version = "0.13.1", default-features = false } 
