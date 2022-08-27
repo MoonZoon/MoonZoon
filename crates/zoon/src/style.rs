@@ -302,6 +302,19 @@ impl<'a> StyleGroup<'a> {
         }
     }
 
+    // @TODO use https://docs.rs/web-sys/0.3.59/web_sys/struct.CssGroupingRule.html#impl-CssGroupingRule-1 ?
+
+    pub fn nested(self, _group: impl Into<Option<StyleGroup<'a>>>) -> Self {
+        todo!();
+    }
+    
+    pub fn nested_signal_vec(
+        self, 
+        _groups: impl SignalVec<Item = impl Into<Option<StyleGroup<'a>>>> + Unpin + 'static,
+    ) -> Self {
+        todo!();
+    }
+
     /// Add a css a property to a specific selector with a `key` and `value`.
     /// # Example
     /// ```no_run
@@ -309,8 +322,9 @@ impl<'a> StyleGroup<'a> {
     /// use zoon::RawEl;
     ///
     ///  let button = Button::new()
-    ///         .update_raw_el(|el| el.style_group(StyleGroup::new(":hover").style("background", "purple")))
-    ///         .label("Click me");
+    ///     .update_raw_el(|el| el.style_group(StyleGroup::new(":hover").style("background", "purple")))
+    ///     .label("Click me");
+    /// ```
     pub fn style(mut self, name: &'a str, value: impl Into<Cow<'a, str>>) -> Self {
         self.static_css_props.insert(name, value.into());
         self
@@ -331,9 +345,11 @@ impl<'a> StyleGroup<'a> {
     /// use zoon::RawEl;
     ///
     ///  let button = Button::new()
-    ///         .update_raw_el(|el| el.style_group(StyleGroup::new(".button")
-    /// .style_important("background", "purple")))
-    ///         .label("Click me");
+    ///     .update_raw_el(|el| { 
+    ///         el.style_group(StyleGroup::new(".button")style_important("background", "purple"))
+    ///     })
+    ///     .label("Click me");
+    /// ```
     pub fn style_important(mut self, name: &'a str, value: impl Into<Cow<'a, str>>) -> Self {
         self.static_css_props.insert_important(name, value.into());
         self
