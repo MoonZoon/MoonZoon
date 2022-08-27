@@ -67,8 +67,22 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let (color, align) = rectangle.color_and_align();
 
+    let keyframes = global_styles()
+        .style_group_droppable(StyleGroup::new("@keyframes stretch").nested_signal_vec(
+            always_vec(vec![StyleGroup::new("100%").style("transform", "scale(1.2)")])
+        ));
+
     El::new()
-        .update_raw_el(|el| el.class("rectangle"))
+        // @TODO replace `keyframes` and styles below with the future Zoon animation API
+        .update_raw_el(|raw_el| {
+            raw_el
+                .style("animation-name", "stretch")
+                .style("animation-duration", "2.0s")
+                .style("animation-timing-function", "ease-out")
+                .style("animation-direction", "alternate")
+                .style("animation-iteration-count", "infinite")
+                .style("animation-play-state", "running")
+        })
         .s(Width::exact(100))
         .s(Height::exact(100))
         .s(RoundedCorners::all(15))
@@ -80,6 +94,7 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
         .s(align)
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_click(move || bring_to_front(rectangle))
+        .after_remove(move |_| drop(keyframes))
 }
 
 // ------ ------
