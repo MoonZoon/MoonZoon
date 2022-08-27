@@ -109,7 +109,7 @@ impl<'a, EmptyFlag, RE: RawEl> Column<EmptyFlag, RE> {
 
     pub fn items(
         mut self,
-        items: impl IntoIterator<Item = impl IntoElement<'a> + 'a>,
+        items: impl IntoIterator<Item = impl IntoOptionElement<'a> + 'a>,
     ) -> Column<EmptyFlagNotSet, RE> {
         self.raw_el = self.raw_el.children(items);
         self.into_type()
@@ -117,7 +117,7 @@ impl<'a, EmptyFlag, RE: RawEl> Column<EmptyFlag, RE> {
 
     pub fn items_signal_vec(
         mut self,
-        items: impl SignalVec<Item = impl IntoElement<'a>> + Unpin + 'static,
+        items: impl SignalVec<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> Column<EmptyFlagNotSet, RE> {
         self.raw_el = self.raw_el.children_signal_vec(items);
         self.into_type()

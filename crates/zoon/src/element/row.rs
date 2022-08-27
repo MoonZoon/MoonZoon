@@ -116,7 +116,7 @@ impl<'a, EmptyFlag, MultilineFlag, RE: RawEl> Row<EmptyFlag, MultilineFlag, RE> 
 
     pub fn items(
         mut self,
-        items: impl IntoIterator<Item = impl IntoElement<'a> + 'a>,
+        items: impl IntoIterator<Item = impl IntoOptionElement<'a> + 'a>,
     ) -> Row<EmptyFlagNotSet, MultilineFlag, RE> {
         self.raw_el = self.raw_el.children(items);
         self.into_type()
@@ -124,7 +124,7 @@ impl<'a, EmptyFlag, MultilineFlag, RE: RawEl> Row<EmptyFlag, MultilineFlag, RE> 
 
     pub fn items_signal_vec(
         mut self,
-        items: impl SignalVec<Item = impl IntoElement<'a>> + Unpin + 'static,
+        items: impl SignalVec<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> Row<EmptyFlagNotSet, MultilineFlag, RE> {
         self.raw_el = self.raw_el.children_signal_vec(items);
         self.into_type()
