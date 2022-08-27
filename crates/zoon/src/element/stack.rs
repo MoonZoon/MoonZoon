@@ -115,7 +115,7 @@ impl<'a, EmptyFlag, RE: RawEl> Stack<EmptyFlag, RE> {
 
     pub fn layers(
         mut self,
-        layers: impl IntoIterator<Item = impl IntoElement<'a> + 'a>,
+        layers: impl IntoIterator<Item = impl IntoOptionElement<'a> + 'a>,
     ) -> Stack<EmptyFlagNotSet, RE> {
         self.raw_el = self.raw_el.children(layers);
         self.into_type()
@@ -123,7 +123,7 @@ impl<'a, EmptyFlag, RE: RawEl> Stack<EmptyFlag, RE> {
 
     pub fn layers_signal_vec(
         mut self,
-        layers: impl SignalVec<Item = impl IntoElement<'a>> + Unpin + 'static,
+        layers: impl SignalVec<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> Stack<EmptyFlagNotSet, RE> {
         self.raw_el = self.raw_el.children_signal_vec(layers);
         self.into_type()

@@ -96,7 +96,7 @@ impl<'a, EmptyFlag, RE: RawEl> Paragraph<EmptyFlag, RE> {
 
     pub fn contents(
         mut self,
-        contents: impl IntoIterator<Item = impl IntoElement<'a> + 'a>,
+        contents: impl IntoIterator<Item = impl IntoOptionElement<'a> + 'a>,
     ) -> Paragraph<EmptyFlagNotSet, RE> {
         self.raw_el = self.raw_el.children(contents);
         self.into_type()
@@ -104,7 +104,7 @@ impl<'a, EmptyFlag, RE: RawEl> Paragraph<EmptyFlag, RE> {
 
     pub fn contents_signal_vec(
         mut self,
-        contents: impl SignalVec<Item = impl IntoElement<'a>> + Unpin + 'static,
+        contents: impl SignalVec<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> Paragraph<EmptyFlagNotSet, RE> {
         self.raw_el = self.raw_el.children_signal_vec(contents);
         self.into_type()
