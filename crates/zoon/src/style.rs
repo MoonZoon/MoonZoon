@@ -307,9 +307,9 @@ impl<'a> StyleGroup<'a> {
     pub fn nested(self, _group: impl Into<Option<StyleGroup<'a>>>) -> Self {
         todo!();
     }
-    
+
     pub fn nested_signal_vec(
-        self, 
+        self,
         _groups: impl SignalVec<Item = impl Into<Option<StyleGroup<'a>>>> + Unpin + 'static,
     ) -> Self {
         todo!();
@@ -345,7 +345,7 @@ impl<'a> StyleGroup<'a> {
     /// use zoon::RawEl;
     ///
     ///  let button = Button::new()
-    ///     .update_raw_el(|el| { 
+    ///     .update_raw_el(|el| {
     ///         el.style_group(StyleGroup::new(".button")style_important("background", "purple"))
     ///     })
     ///     .label("Click me");
