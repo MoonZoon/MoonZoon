@@ -67,10 +67,12 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let (color, align) = rectangle.color_and_align();
 
-    let keyframes = global_styles()
-        .style_group_droppable(StyleGroup::new("@keyframes stretch").nested_signal_vec(
-            always_vec(vec![StyleGroup::new("100%").style("transform", "scale(1.2)")])
-        ));
+    let keyframes = global_styles().style_group_droppable(
+        StyleGroup::new("@keyframes stretch")
+            .nested_signal_vec(always_vec(vec![
+                StyleGroup::new("100%").style("transform", "scale(1.2)")
+            ])),
+    );
 
     El::new()
         // @TODO replace `keyframes` and styles below with the future Zoon animation API

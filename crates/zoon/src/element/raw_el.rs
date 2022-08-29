@@ -168,7 +168,10 @@ pub trait RawEl: Sized {
         })
     }
 
-    fn children<'a>(self, children: impl IntoIterator<Item = impl IntoOptionElement<'a> + 'a>) -> Self {
+    fn children<'a>(
+        self,
+        children: impl IntoIterator<Item = impl IntoOptionElement<'a> + 'a>,
+    ) -> Self {
         self.update_dom_builder(|dom_builder| {
             dom_builder.children(
                 children
@@ -186,8 +189,8 @@ pub trait RawEl: Sized {
         self.update_dom_builder(|dom_builder| {
             dom_builder.children_signal_vec(
                 children
-                .filter_map(|child| child.into_option_element())
-                .map(|child| child.into_element().into_raw_element().into_dom()),
+                    .filter_map(|child| child.into_option_element())
+                    .map(|child| child.into_element().into_raw_element().into_dom()),
             )
         })
     }
