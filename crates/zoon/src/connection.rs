@@ -1,13 +1,42 @@
 use crate::*;
+use futures_channel::oneshot;
 use moonlight::serde::{de::DeserializeOwned, Serialize};
 use moonlight::{serde_json, AuthToken, CorId, SessionId};
-use std::error::Error;
-use std::fmt;
-use std::marker::PhantomData;
+use std::{
+    collections::BTreeMap,
+    error::Error,
+    fmt,
+    marker::PhantomData,
+    sync::{Arc, Mutex},
+};
 use web_sys::{Request, RequestInit, Response};
 
 mod sse;
 use sse::SSE;
+
+// ------ DMsgSenders ------
+
+struct DMsgSenders<DMsg>(Arc<Mutex<BTreeMap<CorId, oneshot::Sender<DMsg>>>>);
+
+impl<DMsg> DMsgSenders<DMsg> {
+    fn new() -> Self {
+        Self(Arc::new(Mutex::new(BTreeMap::new())))
+    }
+
+    fn remove(&self, cor_id: &CorId) -> Option<oneshot::Sender<DMsg>> {
+        self.0.lock().unwrap_throw().remove(cor_id)
+    }
+
+    fn insert(&self, cor_id: CorId, sender: oneshot::Sender<DMsg>) {
+        self.0.lock().unwrap_throw().insert(cor_id, sender);
+    }
+}
+
+impl<DMsg> Clone for DMsgSenders<DMsg> {
+    fn clone(&self) -> Self {
+        DMsgSenders(Arc::clone(&self.0))
+    }
+}
 
 // ------ Connection ------
 
@@ -16,16 +45,38 @@ pub struct Connection<UMsg, DMsg> {
     _sse: SSE,
     auth_token_getter: Option<Box<dyn Fn() -> Option<AuthToken> + Send + Sync>>,
     msg_types: PhantomData<(UMsg, DMsg)>,
+    d_msg_senders: DMsgSenders<DMsg>,
 }
 
-impl<UMsg: Serialize, DMsg: DeserializeOwned> Connection<UMsg, DMsg> {
+impl<UMsg: Serialize, DMsg: DeserializeOwned + 'static> Connection<UMsg, DMsg> {
     pub fn new(down_msg_handler: impl FnMut(DMsg, CorId) + Send + Sync + 'static) -> Self {
+        let d_msg_senders = DMsgSenders::new();
+
+        let down_msg_handler = {
+            let d_msg_senders = d_msg_senders.clone();
+            let down_msg_handler = Arc::new(Mutex::new(down_msg_handler));
+
+            move |d_msg: DMsg, cor_id: CorId| {
+                if let Some(d_msg_sender) = d_msg_senders.remove(&cor_id) {
+                    let down_msg_handler = Arc::clone(&down_msg_handler);
+                    Task::start(async move {
+                        if let Err(d_msg) = d_msg_sender.send(d_msg) {
+                            (down_msg_handler.lock().unwrap_throw())(d_msg, cor_id);
+                        }
+                    });
+                } else {
+                    (down_msg_handler.lock().unwrap_throw())(d_msg, cor_id)
+                }
+            }
+        };
+
         let session_id = SessionId::new();
         Self {
             session_id,
             _sse: SSE::new(session_id, down_msg_handler),
             auth_token_getter: None,
             msg_types: PhantomData,
+            d_msg_senders,
         }
     }
 
@@ -41,6 +92,14 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned> Connection<UMsg, DMsg> {
     }
 
     pub async fn send_up_msg(&self, up_msg: UMsg) -> Result<CorId, SendUpMsgError> {
+        self.send_up_msg_with_cor_id(up_msg, CorId::new()).await
+    }
+
+    async fn send_up_msg_with_cor_id(
+        &self,
+        up_msg: UMsg,
+        cor_id: CorId,
+    ) -> Result<CorId, SendUpMsgError> {
         // ---- RequestInit ----
         #[cfg(feature = "serde-lite")]
         let body = serde_json::to_string(&up_msg.serialize().unwrap_throw()).unwrap_throw();
@@ -55,7 +114,6 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned> Connection<UMsg, DMsg> {
             Request::new_with_str_and_init("/_api/up_msg_handler", &request_init).unwrap_throw();
 
         // ---- Headers ----
-        let cor_id = CorId::new();
         let headers = request.headers();
         headers
             .set("X-Correlation-ID", &cor_id.to_string())
@@ -85,6 +143,21 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned> Connection<UMsg, DMsg> {
         }
         Err(SendUpMsgError::ResponseIsNot2xx)
     }
+
+    pub async fn exchange_msgs(&self, up_msg: UMsg) -> Result<DMsg, ExchangeMsgsError> {
+        let cor_id = CorId::new();
+        let (d_msg_sender, d_msg_receiver) = oneshot::channel();
+
+        self.d_msg_senders.insert(cor_id, d_msg_sender);
+
+        self.send_up_msg_with_cor_id(up_msg, cor_id)
+            .await
+            .map_err(ExchangeMsgsError::SendError)?;
+        let d_msg = d_msg_receiver
+            .await
+            .map_err(|_| ExchangeMsgsError::ReceiveError(ReceiveDownMsgError::ConnectionClosed))?;
+        Ok(d_msg)
+    }
 }
 
 // ------ SendUpMsgError ------
@@ -98,10 +171,10 @@ pub enum SendUpMsgError {
 impl fmt::Display for SendUpMsgError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            SendUpMsgError::RequestFailed(error) => {
+            Self::RequestFailed(error) => {
                 write!(f, "request failed: {:?}", error)
             }
-            SendUpMsgError::ResponseIsNot2xx => {
+            Self::ResponseIsNot2xx => {
                 write!(f, "response status is not 2xx")
             }
         }
@@ -109,3 +182,45 @@ impl fmt::Display for SendUpMsgError {
 }
 
 impl Error for SendUpMsgError {}
+
+// ------ ReceiveDownMsgError ------
+
+#[derive(Debug)]
+pub enum ReceiveDownMsgError {
+    ConnectionClosed,
+}
+
+impl fmt::Display for ReceiveDownMsgError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::ConnectionClosed => {
+                write!(f, "cannot receive DownMsg, connection closed")
+            }
+        }
+    }
+}
+
+impl Error for ReceiveDownMsgError {}
+
+// ------ ExchangeMsgsError ------
+
+#[derive(Debug)]
+pub enum ExchangeMsgsError {
+    SendError(SendUpMsgError),
+    ReceiveError(ReceiveDownMsgError),
+}
+
+impl fmt::Display for ExchangeMsgsError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::SendError(error) => {
+                write!(f, "{error}")
+            }
+            Self::ReceiveError(error) => {
+                write!(f, "{error}")
+            }
+        }
+    }
+}
+
+impl Error for ExchangeMsgsError {}
