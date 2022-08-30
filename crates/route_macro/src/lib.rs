@@ -12,6 +12,9 @@ use urlencoding::encode as url_encode;
 
 // @TODO rewrite panics/expects/unwraps to `syn::Error`s (see hsluv_macro)?
 
+// @TODO replace the compiler error `named argument never used` with
+// the info what route struct field is not used in the route path
+
 // ```
 // #[route]
 // pub enum Route {
