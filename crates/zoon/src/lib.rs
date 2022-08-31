@@ -77,7 +77,9 @@ pub use wasm_bindgen_futures::{self, JsFuture};
 pub use web_sys;
 
 #[cfg(feature = "connection")]
-pub use connection::{Connection, SendUpMsgError};
+pub use connection::{
+    Connection, ExchangeMsgsError, MsgOptions, ReceiveDownMsgError, SendUpMsgError,
+};
 
 #[cfg(feature = "routing")]
 pub use route_macro::route;
