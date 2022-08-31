@@ -99,13 +99,24 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned + 'static> Connection<UMsg, DMsg> {
     }
 
     pub async fn send_up_msg(&self, up_msg: UMsg) -> Result<CorId, SendUpMsgError> {
-        self.send_up_msg_with_cor_id(up_msg, CorId::new()).await
+        self.send_up_msg_with_options(up_msg, MsgOptions::default())
+            .await
     }
 
-    async fn send_up_msg_with_cor_id(
+    pub async fn send_up_msg_with_options(
+        &self,
+        up_msg: UMsg,
+        msg_options: MsgOptions,
+    ) -> Result<CorId, SendUpMsgError> {
+        self.send_up_msg_with_cor_id_and_options(up_msg, CorId::new(), msg_options)
+            .await
+    }
+
+    async fn send_up_msg_with_cor_id_and_options(
         &self,
         up_msg: UMsg,
         cor_id: CorId,
+        msg_options: MsgOptions,
     ) -> Result<CorId, SendUpMsgError> {
         // ---- RequestInit ----
         #[cfg(feature = "serde-lite")]
@@ -129,16 +140,17 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned + 'static> Connection<UMsg, DMsg> {
             .set("X-Session-ID", &self.session_id.to_string())
             .unwrap_throw();
 
-        let auth_token = if let Some(auth_token_getter) = &self.auth_token_getter {
-            auth_token_getter().await
-        } else {
-            None
-        };
-
-        if let Some(auth_token) = auth_token {
-            headers
-                .set("X-Auth-Token", auth_token.as_str())
-                .unwrap_throw();
+        if msg_options.auth_token {
+            let auth_token = if let Some(auth_token_getter) = &self.auth_token_getter {
+                auth_token_getter().await
+            } else {
+                None
+            };
+            if let Some(auth_token) = auth_token {
+                headers
+                    .set("X-Auth-Token", auth_token.as_str())
+                    .unwrap_throw();
+            }
         }
 
         // ---- Response ----
@@ -153,19 +165,52 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned + 'static> Connection<UMsg, DMsg> {
         Err(SendUpMsgError::ResponseIsNot2xx)
     }
 
-    pub async fn exchange_msgs(&self, up_msg: UMsg) -> Result<DMsg, ExchangeMsgsError> {
+    pub async fn exchange_msgs(&self, up_msg: UMsg) -> Result<(DMsg, CorId), ExchangeMsgsError> {
+        self.exchange_msgs_with_options(up_msg, MsgOptions::default())
+            .await
+    }
+
+    pub async fn exchange_msgs_with_options(
+        &self,
+        up_msg: UMsg,
+        msg_options: MsgOptions,
+    ) -> Result<(DMsg, CorId), ExchangeMsgsError> {
         let cor_id = CorId::new();
         let (d_msg_sender, d_msg_receiver) = oneshot::channel();
 
         self.d_msg_senders.insert(cor_id, d_msg_sender);
 
-        self.send_up_msg_with_cor_id(up_msg, cor_id)
+        self.send_up_msg_with_cor_id_and_options(up_msg, cor_id, msg_options)
             .await
             .map_err(ExchangeMsgsError::SendError)?;
         let d_msg = d_msg_receiver
             .await
             .map_err(|_| ExchangeMsgsError::ReceiveError(ReceiveDownMsgError::ConnectionClosed))?;
-        Ok(d_msg)
+        Ok((d_msg, cor_id))
+    }
+}
+
+// ------ MsgOptions ------
+
+#[derive(Debug, Clone, Copy)]
+pub struct MsgOptions {
+    auth_token: bool,
+}
+
+impl Default for MsgOptions {
+    fn default() -> Self {
+        Self { auth_token: true }
+    }
+}
+
+impl MsgOptions {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn auth_token(mut self, include: bool) -> Self {
+        self.auth_token = include;
+        self
     }
 }
 
