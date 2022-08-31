@@ -7,6 +7,7 @@ use std::{
     error::Error,
     fmt,
     marker::PhantomData,
+    pin::Pin,
     sync::{Arc, Mutex},
 };
 use web_sys::{Request, RequestInit, Response};
@@ -43,7 +44,8 @@ impl<DMsg> Clone for DMsgSenders<DMsg> {
 pub struct Connection<UMsg, DMsg> {
     session_id: SessionId,
     _sse: SSE,
-    auth_token_getter: Option<Box<dyn Fn() -> Option<AuthToken> + Send + Sync>>,
+    auth_token_getter:
+        Option<Box<dyn Fn() -> Pin<Box<dyn Future<Output = Option<AuthToken>>>> + Send + Sync>>,
     msg_types: PhantomData<(UMsg, DMsg)>,
     d_msg_senders: DMsgSenders<DMsg>,
 }
@@ -80,14 +82,19 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned + 'static> Connection<UMsg, DMsg> {
         }
     }
 
-    pub fn auth_token_getter<IAT>(
+    pub fn auth_token_getter<IAT, FIAT>(
         mut self,
-        getter: impl Fn() -> IAT + Send + Sync + 'static,
+        getter: impl Fn() -> FIAT + Send + Sync + 'static,
     ) -> Self
     where
         IAT: Into<Option<AuthToken>>,
+        FIAT: Future<Output = IAT>,
     {
-        self.auth_token_getter = Some(Box::new(move || getter().into()));
+        let getter = Arc::new(getter);
+        self.auth_token_getter = Some(Box::new(move || {
+            let getter = Arc::clone(&getter);
+            Box::pin(async move { getter().await.into() })
+        }));
         self
     }
 
@@ -122,10 +129,12 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned + 'static> Connection<UMsg, DMsg> {
             .set("X-Session-ID", &self.session_id.to_string())
             .unwrap_throw();
 
-        let auth_token = self
-            .auth_token_getter
-            .as_ref()
-            .and_then(|auth_token_getter| auth_token_getter());
+        let auth_token = if let Some(auth_token_getter) = &self.auth_token_getter {
+            auth_token_getter().await
+        } else {
+            None
+        };
+
         if let Some(auth_token) = auth_token {
             headers
                 .set("X-Auth-Token", auth_token.as_str())
