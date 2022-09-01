@@ -12,7 +12,7 @@ use tar::Archive;
 use tokio::process::Command;
 
 // NOTE: Sync with zoon's wasm-bindgen version.
-const VERSION: &str = "0.2.81";
+const VERSION: &str = "0.2.82";
 
 // -- public --
 
@@ -62,9 +62,7 @@ pub async fn build_with_wasm_bindgen(build_mode: BuildMode) {
         "--target",
         "web",
         "--no-typescript",
-        // @TODO enable once the wasm-opt version 110 is out
-        // @TODO uncomment the related wasm-opt parameter, too
-        // "--reference-types",
+        "--reference-types",
         "--weak-refs",
         "--out-dir",
         "frontend/pkg",
