@@ -25,7 +25,7 @@ pub fn previous_route() -> Option<Route> {
 
 #[static_ref]
 pub fn router() -> &'static Router<Route> {
-    Router::new(|route: Option<Route>| {
+    Router::new(|route: Option<Route>| async {
         println!("{}", routing::url());
 
         app::close_menu();
