@@ -693,7 +693,7 @@ fn sleep_panel() -> impl Element {
 
 #[static_ref]
 pub fn router() -> &'static Router<Route> {
-    Router::new(|route| match route { 
+    Router::new(|route| async { match route { 
         Some(Route::Report { frequency }) => {
             app::set_page_id(PageId::Report);
             report_page::set_frequency(frequency);
@@ -710,7 +710,7 @@ pub fn router() -> &'static Router<Route> {
         None => {
             app::set_page_id(PageId::Unknown);
         }
-    })
+    }})
 }
 
 // ------ Route ------
