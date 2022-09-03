@@ -7,6 +7,7 @@ pub enum Lang {
     Czech,
     English,
     French,
+    // @TODO `no` vs `nb` vs `ny`
     Norwegian,
     Spanish,
     Swedish,
