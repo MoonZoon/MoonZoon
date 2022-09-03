@@ -4,7 +4,7 @@ use std::borrow::Cow;
 use tokio::fs;
 
 pub struct Frontend {
-    pub(crate) lang: Lang,
+    pub(crate) lang: Option<Lang>,
     pub(crate) index_by_robots: bool,
     pub(crate) title: Cow<'static, str>,
     pub(crate) default_styles: bool,
@@ -15,7 +15,7 @@ pub struct Frontend {
 impl Default for Frontend {
     fn default() -> Self {
         Self {
-            lang: Lang::English,
+            lang: None,
             index_by_robots: true,
             title: Cow::from("MoonZoon app"),
             default_styles: true,
@@ -38,8 +38,8 @@ impl Frontend {
         Self::default()
     }
 
-    pub fn lang(mut self, lang: Lang) -> Self {
-        self.lang = lang;
+    pub fn lang(mut self, lang: impl Into<Option<Lang>>) -> Self {
+        self.lang = lang.into();
         self
     }
 
@@ -117,9 +117,15 @@ impl Frontend {
             )
         };
 
+        let html_tag = if let Some(lang) = lang {
+            Cow::from(format!(r#"<html lang="{lang}">"#))
+        } else {
+            Cow::from("<html>")
+        };
+
         format!(
             r#"<!DOCTYPE html>
-        <html lang="{lang}">
+        {html_tag}
         
         <head>
           <meta charset="utf-8" />
