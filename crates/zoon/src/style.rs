@@ -302,19 +302,6 @@ impl<'a> StyleGroup<'a> {
         }
     }
 
-    // @TODO use https://docs.rs/web-sys/0.3.59/web_sys/struct.CssGroupingRule.html#impl-CssGroupingRule-1 ?
-
-    pub fn nested(self, _group: impl Into<Option<StyleGroup<'a>>>) -> Self {
-        todo!();
-    }
-
-    pub fn nested_signal_vec(
-        self,
-        _groups: impl SignalVec<Item = impl Into<Option<StyleGroup<'a>>>> + Unpin + 'static,
-    ) -> Self {
-        todo!();
-    }
-
     /// Add a css a property to a specific selector with a `key` and `value`.
     /// # Example
     /// ```no_run
@@ -425,6 +412,30 @@ impl Drop for StyleGroupHandle {
     }
 }
 
+// ------ StyleAnimation ------
+
+#[derive(Default)]
+pub struct StyleAnimation<'a> {
+    pub name: Cow<'a, str>,
+    pub keyframes: Vec<StyleGroup<'a>>,
+}
+
+impl<'a> StyleAnimation<'a> {
+    pub fn new(name: impl IntoCowStr<'a>) -> Self {
+        Self {
+            name: name.into_cow_str(),
+            ..Default::default()
+        }
+    }
+
+    pub fn keyframe(mut self, keyframe: impl Into<Option<StyleGroup<'a>>>) -> Self {
+        if let Some(keyframe) = keyframe.into() {
+            self.keyframes.push(keyframe);
+        }
+        self
+    }
+}
+
 // ------ global_styles ------
 
 /// Set styles that are globally used in your application.
@@ -485,6 +496,10 @@ impl GlobalStyles {
             sheet: SendWrapper::new(sheet),
             rule_ids: MonotonicIds::default(),
         }
+    }
+
+    pub fn style_animation(&self, animation: StyleAnimation) -> &Self {
+        self
     }
 
     pub fn style_group(&self, group: StyleGroup) -> &Self {
