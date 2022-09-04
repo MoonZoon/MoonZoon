@@ -72,7 +72,7 @@ fn logged_user_name() -> Option<String> {
     Some(logged_user().lock_ref().as_ref()?.name.clone())
 }
 
-pub fn auth_token() -> Option<AuthToken> {
+pub async fn auth_token() -> Option<AuthToken> {
     Some(logged_user().lock_ref().as_ref()?.auth_token.clone())
 }
 
