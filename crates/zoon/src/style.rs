@@ -506,6 +506,7 @@ impl GlobalStyles {
         self
     }
 
+    #[must_use]
     pub fn style_animation_droppable(&self, animation: StyleAnimation) -> StyleRuleHandle {
         let (rule_id, _task_handles) = self.style_animation_inner(animation, true);
         StyleRuleHandle {
