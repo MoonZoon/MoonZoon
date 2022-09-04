@@ -7,7 +7,9 @@ use std::{
     iter, mem,
     sync::Arc,
 };
-use web_sys::{CssStyleDeclaration, CssStyleRule, CssStyleSheet, HtmlStyleElement};
+use web_sys::{
+    CssKeyframesRule, CssStyleDeclaration, CssStyleRule, CssStyleSheet, HtmlStyleElement,
+};
 
 pub mod named_color;
 
@@ -399,14 +401,14 @@ impl<'a> StyleGroup<'a> {
     }
 }
 
-// ------ StyleGroupHandle ------
+// ------ StyleRuleHandle ------
 
-pub struct StyleGroupHandle {
+pub struct StyleRuleHandle {
     rule_id: u32,
     _task_handles: Vec<TaskHandle>,
 }
 
-impl Drop for StyleGroupHandle {
+impl Drop for StyleRuleHandle {
     fn drop(&mut self) {
         global_styles().remove_rule(self.rule_id);
     }
@@ -499,7 +501,17 @@ impl GlobalStyles {
     }
 
     pub fn style_animation(&self, animation: StyleAnimation) -> &Self {
+        let (_, task_handles) = self.style_animation_inner(animation, false);
+        mem::forget(task_handles);
         self
+    }
+
+    pub fn style_animation_droppable(&self, animation: StyleAnimation) -> StyleRuleHandle {
+        let (rule_id, _task_handles) = self.style_animation_inner(animation, true);
+        StyleRuleHandle {
+            rule_id,
+            _task_handles,
+        }
     }
 
     pub fn style_group(&self, group: StyleGroup) -> &Self {
@@ -509,15 +521,88 @@ impl GlobalStyles {
     }
 
     #[must_use]
-    pub fn style_group_droppable(&self, group: StyleGroup) -> StyleGroupHandle {
+    pub fn style_group_droppable(&self, group: StyleGroup) -> StyleRuleHandle {
         let (rule_id, _task_handles) = self.style_group_inner(group, true);
-        StyleGroupHandle {
+        StyleRuleHandle {
             rule_id,
             _task_handles,
         }
     }
 
     // --
+
+    fn style_animation_inner(
+        &self,
+        animation: StyleAnimation,
+        droppable: bool,
+    ) -> (u32, Vec<TaskHandle>) {
+        let (rule_id_and_index, ids_lock) = self.rule_ids.add_new_id();
+        let keyframe_rules: String = animation
+            .keyframes
+            .iter()
+            .map(|keyframe| [&keyframe.selector, "{}"].concat())
+            .collect();
+        let keyframes_rule = ["@keyframes ", &animation.name, "{", &keyframe_rules, "}"].concat();
+
+        self.sheet
+            .insert_rule_with_index(&keyframes_rule, rule_id_and_index)
+            .unwrap_or_else(|_| {
+                panic!("invalid animation: `{keyframes_rule}`");
+            });
+
+        let keyframe_rules = self
+            .sheet
+            .css_rules()
+            .expect_throw("failed to get global CSS rules")
+            .item(rule_id_and_index)
+            .expect_throw("failed to get selected global animation rule")
+            .unchecked_into::<CssKeyframesRule>()
+            .css_rules();
+
+        drop(ids_lock);
+
+        let mut task_handles = Vec::new();
+
+        for (index, keyframe) in animation.keyframes.into_iter().enumerate() {
+            // @TODO refactor together with the `style_group_inner` method
+
+            let declaration = keyframe_rules
+                .item(index.try_into().unwrap_throw())
+                .expect_throw("failed to get keyframe rule")
+                .unchecked_into::<CssStyleRule>()
+                .style();
+
+            for (name, css_prop_value) in keyframe.static_css_props {
+                set_css_property(
+                    &declaration,
+                    name,
+                    &css_prop_value.value,
+                    css_prop_value.important,
+                );
+            }
+
+            let declaration = Arc::new(SendWrapper::new(declaration));
+            for (name, value_signal) in keyframe.dynamic_css_props {
+                let declaration = Arc::clone(&declaration);
+                let task = value_signal.for_each_sync(move |value| {
+                    if let Some(value) = value.into_option_cow_str() {
+                        // @TODO allow to set `important ` also in dynamic styles
+                        set_css_property(&declaration, &name, &value, false);
+                    } else {
+                        declaration
+                            .remove_property(&name)
+                            .expect_throw("style: remove_property failed");
+                    }
+                });
+                if droppable {
+                    task_handles.push(Task::start_droppable(task));
+                } else {
+                    Task::start(task);
+                }
+            }
+        }
+        (rule_id_and_index, task_handles)
+    }
 
     fn style_group_inner(&self, group: StyleGroup, droppable: bool) -> (u32, Vec<TaskHandle>) {
         let (rule_id_and_index, ids_lock) = self.rule_ids.add_new_id();

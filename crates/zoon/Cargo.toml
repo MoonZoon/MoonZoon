@@ -48,6 +48,7 @@ lexical = { git = "https://github.com/Alexhuszagh/rust-lexical", rev = "7010efd5
 version = "0.3.58"
 features = [
   'css',
+  'CssKeyframesRule',
   'CssRule',
   'CssRuleList',
   'CssStyleDeclaration',
