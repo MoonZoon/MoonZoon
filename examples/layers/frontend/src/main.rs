@@ -67,14 +67,15 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let (color, align) = rectangle.color_and_align();
 
-    // let animation = global_styles().style_animation_droppable(
-    global_styles().style_animation(
-        StyleAnimation::new("stretch")
-            .keyframe(StyleGroup::new("100%").style("transform", "scale(1.2)")),
-    );
+    // @TODO replace global styles and `El` styles below with the future Zoon animation API
+    run_once!(|| {
+        global_styles().style_animation(
+            StyleAnimation::new("stretch")
+                .keyframe(StyleGroup::new("100%").style("transform", "scale(1.2)")),
+        );
+    });
 
     El::new()
-        // @TODO replace `animation` and styles below with the future Zoon animation API
         .update_raw_el(|raw_el| {
             raw_el
                 .style("animation-name", "stretch")
@@ -95,7 +96,6 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
         .s(align)
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_click(move || bring_to_front(rectangle))
-    // .after_remove(move |_| drop(animation))
 }
 
 // ------ ------
