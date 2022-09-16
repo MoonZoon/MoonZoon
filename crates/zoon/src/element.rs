@@ -18,6 +18,9 @@ pub use column::Column;
 pub mod el;
 pub use el::El;
 
+pub mod grid;
+pub use grid::Grid;
+
 pub mod image;
 pub use image::Image;
 
