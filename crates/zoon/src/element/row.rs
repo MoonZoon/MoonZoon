@@ -64,7 +64,28 @@ impl ChoosableTag for Row<EmptyFlagSet, MultilineFlagNotSet, RawHtmlEl<web_sys::
                 )
                 .style_group(StyleGroup::new(".row > .align_right").style("margin-left", "auto"))
                 .style_group(StyleGroup::new(".row > .exact_width").style("flex-shrink", "0"))
-                .style_group(StyleGroup::new(".row > .fill_width").style("flex-grow", "1"));
+                .style_group(StyleGroup::new(".row > .fill_width").style("flex-grow", "1"))
+                .style_group(
+                    StyleGroup::new(".row.align_left_content").style("justify-content", "left"),
+                )
+                .style_group(
+                    StyleGroup::new(".row.align_right_content").style("justify-content", "right"),
+                )
+                .style_group(
+                    StyleGroup::new(".row.align_top_content")
+                        .style_important("align-items", "start"),
+                )
+                .style_group(
+                    StyleGroup::new(".row.align_bottom_content")
+                        .style_important("align-items", "end"),
+                )
+                .style_group(
+                    StyleGroup::new(".row.center_x_content").style("justify-content", "center"),
+                )
+                .style_group(
+                    StyleGroup::new(".row.center_y_content")
+                        .style_important("align-items", "center"),
+                );
         });
         Self {
             raw_el: RawHtmlEl::new(tag.as_str())

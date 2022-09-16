@@ -16,6 +16,9 @@ pub mod named_color;
 mod align;
 pub use align::Align;
 
+mod align_content;
+pub use align_content::AlignContent;
+
 mod background;
 pub use background::Background;
 
