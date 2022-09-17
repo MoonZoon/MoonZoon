@@ -3,7 +3,8 @@
         // rust-analyzer ignores `main.rs` when `linkedProjects` are set
         "crates/mzoon/Cargo.toml",
         // examples are ignored because they have own workspaces
-        // "examples/align/Cargo.toml",
+        "examples/align/Cargo.toml",
+        "examples/align_content/Cargo.toml",
         // "examples/canvas/Cargo.toml",
         // "examples/chat/Cargo.toml",
         "examples/counter/Cargo.toml",
