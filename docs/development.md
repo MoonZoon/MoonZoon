@@ -32,6 +32,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         "crates/mzoon/Cargo.toml",
         // examples are ignored because they have own workspaces
         // "examples/align/Cargo.toml",
+        // "examples/align_content/Cargo.toml",
         // "examples/canvas/Cargo.toml",
         // "examples/chat/Cargo.toml",
         "examples/counter/Cargo.toml",
