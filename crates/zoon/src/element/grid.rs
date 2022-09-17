@@ -51,19 +51,12 @@ impl ChoosableTag for Grid<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
     fn with_tag(tag: Tag) -> Self {
         run_once!(|| {
             global_styles()
-                // @TODO check all (copy-pasted from `Row`)
-                .style_group(
-                    StyleGroup::new(".grid > .center_x")
-                        .style("margin-left", "auto")
-                        .style("margin-right", "auto"),
-                )
-                .style_group(
-                    StyleGroup::new(".grid > .align_top").style("align-self", "flex-start"),
-                )
-                .style_group(
-                    StyleGroup::new(".grid > .align_bottom").style("align-self", "flex-end"),
-                )
-                .style_group(StyleGroup::new(".grid > .align_right").style("margin-left", "auto"))
+                .style_group(StyleGroup::new(".grid > .align_top").style("align-self", "start"))
+                .style_group(StyleGroup::new(".grid > .align_bottom").style("align-self", "end"))
+                .style_group(StyleGroup::new(".grid > .align_left").style("justify-self", "left"))
+                .style_group(StyleGroup::new(".grid > .align_right").style("justify-self", "right"))
+                .style_group(StyleGroup::new(".grid > .center_x").style("justify-self", "center"))
+                .style_group(StyleGroup::new(".grid > .center_y").style("align-self", "center"))
                 .style_group(StyleGroup::new(".grid > .exact_width").style("flex-shrink", "0"))
                 .style_group(StyleGroup::new(".grid > .fill_width").style("flex-grow", "1"))
                 .style_group(
@@ -91,8 +84,7 @@ impl ChoosableTag for Grid<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
         Self {
             raw_el: RawHtmlEl::new(tag.as_str())
                 .class("grid")
-                .style("display", "inline-grid")
-                .style("align-items", "center"),
+                .style("display", "inline-grid"),
             flags: PhantomData,
         }
     }

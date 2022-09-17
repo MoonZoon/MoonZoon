@@ -45,14 +45,18 @@ impl Link<LabelFlagNotSet, ToFlagNotSet, RawHtmlEl<web_sys::HtmlAnchorElement>> 
                         .style("margin-top", "auto")
                         .style("margin-bottom", "auto"),
                 )
-                .style_group(StyleGroup::new(".link > .align_top").style("margin-bottom", "auto"))
-                .style_group(StyleGroup::new(".link > .align_bottom").style("margin-top", "auto"))
                 .style_group(
-                    StyleGroup::new(".link > .align_left").style("align-self", "flex-start"),
+                    StyleGroup::new(".link > .align_top")
+                        .style("margin-bottom", "auto")
+                        .style("margin-top", "0"),
                 )
                 .style_group(
-                    StyleGroup::new(".link > .align_right").style("align-self", "flex-end"),
+                    StyleGroup::new(".link > .align_bottom")
+                        .style("margin-top", "auto")
+                        .style("margin-bottom", "0"),
                 )
+                .style_group(StyleGroup::new(".link > .align_left").style("align-self", "start"))
+                .style_group(StyleGroup::new(".link > .align_right").style("align-self", "end"))
                 .style_group(StyleGroup::new(".link > .exact_height").style("flex-shrink", "0"))
                 .style_group(StyleGroup::new(".link > .fill_height").style("flex-grow", "1"));
         });

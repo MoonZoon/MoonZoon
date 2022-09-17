@@ -51,22 +51,39 @@ impl ChoosableTag for Column<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
     fn with_tag(tag: Tag) -> Self {
         run_once!(|| {
             global_styles()
+                .style_group(StyleGroup::new(".column > .align_top").style("margin-bottom", "auto"))
+                .style_group(StyleGroup::new(".column > .align_bottom").style("margin-top", "auto"))
+                .style_group(StyleGroup::new(".column > .align_left").style("align-self", "start"))
+                .style_group(StyleGroup::new(".column > .align_right").style("align-self", "end"))
                 .style_group(StyleGroup::new(".column > .center_x").style("align-self", "center"))
                 .style_group(
                     StyleGroup::new(".column > .center_y")
                         .style("margin-top", "auto")
                         .style("margin-bottom", "auto"),
                 )
-                .style_group(StyleGroup::new(".column > .align_top").style("margin-bottom", "auto"))
-                .style_group(StyleGroup::new(".column > .align_bottom").style("margin-top", "auto"))
-                .style_group(
-                    StyleGroup::new(".column > .align_left").style("align-self", "flex-start"),
-                )
-                .style_group(
-                    StyleGroup::new(".column > .align_right").style("align-self", "flex-end"),
-                )
                 .style_group(StyleGroup::new(".column > .exact_height").style("flex-shrink", "0"))
-                .style_group(StyleGroup::new(".column > .fill_height").style("flex-grow", "1"));
+                .style_group(StyleGroup::new(".column > .fill_height").style("flex-grow", "1"))
+                .style_group(
+                    StyleGroup::new(".column.align_left_content").style("align-items", "end"),
+                )
+                .style_group(
+                    StyleGroup::new(".column.align_right_content").style("align-items", "start"),
+                )
+                .style_group(
+                    StyleGroup::new(".column.align_top_content")
+                        .style_important("justify-content", "start"),
+                )
+                .style_group(
+                    StyleGroup::new(".column.align_bottom_content")
+                        .style_important("justify-content", "end"),
+                )
+                .style_group(
+                    StyleGroup::new(".column.center_x_content").style("align-items", "center"),
+                )
+                .style_group(
+                    StyleGroup::new(".column.center_y_content")
+                        .style_important("justify-content", "center"),
+                );
         });
         Self {
             raw_el: RawHtmlEl::new(tag.as_str())
