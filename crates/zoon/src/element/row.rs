@@ -53,16 +53,16 @@ impl ChoosableTag for Row<EmptyFlagSet, MultilineFlagNotSet, RawHtmlEl<web_sys::
     fn with_tag(tag: Tag) -> Self {
         run_once!(|| {
             global_styles()
+                .style_group(StyleGroup::new(".row > .align_top").style("align-self", "start"))
+                .style_group(StyleGroup::new(".row > .align_bottom").style("align-self", "end"))
+                .style_group(StyleGroup::new(".row > .align_left").style("margin-right", "auto"))
+                .style_group(StyleGroup::new(".row > .align_right").style("margin-left", "auto"))
                 .style_group(
                     StyleGroup::new(".row > .center_x")
                         .style("margin-left", "auto")
                         .style("margin-right", "auto"),
                 )
-                .style_group(StyleGroup::new(".row > .align_top").style("align-self", "flex-start"))
-                .style_group(
-                    StyleGroup::new(".row > .align_bottom").style("align-self", "flex-end"),
-                )
-                .style_group(StyleGroup::new(".row > .align_right").style("margin-left", "auto"))
+                .style_group(StyleGroup::new(".row > .center_y").style("align-self", "center"))
                 .style_group(StyleGroup::new(".row > .exact_width").style("flex-shrink", "0"))
                 .style_group(StyleGroup::new(".row > .fill_width").style("flex-grow", "1"))
                 .style_group(
