@@ -56,22 +56,37 @@ impl ChoosableTag for Stack<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
                         .style("grid-column", "1")
                         .style("grid-row", "1"),
                 )
+                .style_group(StyleGroup::new(".stack > .align_top").style("align-self", "start"))
+                .style_group(StyleGroup::new(".stack > .align_bottom").style("align-self", "end"))
+                .style_group(StyleGroup::new(".stack > .align_left").style("justify-self", "left"))
                 .style_group(
-                    StyleGroup::new(".stack > .center_x")
-                        .style("margin-left", "auto")
-                        .style("margin-right", "auto"),
+                    StyleGroup::new(".stack > .align_right").style("justify-self", "right"),
                 )
-                .style_group(
-                    StyleGroup::new(".stack > .center_y")
-                        .style("margin-top", "auto")
-                        .style("margin-bottom", "auto"),
-                )
-                .style_group(StyleGroup::new(".stack > .align_top").style("margin-bottom", "auto"))
-                .style_group(StyleGroup::new(".stack > .align_bottom").style("margin-top", "auto"))
-                .style_group(StyleGroup::new(".stack > .align_left").style("margin-right", "auto"))
-                .style_group(StyleGroup::new(".stack > .align_right").style("margin-left", "auto"))
+                .style_group(StyleGroup::new(".stack > .center_x").style("justify-self", "center"))
+                .style_group(StyleGroup::new(".stack > .center_y").style("align-self", "center"))
                 .style_group(StyleGroup::new(".stack > .fill_width").style("width", "100%"))
-                .style_group(StyleGroup::new(".stack > .fill_height").style("height", "100%"));
+                .style_group(StyleGroup::new(".stack > .fill_height").style("height", "100%"))
+                .style_group(
+                    StyleGroup::new(".stack.align_left_content").style("justify-content", "left"),
+                )
+                .style_group(
+                    StyleGroup::new(".stack.align_right_content").style("justify-content", "right"),
+                )
+                .style_group(
+                    StyleGroup::new(".stack.align_top_content")
+                        .style_important("align-items", "start"),
+                )
+                .style_group(
+                    StyleGroup::new(".stack.align_bottom_content")
+                        .style_important("align-items", "end"),
+                )
+                .style_group(
+                    StyleGroup::new(".stack.center_x_content").style("justify-content", "center"),
+                )
+                .style_group(
+                    StyleGroup::new(".stack.center_y_content")
+                        .style_important("align-items", "center"),
+                );
         });
         Self {
             raw_el: RawHtmlEl::new(tag.as_str())

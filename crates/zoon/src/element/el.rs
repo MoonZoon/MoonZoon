@@ -51,18 +51,35 @@ impl ChoosableTag for El<ChildFlagNotSet, RawHtmlEl<web_sys::HtmlElement>> {
     fn with_tag(tag: Tag) -> Self {
         run_once!(|| {
             global_styles()
+                .style_group(StyleGroup::new(".el > .align_top").style("margin-bottom", "auto"))
+                .style_group(StyleGroup::new(".el > .align_bottom").style("margin-top", "auto"))
+                .style_group(StyleGroup::new(".el > .align_left").style("align-self", "start"))
+                .style_group(StyleGroup::new(".el > .align_right").style("align-self", "end"))
                 .style_group(StyleGroup::new(".el > .center_x").style("align-self", "center"))
                 .style_group(
                     StyleGroup::new(".el > .center_y")
                         .style("margin-top", "auto")
                         .style("margin-bottom", "auto"),
                 )
-                .style_group(StyleGroup::new(".el > .align_top").style("margin-bottom", "auto"))
-                .style_group(StyleGroup::new(".el > .align_bottom").style("margin-top", "auto"))
-                .style_group(StyleGroup::new(".el > .align_left").style("align-self", "start"))
-                .style_group(StyleGroup::new(".el > .align_right").style("align-self", "end"))
                 .style_group(StyleGroup::new(".el > .exact_height").style("flex-shrink", "0"))
-                .style_group(StyleGroup::new(".el > .fill_height").style("flex-grow", "1"));
+                .style_group(StyleGroup::new(".el > .fill_height").style("flex-grow", "1"))
+                .style_group(
+                    StyleGroup::new(".el.align_left_content").style("align-items", "start"),
+                )
+                .style_group(StyleGroup::new(".el.align_right_content").style("align-items", "end"))
+                .style_group(
+                    StyleGroup::new(".el.align_top_content")
+                        .style_important("justify-content", "start"),
+                )
+                .style_group(
+                    StyleGroup::new(".el.align_bottom_content")
+                        .style_important("justify-content", "end"),
+                )
+                .style_group(StyleGroup::new(".el.center_x_content").style("align-items", "center"))
+                .style_group(
+                    StyleGroup::new(".el.center_y_content")
+                        .style_important("justify-content", "center"),
+                );
         });
         Self {
             raw_el: RawHtmlEl::new(tag.as_str())
