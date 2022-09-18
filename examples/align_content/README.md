@@ -1,2 +1,2 @@
-# Counter
+# Align content
 > MoonZoon example
