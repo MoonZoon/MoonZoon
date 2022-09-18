@@ -64,10 +64,10 @@ impl ChoosableTag for Column<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
                 .style_group(StyleGroup::new(".column > .exact_height").style("flex-shrink", "0"))
                 .style_group(StyleGroup::new(".column > .fill_height").style("flex-grow", "1"))
                 .style_group(
-                    StyleGroup::new(".column.align_left_content").style("align-items", "end"),
+                    StyleGroup::new(".column.align_left_content").style("align-items", "start"),
                 )
                 .style_group(
-                    StyleGroup::new(".column.align_right_content").style("align-items", "start"),
+                    StyleGroup::new(".column.align_right_content").style("align-items", "end"),
                 )
                 .style_group(
                     StyleGroup::new(".column.align_top_content")
