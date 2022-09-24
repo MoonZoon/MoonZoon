@@ -2,7 +2,7 @@ use anyhow::Error;
 use fehler::throws;
 use std::path::PathBuf;
 use tar::Archive;
-use tokio::{fs, task, try_join};
+use tokio::{fs, task};
 
 static NEW_PROJECT_TAR: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/new_project.tar"));
 
@@ -20,23 +20,25 @@ pub async fn new(path: PathBuf, local_deps: bool) {
 #[throws]
 pub async fn postprocess_project_files(path: PathBuf, local_deps: bool) {
     if !local_deps {
-        try_join!(
-            replace_in_file(
-                path.join("frontend/Cargo.toml"),
-                r#"zoon = { path = "../../../zoon" }"#,
+        let replacements = [
+            (
+                r#"moon = { path = "../../moon" }"#,
+                r#"moon = { git = "https://github.com/MoonZoon/MoonZoon", branch = "main" }"#,
+            ),
+            (
+                r#"zoon = { path = "../../zoon" }"#,
                 r#"zoon = { git = "https://github.com/MoonZoon/MoonZoon", branch = "main" }"#,
             ),
-            replace_in_file(
-                path.join("backend/Cargo.toml"),
-                r#"moon = { path = "../../../moon" }"#,
-                r#"moon = { git = "https://github.com/MoonZoon/MoonZoon", branch = "main" }"#,
-            )
-        )?;
+        ];
+        replace_in_file(path.join("Cargo.toml"), replacements).await?;
     }
 }
 
 #[throws]
-pub async fn replace_in_file(path: PathBuf, from: &str, to: &str) {
-    let content = fs::read_to_string(&path).await?;
-    fs::write(path, content.replace(from, to)).await?;
+pub async fn replace_in_file(path: PathBuf, replacements: impl IntoIterator<Item = (&str, &str)>) {
+    let mut content = fs::read_to_string(&path).await?;
+    for (from, to) in replacements {
+        content = content.replace(from, to);
+    }
+    fs::write(path, content).await?;
 }
