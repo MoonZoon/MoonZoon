@@ -1,7 +1,7 @@
 [package]
-version = "0.1.0"
 name = "frontend"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
-zoon = { path = "../../../zoon" }
+zoon.workspace = true
