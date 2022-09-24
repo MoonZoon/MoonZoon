@@ -56,12 +56,6 @@
 ## New Project Template [on Netlify](https://moonzoon-new-project.netlify.app/) | [Template](https://github.com/MoonZoon/MoonZoon/tree/main/crates/mzoon/new_project)
    - Used by the command `mzoon new` (see the section [Create & Run project](#create--run-project) below)
 
-## TodoMVC [on Heroku](https://moonzoon-todomvc.herokuapp.com/) | [Repo](https://github.com/MoonZoon/todomvc)
-   - Up-to-date alternative in this repo: [examples/todomvc](examples/todomvc)
-
-## GUI Benchmark [on Heroku](https://moonzoon-demo.herokuapp.com/) | [Repo](https://github.com/MoonZoon/demo)
-   - Up-to-date alternative in this repo: [examples/js_framework_benchmark](examples/js_framework_benchmark)
-
 ## [Production apps in development]
    - @TODO
 
@@ -90,7 +84,7 @@
 
 ## Both Frontend & Backend
 
-MoonZoon apps have been deployed to [Heroku](https://www.heroku.com/) ([buildpack](https://github.com/MoonZoon/heroku-buildpack-moonzoon)), [Clever Cloud](https://www.clever-cloud.com/) and [CapRover](https://www.clever-cloud.com/). [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform) is planned. However, no solution was simple enough. That's why we need [MoonZoon Cloud](docs/cloud.md). But I plan to include `Dockerfile` soon so we have other options in the meantime. Please, write to [chat](https://discord.gg/eGduTxK2Es) when you have some questions regarding deployment.
+MoonZoon apps have been deployed to [Heroku](https://www.heroku.com/) ([buildpack](https://github.com/MoonZoon/heroku-buildpack-moonzoon)), [Clever Cloud](https://www.clever-cloud.com/), [CapRover](https://www.clever-cloud.com/) and [Fly.io](https://fly.io/). [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform) is planned. However, no solution was simple enough. That's why we need [MoonZoon Cloud](docs/cloud.md). But I plan to include `Dockerfile` soon so we have other options in the meantime. Please, write to [chat](https://discord.gg/eGduTxK2Es) when you have some questions regarding deployment.
 
 ## Frontend-only
 
