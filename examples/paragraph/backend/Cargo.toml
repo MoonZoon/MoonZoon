@@ -1,13 +1,13 @@
 [package]
-version = "0.1.0"
 name = "backend"
-repository = "https://github.com/MoonZoon/MoonZoon"
-authors = ["Martin Kavík <martin@kavik.cz>"]
-description = "Paragraph - MoonZoon example"
-categories = ["MoonZoon", "example"]
-license = "MIT"
-readme = "../README.md"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+authors.workspace = true
+description.workspace = true
+categories.workspace = true
+license.workspace = true
+readme.workspace = true
 
 [dependencies]
-moon = { path = "../../../crates/moon" }
+moon.workspace = true
