@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="branding/MoonZoon_logo_readme.png" width="360" title="MoonZoon logo">
+  <img src="branding/MoonZoon_logo_both_texts_light_on_black.svg" width="630" title="MoonZoon logo">
 </p>
 
 <p align="center">
