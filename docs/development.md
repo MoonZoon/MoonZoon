@@ -85,6 +85,7 @@ makers mzoon start -o # add -r for the release mode
 ## 4. Rebuild all examples
 
 ```sh
+# in the root:
 makers in_examples clean
 makers in_examples mzoon build
 ```
