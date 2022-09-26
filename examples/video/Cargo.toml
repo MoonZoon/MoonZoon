@@ -14,6 +14,7 @@ description = "Video - MoonZoon example"
 categories = ["MoonZoon", "example"]
 license = "MIT"
 readme = "../README.md"
+publish = false
 
 [workspace.dependencies]
 moon = { path = "../../crates/moon" }

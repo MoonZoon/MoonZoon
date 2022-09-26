@@ -2,3 +2,4 @@
 name = "shared"
 version.workspace = true
 edition.workspace = true
+publish.workspace = true
