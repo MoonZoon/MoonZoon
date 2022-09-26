@@ -565,6 +565,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "evalexpr"
+version = "6.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cfc25fd417983cc7f203394ebb89eba18e2df1b0ac1be2673091b5aca52b595f"
+
+[[package]]
 name = "firestorm"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -589,7 +595,7 @@ dependencies = [
 name = "frontend"
 version = "0.1.0"
 dependencies = [
- "uuid 1.1.2",
+ "evalexpr",
  "wasm-bindgen-test",
  "zoon",
 ]
@@ -1981,7 +1987,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd6469f4314d5f1ffec476e05f17cc9a78bc7a27a6a857842170bdf8d6f98d2f"
 dependencies = [
  "getrandom",
- "serde",
 ]
 
 [[package]]

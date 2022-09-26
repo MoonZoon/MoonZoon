@@ -319,6 +319,7 @@ name = "backend"
 version = "0.1.0"
 dependencies = [
  "moon",
+ "shared",
 ]
 
 [[package]]
@@ -589,7 +590,7 @@ dependencies = [
 name = "frontend"
 version = "0.1.0"
 dependencies = [
- "uuid 1.1.2",
+ "shared",
  "wasm-bindgen-test",
  "zoon",
 ]
@@ -1637,6 +1638,9 @@ dependencies = [
 [[package]]
 name = "shared"
 version = "0.1.0"
+dependencies = [
+ "moonlight",
+]
 
 [[package]]
 name = "signal-hook-registry"
@@ -1981,7 +1985,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd6469f4314d5f1ffec476e05f17cc9a78bc7a27a6a857842170bdf8d6f98d2f"
 dependencies = [
  "getrandom",
- "serde",
 ]
 
 [[package]]
