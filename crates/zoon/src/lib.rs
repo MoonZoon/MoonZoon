@@ -7,6 +7,7 @@ pub mod routing;
 #[cfg(feature = "web_storage")]
 pub mod web_storage;
 
+mod animation_frame;
 mod class_id;
 pub mod console;
 mod cow_str;
@@ -27,9 +28,11 @@ mod not;
 mod resize_observer;
 mod style;
 mod task;
+pub mod timeline;
 mod timer;
 mod viewport;
 
+pub use animation_frame::AnimationFrame;
 pub use class_id::ClassId;
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use css_property::VENDOR_PREFIXES;
@@ -70,6 +73,7 @@ pub use std::future::Future;
 pub use strum;
 pub use style::*;
 pub use task::{Task, TaskHandle};
+pub use timeline::Timeline;
 pub use timer::Timer;
 pub use viewport::{Scene, Viewport};
 pub use wasm_bindgen::{self, prelude::*, JsCast};
