@@ -15,7 +15,7 @@
         // "examples/js_text_editor/Cargo.toml",
         // "examples/js_framework_benchmark/Cargo.toml",
         // "examples/keyboard/Cargo.toml",
-        // "examples/layers/Cargo.toml",
+        "examples/layers/Cargo.toml",
         // "examples/markup/Cargo.toml",
         // "examples/minesweeper/Cargo.toml",
         // "examples/pages/Cargo.toml",

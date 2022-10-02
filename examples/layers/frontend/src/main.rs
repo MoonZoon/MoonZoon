@@ -27,6 +27,12 @@ impl Rectangle {
     }
 }
 
+#[derive(Clone, Copy)]
+enum Breath {
+    In,
+    Out,
+}
+
 // ------ ------
 //    States
 // ------ ------
@@ -34,6 +40,24 @@ impl Rectangle {
 #[static_ref]
 fn rectangles() -> &'static MutableVec<Rectangle> {
     MutableVec::new_with_values(Rectangle::iter().collect())
+}
+
+#[static_ref]
+fn breathing_timeline() -> &'static Timeline<Breath> {
+    let timeline = Timeline::new(Breath::Out);
+    Task::start(
+        timeline
+            .previous_signal_ref(|breath| *breath)
+            .for_each_sync(clone!((timeline) move |previous_state| {
+                let next_state = if matches!(previous_state, Breath::Out) {
+                    Breath::In
+                } else {
+                    Breath::Out
+                };
+                timeline.push(Duration::seconds(2), next_state);
+            })),
+    );
+    timeline
 }
 
 // ------ ------
@@ -50,6 +74,17 @@ fn bring_to_front(rectangle: Rectangle) {
 }
 
 // ------ ------
+//    Signals
+// ------ ------
+
+fn breathing_animation() -> impl Signal<Item = f64> {
+    breathing_timeline().linear_animation(|breath| match breath {
+        Breath::Out => 100.,
+        Breath::In => 120.,
+    })
+}
+
+// ------ ------
 //     View
 // ------ ------
 
@@ -63,38 +98,34 @@ fn root() -> impl Element {
 
 fn rectangle(rectangle: Rectangle) -> impl Element {
     println!("render Rectangle '{rectangle:?}'");
-
-    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let (color, align) = rectangle.color_and_align();
 
-    // @TODO replace global styles and `El` styles below with the future Zoon animation API
-    run_once!(|| {
-        global_styles().style_animation(
-            StyleAnimation::new("stretch")
-                .keyframe(StyleGroup::new("100%").style("transform", "scale(1.2)")),
+    let hover_timeline = Timeline::new(false);
+    let lightness_animation =
+        hover_timeline.linear_animation(
+            move |hovered| {
+                if *hovered {
+                    color.l() + 5.
+                } else {
+                    color.l()
+                }
+            },
         );
-    });
 
     El::new()
-        .update_raw_el(|raw_el| {
-            raw_el
-                .style("animation-name", "stretch")
-                .style("animation-duration", "2.0s")
-                .style("animation-timing-function", "ease-out")
-                .style("animation-direction", "alternate")
-                .style("animation-iteration-count", "infinite")
-                .style("animation-play-state", "running")
-        })
+        .s(Transform::with_signal(
+            breathing_animation().map(|percent| Transform::new().scale(percent)),
+        ))
         .s(Width::exact(100))
         .s(Height::exact(100))
         .s(RoundedCorners::all(15))
         .s(Cursor::new(CursorIcon::Pointer))
         .s(Shadows::new([Shadow::new().blur(20).color(GRAY_8)]))
-        .s(Background::new().color_signal(
-            hovered_signal.map_bool(move || color.update_l(|l| l + 5.), move || color),
-        ))
+        .s(Background::new().color_signal(lightness_animation.map(move |l| color.set_l(l))))
         .s(align)
-        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .on_hovered_change(move |is_hovered| {
+            hover_timeline.push(Duration::milliseconds(200), is_hovered)
+        })
         .on_click(move || bring_to_front(rectangle))
 }
 
