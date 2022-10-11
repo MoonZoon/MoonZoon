@@ -29,8 +29,8 @@ impl Oscillator {
         always(0.)
     }
 
-    pub fn go_to(&self, zero_to_one: bool) {
-        
+    pub fn go_to(&self, unit_interval_value: impl IntoF64) {
+        let unit_interval_value = unit_interval_value.into_f64();    
     }
 }
 
