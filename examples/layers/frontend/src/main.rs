@@ -27,12 +27,6 @@ impl Rectangle {
     }
 }
 
-#[derive(Clone, Copy)]
-enum Breath {
-    In,
-    Out,
-}
-
 // ------ ------
 //    States
 // ------ ------
@@ -43,21 +37,8 @@ fn rectangles() -> &'static MutableVec<Rectangle> {
 }
 
 #[static_ref]
-fn breathing_timeline() -> &'static Timeline<Breath> {
-    let timeline = Timeline::new(Breath::Out);
-    Task::start(
-        timeline
-            .previous_signal_ref(|breath| *breath)
-            .for_each_sync(clone!((timeline) move |previous_state| {
-                let next_state = if matches!(previous_state, Breath::Out) {
-                    Breath::In
-                } else {
-                    Breath::Out
-                };
-                timeline.push(Duration::seconds(2), next_state);
-            })),
-    );
-    timeline
+fn scale_oscillator() -> &'static Oscillator {
+    Oscillator::with_speed(Duration::seconds(2)).cycle()
 }
 
 // ------ ------
@@ -71,17 +52,6 @@ fn bring_to_front(rectangle: Rectangle) {
         .position(|r| r == &rectangle)
         .unwrap_throw();
     rectangles.move_from_to(position, rectangles.len() - 1);
-}
-
-// ------ ------
-//    Signals
-// ------ ------
-
-fn breathing_animation() -> impl Signal<Item = f64> {
-    breathing_timeline().linear_animation(|breath| match breath {
-        Breath::Out => 100.,
-        Breath::In => 120.,
-    })
 }
 
 // ------ ------
@@ -100,32 +70,24 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
     println!("render Rectangle '{rectangle:?}'");
     let (color, align) = rectangle.color_and_align();
 
-    let hover_timeline = Timeline::new(false);
-    let lightness_animation =
-        hover_timeline.linear_animation(
-            move |hovered| {
-                if *hovered {
-                    color.l() + 5.
-                } else {
-                    color.l()
-                }
-            },
-        );
+    let lightness_oscillator = Oscillator::fast();
+    let color = lightness_oscillator
+        .signal()
+        .map(ease::linear_unit(color.l(), color.l() + 5.))
+        .map(move |l| color.set_l(l));
 
     El::new()
         .s(Transform::with_signal(
-            breathing_animation().map(|percent| Transform::new().scale(percent)),
+            scale_oscillator().signal().map(|scale| Transform::new().scale(scale * 100.)),
         ))
         .s(Width::exact(100))
         .s(Height::exact(100))
         .s(RoundedCorners::all(15))
         .s(Cursor::new(CursorIcon::Pointer))
         .s(Shadows::new([Shadow::new().blur(20).color(GRAY_8)]))
-        .s(Background::new().color_signal(lightness_animation.map(move |l| color.set_l(l))))
+        .s(Background::new().color_signal(color))
         .s(align)
-        .on_hovered_change(move |is_hovered| {
-            hover_timeline.push(Duration::milliseconds(200), is_hovered)
-        })
+        .on_hovered_change(move |is_hovered| lightness_oscillator.go_to(is_hovered))
         .on_click(move || bring_to_front(rectangle))
 }
 

@@ -4,6 +4,39 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+pub struct Oscillator {
+
+}
+
+impl Oscillator {
+    pub fn with_speed(transition_duration: Duration) -> Self {
+        Self {
+            
+        }
+    }
+
+    pub fn fast() -> Self {
+        Self {
+
+        }
+    }
+
+    pub fn cycle(self) -> Self {
+        self
+    }
+
+    pub fn signal(&self) -> impl Signal<Item = f64> {
+        always(0.)
+    }
+
+    pub fn go_to(&self, zero_to_one: bool) {
+        
+    }
+}
+
+
+// @TODO Remove code below
+
 // ------ Timeline Data ------
 
 struct Data<T> {
