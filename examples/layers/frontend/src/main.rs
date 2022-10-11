@@ -80,7 +80,9 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
 
     El::new()
         .s(Transform::with_signal(
-            spread_oscillator().signal().map(|spread| Transform::new().scale(100. + spread * 20.)),
+            spread_oscillator()
+                .signal()
+                .map(|spread| Transform::new().scale(100. + spread * 20.)),
         ))
         .s(Width::exact(100))
         .s(Height::exact(100))

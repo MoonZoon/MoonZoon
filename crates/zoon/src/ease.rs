@@ -17,8 +17,8 @@ pub fn linear_bounded<T: Into<f64> + Conv<f64>>(
 }
 
 pub fn linear_unit<T: Into<f64> + Conv<f64>>(
-    when_zero: impl Into<f64>, 
-    when_one: impl Into<f64>, 
+    when_zero: impl Into<f64>,
+    when_one: impl Into<f64>,
 ) -> impl Fn(T) -> T {
     linear_bounded((0., when_zero), (1., when_one))
 }

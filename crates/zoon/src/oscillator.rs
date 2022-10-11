@@ -49,7 +49,7 @@ impl Data {
     }
 
     fn jump_to(&self, unit_interval_value: f64) {
-        self.value.set_neq(unit_interval_value); 
+        self.value.set_neq(unit_interval_value);
     }
 
     fn advance(&self, duration: Duration) {
@@ -60,7 +60,8 @@ impl Data {
         match status {
             Status::Stopped => (),
             Status::GoingTo(target) => {
-                let range = (duration.num_milliseconds() as f64) / (transition_duration.num_milliseconds() as f64);
+                let range = (duration.num_milliseconds() as f64)
+                    / (transition_duration.num_milliseconds() as f64);
                 let target_value_diff = target - value;
                 let distance = target_value_diff.abs();
                 if range >= distance {
@@ -68,30 +69,30 @@ impl Data {
                     self.jump_to(target);
                 } else {
                     self.jump_to(value + range.copysign(target_value_diff))
-                } 
+                }
             }
             Status::CycleWrap => {
-                let range = (duration.num_milliseconds() as f64) / (transition_duration.num_milliseconds() as f64);
-                self.jump_to((range + value).fract())   
+                let range = (duration.num_milliseconds() as f64)
+                    / (transition_duration.num_milliseconds() as f64);
+                self.jump_to((range + value).fract())
             }
             Status::Cycle(target) => {
-                let range = (duration.num_milliseconds() as f64) / (transition_duration.num_milliseconds() as f64);
+                let range = (duration.num_milliseconds() as f64)
+                    / (transition_duration.num_milliseconds() as f64);
                 let target_value_diff = target - value;
                 let distance = target_value_diff.abs();
                 if range >= distance {
                     self.jump_to(target);
-                    self.start(Status::Cycle(
-                        if target == 0. {
-                            1.
-                        } else if target == 1. {
-                            0.
-                        } else {
-                            unreachable!()
-                        }
-                    ));
+                    self.start(Status::Cycle(if target == 0. {
+                        1.
+                    } else if target == 1. {
+                        0.
+                    } else {
+                        unreachable!()
+                    }));
                 } else {
                     self.jump_to(value + range.copysign(target_value_diff))
-                } 
+                }
             }
         }
     }
@@ -149,7 +150,7 @@ impl Oscillator {
     }
 
     pub fn jump_to(&self, unit_interval_value: impl IntoF64) {
-        let unit_interval_value = unit_interval_value.into_f64().clamp(0., 1.); 
-        self.data.jump_to(unit_interval_value);   
+        let unit_interval_value = unit_interval_value.into_f64().clamp(0., 1.);
+        self.data.jump_to(unit_interval_value);
     }
 }
