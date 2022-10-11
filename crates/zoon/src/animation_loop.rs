@@ -1,7 +1,7 @@
 use crate::*;
 use std::sync::{Arc, Mutex};
 
-// ------ AnimationFrame Data ------
+// ------ AnimationLoop Data ------
 
 struct Data {
     id: Option<i32>,
@@ -9,14 +9,14 @@ struct Data {
     callback: Option<SendWrapper<Closure<dyn FnMut(f64)>>>,
 }
 
-// ------ AnimationFrame ------
+// ------ AnimationLoop ------
 
 #[derive(Clone)]
-pub struct AnimationFrame {
+pub struct AnimationLoop {
     data: Arc<Mutex<Data>>,
 }
 
-impl AnimationFrame {
+impl AnimationLoop {
     pub fn new(mut on_frame: impl FnMut(Duration) + 'static) -> Self {
         let timestamp = window().performance().unwrap_throw().now();
         let data: Arc<Mutex<Data>> = Arc::new(Mutex::new(Data {
@@ -59,7 +59,7 @@ impl AnimationFrame {
     }
 }
 
-impl Drop for AnimationFrame {
+impl Drop for AnimationLoop {
     fn drop(&mut self) {
         let mut data = self.data.lock().unwrap_throw();
         let _callback = data.callback.take();

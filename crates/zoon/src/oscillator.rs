@@ -1,205 +1,155 @@
 use crate::*;
-use std::{
-    collections::VecDeque,
-    sync::{Arc, Mutex},
-};
+use std::sync::{Arc, Mutex};
 
+// ------ Oscillator Data ------
+
+#[derive(Clone)]
+struct Data {
+    transition_duration: Arc<Mutex<Duration>>,
+    value: Mutable<f64>,
+    status: Arc<Mutex<Status>>,
+    animation_loop: Arc<Mutex<Option<AnimationLoop>>>,
+}
+
+#[derive(PartialEq, Clone, Copy)]
+enum Status {
+    Stopped,
+    GoingTo(f64),
+    CycleWrap,
+    Cycle(f64),
+}
+
+impl Data {
+    fn new(transition_duration: Duration) -> Self {
+        Self {
+            transition_duration: Arc::new(Mutex::new(transition_duration)),
+            value: Mutable::new(0.),
+            status: Arc::new(Mutex::new(Status::Stopped)),
+            animation_loop: Arc::new(Mutex::new(None)),
+        }
+    }
+
+    fn start(&self, status: Status) {
+        *self.status.lock().unwrap_throw() = status;
+        let mut animation_loop = self.animation_loop.lock().unwrap_throw();
+        if animation_loop.is_none() {
+            let data = self.clone();
+            *animation_loop = Some(AnimationLoop::new(move |difference| {
+                data.advance(difference);
+            }));
+        }
+    }
+
+    fn stop(&self) {
+        let mut animation_loop = self.animation_loop.lock().unwrap_throw();
+        if animation_loop.is_some() {
+            *animation_loop = None;
+            *self.status.lock().unwrap_throw() = Status::Stopped;
+        }
+    }
+
+    fn jump_to(&self, unit_interval_value: f64) {
+        self.value.set_neq(unit_interval_value); 
+    }
+
+    fn advance(&self, duration: Duration) {
+        let status = *self.status.lock().unwrap_throw();
+        let transition_duration = *self.transition_duration.lock().unwrap_throw();
+        let value = self.value.get();
+
+        match status {
+            Status::Stopped => (),
+            Status::GoingTo(target) => {
+                let range = (duration.num_milliseconds() as f64) / (transition_duration.num_milliseconds() as f64);
+                let target_value_diff = target - value;
+                let distance = target_value_diff.abs();
+                if range >= distance {
+                    self.stop();
+                    self.jump_to(target);
+                } else {
+                    self.jump_to(value + range.copysign(target_value_diff))
+                } 
+            }
+            Status::CycleWrap => {
+                let range = (duration.num_milliseconds() as f64) / (transition_duration.num_milliseconds() as f64);
+                self.jump_to((range + value).fract())   
+            }
+            Status::Cycle(target) => {
+                let range = (duration.num_milliseconds() as f64) / (transition_duration.num_milliseconds() as f64);
+                let target_value_diff = target - value;
+                let distance = target_value_diff.abs();
+                if range >= distance {
+                    self.jump_to(target);
+                    self.start(Status::Cycle(
+                        if target == 0. {
+                            1.
+                        } else if target == 1. {
+                            0.
+                        } else {
+                            unreachable!()
+                        }
+                    ));
+                } else {
+                    self.jump_to(value + range.copysign(target_value_diff))
+                } 
+            }
+        }
+    }
+}
+
+// ------ Oscillator ------
+
+#[derive(Clone)]
 pub struct Oscillator {
-
+    data: Data,
 }
 
 impl Oscillator {
     pub fn with_speed(transition_duration: Duration) -> Self {
         Self {
-            
+            data: Data::new(transition_duration),
         }
+    }
+
+    pub fn very_fast() -> Self {
+        Self::with_speed(Duration::milliseconds(100))
     }
 
     pub fn fast() -> Self {
-        Self {
-
-        }
+        Self::with_speed(Duration::milliseconds(200))
     }
 
-    pub fn cycle(self) -> Self {
-        self
+    pub fn slow() -> Self {
+        Self::with_speed(Duration::milliseconds(400))
+    }
+
+    pub fn very_slow() -> Self {
+        Self::with_speed(Duration::milliseconds(500))
     }
 
     pub fn signal(&self) -> impl Signal<Item = f64> {
-        always(0.)
+        self.data.value.signal()
+    }
+
+    pub fn cycle_wrap(&self) {
+        self.data.start(Status::CycleWrap);
+    }
+
+    pub fn cycle(&self) {
+        self.data.start(Status::Cycle(1.));
+    }
+
+    pub fn stop(&self) {
+        self.data.stop();
     }
 
     pub fn go_to(&self, unit_interval_value: impl IntoF64) {
-        let unit_interval_value = unit_interval_value.into_f64();    
-    }
-}
-
-
-// @TODO Remove code below
-
-// ------ Timeline Data ------
-
-struct Data<T> {
-    queue: Arc<Mutex<VecDeque<Step<T>>>>,
-    previous: Mutable<Step<T>>,
-    next: Mutable<Option<Step<T>>>,
-}
-
-impl<T> Data<T> {
-    fn new(state: T) -> Self {
-        Self {
-            queue: Arc::new(Mutex::new(VecDeque::new())),
-            previous: Mutable::new(Step::new(Duration::zero(), state)),
-            next: Mutable::new(None),
-        }
+        let unit_interval_value = unit_interval_value.into_f64().clamp(0., 1.);
+        self.data.start(Status::GoingTo(unit_interval_value));
     }
 
-    fn advance(&self, mut duration: Duration) {
-        let next = self.next.take();
-        if let Some(mut next) = next {
-            if next.elapsed + duration > next.duration {
-                duration = duration - (next.duration - next.elapsed);
-                next.elapsed = next.duration;
-                self.previous.set(next);
-                self.advance(duration);
-            } else {
-                next.elapsed = next.elapsed + duration;
-                self.next.set(Some(next))
-            }
-        } else {
-            let next = self.queue.lock().unwrap_throw().pop_front();
-            if let Some(next) = next {
-                self.next.set(Some(next));
-                self.advance(duration);
-            }
-        }
-    }
-}
-
-impl<T> Clone for Data<T> {
-    fn clone(&self) -> Self {
-        Self {
-            queue: Arc::clone(&self.queue),
-            previous: self.previous.clone(),
-            next: self.next.clone(),
-        }
-    }
-}
-
-// ------ Timeline ------
-
-pub struct Timeline<T> {
-    data: Data<T>,
-    animation_frame: Option<AnimationFrame>,
-}
-
-impl<T> Clone for Timeline<T> {
-    fn clone(&self) -> Self {
-        Self {
-            data: self.data.clone(),
-            animation_frame: self.animation_frame.clone(),
-        }
-    }
-}
-
-impl<T: 'static> Timeline<T> {
-    pub fn new(state: T) -> Self {
-        let data = Data::new(state);
-        Self {
-            data: data.clone(),
-            animation_frame: Some(AnimationFrame::new(move |difference| {
-                data.advance(difference);
-            })),
-        }
-    }
-
-    pub fn new_manual(state: T) -> Self {
-        Self {
-            data: Data::new(state),
-            animation_frame: None,
-        }
-    }
-
-    pub fn previous_signal_ref<U>(&self, mut mapper: impl FnMut(&T) -> U) -> impl Signal<Item = U> {
-        self.data
-            .previous
-            .signal_ref(move |step| mapper(&step.state))
-    }
-
-    pub fn next_signal_ref<U>(
-        &self,
-        mut mapper: impl FnMut(Option<&T>) -> U,
-    ) -> impl Signal<Item = U> {
-        self.data
-            .next
-            .signal_ref(move |step| mapper(step.as_ref().map(|step| step.state.as_ref())))
-    }
-
-    pub fn previous_next_step_signals(&self) -> impl Signal<Item = (Step<T>, Option<Step<T>>)> {
-        map_ref! {
-            let previous = self.data.previous.signal_cloned(),
-            let next = self.data.next.signal_cloned() => {
-                (previous.clone(), next.clone())
-            }
-        }
-    }
-
-    pub fn push(&self, duration: Duration, state: T) {
-        let step = Step::new(duration, state);
-        self.data
-            .queue
-            .lock()
-            .expect("failed to lock Timeline queue")
-            .push_back(step);
-    }
-
-    pub fn advance(&self, duration: Duration) {
-        self.data.advance(duration)
-    }
-
-    pub fn linear_animation(
-        &self,
-        mut keyframes: impl FnMut(&T) -> f64 + 'static,
-    ) -> impl Signal<Item = f64> {
-        self.previous_next_step_signals()
-            .map(move |(previous, next)| {
-                let previous_value = keyframes(previous.state.as_ref());
-                if let Some(next) = next {
-                    let next_value = keyframes(next.state.as_ref());
-                    let progress = (next.elapsed.num_milliseconds() as f64)
-                        / (next.duration.num_milliseconds() as f64);
-                    previous_value + ((next_value - previous_value) * progress)
-                } else {
-                    previous_value
-                }
-            })
-    }
-}
-
-// ------ Step ------
-
-pub struct Step<T> {
-    pub duration: Duration,
-    pub state: Arc<T>,
-    pub elapsed: Duration,
-}
-
-impl<T> Clone for Step<T> {
-    fn clone(&self) -> Self {
-        Self {
-            duration: self.duration,
-            state: Arc::clone(&self.state),
-            elapsed: self.elapsed.clone(),
-        }
-    }
-}
-
-impl<T> Step<T> {
-    fn new(duration: Duration, state: T) -> Self {
-        Self {
-            duration,
-            state: Arc::new(state),
-            elapsed: Duration::zero(),
-        }
+    pub fn jump_to(&self, unit_interval_value: impl IntoF64) {
+        let unit_interval_value = unit_interval_value.into_f64().clamp(0., 1.); 
+        self.data.jump_to(unit_interval_value);   
     }
 }

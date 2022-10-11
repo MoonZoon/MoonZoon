@@ -37,8 +37,10 @@ fn rectangles() -> &'static MutableVec<Rectangle> {
 }
 
 #[static_ref]
-fn scale_oscillator() -> &'static Oscillator {
-    Oscillator::with_speed(Duration::seconds(2)).cycle()
+fn spread_oscillator() -> &'static Oscillator {
+    let oscillator = Oscillator::with_speed(Duration::seconds(2));
+    oscillator.cycle();
+    oscillator
 }
 
 // ------ ------
@@ -71,7 +73,6 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
     let (color, align) = rectangle.color_and_align();
 
     let lightness_oscillator = Oscillator::fast();
-    lightness_oscillator.go_to(0.6);
     let color = lightness_oscillator
         .signal()
         .map(ease::linear_unit(color.l(), color.l() + 5.))
@@ -79,7 +80,7 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
 
     El::new()
         .s(Transform::with_signal(
-            scale_oscillator().signal().map(|scale| Transform::new().scale(scale * 100.)),
+            spread_oscillator().signal().map(|spread| Transform::new().scale(100. + spread * 20.)),
         ))
         .s(Width::exact(100))
         .s(Height::exact(100))
