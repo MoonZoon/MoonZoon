@@ -7,7 +7,7 @@ pub mod routing;
 #[cfg(feature = "web_storage")]
 pub mod web_storage;
 
-mod animation_frame;
+mod animation_loop;
 mod class_id;
 pub mod console;
 mod cow_str;
@@ -33,7 +33,7 @@ mod task;
 mod timer;
 mod viewport;
 
-pub use animation_frame::AnimationFrame;
+pub use animation_loop::AnimationLoop;
 pub use class_id::ClassId;
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use css_property::VENDOR_PREFIXES;
