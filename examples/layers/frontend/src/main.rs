@@ -71,6 +71,7 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
     let (color, align) = rectangle.color_and_align();
 
     let lightness_oscillator = Oscillator::fast();
+    lightness_oscillator.go_to(0.6);
     let color = lightness_oscillator
         .signal()
         .map(ease::linear_unit(color.l(), color.l() + 5.))
