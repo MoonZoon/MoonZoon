@@ -61,6 +61,11 @@ fn paragraph() -> impl Element {
                 .description("paragraph image")
         )
         .content(" Aliquam in lorem sit amet leo accumsan lacinia. Pellentesque sapien. Donec ipsum massa, ullamcorper in, auctor et, scelerisque sed, est. Integer tempor. Aliquam erat volutpat. Phasellus enim erat, vestibulum vel, aliquam a, posuere eu, velit. Aliquam erat volutpat. Etiam commodo dui eget wisi.")
+        .content(
+            El::new()
+                .s(Font::new().tracking(8))
+                .child("\nI like tracking (aka letter-spacing).")
+        )
 }
 
 fn main() {
