@@ -321,6 +321,11 @@ impl<'a> Font<'a> {
             .extend(line.dynamic_css_props.into_iter());
         self
     }
+
+    pub fn tracking(mut self, tracking: i32) -> Self {
+        self.static_css_props.insert("letter-spacing", px(tracking));
+        self
+    }
 }
 
 impl<'a> Style<'a> for Font<'a> {
