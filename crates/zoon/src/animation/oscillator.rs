@@ -106,26 +106,10 @@ pub struct Oscillator {
 }
 
 impl Oscillator {
-    pub fn with_speed(transition_duration: Duration) -> Self {
+    pub fn new(transition_duration: Duration) -> Self {
         Self {
             data: Data::new(transition_duration),
         }
-    }
-
-    pub fn very_fast() -> Self {
-        Self::with_speed(Duration::milliseconds(100))
-    }
-
-    pub fn fast() -> Self {
-        Self::with_speed(Duration::milliseconds(200))
-    }
-
-    pub fn slow() -> Self {
-        Self::with_speed(Duration::milliseconds(400))
-    }
-
-    pub fn very_slow() -> Self {
-        Self::with_speed(Duration::milliseconds(500))
     }
 
     pub fn signal(&self) -> impl Signal<Item = f64> {

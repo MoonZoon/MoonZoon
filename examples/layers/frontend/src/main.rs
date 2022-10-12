@@ -38,7 +38,7 @@ fn rectangles() -> &'static MutableVec<Rectangle> {
 
 #[static_ref]
 fn spread_oscillator() -> &'static Oscillator {
-    let oscillator = Oscillator::with_speed(Duration::seconds(2));
+    let oscillator = Oscillator::new(Duration::seconds(2));
     oscillator.cycle();
     oscillator
 }
@@ -72,10 +72,10 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
     println!("render Rectangle '{rectangle:?}'");
     let (color, align) = rectangle.color_and_align();
 
-    let lightness_oscillator = Oscillator::fast();
+    let lightness_oscillator = Oscillator::new(Duration::milliseconds(200));
     let color = lightness_oscillator
         .signal()
-        .map(ease::linear_unit(color.l(), color.l() + 5.))
+        .map(interpolate::linear(color.l(), color.l() + 5.))
         .map(move |l| color.set_l(l));
 
     El::new()
