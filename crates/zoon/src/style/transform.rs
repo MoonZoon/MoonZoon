@@ -170,6 +170,8 @@ impl Transform {
             "scale({})",
             percent.into() / 100.
         )));
+        // workaround to resolve "jumpy" scale animation on Firefox
+        self.transformations.push(Cow::from("translateZ(0.001px)"));
         self
     }
 
