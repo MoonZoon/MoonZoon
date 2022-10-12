@@ -1,6 +1,6 @@
 use easy_cast::*;
 
-pub fn linear_bounded<T: Into<f64> + Conv<f64>>(
+pub fn linear_with_bounds<T: Into<f64> + Conv<f64>>(
     (x1, y1): (impl Into<f64>, impl Into<f64>),
     (x2, y2): (impl Into<f64>, impl Into<f64>),
 ) -> impl Fn(T) -> T {
@@ -16,9 +16,9 @@ pub fn linear_bounded<T: Into<f64> + Conv<f64>>(
     }
 }
 
-pub fn linear_unit<T: Into<f64> + Conv<f64>>(
+pub fn linear<T: Into<f64> + Conv<f64>>(
     when_zero: impl Into<f64>,
     when_one: impl Into<f64>,
 ) -> impl Fn(T) -> T {
-    linear_bounded((0., when_zero), (1., when_one))
+    linear_with_bounds((0., when_zero), (1., when_one))
 }
