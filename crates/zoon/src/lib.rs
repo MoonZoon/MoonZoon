@@ -133,6 +133,9 @@ pub use thiserror;
 #[cfg(feature = "chrono")]
 pub use chrono::{self, prelude::*, Duration};
 
+#[cfg(feature = "serde-wasm-bindgen")]
+pub use serde_wasm_bindgen;
+
 // -- public_url --
 
 pub static PUBLIC_URL: &str = "/_api/public/";

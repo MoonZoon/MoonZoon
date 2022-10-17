@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 # wasm-bindgen has to match the version installed by mzoon
 # @TODO install the compatible (aka the same) version by mzoon automatically?
-wasm-bindgen = { version = "=0.2.82", default-features = false }
+wasm-bindgen = { version = "=0.2.83", default-features = false }
 wasm-bindgen-futures = { version = "0.4.31", default-features = false }
 js-sys = { version = "0.3.58", default-features = false }
 futures-signals = { version = "0.3.29", default-features = false }
@@ -40,6 +40,7 @@ serde = { version = "1.0.137", features = ["derive", "std", "rc"], default-featu
 serde_json = { version = "1.0.81", features = ['std'], default-features = false, optional = true }
 thiserror = { version = "1.0.31", default-features = false, optional = true }
 chrono = { version = "0.4.19", default-features = false, optional = true }
+serde-wasm-bindgen = { version = "0.4.5", default-features = false, optional = true }
 
 ufmt = { version = "0.1.0", features = ["std"], default-features = false, optional = true }
 lexical = { git = "https://github.com/Alexhuszagh/rust-lexical", rev = "7010efd5e144faff0c9afbc1b22b47d9d9567966", features = ["std"], default-features = false, optional = true }
@@ -110,4 +111,5 @@ fast_alloc = []
 clone = ["enclose"]  # @TODO use Dominator's clone! instead?
 fmt = ["ufmt", "lexical"]
 web_storage = ["serde", "serde_json", "thiserror"]
-jsvalue_into_serde = ["wasm-bindgen/serde-serialize"]
+# @TODO is "wasm-bindgen/serde-serialize" still needed?
+jsvalue_into_serde = ["wasm-bindgen/serde-serialize", "serde-wasm-bindgen"]
