@@ -15,11 +15,11 @@ use crate::*;
 /// Create a `static` `HSluv` color from a color name, hue, saturation and lightness.
 macro_rules! color {
     ($color:ident => $h:literal, $s:literal, $l:literal) => {
-        pub static $color: HSLuv = hsluv!($h, $s, $l);
+        pub const $color: HSLuv = hsluv!($h, $s, $l);
     };
 }
 
-pub static TRANSPARENT: HSLuv = hsluv!(0, 0, 0, 0);
+pub const TRANSPARENT: HSLuv = hsluv!(0, 0, 0, 0);
 
 color!(GRAY_0 => 235.5, 22.1, 98.2);
 color!(GRAY_1 => 248.2, 18.5, 96.2);
