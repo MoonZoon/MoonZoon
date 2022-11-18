@@ -1,0 +1,10 @@
+world say {
+    import console: interface {
+        log: func(msg: string)
+        error: func(msg: string)
+    }
+
+    default export interface {
+        say-something: func() -> string
+    }
+}

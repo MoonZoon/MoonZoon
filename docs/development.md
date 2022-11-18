@@ -9,13 +9,13 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 - [Rust](https://www.rust-lang.org/)
   ```bash
   rustup update stable
-  rustc -V # rustc 1.64.0 (a55dd71d5 2022-09-19)
+  rustc -V # rustc 1.65.0 (897e37553 2022-11-02)
   ```
 
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
   ```bash
   cargo install cargo-make --no-default-features
-  makers -V # makers 0.36.1
+  makers -V # cargo-make 0.36.3
   ```
   - _Note_: `cargo-make` is needed only for MoonZoon development and running its examples, you don't need it for your apps.
 
@@ -61,6 +61,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/tweened/Cargo.toml",
         // "examples/video/Cargo.toml",
         // "examples/viewport/Cargo.toml",
+        // "examples/wasm_components/Cargo.toml",
     ],
     "rust-analyzer.diagnostics.disabled": [
         "missing-unsafe",
