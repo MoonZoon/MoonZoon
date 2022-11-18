@@ -76,7 +76,7 @@ pub use task::{Task, TaskHandle};
 pub use timer::Timer;
 pub use viewport::{Scene, Viewport};
 pub use wasm_bindgen::{self, prelude::*, JsCast};
-pub use wasm_bindgen_futures::{self, JsFuture};
+pub use wasm_bindgen_futures::{self, JsFuture, future_to_promise};
 pub use web_sys;
 
 #[cfg(feature = "connection")]
