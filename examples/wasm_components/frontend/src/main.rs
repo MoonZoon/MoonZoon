@@ -1,4 +1,5 @@
 use zoon::{*, named_color::*};
+use extism::{Context, Plugin};
 
 #[static_ref]
 fn drop_zone_active() -> &'static Mutable<bool> {
@@ -11,32 +12,41 @@ fn component_said() -> &'static Mutable<Option<String>> {
 }
 
 fn load_and_use_component(file_list: web_sys::FileList) {
-    let imports = js_sys::Object::new();
-
     let file = file_list.get(0).unwrap_throw();
-    let readable_stream = file.stream();
-
-    let mut response_init = web_sys::ResponseInit::new();
-    let headers = web_sys::Headers::new().unwrap_throw();
-    headers.append("Content-Type", "application/wasm").unwrap_throw();
-    response_init.headers(&JsValue::from(headers));
-    let response = web_sys::Response::new_with_opt_readable_stream_and_init(Some(&readable_stream), &response_init).unwrap_throw();
-    let response_promise =  future_to_promise(future::ok(JsValue::from(response)));
-
-    let result_object = JsFuture::from(js_sys::WebAssembly::instantiate_streaming(&response_promise, &imports));
-
     Task::start(async move {
-        let result_object = result_object.await.unwrap_throw();
-        let instance: js_sys::WebAssembly::Instance = Reflect::get(&result_object, &JsValue::from("instance")).unwrap_throw().dyn_into().unwrap_throw();
-        let exports = instance.exports();
+        let array_buffer = JsFuture::from(file.array_buffer()).await.unwrap_throw();
+        let array = js_sys::Uint8Array::new(&array_buffer);
+        let wasm_bytes = array.to_vec();
+        let context = Context::new();
+        let plugin = Plugin::new(&context, wasm_bytes, false).unwrap_throw();
+        let greeting = plugin.call("greet", "World").unwrap_throw();
+        component_said().set(Some(String::from_utf8(greeting.to_vec()).unwrap_throw()));
+    });
 
-        let say_something = Reflect::get(exports.as_ref(), &"say_something".into())
-            .unwrap_throw()
-            .dyn_into::<js_sys::Function>()
-            .expect("the function `say_something` not found in the Wasm module");
 
-        // let said = say_something.
-    })
+    // let readable_stream = file.stream();
+
+    // let mut response_init = web_sys::ResponseInit::new();
+    // let headers = web_sys::Headers::new().unwrap_throw();
+    // headers.append("Content-Type", "application/wasm").unwrap_throw();
+    // response_init.headers(&JsValue::from(headers));
+    // let response = web_sys::Response::new_with_opt_readable_stream_and_init(Some(&readable_stream), &response_init).unwrap_throw();
+    // let response_promise =  future_to_promise(future::ok(JsValue::from(response)));
+
+    // let result_object = JsFuture::from(js_sys::WebAssembly::instantiate_streaming(&response_promise, &imports));
+
+    // Task::start(async move {
+    //     let result_object = result_object.await.unwrap_throw();
+    //     let instance: js_sys::WebAssembly::Instance = Reflect::get(&result_object, &JsValue::from("instance")).unwrap_throw().dyn_into().unwrap_throw();
+    //     let exports = instance.exports();
+
+    //     let say_something = Reflect::get(exports.as_ref(), &"say_something".into())
+    //         .unwrap_throw()
+    //         .dyn_into::<js_sys::Function>()
+    //         .expect("the function `say_something` not found in the Wasm module");
+
+    //     // let said = say_something.
+    // })
 }
 
 fn root() -> impl Element {

@@ -1,12 +1,8 @@
-wit_bindgen_guest_rust::generate!("say.wit");
+#![no_main]
 
-struct Say;
+use extism_pdk::*;
 
-export_say!(Say);
-
-impl say::Say for Say {
-    fn say_something() -> String {
-        // console::log("I'm saying!");
-        "Hello, World!".to_string()
-    }
+#[plugin_fn]
+pub fn greet(name: String) -> FnResult<String> {
+    Ok(format!("Hello {name}"))
 }
