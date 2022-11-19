@@ -1,15 +1,17 @@
 use moon::*;
 
 async fn frontend() -> Frontend {
-    Frontend::new().title("Wasm components example").append_to_head(
-        "
+    Frontend::new()
+        .title("Wasm components example")
+        .append_to_head(
+            "
         <style>
             html {
                 background-color: black;
                 color: lightgray;
             }
         </style>",
-    )
+        )
 }
 
 async fn up_msg_handler(_: UpMsgRequest<()>) {}
