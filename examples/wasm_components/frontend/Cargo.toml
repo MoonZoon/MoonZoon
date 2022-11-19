@@ -15,3 +15,7 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 zoon.workspace = true
+# extism = { version = "=0.0.1-rc.6", default-features = false }
+# extism = { git = "https://github.com/extism/extism.git", rev = "58ad4ce6e29c21ae3321d4732da18fa758ad1dfb", default-features = false }
+extism = { path = "../../../../extism/rust", default-features = false }
+extism-runtime = { path = "../../../../extism/runtime", default-features = false }
