@@ -1,22 +1,45 @@
+fn host_log(message: String) {
+    let message = message.into_bytes();
+    unsafe { imported::host_log(message.as_ptr(), message.len()) };
+}
+mod imported {
+    extern "C" {
+        pub fn host_log(ptr: *const u8, size: usize);
+    }
+}
+
+macro_rules! log {
+    ($($arg:tt)*) => (host_log(format!($($arg)*)))
+}
+
 #[no_mangle]
 pub extern "C" fn sum(a: f64, b: f64) -> f64 {
     let result = a + b;
-    unsafe { log_result(result) };
+    log!("sum result is {result}");
     result
 }
 
-// @TODO make it extern with a proc_macro
-// - https://radu-matei.com/blog/practical-guide-to-wasm-memory/#passing-arrays-to-rust-webassembly-modules
-// - https://docs.rs/wasmi/latest/wasmi/index.html
-// - https://github.com/paritytech/wasmi/issues/203
-// - https://github.com/andrewdavidmackenzie/wasm_explore
-// - https://nishtahir.com/interacting-with-wasm-memory/
-// - https://github.com/ZuInnoTe/rust-wasm-dynamic-module-study
-// - https://docs.rs/bincode/latest/bincode/
-pub fn some_bytes() -> Vec<u8> {
-    vec![1, 2, 3]
+#[no_mangle]
+pub unsafe extern "C" fn sum_array(ptr: *const u8, size: usize) -> f64 {
+    let encoded_data = core::slice::from_raw_parts(ptr, size);
+    let Ok(array) = bincode::deserialize::<Vec<f64>>(encoded_data) else {
+        let error_message = "deserialization_failed";
+        log!("ERROR: '{error_message}'");
+        panic!("{error_message}");
+    };
+    let result = array.into_iter().sum();
+    log!("sum_array result is {result}");
+    result
 }
 
-extern "C" {
-    fn log_result(result: f64) -> f64;
+// -- helpers --
+
+#[no_mangle]
+pub unsafe extern "C" fn alloc(size: usize) -> *mut u8 {
+    core::mem::ManuallyDrop::new(Vec::with_capacity(size)).as_mut_ptr()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn free(ptr: *mut u8, size: usize) {
+    Vec::from_raw_parts(ptr, size, size);
 }
