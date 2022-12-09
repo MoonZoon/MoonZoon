@@ -8,8 +8,8 @@ edition = "2021"
 # wasm-bindgen has to match the version installed by mzoon
 # @TODO install the compatible (aka the same) version by mzoon automatically?
 wasm-bindgen = { version = "=0.2.83", default-features = false }
-wasm-bindgen-futures = { version = "0.4.31", default-features = false }
-js-sys = { version = "0.3.58", default-features = false }
+wasm-bindgen-futures = { version = "0.4.33", default-features = false }
+js-sys = { version = "0.3.60", default-features = false }
 futures-signals = { version = "0.3.29", default-features = false }
 futures-util = { version = "0.3.21", default-features = false }
 futures-channel = { version = "0.3.21", default-features = false }
@@ -46,8 +46,9 @@ ufmt = { version = "0.1.0", features = ["std"], default-features = false, option
 lexical = { git = "https://github.com/Alexhuszagh/rust-lexical", rev = "7010efd5e144faff0c9afbc1b22b47d9d9567966", features = ["std"], default-features = false, optional = true }
 
 [dependencies.web-sys]
-version = "0.3.58"
+version = "0.3.60"
 features = [
+  'Blob',
   'css',
   'CssKeyframesRule',
   'CssRule',
@@ -79,6 +80,7 @@ features = [
   'HtmlScriptElement',
   'HtmlTemplateElement',
   'HtmlVideoElement',
+  'ImageBitmap',
   'Location',
   'Performance',
   'PointerEvent',
@@ -89,6 +91,7 @@ features = [
   'RequestInit',
   'Storage',
   'SvgsvgElement',
+  'Url',
   'WheelEvent',
 ]
 default-features = false
