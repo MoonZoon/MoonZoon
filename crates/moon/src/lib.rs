@@ -74,7 +74,9 @@ pub use not::not;
 pub use redirect::Redirect;
 pub use up_msg_request::UpMsgRequest;
 
-const MAX_UP_MSG_BYTES: usize = 2 * 1_048_576;
+// @TODO make it configurable
+// const MAX_UP_MSG_BYTES: usize = 2 * 1_048_576;
+const MAX_UP_MSG_BYTES: usize = usize::MAX;
 
 #[derive(Copy, Clone)]
 struct SharedData {
