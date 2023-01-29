@@ -19,6 +19,7 @@ enum CssName {
     MinWidth,
     Width,
     MaxWidth,
+    FlexGrow,
 }
 
 #[derive(Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
@@ -143,9 +144,17 @@ impl<'a> Width<'a> {
     }
 
     pub fn growable() -> Self {
+        Self::growable_with_factor::<f64>(None)
+    }
+
+    pub fn growable_with_factor<T: Into<f64>>(factor: impl Into<Option<T>>) -> Self {
         let mut this = Self::default();
         this.css_props
             .insert(CssName::Width, into_prop_value("auto"));
+        if let Some(factor) = factor.into() {
+            this.css_props
+                .insert(CssName::FlexGrow, into_prop_value(factor.into()));
+        }
         this.width_mode = WidthMode::FillWidth;
         this
     }

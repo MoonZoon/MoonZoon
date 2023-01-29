@@ -7,19 +7,20 @@ pub mod routing;
 #[cfg(feature = "web_storage")]
 pub mod web_storage;
 
+mod animation;
 mod class_id;
 pub mod console;
 mod cow_str;
 mod css_property;
 pub mod dom;
 mod dom_builder_ext;
-pub mod ease;
 mod either;
 mod element;
 mod event_options;
 pub mod events_extra;
 mod futures_signals_ext;
 mod index_generator;
+mod into_f64;
 mod monotonic_ids;
 mod mutable;
 mod mutable_vec;
@@ -30,13 +31,13 @@ mod task;
 mod timer;
 mod viewport;
 
+pub use animation::*;
 pub use class_id::ClassId;
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use css_property::VENDOR_PREFIXES;
 pub use dom::{document, history, load_script, load_stylesheet, window};
 pub use dom_builder_ext::DomBuilderExt;
 pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};
-pub use easy_cast;
 pub use either::{Either, IntoEither};
 pub use element::*;
 pub use event_options::EventOptions;
@@ -55,12 +56,14 @@ pub use futures_util::{self, future, FutureExt, Stream, StreamExt};
 pub use gensym::gensym;
 pub use hsluv::{hsluv, HSLuv};
 pub use index_generator::IndexGenerator;
+pub use into_f64::IntoF64;
 pub use js_sys::{self, JsString, Reflect};
 pub use lang::Lang;
 pub use monotonic_ids::MonotonicIds;
 pub use mutable::Mutable;
 pub use mutable_vec::MutableVec;
 pub use not::not;
+pub use num_traits;
 pub use once_cell;
 pub use paste::paste;
 pub use pin_project::pin_project;
@@ -73,7 +76,7 @@ pub use task::{Task, TaskHandle};
 pub use timer::Timer;
 pub use viewport::{Scene, Viewport};
 pub use wasm_bindgen::{self, prelude::*, JsCast};
-pub use wasm_bindgen_futures::{self, JsFuture};
+pub use wasm_bindgen_futures::{self, future_to_promise, JsFuture};
 pub use web_sys;
 
 #[cfg(feature = "connection")]
@@ -129,6 +132,9 @@ pub use thiserror;
 
 #[cfg(feature = "chrono")]
 pub use chrono::{self, prelude::*, Duration};
+
+#[cfg(feature = "serde-wasm-bindgen")]
+pub use serde_wasm_bindgen;
 
 // -- public_url --
 

@@ -36,6 +36,13 @@ fn rectangles() -> &'static MutableVec<Rectangle> {
     MutableVec::new_with_values(Rectangle::iter().collect())
 }
 
+#[static_ref]
+fn spread_oscillator() -> &'static Oscillator {
+    let oscillator = Oscillator::new(Duration::seconds(2));
+    oscillator.cycle();
+    oscillator
+}
+
 // ------ ------
 //   Commands
 // ------ ------
@@ -63,38 +70,28 @@ fn root() -> impl Element {
 
 fn rectangle(rectangle: Rectangle) -> impl Element {
     println!("render Rectangle '{rectangle:?}'");
-
-    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let (color, align) = rectangle.color_and_align();
 
-    // @TODO replace global styles and `El` styles below with the future Zoon animation API
-    run_once!(|| {
-        global_styles().style_animation(
-            StyleAnimation::new("stretch")
-                .keyframe(StyleGroup::new("100%").style("transform", "scale(1.2)")),
-        );
-    });
+    let lightness_oscillator = Oscillator::new(Duration::milliseconds(200));
+    let color = lightness_oscillator
+        .signal()
+        .map(interpolate::linear(color.l(), color.l() + 5.))
+        .map(move |l| color.set_l(l));
 
     El::new()
-        .update_raw_el(|raw_el| {
-            raw_el
-                .style("animation-name", "stretch")
-                .style("animation-duration", "2.0s")
-                .style("animation-timing-function", "ease-out")
-                .style("animation-direction", "alternate")
-                .style("animation-iteration-count", "infinite")
-                .style("animation-play-state", "running")
-        })
+        .s(Transform::with_signal(
+            spread_oscillator()
+                .signal()
+                .map(|spread| Transform::new().scale(100. + spread * 20.)),
+        ))
         .s(Width::exact(100))
         .s(Height::exact(100))
         .s(RoundedCorners::all(15))
         .s(Cursor::new(CursorIcon::Pointer))
         .s(Shadows::new([Shadow::new().blur(20).color(GRAY_8)]))
-        .s(Background::new().color_signal(
-            hovered_signal.map_bool(move || color.update_l(|l| l + 5.), move || color),
-        ))
+        .s(Background::new().color_signal(color))
         .s(align)
-        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .on_hovered_change(move |is_hovered| lightness_oscillator.go_to(is_hovered))
         .on_click(move || bring_to_front(rectangle))
 }
 

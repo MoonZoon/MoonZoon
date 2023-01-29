@@ -1,0 +1,8 @@
+record init-data {
+  instance-id: u32,
+  host-name: string,
+}
+init-plugin: func(data: init-data)
+
+sum: func(a: float64, b: float64) -> float64
+sum-list: func(addends: list<float64>) -> float64

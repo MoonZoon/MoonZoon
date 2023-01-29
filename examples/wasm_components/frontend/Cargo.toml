@@ -1,0 +1,23 @@
+[package]
+name = "frontend"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+authors.workspace = true
+description.workspace = true
+categories.workspace = true
+license.workspace = true
+readme.workspace = true
+publish.workspace = true
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.19"
+
+[dependencies]
+zoon.workspace = true
+anyhow = { version = "1.0.66", features = ["std"], default-features = false }
+
+# @TODO-WASMER: Resolve all @TODO-WASMER in this branch:
+wai-bindgen-wasmer = { git = "https://github.com/MartinKavik/wai.git", branch = "fix/browser_wasm_compatibility" } 
+# wai-bindgen-wasmer = { version = "0.2.1", default-features = false }
+# wai-bindgen-wasmer = { path = "../../../../wai/crates/wasmer", default-features = false }

@@ -1,4 +1,5 @@
 [package]
-version = "0.1.0"
 name = "shared"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true

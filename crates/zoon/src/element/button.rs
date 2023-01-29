@@ -108,14 +108,31 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet, RawHtmlEl<web_sys::HtmlDivElemen
                         .style("margin-top", "auto")
                         .style("margin-bottom", "0"),
                 )
-                .style_group(
-                    StyleGroup::new(".button > .align_left").style("align-self", "flex-start"),
-                )
-                .style_group(
-                    StyleGroup::new(".button > .align_right").style("align-self", "flex-end"),
-                )
+                .style_group(StyleGroup::new(".button > .align_left").style("align-self", "start"))
+                .style_group(StyleGroup::new(".button > .align_right").style("align-self", "end"))
                 .style_group(StyleGroup::new(".button > .exact_height").style("flex-shrink", "0"))
-                .style_group(StyleGroup::new(".button > .fill_height").style("flex-grow", "1"));
+                .style_group(StyleGroup::new(".button > .fill_height").style("flex-grow", "1"))
+                .style_group(
+                    StyleGroup::new(".button.align_left_content").style("align-items", "start"),
+                )
+                .style_group(
+                    StyleGroup::new(".button.align_right_content").style("align-items", "end"),
+                )
+                .style_group(
+                    StyleGroup::new(".button.align_top_content")
+                        .style_important("justify-content", "start"),
+                )
+                .style_group(
+                    StyleGroup::new(".button.align_bottom_content")
+                        .style_important("justify-content", "end"),
+                )
+                .style_group(
+                    StyleGroup::new(".button.center_x_content").style("align-items", "center"),
+                )
+                .style_group(
+                    StyleGroup::new(".button.center_y_content")
+                        .style_important("justify-content", "center"),
+                );
         });
         Self {
             raw_el: RawHtmlEl::<web_sys::HtmlDivElement>::new("div")

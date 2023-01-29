@@ -27,6 +27,19 @@ impl Spacer {
             el: Self::new_el().s(Width::growable()).s(Height::growable()),
         }
     }
+
+    pub fn growable_with_factor<T: Into<f64>>(factor: impl Into<Option<T>>) -> Self {
+        if let Some(factor) = factor.into() {
+            let factor = factor.into();
+            Self {
+                el: Self::new_el()
+                    .s(Width::growable_with_factor(factor))
+                    .s(Height::growable_with_factor(factor)),
+            }
+        } else {
+            Self::growable()
+        }
+    }
 }
 
 impl Element for Spacer {

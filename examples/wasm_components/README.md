@@ -1,0 +1,2 @@
+# Wasm components
+> MoonZoon example

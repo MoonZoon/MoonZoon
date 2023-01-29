@@ -1,0 +1,12 @@
+type error = string
+
+record plugin {
+  name: string,
+  version: option<float32>,
+}
+
+// Register plugin in the host
+register-plugin: func(plugin: plugin) -> expected<unit, error>
+
+log: func(message: string)
+
