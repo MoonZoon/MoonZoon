@@ -24,6 +24,7 @@
         // "examples/resize_drag/Cargo.toml",
         // "examples/row_wrap/Cargo.toml",
         // "examples/slider/Cargo.toml",
+        // "examples/spinner/Cargo.toml",
         // "examples/start_with_app/Cargo.toml",
         // "examples/svg/Cargo.toml",
         // "examples/text_area/Cargo.toml",
@@ -33,7 +34,7 @@
         // "examples/tweened/Cargo.toml",
         // "examples/video/Cargo.toml",
         // "examples/viewport/Cargo.toml",
-        "examples/wasm_components/Cargo.toml",
+        // "examples/wasm_components/Cargo.toml",
     ],
     "rust-analyzer.diagnostics.disabled": [
         "missing-unsafe",

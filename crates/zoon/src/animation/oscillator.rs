@@ -52,6 +52,10 @@ impl Data {
         self.value.set_neq(unit_interval_value);
     }
 
+    pub fn set_duration(&self, transition_duration: Duration) {
+        *self.transition_duration.lock().unwrap_throw() = transition_duration;
+    }
+
     fn advance(&self, duration: Duration) {
         let status = *self.status.lock().unwrap_throw();
         let transition_duration = *self.transition_duration.lock().unwrap_throw();
@@ -136,5 +140,9 @@ impl Oscillator {
     pub fn jump_to(&self, unit_interval_value: impl IntoF64) {
         let unit_interval_value = unit_interval_value.into_f64().clamp(0., 1.);
         self.data.jump_to(unit_interval_value);
+    }
+
+    pub fn set_duration(&self, transition_duration: Duration) {
+        self.data.set_duration(transition_duration);
     }
 }
