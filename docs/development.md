@@ -63,6 +63,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/video/Cargo.toml",
         // "examples/viewport/Cargo.toml",
         // "examples/wasm_components/Cargo.toml",
+        // "examples/web_components/Cargo.toml",
     ],
     "rust-analyzer.diagnostics.disabled": [
         "missing-unsafe",
