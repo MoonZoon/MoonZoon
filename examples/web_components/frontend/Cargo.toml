@@ -1,0 +1,17 @@
+[package]
+name = "frontend"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+authors.workspace = true
+description.workspace = true
+categories.workspace = true
+license.workspace = true
+readme.workspace = true
+publish.workspace = true
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.19"
+
+[dependencies]
+zoon.workspace = true
