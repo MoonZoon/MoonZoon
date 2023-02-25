@@ -26,8 +26,16 @@ pub fn set_env_vars(config: &Config, build_mode: BuildMode, frontend_dist: bool)
         (build_mode.is_not_dev() && !frontend_dist).to_string(),
     );
 
+    // frontend_dist = false
     env::set_var("FRONTEND_DIST", frontend_dist.to_string());
 
+    // frontend_auto_reload = false
+    env::set_var(
+        "FRONTEND_AUTO_RELOAD",
+        (build_mode.is_not_release() && !frontend_dist).to_string(),
+    );
+
+    // custom configs from MoonZoonCustom.toml
     for (key, value) in &config.custom_env_vars {
         env::set_var(key, value);
     }

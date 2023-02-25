@@ -71,7 +71,10 @@ async fn on_change(
 
 async fn build_and_reload(reload_url: Arc<String>, build_mode: BuildMode, cache_busting: bool) {
     if let Err(error) = build_frontend(build_mode, cache_busting, false).await {
-        return eprintln!("{}", error);
+        return eprintln!("{error}");
+    }
+    if build_mode.is_release() {
+        return println!("['Reload frontend' is deactivated in release mode]");
     }
     println!("Reload frontend");
     let response = reqwest::Client::builder()
