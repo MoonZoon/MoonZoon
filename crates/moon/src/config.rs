@@ -21,6 +21,8 @@ pub struct Config {
     pub backend_log_level: LevelFilter,
     // FRONTEND_DIST
     pub frontend_dist: bool,
+    // FRONTEND_AUTO_RELOAD
+    pub frontend_auto_reload: bool,
 
     #[serde(default = "Redirect::from_env_vars")]
     pub redirect: Redirect,
@@ -44,6 +46,7 @@ impl Default for Config {
             frontend_dist: false,
             redirect: Redirect::default(),
             cors: Cors::default(),
+            frontend_auto_reload: false,
         }
     }
 }

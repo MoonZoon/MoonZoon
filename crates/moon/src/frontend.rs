@@ -108,7 +108,13 @@ impl Frontend {
         } else {
             let reconnecting_event_source_js_code =
                 include_str!("../js/ReconnectingEventSource.min.js");
-            let sse_js_code = include_str!("../js/sse.js");
+
+            let sse_js_code = if CONFIG.frontend_auto_reload {
+                include_str!("../js/sse_auto_reload.js")
+            } else {
+                ""
+            };
+
             format!(
                 r#"<script type="text/javascript">
                     {reconnecting_event_source_js_code}

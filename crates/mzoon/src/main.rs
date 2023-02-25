@@ -76,6 +76,14 @@ impl BuildMode {
         !self.is_dev()
     }
 
+    fn is_release(&self) -> bool {
+        matches!(self, Self::Release)
+    }
+
+    fn is_not_release(&self) -> bool {
+        !self.is_release()
+    }
+
     fn env_name(&self) -> &str {
         match self {
             Self::Dev => "DEV",
