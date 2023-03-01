@@ -48,8 +48,8 @@ pub use futures_signals::{
         self, always, channel, Broadcaster, MutableSignal, ReadOnlyMutable, Receiver, Sender,
         Signal, SignalExt, SignalStream,
     },
-    signal_map::{MutableBTreeMap, MutableSignalMap, SignalMap, SignalMapExt},
-    signal_vec::{always as always_vec, MutableSignalVec, SignalVec, SignalVecExt},
+    signal_map::{MapDiff, MutableBTreeMap, MutableSignalMap, SignalMap, SignalMapExt},
+    signal_vec::{always as always_vec, MutableSignalVec, SignalVec, SignalVecExt, VecDiff},
 };
 pub use futures_signals_ext::{SignalExtBool, SignalExtExt, SignalExtOption};
 pub use futures_util::{self, future, FutureExt, Stream, StreamExt};
