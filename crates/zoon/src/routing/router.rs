@@ -28,11 +28,19 @@ impl<R: FromRouteSegments> Router<R> {
     }
 
     pub fn go<'a>(&self, to: impl IntoCowStr<'a>) {
-        go(&self.url_change_sender, to);
+        go(&self.url_change_sender, to, false);
     }
 
     pub fn replace<'a>(&self, with: impl IntoCowStr<'a>) {
-        replace(&self.url_change_sender, with);
+        replace(&self.url_change_sender, with, false);
+    }
+
+    pub fn silent_go<'a>(&self, to: impl IntoCowStr<'a>) {
+        go(&self.url_change_sender, to, true);
+    }
+
+    pub fn silent_replace<'a>(&self, with: impl IntoCowStr<'a>) {
+        replace(&self.url_change_sender, with, true);
     }
 }
 
@@ -68,7 +76,7 @@ fn setup_url_change_handler<R: FromRouteSegments, O: Future<Output = ()> + 'stat
     (url_change_sender, url_change_handle)
 }
 
-fn go<'a>(url_change_sender: &UrlChangeSender, to: impl IntoCowStr<'a>) {
+fn go<'a>(url_change_sender: &UrlChangeSender, to: impl IntoCowStr<'a>, silent: bool) {
     let to = to.into_cow_str();
     if !to.starts_with('/') {
         return window().location().assign(&to).unwrap_throw();
@@ -76,12 +84,14 @@ fn go<'a>(url_change_sender: &UrlChangeSender, to: impl IntoCowStr<'a>) {
     history()
         .push_state_with_url(&JsValue::NULL, "", Some(&to))
         .unwrap_throw();
-    url_change_sender
-        .send(current_url_segments())
-        .unwrap_throw();
+    if !silent {
+        url_change_sender
+            .send(current_url_segments())
+            .unwrap_throw();
+    }
 }
 
-fn replace<'a>(url_change_sender: &UrlChangeSender, with: impl IntoCowStr<'a>) {
+fn replace<'a>(url_change_sender: &UrlChangeSender, with: impl IntoCowStr<'a>, silent: bool) {
     let with = with.into_cow_str();
     if !with.starts_with('/') {
         return window().location().replace(&with).unwrap_throw();
@@ -89,9 +99,11 @@ fn replace<'a>(url_change_sender: &UrlChangeSender, with: impl IntoCowStr<'a>) {
     history()
         .replace_state_with_url(&JsValue::NULL, "", Some(&with))
         .unwrap_throw();
-    url_change_sender
-        .send(current_url_segments())
-        .unwrap_throw();
+    if !silent {
+        url_change_sender
+            .send(current_url_segments())
+            .unwrap_throw();
+    }
 }
 
 fn current_url_segments() -> Option<Vec<String>> {
@@ -151,6 +163,6 @@ fn link_click_handler(event: MouseEvent, url_change_sender: &UrlChangeSender) ->
         .ok()??;
     let href = a.get_attribute("href")?;
     event.prevent_default();
-    go(url_change_sender, href);
+    go(url_change_sender, href, false);
     Some(())
 }
