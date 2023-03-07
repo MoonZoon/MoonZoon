@@ -6,3 +6,6 @@ pub use signal_ext_option::*;
 
 mod signal_ext_ext;
 pub use signal_ext_ext::*;
+
+mod signal_map_ext_ext;
+pub use signal_map_ext_ext::*;

@@ -51,7 +51,7 @@ pub use futures_signals::{
     signal_map::{MapDiff, MutableBTreeMap, MutableSignalMap, SignalMap, SignalMapExt},
     signal_vec::{always as always_vec, MutableSignalVec, SignalVec, SignalVecExt, VecDiff},
 };
-pub use futures_signals_ext::{SignalExtBool, SignalExtExt, SignalExtOption};
+pub use futures_signals_ext::{SignalExtBool, SignalExtExt, SignalExtOption, SignalMapExtExt};
 pub use futures_util::{self, future, FutureExt, Stream, StreamExt};
 pub use gensym::gensym;
 pub use hsluv::{hsluv, HSLuv};
