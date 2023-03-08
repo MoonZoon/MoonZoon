@@ -48,6 +48,10 @@ pub use futures_signals::{
         self, always, channel, Broadcaster, MutableSignal, ReadOnlyMutable, Receiver, Sender,
         Signal, SignalExt, SignalStream,
     },
+    // @TODO Uncomment once and remove the next line once the new `futures-signals` version is released
+    // (Note: Patch in Cargo.toml does not work)
+    // (related PR: https://github.com/Pauan/rust-signals/pull/65)
+    // signal_map::{always as always_map, MapDiff, MutableBTreeMap, MutableSignalMap, SignalMap, SignalMapExt},
     signal_map::{MapDiff, MutableBTreeMap, MutableSignalMap, SignalMap, SignalMapExt},
     signal_vec::{always as always_vec, MutableSignalVec, SignalVec, SignalVecExt, VecDiff},
 };
