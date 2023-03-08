@@ -17,7 +17,8 @@ impl Timer {
         }
     }
 
-    pub fn new_immediate(ms: u32, on_tick: impl FnMut() + 'static) -> Self {
+    pub fn new_immediate(ms: u32, mut on_tick: impl FnMut() + 'static) -> Self {
+        on_tick();
         Self::new(ms, on_tick)
     }
 
