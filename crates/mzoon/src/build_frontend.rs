@@ -31,13 +31,23 @@ pub async fn build_frontend(build_mode: BuildMode, cache_busting: bool, frontend
     }
 
     let build_id = Uuid::new_v4().as_u128();
-    let (wasm_file_path, js_file_path, _) = try_join!(
+
+    let (wasm_file_path, js_file_path, snippets_path, _) = try_join!(
         rename_wasm_file(build_id, cache_busting),
         rename_js_file(build_id, cache_busting),
+        rename_snippets_folder(build_id, cache_busting),
         write_build_id(build_id),
     )?;
+
+    update_snippet_paths_in_js_file(build_id, cache_busting, js_file_path.as_ref()).await?;
+
     if build_mode.is_not_dev() && !frontend_dist {
-        compress_pkg(wasm_file_path.as_ref(), js_file_path.as_ref()).await?;
+        compress_pkg(
+            wasm_file_path.as_ref(),
+            js_file_path.as_ref(),
+            snippets_path.as_ref(),
+        )
+        .await?;
     }
     println!("Frontend built");
 }
@@ -110,12 +120,46 @@ async fn rename_wasm_file(build_id: u128, cache_busting: bool) -> Cow<'static, s
         return Cow::from(ORIGINAL_PATH);
     };
 
-    let new_path = format!("{}_{}{}", PATH, build_id, EXTENSION);
+    let new_path = format!("{PATH}_{build_id}{EXTENSION}");
     fs::rename(ORIGINAL_PATH, &new_path)
         .await
         .context("Failed to rename the wasm file in the pkg directory")?;
 
     Cow::from(new_path)
+}
+
+#[throws]
+async fn rename_snippets_folder(build_id: u128, cache_busting: bool) -> Cow<'static, str> {
+    const ORIGINAL_PATH: &str = "frontend/pkg/snippets";
+
+    if !cache_busting || fs::metadata(ORIGINAL_PATH).await.is_err() {
+        return Cow::from(ORIGINAL_PATH);
+    };
+
+    let new_path = format!("{ORIGINAL_PATH}_{build_id}");
+    fs::rename(ORIGINAL_PATH, &new_path)
+        .await
+        .context("Failed to rename the snippets folder in the pkg directory")?;
+
+    Cow::from(new_path)
+}
+
+#[throws]
+async fn update_snippet_paths_in_js_file(
+    build_id: u128,
+    cache_busting: bool,
+    js_file_path: impl AsRef<Path>,
+) {
+    if !cache_busting {
+        return;
+    };
+
+    let js = fs::read_to_string(&js_file_path).await?.replace(
+        "from './snippets/",
+        &format!("from './snippets_{build_id}/"),
+    );
+
+    fs::write(js_file_path, js).await?;
 }
 
 #[throws]
@@ -128,7 +172,7 @@ async fn rename_js_file(build_id: u128, cache_busting: bool) -> Cow<'static, str
         return Cow::from(ORIGINAL_PATH);
     };
 
-    let new_path = format!("{}_{}{}", PATH, build_id, EXTENSION);
+    let new_path = format!("{PATH}_{build_id}{EXTENSION}");
     fs::rename(ORIGINAL_PATH, &new_path)
         .await
         .context("Failed to rename the JS file in the pkg directory")?;
@@ -137,14 +181,17 @@ async fn rename_js_file(build_id: u128, cache_busting: bool) -> Cow<'static, str
 }
 
 #[throws]
-async fn compress_pkg(wasm_file_path: impl AsRef<Path>, js_file_path: impl AsRef<Path>) {
-    static SNIPPETS_PATH: &str = "frontend/pkg/snippets";
+async fn compress_pkg(
+    wasm_file_path: impl AsRef<Path>,
+    js_file_path: impl AsRef<Path>,
+    snippets_file_path: impl AsRef<Path>,
+) {
     try_join!(
         create_compressed_files(wasm_file_path),
         create_compressed_files(js_file_path),
         async {
-            if fs::metadata(SNIPPETS_PATH).await.is_ok() {
-                visit_files(SNIPPETS_PATH)
+            if fs::metadata(snippets_file_path.as_ref()).await.is_ok() {
+                visit_files(snippets_file_path.as_ref())
                     .try_for_each_concurrent(None, |file| create_compressed_files(file.path()))
                     .await?;
             }
@@ -162,5 +209,5 @@ async fn create_compressed_files(file_path: impl AsRef<Path>) {
         BrotliFileCompressor::compress_file(Arc::clone(&content), file_path, "br"),
         GzipFileCompressor::compress_file(content, file_path, "gz"),
     )
-    .with_context(|| format!("Failed to create compressed files for {:?}", file_path))?
+    .with_context(|| format!("Failed to create compressed files for {file_path:?}"))?
 }
