@@ -43,7 +43,9 @@ pub use element::*;
 pub use event_options::EventOptions;
 pub use futures_channel::{self, oneshot};
 pub use futures_signals::{
-    self, map_mut, map_ref,
+    self,
+    map_mut,
+    map_ref,
     signal::{
         self, always, channel, Broadcaster, MutableSignal, ReadOnlyMutable, Receiver, Sender,
         Signal, SignalExt, SignalStream,
