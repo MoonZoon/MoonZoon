@@ -29,10 +29,16 @@ body * {
     height: 100vh;
 }
 
-@supports (height: 100dvh) { 
-    #app {
-        /* @TODO Move to #app block once https://caniuse.com/viewport-unit-variants are supported. */
-        height: 100dvh; 
+/* smartphones, touchscreens (https://ferie.medium.com/detect-a-touch-device-with-only-css-9f8e30fa1134) */
+@media (hover: none) and (pointer: coarse) {
+    @supports (height: 100dvh) { 
+        #app {
+            /* @TODO Move to #app block once https://caniuse.com/viewport-unit-variants are supported 
+                and it works as expected on desktop Safari.
+                Note: When more granularity is needed: https://stackoverflow.com/a/25975282 
+            */
+            height: 100dvh; 
+        }
     }
 }
 
