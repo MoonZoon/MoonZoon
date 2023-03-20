@@ -7,13 +7,13 @@ edition = "2021"
 [dependencies]
 # wasm-bindgen has to match the version installed by mzoon
 # @TODO install the compatible (aka the same) version by mzoon automatically?
-wasm-bindgen = { version = "=0.2.83", default-features = false }
-wasm-bindgen-futures = { version = "0.4.33", default-features = false }
+wasm-bindgen = { version = "=0.2.84", default-features = false }
+wasm-bindgen-futures = { version = "0.4.34", default-features = false }
 js-sys = { version = "0.3.60", default-features = false }
-futures-signals = { version = "0.3.29", default-features = false }
+futures-signals = { version = "0.3.32", default-features = false }
 futures-util = { version = "0.3.21", default-features = false }
 futures-channel = { version = "0.3.21", default-features = false }
-dominator = { version = "0.5.28", default-features = false }
+dominator = { version = "0.5.32", default-features = false }
 paste = { version = "1.0.7", default-features = false }
 send_wrapper = { version = "0.6.0", default-features = false }
 pin-project = { version = "1.0.11", default-features = false }
@@ -46,54 +46,57 @@ ufmt = { version = "0.1.0", features = ["std"], default-features = false, option
 lexical = { git = "https://github.com/Alexhuszagh/rust-lexical", rev = "7010efd5e144faff0c9afbc1b22b47d9d9567966", features = ["std"], default-features = false, optional = true }
 
 [dependencies.web-sys]
-version = "0.3.60"
+version = "0.3.61"
 features = [
-  'Blob',
-  'css',
-  'CssKeyframesRule',
-  'CssRule',
-  'CssRuleList',
-  'CssStyleDeclaration',
-  'CssStyleRule',
-  'CssStyleSheet',
-  'CustomEvent',
-  'DataTransfer',
-  'DomRect',
-  'DomRectReadOnly',
-  'Element',
-  'Event',
-  'EventTarget',
-  'File',
-  'FileList',
-  'Headers',
-  'History',
-  'HtmlAnchorElement',
-  'HtmlButtonElement',
-  'HtmlCanvasElement',
-  'HtmlDivElement',
-  'HtmlElement',
-  'HtmlBodyElement',
-  'HtmlImageElement',
-  'HtmlInputElement',
-  'HtmlLabelElement',
-  'HtmlLinkElement',
-  'HtmlParagraphElement',
-  'HtmlScriptElement',
-  'HtmlTemplateElement',
-  'HtmlVideoElement',
-  'ImageBitmap',
-  'Location',
-  'Performance',
-  'PointerEvent',
-  'Response',
-  'ResponseInit',
-  'ReadableStream',
-  'Request',
-  'RequestInit',
-  'Storage',
-  'SvgsvgElement',
-  'Url',
-  'WheelEvent',
+  "Blob",
+  "css",
+  "CssKeyframesRule",
+  "CssRule",
+  "CssRuleList",
+  "CssStyleDeclaration",
+  "CssStyleRule",
+  "CssStyleSheet",
+  "CustomEvent",
+  "DataTransfer",
+  "DomRect",
+  "DomRectReadOnly",
+  "Element",
+  "Event",
+  "EventTarget",
+  "File",
+  "FileList",
+  "Headers",
+  "History",
+  "HtmlAnchorElement",
+  "HtmlButtonElement",
+  "HtmlCanvasElement",
+  "HtmlDivElement",
+  "HtmlElement",
+  "HtmlBodyElement",
+  "HtmlImageElement",
+  "HtmlInputElement",
+  "HtmlLabelElement",
+  "HtmlLinkElement",
+  "HtmlParagraphElement",
+  "HtmlScriptElement",
+  "HtmlTemplateElement",
+  "HtmlVideoElement",
+  "ImageBitmap",
+  "Location",
+  "Performance",
+  "PointerEvent",
+  "Response",
+  "ResponseInit",
+  "ReadableStream",
+  "Request",
+  "RequestInit",
+  "ScrollIntoViewOptions",
+  "ScrollLogicalPosition",
+  "Storage",
+  "SvgsvgElement",
+  "Url",
+  "UrlSearchParams",
+  "WheelEvent",
 ]
 default-features = false
 
