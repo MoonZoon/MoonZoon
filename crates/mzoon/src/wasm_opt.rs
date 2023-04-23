@@ -68,7 +68,7 @@ pub async fn optimize_with_wasm_opt(build_mode: BuildMode) {
     if let BuildMode::Profiling = build_mode {
         args.push("--debuginfo");
     }
-    Command::new("frontend/wasm-opt")
+    Command::new("frontend/binaryen/bin/wasm-opt")
         .args(&args)
         .status()
         .await
@@ -83,7 +83,7 @@ pub async fn optimize_with_wasm_opt(build_mode: BuildMode) {
 async fn check_wasm_opt() {
     const EXPECTED_VERSION_OUTPUT_START: &[u8] = concatcp!("wasm-opt version ", VERSION).as_bytes();
 
-    let version_output = Command::new("frontend/wasm-opt")
+    let version_output = Command::new("frontend/binaryen/bin/wasm-opt")
         .args(&["--version"])
         .output()
         .await?
