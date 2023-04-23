@@ -7,6 +7,7 @@ use const_format::{concatcp, formatcp};
 use fehler::throws;
 use flate2::read::GzDecoder;
 use std::path::PathBuf;
+use std::fs::create_dir_all;
 use tar::Archive;
 use tokio::process::Command;
 
@@ -104,16 +105,20 @@ fn unpack_wasm_opt(tar_gz: Vec<u8>) {
     for entry in archive.entries()? {
         let mut entry = entry?;
         let path = entry.path()?;
-        let file_stem = path
-            .file_stem()
+        let file_name = path
+            .file_name()
             .ok_or(anyhow!("Entry without a file name"))?;
-        if file_stem != "wasm-opt" {
-            continue;
-        }
-        let mut destination = PathBuf::from("frontend");
-        destination.push(path.file_name().unwrap());
+
+        let destination = match file_name.to_str() {
+            Some("wasm-opt")          => PathBuf::from("frontend/binaryen/bin/wasm-opt"),
+            Some("libbinaryen.dylib") => PathBuf::from("frontend/binaryen/lib/libbinaryen.dylib"),
+            _ => continue,
+        };
+        create_dir_all(destination.parent().unwrap())?;
         entry.unpack(destination)?;
-        return;
     }
-    Err(anyhow!("Failed to find wasm-opt in the downloaded archive"))?;
+
+    if !(PathBuf::from("frontend/binaryen/bin/wasm-opt").exists() && PathBuf::from("frontend/binaryen/lib/libbinaryen.dylib").exists()) {
+        Err(anyhow!("Failed to find wasm-opt in the downloaded archive"))?
+    };
 }
