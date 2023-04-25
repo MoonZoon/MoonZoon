@@ -12,7 +12,7 @@ tar = { version = "0.4.35", default-features = false }
 clap = { version = "4.2.4", features = ["std", "color", "suggestions", "derive"], default-features = false }
 toml = { version = "0.7.3", features = ["preserve_order", "parse"], default-features = false }
 serde = { version = "1.0", features = ["derive"], default-features = false }
-notify = { version = "5.1.0", features = ["crossbeam-channel"], default-features = false }
+notify-debouncer-mini = { version = "0.2.1", features = ["crossbeam"], default-features = false }
 reqwest = { version = "0.11.16", features = ["default-tls"], default-features = false }
 rcgen = { version = "0.10.0", features = ["pem"], default-features = false }
 open = { version = "4.0.2", default-features = false }

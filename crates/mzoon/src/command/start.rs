@@ -12,7 +12,7 @@ use parking_lot::Mutex;
 use std::sync::Arc;
 use tokio::{join, process::Child, signal, time::Duration};
 
-const DEBOUNCE_TIME: Duration = Duration::from_millis(100);
+const DEBOUNCE_TIME: Duration = Duration::from_millis(200);
 
 #[throws]
 pub async fn start(build_mode: BuildMode, open: bool) {
