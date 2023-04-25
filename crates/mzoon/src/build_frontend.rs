@@ -71,7 +71,9 @@ pub async fn compile_with_cargo(build_mode: BuildMode) {
 
     // https://doc.rust-lang.org/cargo/reference/environment-variables.html#configuration-environment-variables
     let mut cargo_configs = Vec::new();
-    if build_mode.is_not_dev() {
+    if build_mode.is_dev() {
+        cargo_configs.push(("DEBUG", "false"));
+    } else {
         cargo_configs.extend([("OPT_LEVEL", "z"), ("CODEGEN_UNITS", "1"), ("LTO", "true")]);
     }
     if let BuildMode::Profiling = build_mode {
