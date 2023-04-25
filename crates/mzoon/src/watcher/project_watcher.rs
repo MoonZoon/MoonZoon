@@ -1,6 +1,6 @@
 use anyhow::{Context, Error};
 use fehler::throws;
-use notify::{recommended_watcher, Event, RecommendedWatcher, RecursiveMode, Watcher};
+use notify_debouncer_mini::{notify::{RecommendedWatcher, RecursiveMode}, new_debouncer as new_notify_debouncer, Debouncer, DebounceEventResult};
 use std::path::Path;
 use std::sync::Arc;
 use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
@@ -8,7 +8,7 @@ use tokio::time::{sleep, Duration};
 use tokio::{spawn, task::JoinHandle};
 
 pub struct ProjectWatcher {
-    watcher: RecommendedWatcher,
+    watcher: Debouncer<RecommendedWatcher>,
     debouncer: JoinHandle<()>,
 }
 
@@ -16,7 +16,7 @@ impl ProjectWatcher {
     #[throws]
     pub fn start(paths: &[String], debounce_time: Duration) -> (Self, UnboundedReceiver<()>) {
         let (sender, receiver) = mpsc::unbounded_channel();
-        let watcher = start_recommended_watcher(sender, paths)?;
+        let watcher = start_recommended_watcher(sender, paths, debounce_time)?;
         let (debounced_sender, debounced_receiver) = mpsc::unbounded_channel();
 
         let this = ProjectWatcher {
@@ -39,21 +39,22 @@ impl ProjectWatcher {
 }
 
 #[throws]
-fn start_recommended_watcher(sender: UnboundedSender<()>, paths: &[String]) -> RecommendedWatcher {
-    let mut watcher = recommended_watcher(move |event| on_change(event, &sender))
+fn start_recommended_watcher(sender: UnboundedSender<()>, paths: &[String], debounce_time: Duration) -> Debouncer<RecommendedWatcher> {
+    let mut debounced_watcher = new_notify_debouncer(debounce_time, None, move |event| on_change(event, &sender))
         .context("Failed to create the watcher")?;
 
     for path in paths {
-        watcher
+        debounced_watcher
+            .watcher()
             .watch(Path::new(path), RecursiveMode::Recursive)
             .with_context(|| format!("Failed to set the watched path: '{}'", path))?;
     }
-    watcher
+    debounced_watcher
 }
 
-fn on_change(event: notify::Result<Event>, sender: &UnboundedSender<()>) {
-    if let Err(error) = event {
-        return eprintln!("Watcher failed: {:?}", error);
+fn on_change(event: DebounceEventResult, sender: &UnboundedSender<()>) {
+    if let Err(errors) = event {
+        return eprintln!("Watcher failed: {:?}", errors);
     }
     if let Err(error) = sender.send(()) {
         return eprintln!("Failed to send with the sender: {:?}", error);
