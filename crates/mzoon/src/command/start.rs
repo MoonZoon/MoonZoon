@@ -12,7 +12,7 @@ use parking_lot::Mutex;
 use std::sync::Arc;
 use tokio::{join, process::Child, signal, time::Duration};
 
-const DEBOUNCE_TIME: Duration = Duration::from_millis(200);
+const DEBOUNCE_TIME: Duration = Duration::from_millis(400);
 
 #[throws]
 pub async fn start(build_mode: BuildMode, open: bool) {
@@ -36,9 +36,6 @@ pub async fn start(build_mode: BuildMode, open: bool) {
         let _ = server.wait().await;
         println!("Moon stopped");
     }
-
-    // @TODO resolve the problem with killing the `start` task when it's started by `makers`
-    // https://github.com/sagiegurari/cargo-make/issues/374#issuecomment-1094366124
 }
 
 #[throws]

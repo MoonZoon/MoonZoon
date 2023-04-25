@@ -9,6 +9,7 @@ use tokio::sync::mpsc::UnboundedReceiver;
 use tokio::{spawn, task::JoinHandle, time::Duration};
 
 pub struct FrontendWatcher {
+    #[allow(dead_code)]
     watcher: ProjectWatcher,
     task: JoinHandle<Result<()>>,
 }
@@ -39,7 +40,7 @@ impl FrontendWatcher {
 
     #[throws]
     pub async fn stop(self) {
-        self.watcher.stop().await?;
+        drop(self.watcher);
         self.task.await??;
     }
 }
