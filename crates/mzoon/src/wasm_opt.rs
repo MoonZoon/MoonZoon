@@ -51,6 +51,7 @@ pub async fn check_or_install_wasm_opt() {
             "Failed to download wasm-opt from the url '{DOWNLOAD_URL}'"
         ))?
         .apply(unpack_wasm_opt)
+        .await
         .context("Failed to unpack wasm-opt")?;
     println!("wasm-opt installed");
 }
@@ -99,7 +100,7 @@ async fn check_wasm_opt() {
 }
 
 #[throws]
-fn unpack_wasm_opt(tar_gz: Vec<u8>) {
+async fn unpack_wasm_opt(tar_gz: Vec<u8>) {
     const LIBBINARYEN_PATH: &str = "frontend/binaryen/lib/libbinaryen.dylib";
 
     let tar = GzDecoder::new(tar_gz.as_slice());
@@ -124,7 +125,7 @@ fn unpack_wasm_opt(tar_gz: Vec<u8>) {
         entry.unpack(destination)?;
     }
 
-    if !(PathBuf::from("frontend/binaryen/bin/wasm-opt").exists() && PathBuf::from("frontend/binaryen/lib/libbinaryen.dylib").exists()) {
-        Err(anyhow!("Failed to find wasm-opt in the downloaded archive"))?
-    };
+    if let Err(error) = check_wasm_opt().await {
+        eprintln!("wasm-opt installation failed: {error:#}");
+    }
 }
