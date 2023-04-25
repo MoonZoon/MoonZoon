@@ -6,12 +6,13 @@ use cfg_if::cfg_if;
 use const_format::{concatcp, formatcp};
 use fehler::throws;
 use flate2::read::GzDecoder;
-use std::path::PathBuf;
 use std::fs::create_dir_all;
+use std::path::PathBuf;
 use tar::Archive;
 use tokio::process::Command;
 
 const VERSION: &str = "110";
+const WASM_OPT_PATH: &str = "frontend/binaryen/bin/wasm-opt";
 
 // -- public --
 
@@ -68,7 +69,7 @@ pub async fn optimize_with_wasm_opt(build_mode: BuildMode) {
     if let BuildMode::Profiling = build_mode {
         args.push("--debuginfo");
     }
-    Command::new("frontend/binaryen/bin/wasm-opt")
+    Command::new(WASM_OPT_PATH)
         .args(&args)
         .status()
         .await
@@ -83,7 +84,7 @@ pub async fn optimize_with_wasm_opt(build_mode: BuildMode) {
 async fn check_wasm_opt() {
     const EXPECTED_VERSION_OUTPUT_START: &[u8] = concatcp!("wasm-opt version ", VERSION).as_bytes();
 
-    let version_output = Command::new("frontend/binaryen/bin/wasm-opt")
+    let version_output = Command::new(WASM_OPT_PATH)
         .args(&["--version"])
         .output()
         .await?
