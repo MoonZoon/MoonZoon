@@ -72,6 +72,13 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
     "rust-analyzer.procMacro.enable": true,
     "rust-analyzer.cargo.allFeatures": true,
     "rust-analyzer.completion.autoimport.enable": false,
+    "rust-analyzer.cargo.extraEnv": {
+        "CARGO_PROFILE_RUST_ANALYZER_INHERITS": "dev"
+    },
+    "rust-analyzer.cargo.extraArgs": [
+        "--profile",
+        "rust-analyzer"
+    ],
     // "rust-analyzer.updates.channel": "nightly"
 }
 ```
