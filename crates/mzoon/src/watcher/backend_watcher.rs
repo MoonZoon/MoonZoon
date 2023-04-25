@@ -12,6 +12,7 @@ use tokio::sync::mpsc::UnboundedReceiver;
 use tokio::{spawn, task::JoinHandle, time::Duration};
 
 pub struct BackendWatcher {
+    #[allow(dead_code)]
     watcher: ProjectWatcher,
     task: JoinHandle<Result<()>>,
 }
@@ -40,7 +41,7 @@ impl BackendWatcher {
 
     #[throws]
     pub async fn stop(self) {
-        self.watcher.stop().await?;
+        drop(self.watcher);
         self.task.await??;
     }
 }
