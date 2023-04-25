@@ -42,12 +42,12 @@ enum Args {
         /// Prepare for frontend-only deploy; You can test it with https://crates.io/crates/microserver
         #[clap(short, long)]
         frontend_dist: bool,
-        #[clap(arg_enum)]
+        #[clap(value_enum)]
         hosting: Option<Hosting>,
     },
 }
 
-#[derive(clap::ArgEnum, Clone, Copy, Debug)]
+#[derive(clap::ValueEnum, Clone, Copy, Debug)]
 pub enum Hosting {
     Netlify,
 }
