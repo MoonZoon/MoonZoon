@@ -1,6 +1,7 @@
 use anyhow::{Context, Error};
 use fehler::throws;
-use notify::{immediate_watcher, Event, RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{recommended_watcher, Event, RecommendedWatcher, RecursiveMode, Watcher};
+use std::path::Path;
 use std::sync::Arc;
 use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use tokio::time::{sleep, Duration};
@@ -15,7 +16,7 @@ impl ProjectWatcher {
     #[throws]
     pub fn start(paths: &[String], debounce_time: Duration) -> (Self, UnboundedReceiver<()>) {
         let (sender, receiver) = mpsc::unbounded_channel();
-        let watcher = start_immediate_watcher(sender, paths)?;
+        let watcher = start_recommended_watcher(sender, paths)?;
         let (debounced_sender, debounced_receiver) = mpsc::unbounded_channel();
 
         let this = ProjectWatcher {
@@ -38,15 +39,13 @@ impl ProjectWatcher {
 }
 
 #[throws]
-fn start_immediate_watcher(sender: UnboundedSender<()>, paths: &[String]) -> RecommendedWatcher {
-    let mut watcher = immediate_watcher(move |event| on_change(event, &sender))
+fn start_recommended_watcher(sender: UnboundedSender<()>, paths: &[String]) -> RecommendedWatcher {
+    let mut watcher = recommended_watcher(move |event| on_change(event, &sender))
         .context("Failed to create the watcher")?;
-
-    configure_watcher(&mut watcher).context("Failed to configure the watcher")?;
 
     for path in paths {
         watcher
-            .watch(path, RecursiveMode::Recursive)
+            .watch(Path::new(path), RecursiveMode::Recursive)
             .with_context(|| format!("Failed to set the watched path: '{}'", path))?;
     }
     watcher
@@ -59,13 +58,6 @@ fn on_change(event: notify::Result<Event>, sender: &UnboundedSender<()>) {
     if let Err(error) = sender.send(()) {
         return eprintln!("Failed to send with the sender: {:?}", error);
     }
-}
-
-#[throws]
-fn configure_watcher(watcher: &mut RecommendedWatcher) {
-    watcher.configure(notify::Config::PreciseEvents(false))?;
-    watcher.configure(notify::Config::NoticeEvents(false))?;
-    watcher.configure(notify::Config::OngoingEvents(None))?;
 }
 
 async fn debounced_on_change(

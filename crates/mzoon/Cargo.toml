@@ -9,28 +9,28 @@ ignore = { version = "0.4.18", default-features = false }
 tar = { version = "0.4.35", default-features = false }
 
 [dependencies]
-clap = { version = "3.1.0", features = ["std", "color", "suggestions", "derive"], default-features = false }
-toml = { version = "0.5.8", features = ["preserve_order"], default-features = false }
+clap = { version = "4.2.4", features = ["std", "color", "suggestions", "derive"], default-features = false }
+toml = { version = "0.7.3", features = ["preserve_order", "parse"], default-features = false }
 serde = { version = "1.0", features = ["derive"], default-features = false }
-notify = { version = "=5.0.0-pre.9", default-features = false }
-reqwest = { version = "0.11.3", features = ["default-tls"], default-features = false }
-rcgen = { version = "0.8.9", features = ["pem"], default-features = false }
-open = { version = "1.7.0", default-features = false }
-uuid = { version = "1.1.2", features = ["v4"], default-features = false }
-tokio = { version = "1.6.1", features = ["rt-multi-thread", "macros", "fs", "signal", "sync", "time", "io-util", "process"], default-features = false }
-anyhow = { version = "1.0.40", features = ["std"], default-features = false }
-cargo_metadata = { version = "0.13.1", default-features = false } 
-parking_lot = { version = "0.11.1", default-features = false }
-log = { version = "0.4.14", features = ["serde"], default-features = false }
-futures = { version = "0.3.13", features = ["std"], default-features = false }
-brotli = { version = "3.3.0", features = ["std"], default-features = false }
-flate2 = { version = "1.0.20", features = ["rust_backend"], default-features = false }
-tar = { version = "0.4.35", default-features = false }
-const_format = { version = "0.2.14", default-features = false }
-async-trait = { version = "0.1.51", default-features = false }
+notify = { version = "5.1.0", features = ["crossbeam-channel"], default-features = false }
+reqwest = { version = "0.11.16", features = ["default-tls"], default-features = false }
+rcgen = { version = "0.10.0", features = ["pem"], default-features = false }
+open = { version = "4.0.2", default-features = false }
+uuid = { version = "1.3.1", features = ["v4"], default-features = false }
+tokio = { version = "1.27.0", features = ["rt-multi-thread", "macros", "fs", "signal", "sync", "time", "io-util", "process"], default-features = false }
+anyhow = { version = "1.0.70", features = ["std"], default-features = false }
+cargo_metadata = { version = "0.15.4", default-features = false } 
+parking_lot = { version = "0.12.1", default-features = false }
+log = { version = "0.4.17", features = ["serde"], default-features = false }
+futures = { version = "0.3.28", features = ["std"], default-features = false }
+brotli = { version = "3.3.4", features = ["std"], default-features = false }
+flate2 = { version = "1.0.25", features = ["rust_backend"], default-features = false }
+tar = { version = "0.4.38", default-features = false }
+const_format = { version = "0.2.30", default-features = false }
+async-trait = { version = "0.1.68", default-features = false }
 fehler = { version = "1.0.0", default-features = false }
 apply = { version = "0.3.0", default-features = false }
-bool_ext = { version = "0.5.1", default-features = false }
+bool_ext = { version = "0.5.3", default-features = false }
 cfg-if = { version = "1.0.0", default-features = false }
 fs_extra = { version = "1.3.0", default-features = false }
 again = { version = "0.1.2", default-features = false }
