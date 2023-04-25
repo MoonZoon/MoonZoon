@@ -100,19 +100,24 @@ async fn check_wasm_opt() {
 
 #[throws]
 fn unpack_wasm_opt(tar_gz: Vec<u8>) {
+    const LIBBINARYEN_PATH: &str = "frontend/binaryen/lib/libbinaryen.dylib";
+
     let tar = GzDecoder::new(tar_gz.as_slice());
     let mut archive = Archive::new(tar);
 
     for entry in archive.entries()? {
         let mut entry = entry?;
         let path = entry.path()?;
-        let file_name = path
-            .file_name()
+        // Use file_stem() because windows executable has `.exe` extension
+        let file_stem = path
+            .file_stem()
             .ok_or(anyhow!("Entry without a file name"))?;
 
-        let destination = match file_name.to_str() {
-            Some("wasm-opt")          => PathBuf::from("frontend/binaryen/bin/wasm-opt"),
-            Some("libbinaryen.dylib") => PathBuf::from("frontend/binaryen/lib/libbinaryen.dylib"),
+        let destination = match file_stem.to_str() {
+            Some("wasm-opt") => {
+                PathBuf::from(WASM_OPT_PATH).with_file_name(path.file_name().unwrap())
+            }
+            Some("libbinaryen") => PathBuf::from(LIBBINARYEN_PATH),
             _ => continue,
         };
         create_dir_all(destination.parent().unwrap())?;
