@@ -7,12 +7,12 @@ use const_format::{concatcp, formatcp};
 use fehler::throws;
 use flate2::read::GzDecoder;
 use std::fs::create_dir_all;
-use std::path::PathBuf;
+use std::path::Path;
 use tar::Archive;
 use tokio::process::Command;
 
 const VERSION: &str = "110";
-const WASM_OPT_PATH: &str = "frontend/binaryen/bin/wasm-opt";
+static WASM_OPT_PATH: &str = "frontend/binaryen/bin/wasm-opt";
 
 // -- public --
 
@@ -101,7 +101,8 @@ async fn check_wasm_opt() {
 
 #[throws]
 async fn unpack_wasm_opt(tar_gz: Vec<u8>) {
-    const LIBBINARYEN_PATH: &str = "frontend/binaryen/lib/libbinaryen.dylib";
+    // The actual file name with OS-dependent extension will be constructed at the time of unpacking
+    const LIBBINARYEN_PATH: &str = "frontend/binaryen/lib/libbinaryen";
 
     let tar = GzDecoder::new(tar_gz.as_slice());
     let mut archive = Archive::new(tar);
@@ -109,20 +110,18 @@ async fn unpack_wasm_opt(tar_gz: Vec<u8>) {
     for entry in archive.entries()? {
         let mut entry = entry?;
         let path = entry.path()?;
-        // Use file_stem() because windows executable has `.exe` extension
+        // Use `file_stem()` because Windows executable has `.exe` extension
         let file_stem = path
             .file_stem()
             .ok_or(anyhow!("Entry without a file name"))?;
 
         let destination = match file_stem.to_str() {
-            Some("wasm-opt") => {
-                PathBuf::from(WASM_OPT_PATH).with_file_name(path.file_name().unwrap())
-            }
-            Some("libbinaryen") => PathBuf::from(LIBBINARYEN_PATH),
+            Some("wasm-opt") => Path::new(WASM_OPT_PATH),
+            Some("libbinaryen") => Path::new(LIBBINARYEN_PATH),
             _ => continue,
         };
         create_dir_all(destination.parent().unwrap())?;
-        entry.unpack(destination)?;
+        entry.unpack(destination.with_file_name(path.file_name().unwrap()))?;
     }
 
     if let Err(error) = check_wasm_opt().await {
