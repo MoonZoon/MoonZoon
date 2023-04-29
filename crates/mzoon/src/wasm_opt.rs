@@ -7,7 +7,6 @@ use const_format::{concatcp, formatcp};
 use fehler::throws;
 use flate2::read::GzDecoder;
 use std::fs::create_dir_all;
-use std::path::Path;
 use tar::Archive;
 use tokio::process::Command;
 
@@ -101,27 +100,29 @@ async fn check_wasm_opt() {
 
 #[throws]
 async fn unpack_wasm_opt(tar_gz: Vec<u8>) {
-    // The actual file name with OS-dependent extension will be constructed at the time of unpacking
-    const LIBBINARYEN_PATH: &str = "frontend/binaryen/lib/libbinaryen";
-
     let tar = GzDecoder::new(tar_gz.as_slice());
     let mut archive = Archive::new(tar);
 
     for entry in archive.entries()? {
         let mut entry = entry?;
         let path = entry.path()?;
-        // Use `file_stem()` because Windows executable has `.exe` extension
-        let file_stem = path
-            .file_stem()
-            .ok_or(anyhow!("Entry without a file name"))?;
 
-        let destination = match file_stem.to_str() {
-            Some("wasm-opt") => Path::new(WASM_OPT_PATH),
-            Some("libbinaryen") => Path::new(LIBBINARYEN_PATH),
+        let file_name = path
+            .file_name()
+            .ok_or_else(|| anyhow!("Entry without a file name"))?
+            .to_str()
+            .ok_or_else(|| anyhow!("Entry with a non-Unicode file name"))?;
+
+        let output_dir = match file_name {
+            // Windows | Linux + Mac
+            "wasm-opt.exe" | "wasm-opt" => "frontend/binaryen/bin",
+            // The lib is required on Mac.
+            // Note: It's called `binaryen.lib` on Windows and `libbinaryen.a` on Linux.
+            "libbinaryen.dylib" => "frontend/binaryen/lib",
             _ => continue,
         };
-        create_dir_all(destination.parent().unwrap())?;
-        entry.unpack(destination.with_file_name(path.file_name().unwrap()))?;
+        create_dir_all(output_dir)?;
+        entry.unpack(format!("{output_dir}/{file_name}"))?;
     }
 
     if let Err(error) = check_wasm_opt().await {
