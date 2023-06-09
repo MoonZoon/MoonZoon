@@ -7,16 +7,17 @@ edition = "2021"
 [dependencies]
 # wasm-bindgen has to match the version installed by mzoon
 # @TODO install the compatible (aka the same) version by mzoon automatically?
-wasm-bindgen = { version = "=0.2.84", default-features = false }
-wasm-bindgen-futures = { version = "0.4.34", default-features = false }
-js-sys = { version = "0.3.60", default-features = false }
+wasm-bindgen = { version = "=0.2.86", default-features = false }
+wasm-bindgen-futures = { version = "0.4.36", default-features = false }
+js-sys = { version = "0.3.63", default-features = false }
 futures-signals = { version = "0.3.32", default-features = false }
-futures-util = { version = "0.3.21", default-features = false }
-futures-channel = { version = "0.3.21", default-features = false }
-dominator = { version = "0.5.32", default-features = false }
+futures-util = { version = "0.3.28", default-features = false }
+futures-channel = { version = "0.3.28", default-features = false }
+dominator = { version = "0.5.33", default-features = false }
 paste = { version = "1.0.7", default-features = false }
 send_wrapper = { version = "0.6.0", default-features = false }
 pin-project = { version = "1.0.11", default-features = false }
+# @TODO replace with the Rust native one (since 1.70.0)
 once_cell = { version = "1.12.0", features = ["alloc"], default-features = false }
 gensym = { version = "0.1.0", default-features = false }
 strum = { version = "0.24.1", features = ["derive"], default-features = false }
