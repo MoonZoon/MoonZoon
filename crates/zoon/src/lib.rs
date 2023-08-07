@@ -18,12 +18,9 @@ mod either;
 mod element;
 mod event_options;
 pub mod events_extra;
-mod futures_signals_ext;
 mod index_generator;
 mod into_f64;
 mod monotonic_ids;
-mod mutable;
-mod mutable_vec;
 mod not;
 mod resize_observer;
 mod style;
@@ -42,19 +39,7 @@ pub use either::{Either, IntoEither};
 pub use element::*;
 pub use event_options::EventOptions;
 pub use futures_channel::{self, oneshot};
-pub use futures_signals::{
-    self,
-    map_mut,
-    map_ref,
-    signal::{
-        self, always, channel, Broadcaster, MutableSignal, ReadOnlyMutable, Receiver, Sender,
-        Signal, SignalExt, SignalStream,
-    },
-    signal_map::{always as always_map, MapDiff, MutableBTreeMap, MutableSignalMap, SignalMap, SignalMapExt},
-    signal_vec::{always as always_vec, MutableSignalVec, SignalVec, SignalVecExt, VecDiff},
-};
-pub use futures_signals_ext::{SignalExtBool, SignalExtExt, SignalExtOption, SignalMapExtExt};
-pub use futures_util::{self, future, FutureExt, Stream, StreamExt};
+pub use futures_signals_ext::*;
 pub use gensym::gensym;
 pub use hsluv::{hsluv, HSLuv};
 pub use index_generator::IndexGenerator;
@@ -62,8 +47,6 @@ pub use into_f64::IntoF64;
 pub use js_sys::{self, JsString, Reflect};
 pub use lang::Lang;
 pub use monotonic_ids::MonotonicIds;
-pub use mutable::Mutable;
-pub use mutable_vec::MutableVec;
 pub use not::not;
 pub use num_traits;
 pub use once_cell;
