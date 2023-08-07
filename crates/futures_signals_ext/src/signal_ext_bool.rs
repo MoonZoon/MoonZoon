@@ -190,7 +190,7 @@ impl<I, S: Signal<Item = bool>, F: FnMut() -> I> Signal for MapFalse<S, F> {
 
         signal
             .poll_change(cx)
-            .map(|opt| opt.map(|value| not(value).then(f)))
+            .map(|opt| opt.map(|value| (!value).then(f)))
     }
 }
 
@@ -206,7 +206,11 @@ where
 {
     #[pin]
     inner: signal::Flatten<
-        MapBool<S, Box<dyn FnMut() -> Either<TS, FS>>, Box<dyn FnMut() -> Either<TS, FS>>>,
+        MapBool<
+            S,
+            Box<dyn FnMut() -> SignalEither<TS, FS>>,
+            Box<dyn FnMut() -> SignalEither<TS, FS>>,
+        >,
     >,
 }
 

@@ -10,8 +10,6 @@ edition = "2021"
 wasm-bindgen = { version = "=0.2.86", default-features = false }
 wasm-bindgen-futures = { version = "0.4.36", default-features = false }
 js-sys = { version = "0.3.63", default-features = false }
-futures-signals = { version = "0.3.32", default-features = false }
-futures-util = { version = "0.3.28", default-features = false }
 futures-channel = { version = "0.3.28", default-features = false }
 dominator = { version = "0.5.33", default-features = false }
 paste = { version = "1.0.7", default-features = false }
@@ -30,6 +28,7 @@ static_ref_macro = { path = "../static_ref_macro", default-features = false, opt
 moonlight = { path = "../moonlight", features = ["frontend"], optional = true }
 hsluv = { path = "../hsluv", features = ["hsluv_macro"], default-features = false }
 lang = { path = "../lang", default-features = false }
+futures_signals_ext = { path = "../futures_signals_ext", default-features = false }
 
 console_error_panic_hook = { version = "0.1.7", default-features = false, optional = true }
 wee_alloc = { version = "0.4.5", default-features = false, optional = true }

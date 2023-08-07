@@ -34,6 +34,7 @@ pub use async_trait::async_trait;
 pub use chashmap;
 pub use enclose::enc as clone;
 pub use futures;
+pub use futures_signals_ext::{self, *};
 pub use lang::Lang;
 pub use mime;
 pub use mime_guess;

@@ -11,6 +11,8 @@ serde = { version = "1.0.130", features = ["derive", "std"], default-features = 
 getrandom = { version = "0.2", features = ["js"], default-features = false, optional = true }
 chrono = { version = "0.4", default-features = false, optional = true }
 
+futures_signals_ext = { path = "../futures_signals_ext", default-features = false }
+
 [features]
 default = ["use__serde"]
 use__serde = ["serde", "chrono/serde", "rusty_ulid/serde"]

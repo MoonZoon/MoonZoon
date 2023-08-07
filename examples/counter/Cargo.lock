@@ -738,6 +738,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "futures_signals_ext"
+version = "0.1.0"
+dependencies = [
+ "futures-signals",
+ "futures-util",
+ "pin-project",
+]
+
+[[package]]
 name = "generic-array"
 version = "0.14.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1090,6 +1099,7 @@ dependencies = [
  "env_logger",
  "envy",
  "futures",
+ "futures_signals_ext",
  "lang",
  "local-ip-address",
  "log",
@@ -1121,6 +1131,7 @@ name = "moonlight"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "futures_signals_ext",
  "getrandom",
  "rusty_ulid",
  "serde",
@@ -2367,8 +2378,7 @@ dependencies = [
  "dominator",
  "enclose",
  "futures-channel",
- "futures-signals",
- "futures-util",
+ "futures_signals_ext",
  "gensym",
  "hsluv",
  "js-sys",
