@@ -1604,7 +1604,6 @@ dependencies = [
  "rustls",
  "rustls-pemfile",
  "serde",
- "serde-lite 0.1.1",
  "tokio",
  "tokio-stream",
  "trait-set",
@@ -1627,7 +1626,6 @@ dependencies = [
  "getrandom",
  "rusty_ulid",
  "serde",
- "serde-lite 0.1.1",
  "serde_json",
 ]
 
@@ -2476,48 +2474,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "728eb6351430bccb993660dfffc5a72f91ccc1295abaa8ce19b27ebe4f75568b"
 dependencies = [
  "serde_derive",
-]
-
-[[package]]
-name = "serde-lite"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9d109b25e9a75d8229a2f0054195d57da82c42f878c8f4db8e87524a282c6ffe"
-dependencies = [
- "serde",
- "serde-lite-derive 0.1.1",
-]
-
-[[package]]
-name = "serde-lite"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02ddeec01bebd9fa9bc7fb22e89867fdca0bacb47137595f3b660a16d8e12221"
-dependencies = [
- "serde",
- "serde-lite-derive 0.3.2",
-]
-
-[[package]]
-name = "serde-lite-derive"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cd09aa97e31ca53b74d57ccd40029aa612818133e963ae096ed2f664b1ba0d55"
-dependencies = [
- "proc-macro2 1.0.56",
- "quote 1.0.26",
- "syn 1.0.100",
-]
-
-[[package]]
-name = "serde-lite-derive"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a1a14155114bb61b608051cfa744486a5fdb8f64e19f3ca5041c3e1876bd9e5"
-dependencies = [
- "proc-macro2 1.0.56",
- "quote 1.0.26",
- "syn 1.0.100",
 ]
 
 [[package]]
@@ -3524,7 +3480,6 @@ dependencies = [
  "route_macro",
  "send_wrapper",
  "serde",
- "serde-lite 0.3.2",
  "serde-wasm-bindgen",
  "serde_json",
  "static_ref_macro",

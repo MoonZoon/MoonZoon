@@ -7,7 +7,6 @@ edition = "2021"
 [dependencies]
 serde_json = { version = "1.0.64", features = ['std'], default-features = false }
 rusty_ulid = { version = "0.10.1", features = ["ulid-generation"], default-features = false }
-serde-lite = { version = "0.1.1", features = ["derive"], default-features = false, optional = true }
 serde = { version = "1.0.130", features = ["derive", "std"], default-features = false, optional = true }
 getrandom = { version = "0.2", features = ["js"], default-features = false, optional = true }
 chrono = { version = "0.4", default-features = false, optional = true }

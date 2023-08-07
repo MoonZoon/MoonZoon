@@ -1,9 +1,6 @@
 pub use rusty_ulid::{self, DecodingError, Ulid};
 pub use serde_json;
 
-#[cfg(feature = "serde-lite")]
-pub use serde_lite::{self, Deserialize, Intermediate, Serialize};
-
 #[cfg(feature = "serde")]
 pub use serde::{
     self,

@@ -119,8 +119,6 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned + 'static> Connection<UMsg, DMsg> {
         msg_options: MsgOptions,
     ) -> Result<CorId, SendUpMsgError> {
         // ---- RequestInit ----
-        #[cfg(feature = "serde-lite")]
-        let body = serde_json::to_string(&up_msg.serialize().unwrap_throw()).unwrap_throw();
         #[cfg(feature = "serde")]
         let body = serde_json::to_string(&up_msg).unwrap_throw();
 
