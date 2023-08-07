@@ -6,13 +6,6 @@ pub struct DownMsgTransporterForSer<'a, DMsg: Serialize> {
     pub cor_id: CorId,
 }
 
-#[cfg(feature = "serde-lite")]
-#[derive(Deserialize)]
-pub struct DownMsgTransporterForDe<DMsg: Deserialize> {
-    pub down_msg: DMsg,
-    pub cor_id: CorId,
-}
-
 #[cfg(feature = "serde")]
 #[derive(Deserialize)]
 pub struct DownMsgTransporterForDe<DMsg> {

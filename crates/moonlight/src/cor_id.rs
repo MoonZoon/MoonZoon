@@ -24,23 +24,3 @@ impl FromStr for CorId {
         Ok(CorId(cor_id.parse()?))
     }
 }
-
-#[cfg(feature = "serde-lite")]
-impl Serialize for CorId {
-    fn serialize(&self) -> Result<Intermediate, serde_lite::Error> {
-        Ok(Intermediate::String(self.to_string()))
-    }
-}
-
-#[cfg(feature = "serde-lite")]
-impl Deserialize for CorId {
-    fn deserialize(intermediate: &Intermediate) -> Result<Self, serde_lite::Error> {
-        intermediate
-            .as_str()
-            .ok_or_else(|| {
-                serde_lite::Error::invalid_value("CorId can be deserialized only from String")
-            })?
-            .parse()
-            .map_err(|error| serde_lite::Error::invalid_value(error))
-    }
-}

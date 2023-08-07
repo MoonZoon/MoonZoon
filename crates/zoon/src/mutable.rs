@@ -86,17 +86,3 @@ impl<T> From<Mutable<T>> for FSMutable<T> {
         mutable.0
     }
 }
-
-#[cfg(feature = "serde-lite")]
-impl<T: Serialize> Serialize for Mutable<T> {
-    fn serialize(&self) -> Result<serde_lite::Intermediate, serde_lite::Error> {
-        self.lock_ref().serialize()
-    }
-}
-
-#[cfg(feature = "serde-lite")]
-impl<T: Deserialize> Deserialize for Mutable<T> {
-    fn deserialize(itermediate: &serde_lite::Intermediate) -> Result<Self, serde_lite::Error> {
-        T::deserialize(itermediate).map(Self::new)
-    }
-}

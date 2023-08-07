@@ -55,17 +55,3 @@ impl<T> From<MutableVec<T>> for FSMutableVec<T> {
         mutable_vec.0
     }
 }
-
-#[cfg(feature = "serde-lite")]
-impl<T: Serialize> Serialize for MutableVec<T> {
-    fn serialize(&self) -> Result<serde_lite::Intermediate, serde_lite::Error> {
-        self.lock_ref().as_slice().serialize()
-    }
-}
-
-#[cfg(feature = "serde-lite")]
-impl<T: Deserialize> Deserialize for MutableVec<T> {
-    fn deserialize(itermediate: &serde_lite::Intermediate) -> Result<Self, serde_lite::Error> {
-        <Vec<T>>::deserialize(itermediate).map(Self::new_with_values)
-    }
-}

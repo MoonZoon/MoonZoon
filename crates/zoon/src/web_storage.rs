@@ -34,9 +34,7 @@ pub enum Error {
     GetStorageError(JsValue),
     #[error("cannot insert or update the given key-value pair (error: `{0:?}`)")]
     InsertError(JsValue),
-    #[cfg(feature = "serde-lite")]
-    #[error("(de)serialization failed (error: `{0}`)")]
-    SerdeError(serde_lite::Error),
+    #[cfg(feature = "serde")]
     #[error("(de)serialization to JSON failed (error: `{0}`)")]
     SerdeJsonError(serde_json::Error),
 }
@@ -163,16 +161,6 @@ pub trait WebStorage: Sized {
         }
         Some(deserialize(&value))
     }
-    #[cfg(feature = "serde-lite")]
-    fn get<T: Deserialize>(&self, key: &str) -> Option<Result<T>> {
-        let value = self.storage().get_item(key).unwrap_throw()?;
-
-        fn deserialize<T: Deserialize>(value: &str) -> Result<T> {
-            let value = serde_json::from_str(&value).map_err(Error::SerdeJsonError)?;
-            T::deserialize(&value).map_err(Error::SerdeError)
-        }
-        Some(deserialize(&value))
-    }
 
     /// Insert a key-value pair. The value will be serialized.
     ///
@@ -192,8 +180,8 @@ pub trait WebStorage: Sized {
     /// Hence developers should make sure to always catch possible exceptions from setItem()."
     ///
     /// [MDN reference](https://developer.mozilla.org/en-US/docs/Web/API/Storage/setItem)
+    #[cfg(feature = "serde")]
     fn insert<T: Serialize + ?Sized>(&self, key: &str, value: &T) -> Result<()> {
-        // let value = T::serialize(value).map_err(Error::SerdeError)?; -- for serde-lite
         let value = serde_json::to_string(&value).map_err(Error::SerdeJsonError)?;
         self.storage()
             .set_item(&key, &value)

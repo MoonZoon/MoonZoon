@@ -127,9 +127,6 @@ pub use web_storage::{local_storage, session_storage, LocalStorage, SessionStora
 #[cfg(feature = "serde_json")]
 pub use serde_json;
 
-#[cfg(feature = "serde-lite")]
-pub use serde_lite::{self, Deserialize, Serialize};
-
 #[cfg(feature = "serde")]
 pub use serde::{self, de::DeserializeOwned, Deserialize, Serialize};
 
