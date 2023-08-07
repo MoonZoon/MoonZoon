@@ -96,7 +96,7 @@ pub use route_macro::route;
 pub use routing::{FromRouteSegments, RouteSegment, Router};
 
 #[cfg(feature = "moonlight")]
-pub use moonlight::{self, AuthToken, CorId, EntityId, Wrapper};
+pub use moonlight::{self, AuthToken, CorId, EntityId};
 
 #[cfg(feature = "panic_hook")]
 pub use console_error_panic_hook;

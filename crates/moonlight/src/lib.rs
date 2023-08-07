@@ -25,6 +25,3 @@ pub use entity_id::EntityId;
 
 mod session_id;
 pub use session_id::SessionId;
-
-mod wrapper;
-pub use wrapper::Wrapper;
