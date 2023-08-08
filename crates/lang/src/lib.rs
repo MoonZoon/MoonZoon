@@ -1,10 +1,13 @@
+use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, fmt};
 
 // ------ Lang ------
 // @TODO: Add remaining langs
-#[derive(Clone)]
+// @TODO optional `serde`?
+#[derive(Debug, Clone, Eq, PartialEq, PartialOrd, Ord, Serialize, Deserialize, Default)]
 pub enum Lang {
     Czech,
+    #[default]
     English,
     French,
     // @TODO `no` vs `nb` vs `ny`
