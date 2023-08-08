@@ -53,16 +53,46 @@ pub trait MutableExt<T>: private::MutableExt<T> {
         let signal = this.signal_cloned();
         (this, signal)
     }
+
+    fn unwrap_cloned(&self) -> T::Unwrapped
+    where
+        T: private::Unwrappable + Clone,
+    {
+        self.get_cloned().unwrap()
+    }
+
+    fn unwrap(&self) -> T::Unwrapped
+    where
+        T: private::Unwrappable + Copy,
+    {
+        self.get().unwrap()
+    }
 }
 
 impl<T> MutableExt<T> for Mutable<T> {}
 
 mod private {
     use super::*;
+
+    pub trait Unwrappable {
+        type Unwrapped;
+        fn unwrap(self) -> Self::Unwrapped;
+    }
+    impl<T> Unwrappable for Option<T> {
+        type Unwrapped = T;
+        fn unwrap(self) -> Self::Unwrapped {
+            // @TODO `.unwrap_throw()` in a browser
+            self.unwrap()
+        }
+    }
+
     pub trait MutableExt<T> {
         fn lock_mut(&self) -> MutableLockMut<T>;
         fn lock_ref(&self) -> MutableLockRef<T>;
         fn set(&self, value: T);
+        fn get_cloned(&self) -> T
+        where
+            T: Clone;
         fn get(&self) -> T
         where
             T: Copy;
@@ -76,6 +106,12 @@ mod private {
         }
         fn set(&self, value: T) {
             self.set(value)
+        }
+        fn get_cloned(&self) -> T
+        where
+            T: Clone,
+        {
+            self.deref().get_cloned()
         }
         fn get(&self) -> T
         where
