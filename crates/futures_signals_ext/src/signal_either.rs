@@ -4,7 +4,7 @@ use std::{
     task::{Context, Poll},
 };
 
-// ------ IntoSignalSignalEither ------
+// ------ IntoSignalEither ------
 
 pub trait IntoSignalEither: Sized {
     fn left_either<R>(self) -> SignalEither<Self, R> {
@@ -18,7 +18,7 @@ pub trait IntoSignalEither: Sized {
 
 impl<T> IntoSignalEither for T {}
 
-// ------ Either ------
+// ------ SignalEither ------
 
 #[pin_project(project = SignalEitherProj)]
 pub enum SignalEither<L, R> {
@@ -26,7 +26,7 @@ pub enum SignalEither<L, R> {
     Right(#[pin] R),
 }
 
-// -- Signal for SignalEither
+// ------ Signal for SignalEither ------
 
 impl<I, L: Signal<Item = I>, R: Signal<Item = I>> Signal for SignalEither<L, R> {
     type Item = I;
@@ -36,6 +36,23 @@ impl<I, L: Signal<Item = I>, R: Signal<Item = I>> Signal for SignalEither<L, R> 
         match self.project() {
             SignalEitherProj::Left(left) => left.poll_change(cx),
             SignalEitherProj::Right(right) => right.poll_change(cx),
+        }
+    }
+}
+
+// ------ SignalVec for SignalEither ------
+
+impl<I, L: SignalVec<Item = I>, R: SignalVec<Item = I>> SignalVec for SignalEither<L, R> {
+    type Item = I;
+
+    #[inline]
+    fn poll_vec_change(
+        self: Pin<&mut Self>,
+        cx: &mut Context,
+    ) -> Poll<Option<VecDiff<Self::Item>>> {
+        match self.project() {
+            SignalEitherProj::Left(left) => left.poll_vec_change(cx),
+            SignalEitherProj::Right(right) => right.poll_vec_change(cx),
         }
     }
 }

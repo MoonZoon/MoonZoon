@@ -14,6 +14,13 @@ pub trait MutableExt<T>: private::MutableExt<T> {
         f(&mut self.lock_mut())
     }
 
+    fn map_cloned<B>(&self, f: impl FnOnce(T) -> B) -> B
+    where
+        T: Clone,
+    {
+        f(self.get_cloned())
+    }
+
     fn update(&self, f: impl FnOnce(T) -> T)
     where
         T: Copy,
