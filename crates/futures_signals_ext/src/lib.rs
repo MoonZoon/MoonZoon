@@ -34,3 +34,33 @@ pub use mutable_ext::MutableExt;
 
 mod mutable_vec_ext;
 pub use mutable_vec_ext::MutableVecExt;
+
+#[macro_export]
+macro_rules! match_to_signal_cloned_option {
+    ($expression:expr, $pattern:pat $(if $guard:expr)? => $mutable:expr $(,)?) => {
+        match $expression {
+            $pattern $(if $guard)? => $crate::SignalEither::Left($mutable.signal_cloned().map(Some)),
+            _ => $crate::SignalEither::Right($crate::always(None))
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! match_to_option {
+    ($expression:expr, $pattern:pat $(if $guard:expr)? => $mutable:expr $(,)?) => {
+        match $expression {
+            $pattern $(if $guard)? => Some($mutable),
+            _ => None
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! match_to_signal_vec_cloned {
+    ($expression:expr, $pattern:pat $(if $guard:expr)? => $mutable_vec:expr $(,)?) => {
+        match $expression {
+            $pattern $(if $guard)? => $crate::SignalEither::Left($mutable_vec.signal_vec_cloned()),
+            _ => $crate::SignalEither::Right($crate::always_vec(vec![]))
+        }
+    };
+}
