@@ -12,6 +12,7 @@ getrandom = { version = "0.2", features = ["js"], default-features = false, opti
 chrono = { version = "0.4", default-features = false, optional = true }
 
 futures_signals_ext = { path = "../futures_signals_ext", default-features = false }
+lang = { path = "../lang", default-features = false }
 
 [features]
 default = ["use__serde"]
