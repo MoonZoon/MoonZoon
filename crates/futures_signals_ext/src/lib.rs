@@ -27,7 +27,7 @@ mod signal_map_ext_ext;
 pub use signal_map_ext_ext::SignalMapExtExt;
 
 mod signal_either;
-pub use signal_either::{IntoSignalEither, SignalEither};
+pub use signal_either::SignalEither;
 
 mod mutable_ext;
 pub use mutable_ext::MutableExt;

@@ -4,29 +4,11 @@ use std::{
     task::{Context, Poll},
 };
 
-// ------ IntoSignalEither ------
-
-pub trait IntoSignalEither: Sized {
-    fn left_either<R>(self) -> SignalEither<Self, R> {
-        SignalEither::Left(self)
-    }
-
-    fn right_either<L>(self) -> SignalEither<L, Self> {
-        SignalEither::Right(self)
-    }
-}
-
-impl<T> IntoSignalEither for T {}
-
-// ------ SignalEither ------
-
 #[pin_project(project = SignalEitherProj)]
 pub enum SignalEither<L, R> {
     Left(#[pin] L),
     Right(#[pin] R),
 }
-
-// ------ Signal for SignalEither ------
 
 impl<I, L: Signal<Item = I>, R: Signal<Item = I>> Signal for SignalEither<L, R> {
     type Item = I;
@@ -39,9 +21,6 @@ impl<I, L: Signal<Item = I>, R: Signal<Item = I>> Signal for SignalEither<L, R> 
         }
     }
 }
-
-// ------ SignalVec for SignalEither ------
-
 impl<I, L: SignalVec<Item = I>, R: SignalVec<Item = I>> SignalVec for SignalEither<L, R> {
     type Item = I;
 
