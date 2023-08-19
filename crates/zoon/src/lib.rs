@@ -9,6 +9,7 @@ pub mod web_storage;
 
 mod animation;
 mod class_id;
+mod clone_deep;
 pub mod console;
 mod cow_str;
 mod css_property;
@@ -30,6 +31,7 @@ mod viewport;
 
 pub use animation::*;
 pub use class_id::ClassId;
+pub use clone_deep::CloneDeep;
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use css_property::VENDOR_PREFIXES;
 pub use dom::{document, history, load_script, load_stylesheet, window};
