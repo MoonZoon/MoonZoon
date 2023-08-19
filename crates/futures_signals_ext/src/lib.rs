@@ -35,6 +35,9 @@ pub use mutable_ext::MutableExt;
 mod mutable_vec_ext;
 pub use mutable_vec_ext::MutableVecExt;
 
+mod map_diff_ext;
+pub use map_diff_ext::MapDiffExt;
+
 #[macro_export]
 macro_rules! match_to_signal_cloned_option {
     ($expression:expr, $pattern:pat $(if $guard:expr)? => $mutable:expr $(,)?) => {
