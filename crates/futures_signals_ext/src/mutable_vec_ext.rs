@@ -9,6 +9,14 @@ pub trait MutableVecExt<T>: private::MutableVecExt<T> {
     fn use_ref(&self, f: impl FnOnce(&MutableVecLockRef<T>)) {
         f(&self.lock_ref())
     }
+
+    fn take(&self) -> Vec<T> {
+        // @TODO better way (`Mutable.0` + `mem::take`?) (`futures-signals` update needed?)
+        let mut lock = self.lock_mut();
+        let new_vec = lock.drain(..).collect();
+        lock.shrink_to_fit();
+        new_vec
+    }
 }
 impl<T> MutableVecExt<T> for MutableVec<T> {}
 
