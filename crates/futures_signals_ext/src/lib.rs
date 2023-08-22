@@ -35,6 +35,9 @@ pub use mutable_ext::MutableExt;
 mod mutable_vec_ext;
 pub use mutable_vec_ext::MutableVecExt;
 
+mod mutable_b_tree_map_ext;
+pub use mutable_b_tree_map_ext::MutableBTreeMapExt;
+
 mod map_diff_ext;
 pub use map_diff_ext::MapDiffExt;
 
