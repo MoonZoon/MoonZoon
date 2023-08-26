@@ -15,12 +15,12 @@ use actix_web::{
 };
 use rustls::{Certificate, PrivateKey, ServerConfig as RustlsServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
+use std::collections::BTreeSet;
 use std::fs::File;
 use std::io::{self, BufReader};
 use std::net::SocketAddr;
 use std::ops::Deref;
 use std::sync::Arc;
-use std::collections::BTreeSet;
 use tokio::fs;
 
 pub use actix_cors;

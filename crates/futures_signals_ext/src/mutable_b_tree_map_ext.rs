@@ -7,11 +7,14 @@ pub trait MutableBTreeMapExt<K, V>: private::MutableBTreeMapExt<K, V> {
         f(&mut self.lock_mut())
     }
 
-    fn use_ref(&self, f: impl FnOnce(&MutableBTreeMapLockRef<K ,V>)) {
+    fn use_ref(&self, f: impl FnOnce(&MutableBTreeMapLockRef<K, V>)) {
         f(&self.lock_ref())
     }
 
-    fn take(&self) -> BTreeMap<K, V> where K: Ord + Clone {
+    fn take(&self) -> BTreeMap<K, V>
+    where
+        K: Ord + Clone,
+    {
         // @TODO better way (`Mutable.0` + `mem::take`?) (`futures-signals` update needed?)
         let mut lock = self.lock_mut();
         let mut new_map = BTreeMap::new();

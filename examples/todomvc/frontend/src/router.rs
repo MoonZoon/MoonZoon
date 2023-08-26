@@ -1,20 +1,16 @@
-use crate::app;
+use crate::store::*;
 use zoon::*;
-
-// ------ router -------
 
 #[static_ref]
 pub fn router() -> &'static Router<Route> {
     Router::new(|route| async move {
-        match route {
-            Some(Route::Active) => app::select_filter(app::Filter::Active),
-            Some(Route::Completed) => app::select_filter(app::Filter::Completed),
-            Some(Route::Root) | None => app::select_filter(app::Filter::All),
-        }
+        store().selected_filter.set_neq(match route {
+            Some(Route::Active) => Filter::Active,
+            Some(Route::Completed) => Filter::Completed,
+            Some(Route::Root) | None => Filter::All,
+        });
     })
 }
-
-// ------ Route -------
 
 #[route]
 #[derive(Clone, Copy)]
