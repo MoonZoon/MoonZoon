@@ -20,10 +20,8 @@ use std::io::{self, BufReader};
 use std::net::SocketAddr;
 use std::ops::Deref;
 use std::sync::Arc;
-use std::{collections::BTreeSet, future::Future};
+use std::collections::BTreeSet;
 use tokio::fs;
-
-use futures::StreamExt;
 
 pub use actix_cors;
 pub use actix_files;
