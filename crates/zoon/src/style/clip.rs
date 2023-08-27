@@ -1,7 +1,7 @@
 use crate::*;
 
 /// Clip the element by its parent or a mask to show only a specific area.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Clip<'a> {
     static_css_props: StaticCSSProps<'a>,
 }

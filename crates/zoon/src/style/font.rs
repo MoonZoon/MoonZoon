@@ -11,7 +11,7 @@ mod font_line;
 pub use font_line::FontLine;
 
 /// Styling to manage font.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Font<'a> {
     /// Static css properties used by zoon.
     static_css_props: StaticCSSProps<'a>,

@@ -2,7 +2,7 @@ use crate::*;
 
 /// Define gap between elements.
 /// More information at <https://developer.mozilla.org/en-US/docs/Web/CSS/gap>.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Gap<'a> {
     /// Static css properties used by zoon.
     static_css_props: StaticCSSProps<'a>,

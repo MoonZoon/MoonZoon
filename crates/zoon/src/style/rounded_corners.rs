@@ -59,17 +59,23 @@ impl<T: Into<Radius>> IntoOptionRadius for Option<T> {
 
 // ------ RadiusSignal ------
 
-struct RadiusSignal(Box<dyn Signal<Item = Option<Radius>> + 'static + Unpin>);
+#[derive(Clone)]
+struct RadiusSignal(Broadcaster<LocalBoxSignal<'static, Option<Radius>>>);
 
 impl RadiusSignal {
     fn new_from_value(radius: impl Into<Radius>) -> Self {
-        Self(Box::new(always(Some(radius.into()))))
+        Self(always(Some(radius.into())).boxed_local().broadcast())
     }
 
     fn new_from_signal(
         radius: impl Signal<Item = impl IntoOptionRadius> + 'static + Unpin,
     ) -> Self {
-        Self(Box::new(radius.map(|radius| radius.into_option_radius())))
+        Self(
+            radius
+                .map(|radius| radius.into_option_radius())
+                .boxed_local()
+                .broadcast(),
+        )
     }
 }
 
@@ -82,7 +88,7 @@ impl Default for RadiusSignal {
 // ------ RoundedCorners ------
 /// Define rounded corners. It does translate to css `border-radius` for web.
 /// More information at <https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius>.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct RoundedCorners {
     top_left: RadiusSignal,
     top_right: RadiusSignal,
@@ -417,10 +423,10 @@ impl<'a> Style<'a> for RoundedCorners {
             let (size_sender, size_receiver) = channel((0, 0));
 
             let border_radius_signal = map_ref! {
-                let top_left = self.top_left.0,
-                let top_right = self.top_right.0,
-                let bottom_left = self.bottom_left.0,
-                let bottom_right = self.bottom_right.0,
+                let top_left = self.top_left.0.signal(),
+                let top_right = self.top_right.0.signal(),
+                let bottom_left = self.bottom_left.0.signal(),
+                let bottom_right = self.bottom_right.0.signal(),
                 let (width, height) = size_receiver =>
                 compute_radii(
                     top_left.unwrap_or_default(),

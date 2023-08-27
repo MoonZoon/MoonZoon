@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Visible<'a> {
     static_css_props: StaticCSSProps<'a>,
     dynamic_css_props: DynamicCSSProps,

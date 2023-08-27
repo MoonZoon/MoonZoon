@@ -3,11 +3,11 @@ use std::borrow::Cow;
 
 /// Define transformation styling to update the shape or position of an element.
 /// More information at <https://developer.mozilla.org/en-US/docs/Web/CSS/transform>.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Transform {
     /// Vector to chain transformations.
     transformations: Vec<Cow<'static, str>>,
-    self_signal: Option<Box<dyn Signal<Item = Option<Self>> + Unpin>>,
+    self_signal: Option<Broadcaster<LocalBoxSignal<'static, Option<Self>>>>,
 }
 
 impl Transform {
@@ -37,7 +37,7 @@ impl Transform {
     ) -> Self {
         let mut this = Self::default();
         let transform = transform.map(|transform| transform.into());
-        this.self_signal = Some(Box::new(transform));
+        this.self_signal = Some(transform.boxed_local().broadcast());
         this
     }
 
@@ -186,16 +186,20 @@ impl Transform {
     }
 }
 
-fn transformations_into_value(transformations: Vec<Cow<'static, str>>) -> Cow<'static, str> {
+fn transformations_to_value(transformations: &[Cow<'static, str>]) -> Cow<'static, str> {
     if transformations.is_empty() {
         return "none".into();
     }
-    transformations
-        .into_iter()
-        .rev()
-        .collect::<Vec<_>>()
-        .join(" ")
-        .into()
+    // @TODO refactor with `intersperse` once stable
+    // https://github.com/rust-lang/rust/issues/79524
+    let mut value = String::new();
+    for (index, transformation) in transformations.iter().rev().enumerate() {
+        value.push_str(transformation);
+        if index < transformations.len() - 1 {
+            value.push(' ');
+        }
+    }
+    value.into()
 }
 
 impl<'a> Style<'a> for Transform {
@@ -209,13 +213,14 @@ impl<'a> Style<'a> for Transform {
             if let Some(self_signal) = self_signal {
                 group.style_signal(
                     "transform",
-                    self_signal.map(|transform| {
+                    self_signal.signal_ref(|transform| {
                         transform
-                            .map(|transform| transformations_into_value(transform.transformations))
+                            .as_ref()
+                            .map(|transform| transformations_to_value(&transform.transformations))
                     }),
                 )
             } else {
-                group.style("transform", transformations_into_value(transformations))
+                group.style("transform", transformations_to_value(&transformations))
             }
         });
     }

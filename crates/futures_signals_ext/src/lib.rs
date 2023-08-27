@@ -2,14 +2,16 @@ use ::pin_project::pin_project;
 pub use futures_signals::{
     self, map_mut, map_ref,
     signal::{
-        self, always, channel, Broadcaster, Mutable, MutableSignal, ReadOnlyMutable, Receiver,
-        Sender, Signal, SignalExt, SignalStream,
+        self, always, channel, BoxSignal, Broadcaster, LocalBoxSignal, Mutable, MutableSignal,
+        ReadOnlyMutable, Receiver, Sender, Signal, SignalExt, SignalStream,
     },
     signal_map::{
-        always as always_map, MapDiff, MutableBTreeMap, MutableSignalMap, SignalMap, SignalMapExt,
+        always as always_map, BoxSignalMap, LocalBoxSignalMap, MapDiff, MutableBTreeMap,
+        MutableSignalMap, SignalMap, SignalMapExt,
     },
     signal_vec::{
-        always as always_vec, MutableSignalVec, MutableVec, SignalVec, SignalVecExt, VecDiff,
+        always as always_vec, BoxSignalVec, LocalBoxSignalVec, MutableSignalVec, MutableVec,
+        SignalVec, SignalVecExt, VecDiff,
     },
 };
 pub use futures_util::{self, future, Future, FutureExt, Stream, StreamExt};

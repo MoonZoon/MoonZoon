@@ -4,7 +4,7 @@ use std::borrow::{Borrow, Cow};
 // ------ Borders ------
 
 /// Styling to set borders for an element.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Borders<'a> {
     /// Default static properties used by zoon.
     static_css_props: StaticCSSProps<'a>,

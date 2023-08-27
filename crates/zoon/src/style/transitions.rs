@@ -5,7 +5,7 @@ use std::borrow::Cow;
 
 /// Define transitions for an element between two states.
 /// More information at <https://developer.mozilla.org/en-US/docs/Web/CSS/transition>
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Transitions<'a> {
     /// Static css properties used by zoon.
     static_css_props: StaticCSSProps<'a>,
