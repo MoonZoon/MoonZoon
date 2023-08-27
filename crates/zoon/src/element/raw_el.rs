@@ -272,7 +272,13 @@ pub trait RawEl: Sized {
                 }
             }
             for (name, value) in dynamic_css_props {
-                self = self.style_signal(name, value);
+                self = self.style_signal(
+                    name,
+                    value.signal_ref(|value| {
+                        // @TODO refactor the line below once `Rc::unwrap_or_clone` is stable
+                        Rc::try_unwrap(value.clone()).unwrap_or_else(|rc| (*rc).clone())
+                    }),
+                );
             }
             if not(resize_handlers.is_empty()) {
                 self = self.on_resize(move |width, height| {

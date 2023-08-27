@@ -7,7 +7,7 @@ use crate::*;
 ///
 /// let element = El::new().s(Background::new().color(hsluv!(241.3, 100, 96.6)));
 /// ```
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Background<'a> {
     /// Css properties used by Zoon to style the element
     /// with Css.

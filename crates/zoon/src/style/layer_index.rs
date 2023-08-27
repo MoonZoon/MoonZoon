@@ -2,7 +2,7 @@ use crate::*;
 
 /// Styling to define the value on the `z` axis for an element. It does
 /// translate to z-index in css.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct LayerIndex<'a> {
     /// Static css properties used by zoon.
     static_css_props: StaticCSSProps<'a>,

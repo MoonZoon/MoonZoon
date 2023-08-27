@@ -1,6 +1,7 @@
 use crate::*;
 
 /// Style an element with scrollbars.
+#[derive(Clone)]
 pub struct Scrollbars<'a> {
     /// Static css properties used by zoon.
     static_css_props: StaticCSSProps<'a>,

@@ -5,6 +5,7 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     convert::TryFrom,
     iter, mem,
+    rc::Rc,
     sync::Arc,
 };
 use web_sys::{
@@ -84,6 +85,7 @@ pub(crate) fn supports_dvx() -> &'static bool {
 pub type U32Width = u32;
 pub type U32Height = u32;
 
+#[derive(Clone)]
 pub struct CssPropValue<'a> {
     pub value: Cow<'a, str>,
     pub important: bool,
@@ -121,7 +123,7 @@ impl<'a> CssPropValue<'a> {
 
 // ------ StaticCSSProps ------
 /// Css properties to be added to the generated html.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct StaticCSSProps<'a>(BTreeMap<&'a str, CssPropValue<'a>>);
 
 impl<'a> StaticCSSProps<'a> {
@@ -168,13 +170,16 @@ pub type DynamicCSSProps = BTreeMap<Cow<'static, str>, BoxedCssSignal>;
 
 // ------ BoxedCssSignal ------
 
-pub type BoxedCssSignal = Box<dyn Signal<Item = Box<dyn IntoOptionCowStr<'static>>> + Unpin>;
+pub type BoxedCssSignal = Broadcaster<LocalBoxSignal<'static, Rc<Option<Cow<'static, str>>>>>;
 
 // @TODO replace with a new function? https://github.com/Pauan/rust-signals/blob/master/CHANGELOG.md#0322---2021-06-13
 pub fn box_css_signal(
     signal: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static,
 ) -> BoxedCssSignal {
-    Box::new(signal.map(|value| Box::new(value) as Box<dyn IntoOptionCowStr<'static>>))
+    signal
+        .map(|value| Rc::new(value.into_option_cow_str()))
+        .boxed_local()
+        .broadcast()
 }
 
 // ------ StaticCSSClasses ------
@@ -205,7 +210,7 @@ pub fn pct<'a>(percent: impl IntoCowStr<'a>) -> Cow<'a, str> {
 /// Every `struct` such as [Align] and [Background] needs to implement
 /// this trait so they can be used by [Styleable] implementations with
 /// the `s()` method within a `Zoon` element.
-pub trait Style<'a>
+pub trait Style<'a>: Clone
 where
     Self: Sized,
 {
@@ -588,8 +593,9 @@ impl GlobalStyles {
             let declaration = Arc::new(SendWrapper::new(declaration));
             for (name, value_signal) in keyframe.dynamic_css_props {
                 let declaration = Arc::clone(&declaration);
-                let task = value_signal.for_each_sync(move |value| {
-                    if let Some(value) = value.into_option_cow_str() {
+                let task = value_signal.signal_cloned().for_each_sync(move |value| {
+                    // @TODO refactor the line below once `Rc::unwrap_or_clone` is stable
+                    if let Some(value) = Rc::try_unwrap(value).unwrap_or_else(|rc| (*rc).clone()) {
                         // @TODO allow to set `important ` also in dynamic styles
                         set_css_property(&declaration, &name, &value, false);
                     } else {
@@ -642,8 +648,9 @@ impl GlobalStyles {
         let mut task_handles = Vec::new();
         for (name, value_signal) in group.dynamic_css_props {
             let declaration = Arc::clone(&declaration);
-            let task = value_signal.for_each_sync(move |value| {
-                if let Some(value) = value.into_option_cow_str() {
+            let task = value_signal.signal_cloned().for_each_sync(move |value| {
+                // @TODO refactor the line below once `Rc::unwrap_or_clone` is stable
+                if let Some(value) = Rc::try_unwrap(value).unwrap_or_else(|rc| (*rc).clone()) {
                     // @TODO allow to set `important ` also in dynamic styles
                     set_css_property(&declaration, &name, &value, false);
                 } else {

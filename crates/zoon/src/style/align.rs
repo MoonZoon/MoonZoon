@@ -26,10 +26,10 @@ use strum::{EnumIter, IntoEnumIterator, IntoStaticStr};
 ///     .s(Align::new().right().center_y())
 ///     .child("bottom_right element");
 /// ```
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Align {
     alignments: BTreeSet<Alignment>,
-    dynamic_alignments: BTreeMap<Alignment, Box<dyn Signal<Item = bool> + Unpin>>,
+    dynamic_alignments: BTreeMap<Alignment, Broadcaster<LocalBoxSignal<'static, bool>>>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
@@ -68,21 +68,21 @@ impl Align {
         align: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
     ) -> Self {
         let mut this = Self::default();
-        let align = Broadcaster::new(align.map(|align| align.into()));
+        let align = align.map(|align| align.into()).broadcast();
 
         for alignment in Alignment::iter() {
             this.dynamic_alignments.insert(
                 alignment,
-                Box::new(
-                    align
-                        .signal_ref(move |align| {
-                            align
-                                .as_ref()
-                                .map(|align| align.alignments.contains(&alignment))
-                                .unwrap_or_default()
-                        })
-                        .dedupe(),
-                ),
+                align
+                    .signal_ref(move |align| {
+                        align
+                            .as_ref()
+                            .map(|align| align.alignments.contains(&alignment))
+                            .unwrap_or_default()
+                    })
+                    .dedupe()
+                    .boxed_local()
+                    .broadcast(),
             );
         }
         this
@@ -214,7 +214,7 @@ impl<'a> Style<'a> for Align {
                 group = group.class(alignment.into());
             }
             for (alignment, enabled) in self.dynamic_alignments {
-                group = group.class_signal(<&str>::from(alignment), enabled);
+                group = group.class_signal(<&str>::from(alignment), enabled.signal());
             }
             group
         });

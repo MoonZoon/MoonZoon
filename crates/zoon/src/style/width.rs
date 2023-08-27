@@ -1,16 +1,16 @@
 use crate::*;
-use std::{cell::Cell, collections::BTreeMap};
+use std::collections::BTreeMap;
 use strum::{EnumIter, IntoEnumIterator, IntoStaticStr};
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Width<'a> {
-    css_props: BTreeMap<CssName, Cell<Option<CssPropValue<'a>>>>,
+    css_props: BTreeMap<CssName, Option<CssPropValue<'a>>>,
     width_mode: WidthMode,
-    self_signal: Option<Box<dyn Signal<Item = Option<Self>> + Unpin>>,
+    self_signal: Option<Broadcaster<LocalBoxSignal<'static, Option<Self>>>>,
 }
 
-fn into_prop_value<'a>(value: impl IntoCowStr<'a>) -> Cell<Option<CssPropValue<'a>>> {
-    Cell::new(Some(CssPropValue::new(value)))
+fn into_prop_value<'a>(value: impl IntoCowStr<'a>) -> Option<CssPropValue<'a>> {
+    Some(CssPropValue::new(value))
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
@@ -92,7 +92,7 @@ impl<'a> Width<'a> {
     ) -> Self {
         let mut this = Self::default();
         let width = width.map(|width| width.into());
-        this.self_signal = Some(Box::new(width));
+        this.self_signal = Some(width.boxed_local().broadcast());
         this
     }
 
@@ -213,8 +213,6 @@ impl<'a> Style<'a> for Width<'static> {
             } = self;
 
             if let Some(self_signal) = self_signal {
-                let self_signal = self_signal.broadcast();
-
                 for name in CssName::iter() {
                     group = group.style_signal(
                         <&str>::from(name),
@@ -222,7 +220,7 @@ impl<'a> Style<'a> for Width<'static> {
                             this.as_ref().and_then(|this| {
                                 this.css_props
                                     .get(&name)
-                                    .and_then(|value| value.take().map(|value| value.value))
+                                    .and_then(|value| value.clone().take().map(|value| value.value))
                             })
                         }),
                     );
@@ -243,7 +241,7 @@ impl<'a> Style<'a> for Width<'static> {
                 group.static_css_props.extend(
                     css_props
                         .into_iter()
-                        .map(|(name, value)| (name.into(), value.take().unwrap_throw())),
+                        .map(|(name, mut value)| (name.into(), value.take().unwrap_throw())),
                 );
                 group.class(width_mode.into())
             }

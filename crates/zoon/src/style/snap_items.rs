@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct SnapItems<'a> {
     static_css_props: StaticCSSProps<'a>,
 }

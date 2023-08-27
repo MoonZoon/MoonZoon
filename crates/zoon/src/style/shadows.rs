@@ -4,7 +4,7 @@ use std::borrow::Cow;
 // ------ Shadows ------
 
 /// Style to add shadows to an element.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Shadows<'a> {
     /// Static css properties used by zoon.
     static_css_props: StaticCSSProps<'a>,

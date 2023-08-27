@@ -3,7 +3,7 @@ use std::borrow::Cow;
 
 // ------ Cursor ------
 /// Styling to manage mouse cursor.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Cursor<'a> {
     /// Default static properties used by zoon.
     static_css_props: StaticCSSProps<'a>,

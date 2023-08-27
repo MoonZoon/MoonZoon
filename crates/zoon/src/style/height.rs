@@ -1,17 +1,17 @@
 use crate::{style::supports_dvx, *};
-use std::{cell::Cell, collections::BTreeMap};
+use std::collections::BTreeMap;
 use strum::{EnumIter, IntoEnumIterator, IntoStaticStr};
 
 /// Styling for height.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Height<'a> {
-    css_props: BTreeMap<CssName, Cell<Option<CssPropValue<'a>>>>,
+    css_props: BTreeMap<CssName, Option<CssPropValue<'a>>>,
     height_mode: HeightMode,
-    self_signal: Option<Box<dyn Signal<Item = Option<Self>> + Unpin>>,
+    self_signal: Option<Broadcaster<LocalBoxSignal<'static, Option<Self>>>>,
 }
 
-fn into_prop_value<'a>(value: impl IntoCowStr<'a>) -> Cell<Option<CssPropValue<'a>>> {
-    Cell::new(Some(CssPropValue::new(value)))
+fn into_prop_value<'a>(value: impl IntoCowStr<'a>) -> Option<CssPropValue<'a>> {
+    Some(CssPropValue::new(value))
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
@@ -69,7 +69,7 @@ impl<'a> Height<'a> {
     ) -> Self {
         let mut this = Self::default();
         let height = height.map(|height| height.into());
-        this.self_signal = Some(Box::new(height));
+        this.self_signal = Some(height.boxed_local().broadcast());
         this
     }
 
@@ -207,8 +207,6 @@ impl<'a> Style<'a> for Height<'static> {
             } = self;
 
             if let Some(self_signal) = self_signal {
-                let self_signal = self_signal.broadcast();
-
                 for name in CssName::iter() {
                     group = group.style_signal(
                         <&str>::from(name),
@@ -216,7 +214,7 @@ impl<'a> Style<'a> for Height<'static> {
                             this.as_ref().and_then(|this| {
                                 this.css_props
                                     .get(&name)
-                                    .and_then(|value| value.take().map(|value| value.value))
+                                    .and_then(|value| value.clone().take().map(|value| value.value))
                             })
                         }),
                     );
@@ -237,7 +235,7 @@ impl<'a> Style<'a> for Height<'static> {
                 group.static_css_props.extend(
                     css_props
                         .into_iter()
-                        .map(|(name, value)| (name.into(), value.take().unwrap_throw())),
+                        .map(|(name, mut value)| (name.into(), value.take().unwrap_throw())),
                 );
                 group.class(height_mode.into())
             }

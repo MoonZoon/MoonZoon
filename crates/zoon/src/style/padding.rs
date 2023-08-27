@@ -1,7 +1,7 @@
 use crate::*;
 
 /// Define padding with pixels for an element.
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Padding<'a> {
     /// Static css properties used by zoon.
     static_css_props: StaticCSSProps<'a>,
