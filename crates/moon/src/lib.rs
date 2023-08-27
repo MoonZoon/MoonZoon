@@ -519,7 +519,7 @@ where
 {
     HttpResponse::Ok()
         .content_type(ContentType::html())
-        .body(frontend.get_ref().clone()().await.into_html().await)
+        .body(frontend.get_ref()().await.into_html().await)
 }
 
 // ====== ====== TESTS ====== ======

@@ -91,12 +91,9 @@ pub use enclose::enc as clone;
 #[cfg(feature = "apply")]
 pub use apply::{Also, Apply};
 
-#[cfg(feature = "small_alloc")]
+#[cfg(feature = "non_standard_alloc")]
 #[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
-#[cfg(feature = "fast_alloc")]
-compile_error!("Do you know a fast allocator working in Wasm?");
+static TALC: talc::TalckWasm = unsafe { talc::TalckWasm::new_global() };
 
 // #[cfg(feature = "tracing_alloc")]
 // #[global_allocator]
