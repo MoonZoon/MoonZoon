@@ -82,7 +82,7 @@ pub struct SessionStorage(Storage);
 impl WebStorage for SessionStorage {
     fn try_new() -> Result<Self> {
         let storage = window()
-            .local_storage()
+            .session_storage()
             .map_err(Error::GetStorageError)?
             .ok_or(Error::StorageNotFoundError);
         Ok(Self(storage?))
