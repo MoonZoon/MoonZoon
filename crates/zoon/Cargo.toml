@@ -7,7 +7,7 @@ edition = "2021"
 [dependencies]
 # wasm-bindgen has to match the version installed by mzoon
 # @TODO install the compatible (aka the same) version by mzoon automatically?
-wasm-bindgen = { version = "=0.2.86", default-features = false }
+wasm-bindgen = { version = "=0.2.87", default-features = false }
 wasm-bindgen-futures = { version = "0.4.36", default-features = false }
 js-sys = { version = "0.3.63", default-features = false }
 futures-channel = { version = "0.3.28", default-features = false }

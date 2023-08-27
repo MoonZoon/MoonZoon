@@ -12,7 +12,7 @@ use tar::Archive;
 use tokio::process::Command;
 
 // NOTE: Sync with zoon's wasm-bindgen version.
-const VERSION: &str = "0.2.86";
+const VERSION: &str = "0.2.87";
 
 // -- public --
 
