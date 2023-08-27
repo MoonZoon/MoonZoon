@@ -1,5 +1,8 @@
 use crate::*;
 
+// @TODO replace with `ResizeObserver` from `wasm-bindgen`?
+// https://github.com/rustwasm/wasm-bindgen/pull/3459
+
 // ------ ResizeObserver ------
 
 pub struct ResizeObserver {
