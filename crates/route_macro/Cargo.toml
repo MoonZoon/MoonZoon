@@ -10,5 +10,5 @@ proc-macro = true
 [dependencies]
 syn = { version = "1.0", default-features = false }
 quote = { version = "1.0", default-features = false }
-proc-macro2 = { version = "1.0", default-features = false }
+proc-macro2 = { version = "1.0.66", default-features = false }
 urlencoding = { version = "2.1.0", default-features = false }
