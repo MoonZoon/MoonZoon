@@ -55,8 +55,8 @@ impl Transform {
     /// ```
     pub fn move_up(mut self, distance: impl Into<f64>) -> Self {
         self.transformations.push(Cow::from(crate::format!(
-            "translateY(-{}px)",
-            distance.into()
+            "translateY({}px)",
+            distance.into() * -1.
         )));
         self
     }
@@ -95,8 +95,8 @@ impl Transform {
     /// ```
     pub fn move_left(mut self, distance: impl Into<f64>) -> Self {
         self.transformations.push(Cow::from(crate::format!(
-            "translateX(-{}px)",
-            distance.into()
+            "translateX({}px)",
+            distance.into() * -1.
         )));
         self
     }
