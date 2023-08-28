@@ -393,7 +393,8 @@ fn todomvc_link() -> impl Element {
 // --
 
 fn save_selected_todo_title() {
-    let todo = store().selected_todo.take().unwrap_throw();
-    let new_title = todo.edited_title.take().unwrap_throw();
-    todo.title.set(new_title);
+    if let Some(todo) = store().selected_todo.take() {
+        let new_title = todo.edited_title.take().unwrap_throw();
+        todo.title.set(new_title);
+    }
 }
