@@ -18,7 +18,7 @@ impl El<ChildFlagNotSet, RawHtmlEl<web_sys::HtmlElement>> {
     }
 }
 
-impl<ChildFlag, RE: RawEl + Into<RawElement>> Element for El<ChildFlag, RE> {
+impl<ChildFlag, RE: RawEl> Element for El<ChildFlag, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }

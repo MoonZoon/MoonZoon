@@ -54,7 +54,7 @@ impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> Element for RawHtm
 // ------ ------
 
 impl<DomElement> RawEl for RawHtmlEl<DomElement>
-// Warning: "Global" bounds with `JsValue` or `JsCast` or `AsRef<web_sys::HtmlElement>` break Rust Analyzer.
+// Warning: "Global" bounds with `JsValue` or `JsCast` or `AsRef<web_sys::HtmlElement>` break Rust Analyzer (?)
 where
     DomElement: AsRef<web_sys::Node>
         + AsRef<web_sys::EventTarget>
@@ -62,6 +62,7 @@ where
         + AsRef<web_sys::Element>
         + Into<web_sys::Element>
         + Into<web_sys::HtmlElement>
+        + JsCast
         + Clone
         + 'static,
 {

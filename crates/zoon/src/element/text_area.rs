@@ -46,7 +46,7 @@ impl
     }
 }
 
-impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl + Into<RawElement>> Element
+impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl> Element
     for TextArea<
         IdFlagSet,
         OnChangeFlag,
@@ -62,7 +62,7 @@ impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl + Into<Raw
     }
 }
 
-impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl + Into<RawElement>> Element
+impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl> Element
     for TextArea<
         IdFlagNotSet,
         OnChangeFlag,
@@ -78,7 +78,7 @@ impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl + Into<Raw
     }
 }
 
-impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl + Into<RawElement>> Element
+impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl> Element
     for TextArea<IdFlagSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagSet, ReadOnlyFlag, RE>
 {
     fn into_raw_element(self) -> RawElement {

@@ -21,7 +21,7 @@ impl Label<LabelFlagNotSet, ForInputFlagNotSet, RawHtmlEl<web_sys::HtmlLabelElem
     }
 }
 
-impl<ForInputFlag, RE: RawEl + Into<RawElement>> Element for Label<LabelFlagSet, ForInputFlag, RE> {
+impl<ForInputFlag, RE: RawEl> Element for Label<LabelFlagSet, ForInputFlag, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }

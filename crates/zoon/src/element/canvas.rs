@@ -21,7 +21,7 @@ impl Canvas<WidthFlagNotSet, HeightFlagNotSet, RawHtmlEl<web_sys::HtmlCanvasElem
     }
 }
 
-impl<HeightFlag, RE: RawEl + Into<RawElement>> Element for Canvas<WidthFlagSet, HeightFlag, RE> {
+impl<HeightFlag, RE: RawEl> Element for Canvas<WidthFlagSet, HeightFlag, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }

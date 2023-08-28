@@ -21,7 +21,7 @@ impl Image<UrlFlagNotSet, DescriptionFlagNotSet, RawHtmlEl<web_sys::HtmlImageEle
     }
 }
 
-impl<RE: RawEl + Into<RawElement>> Element for Image<UrlFlagSet, DescriptionFlagSet, RE> {
+impl<RE: RawEl> Element for Image<UrlFlagSet, DescriptionFlagSet, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }

@@ -18,9 +18,7 @@ impl Row<EmptyFlagSet, MultilineFlagNotSet, RawHtmlEl<web_sys::HtmlElement>> {
     }
 }
 
-impl<MultilineFlag, RE: RawEl + Into<RawElement>> Element
-    for Row<EmptyFlagNotSet, MultilineFlag, RE>
-{
+impl<MultilineFlag, RE: RawEl> Element for Row<EmptyFlagNotSet, MultilineFlag, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }

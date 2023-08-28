@@ -52,14 +52,7 @@ impl
     }
 }
 
-impl<
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        InputTypeFlag,
-        ReadOnlyFlag,
-        RE: RawEl + Into<RawElement>,
-    > Element
+impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl> Element
     for TextInput<
         IdFlagSet,
         OnChangeFlag,
@@ -76,14 +69,7 @@ impl<
     }
 }
 
-impl<
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        InputTypeFlag,
-        ReadOnlyFlag,
-        RE: RawEl + Into<RawElement>,
-    > Element
+impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl> Element
     for TextInput<
         IdFlagNotSet,
         OnChangeFlag,
@@ -100,14 +86,7 @@ impl<
     }
 }
 
-impl<
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        InputTypeFlag,
-        ReadOnlyFlag,
-        RE: RawEl + Into<RawElement>,
-    > Element
+impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl> Element
     for TextInput<
         IdFlagSet,
         OnChangeFlag,
