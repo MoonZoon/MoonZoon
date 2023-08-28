@@ -179,6 +179,7 @@ macro_rules! run_once {
     };
     ($random_ident:ident, $f:expr) => {
         $crate::paste! {{
+            #[allow(non_upper_case_globals)]
             static [<RUN_ONCE $random_ident:snake:upper>]: std::sync::Once = std::sync::Once::new();
             [<RUN_ONCE $random_ident:snake:upper>].call_once($f);
         }}
