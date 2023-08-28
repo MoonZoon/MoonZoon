@@ -151,7 +151,7 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet, RawHtmlEl<web_sys::HtmlDivElemen
     }
 }
 
-impl<OnPressFlag, RE: RawEl + Into<RawElement>> Element for Button<LabelFlagSet, OnPressFlag, RE> {
+impl<OnPressFlag, RE: RawEl> Element for Button<LabelFlagSet, OnPressFlag, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }

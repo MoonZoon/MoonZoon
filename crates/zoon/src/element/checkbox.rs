@@ -64,7 +64,7 @@ impl
     }
 }
 
-impl<OnChangeFlag, CheckedFlag, RE: RawEl + Into<RawElement>> Element
+impl<OnChangeFlag, CheckedFlag, RE: RawEl> Element
     for Checkbox<IdFlagSet, OnChangeFlag, LabelFlagNotSet, IconFlagSet, CheckedFlag, RE>
 {
     fn into_raw_element(self) -> RawElement {
@@ -72,7 +72,7 @@ impl<OnChangeFlag, CheckedFlag, RE: RawEl + Into<RawElement>> Element
     }
 }
 
-impl<OnChangeFlag, CheckedFlag, RE: RawEl + Into<RawElement>> Element
+impl<OnChangeFlag, CheckedFlag, RE: RawEl> Element
     for Checkbox<IdFlagNotSet, OnChangeFlag, LabelFlagSet, IconFlagSet, CheckedFlag, RE>
 {
     fn into_raw_element(self) -> RawElement {
@@ -80,7 +80,7 @@ impl<OnChangeFlag, CheckedFlag, RE: RawEl + Into<RawElement>> Element
     }
 }
 
-impl<OnChangeFlag, CheckedFlag, RE: RawEl + Into<RawElement>> Element
+impl<OnChangeFlag, CheckedFlag, RE: RawEl> Element
     for Checkbox<IdFlagSet, OnChangeFlag, LabelFlagSet, IconFlagSet, CheckedFlag, RE>
 {
     fn into_raw_element(self) -> RawElement {

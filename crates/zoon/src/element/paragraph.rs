@@ -18,7 +18,7 @@ impl Paragraph<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
     }
 }
 
-impl<RE: RawEl + Into<RawElement>> Element for Paragraph<EmptyFlagNotSet, RE> {
+impl<RE: RawEl> Element for Paragraph<EmptyFlagNotSet, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }

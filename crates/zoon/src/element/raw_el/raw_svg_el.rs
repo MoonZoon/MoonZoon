@@ -52,7 +52,7 @@ impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> Element for RawSvgE
 // ------ ------
 
 impl<DomElement> RawEl for RawSvgEl<DomElement>
-// Warning: "Global" bounds with `JsValue` or `JsCast` or `AsRef<web_sys::SvgElement>` break Rust Analyzer.
+// Warning: "Global" bounds with `JsValue` or `JsCast` or `AsRef<web_sys::SvgElement>` break Rust Analyzer (?)
 where
     DomElement: AsRef<web_sys::Node>
         + Into<web_sys::EventTarget>
@@ -60,6 +60,7 @@ where
         + AsRef<web_sys::Element>
         + Into<web_sys::Element>
         + Into<web_sys::SvgElement>
+        + JsCast
         + Clone
         + 'static,
 {

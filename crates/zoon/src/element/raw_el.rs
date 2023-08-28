@@ -43,7 +43,7 @@ pub trait UpdateRawEl {
 
 // ------ RawEl ------
 
-pub trait RawEl: Sized {
+pub trait RawEl: Sized + Into<RawElement> {
     // Warning: "Global" bounds with `JsValue` or `JsCast` on the associated type break Rust Analyzer.
     type DomElement: AsRef<web_sys::Node>
         + AsRef<web_sys::EventTarget>

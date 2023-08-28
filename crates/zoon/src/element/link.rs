@@ -94,7 +94,7 @@ impl Link<LabelFlagNotSet, ToFlagNotSet, RawHtmlEl<web_sys::HtmlAnchorElement>> 
     }
 }
 
-impl<RE: RawEl + Into<RawElement>> Element for Link<LabelFlagSet, ToFlagSet, RE> {
+impl<RE: RawEl> Element for Link<LabelFlagSet, ToFlagSet, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }

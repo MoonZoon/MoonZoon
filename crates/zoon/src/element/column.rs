@@ -18,7 +18,7 @@ impl Column<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
     }
 }
 
-impl<RE: RawEl + Into<RawElement>> Element for Column<EmptyFlagNotSet, RE> {
+impl<RE: RawEl> Element for Column<EmptyFlagNotSet, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
     }
