@@ -1,16 +1,18 @@
 use crate::*;
 use std::collections::BTreeMap;
+use std::rc::Rc;
 use strum::{EnumIter, IntoEnumIterator, IntoStaticStr};
 
 #[derive(Default, Clone)]
 pub struct Width<'a> {
-    css_props: BTreeMap<CssName, Option<CssPropValue<'a>>>,
+    // @TODO `Rc` vs `Arc`? (applies for all styles)
+    css_props: BTreeMap<CssName, Option<Rc<CssPropValue<'a>>>>,
     width_mode: WidthMode,
     self_signal: Option<Broadcaster<LocalBoxSignal<'static, Option<Self>>>>,
 }
 
-fn into_prop_value<'a>(value: impl IntoCowStr<'a>) -> Option<CssPropValue<'a>> {
-    Some(CssPropValue::new(value))
+fn into_prop_value<'a>(value: impl IntoCowStr<'a>) -> Option<Rc<CssPropValue<'a>>> {
+    Some(Rc::new(CssPropValue::new(value)))
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
@@ -218,9 +220,14 @@ impl<'a> Style<'a> for Width<'static> {
                         <&str>::from(name),
                         self_signal.signal_ref(move |this| {
                             this.as_ref().and_then(|this| {
-                                this.css_props
-                                    .get(&name)
-                                    .and_then(|value| value.clone().take().map(|value| value.value))
+                                this.css_props.get(&name).and_then(|value| {
+                                    value.clone().map(|value| {
+                                        // @TODO refactor the line below once `Rc::unwrap_or_clone` is stable
+                                        Rc::try_unwrap(value)
+                                            .unwrap_or_else(|rc| (*rc).clone())
+                                            .value
+                                    })
+                                })
                             })
                         }),
                     );
@@ -238,11 +245,16 @@ impl<'a> Style<'a> for Width<'static> {
                 }
                 group
             } else {
-                group.static_css_props.extend(
-                    css_props
-                        .into_iter()
-                        .map(|(name, mut value)| (name.into(), value.take().unwrap_throw())),
-                );
+                group
+                    .static_css_props
+                    .extend(css_props.into_iter().map(|(name, mut value)| {
+                        (
+                            name.into(),
+                            // @TODO refactor the line below once `Rc::unwrap_or_clone` is stable
+                            Rc::try_unwrap(value.take().unwrap_throw())
+                                .unwrap_or_else(|rc| (*rc).clone()),
+                        )
+                    }));
                 group.class(width_mode.into())
             }
         });
