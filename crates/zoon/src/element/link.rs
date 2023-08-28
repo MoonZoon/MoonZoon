@@ -1,5 +1,5 @@
 use crate::*;
-use std::{iter, marker::PhantomData};
+use std::marker::PhantomData;
 
 // ------ ------
 //    Element
@@ -97,16 +97,6 @@ impl Link<LabelFlagNotSet, ToFlagNotSet, RawHtmlEl<web_sys::HtmlAnchorElement>> 
 impl<RE: RawEl + Into<RawElement>> Element for Link<LabelFlagSet, ToFlagSet, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
-    }
-}
-
-impl<LabelFlag, ToFlag, RE: RawEl> IntoIterator for Link<LabelFlag, ToFlag, RE> {
-    type Item = Self;
-    type IntoIter = iter::Once<Self>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        iter::once(self)
     }
 }
 

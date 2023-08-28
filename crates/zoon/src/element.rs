@@ -1,5 +1,5 @@
 use crate::*;
-use std::iter;
+use std::{iter, vec};
 
 // -- modules --
 
@@ -66,7 +66,7 @@ pub use ability::*;
 
 // ------ Element ------
 
-pub trait Element: IntoIterator<Item = Self> {
+pub trait Element {
     fn into_raw_element(self) -> RawElement;
 }
 
@@ -91,16 +91,6 @@ impl IntoDom for RawElement {
 impl Element for RawElement {
     fn into_raw_element(self) -> RawElement {
         self
-    }
-}
-
-impl IntoIterator for RawElement {
-    type Item = Self;
-    type IntoIter = iter::Once<Self>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        iter::once(self)
     }
 }
 
@@ -142,5 +132,34 @@ impl<'a, E: Element, T: IntoElement<'a, EL = E>> IntoOptionElement<'a> for T {
     type EL = E;
     fn into_option_element(self) -> Option<Self::EL> {
         Some(self.into_element())
+    }
+}
+
+// ------ IntoElementIterator ------
+
+pub trait IntoElementIterator {
+    type Item: Element;
+    type IntoIter: Iterator<Item = Self::Item>;
+
+    fn into_element_iter(self) -> Self::IntoIter;
+}
+
+impl<E: Element> IntoElementIterator for E {
+    type Item = E;
+    type IntoIter = iter::Once<E>;
+
+    #[inline]
+    fn into_element_iter(self) -> Self::IntoIter {
+        iter::once(self)
+    }
+}
+
+impl<E: Element> IntoElementIterator for Vec<E> {
+    type Item = E;
+    type IntoIter = vec::IntoIter<E>;
+
+    #[inline]
+    fn into_element_iter(self) -> Self::IntoIter {
+        self.into_iter()
     }
 }

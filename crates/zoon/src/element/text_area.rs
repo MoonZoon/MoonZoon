@@ -1,5 +1,5 @@
 use crate::{text_input::PlaceholderText, *};
-use std::{iter, marker::PhantomData};
+use std::marker::PhantomData;
 
 // ------ ------
 //    Element
@@ -83,19 +83,6 @@ impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl + Into<Raw
 {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
-    }
-}
-
-impl<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE: RawEl>
-    IntoIterator
-    for TextArea<IdFlag, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlag, ReadOnlyFlag, RE>
-{
-    type Item = Self;
-    type IntoIter = iter::Once<Self>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        iter::once(self)
     }
 }
 

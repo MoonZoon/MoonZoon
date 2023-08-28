@@ -1,5 +1,5 @@
 use crate::*;
-use std::{borrow::Cow, iter, marker::PhantomData};
+use std::{borrow::Cow, marker::PhantomData};
 
 mod input_type;
 pub use input_type::*;
@@ -121,36 +121,6 @@ impl<
 {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
-    }
-}
-
-impl<
-        IdFlag,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlag,
-        InputTypeFlag,
-        ReadOnlyFlag,
-        RE: RawEl,
-    > IntoIterator
-    for TextInput<
-        IdFlag,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlag,
-        InputTypeFlag,
-        ReadOnlyFlag,
-        RE,
-    >
-{
-    type Item = Self;
-    type IntoIter = iter::Once<Self>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        iter::once(self)
     }
 }
 

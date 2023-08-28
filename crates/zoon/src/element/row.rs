@@ -1,5 +1,5 @@
 use crate::*;
-use std::{iter, marker::PhantomData};
+use std::marker::PhantomData;
 
 // ------ ------
 //   Element
@@ -23,16 +23,6 @@ impl<MultilineFlag, RE: RawEl + Into<RawElement>> Element
 {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
-    }
-}
-
-impl<EmptyFlag, MultilineFlag, RE: RawEl> IntoIterator for Row<EmptyFlag, MultilineFlag, RE> {
-    type Item = Self;
-    type IntoIter = iter::Once<Self>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        iter::once(self)
     }
 }
 

@@ -1,5 +1,4 @@
 use crate::*;
-use std::iter;
 
 // ------ ------
 //   Element
@@ -45,16 +44,6 @@ impl Spacer {
 impl Element for Spacer {
     fn into_raw_element(self) -> RawElement {
         self.el.into_raw_element()
-    }
-}
-
-impl IntoIterator for Spacer {
-    type Item = Self;
-    type IntoIter = iter::Once<Self>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        iter::once(self)
     }
 }
 
