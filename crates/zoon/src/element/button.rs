@@ -1,5 +1,5 @@
 use crate::*;
-use std::{cell::RefCell, iter, marker::PhantomData, rc::Rc};
+use std::{cell::RefCell, marker::PhantomData, rc::Rc};
 
 // ------ ------
 //    Element
@@ -154,16 +154,6 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet, RawHtmlEl<web_sys::HtmlDivElemen
 impl<OnPressFlag, RE: RawEl + Into<RawElement>> Element for Button<LabelFlagSet, OnPressFlag, RE> {
     fn into_raw_element(self) -> RawElement {
         self.raw_el.into()
-    }
-}
-
-impl<LabelFlag, OnPressFlag, RE: RawEl> IntoIterator for Button<LabelFlag, OnPressFlag, RE> {
-    type Item = Self;
-    type IntoIter = iter::Once<Self>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        iter::once(self)
     }
 }
 

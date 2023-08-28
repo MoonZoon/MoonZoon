@@ -1,5 +1,4 @@
 use crate::*;
-use std::iter;
 
 // ------ ------
 //   Element
@@ -40,15 +39,5 @@ impl IntoDom for RawText {
 impl Element for RawText {
     fn into_raw_element(self) -> RawElement {
         self.into()
-    }
-}
-
-impl IntoIterator for RawText {
-    type Item = Self;
-    type IntoIter = iter::Once<Self>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        iter::once(self)
     }
 }

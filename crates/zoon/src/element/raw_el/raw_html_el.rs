@@ -1,6 +1,5 @@
 use super::CLASS_ID_GENERATOR;
 use crate::*;
-use std::iter;
 
 // ------ ------
 //   Element
@@ -47,16 +46,6 @@ impl<DomElement: Into<web_sys::HtmlElement> + Into<web_sys::Node>> IntoDom
 impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> Element for RawHtmlEl<DomElement> {
     fn into_raw_element(self) -> RawElement {
         RawElement::El(self.dom_element_type::<web_sys::HtmlElement>())
-    }
-}
-
-impl<DomElement: Into<web_sys::HtmlElement>> IntoIterator for RawHtmlEl<DomElement> {
-    type Item = Self;
-    type IntoIter = iter::Once<Self>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        iter::once(self)
     }
 }
 

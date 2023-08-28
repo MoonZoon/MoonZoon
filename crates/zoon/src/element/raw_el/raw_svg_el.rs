@@ -1,6 +1,5 @@
 use super::CLASS_ID_GENERATOR;
 use crate::*;
-use std::iter;
 
 // ------ ------
 //   Element
@@ -45,16 +44,6 @@ impl<DomElement: Into<web_sys::SvgElement> + Into<web_sys::Node>> IntoDom for Ra
 impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> Element for RawSvgEl<DomElement> {
     fn into_raw_element(self) -> RawElement {
         RawElement::SvgEl(self.dom_element_type::<web_sys::SvgElement>())
-    }
-}
-
-impl<DomElement: Into<web_sys::SvgElement>> IntoIterator for RawSvgEl<DomElement> {
-    type Item = Self;
-    type IntoIter = iter::Once<Self>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        iter::once(self)
     }
 }
 

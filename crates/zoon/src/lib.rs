@@ -205,7 +205,7 @@ macro_rules! element_vec {
 
 // ------ start_app ------
 
-pub fn start_app<'a, E: Element, I: IntoIterator<Item = E>>(
+pub fn start_app<'a, I: IntoElementIterator>(
     browser_element_id: impl Into<Option<&'a str>>,
     view_root: impl FnOnce() -> I,
 ) {
@@ -219,7 +219,7 @@ pub fn start_app<'a, E: Element, I: IntoIterator<Item = E>>(
         .map(dominator::get_id)
         .unwrap_or_else(|| dominator::body().unchecked_into());
 
-    for element in view_root() {
+    for element in view_root().into_element_iter() {
         dominator::append_dom(&parent, element.into_raw_element().into_dom());
     }
 }
