@@ -45,8 +45,10 @@ impl<'a> Borders<'a> {
     ///     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
     ///     .label("hover me");
     /// ```
-    pub fn all_signal(border: impl Signal<Item = Border> + Unpin + 'static) -> Self {
-        let border = Broadcaster::new(border);
+    pub fn all_signal(
+        border: impl Signal<Item = impl Into<Option<Border>>> + Unpin + 'static,
+    ) -> Self {
+        let border = border.map(|border| border.into()).broadcast();
         Self::default()
             .x_signal(border.signal_cloned())
             .y_signal(border.signal_cloned())
@@ -81,8 +83,11 @@ impl<'a> Borders<'a> {
     ///     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
     ///     .label("hover me");
     /// ```
-    pub fn x_signal(self, border: impl Signal<Item = Border> + Unpin + 'static) -> Self {
-        let border = Broadcaster::new(border);
+    pub fn x_signal(
+        self,
+        border: impl Signal<Item = impl Into<Option<Border>>> + Unpin + 'static,
+    ) -> Self {
+        let border = border.map(|border| border.into()).broadcast();
         self.left_signal(border.signal_cloned())
             .right_signal(border.signal_cloned())
     }
@@ -116,8 +121,11 @@ impl<'a> Borders<'a> {
     ///     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
     ///     .label("hover me");
     /// ```
-    pub fn y_signal(self, border: impl Signal<Item = Border> + Unpin + 'static) -> Self {
-        let border = Broadcaster::new(border);
+    pub fn y_signal(
+        self,
+        border: impl Signal<Item = impl Into<Option<Border>>> + Unpin + 'static,
+    ) -> Self {
+        let border = border.map(|border| border.into()).broadcast();
         self.top_signal(border.signal_cloned())
             .bottom_signal(border.signal_cloned())
     }
@@ -152,8 +160,11 @@ impl<'a> Borders<'a> {
     ///     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
     ///     .label("hover me");
     /// ```
-    pub fn top_signal(mut self, border: impl Signal<Item = Border> + Unpin + 'static) -> Self {
-        let border = border.map(|border| border.to_cow_str());
+    pub fn top_signal(
+        mut self,
+        border: impl Signal<Item = impl Into<Option<Border>>> + Unpin + 'static,
+    ) -> Self {
+        let border = border.map(|border| border.into().map(|border| border.to_cow_str()));
         self.dynamic_css_props
             .insert("border-top".into(), box_css_signal(border));
         self
@@ -189,8 +200,11 @@ impl<'a> Borders<'a> {
     ///     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
     ///     .label("hover me");
     /// ```
-    pub fn bottom_signal(mut self, border: impl Signal<Item = Border> + Unpin + 'static) -> Self {
-        let border = border.map(|border| border.to_cow_str());
+    pub fn bottom_signal(
+        mut self,
+        border: impl Signal<Item = impl Into<Option<Border>>> + Unpin + 'static,
+    ) -> Self {
+        let border = border.map(|border| border.into().map(|border| border.to_cow_str()));
         self.dynamic_css_props
             .insert("border-bottom".into(), box_css_signal(border));
         self
@@ -226,8 +240,11 @@ impl<'a> Borders<'a> {
     ///     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
     ///     .label("hover me");
     /// ```
-    pub fn right_signal(mut self, border: impl Signal<Item = Border> + Unpin + 'static) -> Self {
-        let border = border.map(|border| border.to_cow_str());
+    pub fn right_signal(
+        mut self,
+        border: impl Signal<Item = impl Into<Option<Border>>> + Unpin + 'static,
+    ) -> Self {
+        let border = border.map(|border| border.into().map(|border| border.to_cow_str()));
         self.dynamic_css_props
             .insert("border-right".into(), box_css_signal(border));
         self
@@ -263,8 +280,11 @@ impl<'a> Borders<'a> {
     ///     .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
     ///     .label("hover me");
     /// ```
-    pub fn left_signal(mut self, border: impl Signal<Item = Border> + Unpin + 'static) -> Self {
-        let border = border.map(|border| border.to_cow_str());
+    pub fn left_signal(
+        mut self,
+        border: impl Signal<Item = impl Into<Option<Border>>> + Unpin + 'static,
+    ) -> Self {
+        let border = border.map(|border| border.into().map(|border| border.to_cow_str()));
         self.dynamic_css_props
             .insert("border-left".into(), box_css_signal(border));
         self
