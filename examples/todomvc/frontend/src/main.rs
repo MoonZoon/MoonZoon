@@ -317,25 +317,22 @@ fn filter(filter: Filter) -> impl Element {
         Filter::Completed => ("Completed", Route::Completed),
     };
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
-    let is_hovered_selected = map_ref! {
+    let outline_alpha = map_ref! {
         let hovered = hovered_signal,
         let selected = store().selected_filter.signal_ref(move |selected_filter| selected_filter == &filter) =>
-        (*hovered, *selected)
+        if *selected {
+            Some(20)
+        } else if *hovered {
+            Some(10)
+        } else {
+            None
+        }
     };
     Button::new()
-        .s(Padding::new().x(7).y(3))
-        .s(Borders::all_signal(is_hovered_selected.map(
-            |(hovered, selected)| {
-                let border_alpha = if selected {
-                    20
-                } else if hovered {
-                    10
-                } else {
-                    0
-                };
-                Border::new().color(hsluv!(12.2, 72.8, 40.2).set_a(border_alpha))
-            },
-        )))
+        .s(Padding::new().x(8).y(4))
+        .s(Outline::with_signal(outline_alpha.map_some(|alpha| {
+            Outline::inner().color(hsluv!(12.2, 72.8, 40.2).set_a(alpha))
+        })))
         .s(RoundedCorners::all(3))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(move || router().go(route))
