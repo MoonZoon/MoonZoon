@@ -51,13 +51,54 @@
 
 ---
 
+# Code example
+
+<p align="center">
+  <img src="docs/images/counter_demo.gif" width="559" title="MoonZoon logo">
+</p>
+
+```rust
+use zoon::*;
+
+fn main() {
+    start_app("app", root);
+}
+
+#[static_ref]
+fn counter() -> &'static Mutable<i32> {
+    Mutable::new(0)
+}
+
+fn root() -> impl Element {
+    Row::new()
+        .s(Align::center())
+        .s(Gap::new().x(15))
+        .item(counter_button("-", -1))
+        .item_signal(counter().signal())
+        .item(counter_button("+", 1))
+}
+
+fn counter_button(label: &str, step: i32) -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Button::new()
+        .s(Width::exact(45))
+        .s(Height::exact(25))
+        .s(RoundedCorners::all_max())
+        .s(Background::new()
+            .color_signal(hovered_signal.map_bool(|| hsluv!(300, 75, 85), || hsluv!(300, 75, 75))))
+        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .label(label)
+        .on_press(move || *counter().lock_mut() += step)
+}
+```
+
 # Demos
 
 ## New Project Template [on Netlify](https://moonzoon-new-project.netlify.app/) | [Template](https://github.com/MoonZoon/MoonZoon/tree/main/crates/mzoon/new_project)
    - Used by the command `mzoon new` (see the section [Create & Run project](#create--run-project) below)
 
 ## [Production apps in development]
-   - @TODO
+   - @TODO Add once the apps are ready to show.
 
 ## Chat [on Clever Cloud](https://mz-chat-example.mzoon.app/)
    - Up-to-date alternative in this repo: [examples/chat](examples/chat)
@@ -84,12 +125,37 @@
 
 ## Both Frontend & Backend
 
-MoonZoon apps have been deployed to [Heroku](https://www.heroku.com/) ([buildpack](https://github.com/MoonZoon/heroku-buildpack-moonzoon)), [Clever Cloud](https://www.clever-cloud.com/), [CapRover](https://caprover.com/) and [Fly.io](https://fly.io/). [DigitalOcean App Platform](https://www.digitalocean.com/products/app-platform) is planned. However, no solution was simple enough. That's why we need [MoonZoon Cloud](docs/cloud.md). But I plan to include `Dockerfile` soon so we have other options in the meantime. Please, write to [chat](https://discord.gg/eGduTxK2Es) when you have some questions regarding deployment.
+I use [Coolify](https://coolify.io/) on [Hetzner](https://www.hetzner.com/) with this `Dockerfile`:
+
+```dockerfile
+FROM rust:1
+WORKDIR /app
+
+RUN rustup target add wasm32-unknown-unknown
+# NOTE: Set `--rev` to the commit you use in your project
+RUN --mount=type=cache,target=/usr/local/cargo,from=rust,source=/usr/local/cargo \
+    cargo install mzoon --git https://github.com/MoonZoon/MoonZoon --rev ccc15d043e78a6656d68a60d46de1f540724e093 --locked
+
+COPY . .
+
+RUN --mount=type=cache,target=/usr/local/cargo,from=rust,source=/usr/local/cargo \
+    --mount=type=cache,target=target \
+    /usr/local/cargo/bin/mzoon build -r
+
+RUN --mount=type=cache,target=target \
+    ["cp", "./target/release/backend", "/usr/local/bin/moon_app"]
+
+ENTRYPOINT ["moon_app"]
+```
+
+MoonZoon app was successfully deployed to other services like [Heroku](https://www.heroku.com/) ([buildpack](https://github.com/MoonZoon/heroku-buildpack-moonzoon)), [Clever Cloud](https://www.clever-cloud.com/), [CapRover](https://caprover.com/) or [Fly.io](https://fly.io/). 
+
+[MoonZoon Cloud](docs/cloud.md) is planned as well.
 
 ## Frontend-only
 
 1. `mzoon build --release --frontend-dist netlify` 
-   - Hosting name (`netlify`) is optional.
+   - Hosting name (`netlify`) is optional. It creates files like `netlify.toml`.
 2. Drag & drop the `frontend_dist` directory to [Netlify](https://www.netlify.com/). 
 
    ![moonzoon-new-project on Netlify](docs/images/moonzoon-new-project_netlify.png)
