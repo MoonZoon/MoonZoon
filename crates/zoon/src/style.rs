@@ -41,6 +41,9 @@ pub use height::Height;
 mod layer_index;
 pub use layer_index::LayerIndex;
 
+mod outline;
+pub use outline::Outline;
+
 mod padding;
 pub use padding::Padding;
 
