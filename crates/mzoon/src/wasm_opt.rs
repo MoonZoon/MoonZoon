@@ -10,7 +10,7 @@ use std::fs::create_dir_all;
 use tar::Archive;
 use tokio::process::Command;
 
-const VERSION: &str = "110";
+const VERSION: &str = "114";
 static WASM_OPT_PATH: &str = "frontend/binaryen/bin/wasm-opt";
 
 // -- public --
@@ -23,10 +23,12 @@ pub async fn check_or_install_wasm_opt() {
 
     const TARGET: &str = env!("TARGET");
     cfg_if! {
-        if #[cfg(all(target_os = "macos", target_arch = "arm"))] {
-            const ARCHIVE_PLATFORM: &str = "arm64-macos";
-        } else if #[cfg(target_os = "macos")] {
-            const ARCHIVE_PLATFORM: &str = "x86_64-macos";
+        if #[cfg(target_os = "macos")] {
+            if #[cfg(target_arch = "aarch64")] {
+                const ARCHIVE_PLATFORM: &str = "arm64-macos";
+            } else {
+                const ARCHIVE_PLATFORM: &str = "x86_64-macos";
+            }
         } else if #[cfg(target_os = "windows")] {
             const ARCHIVE_PLATFORM: &str = "x86_64-windows";
         } else if #[cfg(target_os = "linux")] {
