@@ -25,11 +25,19 @@ pub async fn check_or_install_wasm_bindgen() {
     const TARGET: &str = env!("TARGET");
     cfg_if! {
         if #[cfg(target_os = "macos")] {
-            const NEAREST_TARGET: &str = "x86_64-apple-darwin";
+            if #[cfg(target_arch = "aarch64")] {
+                const NEAREST_TARGET: &str = "aarch64-apple-darwin";
+            } else {
+                const NEAREST_TARGET: &str = "x86_64-apple-darwin";
+            }
         } else if #[cfg(target_os = "windows")] {
             const NEAREST_TARGET: &str = "x86_64-pc-windows-msvc";
         } else if #[cfg(target_os = "linux")] {
-            const NEAREST_TARGET: &str = "x86_64-unknown-linux-musl";
+            if #[cfg(target_arch = "aarch64")] {
+                const NEAREST_TARGET: &str = "aarch64-unknown-linux-gnu";
+            } else {
+                const NEAREST_TARGET: &str = "x86_64-unknown-linux-musl";
+            }
         } else {
             compile_error!("wasm-bindgen pre-compiled binary hasn't been found for the target platform '{TARGET}'");
         }
