@@ -1,40 +1,32 @@
 use zoon::*;
 
+fn main() {
+    start_app("app", root);
+}
+
 #[static_ref]
 fn counter() -> &'static Mutable<i32> {
     Mutable::new(0)
 }
 
-fn increment() {
-    counter().update(|counter| counter + 1)
-}
-
-fn decrement() {
-    counter().update(|counter| counter - 1)
-}
-
 fn root() -> impl Element {
-    Column::new()
-        .item(Button::new().label("-").on_press(decrement))
-        .item(Text::with_signal(counter().signal()))
-        .item(Button::new().label("+").on_press(increment))
+    Row::new()
+        .s(Align::center())
+        .s(Gap::new().x(15))
+        .item(counter_button("-", -1))
+        .item_signal(counter().signal())
+        .item(counter_button("+", 1))
 }
 
-// ------ Alternative ------
-fn _root() -> impl Element {
-    let (counter, counter_signal) = Mutable::new_and_signal(0);
-    let on_press = move |step: i32| *counter.lock_mut() += step;
-    Column::new()
-        .item(
-            Button::new()
-                .label("-")
-                .on_press(clone!((on_press) move || on_press(-1))),
-        )
-        .item_signal(counter_signal)
-        .item(Button::new().label("+").on_press(move || on_press(1)))
-}
-// ---------- // -----------
-
-fn main() {
-    start_app("app", root);
+fn counter_button(label: &str, step: i32) -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Button::new()
+        .s(Width::exact(45))
+        .s(Height::exact(25))
+        .s(RoundedCorners::all_max())
+        .s(Background::new()
+            .color_signal(hovered_signal.map_bool(|| hsluv!(300, 75, 85), || hsluv!(300, 75, 75))))
+        .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+        .label(label)
+        .on_press(move || *counter().lock_mut() += step)
 }
