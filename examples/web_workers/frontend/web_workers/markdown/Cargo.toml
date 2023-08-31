@@ -1,0 +1,16 @@
+[package]
+name = "markdown"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+authors.workspace = true
+description.workspace = true
+categories.workspace = true
+license.workspace = true
+readme.workspace = true
+publish.workspace = true
+
+[dependencies]
+gloo-worker = { version = "0.4.0", features = ["futures"], default-features = false }
+console_error_panic_hook = { version = "0.1.7", default-features = false }
+frontend = { path = "../.." }
