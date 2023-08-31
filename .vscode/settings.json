@@ -36,6 +36,7 @@
         // "examples/viewport/Cargo.toml",
         // "examples/wasm_components/Cargo.toml",
         // "examples/web_components/Cargo.toml",
+        // "examples/web_workers/Cargo.toml",
     ],
     "rust-analyzer.diagnostics.disabled": [
         "missing-unsafe",

@@ -1,0 +1,8 @@
+.markdown-body {
+    background-color: transparent;
+    white-space: normal;
+}
+
+.markdown-body * {
+    white-space: normal;
+}

@@ -84,6 +84,7 @@ struct SharedData {
     cache_busting: bool,
     compressed_pkg: bool,
     pkg_path: &'static str,
+    web_workers_path: &'static str,
 }
 
 #[derive(Clone)]
@@ -205,6 +206,7 @@ where
         cache_busting: CONFIG.cache_busting,
         compressed_pkg: CONFIG.compressed_pkg,
         pkg_path: "frontend/pkg",
+        web_workers_path: "frontend/web_workers/",
     };
     let reload_sse = ReloadSSE(SSE::start());
     let message_sse = MessageSSE(SSE::start());
@@ -245,6 +247,10 @@ where
                     )
                     .route("reload", web::post().to(reload_responder))
                     .route("pkg/{file:.*}", web::get().to(pkg_responder))
+                    .route(
+                        "web_workers/{file:.*}",
+                        web::get().to(web_workers_responder),
+                    )
                     .route(
                         "message_sse/{session_id}",
                         web::get().to(message_sse_responder),
@@ -468,6 +474,77 @@ fn named_file_and_encoding(
         return Ok((named_file?, Some(ContentEncoding::Gzip)));
     }
     Ok((NamedFile::open(file)?, None))
+}
+
+// ------ web_workers_responder ------
+
+async fn web_workers_responder(
+    req: HttpRequest,
+    file: web::Path<String>,
+    shared_data: web::Data<SharedData>,
+) -> impl Responder {
+    let mime = mime_guess::from_path(file.as_str()).first_or_octet_stream();
+    let (named_file, encoding) = web_worker_named_file_and_encoding(&req, &file, &shared_data)?;
+
+    let named_file = named_file
+        .set_content_type(mime)
+        .prefer_utf8(true)
+        .use_etag(false)
+        .use_last_modified(false)
+        .disable_content_disposition()
+        .customize();
+
+    let mut responder = if shared_data.cache_busting {
+        named_file.insert_header(CacheControl(vec![CacheDirective::MaxAge(31536000)]))
+    } else {
+        named_file.insert_header(ETag(EntityTag::new(
+            false,
+            shared_data.frontend_build_id.to_string(),
+        )))
+    };
+
+    if let Some(encoding) = encoding {
+        responder = responder.insert_header(encoding);
+    }
+    Ok::<_, Error>(responder)
+}
+
+fn web_worker_named_file_and_encoding(
+    _req: &HttpRequest,
+    file: &web::Path<String>,
+    shared_data: &web::Data<SharedData>,
+) -> Result<(NamedFile, Option<ContentEncoding>), Error> {
+    let file = format!("{}/{}", shared_data.web_workers_path, file);
+    Ok((NamedFile::open(file)?, None))
+
+    // let mut file = format!("{}/{}", shared_data.web_workers_path, file);
+    // if !shared_data.compressed_pkg {
+    //     return Ok((NamedFile::open(file)?, None));
+    // }
+    // let accept_encodings = req
+    //     .headers()
+    //     .get(header::ACCEPT_ENCODING)
+    //     .and_then(|accept_encoding| accept_encoding.to_str().ok())
+    //     .map(|accept_encoding| accept_encoding.split(", ").collect::<BTreeSet<_>>())
+    //     .unwrap_or_default();
+
+    // if accept_encodings.contains(ContentEncoding::Brotli.as_str()) {
+    //     file.push_str(".br");
+    //     let named_file = NamedFile::open(&file);
+    //     if named_file.is_err() {
+    //         eprintln!("Cannot load '{}'. Consider to set `ENV COMPRESSED_PKG false` or build with `mzoon build -r`.", file);
+    //     }
+    //     return Ok((named_file?, Some(ContentEncoding::Brotli)));
+    // }
+    // if accept_encodings.contains(ContentEncoding::Gzip.as_str()) {
+    //     file.push_str(".gz");
+    //     let named_file = NamedFile::open(&file);
+    //     if named_file.is_err() {
+    //         eprintln!("Cannot load '{}'. Consider to set `ENV COMPRESSED_PKG false` or build with `mzoon build -r`.", file);
+    //     }
+    //     return Ok((named_file?, Some(ContentEncoding::Gzip)));
+    // }
+    // Ok((NamedFile::open(file)?, None))
 }
 
 // ------ reload_sse_responder ------

@@ -42,6 +42,7 @@ pub use element::*;
 pub use event_options::EventOptions;
 pub use futures_channel::{self, oneshot};
 pub use futures_signals_ext::*;
+pub use futures_util::{self, select as select_future, SinkExt};
 pub use gensym::gensym;
 pub use hsluv::{hsluv, HSLuv};
 pub use index_generator::IndexGenerator;
