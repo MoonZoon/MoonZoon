@@ -37,6 +37,7 @@ pub struct Link<LabelFlag, ToFlag, RE: RawEl> {
 }
 
 impl Link<LabelFlagNotSet, ToFlagNotSet, RawHtmlEl<web_sys::HtmlAnchorElement>> {
+    #[track_caller]
     pub fn new() -> Self {
         run_once!(|| {
             global_styles()

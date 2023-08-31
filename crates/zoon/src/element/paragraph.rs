@@ -38,6 +38,7 @@ impl<EmptyFlag, RE: RawEl> UpdateRawEl for Paragraph<EmptyFlag, RE> {
 // ------ ------
 
 impl ChoosableTag for Paragraph<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
+    #[track_caller]
     fn with_tag(tag: Tag) -> Self {
         run_once!(|| {
             global_styles()

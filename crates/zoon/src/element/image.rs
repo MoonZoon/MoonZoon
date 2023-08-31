@@ -13,6 +13,7 @@ pub struct Image<UrlFlag, DescriptionFlag, RE: RawEl> {
 }
 
 impl Image<UrlFlagNotSet, DescriptionFlagNotSet, RawHtmlEl<web_sys::HtmlImageElement>> {
+    #[track_caller]
     pub fn new() -> Self {
         Self {
             raw_el: RawHtmlEl::<web_sys::HtmlImageElement>::new("img").class("image"),

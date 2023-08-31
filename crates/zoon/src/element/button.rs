@@ -90,6 +90,7 @@ pub struct Button<LabelFlag, OnPressFlag, RE: RawEl> {
 }
 
 impl Button<LabelFlagNotSet, OnPressFlagNotSet, RawHtmlEl<web_sys::HtmlDivElement>> {
+    #[track_caller]
     pub fn new() -> Self {
         run_once!(|| {
             global_styles()

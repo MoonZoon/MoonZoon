@@ -10,12 +10,14 @@ pub struct Text {
 }
 
 impl Text {
+    #[track_caller]
     pub fn new<'a>(text: impl IntoCowStr<'a>) -> Self {
         Self {
             raw_text: RawText::new(text.into_cow_str()),
         }
     }
 
+    #[track_caller]
     pub fn with_signal<'a>(
         text: impl Signal<Item = impl IntoCowStr<'a>> + Unpin + 'static,
     ) -> Self {

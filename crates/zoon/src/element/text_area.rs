@@ -38,6 +38,7 @@ impl
         RawHtmlEl<web_sys::HtmlTextAreaElement>,
     >
 {
+    #[track_caller]
     pub fn new() -> Self {
         Self {
             raw_el: RawHtmlEl::<web_sys::HtmlTextAreaElement>::new("textarea").class("text_area"),

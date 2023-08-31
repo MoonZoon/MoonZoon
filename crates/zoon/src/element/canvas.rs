@@ -13,6 +13,7 @@ pub struct Canvas<WidthFlag, HeightFlag, RE: RawEl> {
 }
 
 impl Canvas<WidthFlagNotSet, HeightFlagNotSet, RawHtmlEl<web_sys::HtmlCanvasElement>> {
+    #[track_caller]
     pub fn new() -> Self {
         Self {
             raw_el: RawHtmlEl::<web_sys::HtmlCanvasElement>::new("canvas").class("canvas"),

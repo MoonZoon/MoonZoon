@@ -9,24 +9,28 @@ pub struct Spacer {
 }
 
 impl Spacer {
+    #[track_caller]
     fn new_el() -> El<el::ChildFlagNotSet, RawHtmlEl<web_sys::HtmlElement>> {
         El::new()
             .update_raw_el(|raw_el| raw_el.class("spacer"))
             .pointer_handling(PointerHandling::none())
     }
 
+    #[track_caller]
     pub fn fill() -> Self {
         Self {
             el: Self::new_el().s(Width::fill()).s(Height::fill()),
         }
     }
 
+    #[track_caller]
     pub fn growable() -> Self {
         Self {
             el: Self::new_el().s(Width::growable()).s(Height::growable()),
         }
     }
 
+    #[track_caller]
     pub fn growable_with_factor<T: Into<f64>>(factor: impl Into<Option<T>>) -> Self {
         if let Some(factor) = factor.into() {
             let factor = factor.into();

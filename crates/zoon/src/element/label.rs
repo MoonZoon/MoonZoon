@@ -13,6 +13,7 @@ pub struct Label<LabelFlag, ForInputFlag, RE: RawEl> {
 }
 
 impl Label<LabelFlagNotSet, ForInputFlagNotSet, RawHtmlEl<web_sys::HtmlLabelElement>> {
+    #[track_caller]
     pub fn new() -> Self {
         Self {
             raw_el: RawHtmlEl::<web_sys::HtmlLabelElement>::new("label").class("label"),
