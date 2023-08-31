@@ -5,58 +5,74 @@ static NEARBY_ELEMENTS_Z_INDEX: Lazy<String> =
     Lazy::new(|| LayerIndex::NEARBY_ELEMENTS.to_string());
 
 pub trait AddNearbyElement<'a>: UpdateRawEl + Sized {
+    #[track_caller]
     fn element_above(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
-        self.update_raw_el(|raw_el| raw_el.child(element_above_container().child(element)))
+        let container = element_above_container();
+        self.update_raw_el(|raw_el| raw_el.child(container.child(element)))
     }
 
+    #[track_caller]
     fn element_above_signal(
         self,
         element: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> Self {
-        self.update_raw_el(|raw_el| raw_el.child(element_above_container().child_signal(element)))
+        let container = element_above_container();
+        self.update_raw_el(|raw_el| raw_el.child(container.child_signal(element)))
     }
 
+    #[track_caller]
     fn element_below(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
-        self.update_raw_el(|raw_el| raw_el.child(element_below_container().child(element)))
+        let container = element_below_container();
+        self.update_raw_el(|raw_el| raw_el.child(container.child(element)))
     }
 
+    #[track_caller]
     fn element_below_signal(
         self,
         element: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> Self {
-        self.update_raw_el(|raw_el| raw_el.child(element_below_container().child_signal(element)))
+        let container = element_below_container();
+        self.update_raw_el(|raw_el| raw_el.child(container.child_signal(element)))
     }
 
+    #[track_caller]
     fn element_on_left(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
-        self.update_raw_el(|raw_el| raw_el.child(element_on_left_container().child(element)))
+        let container = element_on_left_container();
+        self.update_raw_el(|raw_el| raw_el.child(container.child(element)))
     }
 
+    #[track_caller]
     fn element_on_left_signal(
         self,
         element: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> Self {
-        self.update_raw_el(|raw_el| raw_el.child(element_on_left_container().child_signal(element)))
+        let container = element_on_left_container();
+        self.update_raw_el(|raw_el| raw_el.child(container.child_signal(element)))
     }
 
+    #[track_caller]
     fn element_on_right(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
-        self.update_raw_el(|raw_el| raw_el.child(element_on_right_container().child(element)))
+        let container = element_on_right_container();
+        self.update_raw_el(|raw_el| raw_el.child(container.child(element)))
     }
 
+    #[track_caller]
     fn element_on_right_signal(
         self,
         element: impl Signal<Item = impl IntoOptionElement<'a>> + Unpin + 'static,
     ) -> Self {
-        self.update_raw_el(|raw_el| {
-            raw_el.child(element_on_right_container().child_signal(element))
-        })
+        let container = element_on_right_container();
+        self.update_raw_el(|raw_el| raw_el.child(container.child_signal(element)))
     }
 }
 
+#[track_caller]
 fn element_above_container() -> RawHtmlEl<web_sys::HtmlElement> {
     run_once!(|| {
         global_styles().style_group(StyleGroup::new(".above > *").style("pointer-events", "auto"));
     });
     RawHtmlEl::new("div")
+        .class("nearby_element_container")
         .class("above")
         .style("display", "flex")
         .style("flex-direction", "column")
@@ -68,11 +84,13 @@ fn element_above_container() -> RawHtmlEl<web_sys::HtmlElement> {
         .style("z-index", &NEARBY_ELEMENTS_Z_INDEX)
 }
 
+#[track_caller]
 fn element_below_container() -> RawHtmlEl<web_sys::HtmlElement> {
     run_once!(|| {
         global_styles().style_group(StyleGroup::new(".below > *").style("pointer-events", "auto"));
     });
     RawHtmlEl::new("div")
+        .class("nearby_element_container")
         .class("below")
         .style("display", "flex")
         .style("flex-direction", "column")
@@ -84,12 +102,14 @@ fn element_below_container() -> RawHtmlEl<web_sys::HtmlElement> {
         .style("z-index", &NEARBY_ELEMENTS_Z_INDEX)
 }
 
+#[track_caller]
 fn element_on_left_container() -> RawHtmlEl<web_sys::HtmlElement> {
     run_once!(|| {
         global_styles()
             .style_group(StyleGroup::new(".on_left > *").style("pointer-events", "auto"));
     });
     RawHtmlEl::new("div")
+        .class("nearby_element_container")
         .class("on_left")
         .style("display", "flex")
         .style("flex-direction", "column")
@@ -101,12 +121,14 @@ fn element_on_left_container() -> RawHtmlEl<web_sys::HtmlElement> {
         .style("z-index", &NEARBY_ELEMENTS_Z_INDEX)
 }
 
+#[track_caller]
 fn element_on_right_container() -> RawHtmlEl<web_sys::HtmlElement> {
     run_once!(|| {
         global_styles()
             .style_group(StyleGroup::new(".on_right > *").style("pointer-events", "auto"));
     });
     RawHtmlEl::new("div")
+        .class("nearby_element_container")
         .class("on_right")
         .style("display", "flex")
         .style("flex-direction", "column")

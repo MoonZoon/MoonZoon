@@ -13,6 +13,7 @@ pub struct Stack<EmptyFlag, RE: RawEl> {
 }
 
 impl Stack<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
+    #[track_caller]
     pub fn new() -> Self {
         Self::with_tag(Tag::Custom("div"))
     }
@@ -38,6 +39,7 @@ impl<EmptyFlag, RE: RawEl> UpdateRawEl for Stack<EmptyFlag, RE> {
 // ------ ------
 
 impl ChoosableTag for Stack<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
+    #[track_caller]
     fn with_tag(tag: Tag) -> Self {
         run_once!(|| {
             global_styles()

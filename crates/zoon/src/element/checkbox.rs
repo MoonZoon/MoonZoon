@@ -30,6 +30,7 @@ impl
         RawHtmlEl<web_sys::HtmlDivElement>,
     >
 {
+    #[track_caller]
     pub fn new() -> Self {
         let check_state = Mutable::new(CheckState::NotSet);
         Self {

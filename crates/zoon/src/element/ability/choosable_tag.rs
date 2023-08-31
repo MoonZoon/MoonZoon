@@ -1,6 +1,7 @@
 // ------ ChoosableTag ------
 
 pub trait ChoosableTag {
+    #[track_caller]
     fn with_tag(tag: Tag) -> Self;
 }
 

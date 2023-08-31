@@ -5,7 +5,7 @@ use crate::{
 use lang::Lang;
 use once_cell::sync::Lazy;
 use std::mem::ManuallyDrop;
-use std::{cell::Cell, mem, rc::Rc};
+use std::{cell::Cell, mem, panic, rc::Rc};
 
 mod raw_html_el;
 mod raw_svg_el;
@@ -38,6 +38,7 @@ impl ClassIdGenerator {
 
 pub trait UpdateRawEl {
     type RawEl: RawEl;
+    #[track_caller]
     fn update_raw_el(self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self;
 }
 
@@ -53,9 +54,24 @@ pub trait RawEl: Sized + Into<RawElement> {
         + Clone
         + 'static;
 
+    #[track_caller]
     fn new(tag: &str) -> Self
     where
         Self::DomElement: JsCast;
+
+    #[track_caller]
+    fn source_code_location(self) -> Self {
+        if cfg!(debug_assertions) {
+            let location = panic::Location::caller();
+            let file = location.file();
+            let line = location.line();
+            let column = location.column();
+            let location = crate::format!("{file}:{line}:{column}");
+            self.attr("_location", &location.into_cow_str())
+        } else {
+            self
+        }
+    }
 
     #[doc(hidden)]
     fn update_dom_builder(
@@ -363,6 +379,7 @@ pub trait RawEl: Sized + Into<RawElement> {
         self.after_remove(move |_| drop(inner_html_updater))
     }
 
+    #[track_caller]
     fn from_markup(markup: impl AsRef<str>) -> Option<Self>
     where
         Self::DomElement: JsCast,
@@ -428,6 +445,7 @@ pub trait RawEl: Sized + Into<RawElement> {
         self
     }
 
+    #[track_caller]
     fn from_dom_element(dom_element: Self::DomElement) -> Self;
 
     fn focus(self) -> Self

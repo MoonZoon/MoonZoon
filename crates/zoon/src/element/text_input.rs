@@ -44,6 +44,7 @@ impl
         RawHtmlEl<web_sys::HtmlInputElement>,
     >
 {
+    #[track_caller]
     pub fn new() -> Self {
         Self {
             raw_el: RawHtmlEl::<web_sys::HtmlInputElement>::new("input").class("text_input"),

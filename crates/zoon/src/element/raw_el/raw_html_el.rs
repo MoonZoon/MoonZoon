@@ -11,6 +11,7 @@ pub struct RawHtmlEl<DomElement: Into<web_sys::HtmlElement>> {
 }
 
 impl RawHtmlEl<web_sys::HtmlElement> {
+    #[track_caller]
     pub fn new(tag: &str) -> Self {
         <Self as RawEl>::new(tag)
     }
@@ -30,6 +31,7 @@ impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> RawHtmlEl<DomEleme
 impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> From<RawHtmlEl<DomElement>>
     for RawElement
 {
+    #[track_caller]
     fn from(raw_html_el: RawHtmlEl<DomElement>) -> Self {
         RawElement::El(raw_html_el.dom_element_type::<web_sys::HtmlElement>())
     }
@@ -68,6 +70,7 @@ where
 {
     type DomElement = DomElement;
 
+    #[track_caller]
     fn new(tag: &str) -> Self
     where
         DomElement: JsCast,
@@ -82,6 +85,7 @@ where
             dom_builder: dom_builder
                 .after_removed(move |_| CLASS_ID_GENERATOR.remove_class_id(class_id)),
         }
+        .source_code_location()
     }
 
     fn update_dom_builder(
@@ -100,6 +104,7 @@ where
         self.class_id.clone()
     }
 
+    #[track_caller]
     fn from_dom_element(dom_element: Self::DomElement) -> Self {
         let mut dom_builder = DomBuilder::new(dom_element);
 
@@ -111,6 +116,7 @@ where
             dom_builder: dom_builder
                 .after_removed(move |_| CLASS_ID_GENERATOR.remove_class_id(class_id)),
         }
+        .source_code_location()
     }
 
     fn focus(self) -> Self
