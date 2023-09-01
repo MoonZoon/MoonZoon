@@ -3,7 +3,7 @@ use std::borrow::Cow;
 
 // ------ FontFamily ------
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum FontFamily<'a> {
     Serif,
     SansSerif,
