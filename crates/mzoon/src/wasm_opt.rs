@@ -24,10 +24,12 @@ pub async fn check_or_install_wasm_opt() {
     const TARGET: &str = env!("TARGET");
     cfg_if! {
         if #[cfg(target_os = "macos")] {
-            if #[cfg(target_arch = "aarch64")] {
-                const ARCHIVE_PLATFORM: &str = "arm64-macos";
-            } else {
-                const ARCHIVE_PLATFORM: &str = "x86_64-macos";
+            cfg_if! {
+                if #[cfg(target_arch = "aarch64")] {
+                    const ARCHIVE_PLATFORM: &str = "arm64-macos";
+                } else {
+                    const ARCHIVE_PLATFORM: &str = "x86_64-macos";
+                }
             }
         } else if #[cfg(target_os = "windows")] {
             const ARCHIVE_PLATFORM: &str = "x86_64-windows";
