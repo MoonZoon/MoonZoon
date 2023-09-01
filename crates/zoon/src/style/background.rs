@@ -70,9 +70,11 @@ impl<'a> Background<'a> {
     /// use zoon::*;
     /// let element = El::new().s(Background::new().url("/assets/images/stars.png"));
     /// ```
-    pub fn url(mut self, url: impl IntoCowStr<'a>) -> Self {
-        let url = ["url(", &url.into_cow_str(), ")"].concat();
-        self.static_css_props.insert("background-image", url);
+    pub fn url(mut self, url: impl IntoOptionCowStr<'a>) -> Self {
+        if let Some(url) = url.into_option_cow_str() {
+            let url = ["url(", &url, ")"].concat();
+            self.static_css_props.insert("background-image", url);
+        }
         self
     }
 
@@ -95,9 +97,12 @@ impl<'a> Background<'a> {
     /// ```
     pub fn url_signal(
         mut self,
-        url: impl Signal<Item = impl IntoCowStr<'static> + 'static> + Unpin + 'static,
+        url: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static,
     ) -> Self {
-        let url = url.map(|url| ["url(", &url.into_cow_str(), ")"].concat());
+        let url = url.map(|url| {
+            url.into_option_cow_str()
+                .map(|url| ["url(", &url, ")"].concat())
+        });
         self.dynamic_css_props
             .insert("background-image".into(), box_css_signal(url));
         self
