@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct FontLine<'a> {
     pub(crate) static_css_props: StaticCSSProps<'a>,
     pub(crate) dynamic_css_props: DynamicCSSProps,
