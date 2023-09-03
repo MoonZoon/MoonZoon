@@ -45,13 +45,3 @@ impl Element for Search {
         self.raw_el.into_raw_element()
     }
 }
-
-impl IntoIterator for Search {
-    type Item = Self;
-    type IntoIter = iter::Once<Self>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        iter::once(self)
-    }
-}

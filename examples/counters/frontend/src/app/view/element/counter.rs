@@ -105,18 +105,6 @@ impl<ValueFlag, StepFlag> Element
     }
 }
 
-impl<ValueFlag, ValueSignal, OnChangeFlag, StepFlag> IntoIterator
-    for Counter<ValueFlag, ValueSignal, OnChangeFlag, StepFlag>
-{
-    type Item = Self;
-    type IntoIter = iter::Once<Self>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        iter::once(self)
-    }
-}
-
 // ------ ------
 //  Attributes
 // ------ ------

@@ -71,16 +71,6 @@ impl Element for TextEditor {
     }
 }
 
-impl IntoIterator for TextEditor {
-    type Item = Self;
-    type IntoIter = iter::Once<Self>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        iter::once(self)
-    }
-}
-
 // ------ ------
 //   JS Bridge
 // ------ ------
