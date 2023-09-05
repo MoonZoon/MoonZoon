@@ -6,7 +6,8 @@ pub struct Client {
     pub id: ClientId,
     pub name: String,
     pub time_blocks: Vec<TimeBlock>,
-    pub tracked: Wrapper<Duration>,
+    #[serde(with = "DurationSecondsForSerde")]
+    pub tracked: Duration,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -15,7 +16,8 @@ pub struct TimeBlock {
     pub id: TimeBlockId,
     pub name: String,
     pub status: TimeBlockStatus,
-    pub duration: Wrapper<Duration>,
+    #[serde(with = "DurationSecondsForSerde")]
+    pub duration: Duration,
     pub invoice: Option<Invoice>,
 }
 

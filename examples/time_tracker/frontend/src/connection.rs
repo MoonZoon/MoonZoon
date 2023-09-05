@@ -1,6 +1,6 @@
 use crate::*;
 use shared::{DownMsg, UpMsg};
-use zoon::{println, *};
+use zoon::println;
 
 #[static_ref]
 pub fn connection() -> &'static Connection<UpMsg, DownMsg> {

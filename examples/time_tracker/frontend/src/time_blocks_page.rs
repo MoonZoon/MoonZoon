@@ -1,4 +1,5 @@
 use crate::connection::connection;
+use educe::Educe;
 use shared::{
     time_blocks::{self, TimeBlockStatus},
     ClientId, InvoiceId, TimeBlockId, UpMsg,
@@ -29,12 +30,14 @@ struct Stats {
     to_block: Mutable<f64>,
 }
 
-#[derive(Default, Debug)]
+#[derive(Educe, Debug)]
+#[educe(Default)]
 struct TimeBlock {
     id: TimeBlockId,
     name: Mutable<String>,
     status: Mutable<TimeBlockStatus>,
-    duration: Mutable<Wrapper<Duration>>,
+    #[educe(Default(expression = "Mutable::new(Duration::seconds(0))"))]
+    duration: Mutable<Duration>,
     invoice: Mutable<Option<Arc<Invoice>>>,
     is_old: bool,
 }
@@ -178,7 +181,7 @@ fn set_time_block_status(time_block: &TimeBlock, status: TimeBlockStatus) {
     time_block.status.set(status);
 }
 
-fn set_time_block_duration(time_block: &TimeBlock, duration: Wrapper<Duration>) {
+fn set_time_block_duration(time_block: &TimeBlock, duration: Duration) {
     // @TODO send up_msg
     time_block.duration.set(duration);
 }

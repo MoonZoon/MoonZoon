@@ -481,9 +481,9 @@ fn time_entry_duration(
         let started = started.signal(),
         let stopped = stopped.signal() =>
         if let Some(stopped) = stopped {
-            **stopped - **started
+            *stopped - *started
         } else {
-            *current - **started
+            *current - *started
         }
     };
     let duration_updater = Task::start_droppable(duration_signal.for_each_sync(move |duration| {
@@ -520,7 +520,7 @@ fn time_entry_duration(
                             let hours = hours.parse::<i32>().ok()?;
                             let (_, minutes, seconds) = duration.get();
                             let new_duration = Duration::seconds(i64::from(hours * 3600 + minutes * 60 + seconds));
-                            let new_stopped = *started.get() + new_duration;
+                            let new_stopped = started.get() + new_duration;
                             Some(stopped.set(Some(new_stopped.into())))
                         }),
                     )
@@ -543,7 +543,7 @@ fn time_entry_duration(
                             }
                             let (hours, _, seconds) = duration.get();
                             let new_duration = Duration::seconds(i64::from(hours * 3600 + minutes * 60 + seconds));
-                            let new_stopped = *started.get() + new_duration;
+                            let new_stopped = started.get() + new_duration;
                             Some(stopped.set(Some(new_stopped.into())))
                         }),
                     )
@@ -566,7 +566,7 @@ fn time_entry_duration(
                             }
                             let (hours, minutes, _) = duration.get();
                             let new_duration = Duration::seconds(i64::from(hours * 3600 + minutes * 60 + seconds));
-                            let new_stopped = *started.get() + new_duration;
+                            let new_stopped = started.get() + new_duration;
                             Some(stopped.set(Some(new_stopped.into())))
                         },
                     )
