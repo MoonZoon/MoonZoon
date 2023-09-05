@@ -484,28 +484,30 @@ async fn web_workers_responder(
     shared_data: web::Data<SharedData>,
 ) -> impl Responder {
     let mime = mime_guess::from_path(file.as_str()).first_or_octet_stream();
-    let (named_file, encoding) = web_worker_named_file_and_encoding(&req, &file, &shared_data)?;
+    let (named_file, _encoding) = web_worker_named_file_and_encoding(&req, &file, &shared_data)?;
 
-    let named_file = named_file
-        .set_content_type(mime)
-        .prefer_utf8(true)
-        .use_etag(false)
-        .use_last_modified(false)
-        .disable_content_disposition()
-        .customize();
+    // let named_file = named_file
+    //     .set_content_type(mime)
+    //     .prefer_utf8(true)
+    //     .use_etag(false)
+    //     .use_last_modified(false)
+    //     .disable_content_disposition()
+    //     .customize();
+    let named_file = named_file.set_content_type(mime).prefer_utf8(true);
 
-    let mut responder = if shared_data.cache_busting {
-        named_file.insert_header(CacheControl(vec![CacheDirective::MaxAge(31536000)]))
-    } else {
-        named_file.insert_header(ETag(EntityTag::new(
-            false,
-            shared_data.frontend_build_id.to_string(),
-        )))
-    };
+    // let mut responder = if shared_data.cache_busting {
+    //     named_file.insert_header(CacheControl(vec![CacheDirective::MaxAge(31536000)]))
+    // } else {
+    //     named_file.insert_header(ETag(EntityTag::new(
+    //         false,
+    //         shared_data.frontend_build_id.to_string(),
+    //     )))
+    // };
+    let responder = named_file;
 
-    if let Some(encoding) = encoding {
-        responder = responder.insert_header(encoding);
-    }
+    // if let Some(encoding) = encoding {
+    //     responder = responder.insert_header(encoding);
+    // }
     Ok::<_, Error>(responder)
 }
 

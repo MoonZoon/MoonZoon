@@ -1,7 +1,7 @@
 use crate::workers::*;
 use educe::Educe;
 use std::{cell::RefCell, rc::Rc};
-use zoon::*;
+use zoon::{moonlight::Ulid, *};
 
 static DEFAULT_MARKDOWN: &str = r#"This content is *rendered* by a **web worker**"#;
 
@@ -24,15 +24,20 @@ pub struct Store {
 fn create_web_workers_and_triggers() {
     // The command to build a worker after the `frontend` crate has been built at least once:
     //
-    // cargo build --target wasm32-unknown-unknown && ../../wasm-bindgen --target no-modules --out-dir ./pkg ../../../target/wasm32-unknown-unknown/debug/[worker_crate_name].wasm
+    // cargo build --target wasm32-unknown-unknown && ../../wasm-bindgen --target no-modules --no-typescript --out-dir ./pkg ../../../target/wasm32-unknown-unknown/debug/[worker_crate_name].wasm
     //
     // (run it inside the `web_workers/[worker_name]` folder)
 
-    let markdown_bridge =
-        MarkdownWebWorker::spawner().spawn("/_api/web_workers/markdown/pkg/markdown.js");
+    let cache_busting_string = Ulid::generate();
+
+    let markdown_bridge = MarkdownWebWorker::spawner().spawn(&format!(
+        "/_api/web_workers/markdown/pkg/markdown.js?{cache_busting_string}"
+    ));
 
     let (prime_bridge_sink, mut prime_bridge_stream) = PrimeWebWorker::spawner()
-        .spawn("/_api/web_workers/prime/pkg/prime.js")
+        .spawn(&format!(
+            "/_api/web_workers/prime/pkg/prime.js?{cache_busting_string}"
+        ))
         .split();
     let prime_bridge_sink = Rc::new(RefCell::new(prime_bridge_sink));
 
