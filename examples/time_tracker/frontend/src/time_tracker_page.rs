@@ -29,8 +29,8 @@ struct Project {
 struct TimeEntry {
     id: TimeEntryId,
     name: Mutable<String>,
-    started: Mutable<Wrapper<DateTime<Local>>>,
-    stopped: Mutable<Option<Wrapper<DateTime<Local>>>>,
+    started: Mutable<DateTime<Local>>,
+    stopped: Mutable<Option<DateTime<Local>>>,
     is_old: bool,
 }
 
@@ -101,8 +101,8 @@ pub fn convert_and_set_clients(new_clients: Vec<time_tracker::Client>) {
                 Arc::new(TimeEntry {
                     id: time_entry.id,
                     name: Mutable::new(time_entry.name),
-                    started: Mutable::new(Wrapper::new(time_entry.started)),
-                    stopped: Mutable::new(time_entry.stopped.map(Wrapper::new)),
+                    started: Mutable::new(time_entry.started),
+                    stopped: Mutable::new(time_entry.stopped),
                     is_old: true,
                 })
             })
@@ -160,12 +160,12 @@ fn rename_time_entry(time_entry_id: TimeEntryId, name: &str) {
 
 fn set_time_entry_started(time_entry: &TimeEntry, started: DateTime<Local>) {
     // @TODO send up_msg
-    time_entry.started.set(Wrapper::new(started));
+    time_entry.started.set(started);
 }
 
 fn set_time_entry_stopped(time_entry: &TimeEntry, stopped: DateTime<Local>) {
     // @TODO send up_msg
-    time_entry.stopped.set(Some(Wrapper::new(stopped)));
+    time_entry.stopped.set(Some(stopped));
 }
 
 // ------ ------

@@ -12,6 +12,7 @@ publish.workspace = true
 
 [dependencies]
 moonlight.workspace = true
+serde_with = { version = "3.3.0", features = ["chrono"], default-features = true }
 
 [features]
 frontend = ["moonlight/frontend"]

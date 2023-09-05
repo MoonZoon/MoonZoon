@@ -11,6 +11,20 @@ pub type InvoiceId = EntityId;
 pub type TimeEntryId = EntityId;
 pub type UserId = EntityId;
 
+#[derive(Serialize, Deserialize)]
+#[serde(remote = "Duration")]
+#[serde(crate = "serde")]
+struct DurationSecondsForSerde {
+    #[serde(getter = "Duration::num_seconds")]
+    seconds: i64,
+}
+
+impl From<DurationSecondsForSerde> for Duration {
+    fn from(for_serde: DurationSecondsForSerde) -> Duration {
+        Duration::seconds(for_serde.seconds)
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(crate = "serde")]
 pub struct User {
@@ -25,7 +39,10 @@ pub struct User {
 #[serde(crate = "serde")]
 pub enum UpMsg {
     // ------ Auth ------
-    Login { name: String, password: String },
+    Login {
+        name: String,
+        password: String,
+    },
     Logout,
     // ------ Page data ------
     GetClientsAndProjectsClients,
@@ -40,11 +57,18 @@ pub enum UpMsg {
     RemoveProject(ProjectId),
     RenameProject(ProjectId, String),
     // ------ TimeBlock ------
-    AddTimeBlock(ClientId, TimeBlockId, Wrapper<Duration>),
+    AddTimeBlock(
+        ClientId,
+        TimeBlockId,
+        #[serde(with = "DurationSecondsForSerde")] Duration,
+    ),
     RemoveTimeBlock(TimeBlockId),
     RenameTimeBlock(TimeBlockId, String),
     SetTimeBlockStatus(TimeBlockId, time_blocks::TimeBlockStatus),
-    SetTimeBlockDuration(TimeBlockId, Wrapper<Duration>),
+    SetTimeBlockDuration(
+        TimeBlockId,
+        #[serde(with = "DurationSecondsForSerde")] Duration,
+    ),
     // ------ Invoice ------
     AddInvoice(TimeBlockId, InvoiceId),
     RemoveInvoice(InvoiceId),

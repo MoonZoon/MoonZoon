@@ -13,7 +13,7 @@ fn decrement() {
     counter().update(|counter| counter - 1)
 }
 
-fn root() -> impl IntoIterator<Item = impl Element> {
+fn root() -> impl IntoElementIterator {
     element_vec![
         Button::new().label("-").on_press(decrement),
         Text::with_signal(counter().signal()),
