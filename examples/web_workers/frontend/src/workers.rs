@@ -18,7 +18,7 @@ pub async fn MarkdownWebWorker(markdown: String) -> String {
 
 // ------ prime web worker ------
 
-#[derive(PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(crate = "serde")]
 pub enum ControlSignal {
     Start,
@@ -32,9 +32,15 @@ pub async fn PrimeWebWorker(mut scope: ReactorScope<ControlSignal, u64>) {
             continue;
         }
         for prime in prime_iter::primes::<u64>() {
-            scope.send(prime).await.unwrap();
-            if control_signal == ControlSignal::Stop {
-                break;
+            select_future! {
+                control_signal = scope.next() => {
+                    if matches!(control_signal, Some(ControlSignal::Stop) | None) {
+                        break;
+                    }
+                }
+                _ = Timer::sleep(0).fuse() => {
+                    scope.send(prime).await.unwrap()
+                },
             }
         }
     }
