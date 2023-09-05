@@ -9,7 +9,7 @@ ignore = { version = "0.4.18", default-features = false }
 tar = { version = "0.4.35", default-features = false }
 
 [dependencies]
-clap = { version = "4.2.4", features = ["std", "color", "suggestions", "derive"], default-features = false }
+clap = { version = "4.4.2", features = ["derive"], default-features = true }
 toml = { version = "0.7.3", features = ["preserve_order", "parse"], default-features = false }
 serde = { version = "1.0", features = ["derive"], default-features = false }
 notify-debouncer-mini = { version = "0.2.1", features = ["crossbeam"], default-features = false }
