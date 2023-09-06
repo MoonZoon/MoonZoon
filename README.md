@@ -156,7 +156,13 @@ MoonZoon app was successfully deployed to other services like [Heroku](https://w
 
 1. `mzoon build --release --frontend-dist netlify` 
    - Hosting name (`netlify`) is optional. It creates files like `netlify.toml`.
-2. Drag & drop the `frontend_dist` directory to [Netlify](https://www.netlify.com/). 
+1. _[optional]_ Test it with a dev server like [miniserve](https://crates.io/crates/miniserve):
+   ```bash
+   cargo install miniserve
+   
+   miniserve --port 8079 --index index.html --spa frontend_dist
+   ```
+1. Drag & drop the `frontend_dist` directory to [Netlify](https://www.netlify.com/). 
 
    ![moonzoon-new-project on Netlify](docs/images/moonzoon-new-project_netlify.png)
 

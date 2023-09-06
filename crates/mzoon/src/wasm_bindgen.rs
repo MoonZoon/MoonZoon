@@ -7,7 +7,8 @@ use cfg_if::cfg_if;
 use const_format::{concatcp, formatcp};
 use fehler::throws;
 use flate2::read::GzDecoder;
-use std::path::PathBuf;
+use std::ffi::OsStr;
+use std::path::{Path, PathBuf};
 use tar::Archive;
 use tokio::process::Command;
 
@@ -69,33 +70,39 @@ pub async fn check_or_install_wasm_bindgen() {
 // https://rustwasm.github.io/wasm-bindgen/reference/cli.html
 // https://webassembly.org/roadmap/
 #[throws]
-pub async fn build_with_wasm_bindgen(build_mode: BuildMode) {
-    let mut args = vec![
-        "--target",
-        "web",
-        "--no-typescript",
-        "--reference-types",
-        "--weak-refs",
-        "--out-dir",
-        "frontend/pkg",
+pub async fn build_with_wasm_bindgen(
+    build_mode: BuildMode,
+    crate_name: &str,
+    crate_path: &Path,
+    target: &str,
+) {
+    let pkg_path = crate_path.join("pkg");
+    let mut args: Vec<&OsStr> = vec![
+        "--target".as_ref(),
+        target.as_ref(),
+        "--no-typescript".as_ref(),
+        "--reference-types".as_ref(),
+        "--weak-refs".as_ref(),
+        "--out-dir".as_ref(),
+        pkg_path.as_os_str(),
     ];
     if build_mode.is_dev() {
-        args.push("--debug");
+        args.push("--debug".as_ref());
     }
 
     let target_path = MetadataCommand::new().no_deps().exec()?.target_directory;
     let target_profile_folder = build_mode.target_profile_folder();
     let wasm_path =
-        format!("{target_path}/wasm32-unknown-unknown/{target_profile_folder}/frontend.wasm");
-    args.push(&wasm_path);
+        format!("{target_path}/wasm32-unknown-unknown/{target_profile_folder}/{crate_name}.wasm");
+    args.push(wasm_path.as_ref());
 
     Command::new("frontend/wasm-bindgen")
         .args(&args)
         .status()
         .await
-        .context("Failed to get frontend build status")?
+        .context("Failed to get {crate_name} build status")?
         .success()
-        .err(anyhow!("Failed to build frontend with wasm-bindgen"))?;
+        .err(anyhow!("Failed to build {crate_name} with wasm-bindgen"))?;
 }
 
 // -- private --

@@ -1,6 +1,6 @@
 pub use gloo_worker::{
     oneshot::{oneshot, OneshotBridge},
-    reactor::{reactor, ReactorScope},
+    reactor::{reactor, ReactorBridge, ReactorScope},
     Spawnable,
 };
 pub use zoon::*;
@@ -14,6 +14,12 @@ pub async fn MarkdownWebWorker(markdown: String) -> String {
     let mut html_text = String::new();
     pulldown_cmark::html::push_html(&mut html_text, parser);
     html_text
+}
+
+impl MarkdownWebWorker {
+    pub fn start() -> OneshotBridge<MarkdownWebWorker> {
+        Self::spawner().spawn_with_loader(WebWorkerLoader::new("markdown_web_worker").path())
+    }
 }
 
 // ------ prime web worker ------
@@ -43,5 +49,11 @@ pub async fn PrimeWebWorker(mut scope: ReactorScope<ControlSignal, u64>) {
                 },
             }
         }
+    }
+}
+
+impl PrimeWebWorker {
+    pub fn start() -> ReactorBridge<PrimeWebWorker> {
+        Self::spawner().spawn_with_loader(WebWorkerLoader::new("prime_web_worker").path())
     }
 }

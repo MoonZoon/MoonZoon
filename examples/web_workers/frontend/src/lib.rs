@@ -3,8 +3,8 @@ pub use zoon::*;
 mod store;
 pub use store::*;
 
-mod workers;
-pub use workers::*;
+mod web_workers;
+pub use web_workers::*;
 
 pub fn root() -> impl Element {
     Column::new()
@@ -41,6 +41,7 @@ fn markdown_panel() -> impl Element {
             TextArea::new()
                 .s(Width::exact(350))
                 .s(Height::exact(100))
+                .s(Align::new().center_x())
                 .s(Outline::outer())
                 .s(Padding::new().x(4).y(2))
                 .label_hidden("markdown")

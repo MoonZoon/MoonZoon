@@ -5,6 +5,7 @@ mod read_to_vec;
 pub mod tree_into_pairs;
 mod try_into_string;
 mod visit_files;
+pub mod workspace_member;
 
 pub use download::download;
 pub use file_compressor::{BrotliFileCompressor, FileCompressor, GzipFileCompressor};
