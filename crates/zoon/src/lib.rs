@@ -28,6 +28,7 @@ mod style;
 mod task;
 mod timer;
 mod viewport;
+mod web_worker_loader;
 
 pub use animation::*;
 pub use class_id::ClassId;
@@ -66,6 +67,7 @@ pub use viewport::{Scene, Viewport};
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 pub use wasm_bindgen_futures::{self, future_to_promise, JsFuture};
 pub use web_sys;
+pub use web_worker_loader::WebWorkerLoader;
 
 #[cfg(feature = "connection")]
 pub use connection::{

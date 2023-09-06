@@ -1,5 +1,5 @@
 [package]
-name = "markdown"
+name = "markdown_web_worker"
 version.workspace = true
 edition.workspace = true
 repository.workspace = true

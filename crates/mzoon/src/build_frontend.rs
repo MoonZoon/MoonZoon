@@ -1,15 +1,20 @@
 use crate::helper::{
-    visit_files, AsyncReadToVec, BrotliFileCompressor, FileCompressor, GzipFileCompressor,
+    visit_files,
+    workspace_member::{web_worker_workspace_members, WorkspaceMember},
+    AsyncReadToVec, BrotliFileCompressor, FileCompressor, GzipFileCompressor,
 };
 use crate::wasm_bindgen::{build_with_wasm_bindgen, check_or_install_wasm_bindgen};
 use crate::wasm_opt::{check_or_install_wasm_opt, optimize_with_wasm_opt};
 use crate::BuildMode;
 use anyhow::{anyhow, Context, Error};
 use bool_ext::BoolExt;
-use const_format::concatcp;
 use fehler::throws;
 use futures::TryStreamExt;
-use std::{borrow::Cow, path::Path, sync::Arc};
+use std::{
+    env,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use tokio::{fs, process::Command, try_join};
 use uuid::Uuid;
 
@@ -18,48 +23,93 @@ use uuid::Uuid;
 #[throws]
 pub async fn build_frontend(build_mode: BuildMode, cache_busting: bool, frontend_dist: bool) {
     println!("Building frontend...");
-    compile_with_cargo(build_mode).await?;
 
-    remove_pkg().await?;
+    let build_id = Uuid::new_v4().as_u128();
+    env::set_var("FRONTEND_BUILD_ID", build_id.to_string());
+
+    let web_workers = web_worker_workspace_members()?;
+
+    compile_with_cargo(build_mode, "frontend").await?;
+    for WorkspaceMember { name, .. } in &web_workers {
+        compile_with_cargo(build_mode, name).await?;
+    }
+
+    remove_pkg(Path::new("frontend/pkg")).await?;
+    for WorkspaceMember { path, .. } in &web_workers {
+        remove_pkg(&path.join("pkg")).await?;
+    }
 
     check_or_install_wasm_bindgen().await?;
-    build_with_wasm_bindgen(build_mode).await?;
+
+    build_with_wasm_bindgen(build_mode, "frontend", Path::new("frontend"), "web").await?;
+    for WorkspaceMember { name, path, .. } in &web_workers {
+        build_with_wasm_bindgen(build_mode, name, path, "no-modules").await?;
+    }
+
+    write_build_id(build_id).await?;
 
     if build_mode.is_not_dev() {
         check_or_install_wasm_opt().await?;
-        optimize_with_wasm_opt(build_mode).await?;
+        optimize_with_wasm_opt(build_mode, "frontend", Path::new("frontend")).await?;
+        for WorkspaceMember { name, path, .. } in &web_workers {
+            optimize_with_wasm_opt(build_mode, name, path).await?;
+        }
     }
 
-    let build_id = Uuid::new_v4().as_u128();
-
-    let (wasm_file_path, js_file_path, snippets_path, _) = try_join!(
-        rename_wasm_file(build_id, cache_busting),
-        rename_js_file(build_id, cache_busting),
-        rename_snippets_folder(build_id, cache_busting),
-        write_build_id(build_id),
-    )?;
-
-    update_snippet_paths_in_js_file(build_id, cache_busting, js_file_path.as_ref()).await?;
-
-    if build_mode.is_not_dev() && !frontend_dist {
-        compress_pkg(
-            wasm_file_path.as_ref(),
-            js_file_path.as_ref(),
-            snippets_path.as_ref(),
+    rename_and_compress_pkg_files(
+        build_id,
+        build_mode,
+        cache_busting,
+        frontend_dist,
+        "frontend",
+        Path::new("frontend"),
+    )
+    .await?;
+    for WorkspaceMember { name, path, .. } in &web_workers {
+        rename_and_compress_pkg_files(
+            build_id,
+            build_mode,
+            cache_busting,
+            frontend_dist,
+            name,
+            path,
         )
         .await?;
     }
+
     println!("Frontend built");
 }
 
 // -- private --
 
 #[throws]
-pub async fn compile_with_cargo(build_mode: BuildMode) {
+async fn rename_and_compress_pkg_files(
+    build_id: u128,
+    build_mode: BuildMode,
+    cache_busting: bool,
+    frontend_dist: bool,
+    crate_name: &str,
+    crate_path: &Path,
+) {
+    let (wasm_file_path, js_file_path, snippets_path) = try_join!(
+        rename_wasm_file(build_id, cache_busting, crate_name, crate_path),
+        rename_js_file(build_id, cache_busting, crate_name, crate_path),
+        rename_snippets_folder(build_id, cache_busting, crate_name, crate_path),
+    )?;
+
+    update_snippet_paths_in_js_file(build_id, cache_busting, &js_file_path).await?;
+
+    if build_mode.is_not_dev() && !frontend_dist {
+        compress_pkg(wasm_file_path, js_file_path, snippets_path).await?;
+    }
+}
+
+#[throws]
+async fn compile_with_cargo(build_mode: BuildMode, bin_crate: &str) {
     let mut args = vec![
         "build",
         "--bin",
-        "frontend",
+        &bin_crate,
         "--target",
         "wasm32-unknown-unknown",
     ];
@@ -90,14 +140,13 @@ pub async fn compile_with_cargo(build_mode: BuildMode) {
         .envs(envs)
         .status()
         .await
-        .context("Failed to get frontend compilation status")?
+        .context("Failed to get {bin_crate} compilation status")?
         .success()
-        .err(anyhow!("Failed to compile frontend"))?;
+        .err(anyhow!("Failed to compile {bin_crate}"))?;
 }
 
 #[throws]
-async fn remove_pkg() {
-    let pkg_path = Path::new("frontend/pkg");
+async fn remove_pkg(pkg_path: &Path) {
     if pkg_path.is_dir() {
         fs::remove_dir_all(pkg_path)
             .await
@@ -113,37 +162,47 @@ async fn write_build_id(build_id: u128) {
 }
 
 #[throws]
-async fn rename_wasm_file(build_id: u128, cache_busting: bool) -> Cow<'static, str> {
-    const PATH: &str = "frontend/pkg/frontend_bg";
-    const EXTENSION: &str = ".wasm";
-    const ORIGINAL_PATH: &str = concatcp!(PATH, EXTENSION);
+async fn rename_wasm_file(
+    build_id: u128,
+    cache_busting: bool,
+    crate_name: &str,
+    crate_path: &Path,
+) -> PathBuf {
+    let pkg_path = crate_path.join("pkg");
+    let original_path = pkg_path.join(format!("{crate_name}_bg.wasm"));
 
     if !cache_busting {
-        return Cow::from(ORIGINAL_PATH);
+        return original_path;
     };
 
-    let new_path = format!("{PATH}_{build_id}{EXTENSION}");
-    fs::rename(ORIGINAL_PATH, &new_path)
-        .await
-        .context("Failed to rename the wasm file in the pkg directory")?;
+    let new_path = pkg_path.join(format!("{crate_name}_bg_{build_id}.wasm"));
 
-    Cow::from(new_path)
+    fs::rename(original_path, &new_path).await.context(format!(
+        "Failed to rename the wasm file in the pkg directory of the crate '{crate_name}'"
+    ))?;
+    new_path
 }
 
 #[throws]
-async fn rename_snippets_folder(build_id: u128, cache_busting: bool) -> Cow<'static, str> {
-    const ORIGINAL_PATH: &str = "frontend/pkg/snippets";
+async fn rename_snippets_folder(
+    build_id: u128,
+    cache_busting: bool,
+    crate_name: &str,
+    crate_path: &Path,
+) -> PathBuf {
+    let original_path = crate_path.join("pkg/snippets");
 
-    if !cache_busting || fs::metadata(ORIGINAL_PATH).await.is_err() {
-        return Cow::from(ORIGINAL_PATH);
+    if !cache_busting || fs::metadata(&original_path).await.is_err() {
+        return original_path;
     };
 
-    let new_path = format!("{ORIGINAL_PATH}_{build_id}");
-    fs::rename(ORIGINAL_PATH, &new_path)
-        .await
-        .context("Failed to rename the snippets folder in the pkg directory")?;
+    let new_path = crate_path.join(format!("pkg/snippets_{build_id}"));
 
-    Cow::from(new_path)
+    fs::rename(original_path, &new_path).await.context(format!(
+        "Failed to rename the snippets folder in the pkg directory of the crate '{crate_name}'"
+    ))?;
+
+    new_path
 }
 
 #[throws]
@@ -165,21 +224,25 @@ async fn update_snippet_paths_in_js_file(
 }
 
 #[throws]
-async fn rename_js_file(build_id: u128, cache_busting: bool) -> Cow<'static, str> {
-    const PATH: &str = "frontend/pkg/frontend";
-    const EXTENSION: &str = ".js";
-    const ORIGINAL_PATH: &str = concatcp!(PATH, EXTENSION);
+async fn rename_js_file(
+    build_id: u128,
+    cache_busting: bool,
+    crate_name: &str,
+    crate_path: &Path,
+) -> PathBuf {
+    let pkg_path = crate_path.join("pkg");
+    let original_path = pkg_path.join(format!("{crate_name}.js"));
 
     if !cache_busting {
-        return Cow::from(ORIGINAL_PATH);
+        return original_path;
     };
 
-    let new_path = format!("{PATH}_{build_id}{EXTENSION}");
-    fs::rename(ORIGINAL_PATH, &new_path)
-        .await
-        .context("Failed to rename the JS file in the pkg directory")?;
+    let new_path = pkg_path.join(format!("{crate_name}_{build_id}.js"));
 
-    Cow::from(new_path)
+    fs::rename(original_path, &new_path)
+        .await
+        .context("Failed to rename the JS file in the pkg directory of the crate '{crate_name}'")?;
+    new_path
 }
 
 #[throws]

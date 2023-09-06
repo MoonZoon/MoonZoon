@@ -15,7 +15,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
   ```bash
   cargo install cargo-make --no-default-features
-  makers -V # cargo-make 0.36.13
+  makers -V # cargo-make 0.37.0
   ```
   - _Note_: `cargo-make` is needed only for MoonZoon development and running its examples, you don't need it for your apps.
 

@@ -7,6 +7,7 @@ use const_format::{concatcp, formatcp};
 use fehler::throws;
 use flate2::read::GzDecoder;
 use std::fs::create_dir_all;
+use std::path::Path;
 use tar::Archive;
 use tokio::process::Command;
 
@@ -60,26 +61,27 @@ pub async fn check_or_install_wasm_opt() {
 }
 
 #[throws]
-pub async fn optimize_with_wasm_opt(build_mode: BuildMode) {
+pub async fn optimize_with_wasm_opt(build_mode: BuildMode, crate_name: &str, crate_path: &Path) {
+    let wasm_path = crate_path.join("pkg").join(format!("{crate_name}_bg.wasm"));
     let mut args = vec![
-        "frontend/pkg/frontend_bg.wasm",
-        "--output",
-        "frontend/pkg/frontend_bg.wasm",
-        "--enable-reference-types",
+        wasm_path.as_os_str(),
+        "--output".as_ref(),
+        wasm_path.as_os_str(),
+        "--enable-reference-types".as_ref(),
     ];
     if build_mode.is_not_dev() {
-        args.push("-Oz");
+        args.push("-Oz".as_ref());
     }
     if let BuildMode::Profiling = build_mode {
-        args.push("--debuginfo");
+        args.push("--debuginfo".as_ref());
     }
     Command::new(WASM_OPT_PATH)
         .args(&args)
         .status()
         .await
-        .context("Failed to get frontend optimization status")?
+        .context("Failed to get {crate_name} optimization status")?
         .success()
-        .err(anyhow!("Failed to optimize frontend with wasm-opt"))?;
+        .err(anyhow!("Failed to optimize {crate_name} with wasm-opt"))?;
 }
 
 // -- private --

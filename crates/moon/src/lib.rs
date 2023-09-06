@@ -13,6 +13,8 @@ use actix_web::{
     middleware::{Compat, Condition, ErrorHandlers, Logger},
     web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result,
 };
+use cargo_metadata::MetadataCommand;
+use regex::Regex;
 use rustls::{Certificate, PrivateKey, ServerConfig as RustlsServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::collections::BTreeSet;
@@ -20,6 +22,7 @@ use std::fs::File;
 use std::io::{self, BufReader};
 use std::net::SocketAddr;
 use std::ops::Deref;
+use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::fs;
 
@@ -84,7 +87,6 @@ struct SharedData {
     cache_busting: bool,
     compressed_pkg: bool,
     pkg_path: &'static str,
-    web_workers_path: &'static str,
 }
 
 #[derive(Clone)]
@@ -206,7 +208,6 @@ where
         cache_busting: CONFIG.cache_busting,
         compressed_pkg: CONFIG.compressed_pkg,
         pkg_path: "frontend/pkg",
-        web_workers_path: "frontend/web_workers/",
     };
     let reload_sse = ReloadSSE(SSE::start());
     let message_sse = MessageSSE(SSE::start());
@@ -248,7 +249,7 @@ where
                     .route("reload", web::post().to(reload_responder))
                     .route("pkg/{file:.*}", web::get().to(pkg_responder))
                     .route(
-                        "web_workers/{file:.*}",
+                        "web_workers/{crate_name}/pkg/{file:.*}",
                         web::get().to(web_workers_responder),
                     )
                     .route(
@@ -415,6 +416,12 @@ async fn pkg_responder(
     file: web::Path<String>,
     shared_data: web::Data<SharedData>,
 ) -> impl Responder {
+    if file.contains("..") {
+        Err(error::ErrorForbidden(
+            "It is not allowed to use '..' in the requested path",
+        ))?;
+    }
+
     let mime = mime_guess::from_path(file.as_str()).first_or_octet_stream();
     let (named_file, encoding) = named_file_and_encoding(&req, &file, &shared_data)?;
 
@@ -461,7 +468,7 @@ fn named_file_and_encoding(
         file.push_str(".br");
         let named_file = NamedFile::open(&file);
         if named_file.is_err() {
-            eprintln!("Cannot load '{}'. Consider to set `ENV COMPRESSED_PKG false` or build with `mzoon build -r`.", file);
+            eprintln!("Cannot load '{file}'. Consider to set `ENV COMPRESSED_PKG false` or build with `mzoon build -r`.");
         }
         return Ok((named_file?, Some(ContentEncoding::Brotli)));
     }
@@ -469,7 +476,7 @@ fn named_file_and_encoding(
         file.push_str(".gz");
         let named_file = NamedFile::open(&file);
         if named_file.is_err() {
-            eprintln!("Cannot load '{}'. Consider to set `ENV COMPRESSED_PKG false` or build with `mzoon build -r`.", file);
+            eprintln!("Cannot load '{file}'. Consider to set `ENV COMPRESSED_PKG false` or build with `mzoon build -r`.");
         }
         return Ok((named_file?, Some(ContentEncoding::Gzip)));
     }
@@ -480,73 +487,137 @@ fn named_file_and_encoding(
 
 async fn web_workers_responder(
     req: HttpRequest,
-    file: web::Path<String>,
+    path_parameters: web::Path<(String, String)>,
     shared_data: web::Data<SharedData>,
 ) -> impl Responder {
-    let mime = mime_guess::from_path(file.as_str()).first_or_octet_stream();
-    let (named_file, _encoding) = web_worker_named_file_and_encoding(&req, &file, &shared_data)?;
+    let (crate_name, file) = path_parameters.into_inner();
 
-    // let named_file = named_file
-    //     .set_content_type(mime)
-    //     .prefer_utf8(true)
-    //     .use_etag(false)
-    //     .use_last_modified(false)
-    //     .disable_content_disposition()
-    //     .customize();
-    let named_file = named_file.set_content_type(mime).prefer_utf8(true);
+    // @TODO is it a proper solution? Or check whether it starts with `../` and `..\\`?
+    if file.contains("..") {
+        Err(error::ErrorForbidden(
+            "It is not allowed to use '..' in the requested path",
+        ))?;
+    }
 
-    // let mut responder = if shared_data.cache_busting {
-    //     named_file.insert_header(CacheControl(vec![CacheDirective::MaxAge(31536000)]))
-    // } else {
-    //     named_file.insert_header(ETag(EntityTag::new(
-    //         false,
-    //         shared_data.frontend_build_id.to_string(),
-    //     )))
-    // };
-    let responder = named_file;
+    let mime = mime_guess::from_path(&file).first_or_octet_stream();
+    let (named_file, encoding) =
+        web_worker_named_file_and_encoding(&req, &file, &shared_data, &crate_name)?;
 
-    // if let Some(encoding) = encoding {
-    //     responder = responder.insert_header(encoding);
-    // }
+    // @TODO set different cache headers because
+    // it's a problem to clear Web Worker cache in Firefox?
+    let named_file = named_file
+        .set_content_type(mime)
+        .prefer_utf8(true)
+        .use_etag(false)
+        .use_last_modified(false)
+        .disable_content_disposition()
+        .customize();
+
+    let mut responder = if shared_data.cache_busting {
+        named_file.insert_header(CacheControl(vec![CacheDirective::MaxAge(31536000)]))
+    } else {
+        named_file.insert_header(ETag(EntityTag::new(
+            false,
+            shared_data.frontend_build_id.to_string(),
+        )))
+    };
+
+    if let Some(encoding) = encoding {
+        responder = responder.insert_header(encoding);
+    }
     Ok::<_, Error>(responder)
 }
 
 fn web_worker_named_file_and_encoding(
-    _req: &HttpRequest,
-    file: &web::Path<String>,
+    req: &HttpRequest,
+    file: &str,
     shared_data: &web::Data<SharedData>,
+    crate_name: &str,
 ) -> Result<(NamedFile, Option<ContentEncoding>), Error> {
-    let file = format!("{}/{}", shared_data.web_workers_path, file);
-    Ok((NamedFile::open(file)?, None))
+    let WorkspaceMember { mut path, .. } = web_worker_workspace_members()?
+        .into_iter()
+        .find(|member| member.name == crate_name)
+        .ok_or_else(|| {
+            error::ErrorNotFound(format!(
+                "Failed to find Web Worker '{crate_name}' in the project workspace"
+            ))
+        })?;
+    path.push("pkg");
+    path.push(file);
 
-    // let mut file = format!("{}/{}", shared_data.web_workers_path, file);
-    // if !shared_data.compressed_pkg {
-    //     return Ok((NamedFile::open(file)?, None));
-    // }
-    // let accept_encodings = req
-    //     .headers()
-    //     .get(header::ACCEPT_ENCODING)
-    //     .and_then(|accept_encoding| accept_encoding.to_str().ok())
-    //     .map(|accept_encoding| accept_encoding.split(", ").collect::<BTreeSet<_>>())
-    //     .unwrap_or_default();
+    if !shared_data.compressed_pkg {
+        return Ok((NamedFile::open(path)?, None));
+    }
+    let accept_encodings = req
+        .headers()
+        .get(header::ACCEPT_ENCODING)
+        .and_then(|accept_encoding| accept_encoding.to_str().ok())
+        .map(|accept_encoding| accept_encoding.split(", ").collect::<BTreeSet<_>>())
+        .unwrap_or_default();
 
-    // if accept_encodings.contains(ContentEncoding::Brotli.as_str()) {
-    //     file.push_str(".br");
-    //     let named_file = NamedFile::open(&file);
-    //     if named_file.is_err() {
-    //         eprintln!("Cannot load '{}'. Consider to set `ENV COMPRESSED_PKG false` or build with `mzoon build -r`.", file);
-    //     }
-    //     return Ok((named_file?, Some(ContentEncoding::Brotli)));
-    // }
-    // if accept_encodings.contains(ContentEncoding::Gzip.as_str()) {
-    //     file.push_str(".gz");
-    //     let named_file = NamedFile::open(&file);
-    //     if named_file.is_err() {
-    //         eprintln!("Cannot load '{}'. Consider to set `ENV COMPRESSED_PKG false` or build with `mzoon build -r`.", file);
-    //     }
-    //     return Ok((named_file?, Some(ContentEncoding::Gzip)));
-    // }
-    // Ok((NamedFile::open(file)?, None))
+    if accept_encodings.contains(ContentEncoding::Brotli.as_str()) {
+        path.as_mut_os_string().push(".br");
+        let named_file = NamedFile::open(&path);
+        if named_file.is_err() {
+            let path = path.display();
+            eprintln!("Cannot load '{path}'. Consider to set `ENV COMPRESSED_PKG false` or build with `mzoon build -r`.");
+        }
+        return Ok((named_file?, Some(ContentEncoding::Brotli)));
+    }
+    if accept_encodings.contains(ContentEncoding::Gzip.as_str()) {
+        path.as_mut_os_string().push(".gz");
+        let named_file = NamedFile::open(&path);
+        if named_file.is_err() {
+            let path = path.display();
+            eprintln!("Cannot load '{path}'. Consider to set `ENV COMPRESSED_PKG false` or build with `mzoon build -r`.");
+        }
+        return Ok((named_file?, Some(ContentEncoding::Gzip)));
+    }
+    Ok((NamedFile::open(path)?, None))
+}
+
+#[derive(Debug)]
+struct WorkspaceMember {
+    name: String,
+    #[allow(dead_code)]
+    version: String,
+    path: PathBuf,
+}
+
+fn web_worker_workspace_members() -> Result<Vec<WorkspaceMember>, Error> {
+    let package_repr_regex = Regex::new(
+        r"^(?P<name>\S+)\s(?P<version>\S+)\s\(path\+file://(?P<path>\S+)\)$",
+    )
+    .map_err(|err| {
+        eprintln!("Failed to create Regex for 'PackageId::repr': {err:#}");
+        error::ErrorInternalServerError("Failed to create Regex for 'PackageId::repr'")
+    })?;
+
+    MetadataCommand::new()
+        .no_deps()
+        .exec()
+        .map_err(|err| {
+            eprintln!("Failed to parse workspace Cargo metadata: {err:#}");
+            error::ErrorInternalServerError("Failed to parse workspace Cargo metadata")
+        })?
+        .workspace_members
+        .into_iter()
+        .filter_map(|package_id| {
+            let Some(captures) = package_repr_regex.captures(&package_id.repr) else {
+                let error_message = format!("Failed to parse workspace member with {package_id:?}");
+                eprintln!("{error_message}");
+                return Some(Err(error::ErrorInternalServerError(error_message)));
+            };
+            let name = &captures["name"];
+            name.ends_with("web_worker")
+                .then(|| WorkspaceMember {
+                    name: name.to_owned(),
+                    version: captures["version"].to_owned(),
+                    path: PathBuf::from(&captures["path"]),
+                })
+                .map(Ok)
+        })
+        .collect::<Result<_, _>>()
 }
 
 // ------ reload_sse_responder ------
