@@ -5,14 +5,14 @@ use std::{cell::RefCell, rc::Rc, sync::Arc};
 
 pub trait MouseEventAware: UpdateRawEl + Sized {
     fn on_hovered_change(self, handler: impl FnMut(bool) + 'static) -> Self {
-        let mouse_over_handler = Rc::new(RefCell::new(handler));
-        let mouse_leave_handler = mouse_over_handler.clone();
+        let handler = Rc::new(RefCell::new(handler));
         self.update_raw_el(|raw_el| {
             raw_el
-                .event_handler(move |_: events_extra::MouseOver| {
-                    mouse_over_handler.borrow_mut()(true)
+                .event_handler({
+                    let handler = Rc::clone(&handler);
+                    move |_: events::MouseEnter| handler.borrow_mut()(true)
                 })
-                .event_handler(move |_: events::MouseLeave| mouse_leave_handler.borrow_mut()(false))
+                .event_handler(move |_: events::MouseLeave| handler.borrow_mut()(false))
         })
     }
 
