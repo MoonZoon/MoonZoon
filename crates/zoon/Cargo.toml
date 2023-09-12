@@ -58,6 +58,7 @@ features = [
   "CssStyleSheet",
   "CustomEvent",
   "DataTransfer",
+  "DedicatedWorkerGlobalScope",
   "DomRect",
   "DomRectReadOnly",
   "Element",
