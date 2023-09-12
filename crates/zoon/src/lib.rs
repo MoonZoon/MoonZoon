@@ -66,7 +66,7 @@ pub use timer::Timer;
 pub use viewport::{Scene, Viewport};
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 pub use wasm_bindgen_futures::{self, future_to_promise, JsFuture};
-pub use web_sys;
+pub use web_sys::{self, DedicatedWorkerGlobalScope};
 pub use web_worker_loader::WebWorkerLoader;
 
 #[cfg(feature = "connection")]

@@ -1,6 +1,6 @@
 use educe::Educe;
-use zoon::*;
 use std::sync::Arc;
+use zoon::*;
 
 #[derive(Educe)]
 #[educe(Default(new))]
@@ -18,17 +18,17 @@ fn store() -> &'static Store {
 }
 
 fn main() {
-    Task::start(
+    // @TODO / WARNING: experimental
+    Task::start_blocking(|_scope| {
         map_ref! {
             let text_a = store().text_a.signal_cloned(),
             let text_b = store().text_b.signal_cloned() => {
-                Task::start_blocking(clone!((text_a, text_b) move || {
-                    let joined_texts = format!("{text_a} {text_b}");
-                    store().joined_texts.set(joined_texts.into());
-                }))
+                let joined_texts = format!("{text_a} {text_b}");
+                store().joined_texts.set(joined_texts.into());
             }
-        }.to_future()
-    );
+        }
+        .to_future()
+    });
     start_app("app", root);
 }
 
@@ -42,7 +42,7 @@ pub fn root() -> impl Element {
         .item(field("Joined texts", store().joined_texts.clone(), true))
 }
 
-fn field(label: &str, text: Mutable<Arc<String>>, read_only: bool) -> impl Element {
+fn field(label: &str, text: Mutable<Arc<String>>, is_output: bool) -> impl Element {
     Column::new()
         .s(Gap::new().y(15))
         .item(Label::new().for_input(label).label(label))
@@ -50,17 +50,17 @@ fn field(label: &str, text: Mutable<Arc<String>>, read_only: bool) -> impl Eleme
             TextArea::new()
                 .id(label)
                 .s(Width::exact(350))
-                .s(Height::exact(50))
+                .s(Height::exact(if is_output { 160 } else { 80 }))
                 .s(Align::new().center_x())
                 .s(Outline::outer())
                 .s(Padding::new().x(4).y(2))
-                .s(Cursor::new(read_only.then(|| CursorIcon::Default)))
-                .s(Background::new().color(read_only.then_some(hsluv!(0, 0, 95))))
+                .s(Cursor::new(is_output.then(|| CursorIcon::Default)))
+                .s(Background::new().color(is_output.then_some(hsluv!(0, 0, 95))))
                 .update_raw_el(|raw_el| {
                     // @TODO Add to Zoon something like `TextArea::resizing(Resizing::Vertical)`
                     raw_el.style("resize", "vertical")
                 })
-                .read_only(read_only)
+                .read_only(is_output)
                 // @TODO replace `(*text).clone()` with `text.unwrap_or_clone()` once stable
                 // @TODO or/and impl `IntoCowStr` for `Arc` and `Rc` or is there a better solution?
                 .text_signal(text.signal_cloned().map(|text| (*text).clone()))
