@@ -41,7 +41,8 @@ pub async fn build_frontend(build_mode: BuildMode, cache_busting: bool, frontend
 
     check_or_install_wasm_bindgen().await?;
 
-    build_with_wasm_bindgen(build_mode, "frontend", Path::new("frontend"), "web").await?;
+    // build_with_wasm_bindgen(build_mode, "frontend", Path::new("frontend"), "web").await?;
+    build_with_wasm_bindgen(build_mode, "frontend", Path::new("frontend"), "no-modules").await?;
     for WorkspaceMember { name, path, .. } in &web_workers {
         build_with_wasm_bindgen(build_mode, name, path, "no-modules").await?;
     }
@@ -106,13 +107,17 @@ async fn rename_and_compress_pkg_files(
 
 #[throws]
 async fn compile_with_cargo(build_mode: BuildMode, bin_crate: &str) {
-    let mut args = vec![
+    let mut args = Vec::new();
+    if true {
+        args.extend(["+nightly", "-Z", "build-std=panic_abort,std"]);
+    }
+    args.extend(vec![
         "build",
         "--bin",
         &bin_crate,
         "--target",
         "wasm32-unknown-unknown",
-    ];
+    ]);
     match build_mode {
         BuildMode::Dev => (),
         BuildMode::Profiling => args.extend(["--profile", "profiling"]),
@@ -124,16 +129,33 @@ async fn compile_with_cargo(build_mode: BuildMode, bin_crate: &str) {
     if build_mode.is_dev() {
         cargo_configs.push(("DEBUG", "false"));
     } else {
-        cargo_configs.extend([("OPT_LEVEL", "z"), ("CODEGEN_UNITS", "1"), ("LTO", "true")]);
+        cargo_configs.extend([("OPT_LEVEL", "z"), ("CODEGEN_UNITS", "1")]);
+        if false {
+            cargo_configs.push(("LTO", "true"))
+        }
     }
     if let BuildMode::Profiling = build_mode {
         cargo_configs.extend([("DEBUG", "true"), ("INHERITS", "release")]);
     }
 
+    let mut envs: Vec<(String, &str)> = vec![];
+    if true {
+        envs.push((
+            "RUSTFLAGS".to_owned(),
+            "-C target-feature=+atomics,+bulk-memory,+mutable-globals",
+        ));
+    }
+
     let profile_env_name = build_mode.env_name();
     let envs = cargo_configs
         .into_iter()
-        .map(|(key, value)| (format!("CARGO_PROFILE_{profile_env_name}_{key}"), value));
+        .map(|(key, value)| {
+            (
+                format!("CARGO_PROFILE_{profile_env_name}_{key}").into(),
+                value,
+            )
+        })
+        .chain(envs);
 
     Command::new("cargo")
         .args(&args)

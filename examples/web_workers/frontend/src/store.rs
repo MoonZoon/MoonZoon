@@ -42,16 +42,18 @@ fn create_web_workers_and_triggers() {
             .await
     });
 
-    // send `ControlSignal` on `is_generating_primes` change
+    // send `Command` on `is_generating_primes` change
     Task::start(async move {
         store()
             .is_generating_primes
             .signal()
-            .for_each(move |is_generating_primes| clone!((prime_bridge_sink) async move {
-                prime_bridge_sink.borrow_mut().send(
-                    if is_generating_primes { ControlSignal::Start } else { ControlSignal::Stop }
-                ).await.unwrap_throw();
-            }))
+            .for_each(move |is_generating_primes| {
+                clone!((prime_bridge_sink) async move {
+                    prime_bridge_sink.borrow_mut().send(
+                        if is_generating_primes { Command::Start } else { Command::Stop }
+                    ).await.unwrap_throw();
+                })
+            })
             .await
     });
 
@@ -60,5 +62,5 @@ fn create_web_workers_and_triggers() {
         while let Some(prime) = prime_bridge_stream.next().await {
             store().prime.set(prime);
         }
-    })
+    });
 }
