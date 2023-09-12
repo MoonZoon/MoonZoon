@@ -97,6 +97,7 @@ features = [
   "Url",
   "UrlSearchParams",
   "WheelEvent",
+  "Worker",
 ]
 default-features = false
 
