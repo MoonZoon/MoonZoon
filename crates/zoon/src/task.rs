@@ -1,5 +1,6 @@
 use crate::*;
 use futures_util::future::{abortable, AbortHandle};
+#[cfg(feature = "frontend_multithreading")]
 use std::pin::Pin;
 use wasm_bindgen_futures::spawn_local;
 
@@ -20,6 +21,7 @@ impl Task {
         TaskHandle(future_handle)
     }
 
+    #[cfg(feature = "frontend_multithreading")]
     pub fn start_blocking<FUT: Future<Output = ()>>(
         mut f: impl FnMut(DedicatedWorkerGlobalScope) -> FUT + Send + 'static,
     ) {
@@ -51,9 +53,11 @@ impl Drop for TaskHandle {
 
 // ------ WORKER ------
 
+#[cfg(feature = "frontend_multithreading")]
 type BlockingCallback<'fut, 'f> =
     Box<dyn FnMut(DedicatedWorkerGlobalScope) -> Pin<Box<dyn Future<Output = ()> + 'fut>> + 'f>;
 
+#[cfg(feature = "frontend_multithreading")]
 thread_local! {
     static WORKER: web_sys::Worker = {
         let worker = web_sys::Worker::new(&worker_loader_url()).unwrap_throw();
@@ -67,6 +71,7 @@ thread_local! {
     };
 }
 
+#[cfg(feature = "frontend_multithreading")]
 fn worker_loader_url() -> String {
     const FRONTEND_BUILD_ID: &str = env!("FRONTEND_BUILD_ID");
     const CACHE_BUSTING: &str = env!("CACHE_BUSTING");
@@ -111,6 +116,7 @@ fn worker_loader_url() -> String {
     web_sys::Url::create_object_url_with_blob(&blob).unwrap_throw()
 }
 
+#[cfg(feature = "frontend_multithreading")]
 #[wasm_bindgen]
 pub fn worker_entry_point(pointer: u32) {
     let mut callback = unsafe { Box::from_raw(pointer as *mut BlockingCallback) };

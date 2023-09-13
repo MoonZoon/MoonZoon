@@ -125,3 +125,4 @@ fmt = ["ufmt", "lexical"]
 web_storage = ["serde", "serde_json", "thiserror"]
 # @TODO is "wasm-bindgen/serde-serialize" still needed?
 jsvalue_into_serde = ["wasm-bindgen/serde-serialize", "serde-wasm-bindgen"]
+frontend_multithreading = []

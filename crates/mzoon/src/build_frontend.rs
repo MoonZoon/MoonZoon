@@ -21,7 +21,12 @@ use uuid::Uuid;
 // -- public --
 
 #[throws]
-pub async fn build_frontend(build_mode: BuildMode, cache_busting: bool, frontend_dist: bool) {
+pub async fn build_frontend(
+    build_mode: BuildMode,
+    cache_busting: bool,
+    frontend_dist: bool,
+    frontend_multithreading: bool,
+) {
     println!("Building frontend...");
 
     let build_id = Uuid::new_v4().as_u128();
@@ -29,9 +34,9 @@ pub async fn build_frontend(build_mode: BuildMode, cache_busting: bool, frontend
 
     let web_workers = web_worker_workspace_members()?;
 
-    compile_with_cargo(build_mode, "frontend").await?;
+    compile_with_cargo(build_mode, "frontend", frontend_multithreading).await?;
     for WorkspaceMember { name, .. } in &web_workers {
-        compile_with_cargo(build_mode, name).await?;
+        compile_with_cargo(build_mode, name, frontend_multithreading).await?;
     }
 
     remove_pkg(Path::new("frontend/pkg")).await?;
@@ -41,8 +46,17 @@ pub async fn build_frontend(build_mode: BuildMode, cache_busting: bool, frontend
 
     check_or_install_wasm_bindgen().await?;
 
-    // build_with_wasm_bindgen(build_mode, "frontend", Path::new("frontend"), "web").await?;
-    build_with_wasm_bindgen(build_mode, "frontend", Path::new("frontend"), "no-modules").await?;
+    build_with_wasm_bindgen(
+        build_mode,
+        "frontend",
+        Path::new("frontend"),
+        if frontend_multithreading {
+            "no-modules"
+        } else {
+            "web"
+        },
+    )
+    .await?;
     for WorkspaceMember { name, path, .. } in &web_workers {
         build_with_wasm_bindgen(build_mode, name, path, "no-modules").await?;
     }
@@ -106,9 +120,9 @@ async fn rename_and_compress_pkg_files(
 }
 
 #[throws]
-async fn compile_with_cargo(build_mode: BuildMode, bin_crate: &str) {
+async fn compile_with_cargo(build_mode: BuildMode, bin_crate: &str, frontend_multithreading: bool) {
     let mut args = Vec::new();
-    if true {
+    if frontend_multithreading {
         args.extend(["+nightly", "-Z", "build-std=panic_abort,std"]);
     }
     args.extend(vec![
@@ -118,6 +132,9 @@ async fn compile_with_cargo(build_mode: BuildMode, bin_crate: &str) {
         "--target",
         "wasm32-unknown-unknown",
     ]);
+    if frontend_multithreading {
+        args.extend(["--features", "zoon/frontend_multithreading"]);
+    }
     match build_mode {
         BuildMode::Dev => (),
         BuildMode::Profiling => args.extend(["--profile", "profiling"]),
@@ -130,7 +147,8 @@ async fn compile_with_cargo(build_mode: BuildMode, bin_crate: &str) {
         cargo_configs.push(("DEBUG", "false"));
     } else {
         cargo_configs.extend([("OPT_LEVEL", "z"), ("CODEGEN_UNITS", "1")]);
-        if false {
+        if !frontend_multithreading {
+            // @TODO / NOTE: LTO breaks the app when it's building for MT support
             cargo_configs.push(("LTO", "true"))
         }
     }
@@ -139,7 +157,7 @@ async fn compile_with_cargo(build_mode: BuildMode, bin_crate: &str) {
     }
 
     let mut envs: Vec<(String, &str)> = vec![];
-    if true {
+    if frontend_multithreading {
         envs.push((
             "RUSTFLAGS".to_owned(),
             "-C target-feature=+atomics,+bulk-memory,+mutable-globals",

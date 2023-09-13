@@ -40,7 +40,14 @@ pub async fn start(build_mode: BuildMode, open: bool) {
 
 #[throws]
 async fn build_and_watch_frontend(config: &Config, build_mode: BuildMode) -> FrontendWatcher {
-    if let Err(error) = build_frontend(build_mode, config.cache_busting, false).await {
+    if let Err(error) = build_frontend(
+        build_mode,
+        config.cache_busting,
+        false,
+        config.frontend_multithreading == Some(true),
+    )
+    .await
+    {
         eprintln!("{error:#}");
     }
     FrontendWatcher::start(&config, build_mode, DEBOUNCE_TIME).await?

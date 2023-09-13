@@ -34,6 +34,7 @@ impl FrontendWatcher {
                 reload_url,
                 build_mode,
                 config.cache_busting,
+                config.frontend_multithreading == Some(true),
             )),
         }
     }
@@ -51,6 +52,7 @@ async fn on_change(
     reload_url: Arc<String>,
     build_mode: BuildMode,
     cache_busting: bool,
+    frontend_multithreading: bool,
 ) {
     let mut build_task = None::<JoinHandle<()>>;
 
@@ -62,6 +64,7 @@ async fn on_change(
             Arc::clone(&reload_url),
             build_mode,
             cache_busting,
+            frontend_multithreading,
         )));
     }
 
@@ -70,8 +73,15 @@ async fn on_change(
     }
 }
 
-async fn build_and_reload(reload_url: Arc<String>, build_mode: BuildMode, cache_busting: bool) {
-    if let Err(error) = build_frontend(build_mode, cache_busting, false).await {
+async fn build_and_reload(
+    reload_url: Arc<String>,
+    build_mode: BuildMode,
+    cache_busting: bool,
+    frontend_multithreading: bool,
+) {
+    if let Err(error) =
+        build_frontend(build_mode, cache_busting, false, frontend_multithreading).await
+    {
         return eprintln!("{error}");
     }
     if build_mode.is_release() {

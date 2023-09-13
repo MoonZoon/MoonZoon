@@ -12,7 +12,13 @@ pub async fn build(build_mode: BuildMode, frontend_dist: bool, hosting: Option<H
     let config = Config::load_from_moonzoon_tomls().await?;
     set_env_vars(&config, build_mode, frontend_dist);
 
-    build_frontend(build_mode, config.cache_busting, frontend_dist).await?;
+    build_frontend(
+        build_mode,
+        config.cache_busting,
+        frontend_dist,
+        config.frontend_multithreading == Some(true),
+    )
+    .await?;
     build_backend(build_mode, config.https).await?;
 
     if frontend_dist {
