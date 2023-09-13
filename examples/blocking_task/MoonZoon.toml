@@ -3,6 +3,7 @@ port = 8080
 https = false
 cache_busting = true
 backend_log_level = "warn" # "error" / "warn" / "info" / "debug" / "trace"
+frontend_multithreading = true
 
 [redirect]
 port = 8081

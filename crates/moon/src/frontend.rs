@@ -117,8 +117,8 @@ impl Frontend {
 
             format!(
                 r#"<script type="text/javascript">
-                    {reconnecting_event_source_js_code}
-                    {sse_js_code}
+                  {reconnecting_event_source_js_code}
+                  {sse_js_code}
                 </script>"#
             )
         };
@@ -129,39 +129,26 @@ impl Frontend {
             Cow::from("<html>")
         };
 
-        // format!(
-        //     r#"<!DOCTYPE html>
-        // {html_tag}
-
-        // <head>
-        //   <meta charset="utf-8" />
-        //   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-        //   {meta_robots}
-        //   <title>{title}</title>
-        //   <link rel="preload" href="/_api/pkg/frontend_bg{cache_busting_string}.wasm" as="fetch" type="application/wasm" crossorigin>
-        //   <link rel="modulepreload" href="/_api/pkg/frontend{cache_busting_string}.js" crossorigin>
-        //   {default_styles}
-        //   {append_to_head}
-        // </head>
-
-        // <body>
-        //   {body_content}
-
-        //   {scripts}
-
-        //   <script type="module">
-        //     import init from '/_api/pkg/frontend{cache_busting_string}.js';
-        //     init('/_api/pkg/frontend_bg{cache_busting_string}.wasm');
-        //   </script>
-        // </body>
-
-        // </html>"#
-        // )
+        let start_main_wasm_script = if CONFIG.frontend_multithreading {
+            format!(
+                r#"<script src="/_api/pkg/frontend{cache_busting_string}.js"></script>
+               <script>
+                 wasm_bindgen("/_api/pkg/frontend_bg{cache_busting_string}.wasm");
+               </script>"#
+            )
+        } else {
+            format!(
+                r#"<script type="module">
+                  import init from '/_api/pkg/frontend{cache_busting_string}.js';
+                  init('/_api/pkg/frontend_bg{cache_busting_string}.wasm');
+                </script>"#
+            )
+        };
 
         format!(
             r#"<!DOCTYPE html>
         {html_tag}
-        
+
         <head>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
@@ -172,18 +159,15 @@ impl Frontend {
           {default_styles}
           {append_to_head}
         </head>
-    
+
         <body>
           {body_content}
-    
+
           {scripts}
-    
-          <script src="/_api/pkg/frontend{cache_busting_string}.js"></script>
-          <script>
-            wasm_bindgen("/_api/pkg/frontend_bg{cache_busting_string}.wasm");
-          </script>
+
+          {start_main_wasm_script}
         </body>
-        
+
         </html>"#
         )
     }

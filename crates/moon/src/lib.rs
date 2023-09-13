@@ -445,7 +445,7 @@ async fn pkg_responder(
     if let Some(encoding) = encoding {
         responder = responder.insert_header(encoding);
     }
-    if true {
+    if CONFIG.frontend_multithreading {
         // // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer#security_requirements
         responder = responder
             .insert_header(("Cross-Origin-Opener-Policy", "same-origin"))
@@ -531,7 +531,7 @@ async fn web_workers_responder(
     if let Some(encoding) = encoding {
         responder = responder.insert_header(encoding);
     }
-    if true {
+    if CONFIG.frontend_multithreading {
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer#security_requirements
         responder = responder
             .insert_header(("Cross-Origin-Opener-Policy", "same-origin"))
@@ -682,7 +682,7 @@ where
     let mut responder = HttpResponse::Ok();
     responder.content_type(ContentType::html());
 
-    if true {
+    if CONFIG.frontend_multithreading {
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer#security_requirements
         responder
             .insert_header(("Cross-Origin-Opener-Policy", "same-origin"))

@@ -14,6 +14,7 @@ pub struct Config {
     pub https: bool,
     pub cache_busting: bool,
     pub backend_log_level: LevelFilter,
+    pub frontend_multithreading: Option<bool>,
     pub redirect: Redirect,
     pub cors: Cors,
     pub watch: Watch,

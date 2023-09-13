@@ -52,5 +52,5 @@
         "--profile",
         "rust-analyzer"
     ],
-    // "rust-analyzer.updates.channel": "nightly"
+    "rust-analyzer.cargo.features": ["zoon/frontend_multithreading"],
 }

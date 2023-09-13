@@ -10,6 +10,11 @@ pub fn set_env_vars(config: &Config, build_mode: BuildMode, frontend_dist: bool)
     env::set_var("CACHE_BUSTING", config.cache_busting.to_string());
     // backend_log_level = "warn"
     env::set_var("BACKEND_LOG_LEVEL", config.backend_log_level.as_str());
+    // frontend_multithreading = true
+    env::set_var(
+        "FRONTEND_MULTITHREADING",
+        (config.frontend_multithreading == Some(true)).to_string(),
+    );
 
     // [redirect]
     // port = 8080
