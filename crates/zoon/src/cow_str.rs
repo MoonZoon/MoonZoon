@@ -2,10 +2,14 @@ use crate::css_property::{CssPropertyName, CssPropertyValue};
 use crate::*;
 use dominator::traits::AsStr;
 use std::borrow::Cow;
+use std::rc::Rc;
+use std::sync::Arc;
 
 // ------ ------
 //  IntoCowStr
 // ------ ------
+
+// @TODO would it be better/efficient something like `into_arc_cow_str`?
 
 pub trait IntoCowStr<'a> {
     fn into_cow_str(self) -> Cow<'a, str>;
@@ -47,6 +51,24 @@ impl<'a> IntoCowStr<'a> for &'a str {
 impl<'a> IntoCowStr<'a> for Cow<'a, str> {
     fn into_cow_str(self) -> Cow<'a, str> {
         self
+    }
+}
+
+impl<'a, T: IntoCowStr<'a> + Clone> IntoCowStr<'a> for Arc<T> {
+    fn into_cow_str(self) -> Cow<'a, str> {
+        // @TODO refactor the line below once `Arc::unwrap_or_clone` is stable
+        Arc::try_unwrap(self)
+            .unwrap_or_else(|arc| (*arc).clone())
+            .into_cow_str()
+    }
+}
+
+impl<'a, T: IntoCowStr<'a> + Clone> IntoCowStr<'a> for Rc<T> {
+    fn into_cow_str(self) -> Cow<'a, str> {
+        // @TODO refactor the line below once `Rc::unwrap_or_clone` is stable
+        Rc::try_unwrap(self)
+            .unwrap_or_else(|rc| (*rc).clone())
+            .into_cow_str()
     }
 }
 

@@ -61,9 +61,7 @@ fn field(label: &str, text: Mutable<Arc<String>>, is_output: bool) -> impl Eleme
                     raw_el.style("resize", "vertical")
                 })
                 .read_only(is_output)
-                // @TODO replace `(*text).clone()` with `text.unwrap_or_clone()` once stable
-                // @TODO or/and impl `IntoCowStr` for `Arc` and `Rc` or is there a better solution?
-                .text_signal(text.signal_cloned().map(|text| (*text).clone()))
+                .text_signal(text.signal_cloned())
                 .on_change(move |new_text| text.set(new_text.into())),
         )
 }
