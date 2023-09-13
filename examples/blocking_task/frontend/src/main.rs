@@ -56,10 +56,7 @@ fn field(label: &str, text: Mutable<Arc<String>>, is_output: bool) -> impl Eleme
                 .s(Padding::new().x(4).y(2))
                 .s(Cursor::new(is_output.then(|| CursorIcon::Default)))
                 .s(Background::new().color(is_output.then_some(hsluv!(0, 0, 95))))
-                .update_raw_el(|raw_el| {
-                    // @TODO Add to Zoon something like `TextArea::resizing(Resizing::Vertical)`
-                    raw_el.style("resize", "vertical")
-                })
+                .s(Resizable::y())
                 .read_only(is_output)
                 .text_signal(text.signal_cloned())
                 .on_change(move |new_text| text.set(new_text.into())),

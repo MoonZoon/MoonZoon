@@ -47,6 +47,9 @@ pub use outline::Outline;
 mod padding;
 pub use padding::Padding;
 
+mod resizable;
+pub use resizable::Resizable;
+
 mod rounded_corners;
 pub use rounded_corners::{IntoOptionRadius, Radius, RoundedCorners};
 
