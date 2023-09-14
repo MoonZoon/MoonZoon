@@ -38,6 +38,15 @@ impl Task {
     }
 
     // @TODO add `start_blocking_droppable` ; note: properly drop Workers and ObjectUrls
+
+    #[cfg(feature = "frontend_multithreading")]
+    pub fn start_blocking_with_channels<FUT: Future<Output = ()>, T, U>(
+        mut input_task: impl FnMut(UnboundedSender<T>) -> FUT + Send + 'static,
+        mut blocking_task: impl FnMut(UnboundedReceiver<T>, DedicatedWorkerGlobalScope, UnboundedSender<U>) -> FUT + Send + 'static,
+        mut output_task: impl FnMut(UnboundedReceiver<U>) -> FUT + Send + 'static,
+    ) {
+
+    }
 }
 
 // ------ TaskHandle ------
