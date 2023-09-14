@@ -19,6 +19,7 @@ mod either;
 mod element;
 mod event_options;
 pub mod events_extra;
+mod fn_box_clone;
 mod index_generator;
 mod into_f64;
 mod monotonic_ids;
@@ -42,6 +43,7 @@ pub use dominator::{self, events, traits::StaticEvent, Dom, DomBuilder};
 pub use either::{Either, IntoEither};
 pub use element::*;
 pub use event_options::EventOptions;
+pub use fn_box_clone::FnBoxClone;
 pub use futures_channel::{
     self,
     mpsc::{self, UnboundedReceiver, UnboundedSender},

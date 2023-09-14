@@ -37,12 +37,12 @@ impl Task {
         WORKER.with(|worker| worker.post_message(&message).unwrap_throw());
     }
 
-    // @TODO add `start_blocking_droppable` ; note: properly drop Workers and ObjectUrls
+    // @TODO add `start_blocking_droppable` (properly drop Workers and ObjectUrls)
 
     #[cfg(feature = "frontend_multithreading")]
     pub fn start_blocking_with_channels<FutA, FutB, FutC, T, U>(
-        input_task: impl FnOnce(Box<dyn Fn(T)>) -> FutA + 'static,
-        blocking_task: impl FnOnce(UnboundedReceiver<T>, DedicatedWorkerGlobalScope, Box<dyn Fn(U)>) -> FutB
+        input_task: impl FnOnce(Box<dyn FnBoxClone<T>>) -> FutA + 'static,
+        blocking_task: impl FnOnce(UnboundedReceiver<T>, DedicatedWorkerGlobalScope, Box<dyn FnBoxClone<U>>) -> FutB
             + Send
             + 'static,
         output_task: impl FnOnce(UnboundedReceiver<U>) -> FutC + 'static,
@@ -74,7 +74,8 @@ impl Task {
         Task::start(output_task(blocking_to_output_receiver));
     }
 
-    // @TODO add `start_blocking_with_channels_droppable` ; note: properly drop everything
+    // @TODO add `start_blocking_with_channels_droppable`
+    // (properly drop everything, graceful channel shutdown?)
 }
 
 // ------ TaskHandle ------
