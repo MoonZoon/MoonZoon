@@ -22,13 +22,13 @@ impl Task {
     }
 
     #[cfg(feature = "frontend_multithreading")]
-    pub fn start_blocking<FUT: Future<Output = ()>>(
-        mut f: impl FnMut(DedicatedWorkerGlobalScope) -> FUT + Send + 'static,
+    pub fn start_blocking<Fut: Future<Output = ()>>(
+        f: impl FnOnce(DedicatedWorkerGlobalScope) -> Fut + Send + 'static,
     ) {
         let f = |scope| Box::pin(f(scope)) as Pin<Box<dyn Future<Output = ()>>>;
         let f = Box::new(f) as BlockingCallback;
-        // Double-boxing because `dyn FnMut` is unsized and so `Box<dyn FnMut()>` is a fat pointer.
-        // But `Box<Box<dyn FnMut()>>` is just a plain pointer, and since wasm has 32-bit pointers,
+        // Double-boxing because `dyn FnOnce` is unsized and so `Box<dyn FnOnce()>` is a fat pointer.
+        // But `Box<Box<dyn FnOnce()>>` is just a plain pointer, and since wasm has 32-bit pointers,
         // we can cast it to a `u32` and back.
         let pointer = Box::into_raw(Box::new(f));
 
@@ -40,13 +40,41 @@ impl Task {
     // @TODO add `start_blocking_droppable` ; note: properly drop Workers and ObjectUrls
 
     #[cfg(feature = "frontend_multithreading")]
-    pub fn start_blocking_with_channels<FUT: Future<Output = ()>, T, U>(
-        mut input_task: impl FnMut(UnboundedSender<T>) -> FUT + Send + 'static,
-        mut blocking_task: impl FnMut(UnboundedReceiver<T>, DedicatedWorkerGlobalScope, UnboundedSender<U>) -> FUT + Send + 'static,
-        mut output_task: impl FnMut(UnboundedReceiver<U>) -> FUT + Send + 'static,
-    ) {
-
+    pub fn start_blocking_with_channels<FutA, FutB, FutC, T, U>(
+        input_task: impl FnOnce(Box<dyn Fn(T)>) -> FutA + 'static,
+        blocking_task: impl FnOnce(UnboundedReceiver<T>, DedicatedWorkerGlobalScope, Box<dyn Fn(U)>) -> FutB
+            + Send
+            + 'static,
+        output_task: impl FnOnce(UnboundedReceiver<U>) -> FutC + 'static,
+    ) where
+        FutA: Future<Output = ()> + 'static,
+        FutB: Future<Output = ()>,
+        FutC: Future<Output = ()> + 'static,
+        T: Send + 'static,
+        U: Send + 'static,
+    {
+        let (input_to_blocking_sender, input_to_blocking_receiver) = mpsc::unbounded();
+        let (blocking_to_output_sender, blocking_to_output_receiver) = mpsc::unbounded();
+        Task::start(input_task(Box::new(move |to_blocking| {
+            input_to_blocking_sender
+                .unbounded_send(to_blocking)
+                .unwrap_throw()
+        })));
+        Task::start_blocking(move |scope| {
+            blocking_task(
+                input_to_blocking_receiver,
+                scope,
+                Box::new(move |to_output| {
+                    blocking_to_output_sender
+                        .unbounded_send(to_output)
+                        .unwrap_throw()
+                }),
+            )
+        });
+        Task::start(output_task(blocking_to_output_receiver));
     }
+
+    // @TODO add `start_blocking_with_channels_droppable` ; note: properly drop everything
 }
 
 // ------ TaskHandle ------
@@ -64,7 +92,7 @@ impl Drop for TaskHandle {
 
 #[cfg(feature = "frontend_multithreading")]
 type BlockingCallback<'fut, 'f> =
-    Box<dyn FnMut(DedicatedWorkerGlobalScope) -> Pin<Box<dyn Future<Output = ()> + 'fut>> + 'f>;
+    Box<dyn FnOnce(DedicatedWorkerGlobalScope) -> Pin<Box<dyn Future<Output = ()> + 'fut>> + 'f>;
 
 #[cfg(feature = "frontend_multithreading")]
 thread_local! {
@@ -128,7 +156,7 @@ fn worker_loader_url() -> String {
 #[cfg(feature = "frontend_multithreading")]
 #[wasm_bindgen]
 pub fn worker_entry_point(pointer: u32) {
-    let mut callback = unsafe { Box::from_raw(pointer as *mut BlockingCallback) };
+    let callback = unsafe { Box::from_raw(pointer as *mut BlockingCallback) };
     let future = (*callback)(js_sys::global().unchecked_into());
     spawn_local(future);
 }

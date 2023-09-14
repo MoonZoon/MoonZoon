@@ -19,27 +19,24 @@ fn store() -> &'static Store {
 
 fn main() {
     Task::start_blocking_with_channels(
-        |to_blocking| {
+        |send_to_blocking| {
             map_ref! {
                 let text_a = store().text_a.signal_cloned(),
-                let text_b = store().text_b.signal_cloned() => 
+                let text_b = store().text_b.signal_cloned() =>
                 (text_a.clone(), text_b.clone())
             }
-            .for_each_sync(|input| {
-                to_blocking.unbounded_send(input).unwrap_throw();
-            })
+            .for_each_sync(send_to_blocking)
         },
-        |inputs, _scope, outputs| {
-            inputs.for_each_sync(|(text_a, text_b)| {
-                let joined_texts = format!("{text_a} {text_b}");
-                outputs.unbounded_send(joined_texts).unwrap_throw();
+        |from_input, _, send_to_output| {
+            from_input.for_each_sync(move |(text_a, text_b)| {
+                send_to_output(format!("{text_a} {text_b}"));
             })
         },
         |from_blocking| {
             from_blocking.for_each_sync(|joined_texts| {
                 store().joined_texts.set(joined_texts.into());
             })
-        }
+        },
     );
     start_app("app", root);
 }
