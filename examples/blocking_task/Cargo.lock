@@ -767,6 +767,14 @@ name = "futures_signals_ext"
 version = "0.1.0"
 dependencies = [
  "futures-signals",
+ "futures_util_ext",
+ "pin-project",
+]
+
+[[package]]
+name = "futures_util_ext"
+version = "0.1.0"
+dependencies = [
  "futures-util",
  "pin-project",
 ]
@@ -2358,6 +2366,7 @@ dependencies = [
  "enclose",
  "futures-channel",
  "futures_signals_ext",
+ "futures_util_ext",
  "gensym",
  "hsluv",
  "js-sys",

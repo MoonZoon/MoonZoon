@@ -29,6 +29,7 @@ moonlight = { path = "../moonlight", features = ["frontend"], optional = true }
 hsluv = { path = "../hsluv", features = ["hsluv_macro"], default-features = false }
 lang = { path = "../lang", default-features = false }
 futures_signals_ext = { path = "../futures_signals_ext", default-features = false }
+futures_util_ext = { path = "../futures_util_ext", default-features = false }
 
 console_error_panic_hook = { version = "0.1.7", default-features = false, optional = true }
 talc = { version = "2.2.2", default-features = true, optional = true }

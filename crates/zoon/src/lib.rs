@@ -25,7 +25,6 @@ mod into_f64;
 mod monotonic_ids;
 mod not;
 mod resize_observer;
-mod stream_ext_ext;
 mod style;
 mod task;
 mod timer;
@@ -50,7 +49,7 @@ pub use futures_channel::{
     oneshot,
 };
 pub use futures_signals_ext::*;
-pub use futures_util::{self, select as select_future, SinkExt};
+pub use futures_util_ext::*;
 pub use gensym::gensym;
 pub use hsluv::{hsluv, HSLuv};
 pub use index_generator::IndexGenerator;
@@ -66,7 +65,6 @@ pub use pin_project::pin_project;
 pub use resize_observer::ResizeObserver;
 pub use send_wrapper::SendWrapper;
 pub use std::future::Future;
-pub use stream_ext_ext::StreamExtExt;
 pub use strum;
 pub use style::*;
 pub use task::{Task, TaskHandle};

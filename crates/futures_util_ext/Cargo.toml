@@ -1,11 +1,10 @@
 [package]
-name = "futures_signals_ext"
+name = "futures_util_ext"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-futures-signals = { version = "0.3.32", default-features = false }
 pin-project = { version = "1.0.11", default-features = false }
-futures_util_ext = { path = "../futures_util_ext", default-features = false }
+futures-util = { version = "0.3.28", default-features = false }
