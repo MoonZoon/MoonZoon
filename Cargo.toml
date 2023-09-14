@@ -1,14 +1,16 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/hsluv_macro",
-    "crates/route_macro",
-    "crates/lang",
-    "crates/static_ref_macro",
-    "crates/moon_entry_macros",
+    "crates/futures_signals_ext",
+    "crates/futures_util_ext",
     "crates/hsluv",
+    "crates/hsluv_macro",
+    "crates/lang",
     "crates/moon",
+    "crates/moon_entry_macros",
     "crates/moonlight",
     "crates/mzoon",
+    "crates/route_macro",
+    "crates/static_ref_macro",
     "crates/zoon",
 ]

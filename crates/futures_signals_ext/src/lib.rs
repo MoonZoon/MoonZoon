@@ -14,7 +14,7 @@ pub use futures_signals::{
         SignalVec, SignalVecExt, VecDiff,
     },
 };
-pub use futures_util::{self, future, Future, FutureExt, Stream, StreamExt};
+pub use futures_util_ext::*;
 
 mod signal_ext_bool;
 pub use signal_ext_bool::SignalExtBool;

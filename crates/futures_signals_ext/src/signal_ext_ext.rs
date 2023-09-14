@@ -1,7 +1,6 @@
 use crate::*;
 use std::{
     collections::BTreeMap,
-    marker::PhantomData,
     pin::Pin,
     task::{Context, Poll},
 };
@@ -10,21 +9,13 @@ use std::{
 
 pub trait SignalExtExt: SignalExt {
     #[inline]
-    fn for_each_sync<F>(self, mut callback: F) -> ForEachSync<Self, F>
+    fn for_each_sync<F>(self, callback: F) -> ForEachSync<Self, F>
     where
-        F: FnMut(Self::Item) + 'static,
-        Self: 'static + Sized,
+        F: FnMut(Self::Item),
+        Self: Sized,
     {
         ForEachSync {
-            future: self
-                .for_each(move |item| {
-                    callback(item);
-                    async {}
-                })
-                // @TODo get rid of boxing if possible (here and on other similar places)
-                .boxed_local(),
-            signal: PhantomData,
-            callback: PhantomData,
+            inner: self.to_stream().for_each_sync(callback),
         }
     }
 
@@ -48,21 +39,24 @@ impl<S: SignalExt> SignalExtExt for S {}
 
 // -- ForEachSync --
 
-#[pin_project(project = ForEachSyncProj)]
+#[pin_project]
+#[derive(Debug)]
 #[must_use = "Futures do nothing unless polled"]
-pub struct ForEachSync<S, F> {
+pub struct ForEachSync<A, C> {
     #[pin]
-    future: future::LocalBoxFuture<'static, ()>,
-    signal: PhantomData<S>,
-    callback: PhantomData<F>,
+    inner: futures_util_ext::stream_ext_ext::ForEachSync<SignalStream<A>, C>,
 }
 
-impl<S: Signal, F: FnMut(S::Item)> Future for ForEachSync<S, F> {
+impl<A, C> Future for ForEachSync<A, C>
+where
+    A: Signal,
+    C: FnMut(A::Item),
+{
     type Output = ();
 
     #[inline]
     fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
-        self.project().future.poll(cx)
+        self.project().inner.poll(cx)
     }
 }
 

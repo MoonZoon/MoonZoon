@@ -1,6 +1,6 @@
-use crate::future::FusedFuture;
-use crate::futures_util::{ready, stream::FusedStream};
 use crate::*;
+use futures_util::{future::FusedFuture, ready, stream::FusedStream, Stream};
+use pin_project::pin_project;
 use std::fmt;
 use std::pin::Pin;
 use std::task::{Context, Poll};
