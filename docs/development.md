@@ -45,6 +45,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/js_framework_benchmark/Cargo.toml",
         // "examples/keyboard/Cargo.toml",
         // "examples/layers/Cargo.toml",
+        // "examples/local_search/Cargo.toml",
         // "examples/markup/Cargo.toml",
         // "examples/minesweeper/Cargo.toml",
         // "examples/pages/Cargo.toml",
