@@ -1,2 +1,2 @@
-# Blocking Task
+# LocalSearch
 > MoonZoon example

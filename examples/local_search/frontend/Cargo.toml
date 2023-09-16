@@ -1,0 +1,22 @@
+[package]
+name = "frontend"
+version.workspace = true
+edition.workspace = true
+repository.workspace = true
+authors.workspace = true
+description.workspace = true
+categories.workspace = true
+license.workspace = true
+readme.workspace = true
+publish.workspace = true
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.19"
+
+[dependencies]
+zoon.workspace = true
+educe = { version = "0.4.22", default-features = true }
+localsearch = { git = "https://github.com/Stremio/local-search", rev = "74fefe1" }
+fake = { version = "2.5.0", default-features = false }
+rand = { version = "0.8.5", features = ["small_rng", "getrandom"], default-features = false }
+getrandom = { version = "0.2", features = ["js"], default-features = false }
