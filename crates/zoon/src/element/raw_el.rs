@@ -74,6 +74,9 @@ pub trait RawEl: Sized + Into<RawElement> {
     }
 
     #[doc(hidden)]
+    fn new_dummy() -> Self;
+
+    #[doc(hidden)]
     fn update_dom_builder(
         self,
         updater: impl FnOnce(DomBuilder<Self::DomElement>) -> DomBuilder<Self::DomElement>,

@@ -2,6 +2,11 @@ use zoon::*;
 
 pub const BACKGROUND_COLOR: HSLuv = hsluv!(0, 0, 80);
 
-pub mod dropdown;
+
+mod dropdown;
+pub use dropdown::Dropdown;
+
 pub mod header_info;
-pub mod pagination;
+
+mod pagination;
+pub use pagination::Pagination;
