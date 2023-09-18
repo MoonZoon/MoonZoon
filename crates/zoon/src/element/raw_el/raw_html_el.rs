@@ -6,6 +6,10 @@ use crate::*;
 // ------ ------
 
 pub struct RawHtmlEl<DomElement: Into<web_sys::HtmlElement>> {
+    inner: Option<ElInner<DomElement>>
+}
+
+struct ElInner<DomElement> {
     class_id: ClassId,
     dom_builder: DomBuilder<DomElement>,
 }
@@ -19,12 +23,13 @@ impl RawHtmlEl<web_sys::HtmlElement> {
 
 impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> RawHtmlEl<DomElement> {
     pub fn dom_element_type<T: Into<web_sys::HtmlElement> + JsCast>(self) -> RawHtmlEl<T> {
-        let element = self.dom_builder.__internal_element().unchecked_into::<T>();
-        let dom_builder = DomBuilder::new(element).__internal_transfer_callbacks(self.dom_builder);
-        RawHtmlEl {
-            class_id: self.class_id,
+        let inner = self.inner.unwrap_throw();
+        let element = inner.dom_builder.__internal_element().unchecked_into::<T>();
+        let dom_builder = DomBuilder::new(element).__internal_transfer_callbacks(inner.dom_builder);
+        RawHtmlEl { inner: Some(ElInner {
+            class_id: inner.class_id,
             dom_builder,
-        }
+        })}
     }
 }
 
@@ -41,7 +46,7 @@ impl<DomElement: Into<web_sys::HtmlElement> + Into<web_sys::Node>> IntoDom
     for RawHtmlEl<DomElement>
 {
     fn into_dom(self) -> Dom {
-        self.dom_builder.into_dom()
+        self.inner.unwrap_throw().dom_builder.into_dom()
     }
 }
 
@@ -81,27 +86,35 @@ where
         dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
 
         Self {
+            inner: Some(ElInner{
             class_id: class_id.clone(),
             dom_builder: dom_builder
                 .after_removed(move |_| CLASS_ID_GENERATOR.remove_class_id(class_id)),
+            })
         }
         .source_code_location()
+    }
+
+    fn new_dummy() -> Self {
+        Self { inner: None }
     }
 
     fn update_dom_builder(
         mut self,
         updater: impl FnOnce(DomBuilder<Self::DomElement>) -> DomBuilder<Self::DomElement>,
     ) -> Self {
-        self.dom_builder = updater(self.dom_builder);
+        let mut inner = self.inner.unwrap_throw();
+        inner.dom_builder = updater(inner.dom_builder);
+        self.inner = Some(inner);
         self
     }
 
     fn dom_element(&self) -> Self::DomElement {
-        self.dom_builder.__internal_element()
+        self.inner.as_ref().unwrap_throw().dom_builder.__internal_element()
     }
 
     fn class_id(&self) -> ClassId {
-        self.class_id.clone()
+        self.inner.as_ref().unwrap_throw().class_id.clone()
     }
 
     #[track_caller]
@@ -112,9 +125,11 @@ where
         dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
 
         Self {
+            inner: Some(ElInner{
             class_id: class_id.clone(),
             dom_builder: dom_builder
                 .after_removed(move |_| CLASS_ID_GENERATOR.remove_class_id(class_id)),
+            })
         }
         .source_code_location()
     }

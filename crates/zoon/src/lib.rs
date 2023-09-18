@@ -69,6 +69,7 @@ pub use strum;
 pub use style::*;
 pub use task::{Task, TaskHandle};
 pub use timer::Timer;
+pub use trait_set::trait_set;
 pub use viewport::{Scene, Viewport};
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 pub use wasm_bindgen_futures::{self, future_to_promise, JsFuture};

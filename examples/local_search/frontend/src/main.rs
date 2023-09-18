@@ -258,7 +258,7 @@ pub fn root() -> impl Element {
         .item(ui::header_info::view())
         .item(search_field())
         .item(category_filter_panel())
-        .item(ui::pagination::new(current_page().clone(), pages_count()))
+        .item(ui::Pagination::new(current_page().clone(), pages_count()))
         .item(results())
 }
 
@@ -282,13 +282,13 @@ fn search_field() -> impl Element {
 }
 
 fn category_filter_panel() -> impl Element {
-    ui::dropdown::new(
-        Align::new().center_x(),
-        Width::exact(200),
+    ui::Dropdown::new(
         category_filter().signal(),
         always_vec(CategoryFilter::iter().collect()),
         |filter| category_filter().set_neq(filter),
     )
+        .s(Align::new().center_x())
+        .s(Width::exact(200))
 }
 
 fn results() -> impl Element {
