@@ -154,7 +154,7 @@ impl<LabelFlag, OnPressFlag, RE: RawEl> IntoIterator for Button<LabelFlag, OnPre
     // ...
 }
 
-impl<LabelFlag, OnPressFlag, RE: RawEl> UpdateRawEl for Button<LabelFlag, OnPressFlag, RE> {
+impl<LabelFlag, OnPressFlag, RE: RawEl> RawElWrapper for Button<LabelFlag, OnPressFlag, RE> {
     type RawEl = RE;
 
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
@@ -164,7 +164,7 @@ impl<LabelFlag, OnPressFlag, RE: RawEl> UpdateRawEl for Button<LabelFlag, OnPres
 }
 ```
 - The element has to implement the trait `Element`.
-- It's strongly recommended to implement `UpdateRawEl` and `IntoIterator` to allow users to customize the element and use its _abilities_ and to use some Zoon helpers.
+- It's strongly recommended to implement `RawElWrapper` and `IntoIterator` to allow users to customize the element and use its _abilities_ and to use some Zoon helpers.
 - `RawHtmlEl::style` automatically adds vendor prefixes for CSS property names and values where required. E.g. `"user-select"` will be replaced with `"-webkit-user-select"` on Safari and browsers on iOS.
 - `make_flags!`, `run_once` and `global_styles` will be explained later.
 
@@ -188,7 +188,7 @@ MyElement::new().s(Padding::new().all(6))
 You can find all built-in abilities in `crates/zoon/src/element/ability.rs`. The `Styleable` ability implementation:
 
 ```rust
-pub trait Styleable<'a>: UpdateRawEl + Sized {
+pub trait Styleable<'a>: RawElWrapper + Sized {
     fn s(self, style: impl Style<'a>) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el.style_group(style.merge_with_group(StyleGroup::default()))
@@ -300,7 +300,7 @@ fn canvas() -> impl Element {
 The `Hookable` ability / trait:
 
 ```rust
-pub trait Hookable: UpdateRawEl + Sized {
+pub trait Hookable: RawElWrapper + Sized {
     fn after_insert(
         self,
         handler: impl FnOnce(<Self::RawEl as RawEl>::DomElement) + 'static,

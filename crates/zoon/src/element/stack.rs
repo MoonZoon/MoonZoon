@@ -25,12 +25,11 @@ impl<RE: RawEl> Element for Stack<EmptyFlagNotSet, RE> {
     }
 }
 
-impl<EmptyFlag, RE: RawEl> UpdateRawEl for Stack<EmptyFlag, RE> {
+impl<EmptyFlag, RE: RawEl> RawElWrapper for Stack<EmptyFlag, RE> {
     type RawEl = RE;
 
-    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
-        self.raw_el = updater(self.raw_el);
-        self
+    fn raw_el_mut(&mut self) -> &mut Self::RawEl {
+        &mut self.raw_el
     }
 }
 

@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 static NEARBY_ELEMENTS_Z_INDEX: Lazy<String> =
     Lazy::new(|| LayerIndex::NEARBY_ELEMENTS.to_string());
 
-pub trait AddNearbyElement<'a>: UpdateRawEl + Sized {
+pub trait AddNearbyElement<'a>: RawElWrapper + Sized {
     #[track_caller]
     fn element_above(self, element: impl IntoOptionElement<'a> + 'a) -> Self {
         let container = element_above_container();

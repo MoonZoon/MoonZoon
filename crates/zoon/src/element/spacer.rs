@@ -5,7 +5,7 @@ use crate::*;
 // ------ ------
 
 pub struct Spacer {
-    el: El<el::ChildFlagNotSet, RawHtmlEl<web_sys::HtmlElement>>,
+    raw_el: RawHtmlEl<web_sys::HtmlElement>,
 }
 
 impl Spacer {
@@ -19,14 +19,14 @@ impl Spacer {
     #[track_caller]
     pub fn fill() -> Self {
         Self {
-            el: Self::new_el().s(Width::fill()).s(Height::fill()),
+            raw_el: Self::new_el().s(Width::fill()).s(Height::fill()).into_raw_el(),
         }
     }
 
     #[track_caller]
     pub fn growable() -> Self {
         Self {
-            el: Self::new_el().s(Width::growable()).s(Height::growable()),
+            raw_el: Self::new_el().s(Width::growable()).s(Height::growable()).into_raw_el(),
         }
     }
 
@@ -35,9 +35,10 @@ impl Spacer {
         if let Some(factor) = factor.into() {
             let factor = factor.into();
             Self {
-                el: Self::new_el()
+                raw_el: Self::new_el()
                     .s(Width::growable_with_factor(factor))
-                    .s(Height::growable_with_factor(factor)),
+                    .s(Height::growable_with_factor(factor))
+                    .into_raw_el()
             }
         } else {
             Self::growable()
@@ -47,16 +48,15 @@ impl Spacer {
 
 impl Element for Spacer {
     fn into_raw_element(self) -> RawElement {
-        self.el.into_raw_element()
+        self.raw_el.into_raw_element()
     }
 }
 
-impl UpdateRawEl for Spacer {
+impl RawElWrapper for Spacer {
     type RawEl = RawHtmlEl<web_sys::HtmlElement>;
 
-    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
-        self.el = self.el.update_raw_el(updater);
-        self
+    fn raw_el_mut(&mut self) -> &mut Self::RawEl {
+        &mut self.raw_el
     }
 }
 

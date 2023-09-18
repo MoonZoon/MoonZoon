@@ -28,12 +28,11 @@ impl<HeightFlag, RE: RawEl> Element for Canvas<WidthFlagSet, HeightFlag, RE> {
     }
 }
 
-impl<WidthFlag, HeightFlag, RE: RawEl> UpdateRawEl for Canvas<WidthFlag, HeightFlag, RE> {
+impl<WidthFlag, HeightFlag, RE: RawEl> RawElWrapper for Canvas<WidthFlag, HeightFlag, RE> {
     type RawEl = RE;
 
-    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
-        self.raw_el = updater(self.raw_el);
-        self
+    fn raw_el_mut(&mut self) -> &mut Self::RawEl {
+        &mut self.raw_el
     }
 }
 

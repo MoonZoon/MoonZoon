@@ -1,7 +1,7 @@
 use crate::*;
 use std::{cell::RefCell, rc::Rc};
 
-pub trait Focusable: UpdateRawEl + Sized
+pub trait Focusable: RawElWrapper + Sized
 where
     <Self::RawEl as RawEl>::DomElement: AsRef<web_sys::HtmlElement>,
 {

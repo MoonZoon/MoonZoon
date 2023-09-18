@@ -3,7 +3,7 @@ use std::{borrow::Borrow, sync::Arc};
 
 // ------ KeyboardEventAware ------
 
-pub trait KeyboardEventAware: UpdateRawEl + Sized {
+pub trait KeyboardEventAware: RawElWrapper + Sized {
     fn on_key_down_event(self, handler: impl FnMut(KeyboardEvent) + 'static) -> Self {
         self.on_key_down_event_with_options(EventOptions::default(), handler)
     }

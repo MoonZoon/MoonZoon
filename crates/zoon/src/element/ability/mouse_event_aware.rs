@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc, sync::Arc};
 
 // ------ MouseEventAware ------
 
-pub trait MouseEventAware: UpdateRawEl + Sized {
+pub trait MouseEventAware: RawElWrapper + Sized {
     fn on_hovered_change(self, handler: impl FnMut(bool) + 'static) -> Self {
         let handler = Rc::new(RefCell::new(handler));
         self.update_raw_el(|raw_el| {

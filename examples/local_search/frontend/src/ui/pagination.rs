@@ -16,6 +16,7 @@ impl<PCS: PageCountSignal> Element for Pagination<PCS> {
 }
 
 impl<PCS: PageCountSignal> Pagination<PCS> {
+    #[track_caller]
     pub fn new(current_page: Mutable<usize>, page_count: PCS) -> Self {
         Self {
             current_page,

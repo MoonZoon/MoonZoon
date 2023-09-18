@@ -2,7 +2,7 @@ use crate::*;
 
 // ------ SelectableTextContent ------
 
-pub trait SelectableTextContent: UpdateRawEl + Sized {
+pub trait SelectableTextContent: RawElWrapper + Sized {
     fn text_content_selecting(self, selecting: TextContentSelecting) -> Self {
         self.update_raw_el(|raw_el| raw_el.style("user-select", selecting.user_select))
     }

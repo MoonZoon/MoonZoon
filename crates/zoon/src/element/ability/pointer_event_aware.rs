@@ -3,7 +3,7 @@ use std::{cell::Cell, rc::Rc};
 
 // ------ PointerEventAware ------
 
-pub trait PointerEventAware: UpdateRawEl + Sized {
+pub trait PointerEventAware: RawElWrapper + Sized {
     fn on_pointer_down(self, mut handler: impl FnMut() + 'static) -> Self {
         self.update_raw_el(|raw_el| {
             raw_el.event_handler(move |_: events_extra::PointerDown| handler())

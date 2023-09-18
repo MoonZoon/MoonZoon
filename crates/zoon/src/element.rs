@@ -54,7 +54,7 @@ pub use text_input::{InputType, Placeholder, TextInput};
 // --
 
 pub mod raw_el;
-pub use raw_el::{RawEl, RawHtmlEl, RawSvgEl, UpdateRawEl};
+pub use raw_el::{RawEl, RawHtmlEl, RawSvgEl, RawElWrapper};
 
 pub mod raw_text;
 pub use raw_text::RawText;

@@ -7,9 +7,11 @@ use once_cell::sync::Lazy;
 use std::mem::ManuallyDrop;
 use std::{cell::Cell, mem, panic, rc::Rc};
 
+mod raw_el_wrapper;
 mod raw_html_el;
 mod raw_svg_el;
 
+pub use raw_el_wrapper::RawElWrapper;
 pub use raw_html_el::RawHtmlEl;
 pub use raw_svg_el::RawSvgEl;
 
@@ -32,14 +34,6 @@ impl ClassIdGenerator {
         self.index_generator
             .free_index(class_id[1..].parse().unwrap_throw());
     }
-}
-
-// ------ UpdateRawEl ------
-
-pub trait UpdateRawEl {
-    type RawEl: RawEl;
-    #[track_caller]
-    fn update_raw_el(self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self;
 }
 
 // ------ RawEl ------

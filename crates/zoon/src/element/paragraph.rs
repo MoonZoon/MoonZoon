@@ -24,12 +24,11 @@ impl<RE: RawEl> Element for Paragraph<EmptyFlagNotSet, RE> {
     }
 }
 
-impl<EmptyFlag, RE: RawEl> UpdateRawEl for Paragraph<EmptyFlag, RE> {
+impl<EmptyFlag, RE: RawEl> RawElWrapper for Paragraph<EmptyFlag, RE> {
     type RawEl = RE;
 
-    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
-        self.raw_el = updater(self.raw_el);
-        self
+    fn raw_el_mut(&mut self) -> &mut Self::RawEl {
+        &mut self.raw_el
     }
 }
 

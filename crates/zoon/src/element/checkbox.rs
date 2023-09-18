@@ -89,14 +89,13 @@ impl<OnChangeFlag, CheckedFlag, RE: RawEl> Element
     }
 }
 
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> UpdateRawEl
+impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> RawElWrapper
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
     type RawEl = RE;
 
-    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
-        self.raw_el = updater(self.raw_el);
-        self
+    fn raw_el_mut(&mut self) -> &mut Self::RawEl {
+        &mut self.raw_el
     }
 }
 

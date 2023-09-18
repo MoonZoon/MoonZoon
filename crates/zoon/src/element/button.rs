@@ -158,12 +158,11 @@ impl<OnPressFlag, RE: RawEl> Element for Button<LabelFlagSet, OnPressFlag, RE> {
     }
 }
 
-impl<LabelFlag, OnPressFlag, RE: RawEl> UpdateRawEl for Button<LabelFlag, OnPressFlag, RE> {
+impl<LabelFlag, OnPressFlag, RE: RawEl> RawElWrapper for Button<LabelFlag, OnPressFlag, RE> {
     type RawEl = RE;
 
-    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
-        self.raw_el = updater(self.raw_el);
-        self
+    fn raw_el_mut(&mut self) -> &mut Self::RawEl {
+        &mut self.raw_el
     }
 }
 
