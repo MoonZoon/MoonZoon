@@ -22,13 +22,13 @@ impl ImageType {
                 .s(Background::new().url(self.url()).color(BLUE_9))
                 .description("important image")
                 .url(self.url())
-                .into_raw_element(),
+                .into_raw(),
             Self::Background => El::new()
                 .s(Align::center())
                 .s(Width::fill().max(600))
                 .s(Height::fill())
                 .s(Background::new().url(self.url()).color(BLUE_9))
-                .into_raw_element(),
+                .into_raw(),
         }
     }
 }

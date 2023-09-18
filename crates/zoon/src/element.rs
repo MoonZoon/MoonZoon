@@ -54,7 +54,7 @@ pub use text_input::{InputType, Placeholder, TextInput};
 // --
 
 pub mod raw_el;
-pub use raw_el::{RawEl, RawHtmlEl, RawSvgEl, RawElWrapper};
+pub use raw_el::{RawEl, RawElWrapper, RawHtmlEl, RawSvgEl};
 
 pub mod raw_text;
 pub use raw_text::RawText;
@@ -64,33 +64,26 @@ pub use raw_text::RawText;
 pub mod ability;
 pub use ability::*;
 
-// ------ Element ------
+mod raw_el_or_text;
+pub use raw_el_or_text::RawElOrText;
 
-pub trait Element {
-    fn into_raw_element(self) -> RawElement;
+// ------ ElementUnchecked ------
+
+pub trait ElementUnchecked {
+    fn into_raw_unchecked(self) -> RawElOrText;
 }
 
-// ------ RawElement ------
-
-pub enum RawElement {
-    El(RawHtmlEl<web_sys::HtmlElement>),
-    SvgEl(RawSvgEl<web_sys::SvgElement>),
-    Text(RawText),
-}
-
-impl IntoDom for RawElement {
-    fn into_dom(self) -> Dom {
-        match self {
-            RawElement::El(raw_el) => raw_el.into_dom(),
-            RawElement::SvgEl(raw_svg_el) => raw_svg_el.into_dom(),
-            RawElement::Text(raw_text) => raw_text.into_dom(),
-        }
+impl<REW: RawElWrapper> ElementUnchecked for REW {
+    fn into_raw_unchecked(self) -> RawElOrText {
+        self.into_raw_el().into()
     }
 }
 
-impl Element for RawElement {
-    fn into_raw_element(self) -> RawElement {
-        self
+// ------ Element ------
+
+pub trait Element: ElementUnchecked + Sized {
+    fn into_raw(self) -> RawElOrText {
+        self.into_raw_unchecked()
     }
 }
 

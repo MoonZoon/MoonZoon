@@ -12,16 +12,12 @@ pub struct El<ChildFlag, RE: RawEl> {
     flags: PhantomData<ChildFlag>,
 }
 
+impl<ChildFlag, RE: RawEl> Element for El<ChildFlag, RE> {}
+
 impl El<ChildFlagNotSet, RawHtmlEl<web_sys::HtmlElement>> {
     #[track_caller]
     pub fn new() -> Self {
         Self::with_tag(Tag::Custom("div"))
-    }
-}
-
-impl<ChildFlag, RE: RawEl> Element for El<ChildFlag, RE> {
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
     }
 }
 

@@ -12,6 +12,8 @@ pub struct Image<UrlFlag, DescriptionFlag, RE: RawEl> {
     flags: PhantomData<(UrlFlag, DescriptionFlag)>,
 }
 
+impl<RE: RawEl> Element for Image<UrlFlagSet, DescriptionFlagSet, RE> {}
+
 impl Image<UrlFlagNotSet, DescriptionFlagNotSet, RawHtmlEl<web_sys::HtmlImageElement>> {
     #[track_caller]
     pub fn new() -> Self {
@@ -19,12 +21,6 @@ impl Image<UrlFlagNotSet, DescriptionFlagNotSet, RawHtmlEl<web_sys::HtmlImageEle
             raw_el: RawHtmlEl::<web_sys::HtmlImageElement>::new("img").class("image"),
             flags: PhantomData,
         }
-    }
-}
-
-impl<RE: RawEl> Element for Image<UrlFlagSet, DescriptionFlagSet, RE> {
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
     }
 }
 

@@ -12,6 +12,8 @@ pub struct Label<LabelFlag, ForInputFlag, RE: RawEl> {
     flags: PhantomData<(LabelFlag, ForInputFlag)>,
 }
 
+impl<ForInputFlag, RE: RawEl> Element for Label<LabelFlagSet, ForInputFlag, RE> {}
+
 impl Label<LabelFlagNotSet, ForInputFlagNotSet, RawHtmlEl<web_sys::HtmlLabelElement>> {
     #[track_caller]
     pub fn new() -> Self {
@@ -19,12 +21,6 @@ impl Label<LabelFlagNotSet, ForInputFlagNotSet, RawHtmlEl<web_sys::HtmlLabelElem
             raw_el: RawHtmlEl::<web_sys::HtmlLabelElement>::new("label").class("label"),
             flags: PhantomData,
         }
-    }
-}
-
-impl<ForInputFlag, RE: RawEl> Element for Label<LabelFlagSet, ForInputFlag, RE> {
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
     }
 }
 

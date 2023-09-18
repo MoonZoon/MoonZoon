@@ -5,9 +5,19 @@ use crate::*;
 //   Element
 // ------ ------
 
-pub struct RawSvgEl<DomElement: Into<web_sys::SvgElement>> {
-    inner: Option<ElInner<DomElement>>
+pub struct RawSvgEl<DomElement: Into<web_sys::SvgElement> = web_sys::SvgElement> {
+    inner: Option<ElInner<DomElement>>,
 }
+
+impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> ElementUnchecked
+    for RawSvgEl<DomElement>
+{
+    fn into_raw_unchecked(self) -> RawElOrText {
+        self.dom_element_type::<web_sys::SvgElement>().into()
+    }
+}
+
+impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> Element for RawSvgEl<DomElement> {}
 
 struct ElInner<DomElement> {
     class_id: ClassId,
@@ -26,31 +36,27 @@ impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> RawSvgEl<DomElement
         let inner = self.inner.unwrap_throw();
         let element = inner.dom_builder.__internal_element().unchecked_into::<T>();
         let dom_builder = DomBuilder::new(element).__internal_transfer_callbacks(inner.dom_builder);
-        RawSvgEl { inner: Some(ElInner {
-            class_id: inner.class_id,
-            dom_builder,
-        })}
+        RawSvgEl {
+            inner: Some(ElInner {
+                class_id: inner.class_id,
+                dom_builder,
+            }),
+        }
     }
 }
 
 impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> From<RawSvgEl<DomElement>>
-    for RawElement
+    for RawElOrText
 {
     #[track_caller]
     fn from(raw_svg_el: RawSvgEl<DomElement>) -> Self {
-        RawElement::SvgEl(raw_svg_el.dom_element_type::<web_sys::SvgElement>())
+        RawElOrText::RawSvgEl(raw_svg_el.dom_element_type::<web_sys::SvgElement>())
     }
 }
 
 impl<DomElement: Into<web_sys::SvgElement> + Into<web_sys::Node>> IntoDom for RawSvgEl<DomElement> {
     fn into_dom(self) -> Dom {
         self.inner.unwrap_throw().dom_builder.into_dom()
-    }
-}
-
-impl<DomElement: Into<web_sys::SvgElement> + Clone + JsCast> Element for RawSvgEl<DomElement> {
-    fn into_raw_element(self) -> RawElement {
-        RawElement::SvgEl(self.dom_element_type::<web_sys::SvgElement>())
     }
 }
 
@@ -84,11 +90,11 @@ where
         dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
 
         Self {
-            inner: Some(ElInner{
-            class_id: class_id.clone(),
-            dom_builder: dom_builder
-                .after_removed(move |_| CLASS_ID_GENERATOR.remove_class_id(class_id)),
-            })
+            inner: Some(ElInner {
+                class_id: class_id.clone(),
+                dom_builder: dom_builder
+                    .after_removed(move |_| CLASS_ID_GENERATOR.remove_class_id(class_id)),
+            }),
         }
         .source_code_location()
     }
@@ -108,7 +114,11 @@ where
     }
 
     fn dom_element(&self) -> Self::DomElement {
-        self.inner.as_ref().unwrap_throw().dom_builder.__internal_element()
+        self.inner
+            .as_ref()
+            .unwrap_throw()
+            .dom_builder
+            .__internal_element()
     }
 
     fn class_id(&self) -> ClassId {
@@ -123,11 +133,11 @@ where
         dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
 
         Self {
-            inner: Some(ElInner{
-            class_id: class_id.clone(),
-            dom_builder: dom_builder
-                .after_removed(move |_| CLASS_ID_GENERATOR.remove_class_id(class_id)),
-            })
+            inner: Some(ElInner {
+                class_id: class_id.clone(),
+                dom_builder: dom_builder
+                    .after_removed(move |_| CLASS_ID_GENERATOR.remove_class_id(class_id)),
+            }),
         }
         .source_code_location()
     }

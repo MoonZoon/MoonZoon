@@ -32,6 +32,48 @@ pub struct TextInput<
     )>,
 }
 
+impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl> Element
+    for TextInput<
+        IdFlagSet,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlagNotSet,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE,
+    >
+{
+}
+
+impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl> Element
+    for TextInput<
+        IdFlagNotSet,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlagSet,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE,
+    >
+{
+}
+
+impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl> Element
+    for TextInput<
+        IdFlagSet,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlagSet,
+        InputTypeFlag,
+        ReadOnlyFlag,
+        RE,
+    >
+{
+}
+
 impl
     TextInput<
         IdFlagNotSet,
@@ -50,57 +92,6 @@ impl
             raw_el: RawHtmlEl::<web_sys::HtmlInputElement>::new("input").class("text_input"),
             flags: PhantomData,
         }
-    }
-}
-
-impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl> Element
-    for TextInput<
-        IdFlagSet,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlagNotSet,
-        InputTypeFlag,
-        ReadOnlyFlag,
-        RE,
-    >
-{
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
-    }
-}
-
-impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl> Element
-    for TextInput<
-        IdFlagNotSet,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlagSet,
-        InputTypeFlag,
-        ReadOnlyFlag,
-        RE,
-    >
-{
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
-    }
-}
-
-impl<OnChangeFlag, PlaceholderFlag, TextFlag, InputTypeFlag, ReadOnlyFlag, RE: RawEl> Element
-    for TextInput<
-        IdFlagSet,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlagSet,
-        InputTypeFlag,
-        ReadOnlyFlag,
-        RE,
-    >
-{
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
     }
 }
 

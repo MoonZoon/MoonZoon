@@ -212,8 +212,8 @@ fn set_invoice_url(invoice_id: InvoiceId, url: &str) {
 //     View
 // ------ ------
 
-pub fn view() -> RawElement {
-    view::page().into_raw_element()
+pub fn view() -> RawElOrText {
+    view::page().into_raw()
 }
 
 // blocks!{

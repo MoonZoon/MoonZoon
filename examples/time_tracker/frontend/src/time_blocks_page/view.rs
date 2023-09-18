@@ -155,8 +155,8 @@ fn time_block(client: Arc<super::Client>, time_block: Arc<super::TimeBlock>) -> 
         ))
         .item(status_buttons(time_block.clone()))
         .item_signal(time_block.invoice.signal_cloned().map_option(
-            clone!((time_block) move |i| invoice(time_block.clone(), i.clone()).into_raw_element()),
-            move || add_invoice_button(time_block.clone()).into_raw_element(),
+            clone!((time_block) move |i| invoice(time_block.clone(), i.clone()).into_raw()),
+            move || add_invoice_button(time_block.clone()).into_raw(),
         ))
 }
 

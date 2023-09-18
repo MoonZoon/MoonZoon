@@ -8,6 +8,14 @@ pub struct RawText {
     dom: Dom,
 }
 
+impl ElementUnchecked for RawText {
+    fn into_raw_unchecked(self) -> RawElOrText {
+        self.into()
+    }
+}
+
+impl Element for RawText {}
+
 impl RawText {
     pub fn new(text: impl AsRef<str>) -> Self {
         Self {
@@ -24,20 +32,14 @@ impl RawText {
     }
 }
 
-impl From<RawText> for RawElement {
+impl From<RawText> for RawElOrText {
     fn from(raw_text: RawText) -> Self {
-        RawElement::Text(raw_text)
+        RawElOrText::RawText(raw_text)
     }
 }
 
 impl IntoDom for RawText {
     fn into_dom(self) -> Dom {
         self.dom
-    }
-}
-
-impl Element for RawText {
-    fn into_raw_element(self) -> RawElement {
-        self.into()
     }
 }

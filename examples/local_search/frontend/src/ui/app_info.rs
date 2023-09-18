@@ -1,11 +1,29 @@
 use zoon::*;
 
-pub fn view() -> impl Element {
-    Column::new()
-        .s(Gap::new().y(5))
-        .item(running_for_text())
-        .item(companies_generated_text())
-        .item(companies_filtered_text())
+pub struct AppInfo {
+    raw_el: RawHtmlEl,
+}
+
+impl Element for AppInfo {}
+
+impl RawElWrapper for AppInfo {
+    type RawEl = RawHtmlEl;
+
+    fn raw_el_mut(&mut self) -> &mut Self::RawEl {
+        &mut self.raw_el
+    }
+}
+
+impl AppInfo {
+    pub fn new() -> Self {
+        let raw_el = Column::new()
+            .s(Gap::new().y(5))
+            .item(running_for_text())
+            .item(companies_generated_text())
+            .item(companies_filtered_text())
+            .into_raw_el();
+        Self { raw_el }
+    }
 }
 
 fn running_for_text() -> impl Element {

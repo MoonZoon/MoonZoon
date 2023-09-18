@@ -12,15 +12,11 @@ pub struct Paragraph<EmptyFlag, RE: RawEl> {
     flags: PhantomData<EmptyFlag>,
 }
 
+impl<RE: RawEl> Element for Paragraph<EmptyFlagNotSet, RE> {}
+
 impl Paragraph<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
     pub fn new() -> Self {
         Self::with_tag(Tag::Custom("p"))
-    }
-}
-
-impl<RE: RawEl> Element for Paragraph<EmptyFlagNotSet, RE> {
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
     }
 }
 

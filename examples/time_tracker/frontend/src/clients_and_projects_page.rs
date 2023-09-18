@@ -123,6 +123,6 @@ fn rename_project(project_id: ProjectId, name: &str) {
 //     View
 // ------ ------
 
-pub fn view() -> RawElement {
-    view::page().into_raw_element()
+pub fn view() -> RawElOrText {
+    view::page().into_raw()
 }

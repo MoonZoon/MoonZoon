@@ -12,16 +12,12 @@ pub struct Stack<EmptyFlag, RE: RawEl> {
     flags: PhantomData<EmptyFlag>,
 }
 
+impl<RE: RawEl> Element for Stack<EmptyFlagNotSet, RE> {}
+
 impl Stack<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
     #[track_caller]
     pub fn new() -> Self {
         Self::with_tag(Tag::Custom("div"))
-    }
-}
-
-impl<RE: RawEl> Element for Stack<EmptyFlagNotSet, RE> {
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
     }
 }
 

@@ -228,6 +228,6 @@ fn page(page_id: super::PageId) -> impl Element {
         super::PageId::TimeTracker => crate::time_tracker_page::view(),
         super::PageId::TimeBlocks => crate::time_blocks_page::view(),
         super::PageId::Home => crate::home_page::view(),
-        super::PageId::Unknown => El::new().child(404).into_raw_element(),
+        super::PageId::Unknown => El::new().child(404).into_raw(),
     }
 }

@@ -38,7 +38,7 @@ impl ClassIdGenerator {
 
 // ------ RawEl ------
 
-pub trait RawEl: Sized + Into<RawElement> {
+pub trait RawEl: Sized + Into<RawElOrText> {
     // Warning: "Global" bounds with `JsValue` or `JsCast` on the associated type break Rust Analyzer.
     type DomElement: AsRef<web_sys::Node>
         + AsRef<web_sys::EventTarget>
@@ -161,9 +161,8 @@ pub trait RawEl: Sized + Into<RawElement> {
 
     fn child<'a>(self, child: impl IntoOptionElement<'a> + 'a) -> Self {
         if let Some(child) = child.into_option_element() {
-            return self.update_dom_builder(|dom_builder| {
-                dom_builder.child(child.into_raw_element().into_dom())
-            });
+            return self
+                .update_dom_builder(|dom_builder| dom_builder.child(child.into_raw().into_dom()));
         }
         self
     }
@@ -176,7 +175,7 @@ pub trait RawEl: Sized + Into<RawElement> {
             dom_builder.child_signal(child.map(|child| {
                 child
                     .into_option_element()
-                    .map(|element| element.into_raw_element().into_dom())
+                    .map(|element| element.into_raw().into_dom())
             }))
         })
     }
@@ -190,7 +189,7 @@ pub trait RawEl: Sized + Into<RawElement> {
                 children
                     .into_iter()
                     .filter_map(|child| child.into_option_element())
-                    .map(|child| child.into_element().into_raw_element().into_dom()),
+                    .map(|child| child.into_element().into_raw().into_dom()),
             )
         })
     }
@@ -203,7 +202,7 @@ pub trait RawEl: Sized + Into<RawElement> {
             dom_builder.children_signal_vec(
                 children
                     .filter_map(|child| child.into_option_element())
-                    .map(|child| child.into_element().into_raw_element().into_dom()),
+                    .map(|child| child.into_element().into_raw().into_dom()),
             )
         })
     }

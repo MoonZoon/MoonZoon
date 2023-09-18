@@ -12,16 +12,12 @@ pub struct Row<EmptyFlag, MultilineFlag, RE: RawEl> {
     flags: PhantomData<(EmptyFlag, MultilineFlag)>,
 }
 
+impl<MultilineFlag, RE: RawEl> Element for Row<EmptyFlagNotSet, MultilineFlag, RE> {}
+
 impl Row<EmptyFlagSet, MultilineFlagNotSet, RawHtmlEl<web_sys::HtmlElement>> {
     #[track_caller]
     pub fn new() -> Self {
         Self::with_tag(Tag::Custom("div"))
-    }
-}
-
-impl<MultilineFlag, RE: RawEl> Element for Row<EmptyFlagNotSet, MultilineFlag, RE> {
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
     }
 }
 
