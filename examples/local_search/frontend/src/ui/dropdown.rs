@@ -3,16 +3,28 @@ use std::{cell::RefCell, rc::Rc};
 use zoon::*;
 
 pub struct Dropdown {
-    element: Column<column::EmptyFlagNotSet, RawHtmlEl<web_sys::HtmlElement>>,
+    raw_el: RawHtmlEl<web_sys::HtmlElement>,
 }
+
+impl RawElWrapper for Dropdown 
+{
+    type RawEl = RawHtmlEl<web_sys::HtmlElement>;
+
+    fn raw_el_mut(&mut self) -> &mut Self::RawEl {
+        &mut self.raw_el
+    }
+}
+
+impl Styleable<'_> for Dropdown {}
 
 impl Element for Dropdown {
     fn into_raw_element(self) -> RawElement {
-        self.element.into_raw_element()
+        self.raw_el.into_raw_element()
     }
 }
 
 impl Dropdown {
+    #[track_caller]
     pub fn new<V: IntoCowStr<'static> + Clone + PartialEq + Default + 'static>(
         selected: impl Signal<Item = V> + Unpin + 'static,
         values: impl SignalVec<Item = V> + Unpin + 'static,
@@ -47,7 +59,7 @@ impl Dropdown {
         let active = Mutable::new(false);
         let hovered = Mutable::new(false);
     
-        let column = Column::new()
+        let raw_el = Column::new()
             .item(
                 Row::new()
                     .s(Outline::inner().width(2))
@@ -84,11 +96,10 @@ impl Dropdown {
                             Self::menu_item(value, active.clone(), on_select.clone())
                         }),
                     ))
-            }));
+            }))
+            .into_raw_el();
 
-        Self {
-            element: column
-        }
+        Self {raw_el}
     }
     
     fn menu_item<V: IntoCowStr<'static> + Clone + PartialEq + Default + 'static>(
@@ -115,15 +126,3 @@ impl Dropdown {
             .child(value.into_cow_str())
     }
 }
-
-impl UpdateRawEl for Dropdown 
-{
-    type RawEl = RawHtmlEl<web_sys::HtmlElement>;
-
-    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
-        self.element = self.element.update_raw_el(updater);
-        self
-    }
-}
-
-impl Styleable<'_> for Dropdown {}

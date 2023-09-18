@@ -25,12 +25,11 @@ impl<MultilineFlag, RE: RawEl> Element for Row<EmptyFlagNotSet, MultilineFlag, R
     }
 }
 
-impl<EmptyFlag, MultilineFlag, RE: RawEl> UpdateRawEl for Row<EmptyFlag, MultilineFlag, RE> {
+impl<EmptyFlag, MultilineFlag, RE: RawEl> RawElWrapper for Row<EmptyFlag, MultilineFlag, RE> {
     type RawEl = RE;
 
-    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
-        self.raw_el = updater(self.raw_el);
-        self
+    fn raw_el_mut(&mut self) -> &mut Self::RawEl {
+        &mut self.raw_el
     }
 }
 

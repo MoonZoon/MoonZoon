@@ -1,6 +1,6 @@
 use crate::*;
 
-pub trait Styleable<'a>: UpdateRawEl + Sized {
+pub trait Styleable<'a>: RawElWrapper + Sized {
     /// Add `Zoon` styling to the element.
     /// # Example
     ///  Here is how to use [Align] to `center` an element.

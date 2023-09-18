@@ -101,12 +101,11 @@ impl<RE: RawEl> Element for Link<LabelFlagSet, ToFlagSet, RE> {
     }
 }
 
-impl<LabelFlag, ToFlag, RE: RawEl> UpdateRawEl for Link<LabelFlag, ToFlag, RE> {
+impl<LabelFlag, ToFlag, RE: RawEl> RawElWrapper for Link<LabelFlag, ToFlag, RE> {
     type RawEl = RE;
 
-    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
-        self.raw_el = updater(self.raw_el);
-        self
+    fn raw_el_mut(&mut self) -> &mut Self::RawEl {
+        &mut self.raw_el
     }
 }
 

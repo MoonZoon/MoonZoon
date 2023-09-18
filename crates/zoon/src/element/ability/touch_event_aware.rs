@@ -3,7 +3,7 @@ use std::borrow::Cow;
 
 // ------ TouchEventAware ------
 
-pub trait TouchEventAware: UpdateRawEl + Sized {
+pub trait TouchEventAware: RawElWrapper + Sized {
     fn touch_native_handling(self, handling: TouchHandling) -> Self {
         self.update_raw_el(|raw_el| {
             let touch_action = if handling.touch_action.is_empty() {

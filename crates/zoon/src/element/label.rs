@@ -28,12 +28,11 @@ impl<ForInputFlag, RE: RawEl> Element for Label<LabelFlagSet, ForInputFlag, RE> 
     }
 }
 
-impl<LabelFlag, ForInputFlag, RE: RawEl> UpdateRawEl for Label<LabelFlag, ForInputFlag, RE> {
+impl<LabelFlag, ForInputFlag, RE: RawEl> RawElWrapper for Label<LabelFlag, ForInputFlag, RE> {
     type RawEl = RE;
 
-    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
-        self.raw_el = updater(self.raw_el);
-        self
+    fn raw_el_mut(&mut self) -> &mut Self::RawEl {
+        &mut self.raw_el
     }
 }
 

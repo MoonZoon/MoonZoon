@@ -1,7 +1,7 @@
 use crate::*;
 use std::convert::TryFrom;
 
-pub trait MutableViewport: UpdateRawEl + Sized {
+pub trait MutableViewport: RawElWrapper + Sized {
     fn on_viewport_location_change(
         self,
         mut handler: impl FnMut(Scene, Viewport) + 'static,

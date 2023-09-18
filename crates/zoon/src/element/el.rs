@@ -25,12 +25,11 @@ impl<ChildFlag, RE: RawEl> Element for El<ChildFlag, RE> {
     }
 }
 
-impl<ChildFlag, RE: RawEl> UpdateRawEl for El<ChildFlag, RE> {
+impl<ChildFlag, RE: RawEl> RawElWrapper for El<ChildFlag, RE> {
     type RawEl = RE;
 
-    fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
-        self.raw_el = updater(self.raw_el);
-        self
+    fn raw_el_mut(&mut self) -> &mut Self::RawEl {
+        &mut self.raw_el
     }
 }
 
