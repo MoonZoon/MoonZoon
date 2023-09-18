@@ -27,6 +27,37 @@ pub struct TextArea<
     )>,
 }
 
+impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl> Element
+    for TextArea<
+        IdFlagSet,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlagNotSet,
+        ReadOnlyFlag,
+        RE,
+    >
+{
+}
+
+impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl> Element
+    for TextArea<
+        IdFlagNotSet,
+        OnChangeFlag,
+        PlaceholderFlag,
+        TextFlag,
+        LabelFlagSet,
+        ReadOnlyFlag,
+        RE,
+    >
+{
+}
+
+impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl> Element
+    for TextArea<IdFlagSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagSet, ReadOnlyFlag, RE>
+{
+}
+
 impl
     TextArea<
         IdFlagNotSet,
@@ -44,46 +75,6 @@ impl
             raw_el: RawHtmlEl::<web_sys::HtmlTextAreaElement>::new("textarea").class("text_area"),
             flags: PhantomData,
         }
-    }
-}
-
-impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl> Element
-    for TextArea<
-        IdFlagSet,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlagNotSet,
-        ReadOnlyFlag,
-        RE,
-    >
-{
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
-    }
-}
-
-impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl> Element
-    for TextArea<
-        IdFlagNotSet,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlagSet,
-        ReadOnlyFlag,
-        RE,
-    >
-{
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
-    }
-}
-
-impl<OnChangeFlag, PlaceholderFlag, TextFlag, ReadOnlyFlag, RE: RawEl> Element
-    for TextArea<IdFlagSet, OnChangeFlag, PlaceholderFlag, TextFlag, LabelFlagSet, ReadOnlyFlag, RE>
-{
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
     }
 }
 

@@ -27,16 +27,20 @@ pub enum Either<L, R> {
     Right(#[pin] R),
 }
 
-// -- Element for Either --
+// -- ElementUnchecked for Either --
 
-impl<L: Element, R: Element> Element for Either<L, R> {
-    fn into_raw_element(self) -> RawElement {
+impl<L: ElementUnchecked, R: ElementUnchecked> ElementUnchecked for Either<L, R> {
+    fn into_raw_unchecked(self) -> RawElOrText {
         match self {
-            Either::Left(element) => element.into_raw_element(),
-            Either::Right(element) => element.into_raw_element(),
+            Either::Left(element) => element.into_raw_unchecked(),
+            Either::Right(element) => element.into_raw_unchecked(),
         }
     }
 }
+
+// -- Element for Either --
+
+impl<L: Element, R: Element> Element for Either<L, R> {}
 
 // -- IntoCowStr for Either --
 

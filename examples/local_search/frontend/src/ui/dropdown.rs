@@ -3,12 +3,13 @@ use std::{cell::RefCell, rc::Rc};
 use zoon::*;
 
 pub struct Dropdown {
-    raw_el: RawHtmlEl<web_sys::HtmlElement>,
+    raw_el: RawHtmlEl,
 }
 
-impl RawElWrapper for Dropdown 
-{
-    type RawEl = RawHtmlEl<web_sys::HtmlElement>;
+impl Element for Dropdown {}
+
+impl RawElWrapper for Dropdown {
+    type RawEl = RawHtmlEl;
 
     fn raw_el_mut(&mut self) -> &mut Self::RawEl {
         &mut self.raw_el
@@ -17,21 +18,14 @@ impl RawElWrapper for Dropdown
 
 impl Styleable<'_> for Dropdown {}
 
-impl Element for Dropdown {
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into_raw_element()
-    }
-}
-
 impl Dropdown {
-    #[track_caller]
     pub fn new<V: IntoCowStr<'static> + Clone + PartialEq + Default + 'static>(
         selected: impl Signal<Item = V> + Unpin + 'static,
         values: impl SignalVec<Item = V> + Unpin + 'static,
         on_select: impl FnMut(V) + 'static,
     ) -> Self {
         let on_select = Rc::new(RefCell::new(on_select));
-    
+
         let on_select_clone = on_select.clone();
         let values_and_selected = map_ref! {
             let values = values.to_signal_cloned(),
@@ -48,17 +42,17 @@ impl Dropdown {
             }
         }
         .broadcast();
-    
+
         let values = values_and_selected
             .signal_ref(|(values, _)| values.clone())
             .broadcast();
         let selected = values_and_selected
             .signal_ref(|(_, selected)| selected.clone())
             .broadcast();
-    
+
         let active = Mutable::new(false);
         let hovered = Mutable::new(false);
-    
+
         let raw_el = Column::new()
             .item(
                 Row::new()
@@ -99,9 +93,9 @@ impl Dropdown {
             }))
             .into_raw_el();
 
-        Self {raw_el}
+        Self { raw_el }
     }
-    
+
     fn menu_item<V: IntoCowStr<'static> + Clone + PartialEq + Default + 'static>(
         value: V,
         dropdown_active: Mutable<bool>,

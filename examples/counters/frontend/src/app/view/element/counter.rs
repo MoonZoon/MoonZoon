@@ -48,16 +48,16 @@ fn counter(
     decrement_button: impl Element,
     value_element: impl Element,
     increment_button: impl Element,
-) -> RawElement {
+) -> RawElOrText {
     Row::new()
         .item(decrement_button)
         .item(value_element)
         .item(increment_button)
-        .into_raw_element()
+        .into_raw()
 }
 
 impl<StepFlag> Element for Counter<ValueFlagNotSet, ValueSignalFlagSet, OnChangeFlagSet, StepFlag> {
-    fn into_raw_element(self) -> RawElement {
+    fn into_raw(self) -> RawElOrText {
         let on_change = self.on_change.unwrap_throw();
         let step = self.step;
         counter(
@@ -71,7 +71,7 @@ impl<StepFlag> Element for Counter<ValueFlagNotSet, ValueSignalFlagSet, OnChange
 impl<ValueFlag, StepFlag> Element
     for Counter<ValueFlag, ValueSignalFlagNotSet, OnChangeFlagNotSet, StepFlag>
 {
-    fn into_raw_element(self) -> RawElement {
+    fn into_raw(self) -> RawElOrText {
         let state_value = Rc::new(Mutable::new(self.value));
         let step = self.step;
         counter(
@@ -87,7 +87,7 @@ impl<ValueFlag, StepFlag> Element
 impl<ValueFlag, StepFlag> Element
     for Counter<ValueFlag, ValueSignalFlagNotSet, OnChangeFlagSet, StepFlag>
 {
-    fn into_raw_element(self) -> RawElement {
+    fn into_raw(self) -> RawElOrText {
         let state_value = Rc::new(Mutable::new(self.value));
         let on_change = self.on_change.unwrap_throw();
         let step = self.step;

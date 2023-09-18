@@ -12,6 +12,8 @@ pub struct Column<EmptyFlag, RE: RawEl> {
     flags: PhantomData<EmptyFlag>,
 }
 
+impl<RE: RawEl> Element for Column<EmptyFlagNotSet, RE> {}
+
 impl Column<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
     #[track_caller]
     pub fn new() -> Self {
@@ -19,14 +21,7 @@ impl Column<EmptyFlagSet, RawHtmlEl<web_sys::HtmlElement>> {
     }
 }
 
-impl<RE: RawEl> Element for Column<EmptyFlagNotSet, RE> {
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
-    }
-}
-
-impl<EmptyFlag, RE: RawEl> RawElWrapper for Column<EmptyFlag, RE> 
-{
+impl<EmptyFlag, RE: RawEl> RawElWrapper for Column<EmptyFlag, RE> {
     type RawEl = RE;
 
     fn raw_el_mut(&mut self) -> &mut Self::RawEl {

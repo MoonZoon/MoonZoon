@@ -290,7 +290,7 @@ fn delete_entity_button(
 fn time_entry_times(
     time_entry: Arc<super::TimeEntry>,
     is_active: ReadOnlyMutable<bool>,
-) -> impl Signal<Item = RawElement> {
+) -> impl Signal<Item = RawElOrText> {
     super::show_wide_time_entry().map(move |show_wide| {
         let items = element_vec![
             time_entry_started(time_entry.clone(), is_active.clone()),
@@ -298,15 +298,15 @@ fn time_entry_times(
             time_entry_stopped(time_entry.clone(), is_active.clone()),
         ];
         if show_wide {
-            time_entry_times_wide(items, is_active.clone()).into_raw_element()
+            time_entry_times_wide(items, is_active.clone()).into_raw()
         } else {
-            time_entry_times_narrow(items, is_active.clone()).into_raw_element()
+            time_entry_times_narrow(items, is_active.clone()).into_raw()
         }
     })
 }
 
 fn time_entry_times_narrow(
-    items: Vec<RawElement>,
+    items: Vec<RawElOrText>,
     is_active: ReadOnlyMutable<bool>,
 ) -> impl Element {
     Column::new()
@@ -318,7 +318,7 @@ fn time_entry_times_narrow(
         .items(items)
 }
 
-fn time_entry_times_wide(items: Vec<RawElement>, is_active: ReadOnlyMutable<bool>) -> impl Element {
+fn time_entry_times_wide(items: Vec<RawElOrText>, is_active: ReadOnlyMutable<bool>) -> impl Element {
     Row::new()
         .s(Font::new().color_signal(
             is_active

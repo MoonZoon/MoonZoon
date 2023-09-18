@@ -66,8 +66,8 @@ impl TextEditor {
 }
 
 impl Element for TextEditor {
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into_raw_element()
+    fn into_raw(self) -> RawElOrText {
+        self.raw_el.into_raw()
     }
 }
 

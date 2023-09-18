@@ -20,6 +20,21 @@ pub struct Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: 
     flags: PhantomData<(IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag)>,
 }
 
+impl<OnChangeFlag, CheckedFlag, RE: RawEl> Element
+    for Checkbox<IdFlagSet, OnChangeFlag, LabelFlagNotSet, IconFlagSet, CheckedFlag, RE>
+{
+}
+
+impl<OnChangeFlag, CheckedFlag, RE: RawEl> Element
+    for Checkbox<IdFlagNotSet, OnChangeFlag, LabelFlagSet, IconFlagSet, CheckedFlag, RE>
+{
+}
+
+impl<OnChangeFlag, CheckedFlag, RE: RawEl> Element
+    for Checkbox<IdFlagSet, OnChangeFlag, LabelFlagSet, IconFlagSet, CheckedFlag, RE>
+{
+}
+
 impl
     Checkbox<
         IdFlagNotSet,
@@ -62,30 +77,6 @@ impl
                 }),
             flags: PhantomData,
         }
-    }
-}
-
-impl<OnChangeFlag, CheckedFlag, RE: RawEl> Element
-    for Checkbox<IdFlagSet, OnChangeFlag, LabelFlagNotSet, IconFlagSet, CheckedFlag, RE>
-{
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
-    }
-}
-
-impl<OnChangeFlag, CheckedFlag, RE: RawEl> Element
-    for Checkbox<IdFlagNotSet, OnChangeFlag, LabelFlagSet, IconFlagSet, CheckedFlag, RE>
-{
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
-    }
-}
-
-impl<OnChangeFlag, CheckedFlag, RE: RawEl> Element
-    for Checkbox<IdFlagSet, OnChangeFlag, LabelFlagSet, IconFlagSet, CheckedFlag, RE>
-{
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
     }
 }
 

@@ -5,9 +5,19 @@ use crate::*;
 //   Element
 // ------ ------
 
-pub struct RawHtmlEl<DomElement: Into<web_sys::HtmlElement>> {
-    inner: Option<ElInner<DomElement>>
+pub struct RawHtmlEl<DomElement: Into<web_sys::HtmlElement> = web_sys::HtmlElement> {
+    inner: Option<ElInner<DomElement>>,
 }
+
+impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> ElementUnchecked
+    for RawHtmlEl<DomElement>
+{
+    fn into_raw_unchecked(self) -> RawElOrText {
+        self.dom_element_type::<web_sys::HtmlElement>().into()
+    }
+}
+
+impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> Element for RawHtmlEl<DomElement> {}
 
 struct ElInner<DomElement> {
     class_id: ClassId,
@@ -26,19 +36,21 @@ impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> RawHtmlEl<DomEleme
         let inner = self.inner.unwrap_throw();
         let element = inner.dom_builder.__internal_element().unchecked_into::<T>();
         let dom_builder = DomBuilder::new(element).__internal_transfer_callbacks(inner.dom_builder);
-        RawHtmlEl { inner: Some(ElInner {
-            class_id: inner.class_id,
-            dom_builder,
-        })}
+        RawHtmlEl {
+            inner: Some(ElInner {
+                class_id: inner.class_id,
+                dom_builder,
+            }),
+        }
     }
 }
 
 impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> From<RawHtmlEl<DomElement>>
-    for RawElement
+    for RawElOrText
 {
     #[track_caller]
     fn from(raw_html_el: RawHtmlEl<DomElement>) -> Self {
-        RawElement::El(raw_html_el.dom_element_type::<web_sys::HtmlElement>())
+        RawElOrText::RawHtmlEl(raw_html_el.dom_element_type::<web_sys::HtmlElement>())
     }
 }
 
@@ -47,12 +59,6 @@ impl<DomElement: Into<web_sys::HtmlElement> + Into<web_sys::Node>> IntoDom
 {
     fn into_dom(self) -> Dom {
         self.inner.unwrap_throw().dom_builder.into_dom()
-    }
-}
-
-impl<DomElement: Into<web_sys::HtmlElement> + Clone + JsCast> Element for RawHtmlEl<DomElement> {
-    fn into_raw_element(self) -> RawElement {
-        RawElement::El(self.dom_element_type::<web_sys::HtmlElement>())
     }
 }
 
@@ -86,11 +92,11 @@ where
         dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
 
         Self {
-            inner: Some(ElInner{
-            class_id: class_id.clone(),
-            dom_builder: dom_builder
-                .after_removed(move |_| CLASS_ID_GENERATOR.remove_class_id(class_id)),
-            })
+            inner: Some(ElInner {
+                class_id: class_id.clone(),
+                dom_builder: dom_builder
+                    .after_removed(move |_| CLASS_ID_GENERATOR.remove_class_id(class_id)),
+            }),
         }
         .source_code_location()
     }
@@ -110,7 +116,11 @@ where
     }
 
     fn dom_element(&self) -> Self::DomElement {
-        self.inner.as_ref().unwrap_throw().dom_builder.__internal_element()
+        self.inner
+            .as_ref()
+            .unwrap_throw()
+            .dom_builder
+            .__internal_element()
     }
 
     fn class_id(&self) -> ClassId {
@@ -125,11 +135,11 @@ where
         dom_builder = class_id.map(move |class_id| dom_builder.class(class_id.unwrap_throw()));
 
         Self {
-            inner: Some(ElInner{
-            class_id: class_id.clone(),
-            dom_builder: dom_builder
-                .after_removed(move |_| CLASS_ID_GENERATOR.remove_class_id(class_id)),
-            })
+            inner: Some(ElInner {
+                class_id: class_id.clone(),
+                dom_builder: dom_builder
+                    .after_removed(move |_| CLASS_ID_GENERATOR.remove_class_id(class_id)),
+            }),
         }
         .source_code_location()
     }

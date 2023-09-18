@@ -89,6 +89,8 @@ pub struct Button<LabelFlag, OnPressFlag, RE: RawEl> {
     flags: PhantomData<(LabelFlag, OnPressFlag)>,
 }
 
+impl<OnPressFlag, RE: RawEl> Element for Button<LabelFlagSet, OnPressFlag, RE> {}
+
 impl Button<LabelFlagNotSet, OnPressFlagNotSet, RawHtmlEl<web_sys::HtmlDivElement>> {
     #[track_caller]
     pub fn new() -> Self {
@@ -149,12 +151,6 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet, RawHtmlEl<web_sys::HtmlDivElemen
                 .style("touch-action", "manipulation"),
             flags: PhantomData,
         }
-    }
-}
-
-impl<OnPressFlag, RE: RawEl> Element for Button<LabelFlagSet, OnPressFlag, RE> {
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
     }
 }
 

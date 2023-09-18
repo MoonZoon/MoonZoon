@@ -1,5 +1,5 @@
-use std::mem;
 use crate::*;
+use std::mem;
 
 pub trait RawElWrapper: Sized {
     type RawEl: RawEl;
@@ -13,7 +13,6 @@ pub trait RawElWrapper: Sized {
         self
     }
 
-    #[track_caller]
     fn into_raw_el(mut self) -> Self::RawEl {
         mem::replace(self.raw_el_mut(), RawEl::new_dummy())
     }

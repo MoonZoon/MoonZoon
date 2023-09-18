@@ -9,6 +9,14 @@ pub struct Text {
     raw_text: RawText,
 }
 
+impl ElementUnchecked for Text {
+    fn into_raw_unchecked(self) -> RawElOrText {
+        self.raw_text.into()
+    }
+}
+
+impl Element for Text {}
+
 impl Text {
     #[track_caller]
     pub fn new<'a>(text: impl IntoCowStr<'a>) -> Self {
@@ -24,12 +32,6 @@ impl Text {
         Self {
             raw_text: RawText::with_signal(text),
         }
-    }
-}
-
-impl Element for Text {
-    fn into_raw_element(self) -> RawElement {
-        self.raw_text.into()
     }
 }
 

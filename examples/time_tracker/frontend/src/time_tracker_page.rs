@@ -183,6 +183,6 @@ fn show_wide_time_entry() -> impl Signal<Item = bool> {
 //     View
 // ------ ------
 
-pub fn view() -> RawElement {
-    view::page().into_raw_element()
+pub fn view() -> RawElOrText {
+    view::page().into_raw()
 }

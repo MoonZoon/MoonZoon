@@ -12,6 +12,8 @@ pub struct Canvas<WidthFlag, HeightFlag, RE: RawEl> {
     flags: PhantomData<(WidthFlag, HeightFlag)>,
 }
 
+impl<HeightFlag, RE: RawEl> Element for Canvas<WidthFlagSet, HeightFlag, RE> {}
+
 impl Canvas<WidthFlagNotSet, HeightFlagNotSet, RawHtmlEl<web_sys::HtmlCanvasElement>> {
     #[track_caller]
     pub fn new() -> Self {
@@ -19,12 +21,6 @@ impl Canvas<WidthFlagNotSet, HeightFlagNotSet, RawHtmlEl<web_sys::HtmlCanvasElem
             raw_el: RawHtmlEl::<web_sys::HtmlCanvasElement>::new("canvas").class("canvas"),
             flags: PhantomData,
         }
-    }
-}
-
-impl<HeightFlag, RE: RawEl> Element for Canvas<WidthFlagSet, HeightFlag, RE> {
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
     }
 }
 

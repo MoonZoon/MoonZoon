@@ -1148,7 +1148,7 @@ dependencies = [
  "serde",
  "tokio",
  "tokio-stream",
- "trait-set 0.2.0",
+ "trait-set",
  "uuid",
 ]
 
@@ -1992,17 +1992,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "trait-set"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b79e2e9c9ab44c6d7c20d5976961b47e8f49ac199154daa514b77cd1ab536625"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 1.0.109",
-]
-
-[[package]]
 name = "typenum"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2395,7 +2384,6 @@ dependencies = [
  "static_ref_macro",
  "strum",
  "thiserror",
- "trait-set 0.3.0",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",

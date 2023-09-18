@@ -69,7 +69,6 @@ pub use strum;
 pub use style::*;
 pub use task::{Task, TaskHandle};
 pub use timer::Timer;
-pub use trait_set::trait_set;
 pub use viewport::{Scene, Viewport};
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 pub use wasm_bindgen_futures::{self, future_to_promise, JsFuture};
@@ -205,7 +204,7 @@ macro_rules! element_vec {
             let mut elements = Vec::new();
             $(
                 if let Some(element) = $element.into_option_element() {
-                    elements.push(element.into_raw_element());
+                    elements.push(element.into_raw());
                 }
             )*
             elements
@@ -230,6 +229,6 @@ pub fn start_app<'a, I: IntoElementIterator>(
         .unwrap_or_else(|| dominator::body().unchecked_into());
 
     for element in view_root().into_element_iter() {
-        dominator::append_dom(&parent, element.into_raw_element().into_dom());
+        dominator::append_dom(&parent, element.into_raw().into_dom());
     }
 }

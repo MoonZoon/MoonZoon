@@ -7,34 +7,12 @@ use std::marker::PhantomData;
 
 make_flags!(Label, To);
 
-pub struct NewTab {
-    refer: bool,
-    follow: bool,
-}
-
-impl NewTab {
-    pub fn new() -> Self {
-        Self {
-            refer: false,
-            follow: true,
-        }
-    }
-
-    pub fn refer(mut self, value: bool) -> Self {
-        self.refer = value;
-        self
-    }
-
-    pub fn follow(mut self, value: bool) -> Self {
-        self.follow = value;
-        self
-    }
-}
-
 pub struct Link<LabelFlag, ToFlag, RE: RawEl> {
     raw_el: RE,
     flags: PhantomData<(LabelFlag, ToFlag)>,
 }
+
+impl<RE: RawEl> Element for Link<LabelFlagSet, ToFlagSet, RE> {}
 
 impl Link<LabelFlagNotSet, ToFlagNotSet, RawHtmlEl<web_sys::HtmlAnchorElement>> {
     #[track_caller]
@@ -95,17 +73,37 @@ impl Link<LabelFlagNotSet, ToFlagNotSet, RawHtmlEl<web_sys::HtmlAnchorElement>> 
     }
 }
 
-impl<RE: RawEl> Element for Link<LabelFlagSet, ToFlagSet, RE> {
-    fn into_raw_element(self) -> RawElement {
-        self.raw_el.into()
-    }
-}
-
 impl<LabelFlag, ToFlag, RE: RawEl> RawElWrapper for Link<LabelFlag, ToFlag, RE> {
     type RawEl = RE;
 
     fn raw_el_mut(&mut self) -> &mut Self::RawEl {
         &mut self.raw_el
+    }
+}
+
+// -- NewTab --
+
+pub struct NewTab {
+    refer: bool,
+    follow: bool,
+}
+
+impl NewTab {
+    pub fn new() -> Self {
+        Self {
+            refer: false,
+            follow: true,
+        }
+    }
+
+    pub fn refer(mut self, value: bool) -> Self {
+        self.refer = value;
+        self
+    }
+
+    pub fn follow(mut self, value: bool) -> Self {
+        self.follow = value;
+        self
     }
 }
 

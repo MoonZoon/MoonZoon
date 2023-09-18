@@ -255,7 +255,7 @@ pub fn root() -> impl Element {
         .s(Padding::all(20).top(50))
         .s(Align::new().center_x())
         .s(Gap::new().y(45))
-        .item(ui::header_info::view())
+        .item(ui::AppInfo::new())
         .item(search_field())
         .item(category_filter_panel())
         .item(ui::Pagination::new(current_page().clone(), pages_count()))
@@ -287,8 +287,8 @@ fn category_filter_panel() -> impl Element {
         always_vec(CategoryFilter::iter().collect()),
         |filter| category_filter().set_neq(filter),
     )
-        .s(Align::new().center_x())
-        .s(Width::exact(200))
+    .s(Align::new().center_x())
+    .s(Width::exact(200))
 }
 
 fn results() -> impl Element {
