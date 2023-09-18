@@ -1,11 +1,15 @@
 use educe::Educe;
-use std::sync::Arc;
-use zoon::{*, moonlight::Ulid, strum::{EnumIter, IntoEnumIterator}};
 use fake::{faker, Fake};
 use localsearch::LocalSearch;
 use rand::{rngs::SmallRng, seq::SliceRandom, Rng, SeedableRng};
-use std::iter;
 use std::borrow::Cow;
+use std::iter;
+use std::sync::Arc;
+use zoon::{
+    moonlight::Ulid,
+    strum::{EnumIter, IntoEnumIterator},
+    *,
+};
 
 mod ui;
 
@@ -16,9 +20,7 @@ struct CategoryFilter(Option<Category>);
 
 impl CategoryFilter {
     pub fn iter() -> impl Iterator<Item = Self> {
-        iter::once(None)
-            .chain(Category::iter().map(Some))
-            .map(Self)
+        iter::once(None).chain(Category::iter().map(Some)).map(Self)
     }
 }
 
@@ -124,40 +126,36 @@ fn filtered_companies() -> &'static MutableVec<Arc<Company>> {
         let _ = all_companies().signal_vec_cloned().len().dedupe() =>
         (query.clone(), *category)
     };
-    Task::start(
-        filtering
-            .for_each_sync(|(query, category)| {
-                let company_filter = move |company: &Arc<Company>| {
-                    if let Some(category) = category.0 {
-                        if company.category != category {
-                            return false;
-                        }
-                    }
-                    true
-                };
-                let mut found_companies: Vec<_> = if query.is_empty() {
-                    all_companies()
-                        .lock_ref()
-                        .iter()
-                        .filter(|company| company_filter(company))
-                        .map(Arc::clone)
-                        .collect()
-                } else {
-                    indexed_companies()
-                        .lock_ref()
-                        .search(&query, usize::MAX)
-                        .into_iter()
-                        .filter(|(company, _)| company_filter(company))
-                        .map(|(company, _)| Arc::clone(company))
-                        .collect()
-                };
-                found_companies.sort_unstable_by(|company_a, company_b| {
-                    Ord::cmp(&company_a.name, &company_b.name)
-                });
-                let mut filtered_companies = filtered_companies().lock_mut();
-                filtered_companies.replace_cloned(found_companies);
-            })
-    );
+    Task::start(filtering.for_each_sync(|(query, category)| {
+        let company_filter = move |company: &Arc<Company>| {
+            if let Some(category) = category.0 {
+                if company.category != category {
+                    return false;
+                }
+            }
+            true
+        };
+        let mut found_companies: Vec<_> = if query.is_empty() {
+            all_companies()
+                .lock_ref()
+                .iter()
+                .filter(|company| company_filter(company))
+                .map(Arc::clone)
+                .collect()
+        } else {
+            indexed_companies()
+                .lock_ref()
+                .search(&query, usize::MAX)
+                .into_iter()
+                .filter(|(company, _)| company_filter(company))
+                .map(|(company, _)| Arc::clone(company))
+                .collect()
+        };
+        found_companies
+            .sort_unstable_by(|company_a, company_b| Ord::cmp(&company_a.name, &company_b.name));
+        let mut filtered_companies = filtered_companies().lock_mut();
+        filtered_companies.replace_cloned(found_companies);
+    }));
     MutableVec::new()
 }
 
@@ -178,7 +176,6 @@ fn current_page() -> &'static Mutable<usize> {
     Mutable::default()
 }
 
-
 #[derive(Educe)]
 #[educe(Default(new))]
 struct Store {
@@ -193,7 +190,6 @@ struct Store {
 fn store() -> &'static Store {
     Store::new()
 }
-
 
 fn pages_count() -> impl Signal<Item = usize> {
     filtered_companies()
@@ -250,7 +246,9 @@ fn main() {
 }
 
 pub fn root() -> impl Element {
-    global_styles().style_group(StyleGroup::new("body").style("background-color", ui::BACKGROUND_COLOR.into_cow_str()));
+    global_styles().style_group(
+        StyleGroup::new("body").style("background-color", ui::BACKGROUND_COLOR.into_cow_str()),
+    );
 
     Column::new()
         .s(Width::default().min(550))
@@ -305,6 +303,14 @@ fn company_card(company: Arc<Company>) -> impl Element {
         .s(Gap::new().x(10))
         .s(Outline::inner().width(2))
         .s(RoundedCorners::all(3))
-        .item(El::new().s(Font::new().weight(FontWeight::Bold)).child(company.name.clone()))
-        .item(El::new().s(Align::new().right()).child(company.category.into_cow_str()))
+        .item(
+            El::new()
+                .s(Font::new().weight(FontWeight::Bold))
+                .child(company.name.clone()),
+        )
+        .item(
+            El::new()
+                .s(Align::new().right())
+                .child(company.category.into_cow_str()),
+        )
 }

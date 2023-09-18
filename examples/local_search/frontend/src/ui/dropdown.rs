@@ -1,6 +1,6 @@
+use crate::ui;
 use std::{cell::RefCell, rc::Rc};
 use zoon::*;
-use crate::ui;
 
 pub fn new<T: IntoCowStr<'static> + Clone + PartialEq + 'static + Default>(
     align: Align,
@@ -61,11 +61,7 @@ pub fn new<T: IntoCowStr<'static> + Clone + PartialEq + 'static + Default>(
                                 .signal()
                                 .map_true(|| Transform::new().flip_vertical()),
                         ))
-                        .child(
-                            El::new()
-                                .s(Font::new().weight(FontWeight::Bold))
-                                .child("V"),
-                        ),
+                        .child(El::new().s(Font::new().weight(FontWeight::Bold)).child("V")),
                 ),
         )
         .on_click_outside(clone!((active) move || active.set_neq(false)))
@@ -75,9 +71,7 @@ pub fn new<T: IntoCowStr<'static> + Clone + PartialEq + 'static + Default>(
                 .s(Outline::outer().width(2))
                 .s(RoundedCorners::all(3))
                 .s(Scrollbars::both())
-                .s(Shadows::new(
-                    [Shadow::new().x(15).y(15)]
-                ))
+                .s(Shadows::new([Shadow::new().x(15).y(15)]))
                 .items_signal_vec(values.signal_cloned().to_signal_vec().map(
                     clone!((active, on_select) move |value| {
                         menu_item(value, active.clone(), on_select.clone())
@@ -97,7 +91,10 @@ fn menu_item<T: IntoCowStr<'static> + Clone + PartialEq + 'static>(
         .s(Padding::new().x(8).y(10))
         .s(Font::new().no_wrap())
         .s(Width::fill())
-        .s(Background::new().color_signal(hovered_signal.map_bool(|| ui::BACKGROUND_COLOR.update_l(|l| l - 15.), || ui::BACKGROUND_COLOR)))
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || ui::BACKGROUND_COLOR.update_l(|l| l - 15.),
+            || ui::BACKGROUND_COLOR,
+        )))
         .s(Outline::inner())
         .on_click(clone!((dropdown_active, value, on_select) move || {
             on_select.borrow_mut()(value.clone());
