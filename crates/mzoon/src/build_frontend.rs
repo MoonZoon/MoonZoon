@@ -13,6 +13,7 @@ use futures::TryStreamExt;
 use std::{
     env,
     path::{Path, PathBuf},
+    str,
     sync::Arc,
 };
 use tokio::{fs, process::Command, try_join};
@@ -121,11 +122,40 @@ async fn rename_and_compress_pkg_files(
 
 #[throws]
 async fn compile_with_cargo(build_mode: BuildMode, bin_crate: &str, frontend_multithreading: bool) {
-    let mut args = Vec::new();
+    // @TODO We have to run `rustup run <toolchain>` instead of `cargo +<toolchain>`
+    // because `cargo +<toolchain>` is broken in Rustup on Windows.
+    // https://github.com/rust-lang/rustup/issues/3036
+    // Rewrite it back to `cargo +<toolchain>` once the issue is fixed.
+    let mut args = vec!["run"];
+
+    // @TODO `args: Vec<Cow<str>>`? or a macro/builder to build the `Vec`?
+    #[allow(unused_assignments)]
+    let mut active_toolchain = String::new();
+
     if frontend_multithreading {
-        args.extend(["+nightly", "-Z", "build-std=panic_abort,std"]);
+        args.push("nightly")
+    } else {
+        // @TODO Rustup requires to select a toolchain but we don't want to force `stable`.
+        // Also `default/active` or `""` is not a valid value (anymore?) - https://github.com/rust-lang/rustup/issues/3304.
+        // So we need to find out the default/active toolchain before calling `rustup run`.
+        let active_toolchain_stdout = Command::new("rustup")
+            .args(["show", "active-toolchain"])
+            .output()
+            .await?
+            .stdout;
+        let active_toolchain_stdout = str::from_utf8(&active_toolchain_stdout)?;
+        // `active_toolchain_stdout` examples:
+        // - 'stable-x86_64-pc-windows-msvc (environment override by RUSTUP_TOOLCHAIN)'
+        // - 'stable-x86_64-pc-windows-msvc (default)'
+        active_toolchain = active_toolchain_stdout
+            .split_once(' ')
+            .map(|(toolchain, _)| toolchain)
+            .unwrap_or(active_toolchain_stdout)
+            .to_owned();
+        args.push(&active_toolchain);
     }
     args.extend(vec![
+        "cargo",
         "build",
         "--bin",
         &bin_crate,
@@ -139,6 +169,12 @@ async fn compile_with_cargo(build_mode: BuildMode, bin_crate: &str, frontend_mul
         BuildMode::Dev => (),
         BuildMode::Profiling => args.extend(["--profile", "profiling"]),
         BuildMode::Release => args.push("--release"),
+    }
+    if frontend_multithreading {
+        // @TODO: It requires to run `rustup component add rust-src --toolchain nightly`
+        // if the `rust-src` is not installed. Take it into account while implementing auto-installation.
+        // Related MoonZoon issue: https://github.com/MoonZoon/MoonZoon/issues/115
+        args.extend(["-Z", "build-std=panic_abort,std"]);
     }
 
     // https://doc.rust-lang.org/cargo/reference/environment-variables.html#configuration-environment-variables
@@ -175,7 +211,7 @@ async fn compile_with_cargo(build_mode: BuildMode, bin_crate: &str, frontend_mul
         })
         .chain(envs);
 
-    Command::new("cargo")
+    Command::new("rustup")
         .args(&args)
         .envs(envs)
         .status()
