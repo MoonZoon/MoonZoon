@@ -15,7 +15,6 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 zoon.workspace = true
-educe = { version = "0.4.22", default-features = true }
 localsearch = { git = "https://github.com/Stremio/local-search", rev = "74fefe1" }
 fake = { version = "2.5.0", default-features = false }
 rand = { version = "0.8.5", features = ["small_rng", "getrandom"], default-features = false }

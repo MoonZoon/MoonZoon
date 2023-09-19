@@ -11,7 +11,7 @@ pub use futures_signals::{
     },
     signal_vec::{
         always as always_vec, BoxSignalVec, LocalBoxSignalVec, MutableSignalVec, MutableVec,
-        SignalVec, SignalVecExt, VecDiff,
+        MutableVecLockMut, SignalVec, SignalVecExt, VecDiff,
     },
 };
 pub use futures_util_ext::*;

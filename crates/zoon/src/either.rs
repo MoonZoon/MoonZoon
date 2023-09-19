@@ -55,8 +55,8 @@ impl<'a, L: IntoCowStr<'a>, R: IntoCowStr<'a>> IntoCowStr<'a> for Either<L, R> {
 
 // -- Signal for Either
 
-impl<I, L: Signal<Item = I>, R: Signal<Item = I>> Signal for Either<L, R> {
-    type Item = I;
+impl<L: Signal, R: Signal<Item = L::Item>> Signal for Either<L, R> {
+    type Item = L::Item;
 
     #[inline]
     fn poll_change(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
@@ -65,4 +65,21 @@ impl<I, L: Signal<Item = I>, R: Signal<Item = I>> Signal for Either<L, R> {
             EitherProj::Right(right) => right.poll_change(cx),
         }
     }
+}
+
+// -- Iterator for Either
+
+impl<L: Iterator, R: Iterator<Item = L::Item>> Iterator for Either<L, R> {
+    type Item = L::Item;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self {
+            Either::Left(iterator) => iterator.next(),
+            Either::Right(iterator) => iterator.next(),
+        }
+    }
+
+    // @TODO optimize by implementing other methods?
+    // see https://docs.rs/either/1.9.0/either/enum.Either.html#impl-Iterator-for-Either%3CL,+R%3E
+    // Or can we use `either` crate instead or under the hood?
 }

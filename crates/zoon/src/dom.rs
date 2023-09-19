@@ -12,6 +12,10 @@ pub fn history() -> web_sys::History {
     window().history().unwrap_throw()
 }
 
+pub fn performance() -> web_sys::Performance {
+    window().performance().unwrap_throw()
+}
+
 pub fn head() -> web_sys::HtmlHeadElement {
     document().head().unwrap_throw()
 }
