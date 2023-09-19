@@ -577,9 +577,9 @@ dependencies = [
 
 [[package]]
 name = "educe"
-version = "0.4.22"
+version = "0.4.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "079044df30bb07de7d846d41a184c4b00e66ebdac93ee459253474f3a47e50ae"
+checksum = "0f0042ff8246a363dbe77d2ceedb073339e85a804b9a47636c6e016a9a32c05f"
 dependencies = [
  "enum-ordinalize",
  "proc-macro2",
@@ -671,7 +671,6 @@ dependencies = [
 name = "frontend"
 version = "0.1.0"
 dependencies = [
- "educe",
  "fake",
  "getrandom",
  "localsearch",
@@ -2415,6 +2414,7 @@ dependencies = [
  "chrono",
  "console_error_panic_hook",
  "dominator",
+ "educe",
  "enclose",
  "futures-channel",
  "futures_signals_ext",

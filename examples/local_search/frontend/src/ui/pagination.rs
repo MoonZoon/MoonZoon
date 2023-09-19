@@ -1,3 +1,4 @@
+use crate::BACKGROUND_COLOR;
 use zoon::*;
 
 pub struct Pagination {
@@ -71,7 +72,8 @@ fn page_change_button(
     current_page: Mutable<usize>,
     page_count: impl Signal<Item = usize> + 'static + Unpin,
 ) -> impl Element {
-    El::new()
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Button::new()
         .s(Visible::with_signal(match change {
             PageChange::Previous => current_page.signal_ref(|page| *page > 0).left_either(),
             PageChange::Next => map_ref! {
@@ -81,20 +83,22 @@ fn page_change_button(
             }
             .right_either(),
         }))
-        .child(
-            Button::new()
-                .s(Outline::inner().width(2))
-                .s(RoundedCorners::all(3))
-                .s(Padding::new().x(10).y(5))
-                .s(Font::new().weight(FontWeight::Bold))
-                .s(Shadows::new([Shadow::new().x(3).y(3)]))
-                .label(match change {
-                    PageChange::Previous => "<",
-                    PageChange::Next => ">",
-                })
-                .on_press(move || match change {
-                    PageChange::Previous => *current_page.lock_mut() -= 1,
-                    PageChange::Next => *current_page.lock_mut() += 1,
-                }),
-        )
+        .s(Outline::inner().width(2))
+        .s(RoundedCorners::all(3))
+        .s(Padding::new().x(10).y(5))
+        .s(Font::new().weight(FontWeight::Bold))
+        .s(Shadows::new([Shadow::new().x(3).y(3)]))
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || BACKGROUND_COLOR.update_l(|l| l + 10.),
+            || BACKGROUND_COLOR,
+        )))
+        .label(match change {
+            PageChange::Previous => "<",
+            PageChange::Next => ">",
+        })
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .on_press(move || match change {
+            PageChange::Previous => *current_page.lock_mut() -= 1,
+            PageChange::Next => *current_page.lock_mut() += 1,
+        })
 }

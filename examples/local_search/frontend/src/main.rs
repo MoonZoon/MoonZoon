@@ -1,253 +1,50 @@
-use educe::Educe;
 use fake::{faker, Fake};
-use localsearch::LocalSearch;
-use rand::{rngs::SmallRng, seq::SliceRandom, Rng, SeedableRng};
-use std::borrow::Cow;
+use rand::{rngs::SmallRng, seq::SliceRandom, SeedableRng};
 use std::iter;
-use std::sync::Arc;
-use zoon::{
-    moonlight::Ulid,
-    strum::{EnumIter, IntoEnumIterator},
-    *,
-};
+use zoon::{strum::IntoEnumIterator, *};
 
 mod ui;
 
+mod store;
+use store::*;
+
 const PROJECTS_PER_PAGE: usize = 7;
-
-#[derive(Default, Clone, Copy, PartialEq, Eq)]
-struct CategoryFilter(Option<Category>);
-
-impl CategoryFilter {
-    pub fn iter() -> impl Iterator<Item = Self> {
-        iter::once(None).chain(Category::iter().map(Some)).map(Self)
-    }
-}
-
-impl<'a> IntoCowStr<'a> for CategoryFilter {
-    fn into_cow_str(self) -> Cow<'a, str> {
-        if let Some(category) = self.0 {
-            category.into_cow_str()
-        } else {
-            "All Categories".into()
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-struct Company {
-    #[allow(dead_code)]
-    id: Ulid,
-    name: String,
-    category: Category,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, EnumIter)]
-#[strum(crate = "strum")]
-enum Category {
-    Public,
-    Private,
-    OnePerson,
-}
-
-impl<'a> IntoCowStr<'a> for Category {
-    fn into_cow_str(self) -> Cow<'a, str> {
-        match self {
-            Self::Public => "Public",
-            Self::Private => "Private",
-            Self::OnePerson => "One Person",
-        }
-        .into()
-    }
-}
-
-#[static_ref]
-fn indexed_companies() -> &'static Mutable<SendWrapper<LocalSearch<Arc<Company>>>> {
-    fn index_all_companies() -> SendWrapper<LocalSearch<Arc<Company>>> {
-        SendWrapper::new(
-            LocalSearch::builder(all_companies().lock_ref().to_vec(), |company_card| {
-                &company_card.name
-            })
-            .build(),
-        )
-    }
-    Task::start(
-        all_companies()
-            .signal_vec_cloned()
-            .len()
-            .dedupe()
-            .for_each_sync(|_| {
-                indexed_companies().set(index_all_companies());
-            }),
-    );
-    Mutable::new(index_all_companies())
-}
-
-#[static_ref]
-fn all_companies() -> &'static MutableVec<Arc<Company>> {
-    MutableVec::new_with_values(dummy_companies().clone())
-}
-
-#[static_ref]
-fn dummy_companies() -> &'static Vec<Arc<Company>> {
-    fn generate_name(rng: &mut impl Rng) -> String {
-        faker::company::en::CompanyName().fake_with_rng(rng)
-    }
-    fn generate_category(rng: &mut impl Rng) -> Category {
-        Category::iter()
-            .collect::<Vec<_>>()
-            .choose(rng)
-            .copied()
-            .unwrap_throw()
-    }
-    let mut rng = SmallRng::from_entropy();
-    // (0..10_000)
-    (0..100)
-        .map(|_| {
-            Arc::new(Company {
-                id: Ulid::generate(),
-                name: generate_name(&mut rng),
-                category: generate_category(&mut rng),
-            })
-        })
-        .collect()
-}
-
-#[static_ref]
-fn search_query() -> &'static Mutable<String> {
-    Mutable::default()
-}
-
-#[static_ref]
-fn filtered_companies() -> &'static MutableVec<Arc<Company>> {
-    let filtering = map_ref! {
-        let query = search_query().signal_cloned(),
-        let category = category_filter().signal().dedupe(),
-        let _ = all_companies().signal_vec_cloned().len().dedupe() =>
-        (query.clone(), *category)
-    };
-    Task::start(filtering.for_each_sync(|(query, category)| {
-        let company_filter = move |company: &Arc<Company>| {
-            if let Some(category) = category.0 {
-                if company.category != category {
-                    return false;
-                }
-            }
-            true
-        };
-        let mut found_companies: Vec<_> = if query.is_empty() {
-            all_companies()
-                .lock_ref()
-                .iter()
-                .filter(|company| company_filter(company))
-                .map(Arc::clone)
-                .collect()
-        } else {
-            indexed_companies()
-                .lock_ref()
-                .search(&query, usize::MAX)
-                .into_iter()
-                .filter(|(company, _)| company_filter(company))
-                .map(|(company, _)| Arc::clone(company))
-                .collect()
-        };
-        found_companies
-            .sort_unstable_by(|company_a, company_b| Ord::cmp(&company_a.name, &company_b.name));
-        let mut filtered_companies = filtered_companies().lock_mut();
-        filtered_companies.replace_cloned(found_companies);
-    }));
-    MutableVec::new()
-}
-
-#[static_ref]
-fn category_filter() -> &'static Mutable<CategoryFilter> {
-    Mutable::default()
-}
-
-#[static_ref]
-fn current_page() -> &'static Mutable<usize> {
-    let resetter = map_ref! {
-        let _ = search_query().signal_ref(|_|()),
-        let _ = category_filter().signal().dedupe(),
-        let _ = all_companies().signal_vec_cloned().len().dedupe() =>
-        ()
-    };
-    Task::start(resetter.for_each_sync(|_| current_page().set_neq(0)));
-    Mutable::default()
-}
-
-#[derive(Educe)]
-#[educe(Default(new))]
-struct Store {
-    #[educe(Default(expression = r#"Mutable::new(Arc::new("Hello".to_owned()))"#))]
-    text_a: Mutable<Arc<String>>,
-    #[educe(Default(expression = r#"Mutable::new(Arc::new("World!".to_owned()))"#))]
-    text_b: Mutable<Arc<String>>,
-    joined_texts: Mutable<Arc<String>>,
-}
-
-#[static_ref]
-fn store() -> &'static Store {
-    Store::new()
-}
-
-fn pages_count() -> impl Signal<Item = usize> {
-    filtered_companies()
-        .signal_vec_cloned()
-        .len()
-        // @TODO refactor with https://doc.rust-lang.org/std/primitive.usize.html#method.div_ceil once stable
-        .map(|companies| ((companies as f64) / (PROJECTS_PER_PAGE as f64)).ceil() as usize)
-}
-
-fn filtered_companies_paginated() -> impl SignalVec<Item = Arc<Company>> {
-    // @TODO is there a better solution? New `static ref` `filtered_companies_paginated`? (perhaps search for "pagination" in Dominator chat)
-    filtered_companies()
-        .signal_vec_cloned()
-        .enumerate()
-        .filter_signal_cloned(|(index, _)| {
-            map_ref!{
-                let index = index.signal(),
-                let current_page = current_page().signal() => {
-                    // @TODO refactor once `let..else` is stable (Rust 1.65?):
-                    // let Some(index) = index else { return false }; 
-                    if let Some(index) = index {
-                        (*index >= (*current_page * PROJECTS_PER_PAGE)) && (*index < ((*current_page + 1) * PROJECTS_PER_PAGE))
-                    } else {
-                        false
-                    }
-                }
-            }
-        })
-        .map(|(_, company)| company)
-}
+const BACKGROUND_COLOR: HSLuv = hsluv!(0, 0, 80);
+const DEFAULT_GENERATE_COMPANIES_COUNT: usize = 100;
 
 fn main() {
-    Task::start_blocking_with_channels(
-        |send_to_blocking| {
-            map_ref! {
-                let text_a = store().text_a.signal_cloned(),
-                let text_b = store().text_b.signal_cloned() =>
-                (text_a.clone(), text_b.clone())
-            }
-            .for_each_sync(send_to_blocking)
-        },
-        |from_input, _, send_to_output| {
-            from_input.for_each_sync(move |(text_a, text_b)| {
-                send_to_output(format!("{text_a} {text_b}"));
-            })
-        },
-        |from_blocking| {
-            from_blocking.for_each_sync(|joined_texts| {
-                store().joined_texts.set(joined_texts.into());
-            })
-        },
-    );
+    store();
     start_app("app", root);
+    generate_companies(DEFAULT_GENERATE_COMPANIES_COUNT);
 }
 
-pub fn root() -> impl Element {
+fn generate_companies(count: usize) {
+    let mut rng = SmallRng::from_entropy();
+    let categories = Category::iter().collect::<Vec<_>>();
+
+    store().generate_companies_time.set(None);
+    let start_time = performance().now();
+
+    let mut companies = Vec::with_capacity(count);
+    for index in 0..count {
+        companies.push(Company {
+            name: faker::company::en::CompanyName().fake_with_rng(&mut rng),
+            category: categories.choose(&mut rng).copied().unwrap_throw(),
+        });
+        store().generated_company_count.set(index + 1);
+    }
+    companies.sort_unstable_by(|company_a, company_b| Ord::cmp(&company_a.name, &company_b.name));
+
+    store()
+        .generate_companies_time
+        .set(Some(performance().now() - start_time));
+
+    *store().all_companies.lock_mut() = companies;
+}
+
+fn root() -> impl Element {
     global_styles().style_group(
-        StyleGroup::new("body").style("background-color", ui::BACKGROUND_COLOR.into_cow_str()),
+        StyleGroup::new("body").style("background-color", BACKGROUND_COLOR.into_cow_str()),
     );
 
     Column::new()
@@ -255,11 +52,101 @@ pub fn root() -> impl Element {
         .s(Padding::all(20).top(50))
         .s(Align::new().center_x())
         .s(Gap::new().y(45))
-        .item(ui::AppInfo::new())
+        .item(generate_companies_panel())
         .item(search_field())
         .item(category_filter_panel())
-        .item(ui::Pagination::new(current_page().clone(), pages_count()))
+        .item(ui::Pagination::new(
+            store().current_page.clone(),
+            store().page_count.signal(),
+        ))
         .item(results())
+}
+
+fn generate_companies_panel() -> impl Element {
+    Column::new()
+        .s(Gap::new().y(20))
+        .item(
+            Row::new()
+                .s(Gap::new().x(25))
+                .item(generate_companies_button())
+                .item(generate_companies_input()),
+        )
+        .item(companies_generated_and_indexed_text())
+}
+
+fn generate_companies_button() -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Button::new()
+        .s(Outline::inner().width(2))
+        .s(Padding::new().x(15).y(10))
+        .s(RoundedCorners::all(3))
+        .s(Cursor::new(CursorIcon::Pointer))
+        .s(Shadows::new([Shadow::new().x(6).y(6)]))
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || BACKGROUND_COLOR.update_l(|l| l + 10.),
+            || BACKGROUND_COLOR,
+        )))
+        .label("Generate companies")
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .on_press(|| {
+            if let Ok(count) = store()
+                .generate_companies_input_text
+                .lock_ref()
+                .parse::<usize>()
+            {
+                Task::start(async move { generate_companies(count) });
+            }
+        })
+}
+
+fn generate_companies_input() -> impl Element {
+    TextInput::new()
+        .s(Transform::new().move_down(3))
+        .s(Background::new().color(hsluv!(0, 0, 0, 0)))
+        .s(Shadows::new([Shadow::new().inner().x(3).y(3)]))
+        .s(RoundedCorners::all(3))
+        .s(Outline::inner().width(2))
+        .s(Padding::new().x(10).y(10))
+        .s(Width::exact(100))
+        .placeholder(Placeholder::new("100"))
+        .label_hidden("generate companies count")
+        .text_signal(store().generate_companies_input_text.signal_cloned())
+        .on_change(|text| store().generate_companies_input_text.set(text))
+}
+
+fn companies_generated_and_indexed_text() -> impl Element {
+    Paragraph::new()
+        .content(
+            El::new()
+                .s(Font::new().weight(FontWeight::Bold))
+                .child_signal(store().generated_company_count.signal()),
+        )
+        .content(" companies generated & sorted in ")
+        .content(
+            El::new()
+                .s(Font::new().weight(FontWeight::Bold))
+                .child_signal(store().generate_companies_time.signal_ref(|time| {
+                    if let Some(time) = time {
+                        format!("{time:.2}").into_cow_str()
+                    } else {
+                        "...".into_cow_str()
+                    }
+                })),
+        )
+        .content(" ms")
+        .content(", indexed in ")
+        .content(
+            El::new()
+                .s(Font::new().weight(FontWeight::Bold))
+                .child_signal(store().index_companies_time.signal_ref(|time| {
+                    if let Some(time) = time {
+                        format!("{time:.2}").into_cow_str()
+                    } else {
+                        "...".into_cow_str()
+                    }
+                })),
+        )
+        .content(" ms")
 }
 
 fn search_field() -> impl Element {
@@ -276,28 +163,79 @@ fn search_field() -> impl Element {
                 .s(Outline::inner().width(2))
                 .s(Padding::new().x(15).y(10))
                 .placeholder(Placeholder::new("Company Name"))
-                .text_signal(search_query().signal_cloned())
-                .on_change(move |new_text| search_query().set(new_text.into())),
+                .text_signal(store().search_query.signal_cloned())
+                .on_change(move |new_text| store().search_query.set(new_text.into())),
         )
+        .item(companies_found_info())
+}
+
+fn companies_found_info() -> impl Element {
+    Paragraph::new()
+        .content(
+            El::new()
+                .s(Font::new().weight(FontWeight::Bold))
+                .child_signal(
+                    store()
+                        .filtered_companies
+                        .signal_ref(|filtered_companies| filtered_companies.len()),
+                ),
+        )
+        .content(" companies found in ")
+        .content(
+            El::new()
+                .s(Font::new().weight(FontWeight::Bold))
+                .child_signal(store().search_time.signal_ref(|time| {
+                    if let Some(time) = time {
+                        format!("{time:.2}").into_cow_str()
+                    } else {
+                        "...".into_cow_str()
+                    }
+                })),
+        )
+        .content(" ms")
+        .content(" (Average: ")
+        .content(
+            El::new()
+                .s(Font::new().weight(FontWeight::Bold))
+                .child_signal(
+                    store()
+                        .search_time_history
+                        .signal_vec()
+                        .to_signal_map(|history| {
+                            if history.is_empty() {
+                                "...".into_cow_str()
+                            } else {
+                                let average = history.iter().sum::<f64>() / (history.len() as f64);
+                                format!("{average:.2}").into_cow_str()
+                            }
+                        }),
+                ),
+        )
+        .content(" ms)")
 }
 
 fn category_filter_panel() -> impl Element {
     ui::Dropdown::new(
-        category_filter().signal(),
-        always_vec(CategoryFilter::iter().collect()),
-        |filter| category_filter().set_neq(filter),
+        store().category_filter.signal(),
+        always_vec(iter::once(None).chain(Category::iter().map(Some)).collect()),
+        |filter| filter.map(Into::into).unwrap_or("All Categories"),
+        |filter| store().category_filter.set_neq(*filter),
     )
     .s(Align::new().center_x())
     .s(Width::exact(200))
 }
 
 fn results() -> impl Element {
-    Column::new()
-        .s(Gap::new().y(15))
-        .items_signal_vec(filtered_companies_paginated().map(company_card))
+    Column::new().s(Gap::new().y(15)).items_signal_vec(
+        store()
+            .current_page_companies
+            .signal_cloned()
+            .to_signal_vec()
+            .map(company_card),
+    )
 }
 
-fn company_card(company: Arc<Company>) -> impl Element {
+fn company_card(company: Company) -> impl Element {
     Row::new()
         .s(Padding::new().x(15).y(10))
         .s(Gap::new().x(10))
@@ -311,6 +249,6 @@ fn company_card(company: Arc<Company>) -> impl Element {
         .item(
             El::new()
                 .s(Align::new().right())
-                .child(company.category.into_cow_str()),
+                .child(<&str>::from(company.category)),
         )
 }

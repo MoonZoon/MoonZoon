@@ -661,7 +661,6 @@ dependencies = [
 name = "frontend"
 version = "0.1.0"
 dependencies = [
- "educe",
  "wasm-bindgen-test",
  "zoon",
 ]
@@ -2363,6 +2362,7 @@ dependencies = [
  "chrono",
  "console_error_panic_hook",
  "dominator",
+ "educe",
  "enclose",
  "futures-channel",
  "futures_signals_ext",

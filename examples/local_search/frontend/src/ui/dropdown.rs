@@ -1,4 +1,4 @@
-use crate::ui;
+use crate::BACKGROUND_COLOR;
 use std::{cell::RefCell, rc::Rc};
 use zoon::*;
 
@@ -19,104 +19,155 @@ impl RawElWrapper for Dropdown {
 impl Styleable<'_> for Dropdown {}
 
 impl Dropdown {
-    pub fn new<V: IntoCowStr<'static> + Clone + PartialEq + Default + 'static>(
-        selected: impl Signal<Item = V> + Unpin + 'static,
+    pub fn new<V, IE>(
+        selected_value: impl Signal<Item = V> + Unpin + 'static,
         values: impl SignalVec<Item = V> + Unpin + 'static,
-        on_select: impl FnMut(V) + 'static,
-    ) -> Self {
-        let on_select = Rc::new(RefCell::new(on_select));
+        value_to_label: impl FnMut(&V) -> IE + 'static,
+        on_select: impl FnMut(&V) + 'static,
+    ) -> Self
+    where
+        V: Clone + PartialEq + 'static,
+        IE: IntoElement<'static>,
+    {
+        let selected_value = selected_value.broadcast();
+        let (filtered_values, filtered_values_updater) =
+            filter_values(values, selected_value.clone());
+        let dropdown_active = Mutable::new(false);
 
-        let on_select_clone = on_select.clone();
-        let values_and_selected = map_ref! {
-            let values = values.to_signal_cloned(),
-            let selected = selected => move {
-                let mut values = values.clone();
-                if let Some(index) = values.iter().position(|value| value == selected) {
-                    values.remove(index);
-                    (values, selected.clone())
-                } else {
-                    let selected = V::default();
-                    on_select_clone.borrow_mut()(selected.clone());
-                    (values, selected)
-                }
-            }
-        }
-        .broadcast();
-
-        let values = values_and_selected
-            .signal_ref(|(values, _)| values.clone())
-            .broadcast();
-        let selected = values_and_selected
-            .signal_ref(|(_, selected)| selected.clone())
-            .broadcast();
-
-        let active = Mutable::new(false);
-        let hovered = Mutable::new(false);
+        let value_to_label = {
+            let value_to_label = Rc::new(RefCell::new(value_to_label));
+            move |value: &V| value_to_label.borrow_mut()(value).into_element().into_raw()
+        };
 
         let raw_el = Column::new()
-            .item(
-                Row::new()
-                    .s(Outline::inner().width(2))
-                    .s(Padding::new().x(15).y(10))
-                    .s(RoundedCorners::all(3))
-                    .s(Cursor::new(CursorIcon::Pointer))
-                    .s(Shadows::new([Shadow::new().x(6).y(6)]))
-                    .on_click(clone!((active) move || {
-                        active.update(not);
-                    }))
-                    .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-                    .item(Text::with_signal(selected.signal_cloned()))
-                    .item(
-                        El::new()
-                            .s(Align::new().right())
-                            .s(Transform::with_signal(
-                                active
-                                    .signal()
-                                    .map_true(|| Transform::new().flip_vertical()),
-                            ))
-                            .child(El::new().s(Font::new().weight(FontWeight::Bold)).child("V")),
-                    ),
-            )
-            .on_click_outside(clone!((active) move || active.set_neq(false)))
-            .element_below_signal(active.signal().map_true(move || {
-                Column::new()
-                    .s(Transform::new().move_down(4))
-                    .s(Outline::outer().width(2))
-                    .s(RoundedCorners::all(3))
-                    .s(Scrollbars::both())
-                    .s(Shadows::new([Shadow::new().x(15).y(15)]))
-                    .items_signal_vec(values.signal_cloned().to_signal_vec().map(
-                        clone!((active, on_select) move |value| {
-                            Self::menu_item(value, active.clone(), on_select.clone())
-                        }),
-                    ))
-            }))
+            .after_remove(move |_| drop(filtered_values_updater))
+            .item(head(
+                dropdown_active.clone(),
+                selected_value.signal_ref(value_to_label.clone()),
+            ))
+            .on_click_outside(clone!((dropdown_active) move || dropdown_active.set_neq(false)))
+            .element_below_signal({
+                let on_select = {
+                    let on_select = Rc::new(RefCell::new(on_select));
+                    move |value: &V| on_select.borrow_mut()(value)
+                };
+                dropdown_active.signal().map_true(move || {
+                    menu(
+                        filtered_values.clone(),
+                        dropdown_active.clone(),
+                        value_to_label.clone(),
+                        on_select.clone(),
+                    )
+                })
+            })
             .into_raw_el();
 
         Self { raw_el }
     }
+}
 
-    fn menu_item<V: IntoCowStr<'static> + Clone + PartialEq + Default + 'static>(
-        value: V,
-        dropdown_active: Mutable<bool>,
-        on_select: Rc<RefCell<impl FnMut(V) + 'static>>,
-    ) -> impl Element {
-        let (hovered, hovered_signal) = Mutable::new_and_signal(false);
-        El::new()
-            .s(Cursor::new(CursorIcon::Pointer))
-            .s(Padding::new().x(8).y(10))
-            .s(Font::new().no_wrap())
-            .s(Width::fill())
-            .s(Background::new().color_signal(hovered_signal.map_bool(
-                || ui::BACKGROUND_COLOR.update_l(|l| l - 15.),
-                || ui::BACKGROUND_COLOR,
-            )))
-            .s(Outline::inner())
-            .on_click(clone!((dropdown_active, value, on_select) move || {
-                on_select.borrow_mut()(value.clone());
-                dropdown_active.set_neq(false);
-            }))
-            .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-            .child(value.into_cow_str())
-    }
+fn filter_values<V>(
+    values: impl SignalVec<Item = V> + Unpin + 'static,
+    selected_value: Broadcaster<impl Signal<Item = V> + Unpin + 'static>,
+) -> (MutableVec<V>, TaskHandle)
+where
+    V: Clone + PartialEq + 'static,
+{
+    let filtered_values = MutableVec::new();
+    let filtered_values_updater = Task::start_droppable(values
+        .filter_signal_cloned(clone!((selected_value) move |value| {
+            selected_value.signal_ref(clone!((value) move |selected_value| selected_value != &value))
+        }))
+        // @TODO implement `for_each_sync` and remove `async {}` below
+        .for_each(clone!((filtered_values) move |vec_diff| {
+            MutableVecLockMut::apply_vec_diff(&mut filtered_values.lock_mut(), vec_diff);
+            async {}
+        }))
+    );
+    (filtered_values, filtered_values_updater)
+}
+
+fn head(
+    dropdown_active: Mutable<bool>,
+    selected_value_label: impl Signal<Item = RawElOrText> + Unpin + 'static,
+) -> impl Element {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Row::new()
+        .s(Outline::inner().width(2))
+        .s(Padding::new().x(15).y(10))
+        .s(RoundedCorners::all(3))
+        .s(Cursor::new(CursorIcon::Pointer))
+        .s(Shadows::new([Shadow::new().x(6).y(6)]))
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || BACKGROUND_COLOR.update_l(|l| l + 10.),
+            || BACKGROUND_COLOR,
+        )))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .on_click(clone!((dropdown_active) move || {
+            dropdown_active.update(not);
+        }))
+        .item_signal(selected_value_label)
+        .item(
+            El::new()
+                .s(Align::new().right())
+                .s(Transform::with_signal(
+                    dropdown_active
+                        .signal()
+                        .map_true(|| Transform::new().flip_vertical()),
+                ))
+                .child(El::new().s(Font::new().weight(FontWeight::Bold)).child("V")),
+        )
+}
+
+fn menu<V>(
+    filtered_values: MutableVec<V>,
+    dropdown_active: Mutable<bool>,
+    value_to_label: impl Fn(&V) -> RawElOrText + Clone + 'static,
+    on_select: impl Fn(&V) + Clone + 'static,
+) -> impl Element
+where
+    V: Clone + PartialEq + 'static,
+{
+    Column::new()
+        .s(Transform::new().move_down(4))
+        .s(Outline::outer().width(2))
+        .s(RoundedCorners::all(3))
+        .s(Scrollbars::both())
+        .s(Shadows::new([Shadow::new().x(15).y(15)]))
+        .items_signal_vec(filtered_values.signal_vec_cloned().map(move |value| {
+            menu_item(
+                value.clone(),
+                dropdown_active.clone(),
+                value_to_label.clone(),
+                on_select.clone(),
+            )
+        }))
+}
+
+fn menu_item<V>(
+    value: V,
+    dropdown_active: Mutable<bool>,
+    value_to_label: impl Fn(&V) -> RawElOrText + Clone + 'static,
+    on_select: impl Fn(&V) + Clone + 'static,
+) -> impl Element
+where
+    V: Clone + PartialEq + 'static,
+{
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    El::new()
+        .s(Cursor::new(CursorIcon::Pointer))
+        .s(Padding::new().x(8).y(10))
+        .s(Font::new().no_wrap())
+        .s(Width::fill())
+        .s(Background::new().color_signal(hovered_signal.map_bool(
+            || BACKGROUND_COLOR.update_l(|l| l + 10.),
+            || BACKGROUND_COLOR,
+        )))
+        .s(Outline::inner())
+        .on_click(clone!((value) move || {
+            on_select(&value);
+            dropdown_active.set_neq(false);
+        }))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .child(value_to_label(&value))
 }

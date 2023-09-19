@@ -15,4 +15,3 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 zoon.workspace = true
-educe = { version = "0.4.22", default-features = true }
