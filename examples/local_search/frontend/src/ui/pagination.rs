@@ -30,7 +30,7 @@ impl Pagination {
                 current_page.clone(),
                 page_count.signal(),
             ))
-            .item(pagination_info(current_page.clone(), page_count.signal()))
+            .item(pagination_info(current_page.clone(), page_count.clone()))
             .item(page_change_button(
                 PageChange::Next,
                 current_page,
@@ -50,20 +50,24 @@ enum PageChange {
 
 fn pagination_info(
     current_page: Mutable<usize>,
-    page_count: impl Signal<Item = usize> + 'static + Unpin,
+    page_count: Broadcaster<impl Signal<Item = usize> + 'static + Unpin>,
 ) -> impl Element {
     Paragraph::new()
         .content("Page ")
         .content(
             El::new()
                 .s(Font::new().weight(FontWeight::Bold))
-                .child(Text::with_signal(current_page.signal_ref(|page| page + 1))),
+                .child_signal(map_ref! {
+                    let current_page = current_page.signal(),
+                    let page_count = page_count.signal() =>
+                    (current_page + 1).min(*page_count)
+                }),
         )
         .content(" of ")
         .content(
             El::new()
                 .s(Font::new().weight(FontWeight::Bold))
-                .child(Text::with_signal(page_count)),
+                .child_signal(page_count.signal()),
         )
 }
 

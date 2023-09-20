@@ -17,7 +17,7 @@ fn store() -> &'static Store {
 }
 
 fn main() {
-    Task::start_blocking_with_channels(
+    Task::start_blocking_with_tasks(
         |send_to_blocking| {
             map_ref! {
                 let text_a = store().text_a.signal_cloned(),

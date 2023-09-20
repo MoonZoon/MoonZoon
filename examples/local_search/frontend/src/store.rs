@@ -30,8 +30,7 @@ pub enum Category {
 #[derive(Educe)]
 #[educe(Default(new))]
 pub struct Store {
-    // @TODO get rid of `SendWrapper`? (`static_ref` based on `thread_local`?)
-    pub indexed_companies: Mutable<Option<SendWrapper<LocalSearch<Company>>>>,
+    pub indexed_companies: Mutable<Option<LocalSearch<Company>>>,
     pub all_companies: Mutable<Vec<Company>>,
     pub search_query: Mutable<String>,
     pub category_filter: Mutable<Option<Category>>,
@@ -52,11 +51,25 @@ pub struct Store {
 }
 
 fn create_triggers() {
+    set_search_time_history_on_search_time_change();
     set_current_page_on_filtered_companies_change();
     set_current_page_companies_on_current_page_or_filtered_companies_change();
     set_indexed_companies_and_search_time_history_on_all_companies_change();
     set_filtered_companies_and_page_count_on_query_or_filter_or_indexed_companies_change();
-    set_search_time_history_on_search_time_change();
+}
+
+fn set_search_time_history_on_search_time_change() {
+    Task::start(async {
+        store()
+            .search_time
+            .signal()
+            .for_each_sync(|search_time| {
+                if let Some(search_time) = search_time {
+                    store().search_time_history.lock_mut().push(search_time);
+                }
+            })
+            .await
+    });
 }
 
 fn set_current_page_on_filtered_companies_change() {
@@ -89,18 +102,27 @@ fn set_current_page_companies_on_current_page_or_filtered_companies_change() {
 }
 
 fn set_indexed_companies_and_search_time_history_on_all_companies_change() {
-    Task::start(async {
-        store()
-            .all_companies
-            .signal_cloned()
-            .for_each_sync(|all_companies| {
-                store().index_companies_time.set(None);
-                let start_time = performance().now();
-
-                let indexed_companies = SendWrapper::new(
-                    LocalSearch::builder(all_companies, |company_card| &company_card.name).build(),
-                );
-
+    Task::start_blocking_with_tasks(
+        |send_to_blocking| async move {
+            store()
+                .all_companies
+                .signal_cloned()
+                .for_each_sync(move |all_companies| {
+                    store().index_companies_time.set(None);
+                    let start_time = performance().now();
+                    send_to_blocking((start_time, all_companies));
+                })
+                .await
+        },
+        |from_input, _, send_to_output| {
+            from_input.for_each_sync(move |(start_time, all_companies)| {
+                let indexed_companies =
+                    LocalSearch::builder(all_companies, |company_card| &company_card.name).build();
+                send_to_output((start_time, indexed_companies));
+            })
+        },
+        |from_blocking| {
+            from_blocking.for_each_sync(move |(start_time, indexed_companies)| {
                 store()
                     .index_companies_time
                     .set(Some(performance().now() - start_time));
@@ -108,8 +130,8 @@ fn set_indexed_companies_and_search_time_history_on_all_companies_change() {
                 store().indexed_companies.set(Some(indexed_companies));
                 store().search_time_history.lock_mut().clear();
             })
-            .await
-    });
+        },
+    );
 }
 
 fn set_filtered_companies_and_page_count_on_query_or_filter_or_indexed_companies_change() {
@@ -162,19 +184,5 @@ fn set_filtered_companies_and_page_count_on_query_or_filter_or_indexed_companies
             *store().filtered_companies.lock_mut() = found_companies;
         })
         .await
-    });
-}
-
-fn set_search_time_history_on_search_time_change() {
-    Task::start(async {
-        store()
-            .search_time
-            .signal()
-            .for_each_sync(|search_time| {
-                if let Some(search_time) = search_time {
-                    store().search_time_history.lock_mut().push(search_time);
-                }
-            })
-            .await
     });
 }
