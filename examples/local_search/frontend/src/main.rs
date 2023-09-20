@@ -1,4 +1,5 @@
 use fake::{faker, Fake};
+use num_format::{Locale, ToFormattedString};
 use rand::{rngs::SmallRng, seq::SliceRandom, SeedableRng};
 use std::iter;
 use zoon::{strum::IntoEnumIterator, *};
@@ -10,7 +11,7 @@ use store::*;
 
 const PROJECTS_PER_PAGE: usize = 7;
 const BACKGROUND_COLOR: HSLuv = hsluv!(0, 0, 80);
-const DEFAULT_GENERATE_COMPANIES_COUNT: usize = 100;
+const DEFAULT_GENERATE_COMPANIES_COUNT: usize = 1_000;
 
 fn main() {
     store();
@@ -19,27 +20,50 @@ fn main() {
 }
 
 fn generate_companies(count: usize) {
-    let mut rng = SmallRng::from_entropy();
-    let categories = Category::iter().collect::<Vec<_>>();
+    enum BlockingOutputMsg {
+        CompanyIndex(usize),
+        Companies(Vec<Company>),
+    }
 
     store().generate_companies_time.set(None);
+    store().index_companies_time.set(None);
+    store().search_time.set(None);
+    store().search_time_history.lock_mut().clear();
+
     let start_time = performance().now();
 
-    let mut companies = Vec::with_capacity(count);
-    for index in 0..count {
-        companies.push(Company {
-            name: faker::company::en::CompanyName().fake_with_rng(&mut rng),
-            category: categories.choose(&mut rng).copied().unwrap_throw(),
-        });
-        store().generated_company_count.set(index + 1);
-    }
-    companies.sort_unstable_by(|company_a, company_b| Ord::cmp(&company_a.name, &company_b.name));
+    Task::start_blocking_with_output_task(
+        move |_, send_to_output| async move {
+            let mut rng = SmallRng::from_entropy();
+            let categories = Category::iter().collect::<Vec<_>>();
 
-    store()
-        .generate_companies_time
-        .set(Some(performance().now() - start_time));
-
-    *store().all_companies.lock_mut() = companies;
+            let mut companies = Vec::with_capacity(count);
+            for index in 0..count {
+                companies.push(Company {
+                    name: faker::company::en::CompanyName().fake_with_rng(&mut rng),
+                    category: categories.choose(&mut rng).copied().unwrap_throw(),
+                });
+                send_to_output(BlockingOutputMsg::CompanyIndex(index));
+            }
+            companies.sort_unstable_by(|company_a, company_b| {
+                Ord::cmp(&company_a.name, &company_b.name)
+            });
+            send_to_output(BlockingOutputMsg::Companies(companies))
+        },
+        move |from_blocking| {
+            from_blocking.for_each_sync(move |msg| match msg {
+                BlockingOutputMsg::CompanyIndex(index) => {
+                    store().generated_company_count.set(index + 1);
+                }
+                BlockingOutputMsg::Companies(companies) => {
+                    *store().all_companies.lock_mut() = companies;
+                    store()
+                        .generate_companies_time
+                        .set(Some(performance().now() - start_time));
+                }
+            })
+        },
+    );
 }
 
 fn root() -> impl Element {
@@ -48,7 +72,7 @@ fn root() -> impl Element {
     );
 
     Column::new()
-        .s(Width::default().min(550))
+        .s(Width::default().min(600))
         .s(Padding::all(20).top(50))
         .s(Align::new().center_x())
         .s(Gap::new().y(45))
@@ -119,7 +143,12 @@ fn companies_generated_and_indexed_text() -> impl Element {
         .content(
             El::new()
                 .s(Font::new().weight(FontWeight::Bold))
-                .child_signal(store().generated_company_count.signal()),
+                .child_signal(
+                    store()
+                        .generated_company_count
+                        .signal()
+                        .map(|count| count.to_formatted_string(&Locale::en)),
+                ),
         )
         .content(" companies generated & sorted in ")
         .content(
@@ -177,7 +206,8 @@ fn companies_found_info() -> impl Element {
                 .child_signal(
                     store()
                         .filtered_companies
-                        .signal_ref(|filtered_companies| filtered_companies.len()),
+                        .signal_ref(|filtered_companies| filtered_companies.len())
+                        .map(|count| count.to_formatted_string(&Locale::en)),
                 ),
         )
         .content(" companies found in ")

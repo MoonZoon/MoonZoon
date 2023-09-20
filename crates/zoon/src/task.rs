@@ -40,18 +40,22 @@ impl Task {
     // @TODO add `start_blocking_droppable` (properly drop Workers and ObjectUrls)
 
     #[cfg(feature = "frontend_multithreading")]
-    pub fn start_blocking_with_channels<FutA, FutB, FutC, T, U>(
-        input_task: impl FnOnce(Box<dyn FnBoxClone<T>>) -> FutA + 'static,
-        blocking_task: impl FnOnce(UnboundedReceiver<T>, DedicatedWorkerGlobalScope, Box<dyn FnBoxClone<U>>) -> FutB
+    pub fn start_blocking_with_tasks<FutI, FutB, FutO, IBMsg, BOMsg>(
+        input_task: impl FnOnce(Box<dyn FnBoxClone<IBMsg>>) -> FutI + 'static,
+        blocking_task: impl FnOnce(
+                UnboundedReceiver<IBMsg>,
+                DedicatedWorkerGlobalScope,
+                Box<dyn FnBoxClone<BOMsg>>,
+            ) -> FutB
             + Send
             + 'static,
-        output_task: impl FnOnce(UnboundedReceiver<U>) -> FutC + 'static,
+        output_task: impl FnOnce(UnboundedReceiver<BOMsg>) -> FutO + 'static,
     ) where
-        FutA: Future<Output = ()> + 'static,
+        FutI: Future<Output = ()> + 'static,
         FutB: Future<Output = ()>,
-        FutC: Future<Output = ()> + 'static,
-        T: Send + 'static,
-        U: Send + 'static,
+        FutO: Future<Output = ()> + 'static,
+        IBMsg: Send + 'static,
+        BOMsg: Send + 'static,
     {
         let (input_to_blocking_sender, input_to_blocking_receiver) = mpsc::unbounded();
         let (blocking_to_output_sender, blocking_to_output_receiver) = mpsc::unbounded();
@@ -74,7 +78,35 @@ impl Task {
         Task::start(output_task(blocking_to_output_receiver));
     }
 
-    // @TODO add `start_blocking_with_channels_droppable`
+    // @TODO add `start_blocking_with_tasks_droppable`
+    // (properly drop everything, graceful channel shutdown?)
+
+    #[cfg(feature = "frontend_multithreading")]
+    pub fn start_blocking_with_output_task<FutB, FutO, BOMsg>(
+        blocking_task: impl FnOnce(DedicatedWorkerGlobalScope, Box<dyn FnBoxClone<BOMsg>>) -> FutB
+            + Send
+            + 'static,
+        output_task: impl FnOnce(UnboundedReceiver<BOMsg>) -> FutO + 'static,
+    ) where
+        FutB: Future<Output = ()>,
+        FutO: Future<Output = ()> + 'static,
+        BOMsg: Send + 'static,
+    {
+        let (blocking_to_output_sender, blocking_to_output_receiver) = mpsc::unbounded();
+        Task::start_blocking(move |scope| {
+            blocking_task(
+                scope,
+                Box::new(move |to_output| {
+                    blocking_to_output_sender
+                        .unbounded_send(to_output)
+                        .unwrap_throw()
+                }),
+            )
+        });
+        Task::start(output_task(blocking_to_output_receiver));
+    }
+
+    // @TODO add `start_blocking_with_output_task_droppable`
     // (properly drop everything, graceful channel shutdown?)
 }
 
