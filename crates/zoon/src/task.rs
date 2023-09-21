@@ -21,6 +21,26 @@ impl Task {
         TaskHandle(future_handle)
     }
 
+    /// https://javascript.info/event-loop
+    pub async fn next_micro_tick() {
+        let (sender, receiver) = oneshot::channel();
+        Self::start(async {
+            sender
+                .send(())
+                .expect_throw("`sender` failed in `Task::next_tick`")
+        });
+        receiver
+            .await
+            .expect_throw("`receiver` failed in `Task::next_tick`")
+    }
+
+    /// https://javascript.info/event-loop
+    pub async fn next_macro_tick() {
+        // @TODO make it more efficient, see
+        // https://developer.mozilla.org/en-US/docs/Web/API/Window/setImmediate
+        Timer::sleep(0).await
+    }
+
     #[cfg(feature = "frontend_multithreading")]
     pub fn start_blocking<Fut: Future<Output = ()>>(
         f: impl FnOnce(DedicatedWorkerGlobalScope) -> Fut + Send + 'static,

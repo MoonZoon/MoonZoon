@@ -72,7 +72,7 @@ impl<'a> IntoElement<'a> for Cow<'_, str> {
 impl<'a, T: IntoCowStr<'a> + Clone> IntoElement<'a> for Arc<T> {
     type EL = Text;
     fn into_element(self) -> Self::EL {
-        // @TODO refactor the line below once `Arc::unwrap_or_clone` is stable
+        // @TODO refactor the expression below once `Arc::unwrap_or_clone` is stable
         Text::new(Arc::try_unwrap(self).unwrap_or_else(|arc| (*arc).clone()))
     }
 }
@@ -80,7 +80,7 @@ impl<'a, T: IntoCowStr<'a> + Clone> IntoElement<'a> for Arc<T> {
 impl<'a, T: IntoCowStr<'a> + Clone> IntoElement<'a> for Rc<T> {
     type EL = Text;
     fn into_element(self) -> Self::EL {
-        // @TODO refactor the line below once `Rc::unwrap_or_clone` is stable
+        // @TODO refactor the expression below once `Rc::unwrap_or_clone` is stable
         Text::new(Rc::try_unwrap(self).unwrap_or_else(|rc| (*rc).clone()))
     }
 }

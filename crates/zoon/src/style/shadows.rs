@@ -100,6 +100,8 @@ impl<'a> Style<'a> for Shadows<'a> {
 
 /// Single Shadow effect.
 /// More information available at <https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow>.
+///
+/// NOTE: Default shadow color is inherited from `Font::color`.
 #[derive(Default)]
 pub struct Shadow {
     inner: bool,

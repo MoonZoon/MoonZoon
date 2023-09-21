@@ -56,7 +56,7 @@ impl<'a> IntoCowStr<'a> for Cow<'a, str> {
 
 impl<'a, T: IntoCowStr<'a> + Clone> IntoCowStr<'a> for Arc<T> {
     fn into_cow_str(self) -> Cow<'a, str> {
-        // @TODO refactor the line below once `Arc::unwrap_or_clone` is stable
+        // @TODO refactor the expression below once `Arc::unwrap_or_clone` is stable
         Arc::try_unwrap(self)
             .unwrap_or_else(|arc| (*arc).clone())
             .into_cow_str()
@@ -65,7 +65,7 @@ impl<'a, T: IntoCowStr<'a> + Clone> IntoCowStr<'a> for Arc<T> {
 
 impl<'a, T: IntoCowStr<'a> + Clone> IntoCowStr<'a> for Rc<T> {
     fn into_cow_str(self) -> Cow<'a, str> {
-        // @TODO refactor the line below once `Rc::unwrap_or_clone` is stable
+        // @TODO refactor the expression below once `Rc::unwrap_or_clone` is stable
         Rc::try_unwrap(self)
             .unwrap_or_else(|rc| (*rc).clone())
             .into_cow_str()
