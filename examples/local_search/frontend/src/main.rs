@@ -2,6 +2,7 @@ use fake::{faker, Fake};
 use num_format::{Locale, ToFormattedString};
 use rand::{rngs::SmallRng, seq::SliceRandom, SeedableRng};
 use std::iter;
+use std::sync::Arc;
 use zoon::{strum::IntoEnumIterator, *};
 
 mod ui;
@@ -25,6 +26,7 @@ fn generate_companies(count: usize) {
         Companies(Vec<Company>),
     }
 
+    store().generate_companies_button_disabled.set(true);
     store().generate_companies_time.set(None);
     store().index_companies_time.set(None);
     store().search_time.set(None);
@@ -51,16 +53,19 @@ fn generate_companies(count: usize) {
             send_to_output(BlockingOutputMsg::Companies(companies))
         },
         move |from_blocking| {
-            from_blocking.for_each_sync(move |msg| match msg {
-                BlockingOutputMsg::CompanyIndex(index) => {
-                    store().generated_company_count.set(index + 1);
-                }
-                BlockingOutputMsg::Companies(companies) => {
-                    *store().all_companies.lock_mut() = companies;
-                    store()
-                        .generate_companies_time
-                        .set(Some(performance().now() - start_time));
-                }
+            from_blocking.for_each(move |msg| 
+                match msg {
+                    BlockingOutputMsg::CompanyIndex(index) => {
+                        store().generated_company_count.set(index + 1);
+                    }
+                    BlockingOutputMsg::Companies(companies) => {
+                        store()
+                            .generate_companies_time
+                            .set(Some(performance().now() - start_time));
+                        *store().all_companies.lock_mut() = Arc::new(companies);
+                        store().generate_companies_button_disabled.set(false);
+                    }
+                
             })
         },
     );
@@ -100,25 +105,56 @@ fn generate_companies_panel() -> impl Element {
 
 fn generate_companies_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    let disabled_color = BACKGROUND_COLOR.update_l(|l| l - 30.);
     Button::new()
-        .s(Outline::inner().width(2))
+        .s(Outline::with_signal(
+            store()
+                .generate_companies_button_disabled
+                .signal_ref(move |disabled| {
+                    let outline = Outline::inner().width(2);
+                    if *disabled {
+                        outline.color(disabled_color)
+                    } else {
+                        outline
+                    }
+                }),
+        ))
+        .s(Font::new().color_signal(
+            store()
+                .generate_companies_button_disabled
+                .signal()
+                .map_true(move || disabled_color),
+        ))
         .s(Padding::new().x(15).y(10))
         .s(RoundedCorners::all(3))
         .s(Cursor::new(CursorIcon::Pointer))
         .s(Shadows::new([Shadow::new().x(6).y(6)]))
-        .s(Background::new().color_signal(hovered_signal.map_bool(
-            || BACKGROUND_COLOR.update_l(|l| l + 10.),
-            || BACKGROUND_COLOR,
-        )))
+        .s(Background::new().color_signal(map_ref! {
+            let hovered = hovered_signal,
+            let disabled = store().generate_companies_button_disabled.signal() =>
+            if *hovered && not(disabled) {
+                BACKGROUND_COLOR.update_l(|l| l + 10.)
+            } else {
+                BACKGROUND_COLOR
+            }
+        }))
+        .s(Cursor::with_signal(
+            store()
+                .generate_companies_button_disabled
+                .signal()
+                .map_bool(|| CursorIcon::Default, || CursorIcon::Pointer),
+        ))
         .label("Generate companies")
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(|| {
-            if let Ok(count) = store()
-                .generate_companies_input_text
-                .lock_ref()
-                .parse::<usize>()
-            {
-                Task::start(async move { generate_companies(count) });
+            if not(store().generate_companies_button_disabled.get()) {
+                if let Ok(count) = store()
+                    .generate_companies_input_text
+                    .lock_ref()
+                    .parse::<usize>()
+                {
+                    generate_companies(count);
+                }
             }
         })
 }

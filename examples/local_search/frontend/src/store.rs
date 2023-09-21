@@ -30,9 +30,9 @@ pub enum Category {
 #[derive(Educe)]
 #[educe(Default(new))]
 pub struct Store {
-    pub indexed_companies: Mutable<Option<LocalSearch<Company>>>,
-    pub all_companies: Mutable<Vec<Company>>,
-    pub search_query: Mutable<String>,
+    pub indexed_companies: Mutable<Option<Arc<LocalSearch<Company>>>>,
+    pub all_companies: Mutable<Arc<Vec<Company>>>,
+    pub search_query: Mutable<Arc<String>>,
     pub category_filter: Mutable<Option<Category>>,
     pub current_page: Mutable<usize>,
     pub generated_company_count: Mutable<usize>,
@@ -40,6 +40,7 @@ pub struct Store {
         expression = r#"Mutable::new(DEFAULT_GENERATE_COMPANIES_COUNT.to_string())"#
     ))]
     pub generate_companies_input_text: Mutable<String>,
+    pub generate_companies_button_disabled: Mutable<bool>,
     pub generate_companies_time: Mutable<Option<f64>>,
     pub index_companies_time: Mutable<Option<f64>>,
     pub search_time: Mutable<Option<f64>>,
@@ -116,6 +117,9 @@ fn set_indexed_companies_and_search_time_history_on_all_companies_change() {
         },
         |from_input, _, send_to_output| {
             from_input.for_each_sync(move |(start_time, all_companies)| {
+                // @TODO refactor the expression below once `Arc::unwrap_or_clone` is stable
+                let all_companies = Arc::try_unwrap(all_companies)
+                    .unwrap_or_else(|all_companies| (*all_companies).clone());
                 let indexed_companies =
                     LocalSearch::builder(all_companies, |company_card| &company_card.name).build();
                 send_to_output((start_time, indexed_companies));
@@ -127,7 +131,9 @@ fn set_indexed_companies_and_search_time_history_on_all_companies_change() {
                     .index_companies_time
                     .set(Some(performance().now() - start_time));
 
-                store().indexed_companies.set(Some(indexed_companies));
+                store()
+                    .indexed_companies
+                    .set(Some(Arc::new(indexed_companies)));
                 store().search_time_history.lock_mut().clear();
             })
         },
@@ -135,54 +141,73 @@ fn set_indexed_companies_and_search_time_history_on_all_companies_change() {
 }
 
 fn set_filtered_companies_and_page_count_on_query_or_filter_or_indexed_companies_change() {
-    Task::start(async {
-        map_ref! {
-            let query = store().search_query.signal_cloned(),
-            let category = store().category_filter.signal(),
-            let _ = store().indexed_companies.signal_ref(|_|()) =>
-            (query.clone(), *category)
-        }
-        .for_each_sync(|(query, category)| {
-            store().search_time.set(None);
-            let start_time = performance().now();
-
-            let company_filter = move |company: &&Company| {
-                not(matches!(category, Some(category) if company.category != category))
-            };
-
-            let found_companies: Vec<_> = if query.is_empty() {
+    Task::start_blocking_with_tasks(
+        |send_to_blocking| async move {
+            map_ref! {
+                let query = store().search_query.signal_cloned(),
+                let category = store().category_filter.signal(),
+                let indexed_companies = store().indexed_companies.signal_cloned() =>
+                (query.clone(), *category, indexed_companies.clone())
+            }
+            .for_each_sync(|(query, category, indexed_companies)| {
+                store().search_time.set(None);
+                let start_time = performance().now();
+                send_to_blocking((
+                    start_time,
+                    query,
+                    category,
+                    indexed_companies,
+                    store().all_companies.lock_ref().clone(),
+                ))
+            })
+            .await
+        },
+        |from_input, _, send_to_output| {
+            let task = Mutable::new(None);
+            from_input.for_each_sync(
+                move |(start_time, query, category, indexed_companies, all_companies)| {
+                    task.set(Some(Task::start_droppable(clone!((send_to_output) async move {
+                        let company_filter = move |company: &&Company| {
+                            not(matches!(category, Some(category) if company.category != category))
+                        };
+                        let found_companies: Vec<_> = if query.is_empty() {
+                            all_companies
+                                .iter()
+                                .filter(company_filter)
+                                .map(Clone::clone)
+                                .collect()
+                        } else {
+                            if let Some(indexed_companies) = indexed_companies.as_ref() {
+                                let companies = indexed_companies.search(&query, usize::MAX);
+                                Task::next_micro_tick().await;
+                                companies.into_iter()
+                                    .map(|(company, _)| company)
+                                    .filter(company_filter)
+                                    .map(Clone::clone)
+                                    .collect()
+                            } else {
+                                Vec::new()
+                            }
+                        };
+                        Task::next_micro_tick().await;
+                        send_to_output((start_time, found_companies));
+                    }))));
+                },
+            )
+        },
+        |from_blocking| {
+            from_blocking.for_each_sync(move |(start_time, found_companies)| {
                 store()
-                    .all_companies
-                    .lock_ref()
-                    .iter()
-                    .filter(company_filter)
-                    .map(Clone::clone)
-                    .collect()
-            } else {
-                if let Some(indexed_companies) = store().indexed_companies.lock_ref().as_ref() {
-                    indexed_companies
-                        .search(&query, usize::MAX)
-                        .into_iter()
-                        .map(|(company, _)| company)
-                        .filter(company_filter)
-                        .map(Clone::clone)
-                        .collect()
-                } else {
-                    Vec::new()
-                }
-            };
+                    .search_time
+                    .set(Some(performance().now() - start_time));
 
-            store()
-                .search_time
-                .set(Some(performance().now() - start_time));
+                store().page_count.set_neq(
+                    // @TODO refactor with https://doc.rust-lang.org/std/primitive.usize.html#method.div_ceil once stable
+                    ((found_companies.len() as f64) / (PROJECTS_PER_PAGE as f64)).ceil() as usize,
+                );
 
-            store().page_count.set_neq(
-                // @TODO refactor with https://doc.rust-lang.org/std/primitive.usize.html#method.div_ceil once stable
-                ((found_companies.len() as f64) / (PROJECTS_PER_PAGE as f64)).ceil() as usize,
-            );
-
-            *store().filtered_companies.lock_mut() = found_companies;
-        })
-        .await
-    });
+                *store().filtered_companies.lock_mut() = found_companies;
+            })
+        },
+    );
 }

@@ -600,7 +600,7 @@ impl GlobalStyles {
             for (name, value_signal) in keyframe.dynamic_css_props {
                 let declaration = Arc::clone(&declaration);
                 let task = value_signal.signal_cloned().for_each_sync(move |value| {
-                    // @TODO refactor the line below once `Rc::unwrap_or_clone` is stable
+                    // @TODO refactor the expression below once `Rc::unwrap_or_clone` is stable
                     if let Some(value) = Rc::try_unwrap(value).unwrap_or_else(|rc| (*rc).clone()) {
                         // @TODO allow to set `important ` also in dynamic styles
                         set_css_property(&declaration, &name, &value, false);
@@ -655,7 +655,7 @@ impl GlobalStyles {
         for (name, value_signal) in group.dynamic_css_props {
             let declaration = Arc::clone(&declaration);
             let task = value_signal.signal_cloned().for_each_sync(move |value| {
-                // @TODO refactor the line below once `Rc::unwrap_or_clone` is stable
+                // @TODO refactor the expression below once `Rc::unwrap_or_clone` is stable
                 if let Some(value) = Rc::try_unwrap(value).unwrap_or_else(|rc| (*rc).clone()) {
                     // @TODO allow to set `important ` also in dynamic styles
                     set_css_property(&declaration, &name, &value, false);
