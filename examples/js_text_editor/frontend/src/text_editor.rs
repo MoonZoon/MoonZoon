@@ -1,4 +1,4 @@
-use std::{cell::Cell, rc::Rc, sync::Arc};
+use std::rc::Rc;
 use zoon::{futures_util::join, *};
 
 #[static_ref]
@@ -17,28 +17,35 @@ fn load_assets_once() -> &'static Mutable<bool> {
 
 pub struct TextEditor {
     raw_el: RawHtmlEl<web_sys::HtmlElement>,
-    controller: Mutable<Option<Arc<js_bridge::QuillController>>>,
+    controller: ReadOnlyMutable<Option<js_bridge::QuillController>>,
+}
+
+impl Element for TextEditor {}
+
+impl RawElWrapper for TextEditor {
+    type RawEl = RawHtmlEl<web_sys::HtmlElement>;
+    fn raw_el_mut(&mut self) -> &mut Self::RawEl {
+        &mut self.raw_el
+    }
 }
 
 impl TextEditor {
     pub fn new() -> Self {
-        load_assets_once();
-        let controller = Mutable::default();
-        let controller_creator = Rc::new(Cell::new(None));
-
-        let raw_el = RawHtmlEl::new("div")
-            .after_insert(clone!((controller, controller_creator) move |html_element| {
-                controller_creator.set(Some(Task::start_droppable(async move {
-                    load_assets_once().signal().wait_for(true).await;
-                    controller.set(Some(Arc::new(js_bridge::QuillController::new(&html_element))));
-                })));
-            }))
-            .after_remove(clone!((controller) move |_| {
-                drop(controller);
-                drop(controller_creator);
-            }));
-
-        Self { raw_el, controller }
+        let controller = Mutable::new(None);
+        Self {
+            controller: controller.read_only(),
+            raw_el: El::new()
+                .update_raw_el(|raw_el| {
+                    raw_el.style_group(StyleGroup::new(" *").style("white-space", "unset"))
+                })
+                .child(RawHtmlEl::new("div").after_insert(move |html_element| {
+                    Task::start(async move {
+                        load_assets_once().signal().wait_for(true).await;
+                        controller.set(Some(js_bridge::QuillController::new(&html_element)));
+                    });
+                }))
+                .into_raw_el(),
+        }
     }
 
     pub fn on_change(mut self, on_change: impl Fn(serde_json::Value) + 'static) -> Self {
@@ -49,25 +56,22 @@ impl TextEditor {
                 .expect_throw("failed to parse Quill contents");
             on_change(json)
         };
-        let closure = Closure::new(callback);
+        let closure = Rc::new(Closure::new(callback));
+        self.raw_el = self
+            .raw_el
+            .after_remove(clone!((closure) move |_| drop(closure)));
 
-        let on_change_setter =
-            Task::start_droppable(self.controller.signal_cloned().for_each_sync(
-                move |controller| {
+        Task::start(
+            self.controller
+                .signal_ref(move |controller| {
                     if let Some(controller) = controller {
-                        controller.on_change(&closure);
+                        controller.on_change(&closure)
                     }
-                },
-            ));
-        self.raw_el = self.raw_el.after_remove(move |_| drop(on_change_setter));
+                })
+                .to_future(),
+        );
 
         self
-    }
-}
-
-impl Element for TextEditor {
-    fn into_raw(self) -> RawElOrText {
-        self.raw_el.into_raw()
     }
 }
 
