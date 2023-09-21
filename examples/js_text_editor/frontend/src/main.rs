@@ -4,7 +4,7 @@ mod text_editor;
 use text_editor::TextEditor;
 
 // ------ ------
-//    States
+//     Store
 // ------ ------
 
 #[static_ref]
@@ -17,7 +17,12 @@ fn contents() -> &'static Mutable<Option<String>> {
 // ------ ------
 
 fn root() -> impl Element {
-    Column::new().item(text_editor()).item(contents_display())
+    Column::new()
+        .s(Padding::all(20).top(40))
+        .s(Align::new().center_x())
+        .s(Width::fill().max(600))
+        .item(text_editor())
+        .item(contents_display())
 }
 
 fn text_editor() -> impl Element {
@@ -27,10 +32,12 @@ fn text_editor() -> impl Element {
 }
 
 fn contents_display() -> impl Element {
-    El::new()
-        .s(Padding::all(10))
-        .s(Font::new().family([FontFamily::Monospace]))
-        .child_signal(contents().signal_cloned())
+    El::new().s(Scrollbars::both()).child(
+        El::new()
+            .s(Padding::all(10))
+            .s(Font::new().family([FontFamily::Monospace]))
+            .child_signal(contents().signal_cloned()),
+    )
 }
 
 // ------ ------

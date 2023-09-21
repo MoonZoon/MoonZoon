@@ -1,17 +1,7 @@
 use moon::*;
 
 async fn frontend() -> Frontend {
-    Frontend::new()
-        .title("Js text editor example")
-        .append_to_head(
-            r#"
-                <style>
-                    html {
-                        background: lightgray;
-                    }
-                </style>   
-            "#,
-        )
+    Frontend::new().title("Js text editor example")
 }
 
 async fn up_msg_handler(_: UpMsgRequest<()>) {}
