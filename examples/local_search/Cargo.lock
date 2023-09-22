@@ -305,6 +305,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "619743e34b5ba4e9703bba34deac3427c72507c7159f5fd030aea8cac0cfe341"
 
 [[package]]
+name = "async-once-cell"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9338790e78aa95a416786ec8389546c4b6a1dfc3dc36071ed9518a9413a542eb"
+
+[[package]]
 name = "async-trait"
 version = "0.1.73"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -747,9 +753,9 @@ dependencies = [
 
 [[package]]
 name = "futures-signals"
-version = "0.3.32"
+version = "0.3.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "36a12cb78961d5c0bc0e358599bba98ec09201090a22339cd8ea27e815c11b25"
+checksum = "3b175f2f6600dd81d92d20cf10872b03ea9df6b2513ca7f672341260dacb1ab2"
 dependencies = [
  "discard",
  "futures-channel",
@@ -2428,6 +2434,7 @@ name = "zoon"
 version = "0.1.0"
 dependencies = [
  "apply",
+ "async-once-cell",
  "chrono",
  "console_error_panic_hook",
  "dominator",
@@ -2442,7 +2449,6 @@ dependencies = [
  "lang",
  "moonlight",
  "num-traits",
- "once_cell",
  "paste",
  "pin-project",
  "route_macro",

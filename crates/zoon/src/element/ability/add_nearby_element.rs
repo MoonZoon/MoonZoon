@@ -1,8 +1,10 @@
 use crate::*;
-use once_cell::sync::Lazy;
+use std::sync::OnceLock;
 
-static NEARBY_ELEMENTS_Z_INDEX: Lazy<String> =
-    Lazy::new(|| LayerIndex::NEARBY_ELEMENTS.to_string());
+fn nearby_elements_z_index() -> &'static String {
+    static NEARBY_ELEMENTS_Z_INDEX: OnceLock<String> = OnceLock::new();
+    NEARBY_ELEMENTS_Z_INDEX.get_or_init(|| LayerIndex::NEARBY_ELEMENTS.to_string())
+}
 
 pub trait AddNearbyElement<'a>: RawElWrapper + Sized {
     #[track_caller]
@@ -81,7 +83,7 @@ fn element_above_container() -> RawHtmlEl<web_sys::HtmlElement> {
         .style("left", "0")
         .style("width", "100%")
         .style("pointer-events", "none")
-        .style("z-index", &NEARBY_ELEMENTS_Z_INDEX)
+        .style("z-index", nearby_elements_z_index())
 }
 
 #[track_caller]
@@ -99,7 +101,7 @@ fn element_below_container() -> RawHtmlEl<web_sys::HtmlElement> {
         .style("left", "0")
         .style("width", "100%")
         .style("pointer-events", "none")
-        .style("z-index", &NEARBY_ELEMENTS_Z_INDEX)
+        .style("z-index", nearby_elements_z_index())
 }
 
 #[track_caller]
@@ -118,7 +120,7 @@ fn element_on_left_container() -> RawHtmlEl<web_sys::HtmlElement> {
         .style("top", "0")
         .style("height", "100%")
         .style("pointer-events", "none")
-        .style("z-index", &NEARBY_ELEMENTS_Z_INDEX)
+        .style("z-index", nearby_elements_z_index())
 }
 
 #[track_caller]
@@ -137,5 +139,5 @@ fn element_on_right_container() -> RawHtmlEl<web_sys::HtmlElement> {
         .style("top", "0")
         .style("height", "100%")
         .style("pointer-events", "none")
-        .style("z-index", &NEARBY_ELEMENTS_Z_INDEX)
+        .style("z-index", nearby_elements_z_index())
 }

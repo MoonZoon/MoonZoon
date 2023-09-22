@@ -12,9 +12,8 @@ use syn::{parse_quote, spanned::Spanned, ItemFn, ReturnType, Type};
 //
 // ```
 // fn columns() -> &'static MutableVec<()> {
-//     use once_cell::race::OnceBox;
-//     static INSTANCE: OnceBox<MutableVec<()>> = OnceBox::new();
-//     INSTANCE.get_or_init(move || Box::new(MutableVec::new_with_values(vec![(); 5])))
+//     static INSTANCE: std::sync::OnceLock<MutableVec<()>> = std::sync::OnceLock::new();
+//     INSTANCE.get_or_init(|| MutableVec::new_with_values(vec![(); 5]))
 // }
 // ```
 
@@ -27,9 +26,8 @@ pub fn static_ref(_args: TokenStream, input: TokenStream) -> TokenStream {
 
     let inner_block = input_fn.block;
     input_fn.block = parse_quote!({
-        use once_cell::race::OnceBox;
-        static INSTANCE: OnceBox<#data_type> = OnceBox::new();
-        INSTANCE.get_or_init(move || Box::new(#inner_block))
+        static INSTANCE: std::sync::OnceLock<#data_type> = std::sync::OnceLock::new();
+        INSTANCE.get_or_init(|| #inner_block)
     });
 
     quote::quote_spanned!(input_fn.span()=>
