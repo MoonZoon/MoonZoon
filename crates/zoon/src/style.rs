@@ -1,5 +1,5 @@
 use crate::*;
-use once_cell::race::OnceBox;
+use std::sync::OnceLock;
 use std::{
     borrow::Cow,
     collections::{BTreeMap, BTreeSet},
@@ -83,9 +83,11 @@ pub use width::Width;
 // --
 
 // @TODO Remove once https://caniuse.com/viewport-unit-variants are supported.
-#[static_ref]
-pub(crate) fn supports_dvx() -> &'static bool {
-    web_sys::css::supports_with_value("height", "100dvh").expect_throw("CSS.supports failed")
+fn supports_dvx() -> &'static bool {
+    static SUPPORTS_WITH_VALUE: OnceLock<bool> = OnceLock::new();
+    SUPPORTS_WITH_VALUE.get_or_init(|| {
+        web_sys::css::supports_with_value("height", "100dvh").expect_throw("CSS.supports failed")
+    })
 }
 
 pub type U32Width = u32;
@@ -484,8 +486,8 @@ impl<'a> StyleAnimation<'a> {
 ///     .update_raw_el(|el| el.class("my_button_class"));
 /// ```
 pub fn global_styles() -> &'static GlobalStyles {
-    static GLOBAL_STYLES: OnceBox<GlobalStyles> = OnceBox::new();
-    GLOBAL_STYLES.get_or_init(|| Box::new(GlobalStyles::new()))
+    static GLOBAL_STYLES: OnceLock<GlobalStyles> = OnceLock::new();
+    GLOBAL_STYLES.get_or_init(GlobalStyles::new)
 }
 
 pub struct GlobalStyles {

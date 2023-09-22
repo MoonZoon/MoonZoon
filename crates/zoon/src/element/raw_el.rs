@@ -3,8 +3,8 @@ use crate::{
     *,
 };
 use lang::Lang;
-use once_cell::sync::Lazy;
 use std::mem::ManuallyDrop;
+use std::sync::OnceLock;
 use std::{cell::Cell, mem, panic, rc::Rc};
 
 mod raw_el_wrapper;
@@ -17,7 +17,11 @@ pub use raw_svg_el::RawSvgEl;
 
 // ------ class_ids ------
 
-static CLASS_ID_GENERATOR: Lazy<ClassIdGenerator> = Lazy::new(ClassIdGenerator::default);
+fn class_id_generator() -> &'static ClassIdGenerator {
+    // @TODO replace `OnceLock`s with `LazyLock` everywhere once stable
+    static CLASS_ID_GENERATOR: OnceLock<ClassIdGenerator> = OnceLock::new();
+    CLASS_ID_GENERATOR.get_or_init(ClassIdGenerator::default)
+}
 
 #[derive(Default)]
 struct ClassIdGenerator {

@@ -1,5 +1,5 @@
 use crate::*;
-use once_cell::race::OnceBox;
+use std::sync::OnceLock;
 use web_sys::Storage;
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -7,20 +7,20 @@ pub type Result<T> = std::result::Result<T, Error>;
 // ------ local_storage ------
 
 pub fn local_storage() -> &'static LocalStorage {
-    static LOCAL_STORAGE: OnceBox<SendWrapper<LocalStorage>> = OnceBox::new();
+    static LOCAL_STORAGE: OnceLock<SendWrapper<LocalStorage>> = OnceLock::new();
     LOCAL_STORAGE.get_or_init(|| {
         let storage = LocalStorage::try_new().unwrap_throw();
-        Box::new(SendWrapper::new(storage))
+        SendWrapper::new(storage)
     })
 }
 
 // ------ session_storage ------
 
 pub fn session_storage() -> &'static SessionStorage {
-    static SESSION_STORAGE: OnceBox<SendWrapper<SessionStorage>> = OnceBox::new();
+    static SESSION_STORAGE: OnceLock<SendWrapper<SessionStorage>> = OnceLock::new();
     SESSION_STORAGE.get_or_init(|| {
         let storage = SessionStorage::try_new().unwrap_throw();
-        Box::new(SendWrapper::new(storage))
+        SendWrapper::new(storage)
     })
 }
 

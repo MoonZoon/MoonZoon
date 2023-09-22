@@ -34,6 +34,15 @@ pub use signal_either::SignalEither;
 mod mutable_ext;
 pub use mutable_ext::MutableExt;
 
+mod read_only_mutable_ext;
+pub use read_only_mutable_ext::ReadOnlyMutableExt;
+
+mod mutable_ext_option;
+pub use mutable_ext_option::MutableExtOption;
+
+mod read_only_mutable_ext_option;
+pub use read_only_mutable_ext_option::ReadOnlyMutableExtOption;
+
 mod mutable_vec_ext;
 pub use mutable_vec_ext::MutableVecExt;
 

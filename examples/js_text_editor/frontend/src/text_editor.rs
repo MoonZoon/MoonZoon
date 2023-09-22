@@ -1,20 +1,6 @@
 use std::rc::Rc;
 use zoon::{futures_util::join, *};
 
-#[static_ref]
-fn load_assets_once() -> &'static Mutable<bool> {
-    Task::start(async {
-        join!(
-            load_stylesheet("https://cdn.quilljs.com/1.3.6/quill.snow.css"),
-            load_script("https://cdn.quilljs.com/1.3.6/quill.min.js"),
-        );
-        load_assets_once().set(true);
-    });
-    Mutable::default()
-}
-
-// ------ TextEditor ------
-
 pub struct TextEditor {
     raw_el: RawHtmlEl<web_sys::HtmlElement>,
     controller: ReadOnlyMutable<Option<js_bridge::QuillController>>,
@@ -40,7 +26,13 @@ impl TextEditor {
                 })
                 .child(RawHtmlEl::new("div").after_insert(move |html_element| {
                     Task::start(async move {
-                        load_assets_once().signal().wait_for(true).await;
+                        run_once_async!(async {
+                            join!(
+                                load_stylesheet("https://cdn.quilljs.com/1.3.6/quill.snow.css"),
+                                load_script("https://cdn.quilljs.com/1.3.6/quill.min.js"),
+                            );
+                        })
+                        .await;
                         controller.set(Some(js_bridge::QuillController::new(&html_element)));
                     });
                 }))
@@ -63,21 +55,11 @@ impl TextEditor {
 
         Task::start(
             self.controller
-                .signal_ref(move |controller| {
-                    if let Some(controller) = controller {
-                        controller.on_change(&closure)
-                    }
-                })
-                .to_future(),
+                .wait_for_some_ref(move |controller| controller.on_change(&closure)),
         );
-
         self
     }
 }
-
-// ------ ------
-//   JS Bridge
-// ------ ------
 
 mod js_bridge {
     use super::*;

@@ -32,6 +32,7 @@ mod viewport;
 mod web_worker_loader;
 
 pub use animation::*;
+pub use async_once_cell;
 pub use class_id::ClassId;
 pub use clone_deep::CloneDeep;
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
@@ -60,7 +61,6 @@ pub use lang::Lang;
 pub use monotonic_ids::MonotonicIds;
 pub use not::not;
 pub use num_traits;
-pub use once_cell;
 pub use paste::paste;
 pub use pin_project::pin_project;
 pub use resize_observer::ResizeObserver;
@@ -190,8 +190,24 @@ macro_rules! run_once {
     ($random_ident:ident, $f:expr) => {
         $crate::paste! {{
             #[allow(non_upper_case_globals)]
-            static [<RUN_ONCE $random_ident:snake:upper>]: std::sync::Once = std::sync::Once::new();
-            [<RUN_ONCE $random_ident:snake:upper>].call_once($f);
+            static [<RUN_ONCE_ $random_ident>]: std::sync::Once = std::sync::Once::new();
+            [<RUN_ONCE_ $random_ident>].call_once($f);
+        }}
+    };
+}
+
+// ------ run_once_async! ------
+
+#[macro_export]
+macro_rules! run_once_async {
+    ($f:expr) => {
+        $crate::gensym! { $crate::run_once_async!($f) }
+    };
+    ($random_ident:ident, $fut:expr) => {
+        $crate::paste! {{
+            #[allow(non_upper_case_globals)]
+            static [<RUN_ONCE_ASYNC_ $random_ident>]: async_once_cell::OnceCell<()> = async_once_cell::OnceCell::new();
+            [<RUN_ONCE_ASYNC_ $random_ident>].get_or_init($fut)
         }}
     };
 }
