@@ -193,11 +193,16 @@ async fn compile_with_cargo(build_mode: BuildMode, bin_crate: &str, frontend_mul
     }
 
     let mut envs: Vec<(String, &str)> = vec![];
+
+    #[allow(unused_assignments)]
+    let mut rustflags_value = String::new();
     if frontend_multithreading {
-        envs.push((
-            "RUSTFLAGS".to_owned(),
-            "-C target-feature=+atomics,+bulk-memory,+mutable-globals",
-        ));
+        let mut rustflags = vec!["-C target-feature=+atomics,+bulk-memory,+mutable-globals"];
+        if build_mode.is_not_dev() {
+            rustflags.push("-Z location-detail=none");
+        }
+        rustflags_value = rustflags.join(" ");
+        envs.push(("RUSTFLAGS".to_owned(), &rustflags_value));
     }
 
     let profile_env_name = build_mode.env_name();
