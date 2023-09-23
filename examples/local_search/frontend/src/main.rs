@@ -53,19 +53,17 @@ fn generate_companies(count: usize) {
             send_to_output(BlockingOutputMsg::Companies(companies))
         },
         move |from_blocking| {
-            from_blocking.for_each(move |msg| 
-                match msg {
-                    BlockingOutputMsg::CompanyIndex(index) => {
-                        store().generated_company_count.set(index + 1);
-                    }
-                    BlockingOutputMsg::Companies(companies) => {
-                        store()
-                            .generate_companies_time
-                            .set(Some(performance().now() - start_time));
-                        *store().all_companies.lock_mut() = Arc::new(companies);
-                        store().generate_companies_button_disabled.set(false);
-                    }
-                
+            from_blocking.for_each_sync(move |msg| match msg {
+                BlockingOutputMsg::CompanyIndex(index) => {
+                    store().generated_company_count.set(index + 1);
+                }
+                BlockingOutputMsg::Companies(companies) => {
+                    store()
+                        .generate_companies_time
+                        .set(Some(performance().now() - start_time));
+                    *store().all_companies.lock_mut() = Arc::new(companies);
+                    store().generate_companies_button_disabled.set(false);
+                }
             })
         },
     );
