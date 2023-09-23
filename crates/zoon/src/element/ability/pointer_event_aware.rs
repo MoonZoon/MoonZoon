@@ -96,16 +96,20 @@ pub trait PointerEventAware: RawElWrapper + Sized {
         })
     }
 
-    fn pointer_handling(self, handling: PointerHandling) -> Self
+    fn pointer_handling(self, handling: impl Into<Option<PointerHandling>>) -> Self
     where
         <Self::RawEl as RawEl>::DomElement: Into<web_sys::HtmlElement>,
     {
-        self.update_raw_el(|raw_el| raw_el.style("pointer-events", handling.pointer_events))
+        if let Some(handling) = handling.into() {
+            return self
+                .update_raw_el(|raw_el| raw_el.style("pointer-events", handling.pointer_events));
+        }
+        self
     }
 
     fn pointer_handling_signal(
         self,
-        handling: impl Signal<Item = PointerHandling> + Unpin + 'static,
+        handling: impl Signal<Item = impl Into<Option<PointerHandling>>> + Unpin + 'static,
     ) -> Self
     where
         <Self::RawEl as RawEl>::DomElement: Into<web_sys::HtmlElement>,
@@ -113,21 +117,25 @@ pub trait PointerEventAware: RawElWrapper + Sized {
         self.update_raw_el(|raw_el| {
             raw_el.style_signal(
                 "pointer-events",
-                handling.map(|handling| handling.pointer_events),
+                handling.map(|handling| handling.into().map(|handling| handling.pointer_events)),
             )
         })
     }
 
-    fn pointer_handling_svg(self, handling: PointerHandlingSvg) -> Self
+    fn pointer_handling_svg(self, handling: impl Into<Option<PointerHandlingSvg>>) -> Self
     where
         <Self::RawEl as RawEl>::DomElement: Into<web_sys::SvgElement>,
     {
-        self.update_raw_el(|raw_el| raw_el.style("pointer-events", handling.pointer_events))
+        if let Some(handling) = handling.into() {
+            return self
+                .update_raw_el(|raw_el| raw_el.style("pointer-events", handling.pointer_events));
+        }
+        self
     }
 
     fn pointer_handling_svg_signal(
         self,
-        handling: impl Signal<Item = PointerHandlingSvg> + Unpin + 'static,
+        handling: impl Signal<Item = impl Into<Option<PointerHandlingSvg>>> + Unpin + 'static,
     ) -> Self
     where
         <Self::RawEl as RawEl>::DomElement: Into<web_sys::SvgElement>,
@@ -135,7 +143,7 @@ pub trait PointerEventAware: RawElWrapper + Sized {
         self.update_raw_el(|raw_el| {
             raw_el.style_signal(
                 "pointer-events",
-                handling.map(|handling| handling.pointer_events),
+                handling.map(|handling| handling.into().map(|handling| handling.pointer_events)),
             )
         })
     }
