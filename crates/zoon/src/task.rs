@@ -41,6 +41,7 @@ impl Task {
         Timer::sleep(0).await
     }
 
+    /// NOTE: Add `frontend_multithreading = true` to your MoonZoon.toml file to enable it
     #[cfg(feature = "frontend_multithreading")]
     pub fn start_blocking<Fut: Future<Output = ()>>(
         f: impl FnOnce(DedicatedWorkerGlobalScope) -> Fut + Send + 'static,
@@ -53,12 +54,14 @@ impl Task {
         let pointer = Box::into_raw(Box::new(f));
 
         let message = JsValue::from(pointer as u32);
-        // @TODO worker pool?
+        // @TODO worker pool
+        // Inspiration: https://github.com/rustwasm/wasm-bindgen/blob/main/examples/raytrace-parallel/src/pool.rs
         WORKER.with(|worker| worker.post_message(&message).unwrap_throw());
     }
 
     // @TODO add `start_blocking_droppable` (properly drop Workers and ObjectUrls)
 
+    /// NOTE: Add `frontend_multithreading = true` to your MoonZoon.toml file to enable it
     #[cfg(feature = "frontend_multithreading")]
     pub fn start_blocking_with_tasks<FutI, FutB, FutO, IBMsg, BOMsg>(
         input_task: impl FnOnce(Box<dyn FnBoxClone<IBMsg>>) -> FutI + 'static,
@@ -101,6 +104,7 @@ impl Task {
     // @TODO add `start_blocking_with_tasks_droppable`
     // (properly drop everything, graceful channel shutdown?)
 
+    /// NOTE: Add `frontend_multithreading = true` to your MoonZoon.toml file to enable it
     #[cfg(feature = "frontend_multithreading")]
     pub fn start_blocking_with_output_task<FutB, FutO, BOMsg>(
         blocking_task: impl FnOnce(DedicatedWorkerGlobalScope, Box<dyn FnBoxClone<BOMsg>>) -> FutB
@@ -156,7 +160,14 @@ thread_local! {
         message.push(&wasm_bindgen::module());
         message.push(&wasm_bindgen::memory());
 
-        worker.post_message(&message).unwrap_throw();
+        worker.post_message(&message).unwrap_or_else(|error| {
+            crate::eprintln!("Failed to post the initialization message to the worker. \
+            Make sure you set the env var 'FRONTEND_MULTITHREADING=true' \
+            before the Moon app start or you set the cross-origin isolation headers \
+            'Cross-Origin-Embedder-Policy: require-corp' and 'Cross-Origin-Opener-Policy: same-origin' \
+            in your custom backend app. Error details: {error:?}");
+            panic!("Failed to post the initialization message to the worker");
+        });
         worker
     };
 }
