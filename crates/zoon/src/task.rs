@@ -165,7 +165,9 @@ thread_local! {
             Make sure you set the env var 'FRONTEND_MULTITHREADING=true' \
             before the Moon app start or you set the cross-origin isolation headers \
             'Cross-Origin-Embedder-Policy: require-corp' and 'Cross-Origin-Opener-Policy: same-origin' \
-            in your custom backend app. Error details: {error:?}");
+            in your custom backend app. Also the headers are taken into account by the browser \
+            only when served over HTTPS or from the 'localhost` domain. \
+            Error details: {error:?}");
             panic!("Failed to post the initialization message to the worker");
         });
         worker
