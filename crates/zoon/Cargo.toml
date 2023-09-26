@@ -8,7 +8,9 @@ edition = "2021"
 # wasm-bindgen has to match the version installed by mzoon
 # @TODO install the compatible (aka the same) version by mzoon automatically?
 wasm-bindgen = { version = "=0.2.87", default-features = false }
-wasm-bindgen-futures = { version = "0.4.36", default-features = false }
+# @TODO 'wasm-bindgen-futures' v. "=0.4.29" until the problem with Firefox is fixed:
+# https://github.com/rustwasm/wasm-bindgen/issues/3635
+wasm-bindgen-futures = { version = "=0.4.29", default-features = false }
 js-sys = { version = "0.3.63", default-features = false }
 futures-channel = { version = "0.3.28", default-features = false }
 dominator = { version = "0.5.33", default-features = false }

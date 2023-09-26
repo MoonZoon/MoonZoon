@@ -23,6 +23,8 @@ impl Task {
 
     /// https://javascript.info/event-loop
     pub async fn next_micro_tick() {
+        // @TODO probably we can make it more efficient with `queueMicrotask`:
+        // https://developer.mozilla.org/en-US/docs/Web/API/queueMicrotask
         let (sender, receiver) = oneshot::channel();
         Self::start(async {
             sender
