@@ -1,10 +1,18 @@
-use std::iter;
 use zoon::*;
 
 make_event!(BxSearchInput, "bx-search-input" => web_sys::CustomEvent);
 
 pub struct Search {
-    raw_el: RawHtmlEl<web_sys::HtmlElement>,
+    raw_el: RawHtmlEl,
+}
+
+impl Element for Search {}
+
+impl RawElWrapper for Search {
+    type RawEl = RawHtmlEl;
+    fn raw_el_mut(&mut self) -> &mut Self::RawEl {
+        &mut self.raw_el
+    }
 }
 
 #[allow(dead_code)]
@@ -37,11 +45,5 @@ impl Search {
             on_change(value);
         });
         self
-    }
-}
-
-impl Element for Search {
-    fn into_raw(self) -> RawElOrText {
-        self.raw_el.into_raw()
     }
 }

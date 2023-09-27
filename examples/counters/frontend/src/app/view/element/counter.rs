@@ -56,8 +56,8 @@ fn counter(
         .into_raw()
 }
 
-impl<StepFlag> Element for Counter<ValueFlagNotSet, ValueSignalFlagSet, OnChangeFlagSet, StepFlag> {
-    fn into_raw(self) -> RawElOrText {
+impl<StepFlag> ElementUnchecked for Counter<ValueFlagNotSet, ValueSignalFlagSet, OnChangeFlagSet, StepFlag> {
+    fn into_raw_unchecked(self) -> RawElOrText {
         let on_change = self.on_change.unwrap_throw();
         let step = self.step;
         counter(
@@ -67,11 +67,12 @@ impl<StepFlag> Element for Counter<ValueFlagNotSet, ValueSignalFlagSet, OnChange
         )
     }
 }
+impl<StepFlag> Element for Counter<ValueFlagNotSet, ValueSignalFlagSet, OnChangeFlagSet, StepFlag> {}
 
-impl<ValueFlag, StepFlag> Element
+impl<ValueFlag, StepFlag> ElementUnchecked
     for Counter<ValueFlag, ValueSignalFlagNotSet, OnChangeFlagNotSet, StepFlag>
 {
-    fn into_raw(self) -> RawElOrText {
+    fn into_raw_unchecked(self) -> RawElOrText {
         let state_value = Rc::new(Mutable::new(self.value));
         let step = self.step;
         counter(
@@ -83,11 +84,14 @@ impl<ValueFlag, StepFlag> Element
         )
     }
 }
-
 impl<ValueFlag, StepFlag> Element
+    for Counter<ValueFlag, ValueSignalFlagNotSet, OnChangeFlagNotSet, StepFlag>
+{}
+
+impl<ValueFlag, StepFlag> ElementUnchecked
     for Counter<ValueFlag, ValueSignalFlagNotSet, OnChangeFlagSet, StepFlag>
 {
-    fn into_raw(self) -> RawElOrText {
+    fn into_raw_unchecked(self) -> RawElOrText {
         let state_value = Rc::new(Mutable::new(self.value));
         let on_change = self.on_change.unwrap_throw();
         let step = self.step;
@@ -104,6 +108,9 @@ impl<ValueFlag, StepFlag> Element
         )
     }
 }
+impl<ValueFlag, StepFlag> Element
+    for Counter<ValueFlag, ValueSignalFlagNotSet, OnChangeFlagSet, StepFlag>
+{}
 
 // ------ ------
 //  Attributes
