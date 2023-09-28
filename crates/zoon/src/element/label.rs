@@ -41,7 +41,6 @@ impl<LabelFlag, ForInputFlag, RE: RawEl> KeyboardEventAware for Label<LabelFlag,
 impl<LabelFlag, ForInputFlag, RE: RawEl> MouseEventAware for Label<LabelFlag, ForInputFlag, RE> {}
 impl<LabelFlag, ForInputFlag, RE: RawEl> PointerEventAware for Label<LabelFlag, ForInputFlag, RE> {}
 impl<LabelFlag, ForInputFlag, RE: RawEl> TouchEventAware for Label<LabelFlag, ForInputFlag, RE> {}
-impl<LabelFlag, ForInputFlag, RE: RawEl> Hookable for Label<LabelFlag, ForInputFlag, RE> {}
 impl<LabelFlag, ForInputFlag, RE: RawEl> AddNearbyElement<'_>
     for Label<LabelFlag, ForInputFlag, RE>
 {

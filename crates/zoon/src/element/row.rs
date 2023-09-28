@@ -88,7 +88,6 @@ impl<EmptyFlag, MultilineFlag, RE: RawEl> PointerEventAware for Row<EmptyFlag, M
 impl<EmptyFlag, MultilineFlag, RE: RawEl> TouchEventAware for Row<EmptyFlag, MultilineFlag, RE> {}
 impl<EmptyFlag, MultilineFlag, RE: RawEl> MutableViewport for Row<EmptyFlag, MultilineFlag, RE> {}
 impl<EmptyFlag, MultilineFlag, RE: RawEl> ResizableViewport for Row<EmptyFlag, MultilineFlag, RE> {}
-impl<EmptyFlag, MultilineFlag, RE: RawEl> Hookable for Row<EmptyFlag, MultilineFlag, RE> {}
 impl<EmptyFlag, MultilineFlag, RE: RawEl> AddNearbyElement<'_>
     for Row<EmptyFlag, MultilineFlag, RE>
 {

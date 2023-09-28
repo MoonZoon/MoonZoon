@@ -47,7 +47,6 @@ impl<UrlFlag, DescriptionFlag, RE: RawEl> PointerEventAware
 {
 }
 impl<UrlFlag, DescriptionFlag, RE: RawEl> TouchEventAware for Image<UrlFlag, DescriptionFlag, RE> {}
-impl<UrlFlag, DescriptionFlag, RE: RawEl> Hookable for Image<UrlFlag, DescriptionFlag, RE> {}
 impl<UrlFlag, DescriptionFlag, RE: RawEl> AddNearbyElement<'_>
     for Image<UrlFlag, DescriptionFlag, RE>
 {

@@ -270,28 +270,6 @@ impl<
         InputTypeFlag,
         ReadOnlyFlag,
         RE: RawEl,
-    > Hookable
-    for TextInput<
-        IdFlag,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlag,
-        InputTypeFlag,
-        ReadOnlyFlag,
-        RE,
-    >
-{
-}
-impl<
-        IdFlag,
-        OnChangeFlag,
-        PlaceholderFlag,
-        TextFlag,
-        LabelFlag,
-        InputTypeFlag,
-        ReadOnlyFlag,
-        RE: RawEl,
     > AddNearbyElement<'_>
     for TextInput<
         IdFlag,

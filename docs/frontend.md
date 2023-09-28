@@ -290,17 +290,17 @@ fn canvas() -> impl Element {
 }
 ```
 
-- You can call methods (_hooks_) `after_insert` and `after_remove` on all _elements_ implementing the _ability_ `Hookable`.
+- You can call methods (_hooks_) `after_insert` and `after_remove` on all _elements_ implementing the _ability_ `HookableLifecycle`.
 
 - Hooks allow you to access the DOM node directly through their function argument. The code calling native DOM APIs may become quite verbose but you have the full power of the crate [web_sys](https://docs.rs/web-sys/) under your hands.
 
 - [SendWrapper](https://docs.rs/send_wrapper/latest/send_wrapper/struct.SendWrapper.html) allows you to store non-`Send` types (e.g. `web_sys` elements) to statics. 
   - _Note:_ The API will be probably revisited once Wasm fully supports multithreading. One idea is to introduce lightweight _actors_ as an alternative to `#[static_ref]` functions. 
 
-The `Hookable` ability / trait:
+The `HookableLifecycle` ability / trait:
 
 ```rust
-pub trait Hookable: RawElWrapper + Sized {
+pub trait HookableLifecycle: RawElWrapper + Sized {
     fn after_insert(
         self,
         handler: impl FnOnce(<Self::RawEl as RawEl>::DomElement) + 'static,
@@ -318,9 +318,10 @@ pub trait Hookable: RawElWrapper + Sized {
 ```
 and its implementation for `Canvas`:
 ```rust
-impl<WidthFlag, HeightFlag, RE: RawEl> Hookable for Canvas<WidthFlag, HeightFlag, RE> {}
+impl<WidthFlag, HeightFlag, RE: RawEl> HookableLifecycle for Canvas<WidthFlag, HeightFlag, RE> {}
 ```
 - `DomElement` is one of the `web_sys` / DOM elements. It's [web_sys::HtmlCanvasElement](https://docs.rs/web-sys/latest/web_sys/struct.HtmlCanvasElement.html) in this case (as defined in `crates/zoon/src/element/canvas.rs`).
+- _NOTE:_ `HookableLifecycle` is now automatically implemented for all items implementing `RawElWrapper`.
 
 ---
 

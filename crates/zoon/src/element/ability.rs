@@ -18,8 +18,8 @@ pub use pointer_event_aware::{
 mod touch_event_aware;
 pub use touch_event_aware::{TouchEventAware, TouchHandling};
 
-mod hookable;
-pub use hookable::Hookable;
+mod hookable_lifecycle;
+pub use hookable_lifecycle::HookableLifecycle;
 
 mod mutable_viewport;
 pub use mutable_viewport::MutableViewport;

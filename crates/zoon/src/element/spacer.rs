@@ -67,6 +67,5 @@ impl RawElWrapper for Spacer {
 // ------ ------
 
 impl ResizableViewport for Spacer {}
-impl Hookable for Spacer {}
 impl AddNearbyElement<'_> for Spacer {}
 impl HasIds for Spacer {}

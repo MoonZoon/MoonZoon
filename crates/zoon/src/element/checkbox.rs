@@ -120,10 +120,6 @@ impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> TouchEve
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
 }
-impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> Hookable
-    for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
-{
-}
 impl<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE: RawEl> AddNearbyElement<'_>
     for Checkbox<IdFlag, OnChangeFlag, LabelFlag, IconFlag, CheckedFlag, RE>
 {
