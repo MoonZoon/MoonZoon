@@ -9,7 +9,7 @@
         // "examples/canvas/Cargo.toml",
         // "examples/chat/Cargo.toml",
         "examples/counter/Cargo.toml",
-        "examples/counters/Cargo.toml",
+        // "examples/counters/Cargo.toml",
         // "examples/custom_config/Cargo.toml",
         // "examples/custom_http_client/Cargo.toml",
         // "examples/image/Cargo.toml",

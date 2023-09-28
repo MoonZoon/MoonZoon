@@ -40,7 +40,7 @@ impl TextEditor {
         }
     }
 
-    pub fn on_change(mut self, on_change: impl Fn(serde_json::Value) + 'static) -> Self {
+    pub fn on_change(self, on_change: impl Fn(serde_json::Value) + 'static) -> Self {
         let callback = move |json: JsString| {
             let json = json
                 .as_string()
@@ -49,15 +49,14 @@ impl TextEditor {
             on_change(json)
         };
         let closure = Rc::new(Closure::new(callback));
-        self.raw_el = self
-            .raw_el
-            .after_remove(clone!((closure) move |_| drop(closure)));
-
-        Task::start(
-            self.controller
-                .wait_for_some_ref(move |controller| controller.on_change(&closure)),
-        );
-        self
+        let task =
+            Task::start_droppable(self.controller.wait_for_some_ref(
+                clone!((closure) move |controller| controller.on_change(&closure)),
+            ));
+        self.after_remove(move |_| {
+            drop(task);
+            drop(closure);
+        })
     }
 }
 

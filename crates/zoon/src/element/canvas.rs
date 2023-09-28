@@ -41,7 +41,6 @@ impl<WidthFlag, HeightFlag, RE: RawEl> KeyboardEventAware for Canvas<WidthFlag, 
 impl<WidthFlag, HeightFlag, RE: RawEl> MouseEventAware for Canvas<WidthFlag, HeightFlag, RE> {}
 impl<WidthFlag, HeightFlag, RE: RawEl> PointerEventAware for Canvas<WidthFlag, HeightFlag, RE> {}
 impl<WidthFlag, HeightFlag, RE: RawEl> TouchEventAware for Canvas<WidthFlag, HeightFlag, RE> {}
-impl<WidthFlag, HeightFlag, RE: RawEl> Hookable for Canvas<WidthFlag, HeightFlag, RE> {}
 impl<WidthFlag, HeightFlag, RE: RawEl> AddNearbyElement<'_> for Canvas<WidthFlag, HeightFlag, RE> {}
 impl<WidthFlag, HeightFlag, RE: RawEl> HasIds for Canvas<WidthFlag, HeightFlag, RE> {}
 

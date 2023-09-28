@@ -175,7 +175,6 @@ impl<LabelFlag, OnPressFlag, RE: RawEl> Focusable for Button<LabelFlag, OnPressF
 impl<LabelFlag, OnPressFlag, RE: RawEl> MouseEventAware for Button<LabelFlag, OnPressFlag, RE> {}
 impl<LabelFlag, OnPressFlag, RE: RawEl> PointerEventAware for Button<LabelFlag, OnPressFlag, RE> {}
 impl<LabelFlag, OnPressFlag, RE: RawEl> TouchEventAware for Button<LabelFlag, OnPressFlag, RE> {}
-impl<LabelFlag, OnPressFlag, RE: RawEl> Hookable for Button<LabelFlag, OnPressFlag, RE> {}
 impl<LabelFlag, OnPressFlag, RE: RawEl> AddNearbyElement<'_>
     for Button<LabelFlag, OnPressFlag, RE>
 {

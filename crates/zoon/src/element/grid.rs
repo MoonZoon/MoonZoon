@@ -83,7 +83,6 @@ impl<EmptyFlag, RE: RawEl> PointerEventAware for Grid<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> TouchEventAware for Grid<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> MutableViewport for Grid<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> ResizableViewport for Grid<EmptyFlag, RE> {}
-impl<EmptyFlag, RE: RawEl> Hookable for Grid<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> AddNearbyElement<'_> for Grid<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> HasIds for Grid<EmptyFlag, RE> {}
 impl<EmptyFlag, RE: RawEl> SelectableTextContent for Grid<EmptyFlag, RE> {}

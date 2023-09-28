@@ -1,6 +1,6 @@
 use crate::*;
 
-pub trait Hookable: RawElWrapper + Sized {
+pub trait HookableLifecycle: RawElWrapper + Sized {
     fn after_insert(
         self,
         handler: impl FnOnce(<Self::RawEl as RawEl>::DomElement) + 'static,
@@ -15,3 +15,5 @@ pub trait Hookable: RawElWrapper + Sized {
         self.update_raw_el(|raw_el| raw_el.after_remove(handler))
     }
 }
+
+impl<REW: RawElWrapper> HookableLifecycle for REW {}
