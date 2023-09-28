@@ -308,7 +308,7 @@ impl<'a> Style<'a> for Borders<'a> {
 // ------ Border ------
 
 /// Single border definition.
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub struct Border {
     /// Width in pixels.
     width: u32,
