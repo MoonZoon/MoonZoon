@@ -11,12 +11,12 @@ use bool_ext::BoolExt;
 use fehler::throws;
 use futures::TryStreamExt;
 use std::{
-    env,
+    env, future,
     path::{Path, PathBuf},
     str,
     sync::Arc,
 };
-use tokio::{fs, process::Command, try_join};
+use tokio::{fs, process::Command, select, sync::watch, try_join};
 use uuid::Uuid;
 
 // -- public --
@@ -27,6 +27,7 @@ pub async fn build_frontend(
     cache_busting: bool,
     frontend_dist: bool,
     frontend_multithreading: bool,
+    compilation_killer: Option<watch::Receiver<()>>,
 ) {
     println!("Building frontend...");
 
@@ -35,9 +36,21 @@ pub async fn build_frontend(
 
     let web_workers = web_worker_workspace_members()?;
 
-    compile_with_cargo(build_mode, "frontend", frontend_multithreading).await?;
+    compile_with_cargo(
+        build_mode,
+        "frontend",
+        frontend_multithreading,
+        compilation_killer.clone(),
+    )
+    .await?;
     for WorkspaceMember { name, .. } in &web_workers {
-        compile_with_cargo(build_mode, name, frontend_multithreading).await?;
+        compile_with_cargo(
+            build_mode,
+            name,
+            frontend_multithreading,
+            compilation_killer.clone(),
+        )
+        .await?;
     }
 
     remove_pkg(Path::new("frontend/pkg")).await?;
@@ -121,7 +134,12 @@ async fn rename_and_compress_pkg_files(
 }
 
 #[throws]
-async fn compile_with_cargo(build_mode: BuildMode, bin_crate: &str, frontend_multithreading: bool) {
+async fn compile_with_cargo(
+    build_mode: BuildMode,
+    bin_crate: &str,
+    frontend_multithreading: bool,
+    compilation_killer: Option<watch::Receiver<()>>,
+) {
     // @TODO We have to run `rustup run <toolchain>` instead of `cargo +<toolchain>`
     // because `cargo +<toolchain>` is broken in Rustup on Windows.
     // https://github.com/rust-lang/rustup/issues/3036
@@ -216,14 +234,35 @@ async fn compile_with_cargo(build_mode: BuildMode, bin_crate: &str, frontend_mul
         })
         .chain(envs);
 
-    Command::new("rustup")
+    let mut process = Command::new("rustup")
         .args(&args)
         .envs(envs)
-        .status()
-        .await
-        .context("Failed to get {bin_crate} compilation status")?
-        .success()
-        .err(anyhow!("Failed to compile {bin_crate}"))?;
+        .spawn()
+        .context("Failed to start {bin_crate} compilation")?;
+
+    let compilation_killer_or_pending = async move {
+        if let Some(mut compilation_killer) = compilation_killer {
+            let _ = compilation_killer.changed().await;
+            println!("Stop compilation");
+        } else {
+            future::pending::<()>().await;
+        }
+    };
+    select! {
+        result = process.wait() => {
+            result
+                .context("Failed to get {bin_crate} compilation status")?
+                .success()
+                .err(anyhow!("Failed to compile {bin_crate}"))?;
+        }
+        _ = compilation_killer_or_pending => {
+            process
+                .kill()
+                .await
+                .context("Failed to kill {bin_crate} compilation")?;
+            Err(anyhow!("Compilation stopped"))?;
+        }
+    };
 }
 
 #[throws]
