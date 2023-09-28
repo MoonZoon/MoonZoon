@@ -147,7 +147,6 @@ impl Button<LabelFlagNotSet, OnPressFlagNotSet, RawHtmlEl<web_sys::HtmlDivElemen
                 .style("text-align", "center")
                 .style("display", "inline-flex")
                 .style("flex-direction", "column")
-                .style("align-items", "center")
                 .style("touch-action", "manipulation"),
             flags: PhantomData,
         }
