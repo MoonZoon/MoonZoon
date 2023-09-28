@@ -17,6 +17,7 @@ pub async fn build(build_mode: BuildMode, frontend_dist: bool, hosting: Option<H
         config.cache_busting,
         frontend_dist,
         config.frontend_multithreading == Some(true),
+        None,
     )
     .await?;
     build_backend(build_mode, config.https).await?;

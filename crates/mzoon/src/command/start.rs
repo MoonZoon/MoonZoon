@@ -45,6 +45,7 @@ async fn build_and_watch_frontend(config: &Config, build_mode: BuildMode) -> Fro
         config.cache_busting,
         false,
         config.frontend_multithreading == Some(true),
+        None,
     )
     .await
     {

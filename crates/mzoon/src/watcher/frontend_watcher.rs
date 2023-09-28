@@ -5,8 +5,12 @@ use crate::BuildMode;
 use anyhow::{Context, Error, Result};
 use fehler::throws;
 use std::sync::Arc;
-use tokio::sync::mpsc::UnboundedReceiver;
-use tokio::{spawn, task::JoinHandle, time::Duration};
+use tokio::sync::{mpsc::UnboundedReceiver, watch};
+use tokio::{
+    spawn,
+    task::JoinHandle,
+    time::{sleep, Duration},
+};
 
 pub struct FrontendWatcher {
     #[allow(dead_code)]
@@ -55,19 +59,35 @@ async fn on_change(
     frontend_multithreading: bool,
 ) {
     let mut build_task = None::<JoinHandle<()>>;
+    let mut compilation_killer_sender = None::<watch::Sender<()>>;
 
     while receiver.recv().await.is_some() {
+        if let Some(compilation_killer_sender) = compilation_killer_sender.take() {
+            drop(compilation_killer_sender);
+            // `sleep` / next tick is required to give the runtime chance to handle sender's drop
+            // before calling `build_task.abort()` so the associated receivers will be notified
+            // about the drop and then compilation processes will receive kill signals
+            sleep(Duration::from_millis(0)).await;
+        }
         if let Some(build_task) = build_task.take() {
             build_task.abort();
         }
+
+        let (new_compilation_killer_sender, _) = watch::channel(());
         build_task = Some(spawn(build_and_reload(
             Arc::clone(&reload_url),
             build_mode,
             cache_busting,
             frontend_multithreading,
+            Some(new_compilation_killer_sender.subscribe()),
         )));
+        compilation_killer_sender = Some(new_compilation_killer_sender);
     }
 
+    if let Some(compilation_killer_sender) = compilation_killer_sender.take() {
+        drop(compilation_killer_sender);
+        sleep(Duration::from_millis(0)).await;
+    }
     if let Some(build_task) = build_task.take() {
         build_task.abort();
     }
@@ -78,9 +98,16 @@ async fn build_and_reload(
     build_mode: BuildMode,
     cache_busting: bool,
     frontend_multithreading: bool,
+    compilation_killer: Option<watch::Receiver<()>>,
 ) {
-    if let Err(error) =
-        build_frontend(build_mode, cache_busting, false, frontend_multithreading).await
+    if let Err(error) = build_frontend(
+        build_mode,
+        cache_busting,
+        false,
+        frontend_multithreading,
+        compilation_killer,
+    )
+    .await
     {
         return eprintln!("{error}");
     }
