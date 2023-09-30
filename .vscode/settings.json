@@ -13,7 +13,7 @@
         // "examples/custom_config/Cargo.toml",
         // "examples/custom_http_client/Cargo.toml",
         // "examples/image/Cargo.toml",
-        // "examples/js_text_editor/Cargo.toml",s
+        // "examples/js_text_editor/Cargo.toml",
         // "examples/js_framework_benchmark/Cargo.toml",
         // "examples/keyboard/Cargo.toml",
         // "examples/layers/Cargo.toml",
@@ -25,6 +25,7 @@
         // "examples/paragraph/Cargo.toml",
         // "examples/resize_drag/Cargo.toml",
         // "examples/row_wrap/Cargo.toml",
+        // "examples/signal_params/Cargo.toml",
         // "examples/slider/Cargo.toml",
         // "examples/spinner/Cargo.toml",
         // "examples/start_with_app/Cargo.toml",
