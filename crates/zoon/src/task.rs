@@ -190,26 +190,15 @@ fn worker_loader_url() -> String {
     };
     let js_url = web_sys::Url::new_with_base(&js_url, &current_href)
         .expect_throw("Failed to create URL for Web Worker Javascript")
-        .to_string();
+        .to_string()
+        .as_string()
+        .unwrap_throw();
 
     let array: js_sys::Array = js_sys::Array::new();
     array.push(
-        &format!(
-            r#"
-        importScripts("{js_url}");
-        self.onmessage = async event => {{
-            const [wasm_module, wasm_memory] = event.data;
-            const instance_creator = await wasm_bindgen(wasm_module, wasm_memory);
-            
-            self.onmessage = async event => {{
-                const {{ worker_entry_point }} = await instance_creator;
-                const callback_pointer_u32 = Number(event.data);
-                worker_entry_point(callback_pointer_u32);
-            }};
-          }}
-    "#
-        )
-        .into(),
+        &include_str!("task/worker_script.js")
+            .replacen("{{js_url}}", &js_url, 1)
+            .into(),
     );
 
     let blob = web_sys::Blob::new_with_str_sequence_and_options(
