@@ -81,7 +81,9 @@ pub async fn build_with_wasm_bindgen(
         "--target".as_ref(),
         target.as_ref(),
         "--no-typescript".as_ref(),
-        "--reference-types".as_ref(),
+        // @TODO uncomment when Safari 15.6.1 (August 18, 2022) is no longer needed
+        // (including testing in a virtual machine)
+        // "--reference-types".as_ref(),
         "--weak-refs".as_ref(),
         "--out-dir".as_ref(),
         pkg_path.as_os_str(),
