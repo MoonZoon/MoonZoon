@@ -271,7 +271,7 @@ where
     // ------ Bind ------
 
     server = if CONFIG.https {
-        server.bind_rustls(address, rustls_server_config()?)?
+        server.bind_rustls_021(address, rustls_server_config()?)?
     } else {
         server.bind(address)?
     };
@@ -307,17 +307,19 @@ async fn backend_build_id() -> u128 {
 fn rustls_server_config() -> io::Result<RustlsServerConfig> {
     let key_file = &mut BufReader::new(File::open("backend/private/private.pem")?);
     let key = pkcs8_private_keys(key_file)
-        .expect("private key parsing failed")
-        .into_iter()
-        .map(PrivateKey)
+        .map(|key| {
+            PrivateKey(
+                key.expect("private key parsing failed")
+                    .secret_pkcs8_der()
+                    .to_vec(),
+            )
+        })
         .next()
         .expect("private key file has to contain at least one key");
 
     let cert_file = &mut BufReader::new(File::open("backend/private/public.pem")?);
     let certificates = certs(cert_file)
-        .expect("certificate parsing failed")
-        .into_iter()
-        .map(Certificate)
+        .map(|cert| Certificate(cert.expect("certificate parsing failed").to_vec()))
         .collect();
 
     let config = RustlsServerConfig::builder()
