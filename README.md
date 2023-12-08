@@ -99,8 +99,8 @@ fn counter_button(label: &str, step: i32) -> impl Element {
 ## [Production apps in development]
    - @TODO Add once the apps are ready to show.
 
-## Chat [on Clever Cloud](https://mz-chat-example.mzoon.app/)
-   - Up-to-date alternative in this repo: [examples/chat](examples/chat)
+## Chat
+   - Repo: [examples/chat](examples/chat)
    - Related blog post: _"Chat example, MoonZoon Cloud [[dev.to](https://dev.to/martinkavik/moonzoon-dev-news-5-chat-example-moonzoon-cloud-5de4) / [MD](docs/articles/dev_news_5.md)]_.
 
       ![Chat example](docs/images/chat_example.gif)
