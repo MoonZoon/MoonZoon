@@ -8,10 +8,6 @@
   </a>
 </p>
 
-### [moonzoon.rs](http://moonzoon.rs) | [martin@moonzoon.rs](mailto:martin@moonzoon.rs) | [Discord](https://discord.gg/eGduTxK2Es)
-
----
-
 ### _"We don't want to lose time and money due to millions of unnecessary technical micro-decisions."_
 
 ---
