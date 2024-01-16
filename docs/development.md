@@ -9,13 +9,13 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 - [Rust](https://www.rust-lang.org/)
   ```bash
   rustup update
-  rustc -V # rustc 1.72.1 (d5c2e9c34 2023-09-13)
+  rustc -V # rustc 1.75.0 (82e1608df 2023-12-21)
   ```
 
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
   ```bash
   cargo install cargo-make --no-default-features
-  makers -V # cargo-make 0.37.1
+  makers -V # cargo-make 0.37.7
   ```
   - _Note_: `cargo-make` is needed only for MoonZoon development and running its examples, you don't need it for your apps.
 
@@ -37,6 +37,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/canvas/Cargo.toml",
         // "examples/chat/Cargo.toml",
         "examples/counter/Cargo.toml",
+        // "examples/counter_with_app_events/Cargo.toml",
         // "examples/counters/Cargo.toml",
         // "examples/custom_config/Cargo.toml",
         // "examples/custom_http_client/Cargo.toml",
@@ -62,6 +63,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/time_tracker/Cargo.toml",
         // "examples/timer/Cargo.toml",
         // "examples/todomvc/Cargo.toml",
+        // "examples/todomvc_with_app_events/Cargo.toml",
         // "examples/tweened/Cargo.toml",
         // "examples/video/Cargo.toml",
         // "examples/viewport/Cargo.toml",

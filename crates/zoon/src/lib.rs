@@ -8,6 +8,7 @@ pub mod routing;
 pub mod web_storage;
 
 mod animation;
+mod app_event;
 mod class_id;
 mod clone_deep;
 pub mod console;
@@ -32,6 +33,7 @@ mod viewport;
 mod web_worker_loader;
 
 pub use animation::*;
+pub use app_event::{emit, on};
 pub use async_once_cell;
 pub use class_id::ClassId;
 pub use clone_deep::CloneDeep;
@@ -51,6 +53,8 @@ pub use futures_channel::{
     oneshot,
 };
 pub use futures_signals_ext::*;
+// @TODO remove `pub use futures_util_ext::*;` ?
+#[allow(unused_imports)]
 pub use futures_util_ext::*;
 pub use gensym::gensym;
 pub use hsluv::{hsluv, HSLuv};
@@ -61,6 +65,7 @@ pub use lang::Lang;
 pub use monotonic_ids::MonotonicIds;
 pub use not::not;
 pub use num_traits;
+pub use once_cell;
 pub use paste::paste;
 pub use pin_project::pin_project;
 pub use resize_observer::ResizeObserver;
