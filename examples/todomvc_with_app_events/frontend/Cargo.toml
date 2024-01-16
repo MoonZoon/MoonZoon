@@ -16,4 +16,4 @@ wasm-bindgen-test = "0.3.19"
 [dependencies]
 zoon.workspace = true
 uuid = { version = "1.1.2", features = ["js", "v4", "serde"], default-features = false }
-educe = { version = "0.4.22", default-features = true }
+
