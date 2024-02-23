@@ -1,5 +1,4 @@
 use crate::{routing::decode_uri_component, *};
-use futures_signals::signal::{channel, Sender};
 use std::marker::PhantomData;
 use web_sys::MouseEvent;
 

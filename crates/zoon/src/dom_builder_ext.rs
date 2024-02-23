@@ -288,7 +288,9 @@ where
 
 // ------ DomBuilderExtSvg ------
 
+// @TODO fix `#[allow(dead_code)]`s below?
 trait DomBuilderExtHtml {
+    #[allow(dead_code)]
     fn style_signal<B, C, D, E>(self, name: B, value: E) -> Self
     where
         B: MultiStr + 'static,
@@ -296,6 +298,7 @@ trait DomBuilderExtHtml {
         D: OptionStr<Output = C>,
         E: Signal<Item = D> + 'static;
 
+    #[allow(dead_code)]
     fn style<B, C>(self, name: B, value: C) -> Self
     where
         B: MultiStr,
@@ -306,6 +309,7 @@ trait DomBuilderExtHtml {
         B: MultiStr,
         C: MultiStr;
 
+    #[allow(dead_code)]
     fn style_important<B, C>(self, name: B, value: C) -> Self
     where
         B: MultiStr,
