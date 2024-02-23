@@ -9,6 +9,9 @@ use store::*;
 fn main() {
     start_app("app", root);
     Lazy::force(&ROUTER);
+    init_lazy(ROUTER);
+    lazy::init(ROUTER);
+    ROUTER.init_lazy();
 }
 
 fn root() -> impl Element {

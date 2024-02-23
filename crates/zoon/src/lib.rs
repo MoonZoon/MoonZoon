@@ -23,6 +23,7 @@ pub mod events_extra;
 mod fn_box_clone;
 mod index_generator;
 mod into_f64;
+pub mod lazy;
 mod monotonic_ids;
 mod not;
 mod resize_observer;
@@ -53,15 +54,13 @@ pub use futures_channel::{
     oneshot,
 };
 pub use futures_signals_ext::*;
-// @TODO remove `pub use futures_util_ext::*;` ?
-#[allow(unused_imports)]
-pub use futures_util_ext::*;
 pub use gensym::gensym;
 pub use hsluv::{hsluv, HSLuv};
 pub use index_generator::IndexGenerator;
 pub use into_f64::IntoF64;
 pub use js_sys::{self, JsString, Reflect};
 pub use lang::Lang;
+pub use lazy::{Lazy, LazyExt};
 pub use monotonic_ids::MonotonicIds;
 pub use not::not;
 pub use num_traits;
