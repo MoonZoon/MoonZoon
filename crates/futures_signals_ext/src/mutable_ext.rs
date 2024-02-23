@@ -1,5 +1,5 @@
 use crate::futures_signals::signal::{
-    MutableLockMut, MutableLockRef, MutableSignal, MutableSignalCloned,
+    MutableLockMut, MutableLockRef, MutableSignalCloned,
 };
 use crate::*;
 use std::mem;

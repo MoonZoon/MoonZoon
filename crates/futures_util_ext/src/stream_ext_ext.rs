@@ -1,5 +1,5 @@
 use crate::*;
-use futures_util::{future::FusedFuture, ready, stream::FusedStream, Stream};
+use futures_util::{future::FusedFuture, ready, stream::FusedStream};
 use pin_project::pin_project;
 use std::fmt;
 use std::pin::Pin;
