@@ -103,7 +103,7 @@ fn generate_certificate() -> Keys {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs()
-        .apply(Some);
+        .apply(|time| Some(time.into()));
 
     let certificate = Certificate::from_params(params).unwrap();
     Keys {

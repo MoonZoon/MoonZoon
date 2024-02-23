@@ -31,7 +31,7 @@ fn start_debounced_recommended_watcher(
     debounce_time: Duration,
 ) -> Debouncer<RecommendedWatcher> {
     let mut debounced_watcher =
-        new_notify_debouncer(debounce_time, None, move |event| on_change(event, &sender))
+        new_notify_debouncer(debounce_time, move |event| on_change(event, &sender))
             .context("Failed to create the watcher")?;
 
     for path in paths {
