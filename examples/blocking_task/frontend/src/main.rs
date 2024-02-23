@@ -4,9 +4,9 @@ use zoon::*;
 #[derive(Educe)]
 #[educe(Default(new))]
 struct Store {
-    #[educe(Default(expression = r#"Mutable::new(Arc::new("Hello".to_owned()))"#))]
+    #[educe(Default(expression = Mutable::new(Arc::new("Hello".to_owned()))))]
     text_a: Mutable<Arc<String>>,
-    #[educe(Default(expression = r#"Mutable::new(Arc::new("World!".to_owned()))"#))]
+    #[educe(Default(expression = Mutable::new(Arc::new("World!".to_owned()))))]
     text_b: Mutable<Arc<String>>,
     joined_texts: Mutable<Arc<String>>,
 }

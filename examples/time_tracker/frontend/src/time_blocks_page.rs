@@ -36,7 +36,7 @@ struct TimeBlock {
     id: TimeBlockId,
     name: Mutable<String>,
     status: Mutable<TimeBlockStatus>,
-    #[educe(Default(expression = "Mutable::new(Duration::seconds(0))"))]
+    #[educe(Default(expression = Mutable::new(Duration::seconds(0))))]
     duration: Mutable<Duration>,
     invoice: Mutable<Option<Arc<Invoice>>>,
     is_old: bool,
