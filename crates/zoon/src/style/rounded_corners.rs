@@ -459,8 +459,7 @@ fn compute_radii(
     let height = f64::from(height);
 
     // @TODO cache some parts? If/when signal methods are implemented?
-    // @TODO bug in ResizeObserver on iOS? (see "Add Client" button in time_tracker
-    // example)
+    // @TODO bug in ResizeObserver on iOS?
 
     let mut radii = [
         top_left.f64_pixels_or_zero(),

@@ -154,9 +154,9 @@ async fn main() -> std::io::Result<()> {
 
 ## Actors
 
-_WARNING_: The Actor API will be changed to reduce the number of used macros and to cover more real-world cases. However the main goals and principles explained below won't change too much.
+_WARNING_: The Actor API will be changed and is not fully implemented.
 
-We'll use the **Time Tracker** example parts to demonstrate how to define an _actor_ and create its instances.
+We'll use the **Time Tracker** example (note: the example has been removed from the repo) parts to demonstrate how to define an _actor_ and create its instances.
 
 1. Each actor should be placed in a standalone module / file - e.g. `backend/src/invoice.rs`.
 
