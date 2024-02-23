@@ -215,10 +215,7 @@ impl<'a> Style<'a> for Height<'static> {
                             this.as_ref().and_then(|this| {
                                 this.css_props.get(&name).and_then(|value| {
                                     value.clone().map(|value| {
-                                        // @TODO refactor the expression below once `Rc::unwrap_or_clone` is stable
-                                        Rc::try_unwrap(value)
-                                            .unwrap_or_else(|rc| (*rc).clone())
-                                            .value
+                                        Rc::unwrap_or_clone(value).value
                                     })
                                 })
                             })
@@ -243,9 +240,7 @@ impl<'a> Style<'a> for Height<'static> {
                     .extend(css_props.into_iter().map(|(name, mut value)| {
                         (
                             name.into(),
-                            // @TODO refactor the expression below once `Rc::unwrap_or_clone` is stable
-                            Rc::try_unwrap(value.take().unwrap_throw())
-                                .unwrap_or_else(|rc| (*rc).clone()),
+                            Rc::unwrap_or_clone(value.take().unwrap_throw())
                         )
                     }));
                 group.class(height_mode.into())

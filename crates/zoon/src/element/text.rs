@@ -80,8 +80,7 @@ impl<'a, T: IntoCowStr<'a> + Clone> IntoElement<'a> for Arc<T> {
 impl<'a, T: IntoCowStr<'a> + Clone> IntoElement<'a> for Rc<T> {
     type EL = Text;
     fn into_element(self) -> Self::EL {
-        // @TODO refactor the expression below once `Rc::unwrap_or_clone` is stable
-        Text::new(Rc::try_unwrap(self).unwrap_or_else(|rc| (*rc).clone()))
+        Text::new(Rc::unwrap_or_clone(self))
     }
 }
 
