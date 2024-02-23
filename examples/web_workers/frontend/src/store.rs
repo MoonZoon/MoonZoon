@@ -14,7 +14,7 @@ pub fn store() -> &'static Store {
 #[derive(Educe)]
 #[educe(Default(new))]
 pub struct Store {
-    #[educe(Default(expression = "Mutable::new(DEFAULT_MARKDOWN.to_owned())"))]
+    #[educe(Default(expression = Mutable::new(DEFAULT_MARKDOWN.to_owned())))]
     pub markdown: Mutable<String>,
     pub html: Mutable<String>,
     pub prime: Mutable<u64>,

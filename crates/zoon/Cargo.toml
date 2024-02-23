@@ -7,25 +7,25 @@ edition = "2021"
 [dependencies]
 # wasm-bindgen has to match the version installed by mzoon
 # @TODO install the compatible (aka the same) version by mzoon automatically?
-wasm-bindgen = { version = "=0.2.89", default-features = false }
+wasm-bindgen = { version = "=0.2.91", default-features = false }
 # @TODO 'wasm-bindgen-futures' newer than "0.4.29" causes some rare problems because of Firefox's bugs:
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1855409
 # https://github.com/rustwasm/wasm-bindgen/issues/3635
-wasm-bindgen-futures = { version = "0.4.39", default-features = false }
-js-sys = { version = "0.3.63", default-features = false }
-futures-channel = { version = "0.3.28", default-features = false }
-dominator = { version = "0.5.33", default-features = false }
-paste = { version = "1.0.7", default-features = false }
+wasm-bindgen-futures = { version = "0.4.41", default-features = false }
+js-sys = { version = "0.3.68", default-features = false }
+futures-channel = { version = "0.3.30", default-features = false }
+dominator = { version = "0.5.34", default-features = false }
+paste = { version = "1.0.14", default-features = false }
 send_wrapper = { version = "0.6.0", default-features = false }
-pin-project = { version = "1.0.11", default-features = false }
+pin-project = { version = "1.1.4", default-features = false }
 async-once-cell = { version = "0.5.3", features = ["std"], default-features = false }
 # @TODO remove `once_cell` once it's fully integrated to Rust std (especially Lazy/LazyLock/LazyCell)
 once_cell = { version = "1.19.0", features = ["std"], default-features = false }
 gensym = { version = "0.1.0", default-features = false }
-strum = { version = "0.24.1", features = ["derive"], default-features = false }
+strum = { version = "0.26.1", features = ["derive"], default-features = false }
 # @TODO (?) remove `num-traits` once there is an alternative in Rust,
 # see https://doc.rust-lang.org/core/convert/trait.FloatToInt.html
-num-traits = { version = "0.2.15", features = ["std"], default-features = false }
+num-traits = { version = "0.2.18", features = ["std"], default-features = false }
 
 route_macro = { path = "../route_macro", default-features = false, optional = true }
 static_ref_macro = { path = "../static_ref_macro", default-features = false, optional = true }
@@ -36,22 +36,22 @@ futures_signals_ext = { path = "../futures_signals_ext", default-features = fals
 futures_util_ext = { path = "../futures_util_ext", default-features = false }
 
 console_error_panic_hook = { version = "0.1.7", default-features = false, optional = true }
-talc = { version = "2.2.2", default-features = true, optional = true }
+talc = { version = "4.2.0", default-features = true, optional = true }
 # wasm-tracing-allocator = { version = "0.1.1", default-features = false, optional = true }
 enclose = { version = "1.1.8", default-features = false, optional = true }
 apply = { version = "0.3.0", default-features = false, optional = true }
 serde = { version = "1.0.137", features = ["derive", "std", "rc"], default-features = false, optional = true }
 serde_json = { version = "1.0.81", features = ['std'], default-features = false, optional = true }
-thiserror = { version = "1.0.31", default-features = false, optional = true }
-chrono = { version = "0.4.19", default-features = false, optional = true }
-serde-wasm-bindgen = { version = "0.4.5", default-features = false, optional = true }
-educe = { version = "0.4.22", default-features = true }
+thiserror = { version = "1.0.57", default-features = false, optional = true }
+chrono = { version = "0.4.34", default-features = false, optional = true }
+serde-wasm-bindgen = { version = "0.6.4", default-features = false, optional = true }
+educe = { version = "0.5.11", default-features = true }
 
-ufmt = { version = "0.1.0", features = ["std"], default-features = false, optional = true }
+ufmt = { version = "0.2.0", features = ["std"], default-features = false, optional = true }
 lexical = { git = "https://github.com/Alexhuszagh/rust-lexical", rev = "7010efd5e144faff0c9afbc1b22b47d9d9567966", features = ["std"], default-features = false, optional = true }
 
 [dependencies.web-sys]
-version = "0.3.61"
+version = "0.3.68"
 features = [
   "Blob",
   "BlobPropertyBag",

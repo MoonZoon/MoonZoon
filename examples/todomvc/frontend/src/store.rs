@@ -33,7 +33,7 @@ pub struct Store {
 #[educe(Deref, Default(new))]
 #[derive(PartialEq, Eq, Clone, Copy, Serialize, Deserialize)]
 #[serde(crate = "serde")]
-pub struct TodoId(#[educe(Default(expression = "Uuid::new_v4()"))] Uuid);
+pub struct TodoId(#[educe(Default(expression = Uuid::new_v4()))] Uuid);
 
 #[derive(Educe)]
 #[educe(Default(new))]

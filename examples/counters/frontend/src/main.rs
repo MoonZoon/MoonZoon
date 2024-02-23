@@ -16,9 +16,9 @@ fn store() -> &'static Store {
 #[derive(Educe)]
 #[educe(Default(new))]
 struct Store {
-    #[educe(Default(expression = "Mutable::new(5)"))]
+    #[educe(Default(expression = Mutable::new(5)))]
     column_count: Mutable<usize>,
-    #[educe(Default(expression = "Mutable::new(5)"))]
+    #[educe(Default(expression = Mutable::new(5)))]
     row_count: Mutable<usize>,
     test_counter_value: Mutable<i32>,
 }

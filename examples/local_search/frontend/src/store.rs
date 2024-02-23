@@ -36,9 +36,7 @@ pub struct Store {
     pub category_filter: Mutable<Option<Category>>,
     pub current_page: Mutable<usize>,
     pub generated_company_count: Mutable<usize>,
-    #[educe(Default(
-        expression = r#"Mutable::new(DEFAULT_GENERATE_COMPANIES_COUNT.to_string())"#
-    ))]
+    #[educe(Default(expression = Mutable::new(DEFAULT_GENERATE_COMPANIES_COUNT.to_string())))]
     pub generate_companies_input_text: Mutable<String>,
     pub generate_companies_button_disabled: Mutable<bool>,
     pub generate_companies_time: Mutable<Option<f64>>,

@@ -11,7 +11,7 @@ use std::path::Path;
 use tar::Archive;
 use tokio::process::Command;
 
-const VERSION: &str = "114";
+const VERSION: &str = "116";
 static WASM_OPT_PATH: &str = "frontend/binaryen/bin/wasm-opt";
 
 // -- public --
