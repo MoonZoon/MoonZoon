@@ -2,7 +2,6 @@ use crate::{
     css_property::{CssPropertyName, CssPropertyValue},
     *,
 };
-use lang::Lang;
 use std::mem::ManuallyDrop;
 use std::sync::OnceLock;
 use std::{cell::Cell, mem, panic, rc::Rc};

@@ -215,7 +215,12 @@ async fn compile_with_cargo(
     #[allow(unused_assignments)]
     let mut rustflags_value = String::new();
     if frontend_multithreading {
-        let mut rustflags = vec!["-C target-feature=+atomics,+bulk-memory,+mutable-globals"];
+        let mut rustflags = vec![
+            "-C target-feature=+atomics,+bulk-memory,+mutable-globals",
+            // @TODO is possible to disable warnings like `warning: unstable feature specified for `-Ctarget-feature`: `atomics`?
+            // https://github.com/rust-lang/rust/blob/2dbd6233ccdb2cd4b621a5e839a95c3fbbc0c375/compiler/rustc_codegen_llvm/src/llvm_util.rs#L570
+            // Perhaps it won't show again once we can use `cargo +nightly` on Windows
+        ];
         if build_mode.is_not_dev() {
             rustflags.push("-Z location-detail=none");
         }

@@ -1,5 +1,4 @@
 use crate::*;
-use futures_signals::signal::channel;
 
 // ------ Radius ------
 /// Define radius for rounded corners with pixels.

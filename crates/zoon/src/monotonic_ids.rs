@@ -1,6 +1,5 @@
 use crate::*;
 use std::{
-    convert::TryFrom,
     sync::{Arc, Mutex, MutexGuard},
 };
 

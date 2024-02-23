@@ -1,5 +1,4 @@
 use crate::*;
-use lang::Lang;
 
 // ------ HasLang ------
 

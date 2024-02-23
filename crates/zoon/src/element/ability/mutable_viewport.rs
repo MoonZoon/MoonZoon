@@ -1,5 +1,4 @@
 use crate::*;
-use std::convert::TryFrom;
 
 pub trait MutableViewport: RawElWrapper + Sized {
     fn on_viewport_location_change(
