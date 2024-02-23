@@ -115,11 +115,8 @@ fn set_indexed_companies_and_search_time_history_on_all_companies_change() {
         },
         |from_input, _, send_to_output| {
             from_input.for_each_sync(move |(start_time, all_companies)| {
-                // @TODO refactor the expression below once `Arc::unwrap_or_clone` is stable
-                let all_companies = Arc::try_unwrap(all_companies)
-                    .unwrap_or_else(|all_companies| (*all_companies).clone());
                 let indexed_companies =
-                    LocalSearch::builder(all_companies, |company_card| &company_card.name).build();
+                    LocalSearch::builder(Arc::unwrap_or_clone(all_companies), |company_card| &company_card.name).build();
                 send_to_output((start_time, indexed_companies));
             })
         },

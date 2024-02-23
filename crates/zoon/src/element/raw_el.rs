@@ -289,10 +289,7 @@ pub trait RawEl: Sized + Into<RawElOrText> {
             for (name, value) in dynamic_css_props {
                 self = self.style_signal(
                     name,
-                    value.signal_ref(|value| {
-                        // @TODO refactor the expression below once `Rc::unwrap_or_clone` is stable
-                        Rc::try_unwrap(value.clone()).unwrap_or_else(|rc| (*rc).clone())
-                    }),
+                    value.signal_cloned().map(|value| Rc::unwrap_or_clone(value)),
                 );
             }
             if not(resize_handlers.is_empty()) {
