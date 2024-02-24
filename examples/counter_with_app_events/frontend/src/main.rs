@@ -1,5 +1,4 @@
-use std::any::Any;
-use zoon::{once_cell::sync::Lazy, *};
+use zoon::*;
 
 fn main() {
     start_app("app", root);
@@ -20,12 +19,12 @@ fn root() -> impl Element {
     Row::new()
         .s(Align::center())
         .s(Gap::new().x(15))
-        .item(counter_button("-", DecreaseButtonPressed))
+        .item(counter_button("-", || emit(DecreaseButtonPressed)))
         .item_signal(COUNTER.signal())
-        .item(counter_button("+", IncreaseButtonPressed))
+        .item(counter_button("+", || emit(IncreaseButtonPressed)))
 }
 
-fn counter_button(label: &str, app_event: impl Any + Copy) -> impl Element {
+fn counter_button(label: &str, on_press: fn()) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(Width::exact(45))
@@ -34,5 +33,5 @@ fn counter_button(label: &str, app_event: impl Any + Copy) -> impl Element {
             .color_signal(hovered_signal.map_bool(|| hsluv!(300, 75, 85), || hsluv!(300, 75, 75))))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .label(label)
-        .on_press(move || emit(app_event))
+        .on_press(on_press)
 }
