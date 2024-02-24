@@ -1,7 +1,5 @@
 use crate::*;
-use std::{
-    sync::{Arc, Mutex, MutexGuard},
-};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 #[derive(Default)]
 pub struct MonotonicIds {
