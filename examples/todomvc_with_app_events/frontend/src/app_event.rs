@@ -1,66 +1,60 @@
 use crate::{Route, Todo};
+use std::sync::Arc;
 
 #[derive(Clone)]
-pub struct NewTodoTitleChanged {
+pub(crate) struct NewTodoTitleChanged {
     pub title: String,
 }
 
 #[derive(Clone, Copy)]
-pub struct ToggleAllCheckboxClicked;
+pub(crate) struct ToggleAllCheckboxClicked;
 
 #[derive(Clone)]
-pub struct TodoCheckboxChanged {
+pub(crate) struct TodoCheckboxChanged {
     pub todo: Todo,
     pub checked: bool,
 }
 
 #[derive(Clone)]
-pub struct TodoTitleDoubleClicked {
+pub(crate) struct TodoTitleDoubleClicked {
+    pub todo: Todo,
+    pub title: Arc<String>,
+}
+
+#[derive(Clone)]
+pub(crate) struct RemoveTodoButtonPressed {
     pub todo: Todo,
 }
 
 #[derive(Clone)]
-pub struct RemoveTodoButtonPressed {
+pub(crate) struct EditingTodoTitleBlurredOrEnterPressed {
     pub todo: Todo,
+    pub edited_title: Arc<String>,
 }
 
-#[derive(Clone, Copy)]
-pub struct EditingTodoTitleBlurredOrEnterPressed;
-
 #[derive(Clone)]
-pub struct EditingTodoTitleChanged {
+pub(crate) struct EditingTodoTitleChanged {
     pub todo: Todo,
     pub text: String,
 }
 
 #[derive(Clone, Copy)]
-pub struct EditingTodoTitleEscapePressed;
+pub(crate) struct EditingTodoTitleEscapePressed;
 
 #[derive(Clone, Copy)]
-pub struct FilterPressed {
+pub(crate) struct FilterPressed {
     pub route: Route,
 }
 
 #[derive(Clone, Copy)]
-pub struct ClearCompletedButtonPressed;
+pub(crate) struct ClearCompletedButtonPressed;
 
 #[derive(Clone, Copy)]
-pub struct RouteChanged {
+pub(crate) struct RouteChanged {
     pub route: Option<Route>,
 }
 
 #[derive(Clone)]
-pub struct SelectedTodoToSaveTaken {
-    pub todo: Todo,
-}
-
-#[derive(Clone)]
-pub struct EditedTitleToSaveTaken {
-    pub todo: Todo,
-    pub title: String,
-}
-
-#[derive(Clone)]
-pub struct NewTodoTitleReadyToSave {
-    pub title: String,
+pub(crate) struct NewTodoTitlePreparedForSaving {
+    pub title: Arc<String>,
 }

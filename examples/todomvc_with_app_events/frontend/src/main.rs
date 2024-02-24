@@ -1,4 +1,5 @@
-use zoon::{once_cell::sync::Lazy, strum::IntoEnumIterator, *};
+use std::sync::Arc;
+use zoon::{strum::IntoEnumIterator, *};
 
 mod app_event;
 mod store;
@@ -8,9 +9,6 @@ use store::*;
 
 fn main() {
     start_app("app", root);
-    Lazy::force(&ROUTER);
-    init_lazy(ROUTER);
-    lazy::init(ROUTER);
     ROUTER.init_lazy();
 }
 
@@ -93,8 +91,8 @@ fn new_todo_title() -> impl Element {
                 let new_todo_title = NEW_TODO_TITLE.lock_ref();
                 let trimmed_title = new_todo_title.trim();
                 if not(trimmed_title.is_empty()) {
-                    emit(NewTodoTitleReadyToSave {
-                        title: trimmed_title.to_owned(),
+                    emit(NewTodoTitlePreparedForSaving {
+                        title: Arc::new(trimmed_title.to_owned()),
                     });
                 }
             })
@@ -208,7 +206,7 @@ fn todo_title(todo: Todo) -> impl Element {
         .s(Clip::x())
         .for_input(todo.id.to_string())
         .label_signal(todo.title.signal_cloned())
-        .on_double_click(clone!((todo) move || emit(TodoTitleDoubleClicked { todo: todo.clone() })))
+        .on_double_click(clone!((todo) move || emit(TodoTitleDoubleClicked { todo: todo.clone(), title: todo.title.get_cloned() })))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .element_on_right_signal(hovered_signal.map_true(move || remove_todo_button(todo.clone())))
 }
@@ -232,7 +230,6 @@ fn remove_todo_button(todo_to_remove: Todo) -> impl Element {
 }
 
 fn editing_todo_title(todo: Todo) -> impl Element {
-    let text_signal = todo.edited_title.signal_cloned().map(Option::unwrap_throw);
     TextInput::new()
         .s(Width::exact(506))
         .s(Padding::all(17).bottom(16))
@@ -244,21 +241,29 @@ fn editing_todo_title(todo: Todo) -> impl Element {
             .blur(5)
             .color(hsluv!(0, 0, 0, 20))]))
         .s(Font::new().color(hsluv!(0, 0, 32.7)))
+        .text_signal(todo.edited_title.signal_cloned())
         .label_hidden("selected todo title")
         .focus(true)
-        .on_blur(|| emit(EditingTodoTitleBlurredOrEnterPressed))
-        .on_change(move |text| {
+        .on_blur(
+            clone!((todo) move || emit(EditingTodoTitleBlurredOrEnterPressed {
+                todo: todo.clone(),
+                edited_title: todo.edited_title.get_cloned().unwrap_throw()
+            })),
+        )
+        .on_change(clone!((todo) move |text| {
             emit(EditingTodoTitleChanged {
                 todo: todo.clone(),
                 text,
             })
-        })
-        .on_key_down_event(|event| match event.key() {
+        }))
+        .on_key_down_event(move |event| match event.key() {
             Key::Escape => emit(EditingTodoTitleEscapePressed),
-            Key::Enter => emit(EditingTodoTitleBlurredOrEnterPressed),
+            Key::Enter => emit(EditingTodoTitleBlurredOrEnterPressed {
+                todo: todo.clone(),
+                edited_title: todo.edited_title.get_cloned().unwrap_throw(),
+            }),
             _ => (),
         })
-        .text_signal(text_signal)
 }
 
 fn panel_footer() -> impl Element {
