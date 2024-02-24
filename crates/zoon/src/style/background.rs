@@ -16,6 +16,20 @@ pub struct Background<'a> {
     dynamic_css_props: DynamicCSSProps,
 }
 
+trait IntoOklchaString {
+    fn into_oklcha_string(self) -> String;
+}
+
+impl<T: palette::convert::IntoColor<palette::Oklcha>> IntoOklchaString for T {
+    fn into_oklcha_string(self) -> String {
+        let (l, c, h, a) = self.into_color().into_components();
+        let l = l * 100.;
+        let h = h.into_inner();
+        let a = a * 100.;
+        crate::format!("oklch({l:.2}% {c:.3} {h:.2} / {a:.2}%)")
+    }
+}
+
 impl<'a> Background<'a> {
     pub fn new() -> Self {
         Self::default()
@@ -59,6 +73,18 @@ impl<'a> Background<'a> {
         color: impl Signal<Item = impl Into<Option<HSLuv>>> + Unpin + 'static,
     ) -> Self {
         let color = color.map(|color| color.into().map(|color| color.into_cow_str()));
+        self.dynamic_css_props
+            .insert("background-color".into(), box_css_signal(color));
+        self
+    }
+
+    pub fn color_signal_new<IOK: IntoOklchaString>(
+        mut self,
+        color: impl Signal<Item = impl Into<Option<IOK>>> + Unpin + 'static,
+    ) -> Self {
+        let color = color.map(|color| color.into().map(|color| { 
+            color.into_oklcha_string()
+        }));
         self.dynamic_css_props
             .insert("background-color".into(), box_css_signal(color));
         self

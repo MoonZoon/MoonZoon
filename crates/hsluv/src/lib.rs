@@ -1,4 +1,5 @@
 use rust_hsluv::hsluv_to_rgb;
+use palette::{WithAlpha, IntoColor, convert::FromColorUnclamped};
 use std::fmt;
 
 #[cfg(feature = "hsluv_macro")]
@@ -6,12 +7,48 @@ pub use hsluv_macro::hsluv;
 
 /// https://www.hsluv.org/
 
-#[derive(Debug, Clone, Copy, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, FromColorUnclamped)]
 pub struct HSLuv {
     h: f64,
     s: f64,
     l: f64,
     a: f64,
+}
+
+impl WithAlpha<f32> for HSLuv {
+    type Color = Self;
+    type WithAlpha = Self;
+
+    fn with_alpha(self, alpha: f32) -> Self::WithAlpha {
+        self.set_a(alpha)
+    }
+
+    fn without_alpha(self) -> Self::Color {
+        self.set_a(0)
+    }
+
+    fn split(self) -> (Self::Color, f32) {
+        (self, self.a as f32)
+    }
+}
+
+impl FromColorUnclamped<palette::Xyz> for HSLuv {
+    fn from_color_unclamped(color: palette::Xyz) -> HSLuv {
+        let hsluva: palette::Hsluva = color.into_color();
+        Self {
+            h: hsluva.hue.into_inner().into(),
+            s: hsluva.saturation.into(),
+            l: hsluva.l.into(),
+            a: hsluva.alpha.into(),
+        }
+    }
+}
+
+impl FromColorUnclamped<HSLuv> for palette::Xyz {
+    fn from_color_unclamped(color: HSLuv) -> palette::Xyz {
+        let hsluva = palette::Hsluva::new(color.h as f32, color.s as f32, color.l as f32, color.a as f32);
+        hsluva.into_color()
+    }
 }
 
 impl fmt::Display for HSLuv {
