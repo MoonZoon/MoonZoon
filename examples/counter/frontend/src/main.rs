@@ -23,8 +23,11 @@ fn counter_button(label: &str, step: i32) -> impl Element {
         .s(Background::new()
             // color::hex("#124578")
             // palette::named::WHITE.into_format() ?
-            // .color_signal_new(hovered_signal.map_bool(|| hsluv!(300, 75, 85), || hsluv!(300, 75, 75))))
-            .color_signal_new(hovered_signal.map_bool(|| palette::Oklch::<f32>::new_const(0.5, 0.2, 85.0.into()), || palette::Oklch::new_const(0.8, 0.1, 75.0.into()))))
+            .color_signal_new(hovered_signal.map_bool(|| hsluv!(300, 75, 85), || hsluv!(300, 75, 75))))
+            // .color_signal_new(hovered_signal.map_bool(
+            //     || OKLCH { l: 0.5, c: 0.2, h: 85.0, alpha: 1. }, 
+            //     || OKLCH { l: 0.8, c: 0.1, h: 76.0, alpha: 1. }
+            // )))
             // .color_signal_new(hovered_signal.map_bool(|| "#123569".parse::<palette::Srgb<u8>>().unwrap_throw().into_format(), || "#823569".parse::<palette::Srgb<u8>>().unwrap_throw().into_format())))
             // .color_signal_new(hovered_signal.map_bool(
             //     || palette::named::PINK.into_format(), 

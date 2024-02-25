@@ -61,6 +61,7 @@ pub use into_f64::IntoF64;
 pub use js_sys::{self, JsString, Reflect};
 pub use lang::Lang;
 pub use lazy::{Lazy, LazyExt};
+pub use lightningcss::{traits::ToCss, values::color::{self, CssColor, RGBA, OKLCH}};
 pub use monotonic_ids::MonotonicIds;
 pub use not::not;
 pub use num_traits;
