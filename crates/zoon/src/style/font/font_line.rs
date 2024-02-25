@@ -40,19 +40,19 @@ impl FontLine<'_> {
         self
     }
 
-    pub fn color(mut self, color: impl Into<Option<HSLuv>>) -> Self {
-        if let Some(color) = color.into() {
+    pub fn color(mut self, color: impl IntoOptionColor) -> Self {
+        if let Some(color) = color.into_option_color() {
             self.static_css_props
-                .insert("text-decoration-color", color.into_cow_str());
+                .insert("text-decoration-color", color.into_color_string());
         }
         self
     }
 
     pub fn color_signal(
         mut self,
-        color: impl Signal<Item = impl Into<Option<HSLuv>>> + Unpin + 'static,
+        color: impl Signal<Item = impl IntoOptionColor> + Unpin + 'static,
     ) -> Self {
-        let color = color.map(|color| color.into().map(|color| color.into_cow_str()));
+        let color = color.map(|color| color.into_option_color_string());
         self.dynamic_css_props
             .insert("text-decoration-color".into(), box_css_signal(color));
         self

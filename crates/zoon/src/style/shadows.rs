@@ -109,7 +109,7 @@ pub struct Shadow {
     y: i32,
     spread: i32,
     blur: u32,
-    color: Option<HSLuv>,
+    color: Option<CssColor>,
 }
 
 impl Shadow {
@@ -220,8 +220,8 @@ impl Shadow {
     ///     .s(Height::exact(50))
     ///     .label("Click me");
     /// ```
-    pub fn color(mut self, color: impl Into<Option<HSLuv>>) -> Self {
-        if let Some(color) = color.into() {
+    pub fn color(mut self, color: impl IntoOptionColor) -> Self {
+        if let Some(color) = color.into_option_color() {
             self.color = Some(color);
         }
         self
@@ -236,7 +236,7 @@ impl<'a> IntoCowStr<'a> for Shadow {
         }
         shadow_settings.extend([px(self.x), px(self.y), px(self.blur), px(self.spread)]);
         if let Some(color) = self.color {
-            shadow_settings.push(color.into_cow_str());
+            shadow_settings.push(color.into_color_string().into());
         }
         shadow_settings.join(" ").into()
     }
