@@ -16,22 +16,12 @@ pub struct Background<'a> {
     dynamic_css_props: DynamicCSSProps,
 }
 
-trait IntoColorString {
-    fn into_color_string(self) -> String;
-}
-
-impl<T: Into<CssColor>> IntoColorString for T {
-    fn into_color_string(self) -> String {
-        self.into().to_css_string(<_>::default()).unwrap_throw()
-    }
-}
-
 impl<'a> Background<'a> {
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// Set a given color to the background with HSLuv.
+    /// Set a given color to the background.
     /// # Example
     /// ```no_run
     /// use zoon::*;
@@ -46,10 +36,10 @@ impl<'a> Background<'a> {
     ///
     /// let element = El::new().s(Background::new().color(BLUE_0));
     /// ```
-    pub fn color(mut self, color: impl Into<Option<HSLuv>>) -> Self {
-        if let Some(color) = color.into() {
+    pub fn color(mut self, color: impl IntoOptionColor) -> Self {
+        if let Some(color) = color.into_option_color() {
             self.static_css_props
-                .insert("background-color", color.into_cow_str());
+                .insert("background-color", color.into_color_string());
         }
         self
     }
@@ -66,21 +56,9 @@ impl<'a> Background<'a> {
     /// ```
     pub fn color_signal(
         mut self,
-        color: impl Signal<Item = impl Into<Option<HSLuv>>> + Unpin + 'static,
+        color: impl Signal<Item = impl IntoOptionColor> + Unpin + 'static,
     ) -> Self {
-        let color = color.map(|color| color.into().map(|color| color.into_cow_str()));
-        self.dynamic_css_props
-            .insert("background-color".into(), box_css_signal(color));
-        self
-    }
-
-    pub fn color_signal_new<ICS: IntoColorString>(
-        mut self,
-        color: impl Signal<Item = impl Into<Option<ICS>>> + Unpin + 'static,
-    ) -> Self {
-        let color = color.map(|color| color.into().map(|color| { 
-            color.into_color_string()
-        }));
+        let color = color.map(|color| color.into_option_color_string());
         self.dynamic_css_props
             .insert("background-color".into(), box_css_signal(color));
         self

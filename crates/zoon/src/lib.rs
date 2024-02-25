@@ -22,6 +22,7 @@ mod event_options;
 pub mod events_extra;
 mod fn_box_clone;
 mod index_generator;
+mod into_color;
 mod into_f64;
 pub mod lazy;
 mod monotonic_ids;
@@ -57,11 +58,16 @@ pub use futures_signals_ext::*;
 pub use gensym::gensym;
 pub use hsluv::{hsluv, HSLuv};
 pub use index_generator::IndexGenerator;
+pub use into_color::{IntoColor, IntoOptionColor};
 pub use into_f64::IntoF64;
 pub use js_sys::{self, JsString, Reflect};
 pub use lang::Lang;
 pub use lazy::{Lazy, LazyExt};
-pub use lightningcss::{traits::ToCss, values::color::{self, CssColor, RGBA, OKLCH}};
+pub use lightningcss::{
+    self,
+    traits::{Parse, ToCss},
+    values::color::{self, CssColor, OKLCH, RGBA},
+};
 pub use monotonic_ids::MonotonicIds;
 pub use not::not;
 pub use num_traits;

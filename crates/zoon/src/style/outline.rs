@@ -5,7 +5,7 @@ use std::borrow::Cow;
 pub struct Outline {
     width: u32,
     style: OutlineStyle,
-    color: HSLuv,
+    color: CssColor,
     inner: bool,
     self_signal: Option<Broadcaster<LocalBoxSignal<'static, Option<Self>>>>,
 }
@@ -15,7 +15,7 @@ impl Default for Outline {
         Self {
             width: 1,
             style: OutlineStyle::Solid,
-            color: hsluv!(0, 0, 0),
+            color: CssColor::default(),
             inner: false,
             self_signal: None,
         }
@@ -53,8 +53,8 @@ impl Outline {
         self
     }
 
-    pub fn color(mut self, color: impl Into<Option<HSLuv>>) -> Self {
-        if let Some(color) = color.into() {
+    pub fn color(mut self, color: impl IntoOptionColor) -> Self {
+        if let Some(color) = color.into_option_color() {
             self.color = color;
         }
         self
@@ -80,7 +80,7 @@ impl Outline {
             "{}px {} {}",
             self.width,
             self.style.as_str(),
-            self.color.into_cow_str()
+            self.color.clone().into_color_string()
         )
         .into()
     }

@@ -1,6 +1,6 @@
+use lightningcss::values::color::{CssColor, RGBA};
 use rust_hsluv::hsluv_to_rgb;
 use std::fmt;
-use lightningcss::values::color::{CssColor, RGBA};
 
 #[cfg(feature = "hsluv_macro")]
 pub use hsluv_macro::hsluv;
@@ -18,7 +18,7 @@ pub struct HSLuv {
 impl From<HSLuv> for CssColor {
     fn from(color: HSLuv) -> CssColor {
         let (r, g, b) = color.to_rgb();
-        RGBA::from_floats(r as f32, g as f32, b as f32, color.a  as f32 / 100.).into()
+        RGBA::from_floats(r as f32, g as f32, b as f32, color.a as f32 / 100.).into()
     }
 }
 

@@ -88,9 +88,10 @@ impl<'a> Font<'a> {
     ///     .s(Font::new().color(hsluv!(153.8, 99.1, 44.4)))
     ///     .label("Click me");
     /// ```
-    pub fn color(mut self, color: impl Into<Option<HSLuv>>) -> Self {
-        if let Some(color) = color.into() {
-            self.static_css_props.insert("color", color.into_cow_str());
+    pub fn color(mut self, color: impl IntoOptionColor) -> Self {
+        if let Some(color) = color.into_option_color() {
+            self.static_css_props
+                .insert("color", color.into_color_string());
         }
         self
     }
@@ -108,9 +109,9 @@ impl<'a> Font<'a> {
     /// ```
     pub fn color_signal(
         mut self,
-        color: impl Signal<Item = impl Into<Option<HSLuv>>> + Unpin + 'static,
+        color: impl Signal<Item = impl IntoOptionColor> + Unpin + 'static,
     ) -> Self {
-        let color = color.map(|color| color.into().map(|color| color.into_cow_str()));
+        let color = color.map(|color| color.into_option_color_string());
         self.dynamic_css_props
             .insert("color".into(), box_css_signal(color));
         self

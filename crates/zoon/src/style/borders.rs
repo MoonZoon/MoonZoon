@@ -308,14 +308,14 @@ impl<'a> Style<'a> for Borders<'a> {
 // ------ Border ------
 
 /// Single border definition.
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Border {
     /// Width in pixels.
     width: u32,
     /// Style to apply.
     style: BorderStyle,
-    /// Color with Hsluv standard.
-    color: HSLuv,
+    /// CSS Color.
+    color: CssColor,
 }
 
 impl Border {
@@ -325,7 +325,7 @@ impl Border {
         Self {
             width: 1,
             style: BorderStyle::Solid,
-            color: hsluv!(0, 0, 0),
+            color: CssColor::default(),
         }
     }
 
@@ -344,8 +344,8 @@ impl Border {
     /// use zoon::{named_color::*, *};
     /// let green_border = Border::new().color(GREEN_7);
     /// ```
-    pub fn color(mut self, color: impl Into<Option<HSLuv>>) -> Self {
-        if let Some(color) = color.into() {
+    pub fn color(mut self, color: impl IntoOptionColor) -> Self {
+        if let Some(color) = color.into_option_color() {
             self.color = color;
         }
         self
@@ -387,7 +387,7 @@ impl Border {
             "{}px {} {}",
             self.width,
             self.style.as_str(),
-            self.color.into_cow_str()
+            self.color.clone().into_color_string()
         )
         .into()
     }
