@@ -325,7 +325,7 @@ impl Border {
         Self {
             width: 1,
             style: BorderStyle::Solid,
-            color: CssColor::default(),
+            color: oklch().into_color(),
         }
     }
 
