@@ -11,8 +11,6 @@ use web_sys::{
     CssKeyframesRule, CssStyleDeclaration, CssStyleRule, CssStyleSheet, HtmlStyleElement,
 };
 
-pub mod named_color;
-
 mod align;
 pub use align::Align;
 
