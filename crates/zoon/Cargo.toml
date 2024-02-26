@@ -26,7 +26,8 @@ strum = { version = "0.26.1", features = ["derive"], default-features = false }
 # @TODO (?) remove `num-traits` once there is an alternative in Rust,
 # see https://doc.rust-lang.org/core/convert/trait.FloatToInt.html
 num-traits = { version = "0.2.18", features = ["std"], default-features = false }
-lightningcss = { version = "1.0.0-alpha.54", features = ["grid"], default-features = false }
+cssparser-color = { version = "0.1.0", default-features = false }
+cssparser = { version = "0.33.0", default-features = false }
 
 route_macro = { path = "../route_macro", default-features = false, optional = true }
 static_ref_macro = { path = "../static_ref_macro", default-features = false, optional = true }

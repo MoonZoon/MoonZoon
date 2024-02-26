@@ -24,7 +24,7 @@ fn counter_button(label: &str, step: i32) -> impl Element {
         .s(Borders::all(
             Border::new()
                 .width(2)
-                .color(OKLCH::new(0.6, 0.182, 350.53, 1)),
+                .color(oklch().l(0.6).c(0.182).h(350.53).a(1)),
         ))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .label(label)

@@ -15,7 +15,7 @@ impl Default for Outline {
         Self {
             width: 1,
             style: OutlineStyle::Solid,
-            color: CssColor::default(),
+            color: oklch().into_color(),
             inner: false,
             self_signal: None,
         }

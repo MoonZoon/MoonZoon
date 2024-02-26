@@ -7,7 +7,6 @@ edition = "2021"
 [dependencies]
 rust_hsluv = { version = "0.1.4", default-features = false, package = "rust-hsluv" }
 hsluv_macro = { path = "../hsluv_macro", default-features = false, optional = true }
-lightningcss = { version = "1.0.0-alpha.54", features = ["grid"], default-features = false }
 
 [features]
 default = ["hsluv_macro"]

@@ -1,4 +1,3 @@
-use lightningcss::values::color::{CssColor, RGBA};
 use rust_hsluv::hsluv_to_rgb;
 use std::fmt;
 
@@ -13,13 +12,6 @@ pub struct HSLuv {
     s: f64,
     l: f64,
     a: f64,
-}
-
-impl From<HSLuv> for CssColor {
-    fn from(color: HSLuv) -> CssColor {
-        let (r, g, b) = color.to_rgb();
-        RGBA::from_floats(r as f32, g as f32, b as f32, color.a as f32 / 100.).into()
-    }
 }
 
 impl fmt::Display for HSLuv {
