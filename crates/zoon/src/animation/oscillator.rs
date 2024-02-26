@@ -132,13 +132,13 @@ impl Oscillator {
         self.data.stop();
     }
 
-    pub fn go_to(&self, unit_interval_value: impl IntoF64) {
-        let unit_interval_value = unit_interval_value.into_f64().clamp(0., 1.);
+    pub fn go_to(&self, unit_interval_value: impl Into<f64>) {
+        let unit_interval_value = unit_interval_value.into().clamp(0., 1.);
         self.data.start(Status::GoingTo(unit_interval_value));
     }
 
-    pub fn jump_to(&self, unit_interval_value: impl IntoF64) {
-        let unit_interval_value = unit_interval_value.into_f64().clamp(0., 1.);
+    pub fn jump_to(&self, unit_interval_value: impl Into<f64>) {
+        let unit_interval_value = unit_interval_value.into().clamp(0., 1.);
         self.data.jump_to(unit_interval_value);
     }
 
