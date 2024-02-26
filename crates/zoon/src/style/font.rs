@@ -1,6 +1,9 @@
 use crate::*;
 use std::borrow::Cow;
 
+mod font_alignment;
+pub use font_alignment::FontAlignment;
+
 mod font_weight;
 pub use font_weight::FontWeight;
 
@@ -251,6 +254,28 @@ impl<'a> Font<'a> {
 
     pub fn right(mut self) -> Self {
         self.static_css_props.insert("text-align", "right");
+        self
+    }
+
+    pub fn justify(mut self) -> Self {
+        self.static_css_props.insert("text-align", "justify");
+        self
+    }
+
+    pub fn align_signal(
+        mut self,
+        alignment: impl Signal<Item = impl Into<Option<FontAlignment>>> + Unpin + 'static,
+    ) -> Self {
+        let alignment = alignment.map(|alignment| {
+            alignment.into().map(|alignment| match alignment {
+                FontAlignment::Center => "center",
+                FontAlignment::Left => "left",
+                FontAlignment::Right => "right",
+                FontAlignment::Justify => "justify",
+            })
+        });
+        self.dynamic_css_props
+            .insert("text-align".into(), box_css_signal(alignment));
         self
     }
 

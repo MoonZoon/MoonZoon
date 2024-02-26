@@ -65,7 +65,6 @@ pub use monotonic_ids::MonotonicIds;
 pub use not::not;
 pub use num_traits;
 pub use once_cell;
-pub use palette;
 pub use paste::paste;
 pub use pin_project::pin_project;
 pub use resize_observer::ResizeObserver;
