@@ -11,6 +11,7 @@ mod animation;
 mod app_event;
 mod class_id;
 mod clone_deep;
+mod color;
 pub mod console;
 mod cow_str;
 mod css_property;
@@ -22,7 +23,6 @@ mod event_options;
 pub mod events_extra;
 mod fn_box_clone;
 mod index_generator;
-mod into_color;
 mod into_f64;
 pub mod lazy;
 mod monotonic_ids;
@@ -39,6 +39,7 @@ pub use app_event::{emit, on};
 pub use async_once_cell;
 pub use class_id::ClassId;
 pub use clone_deep::CloneDeep;
+pub use color::*;
 pub use cow_str::{IntoCowStr, IntoOptionCowStr};
 pub use css_property::VENDOR_PREFIXES;
 pub use dom::{document, history, load_script, load_stylesheet, performance, window};
@@ -58,16 +59,10 @@ pub use futures_signals_ext::*;
 pub use gensym::gensym;
 pub use hsluv::{hsluv, HSLuv};
 pub use index_generator::IndexGenerator;
-pub use into_color::{IntoColor, IntoOptionColor};
 pub use into_f64::IntoF64;
 pub use js_sys::{self, JsString, Reflect};
 pub use lang::Lang;
 pub use lazy::{Lazy, LazyExt};
-pub use lightningcss::{
-    self,
-    traits::{Parse, ToCss},
-    values::color::{self, CssColor, OKLCH, RGBA},
-};
 pub use monotonic_ids::MonotonicIds;
 pub use not::not;
 pub use num_traits;

@@ -1,4 +1,4 @@
-use crate::color::*;
+use crate::color_space::*;
 use crate::*;
 
 // ---- IntoColor ----
