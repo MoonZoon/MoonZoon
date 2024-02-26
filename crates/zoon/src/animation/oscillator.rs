@@ -120,6 +120,10 @@ impl Oscillator {
         self.data.value.signal()
     }
 
+    pub fn value(&self) -> ReadOnlyMutable<f64> {
+        self.data.value.read_only()
+    }
+
     pub fn cycle_wrap(&self) {
         self.data.start(Status::CycleWrap);
     }
