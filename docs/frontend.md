@@ -422,6 +422,14 @@ fn sidebar() -> impl Element {
 ---
 ## Color
 
+UPDATE: You can use 
+```rust
+hsluv!(0, 0, 32.7)
+"#edc8f5"
+oklch().l(0.6).c(0.182).h(350.53).a(1)
+```
+and other formats while calling methods like `Font::new().color(..)`. See `/crates/zoon/src/css_color/into_color.rs` for more info.
+
 ```rust
 .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
 

@@ -4,7 +4,7 @@ members = [
     "backend",
     "shared",
     # NOTE: Web Workers have to be registered here 
-    # and their name has to end with "web_worker".
+    # and the name in their Cargo.toml has to end with "web_worker".
     "frontend/web_workers/markdown",
     "frontend/web_workers/prime",
 ]
