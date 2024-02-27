@@ -14,7 +14,6 @@ use actix_web::{
     web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result,
 };
 use cargo_metadata::MetadataCommand;
-use regex::Regex;
 use rustls::{Certificate, PrivateKey, ServerConfig as RustlsServerConfig};
 use rustls_pemfile::{certs, pkcs8_private_keys};
 use std::collections::BTreeSet;
@@ -581,45 +580,30 @@ fn web_worker_named_file_and_encoding(
 #[derive(Debug)]
 struct WorkspaceMember {
     name: String,
-    #[allow(dead_code)]
-    version: String,
     path: PathBuf,
 }
 
-fn web_worker_workspace_members() -> Result<Vec<WorkspaceMember>, Error> {
-    let package_repr_regex = Regex::new(
-        r"^(?P<name>\S+)\s(?P<version>\S+)\s\(path\+file://(?P<path>\S+)\)$",
-    )
-    .map_err(|err| {
-        eprintln!("Failed to create Regex for 'PackageId::repr': {err:#}");
-        error::ErrorInternalServerError("Failed to create Regex for 'PackageId::repr'")
-    })?;
-
-    MetadataCommand::new()
+fn web_worker_workspace_members() -> Result<Vec<WorkspaceMember>> {
+    let members = MetadataCommand::new()
         .no_deps()
         .exec()
         .map_err(|err| {
             eprintln!("Failed to parse workspace Cargo metadata: {err:#}");
             error::ErrorInternalServerError("Failed to parse workspace Cargo metadata")
         })?
-        .workspace_members
+        .packages
         .into_iter()
-        .filter_map(|package_id| {
-            let Some(captures) = package_repr_regex.captures(&package_id.repr) else {
-                let error_message = format!("Failed to parse workspace member with {package_id:?}");
-                eprintln!("{error_message}");
-                return Some(Err(error::ErrorInternalServerError(error_message)));
-            };
-            let name = &captures["name"];
-            name.ends_with("web_worker")
-                .then(|| WorkspaceMember {
-                    name: name.to_owned(),
-                    version: captures["version"].to_owned(),
-                    path: PathBuf::from(&captures["path"]),
-                })
-                .map(Ok)
+        .filter(|package| package.name.ends_with("web_worker"))
+        .map(|package| WorkspaceMember {
+            name: package.name,
+            path: {
+                let mut path = package.manifest_path;
+                path.pop();
+                path.into()
+            },
         })
-        .collect::<Result<_, _>>()
+        .collect();
+    Ok(members)
 }
 
 // ------ reload_sse_responder ------

@@ -1216,7 +1216,6 @@ dependencies = [
  "once_cell",
  "parking_lot 0.12.1",
  "qrcode",
- "regex",
  "rustls",
  "rustls-pemfile",
  "serde",
