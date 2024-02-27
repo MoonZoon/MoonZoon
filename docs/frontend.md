@@ -427,6 +427,7 @@ UPDATE: You can use
 hsluv!(0, 0, 32.7)
 "#edc8f5"
 oklch().l(0.6).c(0.182).h(350.53).a(1)
+"black"
 ```
 and other formats while calling methods like `Font::new().color(..)`. See `/crates/zoon/src/css_color/into_color.rs` for more info.
 

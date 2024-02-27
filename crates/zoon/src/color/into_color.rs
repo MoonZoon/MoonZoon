@@ -4,7 +4,7 @@ use crate::*;
 // ---- IntoColor ----
 
 pub trait IntoColor {
-    fn into_color(self) -> CssColor;
+    fn into_color(self) -> Color;
 
     fn into_color_string(self) -> String
     where
@@ -15,9 +15,9 @@ pub trait IntoColor {
 }
 
 impl<T: IntoCowStr<'static>> IntoColor for T {
-    fn into_color(self) -> CssColor {
+    fn into_color(self) -> Color {
         let color_str = self.into_cow_str();
-        let output = match CssColor::parse(&mut Parser::new(&mut ParserInput::new(&color_str))) {
+        let output = match Color::parse(&mut Parser::new(&mut ParserInput::new(&color_str))) {
             Ok(color) => color,
             Err(error) => {
                 crate::eprintln!("failed to parse CSS color '{color_str}': {error:?}");
@@ -28,8 +28,8 @@ impl<T: IntoCowStr<'static>> IntoColor for T {
     }
 }
 
-impl IntoColor for CssColor {
-    fn into_color(self) -> CssColor {
+impl IntoColor for Color {
+    fn into_color(self) -> Color {
         self
     }
 }
@@ -39,13 +39,13 @@ impl IntoColor for CssColor {
 // ---- IntoOptionColor ----
 
 pub trait IntoOptionColor {
-    fn into_option_color(self) -> Option<CssColor>;
+    fn into_option_color(self) -> Option<Color>;
 
     fn into_option_color_string(self) -> Option<String>;
 }
 
 impl<T: IntoColor> IntoOptionColor for T {
-    fn into_option_color(self) -> Option<CssColor> {
+    fn into_option_color(self) -> Option<Color> {
         Some(self.into_color())
     }
 
@@ -55,7 +55,7 @@ impl<T: IntoColor> IntoOptionColor for T {
 }
 
 impl<T: IntoColor> IntoOptionColor for Option<T> {
-    fn into_option_color(self) -> Option<CssColor> {
+    fn into_option_color(self) -> Option<Color> {
         self.map(|this| this.into_color())
     }
 

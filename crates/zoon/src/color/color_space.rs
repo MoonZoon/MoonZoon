@@ -5,8 +5,8 @@ use crate::*;
 pub use cssparser_color::RgbaLegacy as Rgba;
 
 impl IntoColor for Rgba {
-    fn into_color(self) -> CssColor {
-        CssColor::Rgba(self)
+    fn into_color(self) -> Color {
+        Color::Rgba(self)
     }
 }
 
@@ -15,8 +15,8 @@ impl IntoColor for Rgba {
 pub use cssparser_color::Oklch;
 
 impl IntoColor for Oklch {
-    fn into_color(self) -> CssColor {
-        CssColor::Oklch(self)
+    fn into_color(self) -> Color {
+        Color::Oklch(self)
     }
 }
 
@@ -55,8 +55,8 @@ impl OklchExt for Oklch {
 pub use cssparser_color::Hsl;
 
 impl IntoColor for Hsl {
-    fn into_color(self) -> CssColor {
-        CssColor::Hsl(self)
+    fn into_color(self) -> Color {
+        Color::Hsl(self)
     }
 }
 
@@ -65,8 +65,8 @@ impl IntoColor for Hsl {
 pub use cssparser_color::Hwb;
 
 impl IntoColor for Hwb {
-    fn into_color(self) -> CssColor {
-        CssColor::Hwb(self)
+    fn into_color(self) -> Color {
+        Color::Hwb(self)
     }
 }
 
@@ -75,8 +75,8 @@ impl IntoColor for Hwb {
 pub use cssparser_color::Lab;
 
 impl IntoColor for Lab {
-    fn into_color(self) -> CssColor {
-        CssColor::Lab(self)
+    fn into_color(self) -> Color {
+        Color::Lab(self)
     }
 }
 
@@ -85,8 +85,8 @@ impl IntoColor for Lab {
 pub use cssparser_color::Lch;
 
 impl IntoColor for Lch {
-    fn into_color(self) -> CssColor {
-        CssColor::Lch(self)
+    fn into_color(self) -> Color {
+        Color::Lch(self)
     }
 }
 
@@ -95,7 +95,7 @@ impl IntoColor for Lch {
 pub use cssparser_color::Oklab;
 
 impl IntoColor for Oklab {
-    fn into_color(self) -> CssColor {
-        CssColor::Oklab(self)
+    fn into_color(self) -> Color {
+        Color::Oklab(self)
     }
 }

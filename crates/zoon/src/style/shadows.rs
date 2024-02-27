@@ -109,7 +109,7 @@ pub struct Shadow {
     y: i32,
     spread: i32,
     blur: u32,
-    color: Option<CssColor>,
+    color: Option<Color>,
 }
 
 impl Shadow {

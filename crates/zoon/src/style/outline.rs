@@ -5,7 +5,7 @@ use std::borrow::Cow;
 pub struct Outline {
     width: u32,
     style: OutlineStyle,
-    color: CssColor,
+    color: Color,
     inner: bool,
     self_signal: Option<Broadcaster<LocalBoxSignal<'static, Option<Self>>>>,
 }
@@ -15,7 +15,7 @@ impl Default for Outline {
         Self {
             width: 1,
             style: OutlineStyle::Solid,
-            color: oklch().into_color(),
+            color: oklch().l(0).c(0).h(0).a(1).into_color(),
             inner: false,
             self_signal: None,
         }

@@ -315,7 +315,7 @@ pub struct Border {
     /// Style to apply.
     style: BorderStyle,
     /// CSS Color.
-    color: CssColor,
+    color: Color,
 }
 
 impl Border {
@@ -325,7 +325,7 @@ impl Border {
         Self {
             width: 1,
             style: BorderStyle::Solid,
-            color: oklch().into_color(),
+            color: oklch().l(0).c(0).h(0).a(1).into_color(),
         }
     }
 
