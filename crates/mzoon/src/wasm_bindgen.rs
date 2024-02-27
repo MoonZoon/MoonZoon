@@ -8,7 +8,7 @@ use const_format::{concatcp, formatcp};
 use fehler::throws;
 use flate2::read::GzDecoder;
 use std::ffi::OsStr;
-use std::path::{Path, PathBuf};
+use std::path::{Path, PathBuf, MAIN_SEPARATOR as SEP};
 use tar::Archive;
 use tokio::process::Command;
 
@@ -95,7 +95,7 @@ pub async fn build_with_wasm_bindgen(
     let target_path = MetadataCommand::new().no_deps().exec()?.target_directory;
     let target_profile_folder = build_mode.target_profile_folder();
     let wasm_path =
-        format!("{target_path}/wasm32-unknown-unknown/{target_profile_folder}/{crate_name}.wasm");
+        format!("{target_path}{SEP}wasm32-unknown-unknown{SEP}{target_profile_folder}{SEP}{crate_name}.wasm");
     args.push(wasm_path.as_ref());
 
     Command::new("frontend/wasm-bindgen")
