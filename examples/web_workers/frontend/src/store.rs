@@ -1,5 +1,4 @@
 use crate::web_workers::*;
-use educe::Educe;
 use std::{cell::RefCell, rc::Rc};
 use zoon::*;
 

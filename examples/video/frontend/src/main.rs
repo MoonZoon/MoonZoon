@@ -75,7 +75,7 @@ fn play_button(video_element: Mutable<Option<web_sys::HtmlVideoElement>>) -> imp
                 }
             })
         })
-        .label(play_button_icon())
+        .label(El::new().s(Align::center()).child(play_button_icon()))
 }
 
 fn play_button_icon() -> impl Element {
