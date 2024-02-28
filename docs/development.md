@@ -105,6 +105,8 @@ makers in_examples clean
 makers in_examples mzoon build
 ```
 
+_Note:_ You can use [sccache](https://github.com/mozilla/sccache) to reduce the total `target` directory size.
+
 ## 5. Have fun!
 
 --

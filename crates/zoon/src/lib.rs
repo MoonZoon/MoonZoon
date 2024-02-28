@@ -55,6 +55,8 @@ pub use futures_channel::{
     oneshot,
 };
 pub use futures_signals_ext::*;
+#[allow(unused_imports)]
+pub use futures_util_ext::*;
 pub use gensym::gensym;
 pub use hsluv::{hsluv, HSLuv};
 pub use index_generator::IndexGenerator;
