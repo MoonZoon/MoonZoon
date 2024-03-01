@@ -1,4 +1,6 @@
 use std::borrow::Cow;
+use std::sync::Arc;
+use std::rc::Rc;
 
 pub trait RouteSegment: Sized {
     fn from_string_segment(segment: &str) -> Option<Self>;
@@ -25,6 +27,26 @@ impl RouteSegment for Cow<'static, str> {
 
     fn into_string_segment(self) -> Cow<'static, str> {
         self
+    }
+}
+
+impl RouteSegment for Arc<String> {
+    fn from_string_segment(segment: &str) -> Option<Self> {
+        Some(segment.to_owned().into())
+    }
+
+    fn into_string_segment(self) -> Cow<'static, str> {
+        Arc::unwrap_or_clone(self).into()
+    }
+}
+
+impl RouteSegment for Rc<String> {
+    fn from_string_segment(segment: &str) -> Option<Self> {
+        Some(segment.to_owned().into())
+    }
+
+    fn into_string_segment(self) -> Cow<'static, str> {
+        Rc::unwrap_or_clone(self).into()
     }
 }
 
