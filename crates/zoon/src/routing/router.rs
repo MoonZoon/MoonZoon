@@ -1,28 +1,43 @@
 use crate::{routing::decode_uri_component, *};
-use std::marker::PhantomData;
+use std::collections::VecDeque;
+use std::sync::{Arc, Mutex};
 use web_sys::MouseEvent;
 
 type UrlChangeSender = Sender<Option<Vec<String>>>;
 
-pub struct Router<R> {
+pub struct Router<R: Clone> {
     popstate_listener: SendWrapper<Closure<dyn Fn()>>,
     link_interceptor: SendWrapper<Closure<dyn Fn(MouseEvent)>>,
     url_change_sender: UrlChangeSender,
+    route_history: Arc<Mutex<VecDeque<R>>>,
     _url_change_handle: TaskHandle,
-    _route_type: PhantomData<R>,
 }
 
-impl<R: FromRouteSegments> Router<R> {
+impl<R: FromRouteSegments + Clone + 'static> Router<R> {
     pub fn new<O: Future<Output = ()> + 'static>(
-        on_route_change: impl FnMut(Option<R>) -> O + 'static,
+        mut on_route_change: impl FnMut(Option<R>) -> O + 'static,
     ) -> Self {
+        let route_history = Arc::new(Mutex::new(VecDeque::new()));
+        let on_route_change = {
+            let route_history = Arc::clone(&route_history);
+            move |route| {
+                if let Some(route) = &route {
+                    let mut history = route_history.lock().unwrap_throw();
+                    if history.len() == 2 {
+                        history.pop_back();
+                    }
+                    history.push_front(Clone::clone(route));
+                }
+                on_route_change(route)
+            }
+        };
         let (url_change_sender, _url_change_handle) = setup_url_change_handler(on_route_change);
         Router {
             popstate_listener: setup_popstate_listener(url_change_sender.clone()),
             link_interceptor: setup_link_interceptor(url_change_sender.clone()),
             url_change_sender,
+            route_history: Arc::new(Mutex::new(VecDeque::new())),
             _url_change_handle,
-            _route_type: PhantomData,
         }
     }
 
@@ -41,9 +56,17 @@ impl<R: FromRouteSegments> Router<R> {
     pub fn silent_replace<'a>(&self, with: impl IntoCowStr<'a>) {
         replace(&self.url_change_sender, with, true);
     }
+
+    pub fn current_route(&self) -> Option<R> {
+        self.route_history.lock().unwrap_throw().get(0).cloned()
+    }
+
+    pub fn previous_route(&self) -> Option<R> {
+        self.route_history.lock().unwrap_throw().get(1).cloned()
+    }
 }
 
-impl<R> Drop for Router<R> {
+impl<R: Clone> Drop for Router<R> {
     fn drop(&mut self) {
         window()
             .remove_event_listener_with_callback(

@@ -1,6 +1,6 @@
 use std::borrow::Cow;
-use std::sync::Arc;
 use std::rc::Rc;
+use std::sync::Arc;
 
 pub trait RouteSegment: Sized {
     fn from_string_segment(segment: &str) -> Option<Self>;
