@@ -1,15 +1,23 @@
 use crate::{routing::decode_uri_component, *};
-use std::collections::VecDeque;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use web_sys::MouseEvent;
 
 type UrlChangeSender = Sender<Option<Vec<String>>>;
+
+#[derive(Clone, Default)]
+pub enum RouteState<R: Clone> {
+    #[default]
+    None,
+    Unknown(Arc<String>),
+    Known(R),
+}
 
 pub struct Router<R: Clone> {
     popstate_listener: SendWrapper<Closure<dyn Fn()>>,
     link_interceptor: SendWrapper<Closure<dyn Fn(MouseEvent)>>,
     url_change_sender: UrlChangeSender,
-    route_history: Arc<Mutex<VecDeque<R>>>,
+    current_route: Mutable<RouteState<R>>,
+    previous_route: Mutable<RouteState<R>>,
     _url_change_handle: TaskHandle,
 }
 
@@ -17,17 +25,17 @@ impl<R: FromRouteSegments + Clone + 'static> Router<R> {
     pub fn new<O: Future<Output = ()> + 'static>(
         mut on_route_change: impl FnMut(Option<R>) -> O + 'static,
     ) -> Self {
-        let route_history = Arc::new(Mutex::new(VecDeque::new()));
+        let current_route = Mutable::new(RouteState::default());
+        let previous_route = Mutable::new(RouteState::default());
         let on_route_change = {
-            let route_history = Arc::clone(&route_history);
-            move |route| {
-                if let Some(route) = &route {
-                    let mut history = route_history.lock().unwrap_throw();
-                    if history.len() == 2 {
-                        history.pop_back();
-                    }
-                    history.push_front(Clone::clone(route));
-                }
+            let current_route = current_route.clone();
+            let previous_route = current_route.clone();
+            move |route: Option<R>| {
+                let old_current_route = current_route.replace(match route.clone() {
+                    Some(route) => RouteState::Known(route),
+                    None => RouteState::Unknown(Arc::new(routing::url())),
+                });
+                previous_route.set(old_current_route);
                 on_route_change(route)
             }
         };
@@ -36,7 +44,8 @@ impl<R: FromRouteSegments + Clone + 'static> Router<R> {
             popstate_listener: setup_popstate_listener(url_change_sender.clone()),
             link_interceptor: setup_link_interceptor(url_change_sender.clone()),
             url_change_sender,
-            route_history: Arc::new(Mutex::new(VecDeque::new())),
+            current_route,
+            previous_route,
             _url_change_handle,
         }
     }
@@ -57,12 +66,12 @@ impl<R: FromRouteSegments + Clone + 'static> Router<R> {
         replace(&self.url_change_sender, with, true);
     }
 
-    pub fn current_route(&self) -> Option<R> {
-        self.route_history.lock().unwrap_throw().get(0).cloned()
+    pub fn current_route(&self) -> impl Signal<Item = RouteState<R>> {
+        self.current_route.signal_cloned()
     }
 
-    pub fn previous_route(&self) -> Option<R> {
-        self.route_history.lock().unwrap_throw().get(1).cloned()
+    pub fn previous_route(&self) -> impl Signal<Item = RouteState<R>> {
+        self.previous_route.signal_cloned()
     }
 }
 
