@@ -422,14 +422,23 @@ fn sidebar() -> impl Element {
 ---
 ## Color
 
-UPDATE: You can use 
+---
+
+UPDATE:
+
+You can use:
 ```rust
 hsluv!(0, 0, 32.7)
 "#edc8f5"
-oklch().l(0.6).c(0.182).h(350.53).a(1)
 "black"
+color!("oklch(0.6 0.182 350.53 / .7")
+oklch().l(0.6).c(0.182).h(350.53).a(1)
 ```
-and other formats while calling methods like `Font::new().color(..)`. See `/crates/zoon/src/css_color/into_color.rs` for more info.
+and other color formats while calling methods like `Font::new().color(..)`. See `/crates/zoon/src/css_color/into_color.rs` for more info.
+
+Definitions wrapped in the `color!` macro are heavily recommended because they are parsed during compilation. 
+
+---
 
 ```rust
 .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
