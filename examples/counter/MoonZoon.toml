@@ -18,6 +18,7 @@ frontend = [
     "frontend/src",
     "../../crates/zoon/Cargo.toml",
     "../../crates/zoon/src",
+    "../../crates/color_macro/src",
 ]
 backend = [
     "backend/Cargo.toml",

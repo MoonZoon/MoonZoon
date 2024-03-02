@@ -29,6 +29,7 @@ num-traits = { version = "0.2.18", features = ["std"], default-features = false 
 cssparser-color = { version = "0.1.0", default-features = false }
 cssparser = { version = "0.33.0", default-features = false }
 
+color_macro = { path = "../color_macro", default-features = false, optional = true }
 route_macro = { path = "../route_macro", default-features = false, optional = true }
 static_ref_macro = { path = "../static_ref_macro", default-features = false, optional = true }
 moonlight = { path = "../moonlight", features = ["frontend"], optional = true }
@@ -121,6 +122,7 @@ default = [
   "web_storage", 
   "chrono",
   "jsvalue_into_serde",
+  "color_macro",
 ]
 routing = ["route_macro"]
 connection = ["moonlight"]

@@ -1,6 +1,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/color_macro",
     "crates/futures_signals_ext",
     "crates/futures_util_ext",
     "crates/hsluv",
