@@ -24,14 +24,14 @@ fn prime_panel() -> impl Element {
                 .s(Padding::new().x(5).y(3))
                 .s(Outline::outer())
                 .label_signal(
-                    store()
+                    STORE
                         .is_generating_primes
                         .signal()
                         .map_bool(|| "Stop", || "Start"),
                 )
-                .on_press(|| store().is_generating_primes.update(not)),
+                .on_press(|| STORE.is_generating_primes.update(not)),
         )
-        .item(El::new().child_signal(store().prime.signal()))
+        .item(El::new().child_signal(STORE.prime.signal()))
 }
 
 fn markdown_panel() -> impl Element {
@@ -45,12 +45,12 @@ fn markdown_panel() -> impl Element {
                 .s(Outline::outer())
                 .s(Padding::new().x(4).y(2))
                 .label_hidden("markdown")
-                .text_signal(store().markdown.signal_cloned())
-                .on_change(|markdown| store().markdown.set(markdown)),
+                .text_signal(STORE.markdown.signal_cloned())
+                .on_change(|markdown| STORE.markdown.set(markdown)),
         )
         .item(
             RawHtmlEl::new("div")
                 .class("markdown-body")
-                .inner_markup_signal(store().html.signal_cloned()),
+                .inner_markup_signal(STORE.html.signal_cloned()),
         )
 }

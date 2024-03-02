@@ -7,7 +7,7 @@ use zoon::{
 };
 
 #[static_ref]
-pub fn store() -> &'static Store {
+pub fn STORE -> &'static Store {
     create_triggers();
     Store::new()
 }
@@ -59,12 +59,12 @@ fn create_triggers() {
 
 fn set_search_time_history_on_search_time_change() {
     Task::start(async {
-        store()
+        STORE
             .search_time
             .signal()
             .for_each_sync(|search_time| {
                 if let Some(search_time) = search_time {
-                    store().search_time_history.lock_mut().push(search_time);
+                    STORE.search_time_history.lock_mut().push(search_time);
                 }
             })
             .await
@@ -73,11 +73,11 @@ fn set_search_time_history_on_search_time_change() {
 
 fn set_current_page_on_filtered_companies_change() {
     Task::start(async {
-        store()
+        STORE
             .filtered_companies
             .signal_ref(|_| ())
             .for_each_sync(|_| {
-                store().current_page.set(0);
+                STORE.current_page.set(0);
             })
             .await
     });
@@ -85,15 +85,15 @@ fn set_current_page_on_filtered_companies_change() {
 
 fn set_current_page_companies_on_current_page_or_filtered_companies_change() {
     Task::start(async {
-        store()
+        STORE
             .current_page
             .signal()
             .for_each_sync(|current_page| {
-                let filtered_companies = store().filtered_companies.lock_ref();
+                let filtered_companies = STORE.filtered_companies.lock_ref();
                 let index_from = current_page * PROJECTS_PER_PAGE;
                 let index_to =
                     ((current_page + 1) * PROJECTS_PER_PAGE).min(filtered_companies.len());
-                *store().current_page_companies.lock_mut() =
+                *STORE.current_page_companies.lock_mut() =
                     filtered_companies[index_from..index_to].to_vec();
             })
             .await
@@ -103,11 +103,11 @@ fn set_current_page_companies_on_current_page_or_filtered_companies_change() {
 fn set_indexed_companies_and_search_time_history_on_all_companies_change() {
     Task::start_blocking_with_tasks(
         |send_to_blocking| async move {
-            store()
+            STORE
                 .all_companies
                 .signal_cloned()
                 .for_each_sync(move |all_companies| {
-                    store().index_companies_time.set(None);
+                    STORE.index_companies_time.set(None);
                     let start_time = performance().now();
                     send_to_blocking((start_time, all_companies));
                 })
@@ -122,14 +122,14 @@ fn set_indexed_companies_and_search_time_history_on_all_companies_change() {
         },
         |from_blocking| {
             from_blocking.for_each_sync(move |(start_time, indexed_companies)| {
-                store()
+                STORE
                     .index_companies_time
                     .set(Some(performance().now() - start_time));
 
-                store()
+                STORE
                     .indexed_companies
                     .set(Some(Arc::new(indexed_companies)));
-                store().search_time_history.lock_mut().clear();
+                STORE.search_time_history.lock_mut().clear();
             })
         },
     );
@@ -139,20 +139,20 @@ fn set_filtered_companies_and_page_count_on_query_or_filter_or_indexed_companies
     Task::start_blocking_with_tasks(
         |send_to_blocking| async move {
             map_ref! {
-                let query = store().search_query.signal_cloned(),
-                let category = store().category_filter.signal(),
-                let indexed_companies = store().indexed_companies.signal_cloned() =>
+                let query = STORE.search_query.signal_cloned(),
+                let category = STORE.category_filter.signal(),
+                let indexed_companies = STORE.indexed_companies.signal_cloned() =>
                 (query.clone(), *category, indexed_companies.clone())
             }
             .for_each_sync(|(query, category, indexed_companies)| {
-                store().search_time.set(None);
+                STORE.search_time.set(None);
                 let start_time = performance().now();
                 send_to_blocking((
                     start_time,
                     query,
                     category,
                     indexed_companies,
-                    store().all_companies.lock_ref().clone(),
+                    STORE.all_companies.lock_ref().clone(),
                 ))
             })
             .await
@@ -192,16 +192,16 @@ fn set_filtered_companies_and_page_count_on_query_or_filter_or_indexed_companies
         },
         |from_blocking| {
             from_blocking.for_each_sync(move |(start_time, found_companies)| {
-                store()
+                STORE
                     .search_time
                     .set(Some(performance().now() - start_time));
 
-                store().page_count.set_neq(
+                STORE.page_count.set_neq(
                     // @TODO refactor with https://doc.rust-lang.org/std/primitive.usize.html#method.div_ceil once stable
                     ((found_companies.len() as f64) / (PROJECTS_PER_PAGE as f64)).ceil() as usize,
                 );
 
-                *store().filtered_companies.lock_mut() = found_companies;
+                *STORE.filtered_companies.lock_mut() = found_companies;
             })
         },
     );
