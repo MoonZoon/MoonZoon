@@ -13,7 +13,7 @@ fn main() {
 
 fn selected_filter() -> impl Signal<Item = Filter> {
     ROUTER.current_route().map(|route| match route {
-        NoRoute | UnknownRoute(_) | KnownRoute(Route::Root) => Filter::All,
+        NoRoute | UnknownRoute | KnownRoute(Route::Root) => Filter::All,
         KnownRoute(Route::Active) => Filter::Active,
         KnownRoute(Route::Completed) => Filter::Completed,
     })

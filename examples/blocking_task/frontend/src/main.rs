@@ -12,7 +12,7 @@ struct Store {
 }
 
 #[static_ref]
-fn store() -> &'static Store {
+fn STORE -> &'static Store {
     Store::new()
 }
 
@@ -20,8 +20,8 @@ fn main() {
     Task::start_blocking_with_tasks(
         |send_to_blocking| {
             map_ref! {
-                let text_a = store().text_a.signal_cloned(),
-                let text_b = store().text_b.signal_cloned() =>
+                let text_a = STORE.text_a.signal_cloned(),
+                let text_b = STORE.text_b.signal_cloned() =>
                 (text_a.clone(), text_b.clone())
             }
             .for_each_sync(send_to_blocking)
@@ -33,7 +33,7 @@ fn main() {
         },
         |from_blocking| {
             from_blocking.for_each_sync(|joined_texts| {
-                store().joined_texts.set(joined_texts.into());
+                STORE.joined_texts.set(joined_texts.into());
             })
         },
     );
@@ -45,9 +45,9 @@ pub fn root() -> impl Element {
         .s(Padding::all(20).top(150))
         .s(Align::new().center_x())
         .s(Gap::new().y(70))
-        .item(field("Text A", store().text_a.clone(), false))
-        .item(field("Text B", store().text_b.clone(), false))
-        .item(field("Joined texts", store().joined_texts.clone(), true))
+        .item(field("Text A", STORE.text_a.clone(), false))
+        .item(field("Text B", STORE.text_b.clone(), false))
+        .item(field("Joined texts", STORE.joined_texts.clone(), true))
 }
 
 fn field(label: &str, text: Mutable<Arc<String>>, is_output: bool) -> impl Element {

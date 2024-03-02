@@ -3,20 +3,18 @@ use zoon::{eprintln, strum::EnumIter, *};
 
 static STORAGE_KEY: &str = "todomvc-zoon";
 
-#[static_ref]
-pub fn store() -> &'static Store {
+pub static STORE: Lazy<Store> = Lazy::new(|| {
     let store = Store::default();
     if let Some(Ok(todos)) = local_storage().get(STORAGE_KEY) {
         store.todos.lock_mut().replace_cloned(todos);
     }
     create_triggers();
     store
-}
+});
 
 #[derive(Default)]
 pub struct Store {
     pub todos: MutableVec<Todo>,
-    pub selected_filter: Mutable<Filter>,
     pub selected_todo: Mutable<Option<Todo>>,
     pub new_todo_title: Mutable<String>,
     // -- caches --
@@ -57,7 +55,7 @@ pub enum Filter {
 
 fn create_triggers() {
     Task::start(async {
-        store()
+        STORE
             .todos
             .signal_vec_cloned()
             .map_signal(|todo| {
@@ -73,16 +71,16 @@ fn create_triggers() {
                     eprintln!("failed to store todos: {error:#?}");
                 }
                 let completed_count = todos.iter().filter(|todo| todo.completed.get()).count();
-                store().todos_count.set_neq(todos.len());
-                store()
+                STORE.todos_count.set_neq(todos.len());
+                STORE
                     .active_todos_count
                     .set_neq(todos.len() - completed_count);
-                store().completed_todos_count.set_neq(completed_count);
-                store().are_todos_empty.set_neq(todos.len() == 0);
-                store()
+                STORE.completed_todos_count.set_neq(completed_count);
+                STORE.are_todos_empty.set_neq(todos.len() == 0);
+                STORE
                     .are_completed_todos_empty
                     .set_neq(completed_count == 0);
-                store()
+                STORE
                     .are_all_todos_completed
                     .set_neq(todos.len() == completed_count);
             })

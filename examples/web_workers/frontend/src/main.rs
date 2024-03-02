@@ -1,6 +1,6 @@
 use frontend::*;
 
 fn main() {
-    store();
+    STORE;
     start_app("app", root);
 }

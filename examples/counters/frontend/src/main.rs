@@ -9,7 +9,7 @@ fn main() {
 }
 
 #[static_ref]
-fn store() -> &'static Store {
+fn STORE -> &'static Store {
     Store::new()
 }
 
@@ -29,8 +29,8 @@ pub fn root() -> impl Element {
 
 fn control_counters() -> impl Element {
     let counter_count = map_ref! {
-        let column_count = store().column_count.signal(),
-        let row_count = store().row_count.signal() =>
+        let column_count = STORE.column_count.signal(),
+        let row_count = STORE.row_count.signal() =>
         column_count * row_count
     }
     .broadcast();
@@ -74,37 +74,37 @@ fn test_counters() -> impl Element {
     Row::new()
         .item("Test counters")
         .item(
-            Counter::with_signal(store().test_counter_value.signal())
-                .on_change(|value| store().test_counter_value.set(value)),
+            Counter::with_signal(STORE.test_counter_value.signal())
+                .on_change(|value| STORE.test_counter_value.set(value)),
         )
         .item(Counter::new(1))
 }
 
 fn column_counter() -> impl Element {
     Row::new().item("Columns:").item(
-        Counter::with_signal(store().column_count.signal())
-            .on_change(|value| store().column_count.set(value))
+        Counter::with_signal(STORE.column_count.signal())
+            .on_change(|value| STORE.column_count.set(value))
             .step(5),
     )
 }
 
 fn row_counter() -> impl Element {
     Row::new().item("Rows:").item(
-        Counter::with_signal(store().row_count.signal())
-            .on_change(|value| store().row_count.set(value))
+        Counter::with_signal(STORE.row_count.signal())
+            .on_change(|value| STORE.row_count.set(value))
             .step(5),
     )
 }
 
 fn counters() -> impl Element {
-    let (columns, columns_updater) = count_signal_to_mutable_vec(store().column_count.signal());
+    let (columns, columns_updater) = count_signal_to_mutable_vec(STORE.column_count.signal());
     Row::new()
         .items_signal_vec(columns.signal_vec().map(|()| counter_column()))
         .after_remove(move |_| drop(columns_updater))
 }
 
 fn counter_column() -> impl Element {
-    let (rows, rows_updater) = count_signal_to_mutable_vec(store().row_count.signal());
+    let (rows, rows_updater) = count_signal_to_mutable_vec(STORE.row_count.signal());
     Column::new()
         .items_signal_vec(rows.signal_vec().map(|()| Counter::new(0)))
         .after_remove(move |_| drop(rows_updater))

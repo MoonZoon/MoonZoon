@@ -1,15 +1,32 @@
 use zoon::{strum::IntoEnumIterator, *};
 
-mod router;
 mod store;
-
-use router::*;
 use store::*;
 
+static ROUTER: Lazy<Router<Route>> = lazy::default();
+
+#[route]
+#[derive(Clone, Copy, Debug)]
+pub enum Route {
+    #[route("active")]
+    Active,
+    #[route("completed")]
+    Completed,
+    #[route()]
+    Root,
+}
+
 fn main() {
-    store();
-    router();
+    STORE.init_lazy();
     start_app("app", root);
+}
+
+fn selected_filter() -> impl Signal<Item = Filter> {
+    ROUTER.current_route().map(|route| match route {
+        NoRoute | UnknownRoute | KnownRoute(Route::Root) => Filter::All,
+        KnownRoute(Route::Active) => Filter::Active,
+        KnownRoute(Route::Completed) => Filter::Completed,
+    })
 }
 
 fn root() -> impl Element {
@@ -65,8 +82,8 @@ fn panel() -> impl Element {
         .s(Width::fill())
         .s(Background::new().color(hsluv!(0, 0, 100)))
         .item(new_todo_title())
-        .item_signal(store().are_todos_empty.signal().map_false(todos))
-        .item_signal(store().are_todos_empty.signal().map_false(panel_footer))
+        .item_signal(STORE.are_todos_empty.signal().map_false(todos))
+        .item_signal(STORE.are_todos_empty.signal().map_false(panel_footer))
 }
 
 fn new_todo_title() -> impl Element {
@@ -80,7 +97,7 @@ fn new_todo_title() -> impl Element {
             .blur(1)
             .color(hsluv!(0, 0, 0, 3))]))
         .focus(true)
-        .on_change(|title| store().new_todo_title.set(title))
+        .on_change(|title| STORE.new_todo_title.set(title))
         .label_hidden("What needs to be done?")
         .placeholder(
             Placeholder::new("What needs to be done?")
@@ -88,12 +105,12 @@ fn new_todo_title() -> impl Element {
         )
         .on_key_down_event(|event| {
             event.if_key(Key::Enter, || {
-                let mut new_todo_title = store().new_todo_title.lock_mut();
+                let mut new_todo_title = STORE.new_todo_title.lock_mut();
                 let title = new_todo_title.trim();
                 if title.is_empty() {
                     return;
                 }
-                store().todos.lock_mut().push_cloned({
+                STORE.todos.lock_mut().push_cloned({
                     let todo = Todo::new();
                     todo.title.set(title.to_owned());
                     todo
@@ -101,7 +118,7 @@ fn new_todo_title() -> impl Element {
                 new_todo_title.clear();
             })
         })
-        .text_signal(store().new_todo_title.signal_cloned())
+        .text_signal(STORE.new_todo_title.signal_cloned())
 }
 
 fn todos() -> impl Element {
@@ -110,13 +127,13 @@ fn todos() -> impl Element {
         .s(Background::new().color(hsluv!(0, 0, 93.7)))
         .s(Gap::both(1))
         .items_signal_vec(
-            store()
+            STORE
                 .todos
                 .signal_vec_cloned()
                 .filter_signal_cloned(|todo| {
                     map_ref! {
                         let completed = todo.completed.signal(),
-                        let filter = store().selected_filter.signal() =>
+                        let filter = selected_filter() =>
                         match filter {
                             Filter::All => true,
                             Filter::Active => not(*completed),
@@ -133,11 +150,11 @@ fn toggle_all_checkbox() -> impl Element {
     Checkbox::new()
         .s(Width::exact(60))
         .s(Height::fill())
-        .checked_signal(store().are_all_todos_completed.signal())
+        .checked_signal(STORE.are_all_todos_completed.signal())
         .on_click(|| {
-            for todo in store().todos.lock_ref().iter() {
+            for todo in STORE.todos.lock_ref().iter() {
                 todo.completed
-                    .set_neq(not(store().are_all_todos_completed.get()));
+                    .set_neq(not(STORE.are_all_todos_completed.get()));
             }
         })
         .label_hidden("Toggle all")
@@ -162,7 +179,7 @@ fn todo(todo: Todo) -> impl Element {
         .s(Gap::both(5))
         .s(Font::new().size(24))
         .items_signal_vec(
-            store()
+            STORE
             .selected_todo
             .signal_ref(move |selected_todo| matches!(selected_todo, Some(selected_todo) if selected_todo.id == todo.id))
             .dedupe_map(move |is_selected| { if *is_selected {
@@ -212,7 +229,7 @@ fn todo_title(todo: Todo) -> impl Element {
             if todo.edited_title.lock_ref().is_none() {
                 todo.edited_title.set(Some(todo.title.get_cloned()))
             }
-            store().selected_todo.set(Some(todo.clone()));
+            STORE.selected_todo.set(Some(todo.clone()));
         }))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .element_on_right_signal(hovered_signal.map_true(move || remove_todo_button(todo.clone())))
@@ -229,7 +246,7 @@ fn remove_todo_button(todo_to_remove: Todo) -> impl Element {
         ))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(move || {
-            store()
+            STORE
                 .todos
                 .lock_mut()
                 .retain(|todo| todo.id != todo_to_remove.id)
@@ -255,7 +272,7 @@ fn editing_todo_title(todo: Todo) -> impl Element {
         .on_blur(save_selected_todo_title)
         .on_change(move |text| todo.edited_title.set_neq(Some(text)))
         .on_key_down_event(|event| match event.key() {
-            Key::Escape => store().selected_todo.set(None),
+            Key::Escape => STORE.selected_todo.set(None),
             Key::Enter => save_selected_todo_title(),
             _ => (),
         })
@@ -287,7 +304,7 @@ fn panel_footer() -> impl Element {
         .item(item_container().child(filters()))
         .item(
             item_container().child_signal(
-                store()
+                STORE
                     .are_completed_todos_empty
                     .signal()
                     .map_false(clear_completed_button),
@@ -297,7 +314,7 @@ fn panel_footer() -> impl Element {
 
 fn active_items_count() -> impl Element {
     Text::with_signal(
-        store()
+        STORE
             .active_todos_count
             .signal()
             .map(|count| format!("{} item{} left", count, if count == 1 { "" } else { "s" })),
@@ -319,7 +336,7 @@ fn filter(filter: Filter) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let outline_alpha = map_ref! {
         let hovered = hovered_signal,
-        let selected = store().selected_filter.signal_ref(move |selected_filter| selected_filter == &filter) =>
+        let selected = selected_filter().map(move |selected_filter| selected_filter == filter) =>
         if *selected {
             Some(20)
         } else if *hovered {
@@ -335,7 +352,7 @@ fn filter(filter: Filter) -> impl Element {
         })))
         .s(RoundedCorners::all(3))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-        .on_press(move || router().go(route))
+        .on_press(move || ROUTER.go(route))
         .label(label)
 }
 
@@ -346,7 +363,7 @@ fn clear_completed_button() -> impl Element {
         .s(Font::new().line(FontLine::new().underline_signal(hovered_signal)))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(|| {
-            store()
+            STORE
                 .todos
                 .lock_mut()
                 .retain(|todo| not(todo.completed.get()))
@@ -390,7 +407,7 @@ fn todomvc_link() -> impl Element {
 // --
 
 fn save_selected_todo_title() {
-    if let Some(todo) = store().selected_todo.take() {
+    if let Some(todo) = STORE.selected_todo.take() {
         let new_title = todo.edited_title.take().unwrap_throw();
         todo.title.set(new_title);
     }

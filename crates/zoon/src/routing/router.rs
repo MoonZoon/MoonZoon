@@ -1,5 +1,4 @@
 use crate::{routing::decode_uri_component, *};
-use std::sync::Arc;
 use web_sys::MouseEvent;
 
 type UrlChangeSender = Sender<Option<Vec<String>>>;
@@ -8,7 +7,7 @@ type UrlChangeSender = Sender<Option<Vec<String>>>;
 pub enum RouteState<R: Clone> {
     #[default]
     NoRoute,
-    UnknownRoute(Arc<String>),
+    UnknownRoute,
     KnownRoute(R),
 }
 
@@ -39,7 +38,7 @@ impl<R: FromRouteSegments + Clone + 'static> Router<R> {
             move |route: Option<R>| {
                 let old_current_route = current_route.replace(match route.clone() {
                     Some(route) => RouteState::KnownRoute(route),
-                    None => RouteState::UnknownRoute(Arc::new(routing::url())),
+                    None => RouteState::UnknownRoute,
                 });
                 previous_route.set(old_current_route);
                 on_route_change(route)

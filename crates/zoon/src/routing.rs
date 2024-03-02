@@ -16,6 +16,10 @@ pub fn origin() -> String {
     window().location().origin().unwrap_throw()
 }
 
+pub fn path() -> String {
+    window().location().pathname().unwrap_throw()
+}
+
 pub fn back() {
     history().back().unwrap_throw();
 }

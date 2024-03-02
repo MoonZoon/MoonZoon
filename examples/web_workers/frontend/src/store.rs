@@ -5,7 +5,7 @@ use zoon::*;
 static DEFAULT_MARKDOWN: &str = r#"This content is *rendered* by a **web worker**"#;
 
 #[static_ref]
-pub fn store() -> &'static Store {
+pub fn STORE -> &'static Store {
     create_web_workers_and_triggers();
     Store::new()
 }
@@ -28,14 +28,14 @@ fn create_web_workers_and_triggers() {
 
     // set `html` on `markdown` change
     Task::start(async move {
-        store()
+        STORE
             .markdown
             .signal_cloned()
             .for_each(move |markdown| {
                 let mut markdown_web_worker_bridge = markdown_bridge.fork();
                 async move {
                     let html = markdown_web_worker_bridge.run(markdown).await;
-                    store().html.set(html);
+                    STORE.html.set(html);
                 }
             })
             .await
@@ -43,7 +43,7 @@ fn create_web_workers_and_triggers() {
 
     // send `Command` on `is_generating_primes` change
     Task::start(async move {
-        store()
+        STORE
             .is_generating_primes
             .signal()
             .for_each(move |is_generating_primes| {
@@ -59,7 +59,7 @@ fn create_web_workers_and_triggers() {
     // set `prime` on prime receive
     Task::start(async move {
         while let Some(prime) = prime_bridge_stream.next().await {
-            store().prime.set(prime);
+            STORE.prime.set(prime);
         }
     });
 }

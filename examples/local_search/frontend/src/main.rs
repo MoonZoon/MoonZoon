@@ -15,7 +15,7 @@ const BACKGROUND_COLOR: HSLuv = hsluv!(0, 0, 80);
 const DEFAULT_GENERATE_COMPANIES_COUNT: usize = 1_000;
 
 fn main() {
-    store();
+    STORE;
     start_app("app", root);
     generate_companies(DEFAULT_GENERATE_COMPANIES_COUNT);
 }
@@ -26,11 +26,11 @@ fn generate_companies(count: usize) {
         Companies(Vec<Company>),
     }
 
-    store().generate_companies_button_disabled.set(true);
-    store().generate_companies_time.set(None);
-    store().index_companies_time.set(None);
-    store().search_time.set(None);
-    store().search_time_history.lock_mut().clear();
+    STORE.generate_companies_button_disabled.set(true);
+    STORE.generate_companies_time.set(None);
+    STORE.index_companies_time.set(None);
+    STORE.search_time.set(None);
+    STORE.search_time_history.lock_mut().clear();
 
     let start_time = performance().now();
 
@@ -55,14 +55,14 @@ fn generate_companies(count: usize) {
         move |from_blocking| {
             from_blocking.for_each_sync(move |msg| match msg {
                 BlockingOutputMsg::CompanyIndex(index) => {
-                    store().generated_company_count.set(index + 1);
+                    STORE.generated_company_count.set(index + 1);
                 }
                 BlockingOutputMsg::Companies(companies) => {
-                    store()
+                    STORE
                         .generate_companies_time
                         .set(Some(performance().now() - start_time));
-                    *store().all_companies.lock_mut() = Arc::new(companies);
-                    store().generate_companies_button_disabled.set(false);
+                    *STORE.all_companies.lock_mut() = Arc::new(companies);
+                    STORE.generate_companies_button_disabled.set(false);
                 }
             })
         },
@@ -83,8 +83,8 @@ fn root() -> impl Element {
         .item(search_field())
         .item(category_filter_panel())
         .item(ui::Pagination::new(
-            store().current_page.clone(),
-            store().page_count.signal(),
+            STORE.current_page.clone(),
+            STORE.page_count.signal(),
         ))
         .item(results())
 }
@@ -106,7 +106,7 @@ fn generate_companies_button() -> impl Element {
     let disabled_color = BACKGROUND_COLOR.update_l(|l| l - 30.);
     Button::new()
         .s(Outline::with_signal(
-            store()
+            STORE
                 .generate_companies_button_disabled
                 .signal_ref(move |disabled| {
                     let outline = Outline::inner().width(2);
@@ -118,7 +118,7 @@ fn generate_companies_button() -> impl Element {
                 }),
         ))
         .s(Font::new().color_signal(
-            store()
+            STORE
                 .generate_companies_button_disabled
                 .signal()
                 .map_true(move || disabled_color),
@@ -129,7 +129,7 @@ fn generate_companies_button() -> impl Element {
         .s(Shadows::new([Shadow::new().x(6).y(6)]))
         .s(Background::new().color_signal(map_ref! {
             let hovered = hovered_signal,
-            let disabled = store().generate_companies_button_disabled.signal() =>
+            let disabled = STORE.generate_companies_button_disabled.signal() =>
             if *hovered && not(disabled) {
                 BACKGROUND_COLOR.update_l(|l| l + 10.)
             } else {
@@ -137,7 +137,7 @@ fn generate_companies_button() -> impl Element {
             }
         }))
         .s(Cursor::with_signal(
-            store()
+            STORE
                 .generate_companies_button_disabled
                 .signal()
                 .map_bool(|| CursorIcon::Default, || CursorIcon::Pointer),
@@ -145,8 +145,8 @@ fn generate_companies_button() -> impl Element {
         .label("Generate companies")
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(|| {
-            if not(store().generate_companies_button_disabled.get()) {
-                if let Ok(count) = store()
+            if not(STORE.generate_companies_button_disabled.get()) {
+                if let Ok(count) = STORE
                     .generate_companies_input_text
                     .lock_ref()
                     .parse::<usize>()
@@ -168,8 +168,8 @@ fn generate_companies_input() -> impl Element {
         .s(Width::exact(100))
         .placeholder(Placeholder::new("100"))
         .label_hidden("generate companies count")
-        .text_signal(store().generate_companies_input_text.signal_cloned())
-        .on_change(|text| store().generate_companies_input_text.set(text))
+        .text_signal(STORE.generate_companies_input_text.signal_cloned())
+        .on_change(|text| STORE.generate_companies_input_text.set(text))
 }
 
 fn companies_generated_and_indexed_text() -> impl Element {
@@ -178,7 +178,7 @@ fn companies_generated_and_indexed_text() -> impl Element {
             El::new()
                 .s(Font::new().weight(FontWeight::Bold))
                 .child_signal(
-                    store()
+                    STORE
                         .generated_company_count
                         .signal()
                         .map(|count| count.to_formatted_string(&Locale::en)),
@@ -188,7 +188,7 @@ fn companies_generated_and_indexed_text() -> impl Element {
         .content(
             El::new()
                 .s(Font::new().weight(FontWeight::Bold))
-                .child_signal(store().generate_companies_time.signal_ref(|time| {
+                .child_signal(STORE.generate_companies_time.signal_ref(|time| {
                     if let Some(time) = time {
                         format!("{time:.2}").into_cow_str()
                     } else {
@@ -201,7 +201,7 @@ fn companies_generated_and_indexed_text() -> impl Element {
         .content(
             El::new()
                 .s(Font::new().weight(FontWeight::Bold))
-                .child_signal(store().index_companies_time.signal_ref(|time| {
+                .child_signal(STORE.index_companies_time.signal_ref(|time| {
                     if let Some(time) = time {
                         format!("{time:.2}").into_cow_str()
                     } else {
@@ -226,8 +226,8 @@ fn search_field() -> impl Element {
                 .s(Outline::inner().width(2))
                 .s(Padding::new().x(15).y(10))
                 .placeholder(Placeholder::new("Company Name"))
-                .text_signal(store().search_query.signal_cloned())
-                .on_change(move |new_text| store().search_query.set(new_text.into())),
+                .text_signal(STORE.search_query.signal_cloned())
+                .on_change(move |new_text| STORE.search_query.set(new_text.into())),
         )
         .item(companies_found_info())
 }
@@ -238,7 +238,7 @@ fn companies_found_info() -> impl Element {
             El::new()
                 .s(Font::new().weight(FontWeight::Bold))
                 .child_signal(
-                    store()
+                    STORE
                         .filtered_companies
                         .signal_ref(|filtered_companies| filtered_companies.len())
                         .map(|count| count.to_formatted_string(&Locale::en)),
@@ -248,7 +248,7 @@ fn companies_found_info() -> impl Element {
         .content(
             El::new()
                 .s(Font::new().weight(FontWeight::Bold))
-                .child_signal(store().search_time.signal_ref(|time| {
+                .child_signal(STORE.search_time.signal_ref(|time| {
                     if let Some(time) = time {
                         format!("{time:.2}").into_cow_str()
                     } else {
@@ -262,7 +262,7 @@ fn companies_found_info() -> impl Element {
             El::new()
                 .s(Font::new().weight(FontWeight::Bold))
                 .child_signal(
-                    store()
+                    STORE
                         .search_time_history
                         .signal_vec()
                         .to_signal_map(|history| {
@@ -280,10 +280,10 @@ fn companies_found_info() -> impl Element {
 
 fn category_filter_panel() -> impl Element {
     ui::Dropdown::new(
-        store().category_filter.signal(),
+        STORE.category_filter.signal(),
         always_vec(iter::once(None).chain(Category::iter().map(Some)).collect()),
         |filter| filter.map(Into::into).unwrap_or("All Categories"),
-        |filter| store().category_filter.set_neq(*filter),
+        |filter| STORE.category_filter.set_neq(*filter),
     )
     .s(Align::new().center_x())
     .s(Width::exact(200))
@@ -291,7 +291,7 @@ fn category_filter_panel() -> impl Element {
 
 fn results() -> impl Element {
     Column::new().s(Gap::new().y(15)).items_signal_vec(
-        store()
+        STORE
             .current_page_companies
             .signal_cloned()
             .to_signal_vec()
