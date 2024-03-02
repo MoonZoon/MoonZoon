@@ -6,7 +6,7 @@ mod router;
 
 pub use from_route_segments::FromRouteSegments;
 pub use route_segment::RouteSegment;
-pub use router::Router;
+pub use router::{RouteState, Router};
 
 pub fn url() -> String {
     window().location().href().unwrap_throw()

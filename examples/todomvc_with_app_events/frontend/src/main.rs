@@ -9,7 +9,14 @@ use store::*;
 
 fn main() {
     start_app("app", root);
-    ROUTER.init_lazy();
+}
+
+fn selected_filter() -> impl Signal<Item = Filter> {
+    ROUTER.current_route().map(|route| match route {
+        NoRoute | UnknownRoute(_) | KnownRoute(Route::Root) => Filter::All,
+        KnownRoute(Route::Active) => Filter::Active,
+        KnownRoute(Route::Completed) => Filter::Completed,
+    })
 }
 
 fn root() -> impl Element {
@@ -111,8 +118,7 @@ fn todos() -> impl Element {
                 .filter_signal_cloned(|todo| {
                     map_ref! {
                         let completed = todo.completed.signal(),
-                        let filter = SELECTED_FILTER.signal() =>
-                        match filter {
+                        let filter = selected_filter() => match filter {
                             Filter::All => true,
                             Filter::Active => not(*completed),
                             Filter::Completed => *completed,
@@ -325,7 +331,7 @@ fn filter(filter: Filter) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let outline_alpha = map_ref! {
         let hovered = hovered_signal,
-        let selected = SELECTED_FILTER.signal_ref(move |selected_filter| selected_filter == &filter) =>
+        let selected = selected_filter().map(move |selected_filter| selected_filter == filter) =>
         if *selected {
             Some(20)
         } else if *hovered {

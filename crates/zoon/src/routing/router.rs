@@ -4,21 +4,27 @@ use web_sys::MouseEvent;
 
 type UrlChangeSender = Sender<Option<Vec<String>>>;
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub enum RouteState<R: Clone> {
     #[default]
-    None,
-    Unknown(Arc<String>),
-    Known(R),
+    NoRoute,
+    UnknownRoute(Arc<String>),
+    KnownRoute(R),
 }
 
-pub struct Router<R: Clone> {
+pub struct Router<R: FromRouteSegments + Clone + 'static> {
     popstate_listener: SendWrapper<Closure<dyn Fn()>>,
     link_interceptor: SendWrapper<Closure<dyn Fn(MouseEvent)>>,
     url_change_sender: UrlChangeSender,
     current_route: Mutable<RouteState<R>>,
     previous_route: Mutable<RouteState<R>>,
     _url_change_handle: TaskHandle,
+}
+
+impl<R: FromRouteSegments + Clone + 'static> Default for Router<R> {
+    fn default() -> Self {
+        Self::new(|_| async {})
+    }
 }
 
 impl<R: FromRouteSegments + Clone + 'static> Router<R> {
@@ -29,11 +35,11 @@ impl<R: FromRouteSegments + Clone + 'static> Router<R> {
         let previous_route = Mutable::new(RouteState::default());
         let on_route_change = {
             let current_route = current_route.clone();
-            let previous_route = current_route.clone();
+            let previous_route = previous_route.clone();
             move |route: Option<R>| {
                 let old_current_route = current_route.replace(match route.clone() {
-                    Some(route) => RouteState::Known(route),
-                    None => RouteState::Unknown(Arc::new(routing::url())),
+                    Some(route) => RouteState::KnownRoute(route),
+                    None => RouteState::UnknownRoute(Arc::new(routing::url())),
                 });
                 previous_route.set(old_current_route);
                 on_route_change(route)
@@ -75,7 +81,7 @@ impl<R: FromRouteSegments + Clone + 'static> Router<R> {
     }
 }
 
-impl<R: Clone> Drop for Router<R> {
+impl<R: FromRouteSegments + Clone + 'static> Drop for Router<R> {
     fn drop(&mut self) {
         window()
             .remove_event_listener_with_callback(
