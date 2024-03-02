@@ -49,11 +49,6 @@ pub(crate) struct FilterPressed {
 #[derive(Clone, Copy)]
 pub(crate) struct ClearCompletedButtonPressed;
 
-#[derive(Clone, Copy)]
-pub(crate) struct RouteChanged {
-    pub route: Option<Route>,
-}
-
 #[derive(Clone)]
 pub(crate) struct NewTodoTitlePreparedForSaving {
     pub title: Arc<String>,

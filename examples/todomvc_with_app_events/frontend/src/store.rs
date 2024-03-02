@@ -4,7 +4,7 @@ use uuid::Uuid;
 use zoon::{eprintln, strum::EnumIter, *};
 
 #[route]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Route {
     #[route("active")]
     Active,
@@ -37,18 +37,7 @@ static STORAGE_KEY: &str = "todomvc-zoon";
 
 pub static ROUTER: Lazy<Router<Route>> = Lazy::new(|| {
     on(|FilterPressed { route }| ROUTER.go(route));
-    Router::new(|route| async move { emit(RouteChanged { route }) })
-});
-
-pub static SELECTED_FILTER: Lazy<Mutable<Filter>> = Lazy::new(|| {
-    on(|RouteChanged { route }| {
-        SELECTED_FILTER.set_neq(match route {
-            Some(Route::Active) => Filter::Active,
-            Some(Route::Completed) => Filter::Completed,
-            Some(Route::Root) | None => Filter::All,
-        })
-    });
-    Mutable::new(Filter::All)
+    Router::default()
 });
 
 pub static SELECTED_TODO: Lazy<Mutable<Option<Todo>>> = Lazy::new(|| {
