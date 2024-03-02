@@ -71,12 +71,12 @@ impl<R: FromRouteSegments + Clone + 'static> Router<R> {
         replace(&self.url_change_sender, with, true);
     }
 
-    pub fn current_route(&self) -> impl Signal<Item = RouteState<R>> {
-        self.current_route.signal_cloned()
+    pub fn route(&self) -> ReadOnlyMutable<RouteState<R>> {
+        self.current_route.read_only()
     }
 
-    pub fn previous_route(&self) -> impl Signal<Item = RouteState<R>> {
-        self.previous_route.signal_cloned()
+    pub fn previous_route(&self) -> ReadOnlyMutable<RouteState<R>> {
+        self.previous_route.read_only()
     }
 }
 
