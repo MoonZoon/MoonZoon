@@ -451,6 +451,8 @@ impl<'a> StyleAnimation<'a> {
     }
 }
 
+// @TODO fix comments and examples - replace named colors with something like "black" 
+
 // ------ global_styles ------
 
 /// Set styles that are globally used in your application.
