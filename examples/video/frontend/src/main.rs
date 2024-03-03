@@ -1,8 +1,9 @@
-use zoon::{named_color::*, println, *};
+use zoon::{println, *};
 
-#[static_ref]
-fn playing() -> &'static Mutable<bool> {
-    Default::default()
+static PLAYING: Lazy<Mutable<bool>> = lazy::default();
+
+fn main() {
+    start_app("app", root);
 }
 
 fn root() -> impl Element {
@@ -38,8 +39,8 @@ fn video(video_element: Mutable<Option<web_sys::HtmlVideoElement>>) -> impl Elem
             this
         })
         .after_insert(move |dom_element| video_element.set(Some(dom_element)))
-        .event_handler(|_: VideoPlay| playing().set_neq(true))
-        .event_handler(|_: VideoPause| playing().set_neq(false))
+        .event_handler(|_: VideoPlay| PLAYING.set_neq(true))
+        .event_handler(|_: VideoPause| PLAYING.set_neq(false))
         // Unchecked cast `DomElement` to another type.
         .dom_element_type::<web_sys::HtmlMediaElement>()
 }
@@ -51,12 +52,13 @@ fn play_button(video_element: Mutable<Option<web_sys::HtmlVideoElement>>) -> imp
         .s(Visible::with_signal(
             video_element.signal_ref(Option::is_some),
         ))
-        .s(Background::new().color_signal(hovered_signal.map_bool(|| BLUE_7, || BLUE_9)))
+        .s(Background::new()
+            .color_signal(hovered_signal.map_bool(|| color!("blue"), || color!("darkblue"))))
         .s(Align::new().center_x())
         .s(Width::exact(size))
         .s(Height::exact(size))
         .s(RoundedCorners::all_max())
-        .s(Borders::all(Border::new().color(BLUE_5).width(2)))
+        .s(Borders::all(Border::new().color(color!("blue")).width(2)))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_click(move || {
             video_element.use_ref(|video| {
@@ -87,7 +89,7 @@ fn play_button_icon() -> impl Element {
                     RawSvgEl::from_markup(include_str!(concat!("../icons/", $name, ".svg")))
                         .unwrap_throw()
                         // Set `currentColor` in SVG elements.
-                        .style("color", &BLUE_3.to_string())
+                        .style("color", &color!("lightblue").to_css_string())
                 }
             }
         };
@@ -98,9 +100,5 @@ fn play_button_icon() -> impl Element {
     make_icon!("play-fill");
     make_icon!("pause-fill");
 
-    El::new().child_signal(playing().signal().map_bool(icon_pause_fill, icon_play_fill))
-}
-
-fn main() {
-    start_app("app", root);
+    El::new().child_signal(PLAYING.signal().map_bool(icon_pause_fill, icon_play_fill))
 }

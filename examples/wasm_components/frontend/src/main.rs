@@ -1,6 +1,8 @@
 use anyhow::anyhow;
 use wai_bindgen_wasmer::wasmer::{Imports, Module, Store};
-use zoon::{eprintln, named_color::*, println, *};
+use zoon::{eprintln, println, *};
+
+// WARNING: The example is NOT runnable at the moment!
 
 // @TODO-WASMER: Uncomment once the Wasmer generator is updated.
 // @TODO-WASMER: See the two longer Rust modules with generated code at the end of this file.
@@ -70,6 +72,10 @@ async fn load_and_use_component(file_list: web_sys::FileList) -> anyhow::Result<
     Ok(())
 }
 
+fn main() {
+  start_app("app", root);
+}
+
 fn root() -> impl Element {
     Column::new()
         .s(Width::exact(300))
@@ -92,8 +98,8 @@ fn drop_zone() -> impl Element {
     El::new()
         .s(Height::exact(200))
         .s(RoundedCorners::all(30))
-        .s(Borders::all(Border::new().color(GREEN_5).width(2)))
-        .s(Background::new().color_signal(drop_zone_active().signal().map_true(|| GREEN_9)))
+        .s(Borders::all(Border::new().color(color!("green")).width(2)))
+        .s(Background::new().color_signal(drop_zone_active().signal().map_true(|| color!("darkgreen"))))
         // @TODO refactor with a new MoonZoon ability
         .update_raw_el(|raw_el| {
             raw_el
@@ -145,9 +151,6 @@ fn drop_zone() -> impl Element {
         )
 }
 
-fn main() {
-    start_app("app", root);
-}
 
 
 

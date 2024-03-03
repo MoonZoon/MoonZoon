@@ -1,12 +1,7 @@
 use zoon::{
-    named_color::*,
     strum::{AsRefStr, EnumIter, IntoEnumIterator},
     *,
 };
-
-// ------ ------
-//     Types
-// ------ ------
 
 #[derive(Clone, Copy, EnumIter, AsRefStr)]
 #[strum(crate = "strum")]
@@ -38,26 +33,11 @@ impl RectangleAlignment {
     }
 }
 
-// ------ ------
-//    States
-// ------ ------
+static RECTANGLE_ALIGNMENT: Lazy<Mutable<Option<RectangleAlignment>>> = lazy::default();
 
-#[static_ref]
-fn rectangle_alignment() -> &'static Mutable<Option<RectangleAlignment>> {
-    Mutable::default()
+fn main() {
+    start_app("app", root);
 }
-
-// ------ ------
-//   Commands
-// ------ ------
-
-fn set_rectangle_alignment(alignment: RectangleAlignment) {
-    rectangle_alignment().set(Some(alignment))
-}
-
-// ------ ------
-//     View
-// ------ ------
 
 fn root() -> impl Element {
     Column::new()
@@ -93,7 +73,7 @@ fn container<'a, T: Styleable<'a> + Element>(name: &str, element: T) -> impl Ele
             element
                 .s(Width::exact(278))
                 .s(Height::exact(200))
-                .s(Borders::all(Border::new().color(GRAY_5).width(3)))
+                .s(Borders::all(Border::new().color(color!("gray")).width(3)))
                 .s(RoundedCorners::all(15)),
         )
 }
@@ -107,9 +87,9 @@ fn rectangle(index: i32) -> impl Element {
     El::new()
         .s(Width::exact(size))
         .s(Height::exact(size))
-        .s(Background::new().color(GREEN_7))
+        .s(Background::new().color(color!("green")))
         .s(RoundedCorners::all(10))
-        .s(Align::with_signal(rectangle_alignment().signal_ref(
+        .s(Align::with_signal(RECTANGLE_ALIGNMENT.signal_ref(
             |alignment| alignment.map(|alignment| alignment.to_align()),
         )))
         .child(El::new().s(Align::center()).child(index))
@@ -119,18 +99,11 @@ fn align_switcher(rectangle_alignment: RectangleAlignment) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(rectangle_alignment.to_align())
-        .s(Background::new().color_signal(hovered_signal.map_bool(|| BLUE_7, || BLUE_9)))
+        .s(Background::new()
+            .color_signal(hovered_signal.map_bool(|| color!("blue"), || color!("darkblue"))))
         .s(Padding::all(5))
         .s(RoundedCorners::all(10))
         .label(rectangle_alignment.as_ref())
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
-        .on_press(move || set_rectangle_alignment(rectangle_alignment))
-}
-
-// ------ ------
-//     Start
-// ------ ------
-
-fn main() {
-    start_app("app", root);
+        .on_press(move || RECTANGLE_ALIGNMENT.set(Some(rectangle_alignment)))
 }

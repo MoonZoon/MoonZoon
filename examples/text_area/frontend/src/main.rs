@@ -1,25 +1,10 @@
-use zoon::{named_color::*, *};
+use zoon::*;
 
-// ------ ------
-//    States
-// ------ ------
+static CONTENT: Lazy<Mutable<String>> = lazy::default();
 
-#[static_ref]
-fn content() -> &'static Mutable<String> {
-    Mutable::new(String::new())
+fn main() {
+    start_app("app", root);
 }
-
-// ------ ------
-//   Commands
-// ------ ------
-
-fn set_content(text: String) {
-    content().set(text);
-}
-
-// ------ ------
-//     View
-// ------ ------
 
 fn root() -> impl Element {
     Column::new()
@@ -36,7 +21,7 @@ fn heading() -> impl Element {
     El::with_tag(Tag::H1)
         .s(Align::new().center_x())
         .s(Font::new()
-            .color(PURPLE_7)
+            .color(color!("purple"))
             .size(40)
             .weight(FontWeight::ExtraLight)
             .italic())
@@ -50,7 +35,7 @@ fn text_input() -> impl Element {
         .s(Padding::all(8))
         .s(RoundedCorners::all(8).bottom_right(0))
         .placeholder(Placeholder::new("Write something here..."))
-        .on_change(set_content)
+        .on_change(|text| CONTENT.set(text))
         .label_hidden("Write something...")
 }
 
@@ -60,16 +45,8 @@ fn text_display() -> impl Element {
         .s(Height::default().min(100))
         .s(Padding::all(8))
         .s(RoundedCorners::all(8))
-        .s(Background::new().color(GRAY_2))
+        .s(Background::new().color(color!("silver")))
         .s(Font::new().wrap_anywhere())
         .s(Cursor::new(CursorIcon::Default))
-        .item_signal(content().signal_cloned())
-}
-
-// ------ ------
-//     Start
-// ------ ------
-
-fn main() {
-    start_app("app", root);
+        .item_signal(CONTENT.signal_cloned())
 }
