@@ -20,16 +20,6 @@ impl RouteSegment for String {
     }
 }
 
-impl RouteSegment for Cow<'static, str> {
-    fn from_string_segment(segment: &str) -> Option<Self> {
-        Some(segment.to_owned().into())
-    }
-
-    fn into_string_segment(self) -> Cow<'static, str> {
-        self
-    }
-}
-
 impl RouteSegment for Arc<String> {
     fn from_string_segment(segment: &str) -> Option<Self> {
         Some(segment.to_owned().into())
@@ -47,6 +37,36 @@ impl RouteSegment for Rc<String> {
 
     fn into_string_segment(self) -> Cow<'static, str> {
         Rc::unwrap_or_clone(self).into()
+    }
+}
+
+impl RouteSegment for Cow<'static, str> {
+    fn from_string_segment(segment: &str) -> Option<Self> {
+        Some(segment.to_owned().into())
+    }
+
+    fn into_string_segment(self) -> Cow<'static, str> {
+        self
+    }
+}
+
+impl RouteSegment for Arc<Cow<'static, str>> {
+    fn from_string_segment(segment: &str) -> Option<Self> {
+        Some(Arc::new(segment.to_owned().into()))
+    }
+
+    fn into_string_segment(self) -> Cow<'static, str> {
+        Arc::unwrap_or_clone(self)
+    }
+}
+
+impl RouteSegment for Rc<Cow<'static, str>> {
+    fn from_string_segment(segment: &str) -> Option<Self> {
+        Some(Rc::new(segment.to_owned().into()))
+    }
+
+    fn into_string_segment(self) -> Cow<'static, str> {
+        Rc::unwrap_or_clone(self)
     }
 }
 
