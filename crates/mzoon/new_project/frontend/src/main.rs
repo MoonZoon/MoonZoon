@@ -1,35 +1,33 @@
-use zoon::{named_color::*, *};
+use zoon::*;
 
-#[static_ref]
-fn counter() -> &'static Mutable<u32> {
-    Mutable::new(0)
+fn main() {
+    start_app("app", root);
 }
 
-fn increment() {
-    counter().update(|counter| counter + 1)
-}
+static COUNTER: Lazy<Mutable<i32>> = lazy::default();
 
 fn root() -> impl Element {
     Row::new()
         .s(Align::center())
-        .s(Transform::new().move_up(20))
-        .s(Gap::both(20))
-        .s(Font::new().color(GRAY_0).size(30))
-        .item(increment_button())
-        .item_signal(counter().signal())
+        .s(Gap::new().x(15))
+        .item(counter_button("-", -1))
+        .item_signal(COUNTER.signal())
+        .item(counter_button("+", 1))
 }
 
-fn increment_button() -> impl Element {
+fn counter_button(label: &str, step: i32) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .s(Padding::new().x(12).y(7))
-        .s(RoundedCorners::all(10))
-        .s(Background::new().color_signal(hovered_signal.map_bool(|| GREEN_7, || GREEN_8)))
+        .s(Width::exact(45))
+        .s(RoundedCorners::all_max())
+        .s(Background::new()
+            .color_signal(hovered_signal.map_bool(|| color!("#edc8f5"), || color!("#E1A3EE", 0.8))))
+        .s(Borders::all(
+            Border::new()
+                .width(2)
+                .color(color!("oklch(0.6 0.182 350.53 / .7")),
+        ))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
-        .label("Increment!")
-        .on_press(increment)
-}
-
-fn main() {
-    start_app("app", root);
+        .label(label)
+        .on_press(move || *COUNTER.lock_mut() += step)
 }

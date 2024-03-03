@@ -1,7 +1,6 @@
 mod into_color;
 
 pub mod color_space;
-pub mod named_color;
 
 pub use color_macro::color;
 pub use color_space::{oklch, Oklch, OklchExt, Rgba};
