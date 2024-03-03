@@ -1,4 +1,8 @@
-use zoon::{named_color::*, *};
+use zoon::*;
+
+fn main() {
+    start_app("app", root);
+}
 
 fn root() -> impl Element {
     Column::new()
@@ -24,7 +28,7 @@ fn title() -> impl Element {
             El::new()
                 .s(Font::new().line(FontLine::new().underline().wavy()))
                 .s(RoundedCorners::all(10))
-                .s(Background::new().color(BLUE_9))
+                .s(Background::new().color(color!("DarkBlue")))
                 .s(Padding::all(5).top(0))
                 .child("wavy"),
         )
@@ -47,7 +51,7 @@ fn paragraph() -> impl Element {
             )
         .content(
             Link::new()
-                .s(Font::new().color(BLUE_4).line(FontLine::new().underline()))
+                .s(Font::new().color(color!("RoyalBlue")).line(FontLine::new().underline()))
                 .label("Extra mega super big large looooooooong label link to the page example.com")
                 .to("http://example.com")
         )
@@ -66,8 +70,4 @@ fn paragraph() -> impl Element {
                 .s(Font::new().tracking(8))
                 .child("\nI like tracking (aka letter-spacing).")
         )
-}
-
-fn main() {
-    start_app("app", root);
 }

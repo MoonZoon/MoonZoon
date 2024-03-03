@@ -1,19 +1,24 @@
-use zoon::{named_color, *};
+use zoon::*;
 
 const RECTANGLE_SIZE: u32 = 130;
+
+fn main() {
+    start_app("app", root);
+}
 
 fn root() -> impl Element {
     Column::new()
         .s(Align::center())
         .s(Gap::new().y(10))
-        .item(label("Row"))
+        .item(
+            El::new()
+                .s(Font::new().color(color!("gray")))
+                .child("Resize the browser window"),
+        )
+        .item(El::new().child("Row"))
         .item(row())
-        .item(label("Grid"))
+        .item(El::new().child("Grid"))
         .item(grid())
-}
-
-fn label(label: &str) -> impl Element {
-    El::new().child(label)
 }
 
 fn row() -> impl Element {
@@ -37,11 +42,7 @@ fn rectangles() -> impl Iterator<Item = impl Element> {
         El::new()
             .s(Width::exact(RECTANGLE_SIZE))
             .s(Height::exact(RECTANGLE_SIZE))
-            .s(Background::new().color(named_color::GREEN_9))
+            .s(Background::new().color(color!("green")))
             .child(El::new().s(Align::center()).child(index))
     })
-}
-
-fn main() {
-    start_app("app", root);
 }

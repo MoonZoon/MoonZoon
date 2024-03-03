@@ -1,40 +1,13 @@
-use zoon::{named_color::*, *};
+use zoon::*;
 
-// ------ ------
-//    States
-// ------ ------
-
-#[static_ref]
-fn radius() -> &'static Mutable<u32> {
-    Mutable::new(20)
-}
-
-#[static_ref]
-fn radius_max() -> &'static Mutable<bool> {
-    Mutable::new(false)
-}
-
-// ------ ------
-//   Commands
-// ------ ------
-
-fn set_radius(new_radius: u32) {
-    radius().set_neq(new_radius);
-}
-
-fn set_radius_max(is_max: bool) {
-    radius_max().set_neq(is_max);
-}
-
-// ------ ------
-//    Signals
-// ------ ------
+static RADIUS: Lazy<Mutable<u32>> = Lazy::new(|| Mutable::new(20));
+static RADIUS_MAX_CHECKED: Lazy<Mutable<bool>> = lazy::default();
 
 fn radius_signal() -> impl Signal<Item = Radius> {
     map_ref! {
-        let radius = radius().signal(),
-        let is_max = radius_max().signal() =>
-        if *is_max {
+        let radius = RADIUS.signal(),
+        let radius_max_checked = RADIUS_MAX_CHECKED.signal() =>
+        if *radius_max_checked {
             Radius::Max
         } else {
             Radius::Px(*radius)
@@ -42,9 +15,9 @@ fn radius_signal() -> impl Signal<Item = Radius> {
     }
 }
 
-// ------ ------
-//     View
-// ------ ------
+fn main() {
+    start_app("app", root);
+}
 
 fn root() -> impl Element {
     Column::new()
@@ -59,14 +32,14 @@ fn root() -> impl Element {
 fn rectangle() -> impl Element {
     El::new()
         .s(Align::center())
-        .s(Background::new().color(GREEN_8))
+        .s(Background::new().color(color!("green")))
         .s(Width::exact(150))
         .s(Height::exact(150))
         .s(RoundedCorners::all_signal(radius_signal()))
 }
 
 fn rectangle_radius() -> impl Element {
-    El::new().s(Align::center()).child_signal(radius().signal())
+    El::new().s(Align::center()).child_signal(RADIUS.signal())
 }
 
 fn slider() -> impl Element {
@@ -79,7 +52,7 @@ fn slider() -> impl Element {
         .attr("type", "range")
         .attr("min", "0")
         .attr("max", "75")
-        .attr_signal("value", radius().signal())
+        .attr_signal("value", RADIUS.signal())
         .event_handler(|event: events::Input| {
             #[allow(deprecated)]
             let value = event
@@ -87,7 +60,7 @@ fn slider() -> impl Element {
                 .expect("slider value")
                 .parse()
                 .expect("u32 value");
-            set_radius(value)
+            RADIUS.set_neq(value)
         })
 }
 
@@ -111,14 +84,6 @@ fn max_checkbox(checkbox_id: &str) -> impl Element {
     Checkbox::new()
         .id(checkbox_id)
         .icon(|checked| checkbox::default_icon(checked.signal()))
-        .checked_signal(radius_max().signal())
-        .on_change(set_radius_max)
-}
-
-// ------ ------
-//     Start
-// ------ ------
-
-fn main() {
-    start_app("app", root);
+        .checked_signal(RADIUS_MAX_CHECKED.signal())
+        .on_change(|checked| RADIUS_MAX_CHECKED.set_neq(checked))
 }

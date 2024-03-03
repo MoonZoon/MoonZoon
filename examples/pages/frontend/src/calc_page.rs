@@ -1,7 +1,7 @@
 use crate::router::Route;
 use evalexpr::eval;
 use std::fmt;
-use zoon::{named_color::*, *};
+use zoon::*;
 
 // ------ ------
 //     Types
@@ -104,7 +104,7 @@ fn expressions() -> impl Element {
 
 fn expression_link(expression: Expression) -> impl Element {
     Link::new()
-        .s(Font::new().color(BLUE_4))
+        .s(Font::new().color(color!("RoyalBlue")))
         .label(expression.to_string())
         .to(expression.into_route())
 }

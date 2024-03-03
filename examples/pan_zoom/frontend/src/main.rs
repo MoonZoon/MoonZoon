@@ -1,8 +1,12 @@
-use zoon::{named_color::*, *};
+use zoon::*;
+
+fn main() {
+    start_app("app", root);
+}
 
 fn root() -> impl Element {
     El::new()
-        .s(Borders::all(Border::new().color(GRAY_0)))
+        .s(Borders::all(Border::new().color(color!("Gray"))))
         .s(Width::exact(320))
         .s(Height::exact(320))
         .s(Align::center())
@@ -120,8 +124,4 @@ fn circles() -> impl IntoIterator<Item = impl Element> {
             .attr("r", "10")
             .attr("fill", "cornflowerblue"),
     ]
-}
-
-fn main() {
-    start_app("app", root);
 }

@@ -1,39 +1,23 @@
-use zoon::{named_color::*, *};
+use zoon::*;
 
-#[static_ref]
-fn drag_rectangle() -> &'static Mutable<bool> {
-    Default::default()
-}
-
-#[static_ref]
-fn drag_handle() -> &'static Mutable<bool> {
-    Default::default()
-}
-
-#[static_ref]
-fn rectangle_offset() -> &'static Mutable<(i32, i32)> {
-    Default::default()
-}
-
-#[static_ref]
-fn rectangle_size() -> &'static Mutable<(u32, u32)> {
-    Mutable::new((150, 150))
-}
+static DRAG_RECTANGLE: Lazy<Mutable<bool>> = lazy::default();
+static DRAG_HANDLE: Lazy<Mutable<bool>> = lazy::default();
+static RECTANGLE_OFFSET: Lazy<Mutable<(i32, i32)>> = lazy::default();
+static RECTANGLE_SIZE: Lazy<Mutable<(u32, u32)>> = Lazy::new(|| (150, 150).into());
 
 fn root() -> impl Element {
     El::new()
         .s(Width::fill())
         .s(Height::fill())
         .on_pointer_up(|| {
-            drag_rectangle().set_neq(false);
-            drag_handle().set_neq(false);
+            DRAG_RECTANGLE.set_neq(false);
+            DRAG_HANDLE.set_neq(false);
         })
         .on_pointer_move_event(|event| {
-            if drag_rectangle().get() {
-                rectangle_offset()
-                    .update(|(x, y)| (x + event.movement_x(), y + event.movement_y()));
-            } else if drag_handle().get() {
-                rectangle_size().update(|(width, height)| {
+            if DRAG_RECTANGLE.get() {
+                RECTANGLE_OFFSET.update(|(x, y)| (x + event.movement_x(), y + event.movement_y()));
+            } else if DRAG_HANDLE.get() {
+                RECTANGLE_SIZE.update(|(width, height)| {
                     let new_width = width as i32 + event.movement_x();
                     let new_height = height as i32 + event.movement_y();
                     (
@@ -43,27 +27,30 @@ fn root() -> impl Element {
                 });
             }
         })
-        .on_pointer_leave(|| drag_rectangle().set_neq(false))
+        .on_pointer_leave(|| DRAG_RECTANGLE.set_neq(false))
         .child(rectangle())
 }
 
 fn rectangle() -> impl Element {
     Stack::new()
         .s(Width::exact_signal(
-            rectangle_size().signal().map(|(width, _)| width).dedupe(),
+            RECTANGLE_SIZE.signal().map(|(width, _)| width).dedupe(),
         ))
         .s(Height::exact_signal(
-            rectangle_size().signal().map(|(_, height)| height).dedupe(),
+            RECTANGLE_SIZE.signal().map(|(_, height)| height).dedupe(),
         ))
-        .s(Background::new()
-            .color_signal(drag_rectangle().signal().map_bool(|| GREEN_9, || GRAY_5)))
+        .s(Background::new().color_signal(
+            DRAG_RECTANGLE
+                .signal()
+                .map_bool(|| color!("green"), || color!("gray")),
+        ))
         .s(Transform::with_signal(
-            rectangle_offset()
+            RECTANGLE_OFFSET
                 .signal()
                 .map(|(x, y)| Transform::new().move_right(x).move_down(y)),
         ))
         .s(Cursor::with_signal(
-            drag_rectangle()
+            DRAG_RECTANGLE
                 .signal()
                 .map_bool(|| CursorIcon::Grabbing, || CursorIcon::Grab),
         ))
@@ -75,34 +62,34 @@ fn rectangle() -> impl Element {
 fn rectangle_content() -> impl Element {
     El::new()
         .s(Clip::both())
-        .on_pointer_down(|| drag_rectangle().set_neq(true))
+        .on_pointer_down(|| DRAG_RECTANGLE.set_neq(true))
         .child(rectangle_attributes())
 }
 
 fn rectangle_attributes() -> impl Element {
     Column::new()
         .s(Align::center())
-        .s(Font::new().color(GRAY_2))
+        .s(Font::new().color(color!("white")))
         .text_content_selecting(TextContentSelecting::none())
         .item(
             Row::new()
                 .item("offset X: ")
-                .item_signal(rectangle_offset().signal().map(|(x, _)| x).dedupe()),
+                .item_signal(RECTANGLE_OFFSET.signal().map(|(x, _)| x).dedupe()),
         )
         .item(
             Row::new()
                 .item("offset Y: ")
-                .item_signal(rectangle_offset().signal().map(|(_, y)| y).dedupe()),
+                .item_signal(RECTANGLE_OFFSET.signal().map(|(_, y)| y).dedupe()),
         )
         .item(
             Row::new()
                 .item("width: ")
-                .item_signal(rectangle_size().signal().map(|(width, _)| width).dedupe()),
+                .item_signal(RECTANGLE_SIZE.signal().map(|(width, _)| width).dedupe()),
         )
         .item(
             Row::new()
                 .item("height: ")
-                .item_signal(rectangle_size().signal().map(|(_, height)| height).dedupe()),
+                .item_signal(RECTANGLE_SIZE.signal().map(|(_, height)| height).dedupe()),
         )
 }
 
@@ -111,14 +98,15 @@ fn handle() -> impl Element {
         .s(Width::exact(40))
         .s(Height::exact(40))
         .s(Align::new().bottom().right())
-        .s(
-            Background::new()
-                .color_signal(drag_handle().signal().map_bool(|| YELLOW_4, || GREEN_5)),
-        )
+        .s(Background::new().color_signal(
+            DRAG_HANDLE
+                .signal()
+                .map_bool(|| color!("green"), || color!("yellow")),
+        ))
         .s(Transform::new().move_down(10).move_right(10))
         .s(RoundedCorners::all_max())
         .s(Cursor::new(CursorIcon::UpLeftDownRightArrow))
-        .on_pointer_down(|| drag_handle().set_neq(true))
+        .on_pointer_down(|| DRAG_HANDLE.set_neq(true))
 }
 
 fn main() {

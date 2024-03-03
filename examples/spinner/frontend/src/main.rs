@@ -1,13 +1,22 @@
-use zoon::{named_color::*, *};
+use zoon::*;
+
+fn main() {
+    start_app("app", root);
+}
 
 fn root() -> impl Element {
     El::new()
         .s(Align::center())
-        .child(spinner(50, 8, 10, YELLOW_6))
+        .child(spinner(50, 8, 10, color!("yellow")))
 }
 
-fn spinner(spinner_diameter: u32, dot_diameter: u32, dot_count: u32, color: HSLuv) -> impl Element {
-    // ~= the higher speed of rotation
+fn spinner(
+    spinner_diameter: u32,
+    dot_diameter: u32,
+    dot_count: u32,
+    color: impl IntoColor,
+) -> impl Element {
+    // ~= the highest speed of rotation
     let shortest_duration = Duration::seconds(1);
     // ~= the lowest speed of rotation
     let longest_duration = Duration::seconds(6);
@@ -39,7 +48,12 @@ fn spinner(spinner_diameter: u32, dot_diameter: u32, dot_count: u32, color: HSLu
                 .signal()
                 .map(|factor| Transform::new().rotate(factor * 360.)),
         ))
-        .layers(dots(spinner_diameter, dot_diameter, dot_count, color))
+        .layers(dots(
+            spinner_diameter,
+            dot_diameter,
+            dot_count,
+            color.into_color(),
+        ))
         .after_remove(move |_| {
             drop(rotation_oscillator);
             drop(rotation_duration_updater);
@@ -50,7 +64,7 @@ fn dots(
     spinner_diameter: u32,
     dot_diameter: u32,
     dot_count: u32,
-    color: HSLuv,
+    color: Color,
 ) -> impl Iterator<Item = impl Element> {
     (0..dot_count).map(move |index| dot(index, spinner_diameter, dot_diameter, dot_count, color))
 }
@@ -60,7 +74,7 @@ fn dot(
     spinner_diameter: u32,
     dot_diameter: u32,
     dot_count: u32,
-    color: HSLuv,
+    color: impl IntoColor,
 ) -> impl Element {
     let dot_radius = dot_diameter as f64 / 2.;
     let spinner_radius = spinner_diameter as f64 / 2.;
@@ -78,8 +92,4 @@ fn dot(
         .s(RoundedCorners::all_max())
         .s(Align::center())
         .s(Transform::new().move_down(y).move_right(x))
-}
-
-fn main() {
-    start_app("app", root);
 }

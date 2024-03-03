@@ -1,56 +1,57 @@
-use zoon::{named_color::*, *};
+use zoon::*;
 
-// -- stopwatch --
+// -- Stopwatch --
 
-#[static_ref]
-fn seconds() -> &'static Mutable<u32> {
-    Mutable::new(0)
+static STOPWATCH: Lazy<Stopwatch> = lazy::default();
+
+#[derive(Default)]
+struct Stopwatch {
+    timer: Mutable<Option<Timer>>,
+    seconds: Mutable<u32>,
+}
+impl Stopwatch {
+    fn start(&self) {
+        self.seconds.set(0);
+        let seconds = self.seconds.clone();
+        self.timer
+            .set(Some(Timer::new(1_000, move || *seconds.lock_mut() += 1)));
+    }
+    fn stop(&self) {
+        self.timer.set(None);
+    }
+    fn enabled(&self) -> impl Signal<Item = bool> {
+        self.timer.signal_ref(Option::is_some)
+    }
+    fn seconds(&self) -> impl Signal<Item = u32> {
+        self.seconds.signal()
+    }
 }
 
-#[static_ref]
-fn stopwatch() -> &'static Mutable<Option<Timer>> {
-    Mutable::new(None)
+// -- Timeout --
+
+static TIMEOUT: Lazy<Timeout> = lazy::default();
+
+#[derive(Default)]
+struct Timeout {
+    timer: Mutable<Option<Timer>>,
+}
+impl Timeout {
+    fn enabled(&self) -> impl Signal<Item = bool> {
+        self.timer.signal_ref(Option::is_some)
+    }
+    fn start(&self) {
+        let timer = self.timer.clone();
+        self.timer
+            .set(Some(Timer::once(2_000, move || timer.set(None))));
+    }
+    fn stop(&self) {
+        self.timer.set(None);
+    }
 }
 
-fn stopwatch_enabled() -> impl Signal<Item = bool> {
-    stopwatch().signal_ref(Option::is_some)
+fn main() {
+    start_app("app", root);
 }
-
-fn start_stopwatch() {
-    seconds().take();
-    stopwatch().set(Some(Timer::new(1_000, increment_seconds)));
-}
-
-fn increment_seconds() {
-    seconds().update(|seconds| seconds + 1);
-}
-
-fn stop_stopwatch() {
-    stopwatch().take();
-}
-
-// -- timeout --
-
-#[static_ref]
-fn timeout() -> &'static Mutable<Option<Timer>> {
-    Mutable::new(None)
-}
-
-fn timeout_enabled() -> impl Signal<Item = bool> {
-    timeout().signal_ref(Option::is_some)
-}
-
-fn start_timeout() {
-    timeout().set(Some(Timer::once(2_000, stop_timeout)));
-}
-
-fn stop_timeout() {
-    timeout().take();
-}
-
-// ------ ------
-//     View
-// ------ ------
 
 fn root() -> impl Element {
     Column::new()
@@ -65,10 +66,10 @@ fn stopwatch_panel() -> impl Element {
     Row::new()
         .s(Gap::both(20))
         .item("Seconds: ")
-        .item(Text::with_signal(seconds().signal()))
-        .item_signal(stopwatch_enabled().map_bool(
-            || stop_button(stop_stopwatch).left_either(),
-            || start_button(start_stopwatch).right_either(),
+        .item_signal(STOPWATCH.seconds())
+        .item_signal(STOPWATCH.enabled().map_bool(
+            || stop_button(|| STOPWATCH.stop()).left_either(),
+            || start_button(|| STOPWATCH.start()).right_either(),
         ))
 }
 
@@ -76,9 +77,9 @@ fn timeout_panel() -> impl Element {
     Row::new()
         .s(Gap::both(20))
         .item("2s Timeout")
-        .item_signal(timeout_enabled().map_bool(
-            || stop_button(stop_timeout).left_either(),
-            || start_button(start_timeout).right_either(),
+        .item_signal(TIMEOUT.enabled().map_bool(
+            || stop_button(|| TIMEOUT.stop()).left_either(),
+            || start_button(|| TIMEOUT.start()).right_either(),
         ))
 }
 
@@ -101,33 +102,26 @@ fn sleep_panel() -> impl Element {
 }
 
 fn start_button(on_press: impl FnMut() + 'static) -> impl Element {
-    button("Start", GREEN_7, GREEN_8, on_press)
+    button("Start", color!("green"), color!("darkgreen"), on_press)
 }
 
 fn stop_button(on_press: impl FnMut() + 'static) -> impl Element {
-    button("Stop", RED_7, RED_8, on_press)
+    button("Stop", color!("red"), color!("darkred"), on_press)
 }
 
 fn button(
     label: &str,
-    bg_color_hovered: HSLuv,
-    bg_color: HSLuv,
+    bg_color_hovered: Rgba,
+    bg_color: Rgba,
     on_press: impl FnMut() + 'static,
 ) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
-        .s(Padding::all(6))
+        .s(Padding::new().x(12).y(6))
+        .s(RoundedCorners::all(5))
         .s(Background::new()
             .color_signal(hovered_signal.map_bool(move || bg_color_hovered, move || bg_color)))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .label(label)
         .on_press(on_press)
-}
-
-// ------ ------
-//     Start
-// ------ ------
-
-fn main() {
-    start_app("app", root);
 }
