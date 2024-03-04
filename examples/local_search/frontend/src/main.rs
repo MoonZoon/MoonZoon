@@ -15,7 +15,7 @@ const BACKGROUND_COLOR: HSLuv = hsluv!(0, 0, 80);
 const DEFAULT_GENERATE_COMPANIES_COUNT: usize = 1_000;
 
 fn main() {
-    STORE;
+    STORE.init_lazy();
     start_app("app", root);
     generate_companies(DEFAULT_GENERATE_COMPANIES_COUNT);
 }

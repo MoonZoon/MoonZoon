@@ -2,19 +2,18 @@ use std::sync::Arc;
 use zoon::*;
 
 #[derive(Educe)]
-#[educe(Default(new))]
+#[educe(Default)]
 struct Store {
     #[educe(Default(expression = Mutable::new(Arc::new("Hello".to_owned()))))]
     text_a: Mutable<Arc<String>>,
+
     #[educe(Default(expression = Mutable::new(Arc::new("World!".to_owned()))))]
     text_b: Mutable<Arc<String>>,
+    
     joined_texts: Mutable<Arc<String>>,
 }
 
-#[static_ref]
-fn STORE -> &'static Store {
-    Store::new()
-}
+static STORE: Lazy<Store> = lazy::default();
 
 fn main() {
     Task::start_blocking_with_tasks(
