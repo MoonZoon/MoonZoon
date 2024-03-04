@@ -1,4 +1,5 @@
 use crate::{routing::decode_uri_component, *};
+use std::ops::Deref;
 use web_sys::MouseEvent;
 
 type UrlChangeSender = Sender<Option<Vec<String>>>;
@@ -11,7 +12,7 @@ pub enum RouteState<R: Clone> {
     KnownRoute(R),
 }
 
-pub struct Router<R: FromRouteSegments + Clone + 'static> {
+pub struct Router<R: FromRouteSegments + IntoCowStr<'static> + Clone + 'static> {
     popstate_listener: SendWrapper<Closure<dyn Fn()>>,
     link_interceptor: SendWrapper<Closure<dyn Fn(MouseEvent)>>,
     url_change_sender: UrlChangeSender,
@@ -20,13 +21,13 @@ pub struct Router<R: FromRouteSegments + Clone + 'static> {
     _url_change_handle: TaskHandle,
 }
 
-impl<R: FromRouteSegments + Clone + 'static> Default for Router<R> {
+impl<R: FromRouteSegments + IntoCowStr<'static> + Clone + 'static> Default for Router<R> {
     fn default() -> Self {
         Self::new(|_| async {})
     }
 }
 
-impl<R: FromRouteSegments + Clone + 'static> Router<R> {
+impl<R: FromRouteSegments + IntoCowStr<'static> + Clone + 'static> Router<R> {
     pub fn new<O: Future<Output = ()> + 'static>(
         mut on_route_change: impl FnMut(Option<R>) -> O + 'static,
     ) -> Self {
@@ -78,9 +79,21 @@ impl<R: FromRouteSegments + Clone + 'static> Router<R> {
     pub fn previous_route(&self) -> ReadOnlyMutable<RouteState<R>> {
         self.previous_route.read_only()
     }
+
+    pub fn go_to_previous_known_or_else<'a, ICS: IntoCowStr<'a>>(&self, to: impl FnOnce() -> ICS) {
+        let previous_lock = self.previous_route.lock_ref();
+        if let KnownRoute(route) = previous_lock.deref() {
+            let route = route.clone();
+            drop(previous_lock);
+            self.go(route);
+        } else {
+            drop(previous_lock);
+            self.go(to());
+        }
+    }
 }
 
-impl<R: FromRouteSegments + Clone + 'static> Drop for Router<R> {
+impl<R: FromRouteSegments + IntoCowStr<'static> + Clone + 'static> Drop for Router<R> {
     fn drop(&mut self) {
         window()
             .remove_event_listener_with_callback(
