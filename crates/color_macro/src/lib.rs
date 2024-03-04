@@ -29,6 +29,32 @@ use syn::{parse_macro_input, punctuated::Punctuated, spanned::Spanned, Error, Li
 // cssparser_color::Oklch { lightness: Some(0.6), chroma: Some(0.182), hue: Some(350.53), alpha: None }
 // ```
 
+/// Parses a CSS color from a literal string during compilation and generates the corresponding typed color.
+///
+/// The second optional parameter is alpha in range `0.0` (transparent) - `1.0` (opaque). It overrides the alpha set directly in the color.
+///
+/// Useful links:
+/// - [docs.rs/cssparser-color](https://docs.rs/cssparser-color/latest/cssparser_color/)
+/// - [HTML Color Groups](https://www.w3schools.com/colors/colors_groups.asp)
+/// - [OKLCH Color Picker & Converter](https://oklch.com/)
+///
+/// # Examples
+/// ```no_run
+/// color!("#ffffff", 0.5)
+/// // => cssparser_color::RgbaLegacy { red: 255, green: 255, blue: 255, alpha: 0.5 }
+///
+/// color!("#FFF")
+/// // => cssparser_color::RgbaLegacy { red: 255, green: 255, blue: 255, alpha: 1.0 }
+///
+/// color!("Black")
+/// // =>  cssparser_color::RgbaLegacy { red: 0, green: 0, blue: 0, alpha: 1.0 }
+///
+/// color!("oklch(0.6 0.182 350.53 / .3")
+/// // => cssparser_color::Oklch { lightness: Some(0.6), chroma: Some(0.182), hue: Some(350.53), alpha: Some(0.3) }
+///
+/// color!("oklch(0.6 0.182 350.53 / none")
+/// // => cssparser_color::Oklch { lightness: Some(0.6), chroma: Some(0.182), hue: Some(350.53), alpha: None }
+///
 #[proc_macro]
 pub fn color(input: TokenStream) -> TokenStream {
     let args_parser = Punctuated::<Lit, Token![,]>::parse_terminated;

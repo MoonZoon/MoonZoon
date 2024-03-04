@@ -430,7 +430,7 @@ You can use:
 ```rust
 hsluv!(0, 0, 32.7)
 "#edc8f5"
-"black"
+"Black"
 color!("oklch(0.6 0.182 350.53 / .7")
 oklch().l(0.6).c(0.182).h(350.53).a(1)
 ```
