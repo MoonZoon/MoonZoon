@@ -42,7 +42,7 @@ fn rectangle() -> impl Element {
         .s(Background::new().color_signal(
             DRAG_RECTANGLE
                 .signal()
-                .map_bool(|| color!("green"), || color!("gray")),
+                .map_bool(|| color!("Green"), || color!("Gray")),
         ))
         .s(Transform::with_signal(
             RECTANGLE_OFFSET
@@ -69,7 +69,7 @@ fn rectangle_content() -> impl Element {
 fn rectangle_attributes() -> impl Element {
     Column::new()
         .s(Align::center())
-        .s(Font::new().color(color!("white")))
+        .s(Font::new().color(color!("White")))
         .text_content_selecting(TextContentSelecting::none())
         .item(
             Row::new()
@@ -101,7 +101,7 @@ fn handle() -> impl Element {
         .s(Background::new().color_signal(
             DRAG_HANDLE
                 .signal()
-                .map_bool(|| color!("green"), || color!("yellow")),
+                .map_bool(|| color!("Green"), || color!("Yellow")),
         ))
         .s(Transform::new().move_down(10).move_right(10))
         .s(RoundedCorners::all_max())

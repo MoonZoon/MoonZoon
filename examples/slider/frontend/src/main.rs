@@ -32,7 +32,7 @@ fn root() -> impl Element {
 fn rectangle() -> impl Element {
     El::new()
         .s(Align::center())
-        .s(Background::new().color(color!("green")))
+        .s(Background::new().color(color!("Green")))
         .s(Width::exact(150))
         .s(Height::exact(150))
         .s(RoundedCorners::all_signal(radius_signal()))

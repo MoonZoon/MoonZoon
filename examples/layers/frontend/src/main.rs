@@ -74,7 +74,7 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
         .s(Height::exact(100))
         .s(RoundedCorners::all(15))
         .s(Cursor::new(CursorIcon::Pointer))
-        .s(Shadows::new([Shadow::new().blur(20).color(color!("gray"))]))
+        .s(Shadows::new([Shadow::new().blur(20).color(color!("Gray"))]))
         .s(Background::new().color_signal(color))
         .s(align)
         .on_hovered_change(move |is_hovered| lightness_oscillator.go_to(is_hovered))

@@ -98,8 +98,8 @@ fn drop_zone() -> impl Element {
     El::new()
         .s(Height::exact(200))
         .s(RoundedCorners::all(30))
-        .s(Borders::all(Border::new().color(color!("green")).width(2)))
-        .s(Background::new().color_signal(drop_zone_active().signal().map_true(|| color!("darkgreen"))))
+        .s(Borders::all(Border::new().color(color!("Green")).width(2)))
+        .s(Background::new().color_signal(drop_zone_active().signal().map_true(|| color!("DarkGreen"))))
         // @TODO refactor with a new MoonZoon ability
         .update_raw_el(|raw_el| {
             raw_el

@@ -73,7 +73,7 @@ fn container<'a, T: Styleable<'a> + Element>(name: &str, element: T) -> impl Ele
             element
                 .s(Width::exact(278))
                 .s(Height::exact(200))
-                .s(Borders::all(Border::new().color(color!("gray")).width(3)))
+                .s(Borders::all(Border::new().color(color!("Gray")).width(3)))
                 .s(RoundedCorners::all(15)),
         )
 }
@@ -87,7 +87,7 @@ fn rectangle(index: i32) -> impl Element {
     El::new()
         .s(Width::exact(size))
         .s(Height::exact(size))
-        .s(Background::new().color(color!("green")))
+        .s(Background::new().color(color!("Green")))
         .s(RoundedCorners::all(10))
         .s(Align::with_signal(RECTANGLE_ALIGNMENT.signal_ref(
             |alignment| alignment.map(|alignment| alignment.to_align()),
@@ -100,7 +100,7 @@ fn align_switcher(rectangle_alignment: RectangleAlignment) -> impl Element {
     Button::new()
         .s(rectangle_alignment.to_align())
         .s(Background::new()
-            .color_signal(hovered_signal.map_bool(|| color!("blue"), || color!("darkblue"))))
+            .color_signal(hovered_signal.map_bool(|| color!("Blue"), || color!("DarkBlue"))))
         .s(Padding::all(5))
         .s(RoundedCorners::all(10))
         .label(rectangle_alignment.as_ref())

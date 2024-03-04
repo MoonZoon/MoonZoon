@@ -102,11 +102,11 @@ fn sleep_panel() -> impl Element {
 }
 
 fn start_button(on_press: impl FnMut() + 'static) -> impl Element {
-    button("Start", color!("green"), color!("darkgreen"), on_press)
+    button("Start", color!("Green"), color!("DarkGreen"), on_press)
 }
 
 fn stop_button(on_press: impl FnMut() + 'static) -> impl Element {
-    button("Stop", color!("red"), color!("darkred"), on_press)
+    button("Stop", color!("Red"), color!("DarkRed"), on_press)
 }
 
 fn button(

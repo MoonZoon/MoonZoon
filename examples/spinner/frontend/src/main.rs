@@ -7,7 +7,7 @@ fn main() {
 fn root() -> impl Element {
     El::new()
         .s(Align::center())
-        .child(spinner(50, 8, 10, color!("yellow")))
+        .child(spinner(50, 8, 10, color!("Yellow")))
 }
 
 fn spinner(
