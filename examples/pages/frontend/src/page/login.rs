@@ -33,11 +33,6 @@ fn log_in_button() -> impl Element {
             STORE
                 .logged_user
                 .set(Some(STORE.login_page.username.get_cloned()));
-            // @TODO
-            if let KnownRoute(route) = ROUTER.previous_route().get_cloned() {
-                ROUTER.go(route);
-            } else {
-                ROUTER.go(Route::Root);
-            }
+            ROUTER.go_to_previous_known_or_else(|| Route::Root);
         })
 }
