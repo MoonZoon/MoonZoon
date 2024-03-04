@@ -1,6 +1,6 @@
 use crate::*;
 
-pub fn maybe_view(frequency: impl Into<Option<Frequency>>) -> Option<RawElOrText> {
+pub fn maybe_view(frequency: impl Into<Option<Frequency>>) -> Option<impl Element> {
     if STORE.logged_user.lock_ref().is_none() {
         ROUTER.replace(Route::Login);
         return None;
@@ -8,7 +8,7 @@ pub fn maybe_view(frequency: impl Into<Option<Frequency>>) -> Option<RawElOrText
     if let Some(frequency) = frequency.into() {
         STORE.report_page.frequency.set_neq(frequency);
     }
-    Some(page_content().into_raw())
+    Some(page_content())
 }
 
 fn page_content() -> impl Element {

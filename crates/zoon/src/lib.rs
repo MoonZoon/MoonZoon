@@ -30,6 +30,7 @@ mod resize_observer;
 mod style;
 mod task;
 mod timer;
+mod unify;
 mod viewport;
 mod web_worker_loader;
 
@@ -76,6 +77,7 @@ pub use strum;
 pub use style::*;
 pub use task::{Task, TaskHandle};
 pub use timer::Timer;
+pub use unify::Unify;
 pub use viewport::{Scene, Viewport};
 pub use wasm_bindgen::{self, prelude::*, JsCast};
 pub use wasm_bindgen_futures::{self, future_to_promise, JsFuture};

@@ -23,13 +23,13 @@ impl ImageType {
                 .s(Background::new().url(self.url()).color(color!("DarkBlue")))
                 .description("important image")
                 .url(self.url())
-                .into_raw(),
+                .unify(),
             Self::Background => El::new()
                 .s(Align::center())
                 .s(Width::fill().max(600))
                 .s(Height::fill())
                 .s(Background::new().url(self.url()).color(color!("DarkBlue")))
-                .into_raw(),
+                .unify(),
         }
     }
 }

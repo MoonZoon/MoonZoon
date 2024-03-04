@@ -1,11 +1,11 @@
 use crate::*;
 
-pub fn maybe_view() -> Option<RawElOrText> {
+pub fn maybe_view() -> Option<impl Element> {
     if STORE.logged_user.lock_ref().is_some() {
         ROUTER.replace(Route::Root);
         return None;
     }
-    Some(page_content().into_raw())
+    Some(page_content())
 }
 
 fn page_content() -> impl Element {
