@@ -53,12 +53,12 @@ fn play_button(video_element: Mutable<Option<web_sys::HtmlVideoElement>>) -> imp
             video_element.signal_ref(Option::is_some),
         ))
         .s(Background::new()
-            .color_signal(hovered_signal.map_bool(|| color!("blue"), || color!("darkblue"))))
+            .color_signal(hovered_signal.map_bool(|| color!("Blue"), || color!("DarkBlue"))))
         .s(Align::new().center_x())
         .s(Width::exact(size))
         .s(Height::exact(size))
         .s(RoundedCorners::all_max())
-        .s(Borders::all(Border::new().color(color!("blue")).width(2)))
+        .s(Borders::all(Border::new().color(color!("Blue")).width(2)))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_click(move || {
             video_element.use_ref(|video| {
@@ -89,7 +89,7 @@ fn play_button_icon() -> impl Element {
                     RawSvgEl::from_markup(include_str!(concat!("../icons/", $name, ".svg")))
                         .unwrap_throw()
                         // Set `currentColor` in SVG elements.
-                        .style("color", &color!("lightblue").to_css_string())
+                        .style("color", &color!("LightBlue").to_css_string())
                 }
             }
         };

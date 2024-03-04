@@ -42,7 +42,7 @@ fn rectangles() -> impl Element {
         .s(Height::exact(200))
         .s(Gap::both(20))
         .s(Padding::all(15))
-        .s(Background::new().color(color!("dimgray")))
+        .s(Background::new().color(color!("DimGray")))
         .s(Scrollbars::both())
         .on_viewport_location_change(|_, viewport| emit(viewport))
         .viewport_x_signal(VIEWPORT_X.signal())
@@ -54,7 +54,7 @@ fn rectangle() -> impl Element {
     El::new()
         .s(Width::exact(150))
         .s(Height::exact(50))
-        .s(Background::new().color(color!("blue")))
+        .s(Background::new().color(color!("Blue")))
 }
 
 // -- viewport_info --
@@ -83,7 +83,7 @@ fn jump_button(label: &str, on_press: fn()) -> impl Element {
     Button::new()
         .s(Padding::all(5))
         .s(Background::new()
-            .color_signal(hovered_signal.map_bool(|| color!("green"), || color!("darkgreen"))))
+            .color_signal(hovered_signal.map_bool(|| color!("Green"), || color!("DarkGreen"))))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .label(label)
         .on_press(on_press)

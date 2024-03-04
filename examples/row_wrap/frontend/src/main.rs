@@ -12,7 +12,7 @@ fn root() -> impl Element {
         .s(Gap::new().y(10))
         .item(
             El::new()
-                .s(Font::new().color(color!("gray")))
+                .s(Font::new().color(color!("Gray")))
                 .child("Resize the browser window"),
         )
         .item(El::new().child("Row"))
@@ -42,7 +42,7 @@ fn rectangles() -> impl Iterator<Item = impl Element> {
         El::new()
             .s(Width::exact(RECTANGLE_SIZE))
             .s(Height::exact(RECTANGLE_SIZE))
-            .s(Background::new().color(color!("green")))
+            .s(Background::new().color(color!("Green")))
             .child(El::new().s(Align::center()).child(index))
     })
 }

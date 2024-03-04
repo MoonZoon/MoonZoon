@@ -129,7 +129,7 @@ fn send_button() -> impl Element {
         .s(Padding::all(10))
         .s(RoundedCorners::new().right(5))
         .s(Background::new()
-            .color_signal(hovered_signal.map_bool(|| color!("green"), || color!("darkgreen"))))
+            .color_signal(hovered_signal.map_bool(|| color!("Green"), || color!("DarkGreen"))))
         .s(Font::new().color(color!("#EEE")).size(17))
         .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
         .on_press(send_message)

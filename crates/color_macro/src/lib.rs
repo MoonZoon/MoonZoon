@@ -9,7 +9,7 @@ use syn::{parse_macro_input, punctuated::Punctuated, spanned::Spanned, Error, Li
 // color!("#fff")
 // color!("#FFFFFF", 0.5)
 // color!("#FFFFFF", 0)
-// color!("black")
+// color!("Black")
 // color!("oklch(0.6 0.182 350.53")
 // color!("oklch(0.6 0.182 350.53", 0.5)
 // color!("oklch(0.6 0.182 350.53 / .3")
