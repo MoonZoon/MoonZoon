@@ -1,6 +1,6 @@
 use crate::*;
 
-pub fn maybe_view(expression: impl Into<Option<Arc<Cow<'static, str>>>>) -> Option<RawElOrText> {
+pub fn maybe_view(expression: impl Into<Option<Arc<Cow<'static, str>>>>) -> Option<impl Element> {
     if let Some(expression) = expression.into() {
         STORE.calc_page.expression.set(Some(expression));
     } else {
@@ -8,7 +8,7 @@ pub fn maybe_view(expression: impl Into<Option<Arc<Cow<'static, str>>>>) -> Opti
             ROUTER.silent_replace(Route::Calc { expression });
         }
     }
-    Some(page_content().into_raw())
+    Some(page_content())
 }
 
 fn page_content() -> impl Element {

@@ -21,14 +21,14 @@ fn root() -> impl Element {
         println!("{}", routing::url());
         match route {
             NoRoute => None,
-            UnknownRoute => Some(El::new().child("404").into_raw()),
+            UnknownRoute => El::new().child("404").unify_option(),
             KnownRoute(route) => match route {
-                Route::ReportRoot => page::report::maybe_view(None),
-                Route::Report { frequency } => page::report::maybe_view(frequency),
-                Route::Login => page::login::maybe_view(),
-                Route::CalcRoot => page::calc::maybe_view(None),
-                Route::Calc { expression } => page::calc::maybe_view(expression),
-                Route::Root => Some(El::new().child("Welcome Home!").into_raw()),
+                Route::ReportRoot => page::report::maybe_view(None).unify_option(),
+                Route::Report { frequency } => page::report::maybe_view(frequency).unify_option(),
+                Route::Login => page::login::maybe_view().unify_option(),
+                Route::CalcRoot => page::calc::maybe_view(None).unify_option(),
+                Route::Calc { expression } => page::calc::maybe_view(expression).unify_option(),
+                Route::Root => El::new().child("Welcome Home!").unify_option(),
             },
         }
     }))

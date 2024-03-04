@@ -86,11 +86,11 @@ fn received_message(message: Message) -> impl Element {
         )
 }
 
-fn message_text_to_contents(text: &str) -> impl Iterator<Item = RawElOrText> + '_ {
+fn message_text_to_contents(text: &str) -> impl Iterator<Item = impl Element> + '_ {
     markup::parse_markup_objects(text).map(|object| match object {
-        markup::Object::Text(text) => Text::new(text).into_raw(),
-        markup::Object::Smile => emoji("smile").into_raw(),
-        markup::Object::SlightSmile => emoji("slight_smile").into_raw(),
+        markup::Object::Text(text) => Text::new(text).unify(),
+        markup::Object::Smile => emoji("smile").unify(),
+        markup::Object::SlightSmile => emoji("slight_smile").unify(),
     })
 }
 
