@@ -7,25 +7,25 @@ pub type Username = String;
 #[derive(Default)]
 pub struct Store {
     pub logged_user: Mutable<Option<Username>>,
-    pub calc_page: CalcPage,
-    pub login_page: LoginPage,
-    pub report_page: ReportPage,
+    pub calc_page: CalcPageStore,
+    pub login_page: LoginPageStore,
+    pub report_page: ReportPageStore,
 }
 
 #[derive(Default)]
-pub struct CalcPage {
+pub struct CalcPageStore {
     pub expression: Mutable<Option<Arc<Cow<'static, str>>>>,
 }
 
 #[derive(Educe)]
 #[educe(Default)]
-pub struct LoginPage {
+pub struct LoginPageStore {
     #[educe(Default(expression = Mutable::new("John".to_owned())))]
     pub username: Mutable<String>,
 }
 
 #[derive(Default)]
-pub struct ReportPage {
+pub struct ReportPageStore {
     pub frequency: Mutable<Frequency>,
 }
 

@@ -1,14 +1,17 @@
 use crate::*;
 
-pub fn maybe_view(expression: impl Into<Option<Arc<Cow<'static, str>>>>) -> Option<impl Element> {
-    if let Some(expression) = expression.into() {
-        STORE.calc_page.expression.set(Some(expression));
-    } else {
-        if let Some(expression) = STORE.calc_page.expression.get_cloned() {
-            ROUTER.silent_replace(Route::Calc { expression });
+pub struct CalcPage;
+impl CalcPage {
+    pub fn new(expression: Option<Arc<Cow<'static, str>>>) -> impl Element {
+        if let Some(expression) = expression {
+            STORE.calc_page.expression.set(Some(expression));
+        } else {
+            if let Some(expression) = STORE.calc_page.expression.get_cloned() {
+                ROUTER.silent_replace(Route::Calc { expression });
+            }
         }
+        page_content()
     }
-    Some(page_content())
 }
 
 fn page_content() -> impl Element {
