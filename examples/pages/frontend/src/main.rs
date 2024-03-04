@@ -9,6 +9,7 @@ mod router;
 mod store;
 mod ui;
 
+use page::*;
 use router::*;
 use store::*;
 
@@ -23,11 +24,11 @@ fn root() -> impl Element {
             NoRoute => None,
             UnknownRoute => El::new().child("404").unify_option(),
             KnownRoute(route) => match route {
-                Route::ReportRoot => page::report::maybe_view(None).unify_option(),
-                Route::Report { frequency } => page::report::maybe_view(frequency).unify_option(),
-                Route::Login => page::login::maybe_view().unify_option(),
-                Route::CalcRoot => page::calc::maybe_view(None).unify_option(),
-                Route::Calc { expression } => page::calc::maybe_view(expression).unify_option(),
+                Route::ReportRoot => ReportPage::new(None).unify_option(),
+                Route::Report { frequency } => ReportPage::new(Some(frequency)).unify_option(),
+                Route::Login => LoginPage::new().unify_option(),
+                Route::CalcRoot => CalcPage::new(None).unify_option(),
+                Route::Calc { expression } => CalcPage::new(Some(expression)).unify_option(),
                 Route::Root => El::new().child("Welcome Home!").unify_option(),
             },
         }

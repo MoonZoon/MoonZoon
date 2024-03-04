@@ -1,35 +1,34 @@
 use crate::*;
 
-pub fn maybe_view(frequency: impl Into<Option<Frequency>>) -> Option<impl Element> {
-    if STORE.logged_user.lock_ref().is_none() {
-        ROUTER.replace(Route::Login);
-        return None;
+pub struct ReportPage;
+impl ReportPage {
+    pub fn new(frequency: Option<Frequency>) -> Option<impl Element> {
+        if STORE.logged_user.lock_ref().is_none() {
+            ROUTER.replace(Route::Login);
+            return None;
+        }
+        if let Some(frequency) = frequency {
+            STORE.report_page.frequency.set_neq(frequency);
+        }
+        Some(page_content())
     }
-    if let Some(frequency) = frequency.into() {
-        STORE.report_page.frequency.set_neq(frequency);
-    }
-    Some(page_content())
 }
 
 fn page_content() -> impl Element {
     Column::new()
         .s(Gap::both(20))
-        .item(greeting())
-        .item(switch_frequency_link())
-}
-
-fn greeting() -> impl Element {
-    let greeting = move |frequency: Frequency| {
-        format!(
-            "Hello {}! This is your {} report.",
-            STORE.logged_user.lock_ref().as_ref().unwrap_throw(),
-            match frequency {
-                Frequency::Daily => "daily",
-                Frequency::Weekly => "weekly",
+        .item_signal(
+            map_ref! {
+                let frequency = STORE.report_page.frequency.signal().map(|frequency| match frequency {
+                    Frequency::Daily => "daily",
+                    Frequency::Weekly => "weekly"
+                }),
+                let username = STORE.logged_user.signal_cloned() => {
+                    username.as_ref().map(|username| format!("Hello {username}! This is your {frequency} report."))
+                }
             }
         )
-    };
-    Text::with_signal(STORE.report_page.frequency.signal().map(greeting))
+        .item(switch_frequency_link())
 }
 
 fn switch_frequency_link() -> impl Element {
