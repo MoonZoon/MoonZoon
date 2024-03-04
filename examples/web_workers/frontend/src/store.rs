@@ -4,11 +4,10 @@ use zoon::*;
 
 static DEFAULT_MARKDOWN: &str = r#"This content is *rendered* by a **web worker**"#;
 
-#[static_ref]
-pub fn STORE -> &'static Store {
+pub static STORE: Lazy<Store> = Lazy::new(|| {
     create_web_workers_and_triggers();
     Store::new()
-}
+});
 
 #[derive(Educe)]
 #[educe(Default(new))]

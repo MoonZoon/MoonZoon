@@ -496,6 +496,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "color_macro"
+version = "0.1.0"
+dependencies = [
+ "cssparser",
+ "cssparser-color",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "console_error_panic_hook"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2648,6 +2659,7 @@ dependencies = [
  "apply",
  "async-once-cell",
  "chrono",
+ "color_macro",
  "console_error_panic_hook",
  "cssparser",
  "cssparser-color",
