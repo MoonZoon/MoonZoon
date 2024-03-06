@@ -1,9 +1,6 @@
 use rand::prelude::*;
-use std::sync::{
-    atomic::{AtomicUsize, Ordering},
-    Arc,
-};
 use std::iter::repeat_with;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use zoon::{format, *};
 
 type ID = usize;
@@ -48,61 +45,28 @@ static NOUNS: &[&'static str] = &[
 
 static NEXT_ID: AtomicUsize = AtomicUsize::new(1);
 static SELECTED_ROW: Lazy<Mutable<Option<ID>>> = lazy::default();
-static ROWS: Lazy<MutableVec<Arc<Row>>> = lazy::default();
+static ROWS: Lazy<MutableVec<Row>> = lazy::default();
 
+#[derive(Clone)]
 struct Row {
     id: ID,
     label: Mutable<String>,
 }
 
-fn create_row() -> Arc<Row> {
-    let mut generator = SmallRng::from_entropy();
-    let label = format!(
-        "{} {} {}",
-        ADJECTIVES.choose(&mut generator).unwrap_throw(),
-        COLOURS.choose(&mut generator).unwrap_throw(),
-        NOUNS.choose(&mut generator).unwrap_throw(),
-    );
-    Arc::new(Row {
-        id: NEXT_ID.fetch_add(1, Ordering::SeqCst),
-        label: Mutable::new(label),
-    })
-}
-
-fn create_rows(count: usize) {
-    ROWS.lock_mut()
-        .replace_cloned(repeat_with(create_row).take(count).collect())
-}
-
-fn append_rows(count: usize) {
-    ROWS.lock_mut().extend(repeat_with(create_row).take(count));
-}
-
-fn update_rows(step: usize) {
-    let rows = ROWS.lock_ref();
-    for position in (0..rows.len()).step_by(step) {
-        rows[position].label.lock_mut().push_str(" !!!");
+impl Row {
+    fn new() -> Self {
+        let mut generator = SmallRng::from_entropy();
+        let label = format!(
+            "{} {} {}",
+            ADJECTIVES.choose(&mut generator).unwrap_throw(),
+            COLOURS.choose(&mut generator).unwrap_throw(),
+            NOUNS.choose(&mut generator).unwrap_throw(),
+        );
+        Self {
+            id: NEXT_ID.fetch_add(1, Ordering::SeqCst),
+            label: Mutable::new(label),
+        }
     }
-}
-
-fn clear_rows() {
-    ROWS.lock_mut().clear()
-}
-
-fn swap_rows() {
-    let mut rows = ROWS.lock_mut();
-    if rows.len() < 999 {
-        return;
-    }
-    rows.swap(1, 998)
-}
-
-fn select_row(id: ID) {
-    SELECTED_ROW.set(Some(id))
-}
-
-fn remove_row(id: ID) {
-    ROWS.lock_mut().retain(|row| row.id != id);
 }
 
 fn main() {
@@ -136,12 +100,30 @@ fn jumbotron() -> impl Element {
 
 fn action_buttons() -> impl Element {
     RawHtmlEl::new("div").attr("class", "row").children([
-        action_button("run", "Create 1,000 rows", || create_rows(1_000)),
-        action_button("runlots", "Create 10,000 rows", || create_rows(10_000)),
-        action_button("add", "Append 1,000 rows", || append_rows(1_000)),
-        action_button("update", "Update every 10th row", || update_rows(10)),
-        action_button("clear", "Clear", clear_rows),
-        action_button("swaprows", "Swap Rows", swap_rows),
+        action_button("run", "Create 1,000 rows", || {
+            ROWS.lock_mut()
+                .replace_cloned(repeat_with(Row::new).take(1_000).collect())
+        }),
+        action_button("runlots", "Create 10,000 rows", || {
+            ROWS.lock_mut()
+                .replace_cloned(repeat_with(Row::new).take(10_000).collect())
+        }),
+        action_button("add", "Append 1,000 rows", || {
+            ROWS.lock_mut().extend(repeat_with(Row::new).take(1_000))
+        }),
+        action_button("update", "Update every 10th row", || {
+            let rows = ROWS.lock_ref();
+            for position in (0..rows.len()).step_by(10) {
+                rows[position].label.lock_mut().push_str(" !!!");
+            }
+        }),
+        action_button("clear", "Clear", || ROWS.lock_mut().clear()),
+        action_button("swaprows", "Swap Rows", || {
+            let mut rows = ROWS.lock_mut();
+            if rows.len() > 998 {
+                rows.swap(1, 998)
+            }
+        }),
     ])
 }
 
@@ -168,7 +150,7 @@ fn table() -> impl Element {
         }))
 }
 
-fn row(row: Arc<Row>) -> impl Element {
+fn row(row: Row) -> impl Element {
     let id = row.id;
     RawHtmlEl::new("tr")
         .attr_signal(
@@ -188,7 +170,7 @@ fn row_id(id: ID) -> impl Element {
 fn row_label(id: ID, label: impl Signal<Item = String> + Unpin + 'static) -> impl Element {
     RawHtmlEl::new("td").attr("class", "col-md-4").child(
         RawHtmlEl::new("a")
-            .event_handler(move |_: events::Click| select_row(id))
+            .event_handler(move |_: events::Click| SELECTED_ROW.set(Some(id)))
             .child(Text::with_signal(label)),
     )
 }
@@ -196,7 +178,7 @@ fn row_label(id: ID, label: impl Signal<Item = String> + Unpin + 'static) -> imp
 fn row_remove_button(id: ID) -> impl Element {
     RawHtmlEl::new("td").attr("class", "col-md-1").child(
         RawHtmlEl::new("a")
-            .event_handler(move |_: events::Click| remove_row(id))
+            .event_handler(move |_: events::Click| ROWS.lock_mut().retain(|row| row.id != id))
             .child(
                 RawHtmlEl::new("span")
                     .attr("class", "glyphicon glyphicon-remove remove")
