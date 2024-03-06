@@ -16,11 +16,6 @@ pub enum Route {
     Root,
 }
 
-fn main() {
-    STORE.init_lazy();
-    start_app("app", root);
-}
-
 fn selected_filter() -> impl Signal<Item = Filter> {
     ROUTER.route().signal_ref(|route| match route {
         NoRoute | UnknownRoute | KnownRoute(Route::Root) => Filter::All,
@@ -29,13 +24,18 @@ fn selected_filter() -> impl Signal<Item = Filter> {
     })
 }
 
+fn main() {
+    STORE.init_lazy();
+    start_app("app", root);
+}
+
 fn root() -> impl Element {
     Column::new()
         .s(Width::fill())
         .s(Height::fill().min_screen())
         .s(Font::new()
             .size(14)
-            .color(hsluv!(0, 0, 5.1))
+            .color(color!("oklch(17.76% 0 0)"))
             .weight(FontWeight::Light)
             .family([
                 FontFamily::new("Helvetica Neue"),
@@ -43,7 +43,7 @@ fn root() -> impl Element {
                 FontFamily::new("Arial"),
                 FontFamily::SansSerif,
             ]))
-        .s(Background::new().color(hsluv!(0, 0, 96.5)))
+        .s(Background::new().color(color!("oklch(97.02% 0 0)")))
         .item(content())
 }
 
@@ -68,7 +68,7 @@ fn header() -> impl Element {
         .s(Height::exact(130))
         .s(Font::new()
             .size(100)
-            .color(hsluv!(10.5, 62.8, 44.5, 15))
+            .color(color!("oklch(54.04% 0.156 21.24 / 15%)"))
             .weight(FontWeight::Hairline))
         .child(El::with_tag(Tag::H1).child("todos"))
 }
@@ -76,11 +76,17 @@ fn header() -> impl Element {
 fn panel() -> impl Element {
     Column::with_tag(Tag::Section)
         .s(Shadows::new([
-            Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
-            Shadow::new().y(25).blur(50).color(hsluv!(0, 0, 0, 10)),
+            Shadow::new()
+                .y(2)
+                .blur(4)
+                .color(color!("oklch(0% 0 0 / 20%)")),
+            Shadow::new()
+                .y(25)
+                .blur(50)
+                .color(color!("oklch(0% 0 0 / 10%)")),
         ]))
         .s(Width::fill())
-        .s(Background::new().color(hsluv!(0, 0, 100)))
+        .s(Background::new().color(color!("oklch(100% 0 0)")))
         .item(new_todo_title())
         .item_signal(STORE.are_todos_empty.signal().map_false(todos))
         .item_signal(STORE.are_todos_empty.signal().map_false(panel_footer))
@@ -89,19 +95,19 @@ fn panel() -> impl Element {
 fn new_todo_title() -> impl Element {
     TextInput::new()
         .s(Padding::new().y(19).left(60).right(16))
-        .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
-        .s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
+        .s(Font::new().size(24).color(color!("oklch(42.02% 0 0)")))
+        .s(Background::new().color(color!("oklch(0% 0 0 / 0.3%)")))
         .s(Shadows::new([Shadow::new()
             .inner()
             .y(-2)
             .blur(1)
-            .color(hsluv!(0, 0, 0, 3))]))
+            .color(color!("oklch(0% 0 0 / 3%)"))]))
         .focus(true)
         .on_change(|title| STORE.new_todo_title.set(title))
         .label_hidden("What needs to be done?")
         .placeholder(
             Placeholder::new("What needs to be done?")
-                .s(Font::new().italic().color(hsluv!(0, 0, 91.3))),
+                .s(Font::new().italic().color(color!("oklch(92.49% 0 0)"))),
         )
         .on_key_down_event(|event| {
             event.if_key(Key::Enter, || {
@@ -123,8 +129,8 @@ fn new_todo_title() -> impl Element {
 
 fn todos() -> impl Element {
     Column::new()
-        .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
-        .s(Background::new().color(hsluv!(0, 0, 93.7)))
+        .s(Borders::new().top(Border::new().color(color!("oklch(92.49% 0 0)"))))
+        .s(Background::new().color(color!("oklch(94.61% 0 0)")))
         .s(Gap::both(1))
         .items_signal_vec(
             STORE
@@ -160,11 +166,10 @@ fn toggle_all_checkbox() -> impl Element {
         .label_hidden("Toggle all")
         .icon(|checked| {
             El::new()
-                .s(Font::new().size(22).color_signal(
-                    checked
-                        .signal()
-                        .map_bool(|| hsluv!(0, 0, 48.4), || hsluv!(0, 0, 91.3)),
-                ))
+                .s(Font::new().size(22).color_signal(checked.signal().map_bool(
+                    || color!("oklch(55.55% 0 0)"),
+                    || color!("oklch(92.49% 0 0)"),
+                )))
                 .s(Transform::new().rotate(90).move_up(18))
                 .s(Height::exact(34))
                 .s(Padding::new().x(27).y(6))
@@ -175,7 +180,7 @@ fn toggle_all_checkbox() -> impl Element {
 fn todo(todo: Todo) -> impl Element {
     Row::new()
         .s(Width::fill())
-        .s(Background::new().color(hsluv!(0, 0, 100)))
+        .s(Background::new().color(color!("oklch(100% 0 0)")))
         .s(Gap::both(5))
         .s(Font::new().size(24))
         .items_signal_vec(
@@ -214,11 +219,10 @@ fn todo_title(todo: Todo) -> impl Element {
     Label::new()
         .s(Width::fill())
         .s(Font::new()
-            .color_signal(
-                todo.completed
-                    .signal()
-                    .map_bool(|| hsluv!(0, 0, 86.7), || hsluv!(0, 0, 32.7)),
-            )
+            .color_signal(todo.completed.signal().map_bool(
+                || color!("oklch(88.53% 0 0)"),
+                || color!("oklch(42.02% 0 0)"),
+            ))
             .size(24)
             .line(FontLine::new().strike_signal(todo.completed.signal())))
         .s(Padding::all(15).right(60))
@@ -241,9 +245,13 @@ fn remove_todo_button(todo_to_remove: Todo) -> impl Element {
         .s(Width::exact(40))
         .s(Height::exact(40))
         .s(Transform::new().move_left(50).move_down(14))
-        .s(Font::new().size(30).center().color_signal(
-            hovered_signal.map_bool(|| hsluv!(10.5, 37.7, 48.8), || hsluv!(12.2, 34.7, 68.2)),
-        ))
+        .s(Font::new()
+            .size(30)
+            .center()
+            .color_signal(hovered_signal.map_bool(
+                || color!("oklch(57.15% 0.109 18.87)"),
+                || color!("oklch(73.32% 0.06 18.62)"),
+            )))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
         .on_press(move || {
             STORE
@@ -260,13 +268,15 @@ fn editing_todo_title(todo: Todo) -> impl Element {
         .s(Width::exact(506))
         .s(Padding::all(17).bottom(16))
         .s(Align::new().right())
-        .s(Borders::all(Border::new().color(hsluv!(0, 0, 63.2))))
+        .s(Borders::all(
+            Border::new().color(color!("oklch(68.3% 0 0)")),
+        ))
         .s(Shadows::new([Shadow::new()
             .inner()
             .y(-1)
             .blur(5)
-            .color(hsluv!(0, 0, 0, 20))]))
-        .s(Font::new().color(hsluv!(0, 0, 32.7)))
+            .color(color!("oklch(0% 0 0 / 20%)"))]))
+        .s(Font::new().color(color!("oklch(42.02% 0 0)")))
         .label_hidden("selected todo title")
         .focus(true)
         .on_blur(save_selected_todo_title)
@@ -283,22 +293,31 @@ fn panel_footer() -> impl Element {
     let item_container = || El::new().s(Width::fill());
     Row::with_tag(Tag::Footer)
         .s(Padding::new().x(15).y(8))
-        .s(Font::new().color(hsluv!(0, 0, 50)))
-        .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
+        .s(Font::new().color(color!("oklch(56.93% 0 0)")))
+        .s(Borders::new().top(Border::new().color(color!("oklch(92.49% 0 0)"))))
         .s(Shadows::new([
-            Shadow::new().y(1).blur(1).color(hsluv!(0, 0, 0, 20)),
-            Shadow::new().y(8).spread(-3).color(hsluv!(0, 0, 96.9)),
+            Shadow::new()
+                .y(1)
+                .blur(1)
+                .color(color!("oklch(0% 0 0 / 20%)")),
+            Shadow::new()
+                .y(8)
+                .spread(-3)
+                .color(color!("oklch(97.31% 0 0)")),
             Shadow::new()
                 .y(9)
                 .blur(1)
                 .spread(-3)
-                .color(hsluv!(0, 0, 0, 20)),
-            Shadow::new().y(16).spread(-6).color(hsluv!(0, 0, 96.9)),
+                .color(color!("oklch(0% 0 0 / 20%)")),
+            Shadow::new()
+                .y(16)
+                .spread(-6)
+                .color(color!("oklch(97.31% 0 0)")),
             Shadow::new()
                 .y(17)
                 .blur(2)
                 .spread(-6)
-                .color(hsluv!(0, 0, 0, 20)),
+                .color(color!("oklch(0% 0 0 / 20%)")),
         ]))
         .item(item_container().child(active_items_count()))
         .item(item_container().child(filters()))
@@ -317,7 +336,7 @@ fn active_items_count() -> impl Element {
         STORE
             .active_todos_count
             .signal()
-            .map(|count| format!("{} item{} left", count, if count == 1 { "" } else { "s" })),
+            .map(|count| format!("{count} item{} left", if count == 1 { "" } else { "s" })),
     )
 }
 
@@ -338,9 +357,9 @@ fn filter(filter: Filter) -> impl Element {
         let hovered = hovered_signal,
         let selected = selected_filter().map(move |selected_filter| selected_filter == filter) =>
         if *selected {
-            Some(20)
+            Some(0.2)
         } else if *hovered {
-            Some(10)
+            Some(0.1)
         } else {
             None
         }
@@ -348,7 +367,7 @@ fn filter(filter: Filter) -> impl Element {
     Button::new()
         .s(Padding::new().x(8).y(4))
         .s(Outline::with_signal(outline_alpha.map_some(|alpha| {
-            Outline::inner().color(hsluv!(12.2, 72.8, 40.2).set_a(alpha))
+            Outline::inner().color(color!("oklch(50.4% 0.165 25.36)").a(alpha))
         })))
         .s(RoundedCorners::all(3))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
@@ -374,7 +393,10 @@ fn clear_completed_button() -> impl Element {
 fn footer() -> impl Element {
     Column::with_tag(Tag::Footer)
         .s(Gap::both(9))
-        .s(Font::new().size(10).color(hsluv!(0, 0, 77.3)).center())
+        .s(Font::new()
+            .size(10)
+            .color(color!("oklch(80.47% 0 0)"))
+            .center())
         .item(Paragraph::new().content("Double-click to edit a todo"))
         .item(
             Paragraph::new()
