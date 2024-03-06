@@ -62,7 +62,7 @@ fn field(label: &str, text: Mutable<Arc<String>>, is_output: bool) -> impl Eleme
                 .s(Outline::outer())
                 .s(Padding::new().x(4).y(2))
                 .s(Cursor::new(is_output.then(|| CursorIcon::Default)))
-                .s(Background::new().color(is_output.then_some(hsluv!(0, 0, 95))))
+                .s(Background::new().color(is_output.then_some(color!("WhiteSmoke"))))
                 .s(Resizable::y())
                 .read_only(is_output)
                 .text_signal(text.signal_cloned())

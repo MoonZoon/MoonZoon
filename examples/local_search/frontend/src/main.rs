@@ -11,7 +11,7 @@ mod store;
 use store::*;
 
 const PROJECTS_PER_PAGE: usize = 7;
-const BACKGROUND_COLOR: HSLuv = hsluv!(0, 0, 80);
+const BACKGROUND_COLOR: Oklch = color!("oklch(0.8 0 0)");
 const DEFAULT_GENERATE_COMPANIES_COUNT: usize = 1_000;
 
 fn main() {
@@ -71,7 +71,7 @@ fn generate_companies(count: usize) {
 
 fn root() -> impl Element {
     global_styles().style_group(
-        StyleGroup::new("body").style("background-color", BACKGROUND_COLOR.into_cow_str()),
+        StyleGroup::new("body").style("background-color", BACKGROUND_COLOR.to_css_string()),
     );
 
     Column::new()
@@ -103,7 +103,7 @@ fn generate_companies_panel() -> impl Element {
 
 fn generate_companies_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
-    let disabled_color = BACKGROUND_COLOR.update_l(|l| l - 30.);
+    let disabled_color = BACKGROUND_COLOR.also(|color| *color.lightness.get_or_insert(1.0) -= 0.3);
     Button::new()
         .s(Outline::with_signal(
             STORE
@@ -131,7 +131,7 @@ fn generate_companies_button() -> impl Element {
             let hovered = hovered_signal,
             let disabled = STORE.generate_companies_button_disabled.signal() =>
             if *hovered && not(disabled) {
-                BACKGROUND_COLOR.update_l(|l| l + 10.)
+                BACKGROUND_COLOR.also(|color| *color.lightness.get_or_insert(1.0) += 0.1)
             } else {
                 BACKGROUND_COLOR
             }
@@ -160,7 +160,7 @@ fn generate_companies_button() -> impl Element {
 fn generate_companies_input() -> impl Element {
     TextInput::new()
         .s(Transform::new().move_down(3))
-        .s(Background::new().color(hsluv!(0, 0, 0, 0)))
+        .s(Background::new().color(color!("transparent")))
         .s(Shadows::new([Shadow::new().inner().x(3).y(3)]))
         .s(RoundedCorners::all(3))
         .s(Outline::inner().width(2))
@@ -220,7 +220,7 @@ fn search_field() -> impl Element {
         .item(
             TextInput::new()
                 .id(id)
-                .s(Background::new().color(hsluv!(0, 0, 0, 0)))
+                .s(Background::new().color(color!("transparent")))
                 .s(Shadows::new([Shadow::new().inner().x(3).y(3)]))
                 .s(RoundedCorners::all(3))
                 .s(Outline::inner().width(2))
