@@ -1,16 +1,13 @@
 use zoon::{println, *};
 
-#[static_ref]
-fn counter() -> &'static Mutable<i32> {
-    Mutable::new(0)
-}
+static COUNTER: Lazy<Mutable<i32>> = lazy::default();
 
 fn increment() {
-    counter().update(|counter| counter + 1)
+    COUNTER.update(|counter| counter + 1)
 }
 
 fn decrement() {
-    counter().update(|counter| counter - 1)
+    COUNTER.update(|counter| counter - 1)
 }
 
 fn root() -> impl Element {
@@ -37,7 +34,7 @@ fn html_example() -> impl Element {
         child.event_handler(|_: events::Click| decrement())
     })
     .update_html_child("#counter-value", |child| {
-        child.child_signal(counter().signal())
+        child.child_signal(COUNTER.signal())
     })
     .update_html_child("#btn-increment", |child| {
         child.event_handler(|_: events::Click| increment())
@@ -65,7 +62,7 @@ fn counter_info() -> impl Element {
     fn content(counter_value: i32) -> String {
         markdown_to_html(&format!("Counter value: _**{counter_value}**_"))
     }
-    RawHtmlEl::new("div").inner_markup_signal(counter().signal().map(content))
+    RawHtmlEl::new("div").inner_markup_signal(COUNTER.signal().map(content))
 }
 
 fn divider() -> impl Element {

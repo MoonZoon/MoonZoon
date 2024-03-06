@@ -3,12 +3,10 @@ use std::sync::{
     atomic::{AtomicUsize, Ordering},
     Arc,
 };
-use std::{iter::repeat_with, ops::Not};
+use std::iter::repeat_with;
 use zoon::{format, *};
 
-// ------ ------
-//    States
-// ------ ------
+type ID = usize;
 
 static ADJECTIVES: &[&'static str] = &[
     "pretty",
@@ -49,35 +47,13 @@ static NOUNS: &[&'static str] = &[
 ];
 
 static NEXT_ID: AtomicUsize = AtomicUsize::new(1);
-
-#[static_ref]
-fn selected_row() -> &'static Mutable<Option<ID>> {
-    Mutable::new(None)
-}
-
-#[static_ref]
-fn rows() -> &'static MutableVec<Arc<Row>> {
-    MutableVec::new()
-}
-
-type ID = usize;
+static SELECTED_ROW: Lazy<Mutable<Option<ID>>> = lazy::default();
+static ROWS: Lazy<MutableVec<Arc<Row>>> = lazy::default();
 
 struct Row {
     id: ID,
     label: Mutable<String>,
 }
-
-// ------ ------
-//    Signals
-// ------ ------
-
-fn rows_exist() -> impl Signal<Item = bool> {
-    rows().signal_vec_cloned().is_empty().map(Not::not)
-}
-
-// ------ ------
-//   Commands
-// ------ ------
 
 fn create_row() -> Arc<Row> {
     let mut generator = SmallRng::from_entropy();
@@ -94,30 +70,27 @@ fn create_row() -> Arc<Row> {
 }
 
 fn create_rows(count: usize) {
-    rows()
-        .lock_mut()
+    ROWS.lock_mut()
         .replace_cloned(repeat_with(create_row).take(count).collect())
 }
 
 fn append_rows(count: usize) {
-    rows()
-        .lock_mut()
-        .extend(repeat_with(create_row).take(count));
+    ROWS.lock_mut().extend(repeat_with(create_row).take(count));
 }
 
 fn update_rows(step: usize) {
-    let rows = rows().lock_ref();
+    let rows = ROWS.lock_ref();
     for position in (0..rows.len()).step_by(step) {
         rows[position].label.lock_mut().push_str(" !!!");
     }
 }
 
 fn clear_rows() {
-    rows().lock_mut().clear()
+    ROWS.lock_mut().clear()
 }
 
 fn swap_rows() {
-    let mut rows = rows().lock_mut();
+    let mut rows = ROWS.lock_mut();
     if rows.len() < 999 {
         return;
     }
@@ -125,16 +98,16 @@ fn swap_rows() {
 }
 
 fn select_row(id: ID) {
-    selected_row().set(Some(id))
+    SELECTED_ROW.set(Some(id))
 }
 
 fn remove_row(id: ID) {
-    rows().lock_mut().retain(|row| row.id != id);
+    ROWS.lock_mut().retain(|row| row.id != id);
 }
 
-// ------ ------
-//     View
-// ------ ------
+fn main() {
+    start_app("main", root);
+}
 
 fn root() -> impl Element {
     RawHtmlEl::new("div")
@@ -188,10 +161,10 @@ fn action_button(id: &'static str, title: &'static str, on_click: fn()) -> impl 
 fn table() -> impl Element {
     RawHtmlEl::new("table")
         .attr("class", "table table-hover table-striped test-data")
-        .child_signal(rows_exist().map_true(|| {
+        .child_signal(ROWS.signal_vec_cloned().is_empty().map_false(|| {
             RawHtmlEl::new("tbody")
                 .attr("id", "tbody")
-                .children_signal_vec(rows().signal_vec_cloned().map(row))
+                .children_signal_vec(ROWS.signal_vec_cloned().map(row))
         }))
 }
 
@@ -200,7 +173,7 @@ fn row(row: Arc<Row>) -> impl Element {
     RawHtmlEl::new("tr")
         .attr_signal(
             "class",
-            selected_row().signal_ref(move |selected_id| ((*selected_id)? == id).then(|| "danger")),
+            SELECTED_ROW.signal_ref(move |selected_id| ((*selected_id)? == id).then(|| "danger")),
         )
         .child(row_id(id))
         .child(row_label(id, row.label.signal_cloned()))
@@ -230,12 +203,4 @@ fn row_remove_button(id: ID) -> impl Element {
                     .attr("aria-hidden", "true"),
             ),
     )
-}
-
-// ------ ------
-//     Start
-// ------ ------
-
-fn main() {
-    start_app("main", root);
 }

@@ -9,15 +9,8 @@ use zoon::{eprintln, println, *};
 // wai_bindgen_wasmer::import!("components/calculator/calculator.wai");
 // wai_bindgen_wasmer::export!("components/calculator/host.wai");
 
-#[static_ref]
-fn drop_zone_active() -> &'static Mutable<bool> {
-    Mutable::new(false)
-}
-
-#[static_ref]
-fn component_said() -> &'static Mutable<Option<String>> {
-    Mutable::new(None)
-}
+static DROP_ZONE_ACTIVE: Lazy<Mutable<bool>> = lazy::default();
+static COMPONENT_SAID: Lazy<Mutable<Option<String>>> = lazy::default();
 
 async fn load_and_use_component(file_list: web_sys::FileList) -> anyhow::Result<()> {
     let file_bytes = file_list
@@ -67,7 +60,7 @@ async fn load_and_use_component(file_list: web_sys::FileList) -> anyhow::Result<
     let addends_sum = calculator.sum_list(&mut store, &addends)?;
     new_component_said.push_str(&format!("\nSum {addends:?} = {addends_sum}"));
 
-    component_said().set(Some(new_component_said));
+    COMPONENT_SAID.set(Some(new_component_said));
     println!("Done!");
     Ok(())
 }
@@ -82,7 +75,7 @@ fn root() -> impl Element {
         .s(Align::center())
         .s(Gap::new().y(20))
         .item(drop_zone())
-        .item_signal(component_said().signal_cloned().map_some(|text| {
+        .item_signal(COMPONENT_SAID.signal_cloned().map_some(|text| {
             Paragraph::new()
                 .s(Align::new().center_x())
                 .content("Component said: ")
@@ -99,7 +92,7 @@ fn drop_zone() -> impl Element {
         .s(Height::exact(200))
         .s(RoundedCorners::all(30))
         .s(Borders::all(Border::new().color(color!("Green")).width(2)))
-        .s(Background::new().color_signal(drop_zone_active().signal().map_true(|| color!("DarkGreen"))))
+        .s(Background::new().color_signal(DROP_ZONE_ACTIVE.signal().map_true(|| color!("DarkGreen"))))
         // @TODO refactor with a new MoonZoon ability
         .update_raw_el(|raw_el| {
             raw_el
@@ -108,7 +101,7 @@ fn drop_zone() -> impl Element {
                     |event: events::DragEnter| {
                         event.stop_propagation();
                         event.prevent_default();
-                        drop_zone_active().set_neq(true);
+                        DROP_ZONE_ACTIVE.set_neq(true);
                     },
                 )
                 .event_handler_with_options(
@@ -124,7 +117,7 @@ fn drop_zone() -> impl Element {
                     |event: events::DragLeave| {
                         event.stop_propagation();
                         event.prevent_default();
-                        drop_zone_active().set_neq(false);
+                        DROP_ZONE_ACTIVE.set_neq(false);
                     },
                 )
                 .event_handler_with_options(
@@ -132,7 +125,7 @@ fn drop_zone() -> impl Element {
                     |event: events::Drop| {
                         event.stop_propagation();
                         event.prevent_default();
-                        drop_zone_active().set_neq(false);
+                        DROP_ZONE_ACTIVE.set_neq(false);
                         let file_list = event.data_transfer().unwrap_throw().files().unwrap_throw();
                         Task::start(async move {
                             if let Err(error) = load_and_use_component(file_list).await {

@@ -1,22 +1,19 @@
 use zoon::*;
 
-#[static_ref]
-fn counter() -> &'static Mutable<i32> {
-    Mutable::new(0)
-}
+static COUNTER: Lazy<Mutable<i32>> = lazy::default();
 
 fn increment() {
-    counter().update(|counter| counter + 1)
+    COUNTER.update(|counter| counter + 1)
 }
 
 fn decrement() {
-    counter().update(|counter| counter - 1)
+    COUNTER.update(|counter| counter - 1)
 }
 
 fn root() -> impl IntoElementIterator {
     element_vec![
         Button::new().label("-").on_press(decrement),
-        Text::with_signal(counter().signal()),
+        Text::with_signal(COUNTER.signal()),
         Button::new().label("+").on_press(increment),
     ]
 }
