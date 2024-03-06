@@ -99,7 +99,7 @@ fn head(
         .s(Cursor::new(CursorIcon::Pointer))
         .s(Shadows::new([Shadow::new().x(6).y(6)]))
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || BACKGROUND_COLOR.update_l(|l| l + 10.),
+            || BACKGROUND_COLOR.also(|color| *color.lightness.get_or_insert(1.0) += 0.1),
             || BACKGROUND_COLOR,
         )))
         .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
@@ -160,7 +160,7 @@ where
         .s(Font::new().no_wrap())
         .s(Width::fill())
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || BACKGROUND_COLOR.update_l(|l| l + 10.),
+            || BACKGROUND_COLOR.also(|color| *color.lightness.get_or_insert(1.0) += 0.1),
             || BACKGROUND_COLOR,
         )))
         .s(Outline::inner())

@@ -93,7 +93,7 @@ fn page_change_button(
         .s(Font::new().weight(FontWeight::Bold))
         .s(Shadows::new([Shadow::new().x(3).y(3)]))
         .s(Background::new().color_signal(hovered_signal.map_bool(
-            || BACKGROUND_COLOR.update_l(|l| l + 10.),
+            || BACKGROUND_COLOR.also(|color| *color.lightness.get_or_insert(1.0) += 0.1),
             || BACKGROUND_COLOR,
         )))
         .label(match change {
