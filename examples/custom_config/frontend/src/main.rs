@@ -1,25 +1,21 @@
 use shared::{DownMsg, UpMsg};
 use zoon::{eprintln, *};
 
-// ------ ------
-//    States
-// ------ ------
+static FAVORITE_LANGUAGE: Lazy<Mutable<String>> =
+    Lazy::new(|| Mutable::new("Loading...".to_owned()));
 
-#[static_ref]
-fn favorite_languages() -> &'static Mutable<String> {
-    Mutable::new("Loading...".to_owned())
+static CONNECTION: Lazy<Connection<UpMsg, DownMsg>> = Lazy::new(|| {
+    Connection::new(|DownMsg::FavoriteLanguages(languages), _| FAVORITE_LANGUAGE.set_neq(languages))
+});
+
+fn main() {
+    start_app("app", root);
+    Task::start(async {
+        if let Err(error) = CONNECTION.send_up_msg(UpMsg::GetFavoriteLanguages).await {
+            eprintln!("send UpMsg failed: {error}");
+        }
+    });
 }
-
-#[static_ref]
-pub fn connection() -> &'static Connection<UpMsg, DownMsg> {
-    Connection::new(|DownMsg::FavoriteLanguages(languages), _| {
-        favorite_languages().set_neq(languages)
-    })
-}
-
-// ------ ------
-//     View
-// ------ ------
 
 fn root() -> impl Element {
     Column::new()
@@ -36,7 +32,7 @@ fn root() -> impl Element {
             Row::new()
                 .s(Gap::both(20))
                 .multiline()
-                .item(El::new().child("my_api / MY_API:"))
+                .item(El::new().child("MY_API:"))
                 .item(
                     El::new()
                         .s(Font::new().weight(FontWeight::Bold))
@@ -52,11 +48,11 @@ fn root() -> impl Element {
             Row::new()
                 .s(Gap::both(20))
                 .multiline()
-                .item(El::new().child("favorite_languages / FAVORITE_LANGUAGES:"))
+                .item(El::new().child("FAVORITE_LANGUAGES:"))
                 .item(
                     El::new()
                         .s(Font::new().weight(FontWeight::Bold))
-                        .child_signal(favorite_languages().signal_cloned()),
+                        .child_signal(FAVORITE_LANGUAGE.signal_cloned()),
                 )
                 .item(
                     El::new()
@@ -64,17 +60,4 @@ fn root() -> impl Element {
                         .child("(loaded at runtime)"),
                 ),
         )
-}
-
-// ------ ------
-//     Start
-// ------ ------
-
-fn main() {
-    start_app("app", root);
-    Task::start(async {
-        if let Err(error) = connection().send_up_msg(UpMsg::GetFavoriteLanguages).await {
-            eprintln!("send UpMsg failed: {error}");
-        }
-    });
 }

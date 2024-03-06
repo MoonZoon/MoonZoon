@@ -3,18 +3,11 @@ use zoon::*;
 mod text_editor;
 use text_editor::TextEditor;
 
-// ------ ------
-//     Store
-// ------ ------
+static CONTENTS: Lazy<Mutable<Option<String>>> = lazy::default();
 
-#[static_ref]
-fn contents() -> &'static Mutable<Option<String>> {
-    Mutable::default()
+fn main() {
+    start_app("app", root);
 }
-
-// ------ ------
-//     View
-// ------ ------
 
 fn root() -> impl Element {
     Column::new()
@@ -27,7 +20,7 @@ fn root() -> impl Element {
 
 fn text_editor() -> impl Element {
     TextEditor::new().on_change(|json| {
-        contents().set(Some(format!("{json:#}")));
+        CONTENTS.set(Some(format!("{json:#}")));
     })
 }
 
@@ -36,14 +29,6 @@ fn contents_display() -> impl Element {
         El::new()
             .s(Padding::all(10))
             .s(Font::new().family([FontFamily::Monospace]))
-            .child_signal(contents().signal_cloned()),
+            .child_signal(CONTENTS.signal_cloned()),
     )
-}
-
-// ------ ------
-//     Start
-// ------ ------
-
-fn main() {
-    start_app("app", root);
 }

@@ -1,35 +1,21 @@
-use zoon::{eprintln, routing::origin, *};
+use zoon::{eprintln, *};
 
-// ------ ------
-//     Types
-// ------ ------
-
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 enum Stars {
+    #[default]
     Loading,
     Loaded(u32),
     Failed,
 }
 
-// ------ ------
-//    States
-// ------ ------
-
-#[static_ref]
-fn stars() -> &'static Mutable<Stars> {
-    Mutable::new(Stars::Loading)
-}
-
-// ------ ------
-//   Commands
-// ------ ------
+static STARS: Lazy<Mutable<Stars>> = lazy::default();
 
 fn load_stars() {
     async fn stars_request() -> reqwest::Result<u32> {
         // @TODO remove `origin()` once a wasm-compatible HTTP client supports relative urls
         // Surf issue: https://github.com/http-rs/surf/issues/314
         // Reqwest issue: https://github.com/seanmonstar/reqwest/issues/988
-        Ok(reqwest::get(origin() + "/_api/moonzoon_stars")
+        Ok(reqwest::get(routing::origin() + "/_api/moonzoon_stars")
             .await?
             .error_for_status()?
             .text()
@@ -38,38 +24,30 @@ fn load_stars() {
             .unwrap_throw())
     }
     Task::start(async {
-        stars().set_neq(Stars::Loading);
+        STARS.set_neq(Stars::Loading);
         match stars_request().await {
-            Ok(loaded_stars) => stars().set_neq(Stars::Loaded(loaded_stars)),
+            Ok(loaded_stars) => STARS.set_neq(Stars::Loaded(loaded_stars)),
             Err(error) => {
-                eprintln!("stars request failed: {:#?}", error);
-                stars().set_neq(Stars::Failed)
+                eprintln!("stars request failed: {error:#?}");
+                STARS.set_neq(Stars::Failed)
             }
         }
     });
 }
 
-// ------ ------
-//     View
-// ------ ------
+fn main() {
+    start_app("app", root);
+    load_stars();
+}
 
 fn root() -> impl Element {
     Row::new().item("MoonZoon stars: ").item(stars_text())
 }
 
 fn stars_text() -> impl Element {
-    Text::with_signal(stars().signal().map(|stars| match stars {
+    Text::with_signal(STARS.signal().map(|stars| match stars {
         Stars::Loading => "Loading...".into_cow_str(),
         Stars::Loaded(stars) => stars.into_cow_str(),
         Stars::Failed => "Loading failed!".into_cow_str(),
     }))
-}
-
-// ------ ------
-//     Start
-// ------ ------
-
-fn main() {
-    start_app("app", root);
-    load_stars();
 }

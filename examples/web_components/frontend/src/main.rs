@@ -3,9 +3,10 @@ use zoon::*;
 mod components;
 use components::{Search, Tile};
 
-#[static_ref]
-fn search_term() -> &'static Mutable<String> {
-    Mutable::new("Hello!".to_owned())
+static SEARCH_TERM: Lazy<Mutable<String>> = Lazy::new(|| Mutable::new("Hello!".to_owned()));
+
+fn main() {
+    start_app("app", root);
 }
 
 fn root() -> impl Element {
@@ -17,12 +18,8 @@ fn root() -> impl Element {
         .item(
             Search::new()
                 .placeholder("Write something")
-                .value_signal(search_term().signal_cloned())
-                .on_change(|term| search_term().set(term)),
+                .value_signal(SEARCH_TERM.signal_cloned())
+                .on_change(|term| SEARCH_TERM.set(term)),
         )
-        .item(Tile::new().child_signal(search_term().signal_cloned()))
-}
-
-fn main() {
-    start_app("app", root);
+        .item(Tile::new().child_signal(SEARCH_TERM.signal_cloned()))
 }

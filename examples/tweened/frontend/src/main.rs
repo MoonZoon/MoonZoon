@@ -1,8 +1,9 @@
 use zoon::*;
 
-#[static_ref]
-fn hue() -> &'static Tweened {
-    Tweened::new(0, Duration::seconds(3), ease::linear)
+static HUE: Lazy<Tweened> = Lazy::new(|| Tweened::new(0, Duration::seconds(3), ease::linear));
+
+fn main() {
+    start_app("app", root);
 }
 
 fn root() -> impl Element {
@@ -15,7 +16,7 @@ fn root() -> impl Element {
 
     Task::start(async move {
         loop {
-            hue().go_to(360);
+            HUE.go_to(360);
 
             radius.go_to(100);
             cx.go_to(1000);
@@ -31,7 +32,7 @@ fn root() -> impl Element {
             cx.go_to(500);
             cy.go_to(500);
 
-            hue().go_to(0);
+            HUE.go_to(0);
 
             Timer::sleep(1500).await;
             radius.go_to(35);
@@ -50,11 +51,11 @@ fn root() -> impl Element {
             RawSvgEl::new("circle")
                 .attr_signal("cx", cx_signal)
                 .attr_signal("cy", cy_signal)
-                .attr_signal("fill", hue().signal().map(|hue| HSLuv::hsl(hue, 100, 50)))
+                .attr_signal(
+                    "fill",
+                    HUE.signal()
+                        .map(|hue| oklch().l(0.5).c(0.4).h(hue).a(1).to_css_string()),
+                )
                 .attr_signal("r", radius_signal),
         )
-}
-
-fn main() {
-    start_app("app", root);
 }
