@@ -1,7 +1,6 @@
 use crate::*;
 use std::borrow::Cow;
 use strum::{EnumIter, IntoEnumIterator, IntoStaticStr};
-use std::rc::Rc;
 
 mod font_alignment;
 pub use font_alignment::FontAlignment;
@@ -49,15 +48,14 @@ impl Font<'static> {
             this.dynamic_css_props.insert(<&str>::from(style_name).into(), font.signal_ref(move |font: &Option<Font>| {
                 if let Some(font) = font {
                     if let Some(value) = font.static_css_props.0.get(style_name.into()) {
-                        // @TODO make the clone cheap, `Rc`?
                         // @TODO send `value`, not `value.value`
-                        return always(Rc::new(Some(value.value.clone()))).boxed_local()
+                        return always(Some(value.value.clone())).boxed_local()
                     }
                     if let Some(value) = font.dynamic_css_props.get(style_name.into()) {
                         return value.signal_cloned().boxed_local()
                     }
                 }
-                always(Rc::new(None)).boxed_local()
+                always(None).boxed_local()
             }).flatten().boxed_local().broadcast());
         }
         this
