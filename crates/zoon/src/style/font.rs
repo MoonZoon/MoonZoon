@@ -14,6 +14,9 @@ pub use font_family::FontFamily;
 mod font_line;
 pub use font_line::FontLine;
 
+mod line_height;
+pub use line_height::{IntoOptionLineHeight, LineHeight};
+
 /// Styling to manage font.
 #[derive(Default, Clone)]
 pub struct Font<'a> {
@@ -214,17 +217,29 @@ impl<'a> Font<'a> {
     ///     .s(Font::new().line_height(150))
     ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```
-    pub fn line_height(mut self, line_height: u32) -> Self {
-        self.static_css_props
-            .insert(StyleName::LineHeight.into(), px(line_height));
+    pub fn line_height(mut self, line_height: impl Into<LineHeight>) -> Self {
+        self.static_css_props.insert(
+            StyleName::LineHeight.into(),
+            match line_height.into() {
+                LineHeight::Px(pixels) => px(pixels),
+                LineHeight::Normal => "normal".into_cow_str(),
+            },
+        );
         self
     }
 
     pub fn line_height_signal(
         mut self,
-        line_height: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
+        line_height: impl Signal<Item = impl IntoOptionLineHeight> + Unpin + 'static,
     ) -> Self {
-        let line_height = line_height.map(|line_height| line_height.into().map(px));
+        let line_height = line_height.map(|line_height| {
+            line_height
+                .into_option_line_height()
+                .map(|line_height| match line_height {
+                    LineHeight::Px(pixels) => px(pixels),
+                    LineHeight::Normal => "normal".into_cow_str(),
+                })
+        });
         self.dynamic_css_props.insert(
             Cow::Borrowed(StyleName::LineHeight.into()),
             box_css_signal(line_height),

@@ -30,7 +30,7 @@ mod cursor;
 pub use cursor::{Cursor, CursorIcon};
 
 mod font;
-pub use font::{Font, FontFamily, FontLine, FontWeight};
+pub use font::{Font, FontFamily, FontLine, FontWeight, IntoOptionLineHeight, LineHeight};
 
 mod height;
 pub use height::Height;
