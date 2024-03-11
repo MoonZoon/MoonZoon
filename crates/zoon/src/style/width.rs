@@ -86,10 +86,10 @@ impl<'a> Width<'a> {
     pub fn exact_signal(
         width: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
     ) -> Self {
-        Self::with_signal(width.map(|width| width.into().map(Width::exact)))
+        Self::with_signal_self(width.map(|width| width.into().map(Width::exact)))
     }
 
-    pub fn with_signal(
+    pub fn with_signal_self(
         width: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
     ) -> Self {
         let mut this = Self::default();
@@ -125,7 +125,9 @@ impl<'a> Width<'a> {
     pub fn percent_signal<T: Into<f64>>(
         width: impl Signal<Item = impl Into<Option<T>>> + Unpin + 'static,
     ) -> Self {
-        Self::with_signal(width.map(|width| width.into().map(|width| Width::percent(width.into()))))
+        Self::with_signal_self(
+            width.map(|width| width.into().map(|width| Width::percent(width.into()))),
+        )
     }
 
     /// Set the element width to fill its container.

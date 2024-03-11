@@ -39,7 +39,7 @@ enum StyleName {
 }
 
 impl Font<'static> {
-    pub fn with_signal(
+    pub fn with_signal_self(
         font: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
     ) -> Self {
         let mut this = Self::default();
