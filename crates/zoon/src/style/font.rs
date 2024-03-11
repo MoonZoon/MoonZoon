@@ -45,18 +45,23 @@ impl Font<'static> {
         let mut this = Self::default();
         let font = font.map(|font| font.into()).broadcast();
         for style_name in StyleName::iter() {
-            this.dynamic_css_props.insert(<&str>::from(style_name).into(), font.signal_ref(move |font: &Option<Font>| {
-                if let Some(font) = font {
-                    if let Some(value) = font.static_css_props.0.get(style_name.into()) {
-                        // @TODO send `value`, not `value.value`
-                        return always(Some(value.value.clone())).boxed_local()
+            this.dynamic_css_props.insert(
+                <&str>::from(style_name).into(),
+                font.signal_ref(move |font: &Option<Font>| {
+                    if let Some(font) = font {
+                        if let Some(value) = font.static_css_props.0.get(style_name.into()) {
+                            return always(Some(value.clone())).boxed_local();
+                        }
+                        if let Some(value) = font.dynamic_css_props.get(style_name.into()) {
+                            return value.signal_cloned().boxed_local();
+                        }
                     }
-                    if let Some(value) = font.dynamic_css_props.get(style_name.into()) {
-                        return value.signal_cloned().boxed_local()
-                    }
-                }
-                always(None).boxed_local()
-            }).flatten().boxed_local().broadcast());
+                    always(None).boxed_local()
+                })
+                .flatten()
+                .boxed_local()
+                .broadcast(),
+            );
         }
         this
     }
@@ -65,7 +70,7 @@ impl Font<'static> {
 impl<'a> Font<'a> {
     pub fn new() -> Self {
         Self::default()
-    }            
+    }
 
     /// Define the font weight.
     /// # Example
@@ -108,8 +113,10 @@ impl<'a> Font<'a> {
         weight: impl Signal<Item = impl Into<Option<FontWeight>>> + Unpin + 'static,
     ) -> Self {
         let weight = weight.map(|weight| weight.into().map(|weight| weight.number()));
-        self.dynamic_css_props
-            .insert(Cow::Borrowed(StyleName::FontWeight.into()), box_css_signal(weight));
+        self.dynamic_css_props.insert(
+            Cow::Borrowed(StyleName::FontWeight.into()),
+            box_css_signal(weight),
+        );
         self
     }
 
@@ -155,8 +162,10 @@ impl<'a> Font<'a> {
         color: impl Signal<Item = impl IntoOptionColor> + Unpin + 'static,
     ) -> Self {
         let color = color.map(|color| color.into_option_color_string());
-        self.dynamic_css_props
-            .insert(Cow::Borrowed(StyleName::Color.into()), box_css_signal(color));
+        self.dynamic_css_props.insert(
+            Cow::Borrowed(StyleName::Color.into()),
+            box_css_signal(color),
+        );
         self
     }
 
@@ -168,7 +177,8 @@ impl<'a> Font<'a> {
     /// let button = Button::new().s(Font::new().size(350)).label("Click me");
     /// ```
     pub fn size(mut self, size: u32) -> Self {
-        self.static_css_props.insert(StyleName::FontSize.into(), px(size));
+        self.static_css_props
+            .insert(StyleName::FontSize.into(), px(size));
         self
     }
 
@@ -188,8 +198,10 @@ impl<'a> Font<'a> {
         size: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
     ) -> Self {
         let size = size.map(|size| size.into().map(px));
-        self.dynamic_css_props
-            .insert(Cow::Borrowed(StyleName::FontSize.into()), box_css_signal(size));
+        self.dynamic_css_props.insert(
+            Cow::Borrowed(StyleName::FontSize.into()),
+            box_css_signal(size),
+        );
         self
     }
 
@@ -203,7 +215,8 @@ impl<'a> Font<'a> {
     ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```
     pub fn line_height(mut self, line_height: u32) -> Self {
-        self.static_css_props.insert(StyleName::LineHeight.into(), px(line_height));
+        self.static_css_props
+            .insert(StyleName::LineHeight.into(), px(line_height));
         self
     }
 
@@ -212,8 +225,10 @@ impl<'a> Font<'a> {
         line_height: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
     ) -> Self {
         let line_height = line_height.map(|line_height| line_height.into().map(px));
-        self.dynamic_css_props
-            .insert(Cow::Borrowed(StyleName::LineHeight.into()), box_css_signal(line_height));
+        self.dynamic_css_props.insert(
+            Cow::Borrowed(StyleName::LineHeight.into()),
+            box_css_signal(line_height),
+        );
         self
     }
 
@@ -229,7 +244,8 @@ impl<'a> Font<'a> {
     ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```
     pub fn italic(mut self) -> Self {
-        self.static_css_props.insert(StyleName::FontStyle.into(), "italic");
+        self.static_css_props
+            .insert(StyleName::FontStyle.into(), "italic");
         self
     }
 
@@ -245,7 +261,8 @@ impl<'a> Font<'a> {
     ///     .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```
     pub fn no_wrap(mut self) -> Self {
-        self.static_css_props.insert(StyleName::WhiteSpace.into(), "pre");
+        self.static_css_props
+            .insert(StyleName::WhiteSpace.into(), "pre");
         self
     }
 
@@ -266,7 +283,8 @@ impl<'a> Font<'a> {
     pub fn wrap_anywhere(mut self) -> Self {
         // @TODO replace with the line below once `overflow-wrap: anywhere` works on
         // Safari https://developer.mozilla.org/en-US/docs/Web/CSS/overflow-wrap#browser_compatibility
-        self.static_css_props.insert(StyleName::WordBreak.into(), "break-word");
+        self.static_css_props
+            .insert(StyleName::WordBreak.into(), "break-word");
         // self.static_css_props.insert("overflow-wrap", "anywhere");
 
         self.static_css_props.remove(StyleName::WhiteSpace.into());
@@ -283,22 +301,26 @@ impl<'a> Font<'a> {
     ///    .content("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit...");
     /// ```
     pub fn center(mut self) -> Self {
-        self.static_css_props.insert(StyleName::TextAlign.into(), "center");
+        self.static_css_props
+            .insert(StyleName::TextAlign.into(), "center");
         self
     }
 
     pub fn left(mut self) -> Self {
-        self.static_css_props.insert(StyleName::TextAlign.into(), "left");
+        self.static_css_props
+            .insert(StyleName::TextAlign.into(), "left");
         self
     }
 
     pub fn right(mut self) -> Self {
-        self.static_css_props.insert(StyleName::TextAlign.into(), "right");
+        self.static_css_props
+            .insert(StyleName::TextAlign.into(), "right");
         self
     }
 
     pub fn justify(mut self) -> Self {
-        self.static_css_props.insert(StyleName::TextAlign.into(), "justify");
+        self.static_css_props
+            .insert(StyleName::TextAlign.into(), "justify");
         self
     }
 
@@ -314,8 +336,10 @@ impl<'a> Font<'a> {
                 FontAlignment::Justify => "justify",
             })
         });
-        self.dynamic_css_props
-            .insert(<&str>::from(StyleName::TextAlign).into(), box_css_signal(alignment));
+        self.dynamic_css_props.insert(
+            <&str>::from(StyleName::TextAlign).into(),
+            box_css_signal(alignment),
+        );
         self
     }
 
@@ -346,7 +370,8 @@ impl<'a> Font<'a> {
         if family.is_empty() {
             return self;
         }
-        self.static_css_props.insert(StyleName::FontFamily.into(), family);
+        self.static_css_props
+            .insert(StyleName::FontFamily.into(), family);
         self
     }
 
@@ -365,8 +390,10 @@ impl<'a> Font<'a> {
             }
             Some(family_style)
         });
-        self.dynamic_css_props
-            .insert(<&str>::from(StyleName::FontFamily).into(), box_css_signal(family));
+        self.dynamic_css_props.insert(
+            <&str>::from(StyleName::FontFamily).into(),
+            box_css_signal(family),
+        );
         self
     }
 
@@ -389,7 +416,8 @@ impl<'a> Font<'a> {
     }
 
     pub fn tracking(mut self, tracking: i32) -> Self {
-        self.static_css_props.insert(StyleName::LetterSpacing.into(), px(tracking));
+        self.static_css_props
+            .insert(StyleName::LetterSpacing.into(), px(tracking));
         self
     }
 }

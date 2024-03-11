@@ -175,14 +175,13 @@ pub type DynamicCSSProps = BTreeMap<Cow<'static, str>, BoxedCssSignal>;
 
 // ------ BoxedCssSignal ------
 
-pub type BoxedCssSignal = Broadcaster<LocalBoxSignal<'static, Option<Rc<Cow<'static, str>>>>>;
+pub type BoxedCssSignal = Broadcaster<LocalBoxSignal<'static, Option<CssPropValue<'static>>>>;
 
-// @TODO replace with a new function? https://github.com/Pauan/rust-signals/blob/master/CHANGELOG.md#0322---2021-06-13
 pub fn box_css_signal(
     signal: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static,
 ) -> BoxedCssSignal {
     signal
-        .map(|value| value.into_option_cow_str().map(Rc::new))
+        .map(|value| value.into_option_cow_str().map(CssPropValue::new))
         .boxed_local()
         .broadcast()
 }
@@ -601,9 +600,9 @@ impl GlobalStyles {
             for (name, value_signal) in keyframe.dynamic_css_props {
                 let declaration = Arc::clone(&declaration);
                 let task = value_signal.signal_cloned().for_each_sync(move |value| {
-                    if let Some(value) = value {
-                        // @TODO allow to set `important ` also in dynamic styles
-                        set_css_property(&declaration, &name, &value, false);
+                    if let Some(css_prop_value) = value {
+                        // @TODO allow to set `important ` in dynamic styles, too
+                        set_css_property(&declaration, &name, &css_prop_value.value, false);
                     } else {
                         declaration
                             .remove_property(&name)
@@ -655,9 +654,9 @@ impl GlobalStyles {
         for (name, value_signal) in group.dynamic_css_props {
             let declaration = Arc::clone(&declaration);
             let task = value_signal.signal_cloned().for_each_sync(move |value| {
-                if let Some(value) = value {
-                    // @TODO allow to set `important ` also in dynamic styles
-                    set_css_property(&declaration, &name, &value, false);
+                if let Some(css_prop_value) = value {
+                    // @TODO allow to set `important ` in dynamic styles, too
+                    set_css_property(&declaration, &name, &css_prop_value.value, false);
                 } else {
                     declaration
                         .remove_property(&name)
