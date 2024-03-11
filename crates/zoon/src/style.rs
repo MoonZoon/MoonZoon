@@ -92,7 +92,7 @@ pub type U32Height = u32;
 
 #[derive(Clone)]
 pub struct CssPropValue<'a> {
-    pub value: Cow<'a, str>,
+    pub value: Rc<Cow<'a, str>>,
     pub important: bool,
     pub checked: bool,
 }
@@ -100,7 +100,7 @@ pub struct CssPropValue<'a> {
 impl<'a> CssPropValue<'a> {
     pub fn new(value: impl IntoCowStr<'a>) -> Self {
         Self {
-            value: value.into_cow_str(),
+            value: Rc::new(value.into_cow_str()),
             important: false,
             checked: true,
         }
@@ -175,14 +175,14 @@ pub type DynamicCSSProps = BTreeMap<Cow<'static, str>, BoxedCssSignal>;
 
 // ------ BoxedCssSignal ------
 
-pub type BoxedCssSignal = Broadcaster<LocalBoxSignal<'static, Rc<Option<Cow<'static, str>>>>>;
+pub type BoxedCssSignal = Broadcaster<LocalBoxSignal<'static, Option<Rc<Cow<'static, str>>>>>;
 
 // @TODO replace with a new function? https://github.com/Pauan/rust-signals/blob/master/CHANGELOG.md#0322---2021-06-13
 pub fn box_css_signal(
     signal: impl Signal<Item = impl IntoOptionCowStr<'static> + 'static> + Unpin + 'static,
 ) -> BoxedCssSignal {
     signal
-        .map(|value| Rc::new(value.into_option_cow_str()))
+        .map(|value| value.into_option_cow_str().map(Rc::new))
         .boxed_local()
         .broadcast()
 }
@@ -601,7 +601,7 @@ impl GlobalStyles {
             for (name, value_signal) in keyframe.dynamic_css_props {
                 let declaration = Arc::clone(&declaration);
                 let task = value_signal.signal_cloned().for_each_sync(move |value| {
-                    if let Some(value) = Rc::unwrap_or_clone(value) {
+                    if let Some(value) = value {
                         // @TODO allow to set `important ` also in dynamic styles
                         set_css_property(&declaration, &name, &value, false);
                     } else {
@@ -655,7 +655,7 @@ impl GlobalStyles {
         for (name, value_signal) in group.dynamic_css_props {
             let declaration = Arc::clone(&declaration);
             let task = value_signal.signal_cloned().for_each_sync(move |value| {
-                if let Some(value) = Rc::unwrap_or_clone(value) {
+                if let Some(value) = value {
                     // @TODO allow to set `important ` also in dynamic styles
                     set_css_property(&declaration, &name, &value, false);
                 } else {
