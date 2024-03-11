@@ -1,5 +1,6 @@
 use crate::*;
 use std::borrow::Cow;
+use strum::{EnumIter, IntoEnumIterator, IntoStaticStr};
 
 // ------ Shadows ------
 
@@ -10,6 +11,42 @@ pub struct Shadows<'a> {
     static_css_props: StaticCSSProps<'a>,
     /// Customizable css properties which can be added.
     dynamic_css_props: DynamicCSSProps,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, EnumIter, IntoStaticStr)]
+#[strum(serialize_all = "kebab-case")]
+enum StyleName {
+    BoxShadow,
+}
+
+impl Shadows<'static> {
+    pub fn with_signal_self(
+        shadows: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
+    ) -> Self {
+        let mut this = Self::default();
+        let shadows = shadows.map(|shadows| shadows.into()).broadcast();
+        for style_name in StyleName::iter() {
+            this.dynamic_css_props.insert(
+                <&str>::from(style_name).into(),
+                shadows
+                    .signal_ref(move |shadows: &Option<Shadows>| {
+                        if let Some(shadows) = shadows {
+                            if let Some(value) = shadows.static_css_props.0.get(style_name.into()) {
+                                return always(Some(value.clone())).boxed_local();
+                            }
+                            if let Some(value) = shadows.dynamic_css_props.get(style_name.into()) {
+                                return value.signal_cloned().boxed_local();
+                            }
+                        }
+                        always(None).boxed_local()
+                    })
+                    .flatten()
+                    .boxed_local()
+                    .broadcast(),
+            );
+        }
+        this
+    }
 }
 
 impl<'a> Shadows<'a> {
@@ -76,8 +113,10 @@ impl<'a> Shadows<'a> {
             Some(shadow_style)
         });
         let mut this = Self::default();
-        this.dynamic_css_props
-            .insert("box-shadow".into(), box_css_signal(shadows));
+        this.dynamic_css_props.insert(
+            Cow::Borrowed(StyleName::BoxShadow.into()),
+            box_css_signal(shadows),
+        );
         this
     }
 }

@@ -62,10 +62,10 @@ impl<'a> Height<'a> {
     pub fn exact_signal(
         height: impl Signal<Item = impl Into<Option<u32>>> + Unpin + 'static,
     ) -> Self {
-        Self::with_signal(height.map(|height| height.into().map(Height::exact)))
+        Self::with_signal_self(height.map(|height| height.into().map(Height::exact)))
     }
 
-    pub fn with_signal(
+    pub fn with_signal_self(
         height: impl Signal<Item = impl Into<Option<Self>>> + Unpin + 'static,
     ) -> Self {
         let mut this = Self::default();
@@ -102,7 +102,7 @@ impl<'a> Height<'a> {
     pub fn percent_signal<T: Into<f64>>(
         height: impl Signal<Item = impl Into<Option<T>>> + Unpin + 'static,
     ) -> Self {
-        Self::with_signal(
+        Self::with_signal_self(
             height.map(|height| height.into().map(|height| Height::percent(height.into()))),
         )
     }
