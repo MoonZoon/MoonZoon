@@ -88,7 +88,7 @@ fn container<'a, T: Styleable<'a> + Element>(name: &str, element: T) -> impl Ele
                 .s(Height::exact(200))
                 .s(Borders::all(Border::new().color(color!("Gray")).width(3)))
                 .s(RoundedCorners::all(15))
-                .s(AlignContent::with_signal(RECTANGLES_ALIGNMENT.signal_ref(
+                .s(AlignContent::with_signal_self(RECTANGLES_ALIGNMENT.signal_ref(
                     |alignment| alignment.map(|alignment| alignment.to_align_content()),
                 ))),
         )

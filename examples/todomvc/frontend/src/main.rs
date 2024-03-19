@@ -366,7 +366,7 @@ fn filter(filter: Filter) -> impl Element {
     };
     Button::new()
         .s(Padding::new().x(8).y(4))
-        .s(Outline::with_signal(outline_alpha.map_some(|alpha| {
+        .s(Outline::with_signal_self(outline_alpha.map_some(|alpha| {
             Outline::inner().color(color!("oklch(50.4% 0.165 25.36)").a(alpha))
         })))
         .s(RoundedCorners::all(3))

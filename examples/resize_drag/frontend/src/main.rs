@@ -44,7 +44,7 @@ fn rectangle() -> impl Element {
                 .signal()
                 .map_bool(|| color!("Green"), || color!("Gray")),
         ))
-        .s(Transform::with_signal(
+        .s(Transform::with_signal_self(
             RECTANGLE_OFFSET
                 .signal()
                 .map(|(x, y)| Transform::new().move_right(x).move_down(y)),

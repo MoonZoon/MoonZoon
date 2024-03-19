@@ -65,7 +65,7 @@ fn rectangle(rectangle: Rectangle) -> impl Element {
         .map(move |l| color.l(l));
 
     El::new()
-        .s(Transform::with_signal(
+        .s(Transform::with_signal_self(
             SPREAD_OSCILLATOR
                 .signal()
                 .map(|spread| Transform::new().scale(100. + spread * 20.)),

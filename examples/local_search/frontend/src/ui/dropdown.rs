@@ -110,7 +110,7 @@ fn head(
         .item(
             El::new()
                 .s(Align::new().right())
-                .s(Transform::with_signal(
+                .s(Transform::with_signal_self(
                     dropdown_active
                         .signal()
                         .map_true(|| Transform::new().flip_vertical()),
