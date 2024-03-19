@@ -11,6 +11,13 @@ pub enum BackgroundAlign {
     Center,
 }
 
+#[derive(Clone, Copy)]
+pub enum BackgroundSize {
+    Contain,
+    Cover,
+    Original,
+}
+
 /// Styling to set the background for an element.
 /// # Example
 /// ```no_run
@@ -36,6 +43,20 @@ impl<'a> Background<'a> {
         if let Some(align) = align.into() {
             self.static_css_props
                 .insert("background-position", <&'static str>::from(align));
+        }
+        self
+    }
+
+    pub fn size(mut self, size: impl Into<Option<BackgroundSize>>) -> Self {
+        if let Some(size) = size.into() {
+            self.static_css_props.insert(
+                "background-size",
+                match size {
+                    BackgroundSize::Contain => "contain",
+                    BackgroundSize::Cover => "cover",
+                    BackgroundSize::Original => "auto",
+                },
+            );
         }
         self
     }
