@@ -105,7 +105,7 @@ fn generate_companies_button() -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let disabled_color = BACKGROUND_COLOR.also(|color| *color.lightness.get_or_insert(1.0) -= 0.3);
     Button::new()
-        .s(Outline::with_signal(
+        .s(Outline::with_signal_self(
             STORE
                 .generate_companies_button_disabled
                 .signal_ref(move |disabled| {

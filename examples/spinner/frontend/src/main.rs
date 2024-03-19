@@ -43,7 +43,7 @@ fn spinner(
         .s(Width::exact(spinner_diameter))
         .s(RoundedCorners::all_max())
         .s(Align::center())
-        .s(Transform::with_signal(
+        .s(Transform::with_signal_self(
             rotation_oscillator
                 .signal()
                 .map(|factor| Transform::new().rotate(factor * 360.)),

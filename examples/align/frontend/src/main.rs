@@ -89,7 +89,7 @@ fn rectangle(index: i32) -> impl Element {
         .s(Height::exact(size))
         .s(Background::new().color(color!("Green")))
         .s(RoundedCorners::all(10))
-        .s(Align::with_signal(RECTANGLE_ALIGNMENT.signal_ref(
+        .s(Align::with_signal_self(RECTANGLE_ALIGNMENT.signal_ref(
             |alignment| alignment.map(|alignment| alignment.to_align()),
         )))
         .child(El::new().s(Align::center()).child(index))
