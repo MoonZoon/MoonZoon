@@ -1,4 +1,15 @@
 use crate::*;
+use strum::IntoStaticStr;
+
+#[derive(Clone, Copy, IntoStaticStr)]
+#[strum(serialize_all = "lowercase")]
+pub enum BackgroundAlign {
+    Top,
+    Bottom,
+    Left,
+    Right,
+    Center,
+}
 
 /// Styling to set the background for an element.
 /// # Example
@@ -19,6 +30,14 @@ pub struct Background<'a> {
 impl<'a> Background<'a> {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    pub fn align(mut self, align: impl Into<Option<BackgroundAlign>>) -> Self {
+        if let Some(align) = align.into() {
+            self.static_css_props
+                .insert("background-position", <&'static str>::from(align));
+        }
+        self
     }
 
     /// Set a given color to the background.

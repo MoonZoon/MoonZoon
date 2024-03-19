@@ -18,7 +18,7 @@ mod align_content;
 pub use align_content::AlignContent;
 
 mod background;
-pub use background::Background;
+pub use background::{Background, BackgroundAlign};
 
 mod borders;
 pub use borders::{Border, Borders};
