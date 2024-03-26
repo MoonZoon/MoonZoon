@@ -37,7 +37,7 @@ See https://tauri.app/v1/guides/getting-started/setup/integrate/
 1. Install Tauri CLI: `cargo install tauri-cli`
 2. `cargo tauri init`
 3. App name: `LocalSearch`
-4. Window title: `LocalSearch`
+4. Window title: `Local Search`
 5. Web assets relative path: `../frontend_dist`
 6. Dev server url: `https://localhost:8443`
 7. Frontend dev command: `makers mzoon start`
