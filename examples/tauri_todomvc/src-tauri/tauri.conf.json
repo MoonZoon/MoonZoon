@@ -3,7 +3,7 @@
     "beforeBuildCommand": "makers mzoon build -r -f",
     "beforeDevCommand": "makers mzoon start",
     "devPath": "http://localhost:8080",
-    "distDir": "../../frontend_dist"
+    "distDir": "../frontend_dist"
   },
   "package": {
     "productName": "TodoMVC",
@@ -28,7 +28,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "com.example.moonzoon.tauri-todomvc",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
