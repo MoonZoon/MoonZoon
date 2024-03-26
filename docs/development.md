@@ -58,6 +58,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/spinner/Cargo.toml",
         // "examples/start_with_app/Cargo.toml",
         // "examples/svg/Cargo.toml",
+        // "examples/tauri_local_search/Cargo.toml",
         // "examples/tauri_todomvc/Cargo.toml",
         // "examples/text_area/Cargo.toml",
         // "examples/timer/Cargo.toml",
