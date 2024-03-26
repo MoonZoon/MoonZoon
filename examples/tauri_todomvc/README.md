@@ -20,6 +20,7 @@ See https://tauri.app/v1/guides/getting-started/setup/integrate/
 6. Dev server url: `http://localhost:8080`
 7. Frontend dev command: `makers mzoon start`
 8. Frontend build command: `makers mzoon build -r -f`
+9. Add `"src-tauri"` to `Cargo.toml` workspace members.
 
 The config is saved to `src-tauri/tauri.conf.json`, more info here https://tauri.app/v1/api/config/
 
