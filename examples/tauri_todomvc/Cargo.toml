@@ -3,6 +3,7 @@ members = [
     "frontend",
     "backend",
     "shared",
+    "src-tauri",
 ]
 resolver = "2"
 
