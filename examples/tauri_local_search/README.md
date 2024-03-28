@@ -46,9 +46,14 @@ See related Tauri docs:
 Cross-platform compilation: https://tauri.app/v1/guides/building/cross-platform
 
 Properties of an `msi` bundle on Windows:
-- Size of `LocalSearch_0.1.0_x64_en-US.msi` is **2100 KB**.
-- Size of `C:\Program Files\LocalSearch\LocalSearch.exe` is **3730 KB**.
-- Process `LocalSearch.exe` uses ~**65.2 MB** RAM.
+- Size of `LocalSearch_0.1.0_x64_en-US.msi` is **2112 KB**.
+- Size of `C:\Program Files\LocalSearch\LocalSearch.exe` is **3815 KB**.
+- Process `LocalSearch.exe` uses ~**71.8 MB** RAM at start and ~**1030 MB** when 10M companies are generated. 
+
+_Notes_:
+- Wasm memory cannot be freed.
+- 4 GB should be maximum allocated memory.
+- Tauri V1 frontend <-> backend communication uses JSON String, V2 communication should be faster.
 
 ---
 
@@ -70,5 +75,3 @@ See https://tauri.app/v1/guides/getting-started/setup/integrate/
 The config is saved to `src-tauri/tauri.conf.json`, more info here https://tauri.app/v1/api/config/
 
 How to generate custom icons: https://tauri.app/v1/guides/features/icons/
-
-
