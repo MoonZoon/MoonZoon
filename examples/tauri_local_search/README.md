@@ -5,10 +5,32 @@ _Note:_ Tested with **Tauri v1**.
 
 ---
 
+### Create a valid self-signed `localhost` certificate for dev server:
+
+1. Download `mkcert`: https://github.com/FiloSottile/mkcert/releases
+2. `mkcert -install`
+3. `mkcert localhost`
+4. Rename generated `localhost.pem` to `public.pem`.
+5. Rename generated `localhost-key.pem` to `private.pem`.
+6. Move `public.pem` and `private.pem` to `backend/private`.
+
+---
+
 ### Start:
 
 1. `cargo install tauri-cli`
 2. `cargo tauri dev`
+
+---
+
+### Debug build:
+
+1. `cargo tauri build --debug`
+2. Executable is in `target/debug`
+
+_Notes:_ 
+- Only the Tauri app is built in debug mode, the app alone is still built with `mzoon build -r -f`.
+- The debug mode enables the browser dev console / Inspect element feature.
 
 ---
 
@@ -24,7 +46,7 @@ See related Tauri docs:
 Cross-platform compilation: https://tauri.app/v1/guides/building/cross-platform
 
 Properties of an `msi` bundle on Windows:
-- Size of `LocalSearch_0.1.0_x64_en-US.msi` is **2048 KB**.
+- Size of `LocalSearch_0.1.0_x64_en-US.msi` is **2100 KB**.
 - Size of `C:\Program Files\LocalSearch\LocalSearch.exe` is **3730 KB**.
 - Process `LocalSearch.exe` uses ~**65.2 MB** RAM.
 
