@@ -1,60 +1,36 @@
 {
+  "productName": "LocalSearch",
+  "version": "0.1.0",
+  "identifier": "com.tauri.dev",
   "build": {
-    "beforeBuildCommand": "makers mzoon build -r -f",
-    "beforeDevCommand": "makers mzoon start",
     "frontendDist": "../frontend_dist",
-    "devUrl": "https://localhost:8443"
+    "devUrl": "https://localhost:8443",
+    "beforeDevCommand": "makers mzoon start",
+    "beforeBuildCommand": "makers mzoon build -r -f"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Local Search",
+        "width": 800,
+        "height": 600,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
   },
   "bundle": {
     "active": true,
-    "category": "DeveloperTool",
-    "copyright": "",
     "targets": "all",
-    "externalBin": [],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ],
-    "windows": {
-      "certificateThumbprint": null,
-      "digestAlgorithm": "sha256",
-      "timestampUrl": ""
-    },
-    "longDescription": "",
-    "macOS": {
-      "entitlements": null,
-      "exceptionDomain": "",
-      "frameworks": [],
-      "providerShortName": null,
-      "signingIdentity": null
-    },
-    "resources": [],
-    "shortDescription": "",
-    "linux": {
-      "deb": {
-        "depends": []
-      }
-    }
-  },
-  "productName": "LocalSearch",
-  "version": "0.1.0",
-  "identifier": "com.example.moonzoon.tauri-local-search",
-  "plugins": {},
-  "app": {
-    "windows": [
-      {
-        "fullscreen": false,
-        "height": 600,
-        "resizable": true,
-        "title": "Local Search",
-        "width": 800
-      }
-    ],
-    "security": {
-      "csp": null
-    }
+    ]
   }
 }
