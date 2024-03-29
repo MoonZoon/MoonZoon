@@ -52,4 +52,4 @@ Properties of a `deb` bundle on Kubuntu:
 8. Frontend build command: `makers mzoon build -r -f`
 9. Add `"src-tauri"` to `Cargo.toml` workspace members.
 10. Change `identifier` in `src-tauri/tauri.conf.json` to `"com.example.moonzoon.tauri-todomvc"`
-11. Set env var `WEBKIT_DISABLE_DMABUF_RENDERER=1` in `src-tauri/lib.rs` because WebkitGTK (2.42) is not compatible with NVIDIA drivers on Linux.
+11. Set env var `WEBKIT_DISABLE_DMABUF_RENDERER=1` in `src-tauri/lib.rs` because WebKitGTK (2.42) is not compatible with NVIDIA drivers on Linux.

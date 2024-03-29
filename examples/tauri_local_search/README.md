@@ -1,7 +1,16 @@
 # Tauri LocalSearch
 > MoonZoon example
 
-_Note:_ Tested with **Tauri v1**.
+---
+
+**WARNING**: This example currently does NOT work on Linux when run inside Tauri. 
+
+WebKitGTK hasn't reenabled `SharedArrayBuffer` support yet so it's not possible to use fast Zoon multithreading demonstrated in this example.
+
+More info:
+- https://webkitgtk.org/2018/01/10/webkitgtk2.18.5-released.html
+- https://github.com/tauri-apps/tauri/issues/1522
+- https://github.com/tauri-apps/tauri/discussions/6269
 
 ---
 
@@ -18,8 +27,19 @@ _Note:_ Tested with **Tauri v1**.
 
 ### Start:
 
-1. `cargo install tauri-cli`
+1. `cargo install tauri-cli@=2.0.0-beta.11`
 2. `cargo tauri dev`
+
+Troubleshooting:
+- In case of Tauri compilation errors, install system dependencies: https://beta.tauri.app/guides/prerequisites/
+
+- Examples of possible Tauri runtime errors in terminal of VSCode installed from Linux Snap package manager:
+    ```
+    Failed to load module "colorreload-gtk-module"
+
+    /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess: symbol lookup error: /snap/core20/current/lib/x86_64-linux-gnu/libpthread.so.0: undefined symbol: __libc_pthread_init, version GLIBC_PRIVATE
+    ```
+    Fix it by installing VSCode directly from official `.deb` bundle or try to unset multiple env variables - more info in https://stackoverflow.com/questions/75921414/java-symbol-lookup-error-snap-core20-current-lib-x86-64-linux-gnu-libpthread
 
 ---
 
@@ -37,13 +57,8 @@ _Notes:_
 ### Production build:
 
 1. `cargo tauri build`
-2. Installable bundles specific for the platform are at `target/release/bundle`
-
-See related Tauri docs:
-- https://tauri.app/v1/guides/distribution/publishing
-- https://tauri.app/v1/guides/building/
-
-Cross-platform compilation: https://tauri.app/v1/guides/building/cross-platform
+2. Runnable executable is in `target/release`
+3. Installable bundles specific for the platform are in `target/release/bundle`
 
 Properties of an `msi` bundle on Windows:
 - Size of `LocalSearch_0.1.0_x64_en-US.msi` is **2112 KB**.
@@ -52,26 +67,21 @@ Properties of an `msi` bundle on Windows:
 
 _Notes_:
 - Wasm memory cannot be freed.
-- 4 GB should be maximum allocated memory.
-- Tauri V1 frontend <-> backend communication uses JSON String, V2 communication should be faster.
+- 4 GB should be the frontend memory allocation limit.
 
 ---
 
 ### Integration steps for a standard LocalSearch example to make this example:
 
-See https://tauri.app/v1/guides/getting-started/setup/integrate/
-
-1. Install Tauri CLI: `cargo install tauri-cli`
+1. Install Tauri CLI: `cargo install tauri-cli@=2.0.0-beta.11`
 2. `cargo tauri init`
 3. App name: `LocalSearch`
 4. Window title: `Local Search`
 5. Web assets relative path: `../frontend_dist`
-6. Dev server url: `https://localhost:8443`
+6. Dev server url (HTTPS is one of the requirements to enable `SharedArrayBuffer`): `https://localhost:8443`
 7. Frontend dev command: `makers mzoon start`
 8. Frontend build command: `makers mzoon build -r -f`
 9. Add `"src-tauri"` to `Cargo.toml` workspace members.
-10. Change `tauri.bundle.identifier` in `src-tauri/tauri.conf.json` to `"com.example.moonzoon.tauri-local-search"`
-
-The config is saved to `src-tauri/tauri.conf.json`, more info here https://tauri.app/v1/api/config/
-
-How to generate custom icons: https://tauri.app/v1/guides/features/icons/
+10. Change `identifier` in `src-tauri/tauri.conf.json` to `"com.example.moonzoon.tauri-local-search"`
+11. Set env var `WEBKIT_DISABLE_DMABUF_RENDERER=1` in `src-tauri/lib.rs` because WebKitGTK (2.42) is not compatible with NVIDIA drivers on Linux.
+12. Set headers in `src-tauri/lib.rs` for frontend files served by Tauri in prod build to enable `SharedArrayBuffer`.
