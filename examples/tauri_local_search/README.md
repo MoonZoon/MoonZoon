@@ -61,13 +61,9 @@ _Notes:_
 3. Installable bundles specific for the platform are in `target/release/bundle`
 
 Properties of an `msi` bundle on Windows:
-- Size of `LocalSearch_0.1.0_x64_en-US.msi` is **2112 KB**.
-- Size of `C:\Program Files\LocalSearch\LocalSearch.exe` is **3815 KB**.
-- Process `LocalSearch.exe` uses ~**71.8 MB** RAM at start and ~**1030 MB** when 10M companies are generated. 
-
-_Notes_:
-- Wasm memory cannot be freed.
-- 4 GB should be the frontend memory allocation limit.
+- Size of `LocalSearch_0.1.0_x64_en-US.msi` is **2.9 MB**.
+- Size of `C:\Program Files\LocalSearch\LocalSearch.exe` is **7.4 MB**.
+- Process `A Tauri App.exe` uses ~**75.8 MB** RAM at start and ~**760-1030 MB** when 10M companies are generated and search. 
 
 ---
 
