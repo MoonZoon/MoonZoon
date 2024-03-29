@@ -32,6 +32,7 @@
         // "examples/svg/Cargo.toml",
         "examples/tauri_local_search/Cargo.toml",
         "examples/tauri_todomvc/Cargo.toml",
+        "examples/tauri_web_fs/Cargo.toml",
         // "examples/text_area/Cargo.toml",
         // "examples/timer/Cargo.toml",
         "examples/todomvc/Cargo.toml",
