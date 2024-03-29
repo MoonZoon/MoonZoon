@@ -1,8 +1,8 @@
 [package]
 name = "app"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "Tauri Web FS"
+authors = ["Martin Kavík <martin@kavik.cz>"]
 license = ""
 repository = ""
 edition = "2021"

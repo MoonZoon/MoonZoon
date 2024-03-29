@@ -1,7 +1,5 @@
 use zoon::*;
 
-
-
 fn main() {
     start_app("app", root);
 }

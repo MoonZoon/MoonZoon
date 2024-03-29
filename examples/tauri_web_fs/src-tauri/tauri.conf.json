@@ -1,7 +1,7 @@
 {
-  "productName": "TodoMVC",
+  "productName": "Tauri Web FS",
   "version": "0.1.0",
-  "identifier": "com.example.moonzoon.tauri-todomvc",
+  "identifier": "com.example.moonzoon.tauri-web-fs",
   "build": {
     "frontendDist": "../frontend_dist",
     "devUrl": "http://localhost:8080",
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "TodoMVC",
+        "title": "Tauri Web FS",
         "width": 800,
         "height": 600,
         "resizable": true,
