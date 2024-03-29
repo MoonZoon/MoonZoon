@@ -28,15 +28,15 @@ Troubleshooting:
 3. Installable bundles specific for the platform are in `target/release/bundle`
 
 Properties of an `msi` bundle on Windows:
-- Size of `TodoMVC_0.1.0_x64_en-US.msi` is **2 MB**.
-- Size of `C:\Program Files\TodoMVC\TodoMVC.exe` is **3.7 MB**.
-- Process `TodoMVC.exe` uses ~**65.2 MB** RAM from start.
+- Size of `TodoMVC_0.1.0_x64_en-US.msi` is **2,8 MB**.
+- Size of `C:\Program Files\TodoMVC\TodoMVC.exe` is **7.3 MB**.
+- Process / app `A Tauri App` uses ~**63 MB** RAM from start.
 
 Properties of a `deb` bundle on Kubuntu:
 - Size of `todo-mvc_0.1.0_amd64.deb` is **2.7 MB**.
 - Size of `/usr/bin/todo-mvc` is **7.9**.
-- Process `todo-mvc` in System Monitor uses ~**34 MB** RAM.
 - Application `TodoMVC` in System Monitor uses ~**168.3 MB** RAM from start.
+- Process `todo-mvc` in System Monitor uses ~**34 MB** RAM from start.
 
 ---
 

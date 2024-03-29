@@ -1,7 +1,7 @@
 {
   "productName": "LocalSearch",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.example.moonzoon.tauri-local-search",
   "build": {
     "frontendDist": "../frontend_dist",
     "devUrl": "https://localhost:8443",
