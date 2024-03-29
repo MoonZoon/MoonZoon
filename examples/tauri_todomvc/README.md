@@ -57,3 +57,14 @@ How to generate custom icons: https://tauri.app/v1/guides/features/icons/
 Update:
 
 `cargo add tauri-cli@=2.0.0-beta.11`
+
+
+
+
+https://github.com/ros2/ros2/issues/1406
+
+Install VSCode directly from official website as .deb.
+
+`Failed to load module "colorreload-gtk-module"`
+or
+`/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess: symbol lookup error: /snap/core20/current/lib/x86_64-linux-gnu/libpthread.so.0: undefined symbol: __libc_pthread_init, version GLIBC_PRIVATE`
