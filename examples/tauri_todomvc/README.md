@@ -10,6 +10,8 @@ _Note:_ Tested with **Tauri v1**.
 1. `cargo install tauri-cli`
 2. `cargo tauri dev`
 
+_Note:_ In case of Tauri compilation errors, install system dependencies: https://tauri.app/v1/guides/getting-started/prerequisites/
+
 ---
 
 ### Production build:
@@ -50,3 +52,8 @@ The config is saved to `src-tauri/tauri.conf.json`, more info here https://tauri
 How to generate custom icons: https://tauri.app/v1/guides/features/icons/
 
 
+--
+
+Update:
+
+`cargo add tauri-cli@=2.0.0-beta.11`
