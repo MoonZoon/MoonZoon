@@ -16,3 +16,4 @@ wasm-bindgen-test = "0.3.19"
 [dependencies]
 zoon.workspace = true
 uuid = { version = "1.1.2", features = ["js", "v4", "serde"], default-features = false }
+tauri-bindgen-guest-rust = { git = "https://github.com/tauri-apps/tauri-bindgen", rev = "5eabe7b96c7b77f37d82bd2fe519a9e3e1377c52" }
