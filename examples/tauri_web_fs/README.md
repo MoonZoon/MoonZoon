@@ -42,3 +42,4 @@ Troubleshooting:
 9. Add `"src-tauri"` to `Cargo.toml` workspace members.
 10. Change `identifier` in `src-tauri/tauri.conf.json` to `"com.example.moonzoon.tauri-web-fs"`
 11. Set env var `WEBKIT_DISABLE_DMABUF_RENDERER=1` in `src-tauri/lib.rs` because WebKitGTK (2.42) is not compatible with NVIDIA drivers on Linux.
+12. Enable `tauri` crate feature `linux-ipc-protocol` in `src-tauri/Cargo.toml` to make IPC faster on Linux.

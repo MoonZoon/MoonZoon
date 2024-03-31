@@ -9,6 +9,7 @@
     "beforeBuildCommand": "makers mzoon build -r -f"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "Tauri Web FS",
