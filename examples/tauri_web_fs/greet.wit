@@ -1,0 +1,3 @@
+interface greet {
+  func greet(name: string) -> string
+}
