@@ -1,11 +1,43 @@
+use std::sync::Mutex;
+
+// Example call from Tauri web dev console:
+// ```js
+// window.__TAURI__.core.invoke('greet', { name: 'John' }).then(console.log);
+// ```
 #[tauri::command(rename_all = "snake_case")]
-fn greet(name: String) -> String {
+fn greet(name: &str) -> String {
     format!("Hello {name}!")
 }
 
-// window.__TAURI__.core.invoke('greet', { name: 'John' }).then((message) => console.log(message))
-// @TODO fn exchange_channels(channel/jschannelid + webview) -> Channel
-// @TODO document adding `"withGlobalTauri": true,` to `tauri.conf.json`
+#[derive(Default)]
+struct Store {
+    ipc_channel: Mutex<Option<tauri::ipc::Channel>>,
+}
+
+// ```js
+// window.ipc_channel = new window.__TAURI__.core.Channel();
+// window.ipc_channel.onmessage = console.log;
+// window.__TAURI__.core.invoke('send_ipc_channel', { channel: window.ipc_channel });
+// ```
+#[tauri::command(rename_all = "snake_case")]
+fn send_ipc_channel(channel: tauri::ipc::Channel, store: tauri::State<Store>) {
+    *store.ipc_channel.lock().unwrap() = Some(channel);
+}
+
+// ```js
+// window.__TAURI__.core.invoke('greet_through_channel', { name: 'John' });
+// ```
+#[tauri::command(rename_all = "snake_case")]
+fn greet_through_channel(name: &str, store: tauri::State<Store>) {
+    store
+        .ipc_channel
+        .lock()
+        .unwrap()
+        .as_ref()
+        .unwrap()
+        .send(format!("Hello through channel {name}!"))
+        .unwrap()
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -14,13 +46,15 @@ pub fn run() {
     std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
 
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet])
+        .manage(Store::default())
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            send_ipc_channel,
+            greet_through_channel
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
-
-
-
 
 // @TODO test tauri-bindgen again once both Tauri and the bindgen are more mature
 
