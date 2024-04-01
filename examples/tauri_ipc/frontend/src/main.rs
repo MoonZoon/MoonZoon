@@ -5,7 +5,7 @@ fn main() {
 }
 
 fn root() -> impl Element {
-    Column::new().item("Tauri Web FS")
+    Column::new().item("Tauri IPC")
 }
 
 // @TODO Test `tauri-sys` crate later once Tauri is more mature.
@@ -14,7 +14,7 @@ fn root() -> impl Element {
 //
 // fn root() -> impl Element {
 //     Column::new()
-//         .item("Tauri Web FS")
+//         .item("Tauri IPC")
 //         .item_signal(signal::from_future(Box::pin(tauri_sys::tauri::invoke("greet", "Jonas"))))
 // }
 
@@ -29,6 +29,6 @@ fn root() -> impl Element {
 //
 // fn root() -> impl Element {
 //     Column::new()
-//         .item("Tauri Web FS")
+//         .item("Tauri IPC")
 //         .item_signal(signal::from_future(Box::pin(greet::greet("Jonas"))))
 // }

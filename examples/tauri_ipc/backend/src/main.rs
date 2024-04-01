@@ -1,7 +1,7 @@
 use moon::*;
 
 async fn frontend() -> Frontend {
-    Frontend::new().title("Tauri Web FS example")
+    Frontend::new().title("Tauri IPC example")
 }
 
 async fn up_msg_handler(_: UpMsgRequest<()>) {}
