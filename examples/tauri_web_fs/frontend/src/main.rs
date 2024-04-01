@@ -5,11 +5,8 @@ fn main() {
 }
 
 fn root() -> impl Element {
-    Column::new()
-        .item("Tauri Web FS")
+    Column::new().item("Tauri Web FS")
 }
-
-
 
 // @TODO Test `tauri-sys` crate later once Tauri is more mature.
 // @TODO Resolve `url` dependency conflict and ideally get rid of the `url` dependency somehow.
@@ -20,8 +17,6 @@ fn root() -> impl Element {
 //         .item("Tauri Web FS")
 //         .item_signal(signal::from_future(Box::pin(tauri_sys::tauri::invoke("greet", "Jonas"))))
 // }
-
-
 
 // @TODO Test `tauri-bindgen` crate again once both Tauri and the bindgen are more mature.
 //
