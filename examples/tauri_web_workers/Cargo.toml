@@ -1,0 +1,27 @@
+[workspace]
+members = [
+    "frontend",
+    "backend",
+    "shared",
+    "src-tauri",
+    # NOTE: Web Workers have to be registered here 
+    # and the name in their Cargo.toml has to end with "web_worker".
+    "frontend/web_workers/markdown",
+    "frontend/web_workers/prime",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+repository = "https://github.com/MoonZoon/MoonZoon"
+authors = ["Martin Kavík <martin@kavik.cz>"]
+description = "Tauri TodoMVC - MoonZoon example"
+categories = ["MoonZoon", "example"]
+license = "MIT"
+readme = "../README.md"
+publish = false
+
+[workspace.dependencies]
+moon = { path = "../../crates/moon" }
+zoon = { path = "../../crates/zoon" }
