@@ -15,6 +15,7 @@ origins = ["*"]
 frontend = [
     "public",
     "frontend/Cargo.toml",
+    "frontend/js",
     "frontend/src",
     "../../crates/zoon/Cargo.toml",
     "../../crates/zoon/src",

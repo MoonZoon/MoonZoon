@@ -1,32 +1,20 @@
 use std::sync::Mutex;
 
-// Example call from Tauri web dev console:
-// ```js
-// window.__TAURI__.core.invoke('greet', { name: 'John' }).then(console.log);
-// ```
-#[tauri::command(rename_all = "snake_case")]
-fn greet(name: &str) -> String {
-    format!("Hello {name}!")
-}
-
 #[derive(Default)]
 struct Store {
     ipc_channel: Mutex<Option<tauri::ipc::Channel>>,
 }
 
-// ```js
-// window.ipc_channel = new window.__TAURI__.core.Channel();
-// window.ipc_channel.onmessage = console.log;
-// window.__TAURI__.core.invoke('send_ipc_channel', { channel: window.ipc_channel });
-// ```
+#[tauri::command(rename_all = "snake_case")]
+fn greet(name: &str) -> String {
+    format!("Hello {name}!")
+}
+
 #[tauri::command(rename_all = "snake_case")]
 fn send_ipc_channel(channel: tauri::ipc::Channel, store: tauri::State<Store>) {
     *store.ipc_channel.lock().unwrap() = Some(channel);
 }
 
-// ```js
-// window.__TAURI__.core.invoke('greet_through_channel', { name: 'John' });
-// ```
 #[tauri::command(rename_all = "snake_case")]
 fn greet_through_channel(name: &str, store: tauri::State<Store>) {
     store
