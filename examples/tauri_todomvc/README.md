@@ -38,6 +38,11 @@ Properties of a `deb` bundle on Kubuntu:
 - Application `TodoMVC` in System Monitor uses ~**168.3 MB** RAM from start.
 - Process `todo-mvc` in System Monitor uses ~**34 MB** RAM from start.
 
+Properties of a `macos` bundle on macOS:
+- Size of `TodoMVC_0.1.0_x64.dmg` is **3.2 MB**.
+- Size of `TodoMVC.app` is **8.3 MB**.
+- Application `TodoMVC` in Activity Monitor uses ~**42 MB** *real memory* and ~**66.1 MB** *shared memory* from start.
+
 ---
 
 ### Integration steps for a standard TodoMVC example to make this example:
