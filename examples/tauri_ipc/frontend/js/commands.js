@@ -1,5 +1,9 @@
 const invoke = window.__TAURI__.core.invoke;
 
+export async function show_window() {
+    return await invoke("show_window");
+}
+
 export async function greet(name) {
     return await invoke("greet", { name: name });
 }

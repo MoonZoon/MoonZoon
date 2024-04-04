@@ -3,21 +3,37 @@ use zoon::*;
 static MESSAGE: Lazy<Mutable<Option<String>>> = lazy::default();
 
 fn main() {
+    start_app("app", root);
+    Task::start(async {
+        // https://github.com/tauri-apps/tauri/issues/5170
+        Timer::sleep(100).await;
+        command::show_window().await;
+    });
     Task::start(async {
         command::send_ipc_channel(|message| MESSAGE.set(Some(message))).await;
         command::greet_through_channel("Jane").await;
     });
-    start_app("app", root);
 }
 
 fn root() -> impl Element {
-    Column::new()
-        .item(El::new().child_signal(signal::from_future(Box::pin(command::greet("John")))))
-        .item(El::new().child_signal(MESSAGE.signal_cloned()))
+    El::new()
+        .s(Height::screen())
+        .s(Background::new().color(color!("DarkSlateBlue")))
+        .s(Font::new().color(color!("Lavender")))
+        .child(
+            Column::new()
+                .s(Align::center())
+                .item(El::new().child_signal(signal::from_future(Box::pin(command::greet("John")))))
+                .item(El::new().child_signal(MESSAGE.signal_cloned()))
+        )
 }
 
 mod command {
     use super::*;
+
+    pub async fn show_window() {
+        js_bridge::show_window().await
+    }
 
     pub async fn greet(name: &str) -> String {
         js_bridge::greet(name).await.as_string().unwrap_throw()
@@ -35,6 +51,8 @@ mod command {
         use super::*;
         #[wasm_bindgen(module = "/js/commands.js")]
         extern "C" {
+            pub async fn show_window();
+            
             pub async fn greet(name: &str) -> JsValue;
 
             pub async fn send_ipc_channel(on_message: JsValue);
