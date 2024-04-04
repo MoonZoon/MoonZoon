@@ -3,9 +3,7 @@
 
 ---
 
-**WARNING**: This example currently does NOT work on Linux when run inside Tauri. 
-
-WebKitGTK hasn't reenabled `SharedArrayBuffer` support yet so it's not possible to use fast Zoon multithreading demonstrated in this example.
+**WARNING**: This example currently **does NOT work on Linux and macOS** when run inside Tauri. 
 
 More info:
 - https://webkitgtk.org/2018/01/10/webkitgtk2.18.5-released.html
@@ -16,7 +14,7 @@ More info:
 
 ### Create a valid self-signed `localhost` certificate for dev server:
 
-1. Download `mkcert`: https://github.com/FiloSottile/mkcert/releases
+1. Download `mkcert`: https://github.com/FiloSottile/mkcert/releases or follow installation steps on [Create Locally Trusted SSL Certificates on Linux|macOS using mkcert](https://computingforgeeks.com/create-locally-trusted-ssl-certificates-on-linux-macos-using-mkcert/)
 2. `mkcert -install`
 3. `mkcert localhost`
 4. Rename generated `localhost.pem` to `public.pem`.
@@ -27,10 +25,15 @@ More info:
 
 ### Start:
 
+1. `rustup install nightly`
 1. `cargo install tauri-cli@=2.0.0-beta.12`
 2. `cargo tauri dev`
 
 Troubleshooting:
+- In case of MZ compilation errors, follow Cargo recommendations, e.g. run commands
+   - `rustup install nightly`
+   - `rustup component add rust-src --toolchain nightly-x64_64-apple-darwin`
+
 - In case of Tauri compilation errors, install system dependencies: https://beta.tauri.app/guides/prerequisites/
 
 - Examples of possible Tauri runtime errors in terminal of VSCode installed from Linux Snap package manager:
