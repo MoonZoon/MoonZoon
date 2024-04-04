@@ -44,3 +44,4 @@ Troubleshooting:
 11. Set env var `WEBKIT_DISABLE_DMABUF_RENDERER=1` in `src-tauri/lib.rs` because WebKitGTK (2.42) is not compatible with NVIDIA drivers on Linux.
 12. Enable `tauri` crate feature `linux-ipc-protocol` in `src-tauri/Cargo.toml` to make IPC faster on Linux.
 13. Change `app.withGlobalTauri` in `src-tauri/tauri.conf.json` to `true`.
+14. Add `"center": true` and `visible": false` to the first window config in `app.windows` in `src-tauri/tauri.conf.json`.

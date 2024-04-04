@@ -6,6 +6,11 @@ struct Store {
 }
 
 #[tauri::command(rename_all = "snake_case")]
+fn show_window(window: tauri::Window) {
+    window.show().unwrap();
+}
+
+#[tauri::command(rename_all = "snake_case")]
 fn greet(name: &str) -> String {
     format!("Hello {name}!")
 }
@@ -36,6 +41,7 @@ pub fn run() {
     tauri::Builder::default()
         .manage(Store::default())
         .invoke_handler(tauri::generate_handler![
+            show_window,
             greet,
             send_ipc_channel,
             greet_through_channel
