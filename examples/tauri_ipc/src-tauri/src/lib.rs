@@ -50,9 +50,22 @@ pub fn run() {
         .setup(|app| {
             let greet_tom_menu_item =
                 tauri::menu::MenuItem::new(app, "Greet Tom", true, None::<&str>)?;
+
             let quit_menu_item = tauri::menu::MenuItem::new(app, "Quit", true, None::<&str>)?;
-            let menu =
-                tauri::menu::Menu::with_items(app, &[&greet_tom_menu_item, &quit_menu_item])?;
+
+            // Note: It's not possible to add a `MenuItem` directly to MacOS root menu (https://github.com/tauri-apps/tauri/issues/7981)
+            // and you have to double-click `MenuItem`s in the root. So we always need to use `Submenu`s.
+            // Also the first submenu is opened when the window title is clicked on MacOS so the first submenu title/text is basically ignored.
+            let menu = tauri::menu::Menu::with_items(
+                app,
+                &[&tauri::menu::Submenu::with_items(
+                    app,
+                    "Tauri IPC",
+                    true,
+                    &[&greet_tom_menu_item, &quit_menu_item],
+                )?],
+            )?;
+
             app.on_menu_event(move |app_handle, tauri::menu::MenuEvent { id: menu_id }| {
                 match menu_id {
                     id if id == greet_tom_menu_item.id() => {

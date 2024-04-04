@@ -27,7 +27,7 @@ More info:
 
 ### Start:
 
-1. `cargo install tauri-cli@=2.0.0-beta.11`
+1. `cargo install tauri-cli@=2.0.0-beta.12`
 2. `cargo tauri dev`
 
 Troubleshooting:
@@ -69,7 +69,7 @@ Properties of an `msi` bundle on Windows:
 
 ### Integration steps for a standard LocalSearch example to make this example:
 
-1. Install Tauri CLI: `cargo install tauri-cli@=2.0.0-beta.11`
+1. Install Tauri CLI: `cargo install tauri-cli@=2.0.0-beta.12`
 2. `cargo tauri init`
 3. App name: `LocalSearch`
 4. Window title: `Local Search`

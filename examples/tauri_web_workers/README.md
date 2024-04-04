@@ -5,7 +5,7 @@
 
 ### Start:
 
-1. `cargo install tauri-cli@=2.0.0-beta.11`
+1. `cargo install tauri-cli@=2.0.0-beta.12`
 2. `cargo tauri dev`
 
 Troubleshooting:
@@ -31,7 +31,7 @@ Troubleshooting:
 
 ### Integration steps for a standard WebWorkers example to make this example:
 
-1. Install Tauri CLI: `cargo install tauri-cli@=2.0.0-beta.11`
+1. Install Tauri CLI: `cargo install tauri-cli@=2.0.0-beta.12`
 2. `cargo tauri init`
 3. App name: `WebWorkers`
 4. Window title: `WebWorkers`

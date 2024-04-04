@@ -21,7 +21,7 @@ fn main() {
 
 fn root() -> impl Element {
     El::new()
-        .s(Height::screen())
+        .s(Height::fill())
         .s(Background::new().color(color!("DarkSlateBlue")))
         .s(Font::new().color(color!("Lavender")))
         .child(
