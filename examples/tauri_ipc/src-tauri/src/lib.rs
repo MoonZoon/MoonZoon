@@ -1,4 +1,5 @@
 use std::sync::Mutex;
+use tauri::Manager;
 
 #[derive(Default)]
 struct Store {
@@ -12,7 +13,7 @@ fn show_window(window: tauri::Window) {
 
 #[tauri::command(rename_all = "snake_case")]
 fn greet(name: &str) -> String {
-    format!("Hello {name}!")
+    format!("Hello {name}! [from command]")
 }
 
 #[tauri::command(rename_all = "snake_case")]
@@ -28,7 +29,7 @@ fn greet_through_channel(name: &str, store: tauri::State<Store>) {
         .unwrap()
         .as_ref()
         .unwrap()
-        .send(format!("Hello through channel {name}!"))
+        .send(format!("Hello {name}! [from channel]"))
         .unwrap()
 }
 
@@ -46,6 +47,24 @@ pub fn run() {
             send_ipc_channel,
             greet_through_channel
         ])
+        .setup(|app| {
+            let greet_tom_menu_item =
+                tauri::menu::MenuItem::new(app, "Greet Tom", true, None::<&str>)?;
+            let quit_menu_item = tauri::menu::MenuItem::new(app, "Quit", true, None::<&str>)?;
+            let menu =
+                tauri::menu::Menu::with_items(app, &[&greet_tom_menu_item, &quit_menu_item])?;
+            app.on_menu_event(move |app_handle, tauri::menu::MenuEvent { id: menu_id }| {
+                match menu_id {
+                    id if id == greet_tom_menu_item.id() => {
+                        app_handle.emit("greet", "Tom").unwrap()
+                    }
+                    id if id == quit_menu_item.id() => app_handle.exit(0),
+                    _ => unreachable!("unhandled menu id"),
+                }
+            });
+            app.set_menu(menu)?;
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

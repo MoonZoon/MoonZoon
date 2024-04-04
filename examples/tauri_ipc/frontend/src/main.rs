@@ -1,17 +1,21 @@
 use zoon::*;
 
-static MESSAGE: Lazy<Mutable<Option<String>>> = lazy::default();
+static CHANNEL_MESSAGE: Lazy<Mutable<Option<String>>> = lazy::default();
+static GREET_EVENT_NAME: Lazy<Mutable<Option<String>>> = lazy::default();
 
 fn main() {
     start_app("app", root);
     Task::start(async {
         // https://github.com/tauri-apps/tauri/issues/5170
         Timer::sleep(100).await;
-        command::show_window().await;
+        tauri_bridge::show_window().await;
     });
     Task::start(async {
-        command::send_ipc_channel(|message| MESSAGE.set(Some(message))).await;
-        command::greet_through_channel("Jane").await;
+        tauri_bridge::listen_greet_events(|name| GREET_EVENT_NAME.set(Some(name))).await;
+    });
+    Task::start(async {
+        tauri_bridge::send_ipc_channel(|message| CHANNEL_MESSAGE.set(Some(message))).await;
+        tauri_bridge::greet_through_channel("Jane").await;
     });
 }
 
@@ -23,41 +27,54 @@ fn root() -> impl Element {
         .child(
             Column::new()
                 .s(Align::center())
-                .item(El::new().child_signal(signal::from_future(Box::pin(command::greet("John")))))
-                .item(El::new().child_signal(MESSAGE.signal_cloned()))
+                .item(
+                    El::new()
+                        .child_signal(signal::from_future(Box::pin(tauri_bridge::greet("John")))),
+                )
+                .item(El::new().child_signal(CHANNEL_MESSAGE.signal_cloned()))
+                .item(El::new().child_signal(GREET_EVENT_NAME.signal_ref(|name| {
+                    name.as_ref()
+                        .map(|name| format!("Hello {name}! [from event]"))
+                }))),
         )
 }
 
-mod command {
+mod tauri_bridge {
     use super::*;
 
     pub async fn show_window() {
-        js_bridge::show_window().await
+        tauri_glue::show_window().await
     }
 
     pub async fn greet(name: &str) -> String {
-        js_bridge::greet(name).await.as_string().unwrap_throw()
+        tauri_glue::greet(name).await.as_string().unwrap_throw()
     }
 
     pub async fn send_ipc_channel(on_message: impl FnMut(String) + 'static) {
-        js_bridge::send_ipc_channel(Closure::new(on_message).into_js_value()).await
+        tauri_glue::send_ipc_channel(Closure::new(on_message).into_js_value()).await
     }
 
     pub async fn greet_through_channel(name: &str) {
-        js_bridge::greet_through_channel(name).await
+        tauri_glue::greet_through_channel(name).await
     }
 
-    mod js_bridge {
+    pub async fn listen_greet_events(on_event: impl FnMut(String) + 'static) {
+        tauri_glue::listen_greet_events(Closure::new(on_event).into_js_value()).await
+    }
+
+    mod tauri_glue {
         use super::*;
-        #[wasm_bindgen(module = "/js/commands.js")]
+        #[wasm_bindgen(module = "/js/tauri_glue.js")]
         extern "C" {
             pub async fn show_window();
-            
+
             pub async fn greet(name: &str) -> JsValue;
 
             pub async fn send_ipc_channel(on_message: JsValue);
 
             pub async fn greet_through_channel(name: &str);
+
+            pub async fn listen_greet_events(on_event: JsValue);
         }
     }
 }

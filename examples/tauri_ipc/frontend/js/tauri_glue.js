@@ -1,4 +1,5 @@
 const invoke = window.__TAURI__.core.invoke;
+const listen = window.__TAURI__.event.listen;
 
 export async function show_window() {
     return await invoke("show_window");
@@ -16,4 +17,8 @@ export async function send_ipc_channel(on_message) {
 
 export async function greet_through_channel(name) {
     return await invoke("greet_through_channel", { name: name });
+}
+
+export async function listen_greet_events(on_event) {
+    return await listen("greet", (event) => on_event(event.payload));
 }
