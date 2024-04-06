@@ -19,6 +19,12 @@ Troubleshooting:
     ```
     Fix it by installing VSCode directly from official `.deb` bundle or try to unset multiple env variables - more info in https://stackoverflow.com/questions/75921414/java-symbol-lookup-error-snap-core20-current-lib-x86-64-linux-gnu-libpthread
 
+- There is a noticeable lag when clicking global menu items on macOS.
+  - It seems to be a macOS feature, not a bug. The same lag happens even when e.g. closing a native macOS System Settings though its menu (File -> Close).
+  - https://github.com/electron/electron/issues/6498
+  - https://apple.stackexchange.com/questions/199890/why-do-menu-items-blink-twice-when-selected
+  - https://apple.stackexchange.com/questions/293167/how-can-i-disable-menu-blinking-after-selecting-a-menu-item-in-macos
+
 ---
 
 ### Production build:
