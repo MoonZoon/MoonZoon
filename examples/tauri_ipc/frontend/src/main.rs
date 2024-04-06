@@ -23,7 +23,7 @@ fn main() {
 fn root() -> impl Element {
     El::new()
         .s(Height::fill())
-        .s(Background::new().color(color!("DarkSlateBlue")))
+        .s(Background::new().color(color!("DarkSlateBlue", 0.7)))
         .s(Font::new().color(color!("Lavender")))
         .child(
             Column::new()

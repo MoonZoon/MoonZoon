@@ -42,13 +42,21 @@ Troubleshooting:
 9. Add `"src-tauri"` to `Cargo.toml` workspace members.
 10. Change `identifier` in `src-tauri/tauri.conf.json` to `"com.example.moonzoon.tauri-ipc"`
 11. Set env var `WEBKIT_DISABLE_DMABUF_RENDERER=1` in `src-tauri/lib.rs` because WebKitGTK (2.42) is not compatible with NVIDIA drivers on Linux.
-12. Enable `tauri` crate feature `linux-ipc-protocol` in `src-tauri/Cargo.toml` to make IPC faster on Linux.
+12. Enable `tauri` crate feature `linux-ipc-protocol` and `macos-private-api` in `src-tauri/Cargo.toml`.
 13. Change `app.withGlobalTauri` in `src-tauri/tauri.conf.json` to `true`.
+13. Add "macOSPrivateApi": true` in `app` in `src-tauri/tauri.conf.json`.
 14. Add `"center": true` and `visible": false` to the first window config in `app.windows` in `src-tauri/tauri.conf.json`.
-15. Add `"titleBarStyle": Transparent` to the first window config in `app.windows` in `src-tauri/tauri.conf.json`.
+15. Add `"titleBarStyle": "Transparent"` to the first window config in `app.windows` in `src-tauri/tauri.conf.json`.
+16. Add `"transparent": true` to the first window config in `app.windows` in `src-tauri/tauri.conf.json`.
+
+### Transparent window
+
+- https://beta.tauri.app/references/v2/config/#transparent
+- From the doc above: _"Note that on macOS this requires the macos-private-api feature flag, enabled under tauri &gt; macOSPrivateApi. WARNING: Using private APIs on macOS prevents your application from being accepted to the App Store."_
 
 ### Title bar styling and customizations
 
 - https://www.youtube.com/watch?v=zsaWFf2LEv4
 - https://beta.tauri.app/references/v2/config/#titlebarstyle
 - https://docs.rs/tauri-utils/2.0.0-beta.11/tauri_utils/enum.TitleBarStyle.html
+- _Note_: To make the title bar transparent, you have to set `"macOSPrivateApi": true` like in the case of transparent window described above.
