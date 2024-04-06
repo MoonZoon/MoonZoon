@@ -13,6 +13,7 @@
     "windows": [
       {
         "title": "Tauri IPC",
+        "titleBarStyle": "Transparent",
         "width": 800,
         "height": 600,
         "resizable": true,

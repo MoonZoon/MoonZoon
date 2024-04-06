@@ -1,7 +1,7 @@
 use zoon::*;
 
 static CHANNEL_MESSAGE: Lazy<Mutable<Option<String>>> = lazy::default();
-static GREET_EVENT_NAME: Lazy<Mutable<Option<String>>> = lazy::default();
+static GREET_EVENT_NAMES: Lazy<MutableVec<String>> = lazy::default();
 
 fn main() {
     start_app("app", root);
@@ -11,7 +11,8 @@ fn main() {
         tauri_bridge::show_window().await;
     });
     Task::start(async {
-        tauri_bridge::listen_greet_events(|name| GREET_EVENT_NAME.set(Some(name))).await;
+        tauri_bridge::listen_greet_events(|name| GREET_EVENT_NAMES.lock_mut().push_cloned(name))
+            .await;
     });
     Task::start(async {
         tauri_bridge::send_ipc_channel(|message| CHANNEL_MESSAGE.set(Some(message))).await;
@@ -32,10 +33,11 @@ fn root() -> impl Element {
                         .child_signal(signal::from_future(Box::pin(tauri_bridge::greet("John")))),
                 )
                 .item(El::new().child_signal(CHANNEL_MESSAGE.signal_cloned()))
-                .item(El::new().child_signal(GREET_EVENT_NAME.signal_ref(|name| {
-                    name.as_ref()
-                        .map(|name| format!("Hello {name}! [from event]"))
-                }))),
+                .items_signal_vec(
+                    GREET_EVENT_NAMES
+                        .signal_vec_cloned()
+                        .map(|name| El::new().child(format!("Hello {name}! [from event]"))),
+                ),
         )
 }
 
