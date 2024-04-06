@@ -45,3 +45,10 @@ Troubleshooting:
 12. Enable `tauri` crate feature `linux-ipc-protocol` in `src-tauri/Cargo.toml` to make IPC faster on Linux.
 13. Change `app.withGlobalTauri` in `src-tauri/tauri.conf.json` to `true`.
 14. Add `"center": true` and `visible": false` to the first window config in `app.windows` in `src-tauri/tauri.conf.json`.
+15. Add `"titleBarStyle": Transparent` to the first window config in `app.windows` in `src-tauri/tauri.conf.json`.
+
+### Title bar styling and customizations
+
+- https://www.youtube.com/watch?v=zsaWFf2LEv4
+- https://beta.tauri.app/references/v2/config/#titlebarstyle
+- https://docs.rs/tauri-utils/2.0.0-beta.11/tauri_utils/enum.TitleBarStyle.html
