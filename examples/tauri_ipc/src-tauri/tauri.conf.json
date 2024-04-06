@@ -9,6 +9,7 @@
     "beforeBuildCommand": "makers mzoon build -r -f"
   },
   "app": {
+    "macOSPrivateApi": true,
     "withGlobalTauri": true,
     "windows": [
       {
@@ -19,7 +20,8 @@
         "resizable": true,
         "fullscreen": false,
         "center": true,
-        "visible": false
+        "visible": false,
+        "transparent": true
       }
     ],
     "security": {
