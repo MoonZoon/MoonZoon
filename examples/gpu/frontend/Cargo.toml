@@ -15,3 +15,5 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 zoon.workspace = true
+three-d = "0.17.0"
+three-d-asset = { version = "0.7.0", features = ["obj", "http"] }

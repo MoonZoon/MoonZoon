@@ -1,5 +1,5 @@
 [package]
-name = "frontend"
+name = "backend"
 version.workspace = true
 edition.workspace = true
 repository.workspace = true
@@ -10,8 +10,5 @@ license.workspace = true
 readme.workspace = true
 publish.workspace = true
 
-[dev-dependencies]
-wasm-bindgen-test = "0.3.19"
-
 [dependencies]
-zoon.workspace = true
+moon.workspace = true

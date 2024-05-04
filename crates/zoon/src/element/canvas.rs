@@ -12,7 +12,7 @@ pub struct Canvas<WidthFlag, HeightFlag, RE: RawEl> {
     flags: PhantomData<(WidthFlag, HeightFlag)>,
 }
 
-impl<HeightFlag, RE: RawEl> Element for Canvas<WidthFlagSet, HeightFlag, RE> {}
+impl<WidthFlag, HeightFlag, RE: RawEl> Element for Canvas<WidthFlag, HeightFlag, RE> {}
 
 impl Canvas<WidthFlagNotSet, HeightFlagNotSet, RawHtmlEl<web_sys::HtmlCanvasElement>> {
     #[track_caller]
