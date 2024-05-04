@@ -58,6 +58,7 @@ version = "0.3.68"
 features = [
   "Blob",
   "BlobPropertyBag",
+  "CanvasRenderingContext2d",
   "css",
   "CssKeyframesRule",
   "CssRule",
