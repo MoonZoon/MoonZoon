@@ -23,20 +23,20 @@ pub trait SignalExtBool {
     where
         TS: Signal<Item = I>,
         FS: Signal<Item = I>,
-        TM: FnMut() -> TS + 'static,
-        FM: FnMut() -> FS + 'static,
+        TM: FnMut() -> TS + 'static + Send,
+        FM: FnMut() -> FS + 'static + Send,
         Self: Sized + Signal<Item = bool>;
 
     fn map_true_signal<I, MS, F>(self, f: F) -> MapTrueSignal<Self, I, MS>
     where
         MS: Signal<Item = I>,
-        F: FnMut() -> MS + 'static,
+        F: FnMut() -> MS + 'static + Send,
         Self: Sized + Signal<Item = bool>;
 
     fn map_false_signal<I, MS, F>(self, f: F) -> MapFalseSignal<Self, I, MS>
     where
         MS: Signal<Item = I>,
-        F: FnMut() -> MS + 'static,
+        F: FnMut() -> MS + 'static + Send,
         Self: Sized + Signal<Item = bool>;
 }
 
@@ -78,15 +78,15 @@ impl<S: Signal<Item = bool>> SignalExtBool for S {
     where
         TS: Signal<Item = I>,
         FS: Signal<Item = I>,
-        TM: FnMut() -> TS + 'static,
-        FM: FnMut() -> FS + 'static,
+        TM: FnMut() -> TS + 'static + Send,
+        FM: FnMut() -> FS + 'static + Send,
         Self: Sized + Signal<Item = bool>,
     {
         MapBoolSignal {
             inner: self
                 .map_bool(
-                    Box::new(move || SignalEither::Left(t())) as Box<dyn FnMut() -> _>,
-                    Box::new(move || SignalEither::Right(f())) as Box<dyn FnMut() -> _>,
+                    Box::new(move || SignalEither::Left(t())) as Box<dyn FnMut() -> _ + Send>,
+                    Box::new(move || SignalEither::Right(f())) as Box<dyn FnMut() -> _ + Send>,
                 )
                 .flatten(),
         }
@@ -96,7 +96,7 @@ impl<S: Signal<Item = bool>> SignalExtBool for S {
     fn map_true_signal<I, MS, F>(self, mut f: F) -> MapTrueSignal<Self, I, MS>
     where
         MS: Signal<Item = I>,
-        F: FnMut() -> MS + 'static,
+        F: FnMut() -> MS + 'static + Send,
         Self: Sized + Signal<Item = bool>,
     {
         MapTrueSignal {
@@ -108,7 +108,7 @@ impl<S: Signal<Item = bool>> SignalExtBool for S {
     fn map_false_signal<I, MS, F>(self, mut f: F) -> MapFalseSignal<Self, I, MS>
     where
         MS: Signal<Item = I>,
-        F: FnMut() -> MS + 'static,
+        F: FnMut() -> MS + 'static + Send,
         Self: Sized + Signal<Item = bool>,
     {
         MapFalseSignal {
@@ -208,8 +208,8 @@ where
     inner: signal::Flatten<
         MapBool<
             S,
-            Box<dyn FnMut() -> SignalEither<TS, FS>>,
-            Box<dyn FnMut() -> SignalEither<TS, FS>>,
+            Box<dyn FnMut() -> SignalEither<TS, FS> + Send>,
+            Box<dyn FnMut() -> SignalEither<TS, FS> + Send>,
         >,
     >,
 }
