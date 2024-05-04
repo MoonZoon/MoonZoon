@@ -9,13 +9,13 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
 - [Rust](https://www.rust-lang.org/)
   ```bash
   rustup update
-  rustc -V # rustc 1.76.0 (07dca489a 2024-02-04)
+  rustc -V # rustc 1.78.0 (9b00956e5 2024-04-29)
   ```
 
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
   ```bash
   cargo install cargo-make --no-default-features
-  makers -V # cargo-make 0.37.10
+  makers -V # cargo-make 0.37.12
   ```
   - _Note_: `cargo-make` is needed only for MoonZoon development and running its examples, you don't need it for your apps.
 
@@ -107,8 +107,6 @@ makers mzoon start -o # add -r for the release mode
 makers in_examples clean
 makers in_examples mzoon build
 ```
-
-_Note:_ You can use [sccache](https://github.com/mozilla/sccache) to reduce the total `target` directory size.
 
 ## 5. Have fun!
 

@@ -92,6 +92,8 @@ pub trait ShareableSSEMethods {
         data: &str,
     ) -> Option<Result<(), SendError<Bytes>>>;
 
+    // @TODO why is it a dead code since Rust 1.78.0?
+    #[allow(dead_code)]
     fn remove_connection(&self, session_id: &SessionId);
 }
 
