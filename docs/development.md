@@ -41,7 +41,6 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/counters/Cargo.toml",
         // "examples/custom_config/Cargo.toml",
         // "examples/custom_http_client/Cargo.toml",
-        "examples/gpu/Cargo.toml",
         // "examples/image/Cargo.toml",
         // "examples/js_text_editor/Cargo.toml",
         // "examples/js_framework_benchmark/Cargo.toml",
@@ -64,6 +63,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/tauri_todomvc/Cargo.toml",
         // "examples/tauri_web_workers/Cargo.toml",
         // "examples/text_area/Cargo.toml",
+        // "examples/three_d/Cargo.toml",
         // "examples/timer/Cargo.toml",
         "examples/todomvc/Cargo.toml",
         // "examples/todomvc_with_app_events/Cargo.toml",
@@ -73,6 +73,7 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
         // "examples/wasm_components/Cargo.toml",
         // "examples/web_components/Cargo.toml",
         // "examples/web_workers/Cargo.toml",
+        "examples/wgpu/Cargo.toml",
     ],
     "rust-analyzer.diagnostics.disabled": [
         "missing-unsafe",
