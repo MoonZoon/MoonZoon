@@ -1,7 +1,7 @@
 use moon::*;
 
 async fn frontend() -> Frontend {
-    Frontend::new().title("GPU example")
+    Frontend::new().title("three_d example")
 }
 
 async fn up_msg_handler(_: UpMsgRequest<()>) {}

@@ -1,2 +1,2 @@
-# GPU
+# wgpu
 > MoonZoon example
