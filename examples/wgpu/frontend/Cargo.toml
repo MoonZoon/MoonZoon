@@ -15,9 +15,9 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 zoon.workspace = true
-lyon = { version = "1.0.1", features = ["extra"] }
-usvg = { version = "0.41", features = [] }
-wgpu = "0.20.0"
-winit = "0.30.0"
-tiny-skia-path = "0.11"
-bytemuck = "1.2.0"
+# @TODO replace `webgl` with `webgpu` once all relevant browsers and WebViews support WebGPU 
+# NOTE: Compressed Wasm module with`webgpu` has 125KB, with `webgl` 534KB, see
+# https://github.com/gfx-rs/wgpu/issues/1464
+wgpu = { version = "0.20.0", features = ["wgsl", "webgl"], default-features = false }
+# @TODO switch to `0.30.0` or newer once the integrated examples are updated in their original repos
+winit = "0.29.0"
