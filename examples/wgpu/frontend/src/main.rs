@@ -1,9 +1,8 @@
 use zoon::*;
 
-mod pong;
+mod lyon_svg;
 
-const CANVAS_WIDTH: u32 = 500;
-const CANVAS_HEIGHT: u32 = 500;
+const WINDOW_SIZE: u32 = 800;
 
 pub fn main() {
     start_app("app", root);
@@ -13,7 +12,7 @@ fn root() -> impl Element {
     Column::new()
         .s(Height::fill())
         .s(Background::new().color(color!("Black")))
-        .item(panel_with_canvas(pong::run))
+        .item(panel_with_canvas(lyon_svg::run))
 }
 
 fn panel_with_canvas(
@@ -25,8 +24,8 @@ fn panel_with_canvas(
         .s(Clip::both())
         .child(
             Canvas::new()
-                .width(CANVAS_WIDTH)
-                .height(CANVAS_HEIGHT)
+                .width(WINDOW_SIZE)
+                .height(WINDOW_SIZE)
                 .after_insert(example_runner),
         )
 }
