@@ -17,6 +17,12 @@ _WARNING:_ MoonZoon is in the phase of early development and a CI pipeline / lin
   cargo install cargo-make --no-default-features
   makers -V # cargo-make 0.37.12
   ```
+  
+- [Rust Nightly Toolchain]
+  ```bash
+  rustup install nightly-x86_64-unknown-linux-gnu
+  rustup component add rust-src --toolchain nightly-x86_64-unknown-linux-gnu
+  ```
   - _Note_: `cargo-make` is needed only for MoonZoon development and running its examples, you don't need it for your apps.
 
 ## 2. VS Code settings
