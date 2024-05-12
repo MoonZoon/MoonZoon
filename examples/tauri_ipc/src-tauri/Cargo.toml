@@ -1,5 +1,5 @@
 [package]
-name = "app"
+name = "tauri_ipc"
 version = "0.1.0"
 description = "Tauri Web FS"
 authors = ["Martin Kavík <martin@kavik.cz>"]
