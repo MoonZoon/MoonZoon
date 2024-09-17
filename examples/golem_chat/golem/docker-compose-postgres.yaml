@@ -1,0 +1,191 @@
+version: "3.8"
+
+services:
+  router:
+    image: golemservices/golem-router:latest
+    pull_policy: always
+    ports:
+      - "${GOLEM_ROUTER_PORT}:80"
+    environment:
+      - GOLEM_COMPONENT_MAX_SIZE_ALLOWED=${GOLEM_ROUTER_COMPONENT_MAX_SIZE_ALLOWED}
+      - GOLEM_WORKER_SERVICE_HOST=golem-worker-service
+      - GOLEM_WORKER_SERVICE_PORT=${WORKER_SERVICE_HTTP_PORT}
+      - GOLEM_COMPONENT_SERVICE_HOST=golem-component-service
+      - GOLEM_COMPONENT_SERVICE_PORT=${COMPONENT_SERVICE_HTTP_PORT}
+    depends_on:
+      - golem-worker-service
+      - golem-component-service
+      - golem-shard-manager
+      - golem-component-compilation-service
+
+  redis:
+    image: redis:latest
+    volumes:
+      - redis_data:/data
+    command: --port ${REDIS_PORT}
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: golem_db
+      POSTGRES_USER: golem_user
+      POSTGRES_PASSWORD: golem_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U golem_user -d golem_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  golem-shard-manager:
+    image: golemservices/golem-shard-manager:latest
+    pull_policy: always
+    environment:
+      - WASMTIME_BACKTRACE_DETAILS=1
+      - RUST_BACKTRACE=1
+      - RUST_LOG=info,h2=warn,hyper=warn,tower=warn
+      - GOLEM__REDIS__HOST=redis
+      - GOLEM__REDIS__PORT=${REDIS_PORT}
+      - GOLEM__HTTP_PORT=${SHARD_MANAGER_HTTP_PORT}
+      - GOLEM_SHARD_MANAGER_PORT=${SHARD_MANAGER_GRPC_PORT}
+    depends_on:
+      - redis
+
+  golem-component-service:
+    image: golemservices/golem-component-service:latest
+    pull_policy: always
+    environment:
+      - ENVIRONMENT=local
+      - WASMTIME_BACKTRACE_DETAILS=1
+      - RUST_BACKTRACE=1
+      - RUST_LOG=info,h2=warn,hyper=warn,tower=warn
+      - GOLEM__COMPONENT_STORE__TYPE="Local"
+      - GOLEM__COMPONENT_STORE__CONFIG__OBJECT_PREFIX=""
+      - GOLEM__COMPONENT_STORE__CONFIG__ROOT_PATH=/component_store
+      - GOLEM__COMPILATION__TYPE="Enabled"
+      - GOLEM__COMPILATION__CONFIG__HOST=golem-component-compilation-service
+      - GOLEM__COMPILATION__CONFIG__PORT=${COMPONENT_COMPILATION_SERVICE_GRPC_PORT}
+      - GOLEM__DB__TYPE=Postgres
+      - GOLEM__DB__CONFIG__DATABASE=golem_db
+      - GOLEM__DB__CONFIG__SCHEMA=golem_component
+      - GOLEM__DB__CONFIG__MAX_CONNECTIONS=10
+      - GOLEM__DB__CONFIG__HOST=postgres
+      - GOLEM__DB__CONFIG__PORT=${POSTGRES_PORT}
+      - GOLEM__DB__CONFIG__USERNAME=golem_user
+      - GOLEM__DB__CONFIG__PASSWORD=golem_password
+      - GOLEM__GRPC_PORT=${COMPONENT_SERVICE_GRPC_PORT}
+      - GOLEM__HTTP_PORT=${COMPONENT_SERVICE_HTTP_PORT}
+    volumes:
+      - component_store:/component_store
+    ports:
+      - "${COMPONENT_SERVICE_HTTP_PORT}:${COMPONENT_SERVICE_HTTP_PORT}"
+      - "${COMPONENT_SERVICE_GRPC_PORT}:${COMPONENT_SERVICE_GRPC_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  golem-worker-service:
+    image: golemservices/golem-worker-service:latest
+    pull_policy: always
+    environment:
+      - RUST_BACKTRACE=1
+      - RUST_LOG=info,h2=warn,hyper=warn,tower=warn
+      - GOLEM__DB__TYPE=Postgres
+      - GOLEM__DB__CONFIG__DATABASE=golem_db
+      - GOLEM__DB__CONFIG__SCHEMA=golem_worker
+      - GOLEM__DB__CONFIG__PORT=${POSTGRES_PORT}
+      - GOLEM__DB__CONFIG__MAX_CONNECTIONS=10
+      - GOLEM__DB__CONFIG__HOST=postgres
+      - GOLEM__DB__CONFIG__USERNAME=golem_user
+      - GOLEM__DB__CONFIG__PASSWORD=golem_password
+      - GOLEM__ENVIRONMENT=local
+      - GOLEM__COMPONENT_SERVICE__HOST=golem-component-service
+      - GOLEM__COMPONENT_SERVICE__PORT=${COMPONENT_SERVICE_GRPC_PORT}
+      - GOLEM__COMPONENT_SERVICE__ACCESS_TOKEN="5C832D93-FF85-4A8F-9803-513950FDFDB1"
+      - GOLEM__ROUTING_TABLE__HOST="golem-shard-manager"
+      - GOLEM__ROUTING_TABLE__PORT=${SHARD_MANAGER_GRPC_PORT}
+      - GOLEM__CUSTOM_REQUEST_PORT=${WORKER_SERVICE_CUSTOM_REQUEST_PORT}
+      - GOLEM__PORT=${WORKER_SERVICE_HTTP_PORT}
+      - GOLEM__WORKER_GRPC_PORT=${WORKER_SERVICE_GRPC_PORT}
+    ports:
+      - "${WORKER_SERVICE_HTTP_PORT}:${WORKER_SERVICE_HTTP_PORT}"
+      - "${WORKER_SERVICE_CUSTOM_REQUEST_PORT}:${WORKER_SERVICE_CUSTOM_REQUEST_PORT}"
+      - "${WORKER_SERVICE_GRPC_PORT}:${WORKER_SERVICE_GRPC_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  golem-component-compilation-service:
+    image: golemservices/golem-component-compilation-service:latest
+    pull_policy: always
+    environment:
+      - RUST_BACKTRACE=1
+      - RUST_LOG=info,h2=warn,hyper=warn,tower=warn
+      - GOLEM__COMPONENT_SERVICE__HOST=golem-component-service
+      - GOLEM__COMPONENT_SERVICE__PORT=${COMPONENT_SERVICE_GRPC_PORT}
+      - GOLEM__COMPONENT_SERVICE__ACCESS_TOKEN="5C832D93-FF85-4A8F-9803-513950FDFDB1"
+      - GOLEM__COMPILED_COMPONENT_SERVICE__TYPE="Enabled"
+      - GOLEM__BLOB_STORAGE__TYPE="LocalFileSystem"
+      - GOLEM__BLOB_STORAGE__CONFIG__ROOT="/worker_executor_store"
+      - GOLEM__HTTP_PORT=${COMPONENT_COMPILATION_SERVICE_HTTP_PORT}
+      - GOLEM__GRPC_PORT=${COMPONENT_COMPILATION_SERVICE_GRPC_PORT}
+    volumes:
+      - worker_executor_store:/worker_executor_store
+    ports:
+      - "${COMPONENT_COMPILATION_SERVICE_HTTP_PORT}:${COMPONENT_COMPILATION_SERVICE_HTTP_PORT}"
+      - "${COMPONENT_COMPILATION_SERVICE_GRPC_PORT}:${COMPONENT_COMPILATION_SERVICE_GRPC_PORT}"
+    depends_on:
+      - golem-component-service
+
+  golem-worker-executor:
+    image: golemservices/golem-worker-executor:latest
+    pull_policy: always
+    environment:
+      - ENVIRONMENT=local
+      - WASMTIME_BACKTRACE_DETAILS=1
+      - RUST_BACKTRACE=1
+      - RUST_LOG=info
+      - GOLEM__KEY_VALUE_STORAGE__TYPE="Redis"
+      - GOLEM__KEY_VALUE_STORAGE__CONFIG__PORT=${REDIS_PORT}
+      - GOLEM__KEY_VALUE_STORAGE__CONFIG__HOST=redis
+      - GOLEM__INDEXED_STORAGE__TYPE="KVStoreRedis"
+      - GOLEM__BLOB_STORAGE__TYPE="LocalFileSystem"
+      - GOLEM__BLOB_STORAGE__CONFIG__ROOT="/worker_executor_store"
+      - GOLEM__COMPONENT_SERVICE__CONFIG__HOST=golem-component-service
+      - GOLEM__COMPONENT_SERVICE__CONFIG__PORT=${COMPONENT_SERVICE_GRPC_PORT}
+      - GOLEM__COMPONENT_SERVICE__CONFIG__ACCESS_TOKEN="2A354594-7A63-4091-A46B-CC58D379F677"
+      - GOLEM__PORT=${WORKER_EXECUTOR_GRPC_PORT}
+      - GOLEM__HTTP_PORT=${WORKER_EXECUTOR_HTTP_PORT}
+      - GOLEM__SHARD_MANAGER_SERVICE__CONFIG__HOST=golem-shard-manager
+      - GOLEM__SHARD_MANAGER_SERVICE__CONFIG__PORT=${SHARD_MANAGER_GRPC_PORT}
+      - GOLEM__SHARD_MANAGER_SERVICE__CONFIG__RETRIES__MAX_ATTEMPTS=5
+      - GOLEM__SHARD_MANAGER_SERVICE__CONFIG__RETRIES__MIN_DELAY="100ms"
+      - GOLEM__SHARD_MANAGER_SERVICE__CONFIG__RETRIES__MAX_DELAY="2s"
+      - GOLEM__SHARD_MANAGER_SERVICE__CONFIG__RETRIES__MULTIPLIER=2
+      - GOLEM__PUBLIC_WORKER_API__HOST=golem-worker-service
+      - GOLEM__PUBLIC_WORKER_API__PORT=${WORKER_SERVICE_GRPC_PORT}
+      - GOLEM__PUBLIC_WORKER_API__ACCESS_TOKEN="2A354594-7A63-4091-A46B-CC58D379F677"
+      - GOLEM__COMPILED_COMPONENT_SERVICE__TYPE="Enabled"
+
+      - GOLEM__SHARD_MANAGER_SERVICE__TYPE="Grpc"
+    volumes:
+      - worker_executor_store:/worker_executor_store
+    ports:
+      - "${WORKER_EXECUTOR_HTTP_PORT}:${WORKER_EXECUTOR_HTTP_PORT}"
+    depends_on:
+      - redis
+
+volumes:
+  redis_data:
+    driver: local
+  component_store:
+    driver: local
+  postgres_data:
+    driver: local
+  worker_executor_store:
+    driver: local
