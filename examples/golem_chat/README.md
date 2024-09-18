@@ -29,19 +29,22 @@
 5. Add `golem/message_store` to root Cargo.toml `workspace.members`
 6. `cargo component build --release`
 7. `golem-cli component add -c message_store ../../../../target/wasm32-wasi/release/message_store.wasm`
-8. [Redeploy workers](https://learn.golem.cloud/docs/cli/components#redeploying-workers) if needed - `golem-cli component redeploy -c message_store`
 
-### How to create Worker
+### How to create Worker and How to invoke default Counter worker from CLI
 
 - https://learn.golem.cloud/docs/quickstart
 
-1. 
+1. `golem-cli worker add -c message_store -w message_store_1`
+2. `golem-cli worker invoke-and-await -c message_store -w message_store_1 -f 'golem:component/api.{add}' -a '2'`
+3. `golem-cli worker invoke-and-await -c message_store -w message_store_1 -f 'golem:component/api.{get}'`
 
+### Component update and Worker redeploy (destructive)
 
-// @TODO remove
-New component created with URN urn:component:023b0392-9848-42eb-99c7-c4423e6bec36, version 0, and size of 14585 bytes.
-Component name: message_store.
-Exports:
-        golem:component/api.{add}(value: u64)
-        golem:component/api.{get}() -> u64
+- https://learn.golem.cloud/docs/cli/components#redeploying-workers
+
+1. `cargo component build --release && golem-cli component add -y -c message_store ../../../../target/wasm32-wasi/release/message_store.wasm && golem-cli component redeploy -y -c message_store`
+
+### Connect to a worker and live stream its standard output, error and log channels
+
+1. `golem-cli worker connect -c message_store -w message_store_1`
 
