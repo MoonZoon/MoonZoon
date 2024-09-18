@@ -12,4 +12,4 @@ publish.workspace = true
 
 [dependencies]
 moon.workspace = true
-reqwest = { version = "0.11.8", features = ["rustls-tls", "json"], default_features = false }
+reqwest = { version = "0.11.8", features = ["rustls-tls", "json"], default-features = false }

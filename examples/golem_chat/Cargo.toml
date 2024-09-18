@@ -3,6 +3,7 @@ members = [
     "frontend",
     "backend",
     "shared",
+    "golem/message_store",
 ]
 resolver = "2"
 
