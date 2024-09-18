@@ -24,6 +24,7 @@ impl Guest for Component {
     /// Updates the component's state by adding the given value to the total.
     fn add(value: u64) {
         STATE.with_borrow_mut(|state| state.total += value);
+        println!("{value} added!");
     }
 
     /// Returns the current total.
