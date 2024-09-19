@@ -822,7 +822,7 @@ fn save_todos() {
 
 ## SEO
 
-- When the request comes from a robot (e.g. _Googlebot_), then MoonZoon renders elements to a HTML string and sends it back to the robot. (It's basically a limited _Server-Side Rendering_ / [_Dynamic Rendering_](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering).) [Not implemented yet]
+- When the request comes from a robot (e.g. _Googlebot_), then MoonZoon renders elements to a HTML string and sends it back to the robot. (It's basically a limited _Server-Side Rendering_ / [_Dynamic Rendering_](https://developers.google.com/search/docs/advanced/javascript/dynamic-rendering).) [Not implemented yet, waiting for https://servo.org/]
 
 - You can configure the default page title, _The Open Graph Metadata_ and other things in the Moon app.
     ```rust
@@ -840,45 +840,6 @@ fn save_todos() {
 
 ---
 
-## FAQ
-1. _"Why another frontend framework? Are you mad??"_
-   - Because I have some problems with the existing ones. Some examples:
+## Desktop / Mobile apps
 
-        <details>
-        <summary>Problems with existing frontend frameworks</summary>
-
-        - I'm not brave enough to write apps and merge pull requests written in a dynamic language.
-        - I'm tired of configuring Webpack-like bundlers and fixing bugs caused by incorrectly typed JS libraries to Typescript.
-        - I want to share code between the client and server and I want good SEO and I don't want to switch context (language, ecosystem, best practices, etc.) while I'm writing both frontend and server.
-        - I don't want to read the entire stackoverflow.com and MDN docs to find out why my image has incorrect size on the website.
-        - I don't want to be afraid to refactor styles.
-        - I don't want to write backend code instead of the frontend code just because the frontend is too slow.
-        - Who have time and energy to properly learn, write and constantly think about accessibility and write unit tests that take into account weird things like `null` or `undefined`?
-        - I'm tired of searching for missing semicolons and brackets in HTML and CSS when it silently fails in the runtime.
-        - I don't want to choose a CSS framework, bundler, state manager, router, bundler plugins, CSS preprocessor plugins, test framework and debug their incompatibilities and learn new apis everytime I want to create a new web project.
-        - Why the layout is broken on iPhone, the app crashes on Safari, it's slow on Chrome and scrollbars don't work on Windows? 
-        - I just want to send a message to a server. I don't want to handle retrying, set headers, set timeout, correctly serialize everything, handle errors by their numbers, constantly think about cookies, domains, protocols, XSS, CSRF, etc.
-        - What about SEO?
-        - Should I use standard routing, hash routing, query parameters, custom base paths? Is everything correctly encoded and decoded?
-        - etc.
-        
-        </details>
-        
-1. _"How are we taking care of animations?"_ (by None on [chat](https://discord.gg/eGduTxK2Es))
-   - The API for advanced animations is in development. 
-   - Inspiration:
-      - [react-spring](https://www.react-spring.io/)
-      - [Framer Motion](https://www.framer.com/motion/)
-      - [React UseGesture](https://use-gesture.netlify.app/)
-      - [elm-animator](https://korban.net/posts/elm/2020-04-07-using-elm-animator-with-elm-ui/)
-      - "svelte has really good set of animation examples in their tutorial site. Incase it can help somehow [section 9 -11]" (by Ruman on [chat](https://discord.gg/eGduTxK2Es))
-      - [rust-dominator/examples/animation](https://github.com/Pauan/rust-dominator/blob/master/examples/animation/src/lib.rs)
-
-1. _"Hey Martin, what about [Seed](https://seed-rs.org/)?"_
-   - Zoon and Seed have very different features and goals. I no longer actively maintain Seed.
-
-1. _"How do I get a standalone html+wasm output? I previously used Yew + Trunk."_ (by `@Noir` on [chat](https://discord.gg/eGduTxK2Es))
-
-    ```sh
-    mzoon build --release --frontend-dist netlify
-    ```
+- See `/examples/tauri_*`
