@@ -5,9 +5,6 @@ use crate::moonlight::{DownMsgTransporterForDe, SessionId};
 use crate::{format, *};
 use std::{error::Error, fmt};
 
-#[cfg(feature = "moonlight/serde_with_serde")]
-use moonlight::serde::{self, Deserialize};
-
 // ------ SSE ------
 
 pub struct SSE {
