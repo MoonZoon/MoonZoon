@@ -1,6 +1,7 @@
 use indexmap::IndexMap;
 use std::fmt;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use zoon::futures_channel::oneshot;
 
 pub type Functions = IndexMap<FunctionName, Function>;
 pub type Arguments = IndexMap<ArgumentName, Argument>;
@@ -70,7 +71,20 @@ impl ArgumentIn {
 
 #[derive(Debug, Clone)]
 pub struct ArgumentOut {
-    kind: Option<VariableKind>,
+    kind_sender: Arc<Mutex<Option<oneshot::Sender<VariableKind>>>>,
+}
+
+impl ArgumentOut {
+    pub fn send_kind(&self, kind: VariableKind) {
+        self
+            .kind_sender
+            .lock()
+            .unwrap()
+            .take()
+            .unwrap()
+            .send(kind)
+            .unwrap()
+    }
 }
 
 impl Argument {
@@ -78,8 +92,15 @@ impl Argument {
         Self { name, in_out: ArgumentInOut::In(ArgumentIn { kind }) }
     }
 
-    pub fn new_out(name: ArgumentName) -> Self {
-        Self { name, in_out: ArgumentInOut::Out(ArgumentOut { kind: None }) }
+    pub fn new_out(name: ArgumentName) -> (Self, oneshot::Receiver<VariableKind>) {
+        let (kind_sender, kind_receiver) = oneshot::channel();
+        let this = Self { 
+            name, 
+            in_out: ArgumentInOut::Out(ArgumentOut { 
+                kind_sender: Arc::new(Mutex::new(Some(kind_sender))) 
+            })
+        };
+        (this, kind_receiver)
     }
 
     pub fn argument_in(&self) -> Option<&ArgumentIn> {
@@ -115,6 +136,10 @@ pub struct Variable {
 impl Variable {
     pub fn new(name: VariableName, kind: VariableKind) -> Self {
         Self { name, kind }
+    }
+
+    pub fn kind(&self) -> VariableKind {
+        self.kind.clone()
     }
 }
 

@@ -17,6 +17,12 @@ pub fn run(_program: &str) -> impl Element {
                 variable_name.clone(),
                 VariableKind::Number(VariableKindNumber::new(1.))
             );
+            function_arguments
+                .get(&ArgumentName::new("element"))
+                .unwrap()
+                .argument_out()
+                .unwrap()
+                .send_kind(variable.kind());
             variables.insert(variable_name, variable);
 
             let variable_name = VariableName::new("direction");
@@ -92,7 +98,7 @@ pub fn run(_program: &str) -> impl Element {
             let mut arguments = Arguments::new();
             
             let argument_name = ArgumentName::new("element");
-            let argument = Argument::new_out(
+            let (argument, element_kind_receiver) = Argument::new_out(
                 argument_name.clone(),
             );
             arguments.insert(argument_name, argument);
@@ -148,6 +154,12 @@ pub fn run(_program: &str) -> impl Element {
                 variable_name.clone(),
                 VariableKind::Number(VariableKindNumber::new(1.))
             );
+            function_arguments
+                .get(&ArgumentName::new("element"))
+                .unwrap()
+                .argument_out()
+                .unwrap()
+                .send_kind(variable.kind());
             variables.insert(variable_name, variable);
 
             let variable_name = VariableName::new("style");
@@ -199,7 +211,7 @@ pub fn run(_program: &str) -> impl Element {
             let mut arguments = Arguments::new();
             
             let argument_name = ArgumentName::new("element");
-            let argument = Argument::new_out(
+            let (argument, element_kind_receiver) = Argument::new_out(
                 argument_name.clone(),
             );
             arguments.insert(argument_name, argument);
