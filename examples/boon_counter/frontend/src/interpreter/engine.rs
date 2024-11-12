@@ -45,16 +45,55 @@ impl FunctionName {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Argument {
     name: ArgumentName,
+    in_out: ArgumentInOut
+}
+
+#[derive(Debug, Clone)]
+pub enum ArgumentInOut {
+    In(ArgumentIn),
+    Out(ArgumentOut),
+}
+
+#[derive(Debug, Clone)]
+pub struct ArgumentIn {
     kind: VariableKind,
-    out: bool,
+}
+
+impl ArgumentIn {
+    pub fn kind(&self) -> VariableKind {
+        self.kind.clone()
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct ArgumentOut {
+    kind: Option<VariableKind>,
 }
 
 impl Argument {
-    pub fn new(name: ArgumentName, kind: VariableKind, out: bool) -> Self {
-        Self { name, kind, out }
+    pub fn new_in(name: ArgumentName, kind: VariableKind) -> Self {
+        Self { name, in_out: ArgumentInOut::In(ArgumentIn { kind }) }
+    }
+
+    pub fn new_out(name: ArgumentName) -> Self {
+        Self { name, in_out: ArgumentInOut::Out(ArgumentOut { kind: None }) }
+    }
+
+    pub fn argument_in(&self) -> Option<&ArgumentIn> {
+        match &self.in_out {
+            ArgumentInOut::In(argument_in) => Some(argument_in),
+            _ => None
+        }
+    }
+
+    pub fn argument_out(&self) -> Option<&ArgumentOut> {
+        match &self.in_out {
+            ArgumentInOut::Out(argument_out) => Some(argument_out),
+            _ => None
+        }
     }
 }
 
@@ -67,7 +106,7 @@ impl ArgumentName {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Variable {
     name: VariableName,
     kind: VariableKind,
@@ -88,7 +127,7 @@ impl VariableName {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum VariableKind {
     Link(VariableKindLink),
     List(VariableKindList),
@@ -96,11 +135,12 @@ pub enum VariableKind {
     Number(VariableKindNumber),
     Object(VariableKindObject),
     Text(VariableKindText),
+    Tag(VariableKindTag),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VariableKindLink {
-    variable: Option<Box<Variable>>
+    variable: Option<Arc<Variable>>
 }
 
 impl VariableKindLink {
@@ -109,17 +149,17 @@ impl VariableKindLink {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VariableKindList {
 
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VariableKindMap {
 
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VariableKindNumber {
     number: f64
 }
@@ -130,7 +170,7 @@ impl VariableKindNumber {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VariableKindObject {
     variables: Variables
 }
@@ -141,9 +181,20 @@ impl VariableKindObject {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VariableKindText {
 
+}
+
+#[derive(Debug, Clone)]
+pub struct VariableKindTag {
+    tag: String
+}
+
+impl VariableKindTag {
+    pub fn new(tag: impl ToString) -> Self {
+        Self { tag: tag.to_string() }
+    }
 }
 
 

@@ -22,35 +22,60 @@ pub fn run(_program: &str) -> impl Element {
             let variable_name = VariableName::new("direction");
             let variable = Variable::new(
                 variable_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(2.))
+                function_arguments
+                    .get(&ArgumentName::new("direction"))
+                    .unwrap()
+                    .argument_in()
+                    .unwrap()
+                    .kind()
             );
             variables.insert(variable_name, variable);
 
             let variable_name = VariableName::new("gap");
             let variable = Variable::new(
                 variable_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(3.))
+                function_arguments
+                    .get(&ArgumentName::new("gap"))
+                    .unwrap()
+                    .argument_in()
+                    .unwrap()
+                    .kind()
             );
             variables.insert(variable_name, variable);
 
             let variable_name = VariableName::new("style");
             let variable = Variable::new(
                 variable_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(4.))
+                function_arguments
+                    .get(&ArgumentName::new("style"))
+                    .unwrap()
+                    .argument_in()
+                    .unwrap()
+                    .kind()
             );
             variables.insert(variable_name, variable);
 
             let variable_name = VariableName::new("items");
             let variable = Variable::new(
                 variable_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(5.))
+                function_arguments
+                    .get(&ArgumentName::new("items"))
+                    .unwrap()
+                    .argument_in()
+                    .unwrap()
+                    .kind()
             );
             variables.insert(variable_name, variable);
 
             let variable_name = VariableName::new("extra");
             let variable = Variable::new(
                 variable_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(6.))
+                function_arguments
+                    .get(&ArgumentName::new("extra"))
+                    .unwrap()
+                    .argument_in()
+                    .unwrap()
+                    .kind()
             );
             variables.insert(variable_name, variable);
 
@@ -64,55 +89,50 @@ pub fn run(_program: &str) -> impl Element {
     let function_closure = {
         let engine = engine.clone();
         move |function_arguments: Arguments| {
-            // VariableKind::Object(VariableKindObject::new({
-            //     let mut variables = Variables::new();
-                
-            //     let variable_name = VariableName::new("element");
-            //     let variable = Variable::new(
-            //         variable_name.clone(),
-            //         VariableKind::Number(VariableKindNumber::new(1.))
-            //     );
-            //     variables.insert(variable_name, variable);
+            let mut arguments = Arguments::new();
+            
+            let argument_name = ArgumentName::new("element");
+            let argument = Argument::new_out(
+                argument_name.clone(),
+            );
+            arguments.insert(argument_name, argument);
 
-            //     let variable_name = VariableName::new("direction");
-            //     let variable = Variable::new(
-            //         variable_name.clone(),
-            //         VariableKind::Number(VariableKindNumber::new(2.))
-            //     );
-            //     variables.insert(variable_name, variable);
+            let argument_name = ArgumentName::new("direction");
+            let argument = Argument::new_in(
+                argument_name.clone(),
+                VariableKind::Tag(VariableKindTag::new("Row")),
+            );
+            arguments.insert(argument_name, argument);
 
-            //     let variable_name = VariableName::new("gap");
-            //     let variable = Variable::new(
-            //         variable_name.clone(),
-            //         VariableKind::Number(VariableKindNumber::new(3.))
-            //     );
-            //     variables.insert(variable_name, variable);
+            let argument_name = ArgumentName::new("gap");
+            let argument = Argument::new_in(
+                argument_name.clone(),
+                VariableKind::Number(VariableKindNumber::new(3.)),
+            );
+            arguments.insert(argument_name, argument);
 
-            //     let variable_name = VariableName::new("style");
-            //     let variable = Variable::new(
-            //         variable_name.clone(),
-            //         VariableKind::Number(VariableKindNumber::new(4.))
-            //     );
-            //     variables.insert(variable_name, variable);
+            let argument_name = ArgumentName::new("style");
+            let argument = Argument::new_in(
+                argument_name.clone(),
+                VariableKind::Number(VariableKindNumber::new(4.)),
+            );
+            arguments.insert(argument_name, argument);
 
-            //     let variable_name = VariableName::new("items");
-            //     let variable = Variable::new(
-            //         variable_name.clone(),
-            //         VariableKind::Number(VariableKindNumber::new(5.))
-            //     );
-            //     variables.insert(variable_name, variable);
+            let argument_name = ArgumentName::new("items");
+            let argument = Argument::new_in(
+                argument_name.clone(),
+                VariableKind::Number(VariableKindNumber::new(5.)),
+            );
+            arguments.insert(argument_name, argument);
 
-            //     let variable_name = VariableName::new("extra");
-            //     let variable = Variable::new(
-            //         variable_name.clone(),
-            //         VariableKind::Number(VariableKindNumber::new(6.))
-            //     );
-            //     variables.insert(variable_name, variable);
+            let argument_name = ArgumentName::new("extra");
+            let argument = Argument::new_in(
+                argument_name.clone(),
+                VariableKind::Number(VariableKindNumber::new(6.)),
+            );
+            arguments.insert(argument_name, argument);
 
-            //     variables
-            // }))
-
-            engine.read().unwrap().functions.get(&FunctionName::new("Element/stripe")).unwrap().run(Arguments::new())
+            engine.read().unwrap().functions.get(&FunctionName::new("Element/stripe")).unwrap().run(arguments)
         }
     };
     let function = Function::new(function_name.clone(), function_closure);
@@ -133,21 +153,36 @@ pub fn run(_program: &str) -> impl Element {
             let variable_name = VariableName::new("style");
             let variable = Variable::new(
                 variable_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(2.))
+                function_arguments
+                    .get(&ArgumentName::new("style"))
+                    .unwrap()
+                    .argument_in()
+                    .unwrap()
+                    .kind()
             );
             variables.insert(variable_name, variable);
 
             let variable_name = VariableName::new("label");
             let variable = Variable::new(
                 variable_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(3.))
+                function_arguments
+                    .get(&ArgumentName::new("label"))
+                    .unwrap()
+                    .argument_in()
+                    .unwrap()
+                    .kind()
             );
             variables.insert(variable_name, variable);
 
             let variable_name = VariableName::new("extra");
             let variable = Variable::new(
                 variable_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(4.))
+                function_arguments
+                    .get(&ArgumentName::new("extra"))
+                    .unwrap()
+                    .argument_in()
+                    .unwrap()
+                    .kind()
             );
             variables.insert(variable_name, variable);
 
@@ -161,41 +196,41 @@ pub fn run(_program: &str) -> impl Element {
     let function_closure = { 
         let engine = engine.clone();
             move |function_arguments: Arguments| {
-            // VariableKind::Object(VariableKindObject::new({
-            //     let mut variables = Variables::new();
-                
-            //     let variable_name = VariableName::new("element");
-            //     let variable = Variable::new(
-            //         variable_name.clone(),
-            //         VariableKind::Number(VariableKindNumber::new(1.))
-            //     );
-            //     variables.insert(variable_name, variable);
+            let mut arguments = Arguments::new();
+            
+            let argument_name = ArgumentName::new("element");
+            let argument = Argument::new_out(
+                argument_name.clone(),
+            );
+            arguments.insert(argument_name, argument);
 
-            //     let variable_name = VariableName::new("style");
-            //     let variable = Variable::new(
-            //         variable_name.clone(),
-            //         VariableKind::Number(VariableKindNumber::new(2.))
-            //     );
-            //     variables.insert(variable_name, variable);
+            let argument_name = ArgumentName::new("style");
+            let argument = Argument::new_in(
+                argument_name.clone(),
+                VariableKind::Number(VariableKindNumber::new(2.))
+            );
+            arguments.insert(argument_name, argument);
 
-            //     let variable_name = VariableName::new("label");
-            //     let variable = Variable::new(
-            //         variable_name.clone(),
-            //         VariableKind::Number(VariableKindNumber::new(3.))
-            //     );
-            //     variables.insert(variable_name, variable);
+            let argument_name = ArgumentName::new("label");
+            let argument = Argument::new_in(
+                argument_name.clone(),
+                function_arguments
+                    .get(&ArgumentName::new("label"))
+                    .unwrap()
+                    .argument_in()
+                    .unwrap()
+                    .kind()
+            );
+            arguments.insert(argument_name, argument);
 
-            //     let variable_name = VariableName::new("extra");
-            //     let variable = Variable::new(
-            //         variable_name.clone(),
-            //         VariableKind::Number(VariableKindNumber::new(4.))
-            //     );
-            //     variables.insert(variable_name, variable);
+            let argument_name = ArgumentName::new("extra");
+            let argument = Argument::new_in(
+                argument_name.clone(),
+                VariableKind::Number(VariableKindNumber::new(4.))
+            );
+            arguments.insert(argument_name, argument);
 
-            //     variables
-            // }))
-
-            engine.read().unwrap().functions.get(&FunctionName::new("Element/button")).unwrap().run(Arguments::new())
+            engine.read().unwrap().functions.get(&FunctionName::new("Element/button")).unwrap().run(arguments)
         }
     };
     let function = Function::new(function_name.clone(), function_closure);
