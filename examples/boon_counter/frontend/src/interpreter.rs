@@ -113,28 +113,91 @@ pub fn run(_program: &str) -> impl Element {
             let argument_name = ArgumentName::new("gap");
             let argument = Argument::new_in(
                 argument_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(3.)),
+                VariableKind::Number(VariableKindNumber::new(15.)),
             );
             arguments.insert(argument_name, argument);
 
             let argument_name = ArgumentName::new("style");
             let argument = Argument::new_in(
                 argument_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(4.)),
+                VariableKind::Object(VariableKindObject::new({
+                    let mut variables = Variables::new();
+
+                    let variable_name = VariableName::new("align");
+                    let variable = Variable::new(
+                        variable_name.clone(),
+                        VariableKind::Tag(VariableKindTag::new("Center"))
+                    );
+                    variables.insert(variable_name, variable);
+
+                    variables
+                })),
             );
             arguments.insert(argument_name, argument);
 
             let argument_name = ArgumentName::new("items");
             let argument = Argument::new_in(
                 argument_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(5.)),
+                VariableKind::List(VariableKindList::new({
+                    let mut list = Vec::new();
+
+                    list.push({
+                        let mut arguments= Arguments::new();
+
+                        let argument_name = ArgumentName::new("label");
+                        let argument = Argument::new_in(
+                            argument_name.clone(),
+                            VariableKind::Text(VariableKindText::new("-")),
+                        );
+                        arguments.insert(argument_name, argument);
+
+                        engine
+                            .read()
+                            .unwrap()
+                            .functions
+                            .get(&FunctionName::new("counter_button"))
+                            .unwrap()
+                            .run(arguments)
+                    });
+
+                    list.push({
+                        engine
+                            .read()
+                            .unwrap()
+                            .variables
+                            .get(&VariableName::new("counter"))
+                            .unwrap()
+                            .kind()
+                    });
+
+                    list.push({
+                        let mut arguments= Arguments::new();
+
+                        let argument_name = ArgumentName::new("label");
+                        let argument = Argument::new_in(
+                            argument_name.clone(),
+                            VariableKind::Text(VariableKindText::new("+")),
+                        );
+                        arguments.insert(argument_name, argument);
+
+                        engine
+                            .read()
+                            .unwrap()
+                            .functions
+                            .get(&FunctionName::new("counter_button"))
+                            .unwrap()
+                            .run(arguments)
+                    });
+
+                    list
+                })),
             );
             arguments.insert(argument_name, argument);
 
             let argument_name = ArgumentName::new("extra");
             let argument = Argument::new_in(
                 argument_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(6.)),
+                VariableKind::Object(VariableKindObject::new(Variables::new())),
             );
             arguments.insert(argument_name, argument);
 

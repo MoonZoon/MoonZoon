@@ -176,7 +176,13 @@ impl VariableKindLink {
 
 #[derive(Debug, Clone)]
 pub struct VariableKindList {
+    list: Vec<VariableKind>
+}
 
+impl VariableKindList {
+    pub fn new(list: Vec<VariableKind>) -> Self {
+        Self { list }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -208,7 +214,13 @@ impl VariableKindObject {
 
 #[derive(Debug, Clone)]
 pub struct VariableKindText {
+    text: String
+}
 
+impl VariableKindText {
+    pub fn new(text: impl ToString) -> Self {
+        Self { text: text.to_string() }
+    }
 }
 
 #[derive(Debug, Clone)]
