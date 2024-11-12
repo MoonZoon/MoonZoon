@@ -3,6 +3,7 @@ use std::fmt;
 use std::sync::Arc;
 
 pub type Functions = IndexMap<FunctionName, Function>;
+pub type Arguments = IndexMap<ArgumentName, Argument>;
 pub type Variables = IndexMap<VariableName, Variable>;
 
 #[derive(Debug, Default)]
@@ -13,25 +14,25 @@ pub struct Engine {
 
 pub struct Function {
     name: FunctionName,
-    body: Arc<dyn Fn() -> VariableKind>,
+    closure: Arc<dyn Fn(Arguments) -> VariableKind>,
 }
 
 impl fmt::Debug for Function {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Function")
          .field("name", &self.name)
-         .field("body", &"[function body]")
+         .field("closure", &"[closure]")
          .finish()
     }
 }
 
 impl Function {
-    pub fn new(name: FunctionName, body: impl Fn() -> VariableKind + 'static) -> Self {
-        Self { name, body: Arc::new(body) }
+    pub fn new(name: FunctionName, closure: impl Fn(Arguments) -> VariableKind + 'static) -> Self {
+        Self { name, closure: Arc::new(closure) }
     }
 
-    pub fn run(&self) -> VariableKind {
-        (self.body)()
+    pub fn run(&self, arguments: Arguments) -> VariableKind {
+        (self.closure)(arguments)
     }
 }
 
@@ -39,6 +40,28 @@ impl Function {
 pub struct FunctionName(Arc<String>);
 
 impl FunctionName {
+    pub fn new(name: impl ToString) -> Self {
+        Self(Arc::new(name.to_string()))
+    }
+}
+
+#[derive(Debug)]
+pub struct Argument {
+    name: ArgumentName,
+    kind: VariableKind,
+    out: bool,
+}
+
+impl Argument {
+    pub fn new(name: ArgumentName, kind: VariableKind, out: bool) -> Self {
+        Self { name, kind, out }
+    }
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub struct ArgumentName(Arc<String>);
+
+impl ArgumentName {
     pub fn new(name: impl ToString) -> Self {
         Self(Arc::new(name.to_string()))
     }
