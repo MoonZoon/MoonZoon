@@ -15,7 +15,7 @@ pub fn run(_program: &str) -> impl Element {
             let variable_name = VariableName::new("element");
             let variable = Variable::new(
                 variable_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(1.))
+                VariableKind::Object(VariableKindObject::new(Variables::new()))
             );
             function_arguments
                 .get(&ArgumentName::new("element"))
@@ -215,7 +215,29 @@ pub fn run(_program: &str) -> impl Element {
             let variable_name = VariableName::new("element");
             let variable = Variable::new(
                 variable_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(1.))
+                VariableKind::Object(VariableKindObject::new({
+                    let mut variables = Variables::new();
+
+                    let variable_name = VariableName::new("event");
+                    let variable = Variable::new(
+                        variable_name.clone(),
+                        VariableKind::Object(VariableKindObject::new({
+                            let mut variables = Variables::new();
+
+                            let variable_name = VariableName::new("hovered");
+                            let variable = Variable::new(
+                                variable_name.clone(),
+                                VariableKind::Tag(VariableKindTag::new("False"))
+                            );
+                            variables.insert(variable_name, variable);
+
+                            variables
+                        }))
+                    );
+                    variables.insert(variable_name, variable);
+
+                    variables
+                }))
             );
             function_arguments
                 .get(&ArgumentName::new("element"))
@@ -282,7 +304,69 @@ pub fn run(_program: &str) -> impl Element {
             let argument_name = ArgumentName::new("style");
             let argument = Argument::new_in(
                 argument_name.clone(),
-                VariableKind::Number(VariableKindNumber::new(2.))
+                VariableKind::Object(VariableKindObject::new({
+                    let mut variables = Variables::new();
+
+                    let variable_name = VariableName::new("width");
+                    let variable = Variable::new(
+                        variable_name.clone(),
+                        VariableKind::Number(VariableKindNumber::new(45.))
+                    );
+                    variables.insert(variable_name, variable);
+
+                    let variable_name = VariableName::new("rounded_corners");
+                    let variable = Variable::new(
+                        variable_name.clone(),
+                        VariableKind::Tag(VariableKindTag::new("Fully"))
+                    );
+                    variables.insert(variable_name, variable);
+
+                    let variable_name = VariableName::new("background");
+                    let variable = Variable::new(
+                        variable_name.clone(),
+                        VariableKind::Object(VariableKindObject::new({
+                            let mut variables = Variables::new();
+
+                            let variable_name = VariableName::new("color");
+                            let variable = Variable::new(
+                                variable_name.clone(),
+                                VariableKind::TaggedObject(VariableKindTaggedObject::new("Oklch", {
+                                    let mut variables = Variables::new();
+
+                                    let variable_name = VariableName::new("lightness");
+                                    let variable = Variable::new(
+                                        variable_name.clone(),
+                                        // element.hovered |> WHEN { True => 0.85, False => 0.75 }
+                                        VariableKind::Number(VariableKindNumber::new(0.75))
+                                    );
+                                    variables.insert(variable_name, variable);
+
+                                    let variable_name = VariableName::new("chroma");
+                                    let variable = Variable::new(
+                                        variable_name.clone(),
+                                        VariableKind::Number(VariableKindNumber::new(0.07))
+                                    );
+                                    variables.insert(variable_name, variable);
+
+                                    let variable_name = VariableName::new("hue");
+                                    let variable = Variable::new(
+                                        variable_name.clone(),
+                                        VariableKind::Number(VariableKindNumber::new(320.))
+                                    );
+                                    variables.insert(variable_name, variable);
+
+                                    variables
+                                }))
+                            );
+                            variables.insert(variable_name, variable);
+
+                            variables
+                        }))
+                    );
+                    variables.insert(variable_name, variable);
+
+                    variables
+                }))
             );
             arguments.insert(argument_name, argument);
 

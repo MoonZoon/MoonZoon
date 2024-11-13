@@ -159,9 +159,12 @@ pub enum VariableKind {
     Map(VariableKindMap),
     Number(VariableKindNumber),
     Object(VariableKindObject),
-    Text(VariableKindText),
+    TaggedObject(VariableKindTaggedObject),
     Tag(VariableKindTag),
+    Text(VariableKindText),
 }
+
+// --- VariableKindLink ---
 
 #[derive(Debug, Clone)]
 pub struct VariableKindLink {
@@ -174,6 +177,8 @@ impl VariableKindLink {
     }
 }
 
+// --- VariableKindList ---
+
 #[derive(Debug, Clone)]
 pub struct VariableKindList {
     list: Vec<VariableKind>
@@ -185,10 +190,14 @@ impl VariableKindList {
     }
 }
 
+// --- VariableKindMap ---
+
 #[derive(Debug, Clone)]
 pub struct VariableKindMap {
 
 }
+
+// --- VariableKindNumber ---
 
 #[derive(Debug, Clone)]
 pub struct VariableKindNumber {
@@ -201,6 +210,8 @@ impl VariableKindNumber {
     }
 }
 
+// --- VariableKindObject ---
+
 #[derive(Debug, Clone)]
 pub struct VariableKindObject {
     variables: Variables
@@ -212,16 +223,21 @@ impl VariableKindObject {
     }
 }
 
+// --- VariableKindTaggedObject ---
+
 #[derive(Debug, Clone)]
-pub struct VariableKindText {
-    text: String
+pub struct VariableKindTaggedObject {
+    tag: String,
+    variables: Variables
 }
 
-impl VariableKindText {
-    pub fn new(text: impl ToString) -> Self {
-        Self { text: text.to_string() }
+impl VariableKindTaggedObject {
+    pub fn new(tag: impl ToString, variables: Variables) -> Self {
+        Self { tag: tag.to_string(), variables }
     }
 }
+
+// --- VariableKindTag ---
 
 #[derive(Debug, Clone)]
 pub struct VariableKindTag {
@@ -234,10 +250,15 @@ impl VariableKindTag {
     }
 }
 
+// --- VariableKindText ---
 
+#[derive(Debug, Clone)]
+pub struct VariableKindText {
+    text: String
+}
 
-
-
-
-
-
+impl VariableKindText {
+    pub fn new(text: impl ToString) -> Self {
+        Self { text: text.to_string() }
+    }
+}
