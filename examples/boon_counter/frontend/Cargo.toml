@@ -16,3 +16,4 @@ wasm-bindgen-test = "0.3.19"
 [dependencies]
 zoon.workspace = true
 indexmap = "2.6.0"
+async-debug = "0.1.3"
