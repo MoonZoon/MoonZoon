@@ -437,7 +437,8 @@ pub fn run(_program: &str) -> impl Element {
     Task::start({
         let engine = engine.clone();
         async move {
-            println!("{:#?}", engine.read().unwrap().async_debug().await);
+            engine.read().unwrap().print_functions();
+            engine.read().unwrap().print_variables();
         }
     });
 

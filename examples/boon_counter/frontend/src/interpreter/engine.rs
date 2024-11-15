@@ -1,24 +1,33 @@
 use std::fmt;
 use std::sync::{Arc, Mutex};
 
-use async_debug::AsyncDebug;
 use indexmap::IndexMap;
 
 use zoon::futures_channel::{oneshot, mpsc};
 use zoon::futures_util::StreamExt;
 use zoon::{Task, TaskHandle};
+use zoon::println;
 
 pub type Functions = IndexMap<FunctionName, Function>;
 pub type Arguments = IndexMap<ArgumentName, Argument>;
 pub type Variables = IndexMap<VariableName, Variable>;
 
-#[derive(AsyncDebug, Debug, Default)]
+#[derive(Debug, Default)]
 pub struct Engine {
     pub functions: Functions,
     pub variables: Variables,
 }
 
-#[derive(AsyncDebug)]
+impl Engine {
+    pub fn print_functions(&self) {
+        println!("FUNCTIONS: {:#?}", self.functions.values());
+    }
+
+    pub fn print_variables(&self) {
+        println!("VARIABLES: {:#?}", self.variables.values());
+    }
+}
+
 pub struct Function {
     name: FunctionName,
     closure: Arc<dyn Fn(Arguments) -> VariableActor>,
@@ -43,7 +52,7 @@ impl Function {
     }
 }
 
-#[derive(AsyncDebug, Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct FunctionName(Arc<String>);
 
 impl FunctionName {
@@ -52,21 +61,20 @@ impl FunctionName {
     }
 }
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Argument {
     name: ArgumentName,
     in_out: ArgumentInOut
 }
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub enum ArgumentInOut {
     In(ArgumentIn),
     Out(ArgumentOut),
 }
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct ArgumentIn {
-    #[async_debug(async_call = VariableActor::get_value, clone, ty = Option<VariableValue>)]
     actor: VariableActor,
 }
 
@@ -76,7 +84,7 @@ impl ArgumentIn {
     }
 }
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct ArgumentOut {
     actor_sender: Arc<Mutex<Option<oneshot::Sender<VariableActor>>>>,
 }
@@ -125,7 +133,7 @@ impl Argument {
     }
 }
 
-#[derive(AsyncDebug, Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct ArgumentName(Arc<String>);
 
 impl ArgumentName {
@@ -134,10 +142,9 @@ impl ArgumentName {
     }
 }
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct Variable {
     name: VariableName,
-    #[async_debug(async_call = VariableActor::get_value, clone, ty = Option<VariableValue>)]
     actor: VariableActor,
 }
 
@@ -151,7 +158,7 @@ impl Variable {
     }
 }
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct VariableActor {
     task_handle: Arc<TaskHandle>,
     value_sender_sender: mpsc::UnboundedSender<oneshot::Sender<Option<VariableValue>>>,
@@ -179,7 +186,7 @@ impl VariableActor {
     }
 }
 
-#[derive(AsyncDebug, Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct VariableName(Arc<String>);
 
 impl VariableName {
@@ -188,7 +195,7 @@ impl VariableName {
     }
 }
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub enum VariableValue {
     Link(VariableValueLink),
     List(VariableValueList),
@@ -202,7 +209,7 @@ pub enum VariableValue {
 
 // --- VariableValueLink ---
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct VariableValueLink {
     variable: Option<Arc<Variable>>
 }
@@ -215,7 +222,7 @@ impl VariableValueLink {
 
 // --- VariableValueList ---
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct VariableValueList {
     list: Vec<VariableActor>
 }
@@ -228,14 +235,14 @@ impl VariableValueList {
 
 // --- VariableValueMap ---
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct VariableValueMap {
 
 }
 
 // --- VariableValueNumber ---
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct VariableValueNumber {
     number: f64
 }
@@ -248,7 +255,7 @@ impl VariableValueNumber {
 
 // --- VariableValueObject ---
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct VariableValueObject {
     variables: Variables
 }
@@ -261,7 +268,7 @@ impl VariableValueObject {
 
 // --- VariableValueTaggedObject ---
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct VariableValueTaggedObject {
     tag: String,
     variables: Variables
@@ -275,7 +282,7 @@ impl VariableValueTaggedObject {
 
 // --- VariableValueTag ---
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct VariableValueTag {
     tag: String
 }
@@ -288,7 +295,7 @@ impl VariableValueTag {
 
 // --- VariableValueText ---
 
-#[derive(AsyncDebug, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct VariableValueText {
     text: String
 }
