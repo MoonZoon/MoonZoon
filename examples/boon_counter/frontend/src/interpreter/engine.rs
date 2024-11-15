@@ -55,7 +55,28 @@ pub struct Engine {
 }
 
 impl Engine {
-    
+    // @TODO `address` should work for the scope, not only for the root
+    pub fn set_link_value(&self, address: &str, actor: VariableActor) {
+        let mut address_parts = address.split(".").collect::<Vec<_>>();
+
+        if address_parts.len() == 1 {
+            let link_actor = self
+                .variables
+                .get(&VariableName::new(address_parts[0]))
+                .unwrap()
+                .actor();
+            link_actor.set_value(VariableValue::Link(VariableValueLink { 
+                actor: Some(Arc::new(actor))
+            }));
+        }
+
+        let last_address_part = address_parts.pop().unwrap();
+
+        let parent = None::<VariableValueObject>;
+        for address_part in address_parts {
+
+        }
+    }
 }
 
 impl AsyncDebugFormat for Engine {
@@ -236,12 +257,16 @@ impl AsyncDebugFormat for Variable {
 pub struct VariableActor {
     task_handle: Arc<TaskHandle>,
     value_sender_sender: mpsc::UnboundedSender<oneshot::Sender<Option<VariableValue>>>,
+    new_value_sender: mpsc::UnboundedSender<VariableValue>,
 }
 
 impl VariableActor {
     pub fn new(default_value: Option<VariableValue>) -> Self {
         let value = default_value;
+
         let (value_sender_sender, mut value_sender_receiver) = mpsc::unbounded::<oneshot::Sender<Option<VariableValue>>>();
+        let (new_value_sender, new_value_receiver) = mpsc::unbounded::<VariableValue>();
+
         let task_handle = Task::start_droppable(async move {
             while let Some(value_sender) = value_sender_receiver.next().await {
                 value_sender.send(value.clone()).unwrap();
@@ -249,7 +274,8 @@ impl VariableActor {
         });
         Self {
             task_handle: Arc::new(task_handle),
-            value_sender_sender
+            value_sender_sender,
+            new_value_sender,
         }
     }
 
@@ -257,6 +283,10 @@ impl VariableActor {
         let (value_sender, value_receiver) = oneshot::channel();
         self.value_sender_sender.unbounded_send(value_sender).unwrap();
         value_receiver.await.unwrap()
+    }
+
+    pub fn set_value(&self, value: VariableValue) {
+        self.new_value_sender.unbounded_send(value).unwrap();
     }
 }
 
@@ -310,20 +340,20 @@ impl AsyncDebugFormat for VariableValue {
 
 #[derive(Debug, Clone)]
 pub struct VariableValueLink {
-    variable: Option<Variable>
+    actor: Option<Arc<VariableActor>>
 }
 
 impl VariableValueLink {
     pub fn new() -> Self {
-        Self { variable: None }
+        Self { actor: None }
     }
 }
 
 impl AsyncDebugFormat for VariableValueLink {
     async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
-        if let Some(variable) = &self.variable {
-            let variable = Box::pin(variable.async_debug_format_with_formatter(formatter)).await;
-            format!("LINK {{ \n{variable}\n }}")
+        if let Some(actor) = &self.actor {
+            let actor = Box::pin(actor.async_debug_format_with_formatter(formatter)).await;
+            format!("LINK {{ \n{actor}\n }}")
         } else {
             "LINK { UNSET }".to_owned()
         }

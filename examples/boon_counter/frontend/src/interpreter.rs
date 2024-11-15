@@ -151,13 +151,17 @@ pub fn run(_program: &str) -> impl Element {
                         );
                         arguments.insert(argument_name, argument);
 
-                        engine
+                       let variable_actor = engine
                             .read()
                             .unwrap()
                             .functions
                             .get(&FunctionName::new("counter_button"))
                             .unwrap()
-                            .run(arguments)
+                            .run(arguments);
+
+                        engine.read().unwrap().set_link_value("elements.decrement_button", variable_actor.clone());
+
+                        variable_actor
                     });
 
                     list.push({
@@ -180,13 +184,17 @@ pub fn run(_program: &str) -> impl Element {
                         );
                         arguments.insert(argument_name, argument);
 
-                        engine
+                        let variable_actor = engine
                             .read()
                             .unwrap()
                             .functions
                             .get(&FunctionName::new("counter_button"))
                             .unwrap()
-                            .run(arguments)
+                            .run(arguments);
+
+                        engine.read().unwrap().set_link_value("elements.increment_button", variable_actor.clone());
+
+                        variable_actor
                     });
 
                     list
