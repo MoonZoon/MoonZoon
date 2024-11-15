@@ -5,12 +5,48 @@ use indexmap::IndexMap;
 
 use zoon::futures_channel::{oneshot, mpsc};
 use zoon::futures_util::StreamExt;
+use zoon::futures_util::future::join_all;
 use zoon::{Task, TaskHandle};
-use zoon::println;
 
 pub type Functions = IndexMap<FunctionName, Function>;
 pub type Arguments = IndexMap<ArgumentName, Argument>;
 pub type Variables = IndexMap<VariableName, Variable>;
+
+pub trait AsyncDebugFormat {
+    async fn async_debug_format(&self) -> String {
+        self.async_debug_format_with_formatter(Formatter::default()).await
+    }
+
+    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String;
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Formatter {
+    indent_spaces: u32,
+    indent_level: u32,
+}
+
+impl Default for Formatter {
+    fn default() -> Self {
+        Self {
+            indent_spaces: 4,
+            indent_level: 0,
+        }
+    }
+}
+
+impl Formatter {
+    pub fn increase_level(self) -> Formatter {
+        let mut updated = self.clone();
+        updated.indent_level += 1;
+        updated
+    }
+
+    pub fn indent(&self, text: &str) -> String {
+        let indentation = (self.indent_spaces * self.indent_level) as usize;
+        format!("{:indentation$}{text}", "")
+    }
+}
 
 #[derive(Debug, Default)]
 pub struct Engine {
@@ -19,12 +55,42 @@ pub struct Engine {
 }
 
 impl Engine {
-    pub fn print_functions(&self) {
-        println!("FUNCTIONS: {:#?}", self.functions.values());
-    }
+    
+}
 
-    pub fn print_variables(&self) {
-        println!("VARIABLES: {:#?}", self.variables.values());
+impl AsyncDebugFormat for Engine {
+    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+        let mut output = String::new();
+        output.push_str("--- ENGINE ---\n");
+
+        let functions = {
+            let formatter = formatter.increase_level();
+            self
+                .functions
+                .keys()
+                .map(|FunctionName(name)| formatter.indent(name))
+                .collect::<Vec<_>>()
+                .join("\n")
+        };
+        output.push_str(&format!("functions: LIST {{\n{functions}\n}}\n"));
+
+        let variables = {
+            let formatter = formatter.increase_level();
+            self
+                .variables
+                .values()
+                .map(move |variable| async move {
+                    let variable = variable.async_debug_format_with_formatter(formatter).await;
+                    formatter.indent(&format!("{variable},"))
+                })
+        };
+        let variables = join_all(variables)
+            .await
+            .join("\n");
+        output.push_str(&format!("variables: [\n{variables}\n]\n"));
+
+        output.push_str("--------------\n");
+        output
     }
 }
 
@@ -158,6 +224,14 @@ impl Variable {
     }
 }
 
+impl AsyncDebugFormat for Variable {
+    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+        let VariableName(name) = &self.name;
+        let value = self.actor.async_debug_format_with_formatter(formatter).await;
+        format!("{name}: {value}")
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct VariableActor {
     task_handle: Arc<TaskHandle>,
@@ -186,6 +260,16 @@ impl VariableActor {
     }
 }
 
+impl AsyncDebugFormat for VariableActor {
+    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+        if let Some(value) = self.get_value().await {
+            value.async_debug_format_with_formatter(formatter).await
+        } else {
+            "UNSET".to_owned()
+        }
+    }
+}
+
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct VariableName(Arc<String>);
 
@@ -207,16 +291,42 @@ pub enum VariableValue {
     Text(VariableValueText),
 }
 
+impl AsyncDebugFormat for VariableValue {
+    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+        match self {
+            Self::Link(value) => value.async_debug_format_with_formatter(formatter).await,
+            Self::List(value) => value.async_debug_format_with_formatter(formatter).await,
+            Self::Map(value) => value.async_debug_format_with_formatter(formatter).await,
+            Self::Number(value) => value.async_debug_format_with_formatter(formatter).await,
+            Self::Object(value) => value.async_debug_format_with_formatter(formatter).await,
+            Self::TaggedObject(value) => value.async_debug_format_with_formatter(formatter).await,
+            Self::Tag(value) => value.async_debug_format_with_formatter(formatter).await,
+            Self::Text(value) => value.async_debug_format_with_formatter(formatter).await,
+        }
+    }
+}
+
 // --- VariableValueLink ---
 
 #[derive(Debug, Clone)]
 pub struct VariableValueLink {
-    variable: Option<Arc<Variable>>
+    variable: Option<Variable>
 }
 
 impl VariableValueLink {
     pub fn new() -> Self {
         Self { variable: None }
+    }
+}
+
+impl AsyncDebugFormat for VariableValueLink {
+    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+        if let Some(variable) = &self.variable {
+            let variable = Box::pin(variable.async_debug_format_with_formatter(formatter)).await;
+            format!("LINK {{ \n{variable}\n }}")
+        } else {
+            "LINK { UNSET }".to_owned()
+        }
     }
 }
 
@@ -233,11 +343,39 @@ impl VariableValueList {
     }
 }
 
+impl AsyncDebugFormat for VariableValueList {
+    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+        if self.list.is_empty() {
+            return String::from("LIST {}")
+        }
+        let mut output = String::new();
+        output.push_str("LIST {\n");
+
+        let values = {
+            let formatter = formatter.increase_level();
+            self.list.iter().map(move |value| async move {
+                formatter.indent(&value.async_debug_format_with_formatter(formatter).await)
+            })
+        };
+        output.push_str(&join_all(values).await.join("\n"));
+        
+        output.push_str("\n");
+        output.push_str(&formatter.indent("}"));
+        output
+    }
+}
+
 // --- VariableValueMap ---
 
 #[derive(Debug, Clone)]
 pub struct VariableValueMap {
 
+}
+
+impl AsyncDebugFormat for VariableValueMap {
+    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+        String::from("MAP { @TODO }")
+    }
 }
 
 // --- VariableValueNumber ---
@@ -253,6 +391,12 @@ impl VariableValueNumber {
     }
 }
 
+impl AsyncDebugFormat for VariableValueNumber {
+    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+        self.number.to_string()
+    }
+}
+
 // --- VariableValueObject ---
 
 #[derive(Debug, Clone)]
@@ -263,6 +407,27 @@ pub struct VariableValueObject {
 impl VariableValueObject {
     pub fn new(variables: Variables) -> Self {
         Self { variables }
+    }
+}
+
+impl AsyncDebugFormat for VariableValueObject {
+    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+        if self.variables.is_empty() {
+            return String::from("[]")
+        }
+        let mut output = String::new();
+        output.push_str("[\n");
+
+        let variables = { 
+            let formatter = formatter.increase_level();
+            self.variables.values().map(move |variable| async move {
+                formatter.indent(&variable.async_debug_format_with_formatter(formatter).await)
+            })
+        };
+        output.push_str(&join_all(variables).await.join("\n"));
+        output.push_str("\n");
+        output.push_str(&formatter.indent("]"));
+        output
     }
 }
 
@@ -280,6 +445,31 @@ impl VariableValueTaggedObject {
     }
 }
 
+impl AsyncDebugFormat for VariableValueTaggedObject {
+    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+        let tag = &self.tag;
+
+        if self.variables.is_empty() {
+            return format!("{tag}[]")
+        }
+
+        let mut output = String::new();
+        output.push_str(&format!("{tag}[\n"));
+
+        let variables = { 
+            let formatter = formatter.increase_level();
+            self.variables.values().map(move |variable| async move {
+                let variable = variable.async_debug_format_with_formatter(formatter).await;
+                formatter.indent(&variable)
+            })
+        };
+        output.push_str(&join_all(variables).await.join("\n"));
+        output.push_str("\n");
+        output.push_str(&formatter.indent("]"));
+        output
+    }
+}
+
 // --- VariableValueTag ---
 
 #[derive(Debug, Clone)]
@@ -293,6 +483,12 @@ impl VariableValueTag {
     }
 }
 
+impl AsyncDebugFormat for VariableValueTag {
+    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+        self.tag.clone()
+    }
+}
+
 // --- VariableValueText ---
 
 #[derive(Debug, Clone)]
@@ -303,5 +499,12 @@ pub struct VariableValueText {
 impl VariableValueText {
     pub fn new(text: impl ToString) -> Self {
         Self { text: text.to_string() }
+    }
+}
+
+impl AsyncDebugFormat for VariableValueText {
+    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+        let text = &self.text;
+        format!("'{text}'")
     }
 }

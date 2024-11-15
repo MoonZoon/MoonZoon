@@ -385,7 +385,7 @@ pub fn run(_program: &str) -> impl Element {
             let argument_name = ArgumentName::new("extra");
             let argument = Argument::new_in(
                 argument_name.clone(),
-                VariableActor::new(Some(VariableValue::Number(VariableValueNumber::new(4.))))
+                VariableActor::new(Some(VariableValue::Object(VariableValueObject::new(Variables::new()))))
             );
             arguments.insert(argument_name, argument);
 
@@ -437,8 +437,7 @@ pub fn run(_program: &str) -> impl Element {
     Task::start({
         let engine = engine.clone();
         async move {
-            engine.read().unwrap().print_functions();
-            engine.read().unwrap().print_variables();
+            println!("{}", engine.read().unwrap().async_debug_format().await);
         }
     });
 
