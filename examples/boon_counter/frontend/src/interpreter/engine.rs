@@ -66,6 +66,7 @@ pub enum ArgumentInOut {
 
 #[derive(AsyncDebug, Debug, Clone)]
 pub struct ArgumentIn {
+    #[async_debug(async_call = VariableActor::get_value, clone, ty = Option<VariableValue>)]
     actor: VariableActor,
 }
 
@@ -136,6 +137,7 @@ impl ArgumentName {
 #[derive(AsyncDebug, Debug, Clone)]
 pub struct Variable {
     name: VariableName,
+    #[async_debug(async_call = VariableActor::get_value, clone, ty = Option<VariableValue>)]
     actor: VariableActor,
 }
 
@@ -215,11 +217,11 @@ impl VariableValueLink {
 
 #[derive(AsyncDebug, Debug, Clone)]
 pub struct VariableValueList {
-    list: Vec<VariableValue>
+    list: Vec<VariableActor>
 }
 
 impl VariableValueList {
-    pub fn new(list: Vec<VariableValue>) -> Self {
+    pub fn new(list: Vec<VariableActor>) -> Self {
         Self { list }
     }
 }
