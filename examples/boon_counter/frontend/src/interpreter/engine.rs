@@ -56,7 +56,7 @@ pub struct Engine {
 
 impl Engine {
     // @TODO `address` should work for the scope, not only for the root
-    pub fn set_link_value(&self, address: &str, actor: VariableActor) {
+    pub async fn set_link_value(&self, address: &str, actor: VariableActor) {
         let mut address_parts = address.split(".").collect::<Vec<_>>();
 
         if address_parts.len() == 1 {
@@ -68,13 +68,28 @@ impl Engine {
             link_actor.set_value(VariableValue::Link(VariableValueLink { 
                 actor: Some(Arc::new(actor))
             }));
-        }
+        } else {
+            let root = self
+                .variables
+                .get(&VariableName::new(address_parts[0]))
+                .unwrap()
+                .actor();
 
-        let last_address_part = address_parts.pop().unwrap();
-
-        let parent = None::<VariableValueObject>;
-        for address_part in address_parts {
-
+            let mut parent_or_link_actor = root;
+            for address_part in address_parts.into_iter().skip(1) {
+                parent_or_link_actor = match parent_or_link_actor.get_value().await.unwrap() {
+                    VariableValue::Object(VariableValueObject { variables }) => {
+                        variables
+                            .get(&VariableName::new(address_part))
+                            .unwrap()
+                            .actor()
+                    }
+                    _ => unreachable!("Link path parts have to be 'VariableValue::Object'")
+                }
+            }
+            parent_or_link_actor.set_value(VariableValue::Link(VariableValueLink { 
+                actor: Some(Arc::new(actor))
+            }));
         }
     }
 }

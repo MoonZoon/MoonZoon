@@ -4,7 +4,7 @@ use std::sync::{Arc, RwLock};
 mod engine;
 use engine::*;
 
-pub fn run(_program: &str) -> impl Element {
+pub async fn run(_program: &str) -> impl Element {
     let mut engine = Arc::new(RwLock::new(Engine::default()));
 
     let function_name = FunctionName::new("Element/stripe");
@@ -159,7 +159,7 @@ pub fn run(_program: &str) -> impl Element {
                             .unwrap()
                             .run(arguments);
 
-                        engine.read().unwrap().set_link_value("elements.decrement_button", variable_actor.clone());
+                        engine.read().unwrap().set_link_value("elements.decrement_button", variable_actor.clone()).await;
 
                         variable_actor
                     });
@@ -192,7 +192,7 @@ pub fn run(_program: &str) -> impl Element {
                             .unwrap()
                             .run(arguments);
 
-                        engine.read().unwrap().set_link_value("elements.increment_button", variable_actor.clone());
+                        engine.read().unwrap().set_link_value("elements.increment_button", variable_actor.clone()).await;
 
                         variable_actor
                     });
@@ -442,12 +442,7 @@ pub fn run(_program: &str) -> impl Element {
     );
     engine.write().unwrap().variables.insert(variable_name, variable);
 
-    Task::start({
-        let engine = engine.clone();
-        async move {
-            println!("{}", engine.read().unwrap().async_debug_format().await);
-        }
-    });
+    println!("{}", engine.read().unwrap().async_debug_format().await);
 
     El::new().child("Boon root")
 } 
