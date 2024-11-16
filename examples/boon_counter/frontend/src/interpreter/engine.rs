@@ -253,40 +253,55 @@ impl AsyncDebugFormat for Variable {
     }
 }
 
+enum VariableActorMessage {
+    GetValue { value_sender: oneshot::Sender<Option<VariableValue>> },
+    SetValue { new_value: VariableValue }
+}
+
+// @TODO Don't clone - only weak references
 #[derive(Debug, Clone)]
 pub struct VariableActor {
     task_handle: Arc<TaskHandle>,
-    value_sender_sender: mpsc::UnboundedSender<oneshot::Sender<Option<VariableValue>>>,
-    new_value_sender: mpsc::UnboundedSender<VariableValue>,
+    message_sender: mpsc::UnboundedSender<VariableActorMessage>,
 }
 
 impl VariableActor {
     pub fn new(default_value: Option<VariableValue>) -> Self {
-        let value = default_value;
-
-        let (value_sender_sender, mut value_sender_receiver) = mpsc::unbounded::<oneshot::Sender<Option<VariableValue>>>();
-        let (new_value_sender, new_value_receiver) = mpsc::unbounded::<VariableValue>();
+        let mut value = default_value;
+        let (message_sender, mut message_receiver) = mpsc::unbounded::<VariableActorMessage>();
 
         let task_handle = Task::start_droppable(async move {
-            while let Some(value_sender) = value_sender_receiver.next().await {
-                value_sender.send(value.clone()).unwrap();
+            while let Some(message) = message_receiver.next().await {
+                match message {
+                    VariableActorMessage::GetValue { value_sender } => {
+                        value_sender.send(value.clone()).unwrap();
+                    }
+                    VariableActorMessage::SetValue { new_value } => {
+                        value = Some(new_value);
+                    }
+                }
             }
         });
         Self {
             task_handle: Arc::new(task_handle),
-            value_sender_sender,
-            new_value_sender,
+            message_sender
         }
     }
 
     pub async fn get_value(&self) -> Option<VariableValue> {
         let (value_sender, value_receiver) = oneshot::channel();
-        self.value_sender_sender.unbounded_send(value_sender).unwrap();
+        let message = VariableActorMessage::GetValue {
+            value_sender
+        };
+        self.message_sender.unbounded_send(message).unwrap();
         value_receiver.await.unwrap()
     }
 
-    pub fn set_value(&self, value: VariableValue) {
-        self.new_value_sender.unbounded_send(value).unwrap();
+    pub fn set_value(&self, new_value: VariableValue) {
+        let message = VariableActorMessage::SetValue {
+            new_value
+        };
+        self.message_sender.unbounded_send(message).unwrap()
     }
 }
 
