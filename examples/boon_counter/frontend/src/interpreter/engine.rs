@@ -1,7 +1,7 @@
 use std::fmt;
 use std::future::Future;
 use std::pin::Pin;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use indexmap::IndexMap;
 
@@ -170,6 +170,8 @@ impl FunctionName {
 
 #[derive(Debug, Clone)]
 pub struct Argument {
+    // @TODO remove `allow`
+    #[allow(dead_code)]
     name: ArgumentName,
     in_out: ArgumentInOut
 }
@@ -193,19 +195,27 @@ impl ArgumentIn {
 
 #[derive(Debug, Clone)]
 pub struct ArgumentOut {
-    actor_sender: Arc<Mutex<Option<oneshot::Sender<VariableActor>>>>,
+    set_actor_sender: mpsc::UnboundedSender<VariableActor>,
+    get_actor_sender: mpsc::UnboundedSender<oneshot::Sender<VariableActor>>,
+    #[allow(dead_code)]
+    task_with_actor: Arc<TaskHandle>,
 }
 
 impl ArgumentOut {
-    pub fn send_actor(&self, actor: VariableActor) {
+    pub async fn actor(&self) -> VariableActor {
+        let (actor_sender, actor_receiver) = oneshot::channel::<VariableActor>();
+        self.get_actor_sender.unbounded_send(actor_sender).unwrap();
+        actor_receiver.await.unwrap()
+    }
+}
+
+impl ArgumentOut {
+    pub fn set_actor(&self, actor: VariableActor) {
         self
-            .actor_sender
-            .lock()
-            .unwrap()
-            .take()
-            .unwrap()
-            .send(actor)
-            .unwrap()
+            .set_actor_sender
+            .unbounded_send(actor)
+            .unwrap();
+        self.set_actor_sender.close_channel();
     }
 }
 
@@ -214,15 +224,22 @@ impl Argument {
         Self { name, in_out: ArgumentInOut::In(ArgumentIn { actor }) }
     }
 
-    pub fn new_out(name: ArgumentName) -> (Self, oneshot::Receiver<VariableActor>) {
-        let (actor_sender, actor_receiver) = oneshot::channel();
-        let this = Self { 
+    pub fn new_out(name: ArgumentName) -> Self {
+        let (set_actor_sender, mut set_actor_receiver) = mpsc::unbounded();
+        let (get_actor_sender, mut get_actor_receiver) = mpsc::unbounded();
+        Self { 
             name, 
             in_out: ArgumentInOut::Out(ArgumentOut { 
-                actor_sender: Arc::new(Mutex::new(Some(actor_sender))) 
+                set_actor_sender,
+                get_actor_sender,
+                task_with_actor: Arc::new(Task::start_droppable(async move {
+                    let actor = set_actor_receiver.next().await.unwrap();
+                    while let Some(actor_sender) = get_actor_receiver.next().await {
+                        actor_sender.send(actor.clone()).unwrap();
+                    }
+                }))
             })
-        };
-        (this, actor_receiver)
+        }
     }
 
     pub fn argument_in(&self) -> Option<&ArgumentIn> {
@@ -281,6 +298,7 @@ enum VariableActorMessage {
 // @TODO Don't clone - only weak references
 #[derive(Debug, Clone)]
 pub struct VariableActor {
+    #[allow(dead_code)]
     task_handle: Arc<TaskHandle>,
     message_sender: mpsc::UnboundedSender<VariableActorMessage>,
 }
@@ -344,6 +362,8 @@ impl VariableName {
 pub enum VariableValue {
     Link(VariableValueLink),
     List(VariableValueList),
+    // @TODO remove `allow`
+    #[allow(dead_code)]
     Map(VariableValueMap),
     Number(VariableValueNumber),
     Object(VariableValueObject),
@@ -469,6 +489,10 @@ impl VariableValueObject {
     pub fn new(variables: Variables) -> Self {
         Self { variables }
     }
+
+    pub fn variable(&self, variable_name: &VariableName) -> Option<&Variable> {
+        self.variables.get(variable_name)
+    }
 }
 
 impl AsyncDebugFormat for VariableValueObject {
@@ -541,6 +565,10 @@ pub struct VariableValueTag {
 impl VariableValueTag {
     pub fn new(tag: impl ToString) -> Self {
         Self { tag: tag.to_string() }
+    }
+
+    pub fn tag(&self) -> &str {
+        &self.tag
     }
 }
 

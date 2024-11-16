@@ -5,13 +5,13 @@ mod engine;
 use engine::*;
 
 pub async fn run(_program: &str) -> impl Element {
+    // @TODO get rid of the lock?
     let engine = Arc::new(RwLock::new(Engine::default()));
 
     // @TODO pass weak `engine` references instead of cloning?
 
     let function_name = FunctionName::new("Element/stripe");
     let function_closure = { 
-        let engine = engine.clone();
         move |function_arguments: Arguments| { 
             async move {
                 VariableActor::new(async move { VariableValue::Object(VariableValueObject::new({
@@ -27,7 +27,7 @@ pub async fn run(_program: &str) -> impl Element {
                         .unwrap()
                         .argument_out()
                         .unwrap()
-                        .send_actor(variable.actor());
+                        .set_actor(variable.actor());
                     variables.insert(variable_name, variable);
 
                     let variable_name = VariableName::new("direction");
@@ -107,7 +107,7 @@ pub async fn run(_program: &str) -> impl Element {
                 let mut arguments = Arguments::new();
                 
                 let argument_name = ArgumentName::new("element");
-                let (argument, element_kind_receiver) = Argument::new_out(
+                let argument = Argument::new_out(
                     argument_name.clone(),
                 );
                 arguments.insert(argument_name, argument);
@@ -267,7 +267,7 @@ pub async fn run(_program: &str) -> impl Element {
                 .unwrap()
                 .argument_out()
                 .unwrap()
-                .send_actor(variable.actor());
+                .set_actor(variable.actor());
             variables.insert(variable_name, variable);
 
             let variable_name = VariableName::new("style");
@@ -321,9 +321,10 @@ pub async fn run(_program: &str) -> impl Element {
                 let mut arguments = Arguments::new();
                 
                 let argument_name = ArgumentName::new("element");
-                let (argument, element_kind_receiver) = Argument::new_out(
+                let argument = Argument::new_out(
                     argument_name.clone(),
                 );
+                let element_argument = argument.clone();
                 arguments.insert(argument_name, argument);
 
                 let argument_name = ArgumentName::new("style");
@@ -361,8 +362,42 @@ pub async fn run(_program: &str) -> impl Element {
                                         let variable_name = VariableName::new("lightness");
                                         let variable = Variable::new(
                                             variable_name.clone(),
-                                            // element.hovered |> WHEN { True => 0.85, False => 0.75 }
-                                            VariableActor::new(async { VariableValue::Number(VariableValueNumber::new(0.75))})
+                                            VariableActor::new(async move { 
+                                                // @TODO replace with non-compile time construct
+                                                let element_actor = element_argument.argument_out().unwrap().actor().await;
+                                                let event_actor = match element_actor.get_value().await {
+                                                    VariableValue::Object(variable_value_object) => {
+                                                        variable_value_object
+                                                            .variable(&VariableName::new("event"))
+                                                            .unwrap()
+                                                            .actor()
+                                                    }
+                                                    _ => unreachable!()
+                                                };
+                                                let hovered_actor = match event_actor.get_value().await {
+                                                    VariableValue::Object(variable_value_object) => {
+                                                        variable_value_object
+                                                            .variable(&VariableName::new("hovered"))
+                                                            .unwrap()
+                                                            .actor()
+                                                    }
+                                                    _ => unreachable!()
+                                                };
+                                                // @TODO listen for `hovered_actor`` changes, then call its `get_value()`
+                                                // @TODO replace `match` with non-compile time construct 
+                                                // @TODO what if `element_actor` is changed?
+                                                // element.hovered |> WHEN { True => 0.85, False => 0.75 }
+                                                match hovered_actor.get_value().await {
+                                                    VariableValue::Tag(variable_value_tag) => {
+                                                        match variable_value_tag.tag() {
+                                                            "True" => VariableValue::Number(VariableValueNumber::new(0.85)),
+                                                            "False" => VariableValue::Number(VariableValueNumber::new(0.75)),
+                                                            _ => unreachable!(),
+                                                        }
+                                                    }
+                                                    _ => unreachable!()
+                                                }
+                                            })
                                         );
                                         variables.insert(variable_name, variable);
 
@@ -460,6 +495,7 @@ pub async fn run(_program: &str) -> impl Element {
     );
     engine.write().unwrap().variables.insert(variable_name, variable);
 
+    Task::next_micro_tick().await;
     println!("{}", engine.read().unwrap().async_debug_format().await);
 
     El::new().child("Boon root")
