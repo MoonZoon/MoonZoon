@@ -1,4 +1,6 @@
 use std::fmt;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 
 use indexmap::IndexMap;
@@ -57,7 +59,7 @@ pub struct Engine {
 impl Engine {
     // @TODO `address` should work for the scope, not only for the root
     pub async fn set_link_value(&self, address: &str, actor: VariableActor) {
-        let mut address_parts = address.split(".").collect::<Vec<_>>();
+        let address_parts = address.split(".").collect::<Vec<_>>();
 
         if address_parts.len() == 1 {
             let link_actor = self
@@ -132,7 +134,7 @@ impl AsyncDebugFormat for Engine {
 
 pub struct Function {
     name: FunctionName,
-    closure: Arc<dyn Fn(Arguments) -> VariableActor>,
+    closure: Arc<dyn Fn(Arguments) -> Pin<Box<dyn Future<Output = VariableActor>>>>,
 }
 
 impl fmt::Debug for Function {
@@ -145,12 +147,15 @@ impl fmt::Debug for Function {
 }
 
 impl Function {
-    pub fn new(name: FunctionName, closure: impl Fn(Arguments) -> VariableActor + 'static) -> Self {
-        Self { name, closure: Arc::new(closure) }
+    pub fn new<FUT: Future<Output = VariableActor> + 'static>(name: FunctionName, closure: impl Fn(Arguments) -> FUT + 'static) -> Self {
+        let closure = Arc::new(move |arguments: Arguments| { 
+            Box::pin(closure(arguments)) as Pin<Box<dyn Future<Output = VariableActor>>>
+        });
+        Self { name, closure }
     }
 
-    pub fn run(&self, arguments: Arguments) -> VariableActor {
-        (self.closure)(arguments)
+    pub async fn run(&self, arguments: Arguments) -> VariableActor {
+        (self.closure)(arguments).await
     }
 }
 
@@ -383,7 +388,7 @@ impl AsyncDebugFormat for VariableValueLink {
     async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
         if let Some(actor) = &self.actor {
             let actor = Box::pin(actor.async_debug_format_with_formatter(formatter)).await;
-            format!("LINK {{ \n{actor}\n }}")
+            format!("LINK {{ {actor} }}")
         } else {
             "LINK { UNSET }".to_owned()
         }
@@ -433,7 +438,7 @@ pub struct VariableValueMap {
 }
 
 impl AsyncDebugFormat for VariableValueMap {
-    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+    async fn async_debug_format_with_formatter(&self, _: Formatter) -> String {
         String::from("MAP { @TODO }")
     }
 }
@@ -452,7 +457,7 @@ impl VariableValueNumber {
 }
 
 impl AsyncDebugFormat for VariableValueNumber {
-    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+    async fn async_debug_format_with_formatter(&self, _: Formatter) -> String {
         self.number.to_string()
     }
 }
@@ -544,7 +549,7 @@ impl VariableValueTag {
 }
 
 impl AsyncDebugFormat for VariableValueTag {
-    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+    async fn async_debug_format_with_formatter(&self, _: Formatter) -> String {
         self.tag.clone()
     }
 }
@@ -563,7 +568,7 @@ impl VariableValueText {
 }
 
 impl AsyncDebugFormat for VariableValueText {
-    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+    async fn async_debug_format_with_formatter(&self, _: Formatter) -> String {
         let text = &self.text;
         format!("'{text}'")
     }

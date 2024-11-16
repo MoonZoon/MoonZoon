@@ -11,10 +11,11 @@ fn root() -> impl Element {
         .s(Width::fill())
         .s(Height::fill())
         .s(Background::new().color(color!("oklch(0.4 0 0)")))
-        .child(boon_document_root())    
+        .child_signal(boon_document_root())    
 }
 
-fn boon_document_root() -> impl Element {
+fn boon_document_root() -> impl Signal<Item = Option<impl Element>> {
     let program = include_str!("counter.bn");
-    interpreter::run(program)
+    let element_future = interpreter::run(program);
+    signal::from_future(Box::pin(element_future))
 }
