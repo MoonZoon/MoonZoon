@@ -79,7 +79,7 @@ impl Engine {
 
             let mut parent_or_link_actor = root;
             for address_part in address_parts.into_iter().skip(1) {
-                parent_or_link_actor = match parent_or_link_actor.get_value().await.unwrap() {
+                parent_or_link_actor = match parent_or_link_actor.get_value().await {
                     VariableValue::Object(VariableValueObject { variables }) => {
                         variables
                             .get(&VariableName::new(address_part))
@@ -274,7 +274,7 @@ impl AsyncDebugFormat for Variable {
 }
 
 enum VariableActorMessage {
-    GetValue { value_sender: oneshot::Sender<Option<VariableValue>> },
+    GetValue { value_sender: oneshot::Sender<VariableValue> },
     SetValue { new_value: VariableValue }
 }
 
@@ -286,18 +286,18 @@ pub struct VariableActor {
 }
 
 impl VariableActor {
-    pub fn new(default_value: Option<VariableValue>) -> Self {
-        let mut value = default_value;
+    pub fn new(value: impl Future<Output = VariableValue> + 'static) -> Self {
         let (message_sender, mut message_receiver) = mpsc::unbounded::<VariableActorMessage>();
 
         let task_handle = Task::start_droppable(async move {
+            let mut value = value.await;
             while let Some(message) = message_receiver.next().await {
                 match message {
                     VariableActorMessage::GetValue { value_sender } => {
                         value_sender.send(value.clone()).unwrap();
                     }
                     VariableActorMessage::SetValue { new_value } => {
-                        value = Some(new_value);
+                        value = new_value;
                     }
                 }
             }
@@ -308,7 +308,7 @@ impl VariableActor {
         }
     }
 
-    pub async fn get_value(&self) -> Option<VariableValue> {
+    pub async fn get_value(&self) -> VariableValue {
         let (value_sender, value_receiver) = oneshot::channel();
         let message = VariableActorMessage::GetValue {
             value_sender
@@ -327,11 +327,7 @@ impl VariableActor {
 
 impl AsyncDebugFormat for VariableActor {
     async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
-        if let Some(value) = self.get_value().await {
-            value.async_debug_format_with_formatter(formatter).await
-        } else {
-            "UNSET".to_owned()
-        }
+        self.get_value().await.async_debug_format_with_formatter(formatter).await
     }
 }
 
