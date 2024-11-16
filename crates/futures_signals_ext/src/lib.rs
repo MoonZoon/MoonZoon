@@ -16,6 +16,9 @@ pub use futures_signals::{
 };
 pub use futures_util_ext::*;
 
+mod into_signal_option;
+pub use into_signal_option::IntoSignalOption;
+
 mod signal_ext_bool;
 pub use signal_ext_bool::SignalExtBool;
 
