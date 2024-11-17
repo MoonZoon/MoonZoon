@@ -6,7 +6,7 @@ use std::sync::Arc;
 use indexmap::IndexMap;
 
 use zoon::futures_channel::{oneshot, mpsc};
-use zoon::futures_util::StreamExt;
+use zoon::futures_util::stream::{self, Stream, StreamExt};
 use zoon::futures_util::future::join_all;
 use zoon::{Task, TaskHandle};
 
@@ -49,6 +49,8 @@ impl Formatter {
         format!("{:indentation$}{text}", "")
     }
 }
+
+// @TODO Resolve unwraps - some of them fail on a dependency actor/variable drop
 
 #[derive(Debug, Default)]
 pub struct Engine {
@@ -147,7 +149,7 @@ impl fmt::Debug for Function {
 }
 
 impl Function {
-    pub fn new<FUT: Future<Output = VariableActor> + 'static>(name: FunctionName, closure: impl Fn(Arguments) -> FUT + 'static) -> Self {
+    pub fn new<Fut: Future<Output = VariableActor> + 'static>(name: FunctionName, closure: impl Fn(Arguments) -> Fut + 'static) -> Self {
         let closure = Arc::new(move |arguments: Arguments| { 
             Box::pin(closure(arguments)) as Pin<Box<dyn Future<Output = VariableActor>>>
         });
@@ -292,7 +294,13 @@ impl AsyncDebugFormat for Variable {
 
 enum VariableActorMessage {
     GetValue { value_sender: oneshot::Sender<VariableValue> },
-    SetValue { new_value: VariableValue }
+    SetValue { new_value: VariableValue },
+    ValueChanges { change_sender: mpsc::UnboundedSender<VariableValueChanged> },
+}
+
+enum VariableActorValueOrMessage {
+    Value(VariableValue),
+    Message(VariableActorMessage)
 }
 
 // @TODO Don't clone - only weak references
@@ -304,18 +312,43 @@ pub struct VariableActor {
 }
 
 impl VariableActor {
-    pub fn new(value: impl Future<Output = VariableValue> + 'static) -> Self {
-        let (message_sender, mut message_receiver) = mpsc::unbounded::<VariableActorMessage>();
+    pub fn new(mut values: impl Stream<Item = VariableValue> + 'static + Unpin) -> Self {
+        let (message_sender, message_receiver) = mpsc::unbounded::<VariableActorMessage>();
 
         let task_handle = Task::start_droppable(async move {
-            let mut value = value.await;
-            while let Some(message) = message_receiver.next().await {
-                match message {
-                    VariableActorMessage::GetValue { value_sender } => {
-                        value_sender.send(value.clone()).unwrap();
-                    }
-                    VariableActorMessage::SetValue { new_value } => {
+            let mut value = values.next().await.unwrap();
+            let mut change_senders = Vec::<mpsc::UnboundedSender<VariableValueChanged>>::new();
+
+            let mut values_and_messages = stream::select(
+                values.map(VariableActorValueOrMessage::Value), 
+                message_receiver.map(VariableActorValueOrMessage::Message)
+            );
+
+            while let Some(value_or_message) = values_and_messages.next().await {
+                match value_or_message {
+                    VariableActorValueOrMessage::Value(new_value) => {
                         value = new_value;
+                        change_senders.retain(|change_sender| {
+                            change_sender.unbounded_send(VariableValueChanged).is_ok()
+                        });
+                    }
+                    VariableActorValueOrMessage::Message(message) => {
+                        match message {
+                            VariableActorMessage::GetValue { value_sender } => {
+                                value_sender.send(value.clone()).unwrap();
+                            }
+                            VariableActorMessage::SetValue { new_value } => {
+                                value = new_value;
+                                change_senders.retain(|change_sender| {
+                                    change_sender.unbounded_send(VariableValueChanged).is_ok()
+                                });
+                            }
+                            VariableActorMessage::ValueChanges { change_sender } => {
+                                if change_sender.unbounded_send(VariableValueChanged).is_ok() {
+                                    change_senders.push(change_sender);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -328,20 +361,25 @@ impl VariableActor {
 
     pub async fn get_value(&self) -> VariableValue {
         let (value_sender, value_receiver) = oneshot::channel();
-        let message = VariableActorMessage::GetValue {
-            value_sender
-        };
+        let message = VariableActorMessage::GetValue { value_sender };
         self.message_sender.unbounded_send(message).unwrap();
         value_receiver.await.unwrap()
     }
 
     pub fn set_value(&self, new_value: VariableValue) {
-        let message = VariableActorMessage::SetValue {
-            new_value
-        };
+        let message = VariableActorMessage::SetValue { new_value };
         self.message_sender.unbounded_send(message).unwrap()
     }
+
+    pub fn value_changes(&self) -> mpsc::UnboundedReceiver<VariableValueChanged> {
+        let (change_sender, change_receiver) = mpsc::unbounded();
+        let message = VariableActorMessage::ValueChanges { change_sender };
+        self.message_sender.unbounded_send(message).unwrap();
+        change_receiver
+    }
 }
+
+pub struct VariableValueChanged;
 
 impl AsyncDebugFormat for VariableActor {
     async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
