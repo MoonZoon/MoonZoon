@@ -1,6 +1,6 @@
 use std::fmt;
 use std::future::Future;
-use std::pin::Pin;
+use std::pin::{Pin, pin};
 use std::sync::Arc;
 
 use indexmap::IndexMap;
@@ -311,11 +311,14 @@ pub struct VariableActor {
     message_sender: mpsc::UnboundedSender<VariableActorMessage>,
 }
 
+// @TODO replace `Box::pin` with `pin!(Future/Stream)` where possible
+
 impl VariableActor {
-    pub fn new(mut values: impl Stream<Item = VariableValue> + 'static + Unpin) -> Self {
+    pub fn new(values: impl Future<Output = impl Stream<Item = VariableValue> + 'static> + 'static) -> Self {
         let (message_sender, message_receiver) = mpsc::unbounded::<VariableActorMessage>();
 
         let task_handle = Task::start_droppable(async move {
+            let mut values = pin!(values.await);
             let mut value = values.next().await.unwrap();
             let mut change_senders = Vec::<mpsc::UnboundedSender<VariableValueChanged>>::new();
 

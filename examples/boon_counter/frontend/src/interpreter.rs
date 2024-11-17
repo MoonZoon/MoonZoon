@@ -1,4 +1,5 @@
 use zoon::{*, println};
+use zoon::futures_util::stream;
 use std::sync::{Arc, RwLock};
 
 mod engine;
@@ -14,13 +15,13 @@ pub async fn run(_program: &str) -> impl Element {
     let function_closure = { 
         move |function_arguments: Arguments| { 
             async move {
-                VariableActor::new(async move { VariableValue::Object(VariableValueObject::new({
+                VariableActor::new(async move { stream::once(async move { VariableValue::Object(VariableValueObject::new({
                     let mut variables = Variables::new();
                     
                     let variable_name = VariableName::new("element");
                     let variable = Variable::new(
                         variable_name.clone(),
-                        VariableActor::new(async { VariableValue::Object(VariableValueObject::new(Variables::new()))})
+                        VariableActor::new(async move { stream::once(async move { VariableValue::Object(VariableValueObject::new(Variables::new()))})})
                     );
                     function_arguments
                         .get(&ArgumentName::new("element"))
@@ -92,7 +93,7 @@ pub async fn run(_program: &str) -> impl Element {
 
                     variables
                 }))})
-            }
+            })}
         }
     };
     let function = Function::new(function_name.clone(), function_closure);
@@ -115,32 +116,32 @@ pub async fn run(_program: &str) -> impl Element {
                 let argument_name = ArgumentName::new("direction");
                 let argument = Argument::new_in(
                     argument_name.clone(),
-                    VariableActor::new(async { VariableValue::Tag(VariableValueTag::new("Row"))}),
+                    VariableActor::new(async { stream::once(async { VariableValue::Tag(VariableValueTag::new("Row"))})}),
                 );
                 arguments.insert(argument_name, argument);
 
                 let argument_name = ArgumentName::new("gap");
                 let argument = Argument::new_in(
                     argument_name.clone(),
-                    VariableActor::new(async { VariableValue::Number(VariableValueNumber::new(15.))}),
+                    VariableActor::new(async { stream::once(async { VariableValue::Number(VariableValueNumber::new(15.))})}),
                 );
                 arguments.insert(argument_name, argument);
 
                 let argument_name = ArgumentName::new("style");
                 let argument = Argument::new_in(
                     argument_name.clone(),
-                    VariableActor::new(async { VariableValue::Object(VariableValueObject::new({
+                    VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new({
                         let mut variables = Variables::new();
 
                         let variable_name = VariableName::new("align");
                         let variable = Variable::new(
                             variable_name.clone(),
-                            VariableActor::new(async { VariableValue::Tag(VariableValueTag::new("Center"))})
+                            VariableActor::new(async { stream::once(async { VariableValue::Tag(VariableValueTag::new("Center"))})})
                         );
                         variables.insert(variable_name, variable);
 
                         variables
-                    }))}),
+                    }))})}),
                 );
                 arguments.insert(argument_name, argument);
 
@@ -149,7 +150,7 @@ pub async fn run(_program: &str) -> impl Element {
                     argument_name.clone(),
                     { 
                         let engine = engine.clone();
-                        VariableActor::new(async move { VariableValue::List(VariableValueList::new({
+                        VariableActor::new(async move { stream::once(async move { VariableValue::List(VariableValueList::new({
                             let mut list = Vec::new();
 
                             list.push({
@@ -158,7 +159,7 @@ pub async fn run(_program: &str) -> impl Element {
                                 let argument_name = ArgumentName::new("label");
                                 let argument = Argument::new_in(
                                     argument_name.clone(),
-                                    VariableActor::new(async { VariableValue::Text(VariableValueText::new("-"))}),
+                                    VariableActor::new(async { stream::once(async { VariableValue::Text(VariableValueText::new("-"))})}),
                                 );
                                 arguments.insert(argument_name, argument);
 
@@ -192,7 +193,7 @@ pub async fn run(_program: &str) -> impl Element {
                                 let argument_name = ArgumentName::new("label");
                                 let argument = Argument::new_in(
                                     argument_name.clone(),
-                                    VariableActor::new(async { VariableValue::Text(VariableValueText::new("+"))}),
+                                    VariableActor::new(async { stream::once(async { VariableValue::Text(VariableValueText::new("+"))})}),
                                 );
                                 arguments.insert(argument_name, argument);
 
@@ -211,7 +212,7 @@ pub async fn run(_program: &str) -> impl Element {
                             });
 
                             list
-                        }))})
+                        }))})})
                     }
                 );
                 arguments.insert(argument_name, argument);
@@ -219,7 +220,7 @@ pub async fn run(_program: &str) -> impl Element {
                 let argument_name = ArgumentName::new("extra");
                 let argument = Argument::new_in(
                     argument_name.clone(),
-                    VariableActor::new(async { VariableValue::Object(VariableValueObject::new(Variables::new()))}),
+                    VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new(Variables::new()))})}),
                 );
                 arguments.insert(argument_name, argument);
 
@@ -232,35 +233,35 @@ pub async fn run(_program: &str) -> impl Element {
 
     let function_name: FunctionName = FunctionName::new("Element/button");
     let function_closure = |function_arguments: Arguments| async move {
-        VariableActor::new(async move { VariableValue::Object(VariableValueObject::new({
+        VariableActor::new(async move { stream::once(async move { VariableValue::Object(VariableValueObject::new({
             let mut variables = Variables::new();
             
             let variable_name = VariableName::new("element");
             let variable = Variable::new(
                 variable_name.clone(),
-                VariableActor::new(async { VariableValue::Object(VariableValueObject::new({
+                VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new({
                     let mut variables = Variables::new();
 
                     let variable_name = VariableName::new("event");
                     let variable = Variable::new(
                         variable_name.clone(),
-                        VariableActor::new(async { VariableValue::Object(VariableValueObject::new({
+                        VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new({
                             let mut variables = Variables::new();
 
                             let variable_name = VariableName::new("hovered");
                             let variable = Variable::new(
                                 variable_name.clone(),
-                                VariableActor::new(async { VariableValue::Tag(VariableValueTag::new("False"))})
+                                VariableActor::new(async { stream::once(async { VariableValue::Tag(VariableValueTag::new("False"))})})
                             );
                             variables.insert(variable_name, variable);
 
                             variables
-                        }))})
+                        }))})})
                     );
                     variables.insert(variable_name, variable);
 
                     variables
-                }))})
+                }))})})
             );
             function_arguments
                 .get(&ArgumentName::new("element"))
@@ -307,7 +308,7 @@ pub async fn run(_program: &str) -> impl Element {
             variables.insert(variable_name, variable);
 
             variables
-        }))})
+        }))})})
     };
     let function = Function::new(function_name.clone(), function_closure);
     engine.write().unwrap().functions.insert(function_name, function);
@@ -330,33 +331,33 @@ pub async fn run(_program: &str) -> impl Element {
                 let argument_name = ArgumentName::new("style");
                 let argument = Argument::new_in(
                     argument_name.clone(),
-                    VariableActor::new(async { VariableValue::Object(VariableValueObject::new({
+                    VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new({
                         let mut variables = Variables::new();
 
                         let variable_name = VariableName::new("width");
                         let variable = Variable::new(
                             variable_name.clone(),
-                            VariableActor::new(async { VariableValue::Number(VariableValueNumber::new(45.))})
+                            VariableActor::new(async { stream::once(async { VariableValue::Number(VariableValueNumber::new(45.))})})
                         );
                         variables.insert(variable_name, variable);
 
                         let variable_name = VariableName::new("rounded_corners");
                         let variable = Variable::new(
                             variable_name.clone(),
-                            VariableActor::new(async { VariableValue::Tag(VariableValueTag::new("Fully"))})
+                            VariableActor::new(async { stream::once(async { VariableValue::Tag(VariableValueTag::new("Fully"))})})
                         );
                         variables.insert(variable_name, variable);
 
                         let variable_name = VariableName::new("background");
                         let variable = Variable::new(
                             variable_name.clone(),
-                            VariableActor::new(async { VariableValue::Object(VariableValueObject::new({
+                            VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new({
                                 let mut variables = Variables::new();
 
                                 let variable_name = VariableName::new("color");
                                 let variable = Variable::new(
                                     variable_name.clone(),
-                                    VariableActor::new(async { VariableValue::TaggedObject(VariableValueTaggedObject::new("Oklch", {
+                                    VariableActor::new(async { stream::once(async { VariableValue::TaggedObject(VariableValueTaggedObject::new("Oklch", {
                                         let mut variables = Variables::new();
 
                                         let variable_name = VariableName::new("lightness");
@@ -383,20 +384,24 @@ pub async fn run(_program: &str) -> impl Element {
                                                     }
                                                     _ => unreachable!()
                                                 };
-                                                // @TODO listen for `hovered_actor`` changes, then call its `get_value()`
                                                 // @TODO replace `match` with non-compile time construct 
-                                                // @TODO what if `element_actor` is changed?
-                                                // element.hovered |> WHEN { True => 0.85, False => 0.75 }
-                                                match hovered_actor.get_value().await {
-                                                    VariableValue::Tag(variable_value_tag) => {
-                                                        match variable_value_tag.tag() {
-                                                            "True" => VariableValue::Number(VariableValueNumber::new(0.85)),
-                                                            "False" => VariableValue::Number(VariableValueNumber::new(0.75)),
-                                                            _ => unreachable!(),
+                                                // @TODO what if `element_actor` or `event_actor` is changed?
+                                                hovered_actor.value_changes().then(move |_| {
+                                                    let hovered_actor = hovered_actor.clone();
+                                                    async move {
+                                                        // element.hovered |> WHEN { True => 0.85, False => 0.75 }
+                                                        match hovered_actor.get_value().await {
+                                                            VariableValue::Tag(variable_value_tag) => {
+                                                                match variable_value_tag.tag() {
+                                                                    "True" => VariableValue::Number(VariableValueNumber::new(0.85)),
+                                                                    "False" => VariableValue::Number(VariableValueNumber::new(0.75)),
+                                                                    _ => unreachable!(),
+                                                                }
+                                                            }
+                                                            _ => unreachable!()
                                                         }
                                                     }
-                                                    _ => unreachable!()
-                                                }
+                                                })
                                             })
                                         );
                                         variables.insert(variable_name, variable);
@@ -404,29 +409,29 @@ pub async fn run(_program: &str) -> impl Element {
                                         let variable_name = VariableName::new("chroma");
                                         let variable = Variable::new(
                                             variable_name.clone(),
-                                            VariableActor::new(async { VariableValue::Number(VariableValueNumber::new(0.07))})
+                                            VariableActor::new(async { stream::once(async { VariableValue::Number(VariableValueNumber::new(0.07))})})
                                         );
                                         variables.insert(variable_name, variable);
 
                                         let variable_name = VariableName::new("hue");
                                         let variable = Variable::new(
                                             variable_name.clone(),
-                                            VariableActor::new(async { VariableValue::Number(VariableValueNumber::new(320.))})
+                                            VariableActor::new(async { stream::once(async { VariableValue::Number(VariableValueNumber::new(320.))})})
                                         );
                                         variables.insert(variable_name, variable);
 
                                         variables
-                                    }))})
+                                    }))})})
                                 );
                                 variables.insert(variable_name, variable);
 
                                 variables
-                            }))})
+                            }))})})
                         );
                         variables.insert(variable_name, variable);
 
                         variables
-                    }))})
+                    }))})})
                 );
                 arguments.insert(argument_name, argument);
 
@@ -445,7 +450,7 @@ pub async fn run(_program: &str) -> impl Element {
                 let argument_name = ArgumentName::new("extra");
                 let argument = Argument::new_in(
                     argument_name.clone(),
-                    VariableActor::new(async { VariableValue::Object(VariableValueObject::new(Variables::new()))})
+                    VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new(Variables::new()))})})
                 );
                 arguments.insert(argument_name, argument);
 
@@ -459,32 +464,32 @@ pub async fn run(_program: &str) -> impl Element {
     let variable_name = VariableName::new("elements");
     let variable = Variable::new(
         variable_name.clone(),
-        VariableActor::new(async { VariableValue::Object(VariableValueObject::new({
+        VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new({
             let mut variables = Variables::new();
             
             let variable_name = VariableName::new("decrement_button");
             let variable = Variable::new(
                 variable_name.clone(),
-                VariableActor::new(async { VariableValue::Link(VariableValueLink::new())})
+                VariableActor::new(async { stream::once(async { VariableValue::Link(VariableValueLink::new())})})
             );
             variables.insert(variable_name, variable);
 
             let variable_name = VariableName::new("increment_button");
             let variable = Variable::new(
                 variable_name.clone(),
-                VariableActor::new(async { VariableValue::Link(VariableValueLink::new())})
+                VariableActor::new(async { stream::once(async { VariableValue::Link(VariableValueLink::new())})})
             );
             variables.insert(variable_name, variable);
 
             variables
-        }))})
+        }))})})
     );
     engine.write().unwrap().variables.insert(variable_name, variable);
 
     let variable_name = VariableName::new("counter");
     let variable = Variable::new(
         variable_name.clone(),
-        VariableActor::new(async { VariableValue::Number(VariableValueNumber::new(6.))})
+        VariableActor::new(async { stream::once(async { VariableValue::Number(VariableValueNumber::new(6.))})})
     );
     engine.write().unwrap().variables.insert(variable_name, variable);
 
