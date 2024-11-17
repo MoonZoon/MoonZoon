@@ -248,15 +248,29 @@ pub async fn run(_program: &str) -> impl Element {
                         VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new({
                             let mut variables = Variables::new();
 
-                            let variable_name = VariableName::new("hovered");
+                            let variable_name = VariableName::new("press");
                             let variable = Variable::new(
                                 variable_name.clone(),
-                                VariableActor::new(async { stream::once(async { VariableValue::Tag(VariableValueTag::new("False"))})})
+                                VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new(Variables::new()))})})
                             );
                             variables.insert(variable_name, variable);
 
                             variables
                         }))})})
+                    );
+                    variables.insert(variable_name, variable);
+
+                    let variable_name = VariableName::new("hovered");
+                    let variable = Variable::new(
+                        variable_name.clone(),
+                        VariableActor::new(async { stream::once(async { VariableValue::Tag(VariableValueTag::new("False"))})})
+                    );
+                    variables.insert(variable_name, variable);
+
+                    let variable_name = VariableName::new("type");
+                    let variable = Variable::new(
+                        variable_name.clone(),
+                        VariableActor::new(async { stream::once(async { VariableValue::Tag(VariableValueTag::new("Button"))})})
                     );
                     variables.insert(variable_name, variable);
 
@@ -366,16 +380,7 @@ pub async fn run(_program: &str) -> impl Element {
                                             VariableActor::new(async move { 
                                                 // @TODO replace with non-compile time construct
                                                 let element_actor = element_argument.argument_out().unwrap().actor().await;
-                                                let event_actor = match element_actor.get_value().await {
-                                                    VariableValue::Object(variable_value_object) => {
-                                                        variable_value_object
-                                                            .variable(&VariableName::new("event"))
-                                                            .unwrap()
-                                                            .actor()
-                                                    }
-                                                    _ => unreachable!()
-                                                };
-                                                let hovered_actor = match event_actor.get_value().await {
+                                                let hovered_actor = match element_actor.get_value().await {
                                                     VariableValue::Object(variable_value_object) => {
                                                         variable_value_object
                                                             .variable(&VariableName::new("hovered"))
@@ -385,7 +390,7 @@ pub async fn run(_program: &str) -> impl Element {
                                                     _ => unreachable!()
                                                 };
                                                 // @TODO replace `match` with non-compile time construct 
-                                                // @TODO what if `element_actor` or `event_actor` is changed?
+                                                // @TODO what if `element_actor` is changed?
                                                 hovered_actor.value_changes().then(move |_| {
                                                     let hovered_actor = hovered_actor.clone();
                                                     async move {
@@ -502,7 +507,7 @@ pub async fn run(_program: &str) -> impl Element {
     );
     engine.write().unwrap().variables.insert(variable_name, variable);
 
-    Task::next_micro_tick().await;
+    Task::next_macro_tick().await;
     println!("{}", engine.read().unwrap().async_debug_format().await);
 
     El::new().child("Boon root")
