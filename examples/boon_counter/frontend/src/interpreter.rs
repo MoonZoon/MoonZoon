@@ -486,6 +486,8 @@ pub async fn run(_program: &str) -> impl Element {
     );
     engine.write().unwrap().variables.insert(variable_name, variable);
 
+    // @TODO dependencies
+    // @TODO pulse vs beam
     let variable_name = VariableName::new("counter");
     let variable = Variable::new(
         variable_name.clone(),

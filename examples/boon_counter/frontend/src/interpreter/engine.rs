@@ -311,8 +311,6 @@ pub struct VariableActor {
     message_sender: mpsc::UnboundedSender<VariableActorMessage>,
 }
 
-// @TODO replace `Box::pin` with `pin!(Future/Stream)` where possible
-
 impl VariableActor {
     pub fn new(values: impl Future<Output = impl Stream<Item = VariableValue> + 'static> + 'static) -> Self {
         let (message_sender, message_receiver) = mpsc::unbounded::<VariableActorMessage>();
@@ -327,13 +325,21 @@ impl VariableActor {
                 message_receiver.map(VariableActorValueOrMessage::Message)
             );
 
+            let set_value = |
+                old_value: &mut VariableValue, 
+                new_value: VariableValue,
+                change_senders: &mut Vec<mpsc::UnboundedSender<VariableValueChanged>>,
+            | {
+                *old_value = new_value;
+                change_senders.retain(|change_sender| {
+                    change_sender.unbounded_send(VariableValueChanged).is_ok()
+                });
+            };
+
             while let Some(value_or_message) = values_and_messages.next().await {
                 match value_or_message {
                     VariableActorValueOrMessage::Value(new_value) => {
-                        value = new_value;
-                        change_senders.retain(|change_sender| {
-                            change_sender.unbounded_send(VariableValueChanged).is_ok()
-                        });
+                        set_value(&mut value, new_value, &mut change_senders);
                     }
                     VariableActorValueOrMessage::Message(message) => {
                         match message {
@@ -341,10 +347,7 @@ impl VariableActor {
                                 value_sender.send(value.clone()).unwrap();
                             }
                             VariableActorMessage::SetValue { new_value } => {
-                                value = new_value;
-                                change_senders.retain(|change_sender| {
-                                    change_sender.unbounded_send(VariableValueChanged).is_ok()
-                                });
+                                set_value(&mut value, new_value, &mut change_senders);
                             }
                             VariableActorMessage::ValueChanges { change_sender } => {
                                 if change_sender.unbounded_send(VariableValueChanged).is_ok() {
