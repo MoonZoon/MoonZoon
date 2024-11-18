@@ -24,7 +24,6 @@ FUNCTION root_element() {
             counter
             counter_button(label: '+') |> LINK { elements.increment_button }
         }
-        extra: []
     )
 }
 
@@ -44,6 +43,5 @@ FUNCTION counter_button(label) {
             ]]
         ]
         label: label
-        extra: []
     )
 }

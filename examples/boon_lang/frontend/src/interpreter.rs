@@ -5,6 +5,10 @@ use std::sync::{Arc, RwLock};
 mod engine;
 use engine::*;
 
+
+// @TODO generate the code automatically
+
+
 pub async fn run(_program: &str) -> impl Element {
     // @TODO get rid of the lock?
     let engine = Arc::new(RwLock::new(Engine::default()));
@@ -72,18 +76,6 @@ pub async fn run(_program: &str) -> impl Element {
                         variable_name.clone(),
                         function_arguments
                             .get(&ArgumentName::new("items"))
-                            .unwrap()
-                            .argument_in()
-                            .unwrap()
-                            .actor()
-                    );
-                    variables.insert(variable_name, variable);
-
-                    let variable_name = VariableName::new("extra");
-                    let variable = Variable::new(
-                        variable_name.clone(),
-                        function_arguments
-                            .get(&ArgumentName::new("extra"))
                             .unwrap()
                             .argument_in()
                             .unwrap()
@@ -217,13 +209,6 @@ pub async fn run(_program: &str) -> impl Element {
                 );
                 arguments.insert(argument_name, argument);
 
-                let argument_name = ArgumentName::new("extra");
-                let argument = Argument::new_in(
-                    argument_name.clone(),
-                    VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new(Variables::new()))})}),
-                );
-                arguments.insert(argument_name, argument);
-
                 engine.read().unwrap().functions.get(&FunctionName::new("Element/stripe")).unwrap().run(arguments).await
             }
         }
@@ -302,18 +287,6 @@ pub async fn run(_program: &str) -> impl Element {
                 variable_name.clone(),
                 function_arguments
                     .get(&ArgumentName::new("label"))
-                    .unwrap()
-                    .argument_in()
-                    .unwrap()
-                    .actor()
-            );
-            variables.insert(variable_name, variable);
-
-            let variable_name = VariableName::new("extra");
-            let variable = Variable::new(
-                variable_name.clone(),
-                function_arguments
-                    .get(&ArgumentName::new("extra"))
                     .unwrap()
                     .argument_in()
                     .unwrap()
@@ -449,13 +422,6 @@ pub async fn run(_program: &str) -> impl Element {
                         .argument_in()
                         .unwrap()
                         .actor()
-                );
-                arguments.insert(argument_name, argument);
-
-                let argument_name = ArgumentName::new("extra");
-                let argument = Argument::new_in(
-                    argument_name.clone(),
-                    VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new(Variables::new()))})})
                 );
                 arguments.insert(argument_name, argument);
 
