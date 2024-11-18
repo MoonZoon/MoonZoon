@@ -1,7 +1,7 @@
 use moon::*;
 
 async fn frontend() -> Frontend {
-    Frontend::new().title("Boon Counter example")
+    Frontend::new().title("Boon Lang example")
 }
 
 async fn up_msg_handler(_: UpMsgRequest<()>) {}

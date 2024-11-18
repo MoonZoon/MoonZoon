@@ -1,2 +1,2 @@
-# Boon Counter
+# Boon Lang
 > MoonZoon example
