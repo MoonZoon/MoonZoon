@@ -16,5 +16,7 @@ fn root() -> impl Element {
 
 async fn boon_document_root() -> impl Element {
     let program = include_str!("examples/counter.bn");
+    // let program = include_str!("examples/todo_mvc.bn");
+
     interpreter::run(program).await
 }
