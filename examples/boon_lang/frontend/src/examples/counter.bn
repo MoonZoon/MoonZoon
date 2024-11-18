@@ -15,7 +15,7 @@ document: Document/new(root: root_element())
 
 FUNCTION root_element() { 
     Element/stripe(
-        element
+        element: []
         direction: Row
         gap: 15
         style: [align: Center]
@@ -30,7 +30,10 @@ FUNCTION root_element() {
 
 FUNCTION counter_button(label) {
     Element/button(
-        element
+        element: [
+            event: [press: LINK]
+            hovered: LINK
+        ]
         style: [
             width: 45
             rounded_corners: Fully
