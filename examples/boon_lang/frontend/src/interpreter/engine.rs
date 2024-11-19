@@ -13,6 +13,8 @@ use zoon::futures_util::stream::{self, Stream, StreamExt};
 use zoon::futures_util::future::join_all;
 use zoon::{Task, TaskHandle};
 
+// @TODO bounded channels with timers + console.logs?
+
 // @TODO optimize code with https://crates.io/crates/kanal
 // and https://crates.io/crates/smallvec ?
 

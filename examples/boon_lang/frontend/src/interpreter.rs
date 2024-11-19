@@ -6,6 +6,8 @@ mod engine;
 use engine::*;
 
 
+// @TODO finish the manual counter code below
+
 // @TODO generate the code automatically
 
 
