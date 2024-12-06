@@ -1,11 +1,11 @@
 ```mermaid
-flowchart LR
+flowchart RL
     classDef root_variable_class stroke:yellow
     classDef function_arguments_class stroke:blue
     classDef function_output_class stroke:green
 
     subgraph graph_root["Counter"]
-        direction LR
+        direction RL
         style graph_root fill:transparent
 
         VAR_elements__1["elements"]:::root_variable_class
@@ -55,7 +55,7 @@ flowchart LR
     end
 
     subgraph FUNCTION_root_element__20["FUNCTION__root_element(..)"]
-        direction LR
+        direction RL
         ARGUMENTS__46["ARGUMENTS"]:::function_arguments_class
         OUTPUT__47["OUTPUT"]:::function_output_class
 
@@ -95,7 +95,7 @@ flowchart LR
     end
 
     subgraph FUNCTION_counter_button__33["FUNCTION__counter_button(..)"]
-        direction LR
+        direction RL
         ARGUMENTS__48["ARGUMENTS"]:::function_arguments_class
         OUTPUT__49["OUTPUT"]:::function_output_class
 
@@ -171,6 +171,9 @@ flowchart LR
         ARG_label__46 ==> |"label"| CALL_Element_button__33
 
         CALL_Element_button__33 ==> OUTPUT__49
+
+        CALL_Element_button__33 .-> LINK__38
+        CALL_Element_button__33 .-> LINK__40
     end
 
     FUNCTION_root_element__20 o--o CALL_root_element__19
