@@ -33,17 +33,13 @@ flowchart LR
         NUM_0__9["0"]
         GET_elements.decrement_button.event.press__10[".event.press"]   
         GET_elements.increment_button.event.press__11[".event.press"]
-        THEN__12["THEN"]
-        THEN__13["THEN"]
         NUM_minus_1__14["-1"]
         NUM_1__15["1"]   
         CALL_Math_sum__16["Math/sum(..)"]
 
         NUM_0__9 ==> |"1"| LATEST__8
-        GET_elements.decrement_button.event.press__10 .-> THEN__12
-        THEN__12 ==> NUM_minus_1__14
-        GET_elements.increment_button.event.press__11 .-> THEN__13
-        THEN__13 ==> NUM_1__15
+        GET_elements.decrement_button.event.press__10 .-> |"THEN"| NUM_minus_1__14
+        GET_elements.increment_button.event.press__11 .-> |"THEN"| NUM_1__15
         NUM_minus_1__14 ==> |"2"| LATEST__8
         NUM_1__15 ==> |"3"| LATEST__8
         LATEST__8 ==> |"Increment"| CALL_Math_sum__16
@@ -63,7 +59,7 @@ flowchart LR
         CALL_root_element__19 ==> |"1"| LIN__5
         CALL_root_element__19 ==> |"2"| LIN__6
 
-        linkStyle 22,23 stroke:Blue;
+        linkStyle 20,21 stroke:Blue;
     end
 
     subgraph FUNCTION_root_element__20["root_element(..)"]
@@ -109,7 +105,7 @@ flowchart LR
 
         CALL_Element_stripe__21 ==> OUTPUT__47
 
-        linkStyle 37,38 stroke:Blue;
+        linkStyle 35,36 stroke:Blue;
     end
 
     subgraph FUNCTION_counter_button__33["counter_button(..)"]
@@ -147,9 +143,8 @@ flowchart LR
         NUM_0.07__55["0.07"]
         NUM_320__56["320"]
 
-        WHEN__58["WHEN"]
-        ARM_True__59{"True"}
-        ARM_False__60{"False"}
+        WHEN_True__59{"True"}
+        WHEN_False__60{"False"}
         NUM_0.85__61["0.85"]
         NUM_0.75__62["0.75"]
 
@@ -179,18 +174,17 @@ flowchart LR
         NUM_0.07__55 ==> VAR_chroma__53
         NUM_320__56 ==> VAR_hue__54
 
-        VAR_hovered__39 --> WHEN__58
-        WHEN__58 ==> |"1"| ARM_True__59
-        NUM_0.85__61 ==> ARM_True__59
-        WHEN__58 ==> |"2"| ARM_False__60
-        NUM_0.75__62 ==> ARM_False__60
-        ARM_True__59 ==> VAR_lightness__52
-        ARM_False__60 ==> VAR_lightness__52
+        VAR_hovered__39 --> |"WHEN 1"| WHEN_True__59
+        NUM_0.85__61 ==> VAR_lightness__52
+        VAR_hovered__39 --> |"WHEN 2"| WHEN_False__60
+        NUM_0.75__62 ==> VAR_lightness__52
+        WHEN_True__59 ==> NUM_0.85__61
+        WHEN_False__60 ==> NUM_0.75__62
 
         ARG_label__46 ==> |"label"| CALL_Element_button__33
 
         CALL_Element_button__33 ==> OUTPUT__49
 
-        linkStyle 40,41 stroke:Blue;
+        linkStyle 38,39 stroke:Blue;
     end
 ```
