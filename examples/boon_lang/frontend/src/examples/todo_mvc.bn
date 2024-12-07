@@ -60,7 +60,7 @@ store: [
         |> List/retain(item, if: LATEST {
             True
             item.todo_elements.remove_todo_button.event.press |> THEN { False }
-            store.elements.remove_completed_button.event.press |> THEN { item.completed |> Bool/not() }
+            elements.remove_completed_button.event.press |> THEN { item.completed |> Bool/not() }
         })
     selected_todo_id: LATEST {
         None
@@ -125,7 +125,7 @@ FUNCTION new_todo(id, title, completed) {
     ]
 }
 
-document: Document/new(root: root_element())
+document: Document/new(root: root_element(PASS: [store: store]))
 
 FUNCTION root_element() { 
     Element/stripe(
@@ -200,8 +200,8 @@ FUNCTION main_panel() {
             background: [color: Oklch[lightness: 1]]
         ]
         items: LIST {
-            new_todo_title_text_input() |> LINK { store.elements.new_todo_title_text_input }
-            store.todos |> List/empty() |> WHEN { True => NoElement, False => Stripe/new(
+            new_todo_title_text_input() |> LINK { PASSED.store.elements.new_todo_title_text_input }
+            PASSED.store.todos |> List/empty() |> WHEN { True => NoElement, False => Stripe/new(
                 element: []
                 style: [direction: Column]
                 items: LIST { todos_element(), panel_footer() }
@@ -225,7 +225,7 @@ FUNCTION new_todo_title_text_input() {
             shadows: LIST { [direction: Inwards, y: -2, blur: 1, color: Oklch[alpha: 0.03]] }
         ]
         label: Hidden[text: 'What needs to be done?']
-        text: LATEST { '', element.event.change.text, store.title_to_save |> THEN { '' } }
+        text: LATEST { '', element.event.change.text, PASSED.store.title_to_save |> THEN { '' } }
         placeholder: [
             style: [font: [style: Italic, color: Oklch[lightness: 0.925]]]
             text: 'What needs to be done?'
@@ -240,7 +240,7 @@ FUNCTION todos_element() {
         element: [
             nearby_element: [
                 position: Above
-                element: toggle_all_checkbox() |> LINK { store.elements.toggle_all_checkbox }
+                element: toggle_all_checkbox() |> LINK { PASSED.store.elements.toggle_all_checkbox }
             ]
         ]
         direction: Column
@@ -249,8 +249,8 @@ FUNCTION todos_element() {
             borders: [top: [color: Oklch[lightness: 0.915]]]
             background: [color: Oklch[lightness: 0.946]]
         ]
-        items: store.todos
-            |> List/retain(item, if: store.selected_filter |> WHEN {
+        items: PASSED.store.todos
+            |> List/retain(item, if: PASSED.store.selected_filter |> WHEN {
                 All => True 
                 Active => item.completed |> Bool/not()
                 Completed => item.completed
@@ -269,7 +269,7 @@ FUNCTION todo_element(todo) {
             background: [color: Oklch[lightness: 1]]
             font: [size: 24]
         ]
-        items: store.selected_todo_id = todo.id |> WHEN {
+        items: PASSED.store.selected_todo_id = todo.id |> WHEN {
             True => LIST { todo |> editing_todo_title_element() |> LINK { todo.todo_elements.editing_todo_title_element }}
             False => LIST {
                 todo |> todo_checkbox() |> LINK { todo.todo_elements.todo_checkbox: element }
@@ -284,7 +284,7 @@ FUNCTION toggle_all_checkbox() {
         element: [event: [click: LINK]]
         style: [width: 60, height: Fill]
         label: Hidden[text: 'Toggle all']
-        checked: store.todos |> List/every(item, if: item.completed)
+        checked: PASSED.store.todos |> List/every(item, if: item.completed)
         icon: Element/container( 
             element: []
             style: [
@@ -413,8 +413,8 @@ FUNCTION panel_footer() {
         items: LIST {
             active_items_count_text
             filters_element
-            store.todos |> List/any(item, if: item.completed) |> WHEN {
-                True => remove_completed_button() |> LINK { store.elements.remove_completed_button }
+            PASSED.store.todos |> List/any(item, if: item.completed) |> WHEN {
+                True => remove_completed_button() |> LINK { PASSED.store.elements.remove_completed_button }
                 False => NoElement
             }
         } |> List/map(old, new: Element/container(
@@ -427,7 +427,7 @@ FUNCTION panel_footer() {
 
 FUNCTION active_items_count_text() {
     BLOCK {
-        count: store.todos |> List/retain(item, if: item.completed |> Bool/not()) |> List/count
+        count: PASSED.store.todos |> List/retain(item, if: item.completed |> Bool/not()) |> List/count
         maybe_s: count > 1 |> WHEN { True => 's', False => '' }
         '{count} item{maybe_s} left'
     }
@@ -442,7 +442,7 @@ FUNCTION filters_element() {
         items: 
             LIST { All, Active, Completed } 
             |> List/map(old, new: [filter: old, element: old |> filter_button()])
-            |> LINK { store.filters }
+            |> LINK { PASSED.store.filters }
     )
 }
 
@@ -456,7 +456,7 @@ FUNCTION filter_button(filter) {
             padding: [row: 8, column: 4]
             rounded_corners: 3
             outline: BLOCK {
-                selected: store.selected_filter = filter
+                selected: PASSED.store.selected_filter = filter
                 alpha: LIST { selected, element.hovered } |> WHEN {
                     LIST { True, __ } => 0.2
                     LIST { False, True } => 0.1

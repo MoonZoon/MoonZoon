@@ -1,17 +1,18 @@
-elements: [
-    decrement_button: LINK
-    increment_button: LINK
+store: [
+    elements: [
+        decrement_button: LINK
+        increment_button: LINK
+    ]
+    counter: 
+        LATEST {
+            0
+            elements.decrement_button.event.press |> THEN { -1 }
+            elements.increment_button.event.press |> THEN { 1 }
+        } 
+        |> Math/sum()
 ]
 
-counter: 
-    LATEST {
-        0
-        elements.decrement_button.event.press |> THEN { -1 }
-        elements.increment_button.event.press |> THEN { 1 }
-    } 
-    |> Math/sum()
-
-document: Document/new(root: root_element())
+document: Document/new(root: root_element(PASS: store))
 
 FUNCTION root_element() { 
     Element/stripe(
@@ -20,9 +21,9 @@ FUNCTION root_element() {
         gap: 15
         style: [align: Center]
         items: LIST {
-            counter_button(label: '-') |> LINK { elements.decrement_button }
-            counter
-            counter_button(label: '+') |> LINK { elements.increment_button }
+            counter_button(label: '-') |> LINK { PASSED.elements.decrement_button }
+            PASSED.counter
+            counter_button(label: '+') |> LINK { PASSED.elements.increment_button }
         }
     )
 }
