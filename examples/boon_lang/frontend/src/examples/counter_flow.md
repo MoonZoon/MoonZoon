@@ -33,15 +33,22 @@ flowchart LR
         NUM_0__9["0"]
         GET_elements.decrement_button.event.press__10[".event.press"]   
         GET_elements.increment_button.event.press__11[".event.press"]
-        NUM_minus_1__14["-1"]
-        NUM_1__15["1"]   
         CALL_Math_sum__16["Math/sum(..)"]
 
+        subgraph THEN__68["THEN"]
+            NUM_minus_1__14["-1"]
+        end
+
+        subgraph THEN__70["THEN"]
+            NUM_1__15["1"]
+        end
+
+        GET_elements.decrement_button.event.press__10 .-> NUM_minus_1__14
+        GET_elements.increment_button.event.press__11 .-> NUM_1__15
+
         NUM_0__9 ==> |"1"| LATEST__8
-        GET_elements.decrement_button.event.press__10 .-> |"THEN"| NUM_minus_1__14
-        GET_elements.increment_button.event.press__11 .-> |"THEN"| NUM_1__15
-        NUM_minus_1__14 ==> |"2"| LATEST__8
-        NUM_1__15 ==> |"3"| LATEST__8
+        NUM_minus_1__14 .-> |"2"| LATEST__8
+        NUM_1__15 .-> |"3"| LATEST__8
         LATEST__8 ==> |"Increment"| CALL_Math_sum__16
         CALL_Math_sum__16 ==> VAR_counter__7
         VAR_counter__7 ==> OBJ__67
