@@ -16,7 +16,7 @@ router: Router/new(
     }
     go_to_route: store.filters 
         |> List/map(old, new: old |> WHEN {
-            [filter, element] => element.event.press |> THEN { filter }
+            [filter, element] => element.event.press |> WHEN { _ => filter }
         })
         |> List/latest()
         |> WHEN {
@@ -37,7 +37,7 @@ store: [
         trimmed_text: elements.new_todo_title_text_input.text |> Text/trim()
         elements.new_todo_title_text_input.event.key_down.key |> WHEN {
             Enter => trimmed_text |> Text/empty() |> Bool/not() |> WHEN { True => trimmed_text, False => SKIP }
-            __ => SKIP
+            _ => SKIP
         }
     }
     filters: LINK
@@ -59,17 +59,17 @@ store: [
         |> List/append(item: title_to_save |> new_todo_from_title())
         |> List/retain(item, if: LATEST {
             True
-            item.todo_elements.remove_todo_button.event.press |> THEN { False }
-            elements.remove_completed_button.event.press |> THEN { item.completed |> Bool/not() }
+            item.todo_elements.remove_todo_button.event.press |> WHEN { _ => False }
+            elements.remove_completed_button.event.press |> WHEN { _ => item.completed |> Bool/not() }
         })
     selected_todo_id: LATEST {
         None
         todos 
             |> List/map(old, new: LATEST { 
                 old.todo_elements.editing_todo_title_element.event.key_down.key 
-                    |> WHEN { Escape => None, __ => SKIP }
-                old.title_to_update |> THEN { None }
-                old.todo_elements.todo_title_element.event.double_click |> THEN { old.id }
+                    |> WHEN { Escape => None, _ => SKIP }
+                old.title_to_update |> WHEN { _ => None }
+                old.todo_elements.todo_title_element.event.double_click |> WHEN { _ => old.id }
             })
             |> List/latest()
     }
@@ -94,9 +94,9 @@ FUNCTION new_todo(id, title, completed) {
         title_to_update: 
             LATEST {
                 todo_elements.editing_todo_title_element.event.blur
-                todo_elements.editing_todo_title_element.event.key_down.key |> WHEN { Enter => [], __ => SKIP }
+                todo_elements.editing_todo_title_element.event.key_down.key |> WHEN { Enter => [], _ => SKIP }
             } 
-            |> THEN { todo_elements.editing_todo_title_element.text } 
+            |> WHEN { _ => todo_elements.editing_todo_title_element.text } 
         id: id
         title: LATEST {
             title
@@ -106,21 +106,21 @@ FUNCTION new_todo(id, title, completed) {
             LATEST {
                 completed
                 store.elements.toggle_all_checkbox.event.click 
-                    |> THEN { store.todos |> List/every(item, if: item.completed) |> Bool/not() }
+                    |> WHEN { _ => store.todos |> List/every(item, if: item.completed) |> Bool/not() }
             } 
             |> WHEN { completed => LATEST {
                 completed
-                todo_elements.todo_checkbox.event.click |> THEN { completed |> Bool/not() }
+                todo_elements.todo_checkbox.event.click |> WHEN { _ => completed |> Bool/not() }
             }}
         edited_title:
             LATEST {
                 ''
                 todo_elements.editing_todo_title_element.event.change.text
-                title_to_update |> THEN { '' }
+                title_to_update |> WHEN { _ => '' }
             } |> WHEN { edited_title => LATEST {
                 edited_title
                 todo_elements.todo_title_element.event.double_click
-                    |> THEN { edited_title |> Text/empty() |> WHEN { True => title, False => SKIP } }
+                    |> WHEN { _ => edited_title |> Text/empty() |> WHEN { True => title, False => SKIP } }
             }}
     ]
 }
@@ -225,7 +225,7 @@ FUNCTION new_todo_title_text_input() {
             shadows: LIST { [direction: Inwards, y: -2, blur: 1, color: Oklch[alpha: 0.03]] }
         ]
         label: Hidden[text: 'What needs to be done?']
-        text: LATEST { '', element.event.change.text, PASSED.store.title_to_save |> THEN { '' } }
+        text: LATEST { '', element.event.change.text, PASSED.store.title_to_save |> WHEN { _ => '' } }
         placeholder: [
             style: [font: [style: Italic, color: Oklch[lightness: 0.925]]]
             text: 'What needs to be done?'
@@ -458,7 +458,7 @@ FUNCTION filter_button(filter) {
             outline: BLOCK {
                 selected: PASSED.store.selected_filter = filter
                 alpha: LIST { selected, element.hovered } |> WHEN {
-                    LIST { True, __ } => 0.2
+                    LIST { True, _ } => 0.2
                     LIST { False, True } => 0.1
                     LIST { False, False } => 0
                 }

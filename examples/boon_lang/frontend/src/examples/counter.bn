@@ -6,8 +6,8 @@ store: [
     counter: 
         LATEST {
             0
-            elements.decrement_button.event.press |> THEN { -1 }
-            elements.increment_button.event.press |> THEN { 1 }
+            elements.decrement_button.event.press |> WHEN { _ => -1 }
+            elements.increment_button.event.press |> WHEN { _ => 1 }
         } 
         |> Math/sum()
 ]
