@@ -9,7 +9,7 @@ flowchart LR
         direction LR
         style graph_root fill:transparent
 
-        VAR_store__61["store"]:::root_variable_class
+        VAR_store__61[("store")]:::root_variable_class
         OBJ__67["OBJECT"]
 
         OBJ__67 ==> VAR_store__61
@@ -36,26 +36,34 @@ flowchart LR
         CALL_Math_sum__16["Math/sum(..)"]
 
         subgraph THEN__68["THEN"]
+            THEN_IN__71(("IN")):::function_input_class
             NUM_minus_1__14["-1"]
+            THEN_OUT__72(("OUT")):::function_output_class
+
+            NUM_minus_1__14 .-> THEN_OUT__72
         end
 
         subgraph THEN__70["THEN"]
+            THEN_IN__73(("IN")):::function_input_class
             NUM_1__15["1"]
+            THEN_OUT__74(("OUT")):::function_output_class
+
+            NUM_1__15 .-> THEN_OUT__74
         end
 
-        GET_elements.decrement_button.event.press__10 .-> NUM_minus_1__14
-        GET_elements.increment_button.event.press__11 .-> NUM_1__15
+        GET_elements.decrement_button.event.press__10 .-> THEN_IN__71
+        GET_elements.increment_button.event.press__11 .-> THEN_IN__73
 
         NUM_0__9 ==> |"1"| LATEST__8
-        NUM_minus_1__14 .-> |"2"| LATEST__8
-        NUM_1__15 .-> |"3"| LATEST__8
+        THEN_OUT__72 .-> |"2"| LATEST__8
+        THEN_OUT__74 .-> |"3"| LATEST__8
         LATEST__8 ==> |"Increment"| CALL_Math_sum__16
         CALL_Math_sum__16 ==> VAR_counter__7
         VAR_counter__7 ==> OBJ__67
         VAR_decrement_button__3 --> GET_elements.decrement_button.event.press__10
         VAR_increment_button__4 --> GET_elements.increment_button.event.press__11
 
-        VAR_document__17["document"]:::root_variable_class
+        VAR_document__17[("document")]:::root_variable_class
         CALL_Document_new__18["Document/new(..)"]
         CALL_root_element__19["root_element(..)"]
 
@@ -66,7 +74,7 @@ flowchart LR
         CALL_root_element__19 ==> |"1"| LIN__5
         CALL_root_element__19 ==> |"2"| LIN__6
 
-        linkStyle 20,21 stroke:Blue;
+        linkStyle 22,23 stroke:Blue;
     end
 
     subgraph FUNCTION_root_element__20["root_element(..)"]
@@ -112,7 +120,7 @@ flowchart LR
 
         CALL_Element_stripe__21 ==> OUTPUT__47
 
-        linkStyle 35,36 stroke:Blue;
+        linkStyle 37,38 stroke:Blue;
     end
 
     subgraph FUNCTION_counter_button__33["counter_button(..)"]
@@ -150,10 +158,23 @@ flowchart LR
         NUM_0.07__55["0.07"]
         NUM_320__56["320"]
 
-        WHEN_True__59{"True"}
-        WHEN_False__60{"False"}
-        NUM_0.85__61["0.85"]
-        NUM_0.75__62["0.75"]
+        subgraph WHEN__75["WHEN"]
+            subgraph ARM_true__76["True"]
+                ARM_IN__82(("IN")):::function_input_class
+                NUM_0.85__61["0.85"]
+                ARM_OUT__83(("OUT")):::function_output_class
+
+                NUM_0.85__61 .-> ARM_OUT__83
+            end
+
+            subgraph ARM_true__86["False"]
+                ARM_IN__84(("IN")):::function_input_class
+                NUM_0.75__62["0.75"]
+                ARM_OUT__85(("OUT")):::function_output_class
+
+                NUM_0.75__62 .-> ARM_OUT__85
+            end
+        end
 
         INPUT__64 ==> |"ARGUMENT"| ARG_label__46
 
@@ -181,17 +202,15 @@ flowchart LR
         NUM_0.07__55 ==> VAR_chroma__53
         NUM_320__56 ==> VAR_hue__54
 
-        VAR_hovered__39 --> |"WHEN 1"| WHEN_True__59
-        NUM_0.85__61 ==> VAR_lightness__52
-        VAR_hovered__39 --> |"WHEN 2"| WHEN_False__60
-        NUM_0.75__62 ==> VAR_lightness__52
-        WHEN_True__59 ==> NUM_0.85__61
-        WHEN_False__60 ==> NUM_0.75__62
+        VAR_hovered__39 .-> ARM_IN__82
+        VAR_hovered__39 .-> ARM_IN__84
+        ARM_OUT__83 .-> VAR_lightness__52
+        ARM_OUT__85 .-> VAR_lightness__52
 
         ARG_label__46 ==> |"label"| CALL_Element_button__33
 
         CALL_Element_button__33 ==> OUTPUT__49
 
-        linkStyle 38,39 stroke:Blue;
+        linkStyle 40,41 stroke:Blue;
     end
 ```
