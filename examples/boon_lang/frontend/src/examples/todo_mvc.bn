@@ -15,7 +15,7 @@ router: Router/new(
         Root: LIST { '/' }
     }
     go_to_route: store.filters 
-        |> List/map(old, new: old |> WHEN {
+        |> List/map(old, new: old |> WHILE {
             [filter, element] => element.event.press |> WHEN { _ => filter }
         })
         |> List/latest()
@@ -108,7 +108,7 @@ FUNCTION new_todo(id, title, completed) {
                 store.elements.toggle_all_checkbox.event.click 
                     |> WHEN { _ => store.todos |> List/every(item, if: item.completed) |> Bool/not() }
             } 
-            |> WHEN { completed => LATEST {
+            |> WHILE { completed => LATEST {
                 completed
                 todo_elements.todo_checkbox.event.click |> WHEN { _ => completed |> Bool/not() }
             }}
@@ -117,7 +117,7 @@ FUNCTION new_todo(id, title, completed) {
                 ''
                 todo_elements.editing_todo_title_element.event.change.text
                 title_to_update |> WHEN { _ => '' }
-            } |> WHEN { edited_title => LATEST {
+            } |> WHILE { edited_title => LATEST {
                 edited_title
                 todo_elements.todo_title_element.event.double_click
                     |> WHEN { _ => edited_title |> Text/empty() |> WHEN { True => title, False => SKIP } }
@@ -201,7 +201,7 @@ FUNCTION main_panel() {
         ]
         items: LIST {
             new_todo_title_text_input() |> LINK { PASSED.store.elements.new_todo_title_text_input }
-            PASSED.store.todos |> List/empty() |> WHEN { True => NoElement, False => Stripe/new(
+            PASSED.store.todos |> List/empty() |> WHILE { True => NoElement, False => Stripe/new(
                 element: []
                 style: [direction: Column]
                 items: LIST { todos_element(), panel_footer() }
@@ -250,7 +250,7 @@ FUNCTION todos_element() {
             background: [color: Oklch[lightness: 0.946]]
         ]
         items: PASSED.store.todos
-            |> List/retain(item, if: PASSED.store.selected_filter |> WHEN {
+            |> List/retain(item, if: PASSED.store.selected_filter |> WHILE {
                 All => True 
                 Active => item.completed |> Bool/not()
                 Completed => item.completed
@@ -269,10 +269,10 @@ FUNCTION todo_element(todo) {
             background: [color: Oklch[lightness: 1]]
             font: [size: 24]
         ]
-        items: PASSED.store.selected_todo_id = todo.id |> WHEN {
+        items: PASSED.store.selected_todo_id = todo.id |> WHILE {
             True => LIST { todo |> editing_todo_title_element() |> LINK { todo.todo_elements.editing_todo_title_element }}
             False => LIST {
-                todo |> todo_checkbox() |> LINK { todo.todo_elements.todo_checkbox: element }
+                todo |> todo_checkbox() |> LINK { todo.todo_elements.todo_checkbox }
                 todo |> todo_title_element() |> LINK { todo.todo_elements.todo_title_element }
             }
         }
@@ -351,7 +351,7 @@ FUNCTION todo_title_element(todo) {
             hovered: LINK
             nearby_element: [
                 position: Right
-                element: hovered |> WHEN {
+                element: hovered |> WHILE {
                     True => remove_todo_button() |> LINK { todo.todo_elements.remove_todo_button }
                     False => NoElement
                 }
@@ -413,7 +413,7 @@ FUNCTION panel_footer() {
         items: LIST {
             active_items_count_text
             filters_element
-            PASSED.store.todos |> List/any(item, if: item.completed) |> WHEN {
+            PASSED.store.todos |> List/any(item, if: item.completed) |> WHILE {
                 True => remove_completed_button() |> LINK { PASSED.store.elements.remove_completed_button }
                 False => NoElement
             }
@@ -462,7 +462,7 @@ FUNCTION filter_button(filter) {
                     LIST { False, True } => 0.1
                     LIST { False, False } => 0
                 }
-                selected |> Bool/or(that: element.hovered) |> WHEN {
+                selected |> Bool/or(that: element.hovered) |> WHILE {
                     True => [side: Inner, color: Oklch[lightness: 0.5, chroma: 0.165, hue: 25.36, alpha: alpha] ]
                     False => NoOutline
                 }
