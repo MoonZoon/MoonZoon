@@ -66,4 +66,5 @@
         "zoon/frontend_multithreading"
     ],
     "markdown.preview.scrollPreviewWithEditor": false,
+    "markdown.preview.scrollEditorWithPreview": false,
 }
