@@ -249,79 +249,84 @@ pub async fn run(_program: &str) -> impl Element {
 
     let function_name: FunctionName = FunctionName::new("Element/button");
     let function_closure = |function_arguments: Arguments| async move {
-        VariableActor::new(async move { stream::once(async move { VariableValue::Object(VariableValueObject::new({
+        VariableActor::new(async move { stream::once(async move { VariableValue::TaggedObject(VariableValueTaggedObject::new("Element",{
             let mut variables = Variables::new();
-            
-            let variable_name = VariableName::new("element");
+
+            let element_variable_value = function_arguments
+                .get(&ArgumentName::new("element"))
+                .unwrap()
+                .argument_in()
+                .unwrap()
+                .actor()
+                .get_value()  // @TODO `value_changes()`?
+                .await; 
+            match element_variable_value {
+                VariableValue::Object(object) => {
+                    let mut element_variables = object.into_variables();
+                    
+                    if let Some(hovered) = element_variables.get(&VariableName::new("hovered")) {
+                        hovered.actor().set_value(VariableValue::Link(VariableValueLink::new_with_actor(
+                            VariableActor::new(async { stream::once(async { VariableValue::Tag(VariableValueTag::new("False"))})})
+                        )))
+                    };
+
+                    if let Some(event) = element_variables.get(&VariableName::new("event")) {
+                        match event.actor().get_value().await {
+                            VariableValue::Object(object) => {
+                                if let Some(press) = object.variable(&VariableName::new("press")) {
+                                    press.actor().set_value(VariableValue::Link(VariableValueLink::new_with_actor(
+                                        VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new(Variables::new()))})})
+                                    )))
+                                };
+                            }
+                            _ => panic!("'event' has to be 'Object'")
+                        }
+                    };
+
+                    variables.append(&mut element_variables);
+                }
+                _ => panic!("'element' has to be 'Object'")
+            }
+
+            let variable_name = VariableName::new("type");
             let variable = Variable::new(
                 variable_name.clone(),
-                VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new({
+                VariableActor::new(async { stream::once(async { VariableValue::Tag(VariableValueTag::new("Button"))})})
+            );
+            variables.insert(variable_name, variable);
+            
+            let variable_name = VariableName::new("configuration");
+            let variable = Variable::new(
+                variable_name.clone(),
+                VariableActor::new(async move { stream::once(async move { VariableValue::Object(VariableValueObject::new({
                     let mut variables = Variables::new();
 
-                    let variable_name = VariableName::new("event");
+                    let variable_name = VariableName::new("style");
                     let variable = Variable::new(
                         variable_name.clone(),
-                        VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new({
-                            let mut variables = Variables::new();
-
-                            let variable_name = VariableName::new("press");
-                            let variable = Variable::new(
-                                variable_name.clone(),
-                                VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new(Variables::new()))})})
-                            );
-                            variables.insert(variable_name, variable);
-
-                            variables
-                        }))})})
+                        function_arguments
+                            .get(&ArgumentName::new("style"))
+                            .unwrap()
+                            .argument_in()
+                            .unwrap()
+                            .actor()
                     );
                     variables.insert(variable_name, variable);
 
-                    let variable_name = VariableName::new("hovered");
+                    let variable_name = VariableName::new("label");
                     let variable = Variable::new(
                         variable_name.clone(),
-                        VariableActor::new(async { stream::once(async { VariableValue::Tag(VariableValueTag::new("False"))})})
-                    );
-                    variables.insert(variable_name, variable);
-
-                    let variable_name = VariableName::new("type");
-                    let variable = Variable::new(
-                        variable_name.clone(),
-                        VariableActor::new(async { stream::once(async { VariableValue::Tag(VariableValueTag::new("Button"))})})
+                        function_arguments
+                            .get(&ArgumentName::new("label"))
+                            .unwrap()
+                            .argument_in()
+                            .unwrap()
+                            .actor()
                     );
                     variables.insert(variable_name, variable);
 
                     variables
                 }))})})
-            );
-            function_arguments
-                .get(&ArgumentName::new("element"))
-                .unwrap()
-                .argument_out()
-                .unwrap()
-                .set_actor(variable.actor());
-            variables.insert(variable_name, variable);
-
-            let variable_name = VariableName::new("style");
-            let variable = Variable::new(
-                variable_name.clone(),
-                function_arguments
-                    .get(&ArgumentName::new("style"))
-                    .unwrap()
-                    .argument_in()
-                    .unwrap()
-                    .actor()
-            );
-            variables.insert(variable_name, variable);
-
-            let variable_name = VariableName::new("label");
-            let variable = Variable::new(
-                variable_name.clone(),
-                function_arguments
-                    .get(&ArgumentName::new("label"))
-                    .unwrap()
-                    .argument_in()
-                    .unwrap()
-                    .actor()
             );
             variables.insert(variable_name, variable);
 
@@ -340,8 +345,38 @@ pub async fn run(_program: &str) -> impl Element {
                 let mut arguments = Arguments::new();
                 
                 let argument_name = ArgumentName::new("element");
-                let argument = Argument::new_out(
+                let argument = Argument::new_in(
                     argument_name.clone(),
+                    VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new({
+                        let mut variables = Variables::new();
+    
+                        let variable_name = VariableName::new("event");
+                        let variable = Variable::new(
+                            variable_name.clone(),
+                            VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new({
+                                let mut variables = Variables::new();
+    
+                                let variable_name = VariableName::new("press");
+                                let variable = Variable::new(
+                                    variable_name.clone(),
+                                    VariableActor::new(async { stream::once(async { VariableValue::Link(VariableValueLink::new())})})
+                                );
+                                variables.insert(variable_name, variable);
+    
+                                variables
+                            }))})})
+                        );
+                        variables.insert(variable_name, variable);
+    
+                        let variable_name = VariableName::new("hovered");
+                        let variable = Variable::new(
+                            variable_name.clone(),
+                            VariableActor::new(async { stream::once(async { VariableValue::Link(VariableValueLink::new())})})
+                        );
+                        variables.insert(variable_name, variable);
+    
+                        variables
+                    }))})})
                 );
                 let element_argument = argument.clone();
                 arguments.insert(argument_name, argument);
@@ -378,42 +413,42 @@ pub async fn run(_program: &str) -> impl Element {
                                     VariableActor::new(async { stream::once(async { VariableValue::TaggedObject(VariableValueTaggedObject::new("Oklch", {
                                         let mut variables = Variables::new();
 
-                                        let variable_name = VariableName::new("lightness");
-                                        let variable = Variable::new(
-                                            variable_name.clone(),
-                                            VariableActor::new(async move { 
-                                                // @TODO replace with non-compile time construct
-                                                let element_actor = element_argument.argument_out().unwrap().actor().await;
-                                                let hovered_actor = match element_actor.get_value().await {
-                                                    VariableValue::Object(variable_value_object) => {
-                                                        variable_value_object
-                                                            .variable(&VariableName::new("hovered"))
-                                                            .unwrap()
-                                                            .actor()
-                                                    }
-                                                    _ => unreachable!()
-                                                };
-                                                // @TODO replace `match` with non-compile time construct 
-                                                // @TODO what if `element_actor` is changed?
-                                                hovered_actor.value_changes().then(move |_| {
-                                                    let hovered_actor = hovered_actor.clone();
-                                                    async move {
-                                                        // element.hovered |> WHEN { True => 0.85, False => 0.75 }
-                                                        match hovered_actor.get_value().await {
-                                                            VariableValue::Tag(variable_value_tag) => {
-                                                                match variable_value_tag.tag() {
-                                                                    "True" => VariableValue::Number(VariableValueNumber::new(0.85)),
-                                                                    "False" => VariableValue::Number(VariableValueNumber::new(0.75)),
-                                                                    _ => unreachable!(),
-                                                                }
-                                                            }
-                                                            _ => unreachable!()
-                                                        }
-                                                    }
-                                                })
-                                            })
-                                        );
-                                        variables.insert(variable_name, variable);
+                                        // let variable_name = VariableName::new("lightness");
+                                        // let variable = Variable::new(
+                                        //     variable_name.clone(),
+                                        //     VariableActor::new(async move { 
+                                        //         // @TODO replace with non-compile time construct
+                                        //         let element_actor = element_argument.argument_out().unwrap().actor().await;
+                                        //         let hovered_actor = match element_actor.get_value().await {
+                                        //             VariableValue::Object(variable_value_object) => {
+                                        //                 variable_value_object
+                                        //                     .variable(&VariableName::new("hovered"))
+                                        //                     .unwrap()
+                                        //                     .actor()
+                                        //             }
+                                        //             _ => unreachable!()
+                                        //         };
+                                        //         // @TODO replace `match` with non-compile time construct 
+                                        //         // @TODO what if `element_actor` is changed?
+                                        //         hovered_actor.value_changes().then(move |_| {
+                                        //             let hovered_actor = hovered_actor.clone();
+                                        //             async move {
+                                        //                 // element.hovered |> WHEN { True => 0.85, False => 0.75 }
+                                        //                 match hovered_actor.get_value().await {
+                                        //                     VariableValue::Tag(variable_value_tag) => {
+                                        //                         match variable_value_tag.tag() {
+                                        //                             "True" => VariableValue::Number(VariableValueNumber::new(0.85)),
+                                        //                             "False" => VariableValue::Number(VariableValueNumber::new(0.75)),
+                                        //                             _ => unreachable!(),
+                                        //                         }
+                                        //                     }
+                                        //                     _ => unreachable!()
+                                        //                 }
+                                        //             }
+                                        //         })
+                                        //     })
+                                        // );
+                                        // variables.insert(variable_name, variable);
 
                                         let variable_name = VariableName::new("chroma");
                                         let variable = Variable::new(

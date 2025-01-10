@@ -450,6 +450,15 @@ impl VariableValueLink {
     pub fn new() -> Self {
         Self { actor: None }
     }
+
+    pub fn new_with_actor(variable_actor: VariableActor) -> Self {
+        Self { actor: Some(Arc::new(variable_actor)) }
+    }
+
+    // @TODO remove?
+    // pub fn set(&mut self, variable_actor: VariableActor) {
+    //     self.actor = Some(Arc::new(variable_actor));
+    // }
 }
 
 impl AsyncDebugFormat for VariableValueLink {
@@ -544,6 +553,10 @@ impl VariableValueObject {
 
     pub fn variable(&self, variable_name: &VariableName) -> Option<&Variable> {
         self.variables.get(variable_name)
+    }
+
+    pub fn into_variables(self) -> Variables {
+        self.variables
     }
 }
 
