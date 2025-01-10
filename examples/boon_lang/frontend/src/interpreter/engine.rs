@@ -459,6 +459,10 @@ impl VariableValueLink {
     // pub fn set(&mut self, variable_actor: VariableActor) {
     //     self.actor = Some(Arc::new(variable_actor));
     // }
+
+    pub fn actor(&self) -> Option<Arc<VariableActor>> {
+        self.actor.clone()
+    }
 }
 
 impl AsyncDebugFormat for VariableValueLink {
