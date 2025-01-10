@@ -26,7 +26,7 @@ flowchart RL
     VAR_Element_OBJECT__12["Element OBJECT"]
     VAR_type__13["type"]
     TAG_Stripe__14["Stripe"]
-    VAR_configuration__15["configuration"]
+    VAR_settings__15["settings"]
     OBJECT__16["OBJECT"]
     VAR_direction__17["direction"]
     TAG_Row__18["Row"]
@@ -44,8 +44,8 @@ flowchart RL
     VAR_Element_OBJECT__12 ==> VAR_root_element__11
     VAR_type__13 ==> VAR_Element_OBJECT__12
     TAG_Stripe__14 ==> VAR_type__13
-    VAR_configuration__15 ==> VAR_Element_OBJECT__12
-    OBJECT__16 ==> VAR_configuration__15
+    VAR_settings__15 ==> VAR_Element_OBJECT__12
+    OBJECT__16 ==> VAR_settings__15
     VAR_direction__17 ==> OBJECT__16
     TAG_Row__18 ==> VAR_direction__17
     VAR_gap__19 ==> OBJECT__16
@@ -67,7 +67,7 @@ flowchart RL
     OBJECT__52["OBJECT"]
     VAR_hovered__53["hovered"]
     TAG_False__54["False"]
-    VAR_configuration__29["configuration"]
+    VAR_settings__29["settings"]
     OBJECT__30["OBJECT"]
     VAR_style__31["style"]
     OBJECT__32["OBJECT"]
@@ -101,8 +101,8 @@ flowchart RL
     VAR_hovered__53 ==> VAR_Element_OBJECT__26
     %% Ref
     TAG_False__54 ==> VAR_hovered__53
-    VAR_configuration__29 ==> VAR_Element_OBJECT__26
-    OBJECT__30 ==> VAR_configuration__29
+    VAR_settings__29 ==> VAR_Element_OBJECT__26
+    OBJECT__30 ==> VAR_settings__29
     VAR_style__31 ==> OBJECT__30
     OBJECT__32 ==> VAR_style__31
     VAR_width__33 ==> OBJECT__32
@@ -135,7 +135,7 @@ flowchart RL
     OBJECT__61["OBJECT"]
     VAR_hovered__62["hovered"]
     TAG_True__63["True"]
-    VAR_configuration__64["configuration"]
+    VAR_settings__64["settings"]
     OBJECT__65["OBJECT"]
     VAR_style__66["style"]
     OBJECT__67["OBJECT"]
@@ -169,8 +169,8 @@ flowchart RL
     VAR_hovered__62 ==> VAR_Element_OBJECT__55
     %% Ref
     TAG_True__63 ==> VAR_hovered__62
-    VAR_configuration__64 ==> VAR_Element_OBJECT__55
-    OBJECT__65 ==> VAR_configuration__64
+    VAR_settings__64 ==> VAR_Element_OBJECT__55
+    OBJECT__65 ==> VAR_settings__64
     VAR_style__66 ==> OBJECT__65
     OBJECT__67 ==> VAR_style__66
     VAR_width__68 ==> OBJECT__67
