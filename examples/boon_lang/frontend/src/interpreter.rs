@@ -10,12 +10,41 @@ use engine::*;
 
 // @TODO generate the code automatically
 
+// @TODO PASS + PASSED (decrement_button, increment_button, ..)
+
 
 pub async fn run(_program: &str) -> impl Element {
     // @TODO get rid of the lock?
     let engine = Arc::new(RwLock::new(Engine::default()));
 
     // @TODO pass weak `engine` references instead of cloning?
+
+    let function_name: FunctionName = FunctionName::new("Document/new");
+    let function_closure = { 
+        move |function_arguments: Arguments| { 
+            async move {
+                VariableActor::new(async move { stream::once(async move { VariableValue::Object(VariableValueObject::new({
+                    let mut variables = Variables::new();
+                    
+                    let variable_name = VariableName::new("root_element");
+                    let variable = Variable::new(
+                        variable_name.clone(),
+                        function_arguments
+                            .get(&ArgumentName::new("root"))
+                            .unwrap()
+                            .argument_in()
+                            .unwrap()
+                            .actor()
+                    );
+                    variables.insert(variable_name, variable);
+
+                    variables
+                }))})})
+            }
+        }
+    };
+    let function = Function::new(function_name.clone(), function_closure);
+    engine.write().unwrap().functions.insert(function_name, function);
 
     let function_name = FunctionName::new("Element/stripe");
     let function_closure = { 
@@ -471,7 +500,25 @@ pub async fn run(_program: &str) -> impl Element {
     let variable_name = VariableName::new("document");
     let variable = Variable::new(
         variable_name.clone(),
-        engine.read().unwrap().functions.get(&FunctionName::new("root_element")).unwrap().run(Arguments::new()).await,
+        engine
+            .read()
+            .unwrap()
+            .functions
+            .get(&FunctionName::new("Document/new"))
+            .unwrap()
+            .run({
+                let mut arguments = Arguments::new();
+
+                let argument_name = ArgumentName::new("root");
+                let argument = Argument::new_in(
+                    argument_name.clone(),
+                    engine.read().unwrap().functions.get(&FunctionName::new("root_element")).unwrap().run(Arguments::new()).await
+                );
+                arguments.insert(argument_name, argument);
+
+                arguments
+            })
+            .await,
     );
     engine.write().unwrap().variables.insert(variable_name, variable);
 
