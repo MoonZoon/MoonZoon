@@ -321,11 +321,19 @@ pub async fn run(_program: &str) -> impl Element {
                                     );
                                     arguments.insert(argument_name, argument);
 
+                                    let engine = engine.clone();
                                     let argument_name = ArgumentName::new("items");
                                     let argument = Argument::new_in(
                                         argument_name.clone(),
-                                        VariableActor::new(async { stream::once(async { VariableValue::List(VariableValueList::new(vec![
-
+                                        VariableActor::new(async move { stream::once(async move { VariableValue::List(VariableValueList::new(vec![
+                                            VariableActor::new(async { stream::once(async { VariableValue::Number(VariableValueNumber::new(25.)) })}),
+                                            engine
+                                                .read()
+                                                .unwrap()
+                                                .variables
+                                                .get(&VariableName::new("increment_button"))
+                                                .unwrap()
+                                                .actor()
                                         ]))})})
                                     );
                                     arguments.insert(argument_name, argument);
@@ -345,6 +353,50 @@ pub async fn run(_program: &str) -> impl Element {
             .await,
     );
     engine.write().unwrap().variables.insert(variable_name, variable);
+
+    let variable_name = VariableName::new("increment_button");
+    let variable = Variable::new(
+        variable_name.clone(),
+        engine
+                .read()
+                .unwrap()
+                .functions
+                .get(&FunctionName::new("Element/button"))
+                .unwrap()
+                .run(
+                    {
+                        let mut arguments = Arguments::new();
+
+                        let argument_name = ArgumentName::new("element");
+                        let argument = Argument::new_in(
+                            argument_name.clone(),
+                            VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new(Variables::new()))})})
+                        );
+                        arguments.insert(argument_name, argument);
+
+                        let argument_name = ArgumentName::new("style");
+                        let argument = Argument::new_in(
+                            argument_name.clone(),
+                            VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new(Variables::new()))})})
+                        );
+                        arguments.insert(argument_name, argument);
+
+                        let argument_name = ArgumentName::new("label");
+                        let argument = Argument::new_in(
+                            argument_name.clone(),
+                            VariableActor::new(async { stream::once(async { VariableValue::Text(VariableValueText::new("+"))})}),
+
+                        );
+                        arguments.insert(argument_name, argument);
+
+                        arguments
+                    },
+                    None
+                )
+                .await
+    );
+    engine.write().unwrap().variables.insert(variable_name, variable);
+
 
     Task::next_macro_tick().await;
     println!("{}", engine.read().unwrap().async_debug_format().await);
