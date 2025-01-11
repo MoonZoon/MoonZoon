@@ -184,9 +184,27 @@ pub async fn run(_program: &str) -> impl Element {
     Task::next_macro_tick().await;
     println!("{}", engine.read().unwrap().async_debug_format().await);
 
-    engine_to_element(engine)
+    engine_to_element(engine).await
 } 
 
-fn engine_to_element(engine: Arc<RwLock<Engine>>) -> impl Element {
+async fn engine_to_element(engine: Arc<RwLock<Engine>>) -> impl Element {
+    let document_variable_actor = engine
+        .read()
+        .unwrap()
+        .variables
+        .get(&VariableName::new("document"))
+        .unwrap()
+        .actor();
+
+    // @TODO get_value -> changes?
+    let root_element = match document_variable_actor.get_value().await {
+        VariableValue::Object(object) => {
+            object.variable(&VariableName::new("root_element")).unwrap().actor()
+        }
+        _ => panic!("'document' has to be 'Object'")
+    };
+
+    println!("{}", root_element.async_debug_format().await);
+
     El::new().child("Boon root")
 }
