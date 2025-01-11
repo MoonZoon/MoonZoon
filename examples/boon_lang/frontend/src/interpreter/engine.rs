@@ -554,6 +554,10 @@ impl VariableValueNumber {
     pub fn new(number: f64) -> Self {
         Self { number }
     }
+
+    pub fn number(&self) -> f64 {
+        self.number
+    }
 }
 
 impl AsyncDebugFormat for VariableValueNumber {
@@ -616,6 +620,18 @@ impl VariableValueTaggedObject {
     pub fn new(tag: impl ToString, variables: Variables) -> Self {
         Self { tag: tag.to_string(), variables }
     }
+
+    pub fn tag(&self) -> &str {
+        &self.tag
+    }
+
+    pub fn variable(&self, variable_name: &VariableName) -> Option<&Variable> {
+        self.variables.get(variable_name)
+    }
+
+    pub fn into_variables(self) -> Variables {
+        self.variables
+    }
 }
 
 impl AsyncDebugFormat for VariableValueTaggedObject {
@@ -676,6 +692,10 @@ pub struct VariableValueText {
 impl VariableValueText {
     pub fn new(text: impl ToString) -> Self {
         Self { text: text.to_string() }
+    }
+
+    pub fn text(&self) -> &str {
+        &self.text
     }
 }
 

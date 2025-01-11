@@ -196,7 +196,7 @@ async fn engine_to_element(engine: Arc<RwLock<Engine>>) -> impl Element {
         .unwrap()
         .actor();
 
-    // @TODO get_value -> changes?
+    // @TODO get_value -> changes? (everywhere?)
     let root_element = match document_variable_actor.get_value().await {
         VariableValue::Object(object) => {
             object.variable(&VariableName::new("root_element")).unwrap().actor()
@@ -205,6 +205,40 @@ async fn engine_to_element(engine: Arc<RwLock<Engine>>) -> impl Element {
     };
 
     println!("{}", root_element.async_debug_format().await);
+    println!("-----");
 
-    El::new().child("Boon root")
+    actor_to_element(root_element).await
+}
+
+// @TODO `debug_assert_*` instead of `assert_*` everywhere?
+
+async fn actor_to_element(actor: VariableActor) -> impl Element {
+    match actor.get_value().await {
+        VariableValue::TaggedObject(tagged_object) => {
+            assert_eq!(tagged_object.tag(), "Element");
+            match tagged_object.variable(&VariableName::new("type")).unwrap().actor().get_value().await {
+                VariableValue::Tag(variable_value_tag) => {
+                    match variable_value_tag.tag() {
+                        "Container" => {
+                            let settings = match tagged_object.variable(&VariableName::new("settings")).unwrap().actor().get_value().await {
+                                VariableValue::Object(object) => object,
+                                _ => panic!("Element settings has to be 'Object'")
+                            };
+                            let child = settings.variable(&VariableName::new("child")).unwrap().actor();
+                            El::new().child_signal(actor_to_element(child).into_signal_option()).unify()
+                        }
+                        other => panic!("Unknown element type: {other}")
+                    }
+                }
+                _ => panic!("Element type has to be 'Tag'")
+            }
+        }
+        VariableValue::Number(number) => {
+            Text::new(number.number()).unify()
+        }
+        VariableValue::Text(text) => {
+            Text::new(text.text()).unify()
+        }
+        _ => panic!("Element cannot be created from provided VariableActor")
+    }
 }
