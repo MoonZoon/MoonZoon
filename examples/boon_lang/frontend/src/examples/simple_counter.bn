@@ -1,5 +1,15 @@
-document: Document/new(root: Element/container(
+increment_button: Element/button(
     element: []
     style: []
-    child: 32
+    label: '+'
+)
+
+document: Document/new(root: Element/stripe(
+    element: []
+    direction: Row
+    style: []
+    items: LIST {
+        counter: 25
+        increment_button
+    }
 ))

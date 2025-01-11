@@ -23,12 +23,6 @@ document: Document/new(root: Element/stripe(
 ---
 
 ---
-increment_button: Element/button(
-    element: [event: [press: LINK]]
-    style: []
-    label: '+'
-)
-
 document: Document/new(root: Element/stripe(
     element: []
     direction: Row
@@ -41,4 +35,10 @@ document: Document/new(root: Element/stripe(
         increment_button
     }
 ))
+
+increment_button: Element/button(
+    element: [event: [press: LINK]]
+    style: []
+    label: '+'
+)
 ---

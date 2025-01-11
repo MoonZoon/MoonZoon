@@ -506,6 +506,10 @@ impl VariableValueList {
     pub fn new(list: Vec<VariableActor>) -> Self {
         Self { list }
     }
+
+    pub fn list(&self) -> &[VariableActor] {
+        &self.list
+    }
 }
 
 impl AsyncDebugFormat for VariableValueList {
