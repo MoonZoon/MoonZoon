@@ -13,7 +13,7 @@ increment_button: Element/button(
 
 document: Document/new(root: Element/stripe(
     element: []
-    direction: Row
+    direction: Column
     style: []
     items: LIST {
         counter: 25
@@ -25,7 +25,7 @@ document: Document/new(root: Element/stripe(
 ---
 document: Document/new(root: Element/stripe(
     element: []
-    direction: Row
+    direction: Column
     style: []
     items: LIST {
         counter: LATEST {

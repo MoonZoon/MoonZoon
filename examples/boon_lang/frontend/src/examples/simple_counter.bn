@@ -1,15 +1,18 @@
-increment_button: Element/button(
-    element: []
-    style: []
-    label: '+'
-)
-
 document: Document/new(root: Element/stripe(
     element: []
-    direction: Row
+    direction: Column
     style: []
     items: LIST {
-        counter: 25
+        counter: LATEST {
+            0
+            increment_button.event.press |> THEN { 1 } |> Math/sum()
+        }
         increment_button
     }
 ))
+
+increment_button: Element/button(
+    element: [event: [press: LINK]]
+    style: []
+    label: '+'
+)

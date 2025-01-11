@@ -62,8 +62,8 @@ pub async fn run(_program: &str) -> impl Element {
                         .get_value()  // @TODO `value_changes()`?
                         .await; 
                     match element_variable_value {
-                        VariableValue::Object(_object) => {
-
+                        VariableValue::Object(object) => {
+                            variables.append(&mut object.into_variables());
                         }
                         _ => panic!("'element' has to be 'Object'")
                     }
@@ -134,11 +134,11 @@ pub async fn run(_program: &str) -> impl Element {
                         .get_value()  // @TODO `value_changes()`?
                         .await; 
                     match element_variable_value {
-                        VariableValue::Object(_object) => {
-
+                        VariableValue::Object(object) => {
+                            variables.append(&mut object.into_variables());
                         }
                         _ => panic!("'element' has to be 'Object'")
-                    }
+                    };
 
                     let variable_name = VariableName::new("type");
                     let variable = Variable::new(
@@ -206,8 +206,8 @@ pub async fn run(_program: &str) -> impl Element {
                         .get_value()  // @TODO `value_changes()`?
                         .await; 
                     match element_variable_value {
-                        VariableValue::Object(_object) => {
-
+                        VariableValue::Object(object) => {
+                            variables.append(&mut object.into_variables());
                         }
                         _ => panic!("'element' has to be 'Object'")
                     }
@@ -326,7 +326,37 @@ pub async fn run(_program: &str) -> impl Element {
                                     let argument = Argument::new_in(
                                         argument_name.clone(),
                                         VariableActor::new(async move { stream::once(async move { VariableValue::List(VariableValueList::new(vec![
-                                            VariableActor::new(async { stream::once(async { VariableValue::Number(VariableValueNumber::new(25.)) })}),
+                                            // @TODO remove
+                                            // VariableActor::new(async { stream::once(async { VariableValue::Number(VariableValueNumber::new(25.)) })}),
+                                            {
+                                                let engine = engine.clone();
+                                                VariableActor::new(async move { 
+                                                    let increment_button = engine.read().unwrap().variables.get(&VariableName::new("increment_button")).unwrap().actor();
+                                                    match increment_button.get_value().await {
+                                                        VariableValue::TaggedObject(tagged_object) => {
+                                                            assert_eq!(tagged_object.tag(), "Element");
+                                                            match tagged_object.variable(&VariableName::new("event")).unwrap().actor().get_value().await {
+                                                                VariableValue::Object(object) => {
+                                                                    match object.variable(&VariableName::new("press")).unwrap().actor().get_value().await {
+                                                                        VariableValue::Link(link) => {
+                                                                            println!("ASF: {:#?}", link.actor())   // @TODO this has to return Actor, add value UNSET to one of Actor values
+                                                                        }
+                                                                        _ => panic!("increment_button event press has to be 'Link'")
+                                                                    }
+                                                                    // let event_press_actor = object.variable(&VariableName::new("press")).unwrap().actor();
+                                                                    // event_press_actor.value_changes().map(|_change| {
+                                                                    //     // @TODO get VariableValue directly from event_press_actor and then map it
+                                                                    //     println!("value changed!");
+                                                                    //     VariableValue::Number(VariableValueNumber::new(123.))
+                                                                    // })
+                                                                }
+                                                                _ => panic!("increment_button event has to be 'Object'")
+                                                            }
+                                                        }
+                                                        _ => panic!("increment_button has to be 'TaggedObject'")
+                                                    }
+                                                })
+                                            },
                                             engine
                                                 .read()
                                                 .unwrap()
@@ -370,7 +400,29 @@ pub async fn run(_program: &str) -> impl Element {
                         let argument_name = ArgumentName::new("element");
                         let argument = Argument::new_in(
                             argument_name.clone(),
-                            VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new(Variables::new()))})})
+                            VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new({
+                                let mut variables = Variables::new();
+
+                                let variable_name = VariableName::new("event");
+                                let variable = Variable::new(
+                                    variable_name.clone(),
+                                    VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new({
+                                        let mut variables = Variables::new();
+            
+                                        let variable_name = VariableName::new("press");
+                                        let variable = Variable::new(
+                                            variable_name.clone(),
+                                            VariableActor::new(async { stream::once(async { VariableValue::Link(VariableValueLink::new())})})
+                                        );
+                                        variables.insert(variable_name, variable);
+            
+                                        variables
+                                    }))})})
+                                );
+                                variables.insert(variable_name, variable);
+
+                                variables
+                            }))})})
                         );
                         arguments.insert(argument_name, argument);
 
@@ -454,7 +506,38 @@ async fn actor_to_element(actor: VariableActor) -> impl Element {
                                 VariableValue::Text(label) => label.text().to_owned(),
                                 _ => panic!("Button label has to be 'String'")
                             };
-                            Button::new().label(label).unify()
+                            let button = Button::new().label(label);
+                            let button = if let Some(event) = tagged_object.variable(&VariableName::new("event")) {
+                                match event.actor().get_value().await {
+                                    VariableValue::Object(object) => {
+                                        if let Some(press) = object.variable(&VariableName::new("press")) {
+                                            // @TODO Make Link value actor?
+                                            // match press.actor().get_value().await {
+                                            //     VariableValue::Link(link) => {
+                                            //         link.actor()
+                                            //     }
+                                            //     _ => panic!("Element event press has to be 'Link'")
+                                            // }
+                                            let press_event_actor = VariableActor::new(async move { 
+                                                stream::once(async move { 
+                                                    VariableValue::Object(VariableValueObject::new(Variables::new()))
+                                                })
+                                            });
+                                            let button = button.on_press(clone!((press_event_actor) move || { 
+                                                press_event_actor.set_value(VariableValue::Object(VariableValueObject::new(Variables::new())))
+                                            }));
+                                            press.actor().set_value( VariableValue::Link(VariableValueLink::new_with_actor(press_event_actor)));
+                                            button
+                                        } else {
+                                            button.on_press(||{})
+                                        }
+                                    },
+                                    _ => panic!("Element event has to be 'Object'")
+                                }
+                            } else {
+                                button.on_press(||{})
+                            };
+                            button.unify()
                         }
                         "Stripe" => {
                             let settings = match tagged_object.variable(&VariableName::new("settings")).unwrap().actor().get_value().await {
