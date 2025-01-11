@@ -144,7 +144,8 @@ impl AsyncDebugFormat for Engine {
 
 pub struct Function {
     name: FunctionName,
-    closure: Arc<dyn Fn(Arguments) -> Pin<Box<dyn Future<Output = VariableActor>>>>,
+    // @TODO Option -> special variable value type? (the same for Link?)
+    closure: Arc<dyn Fn(Arguments, Option<PassedArgument>) -> Pin<Box<dyn Future<Output = VariableActor>>>>,
 }
 
 impl fmt::Debug for Function {
@@ -157,15 +158,15 @@ impl fmt::Debug for Function {
 }
 
 impl Function {
-    pub fn new<Fut: Future<Output = VariableActor> + 'static>(name: FunctionName, closure: impl Fn(Arguments) -> Fut + 'static) -> Self {
-        let closure = Arc::new(move |arguments: Arguments| { 
-            Box::pin(closure(arguments)) as Pin<Box<dyn Future<Output = VariableActor>>>
+    pub fn new<Fut: Future<Output = VariableActor> + 'static>(name: FunctionName, closure: impl Fn(Arguments, Option<PassedArgument>) -> Fut + 'static) -> Self {
+        let closure = Arc::new(move |arguments: Arguments, passed_argument: Option<PassedArgument>| { 
+            Box::pin(closure(arguments, passed_argument)) as Pin<Box<dyn Future<Output = VariableActor>>>
         });
         Self { name, closure }
     }
 
-    pub async fn run(&self, arguments: Arguments) -> VariableActor {
-        (self.closure)(arguments).await
+    pub async fn run(&self, arguments: Arguments, passed_argument: Option<PassedArgument>) -> VariableActor {
+        (self.closure)(arguments, passed_argument).await
     }
 }
 
@@ -175,6 +176,21 @@ pub struct FunctionName(Arc<String>);
 impl FunctionName {
     pub fn new(name: impl ToString) -> Self {
         Self(Arc::new(name.to_string()))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct PassedArgument {
+    actor: VariableActor,
+}
+
+impl PassedArgument {
+    pub fn new(actor: VariableActor) -> Self {
+        Self { actor }
+    }
+
+    pub fn actor(&self) -> VariableActor {
+        self.actor.clone()
     }
 }
 

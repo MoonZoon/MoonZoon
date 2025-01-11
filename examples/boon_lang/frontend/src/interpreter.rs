@@ -21,7 +21,7 @@ pub async fn run(_program: &str) -> impl Element {
 
     let function_name: FunctionName = FunctionName::new("Document/new");
     let function_closure = { 
-        move |function_arguments: Arguments| { 
+        move |function_arguments: Arguments, _passed_argument: Option<PassedArgument>| { 
             async move {
                 VariableActor::new(async move { stream::once(async move { VariableValue::Object(VariableValueObject::new({
                     let mut variables = Variables::new();
@@ -48,7 +48,7 @@ pub async fn run(_program: &str) -> impl Element {
 
     let function_name = FunctionName::new("Element/stripe");
     let function_closure = { 
-        move |function_arguments: Arguments| { 
+        move |function_arguments: Arguments, _passed_argument: Option<PassedArgument>| { 
             async move {
                 VariableActor::new(async move { stream::once(async move { VariableValue::TaggedObject(VariableValueTaggedObject::new("Element", {
                     let mut variables = Variables::new();
@@ -73,7 +73,8 @@ pub async fn run(_program: &str) -> impl Element {
 
                             if let Some(event) = element_variables.get(&VariableName::new("event")) {
                                 match event.actor().get_value().await {
-                                    VariableValue::Object(object) => {
+                                    VariableValue::Object(_object) => {
+                                        // @TODO
                                     }
                                     _ => panic!("'event' has to be 'Object'")
                                 }
@@ -161,7 +162,7 @@ pub async fn run(_program: &str) -> impl Element {
     let function_name = FunctionName::new("root_element");
     let function_closure = {
         let engine = engine.clone();
-        move |_function_arguments: Arguments| {
+        move |_function_arguments: Arguments, passed_argument: Option<PassedArgument>| {
             let engine = engine.clone();
             async move {
                 let mut arguments = Arguments::new();
@@ -171,7 +172,6 @@ pub async fn run(_program: &str) -> impl Element {
                     argument_name.clone(),
                     VariableActor::new(async { stream::once(async { VariableValue::Object(VariableValueObject::new(Variables::new()))})})
                 );
-                let element_argument = argument.clone();
                 arguments.insert(argument_name, argument);
 
                 let argument_name = ArgumentName::new("direction");
@@ -211,7 +211,7 @@ pub async fn run(_program: &str) -> impl Element {
                     argument_name.clone(),
                     { 
                         let engine = engine.clone();
-                        VariableActor::new(async move { stream::once(async move { VariableValue::List(VariableValueList::new({
+                        VariableActor::new(clone!((passed_argument) async move { stream::once(async move { VariableValue::List(VariableValueList::new({
                             let mut list = Vec::new();
 
                             list.push({
@@ -230,7 +230,7 @@ pub async fn run(_program: &str) -> impl Element {
                                     .functions
                                     .get(&FunctionName::new("counter_button"))
                                     .unwrap()
-                                    .run(arguments)
+                                    .run(arguments, passed_argument.clone())
                                     .await;
 
                                 engine.read().unwrap().set_link_value("elements.decrement_button", variable_actor.clone()).await;
@@ -264,7 +264,7 @@ pub async fn run(_program: &str) -> impl Element {
                                     .functions
                                     .get(&FunctionName::new("counter_button"))
                                     .unwrap()
-                                    .run(arguments)
+                                    .run(arguments, passed_argument.clone())
                                     .await;
 
                                 engine.read().unwrap().set_link_value("elements.increment_button", variable_actor.clone()).await;
@@ -273,12 +273,12 @@ pub async fn run(_program: &str) -> impl Element {
                             });
 
                             list
-                        }))})})
+                        }))})}))
                     }
                 );
                 arguments.insert(argument_name, argument);
 
-                engine.read().unwrap().functions.get(&FunctionName::new("Element/stripe")).unwrap().run(arguments).await
+                engine.read().unwrap().functions.get(&FunctionName::new("Element/stripe")).unwrap().run(arguments, passed_argument).await
             }
         }
     };
@@ -286,7 +286,7 @@ pub async fn run(_program: &str) -> impl Element {
     engine.write().unwrap().functions.insert(function_name, function);
 
     let function_name: FunctionName = FunctionName::new("Element/button");
-    let function_closure = |function_arguments: Arguments| async move {
+    let function_closure = |function_arguments: Arguments, _passed_argument: Option<PassedArgument>| async move {
         VariableActor::new(async move { stream::once(async move { VariableValue::TaggedObject(VariableValueTaggedObject::new("Element",{
             let mut variables = Variables::new();
 
@@ -377,7 +377,7 @@ pub async fn run(_program: &str) -> impl Element {
     let function_name: FunctionName = FunctionName::new("counter_button");
     let function_closure = { 
         let engine = engine.clone();
-        move |function_arguments: Arguments| { 
+        move |function_arguments: Arguments, passed_argument: Option<PassedArgument>| { 
             let engine = engine.clone();
             async move {
                 let mut arguments = Arguments::new();
@@ -539,7 +539,7 @@ pub async fn run(_program: &str) -> impl Element {
                 );
                 arguments.insert(argument_name, argument);
 
-                engine.read().unwrap().functions.get(&FunctionName::new("Element/button")).unwrap().run(arguments).await
+                engine.read().unwrap().functions.get(&FunctionName::new("Element/button")).unwrap().run(arguments, passed_argument).await
             }
         }
     };
@@ -589,18 +589,31 @@ pub async fn run(_program: &str) -> impl Element {
             .functions
             .get(&FunctionName::new("Document/new"))
             .unwrap()
-            .run({
-                let mut arguments = Arguments::new();
+            .run(
+                {
+                    let mut arguments = Arguments::new();
 
-                let argument_name = ArgumentName::new("root");
-                let argument = Argument::new_in(
-                    argument_name.clone(),
-                    engine.read().unwrap().functions.get(&FunctionName::new("root_element")).unwrap().run(Arguments::new()).await
-                );
-                arguments.insert(argument_name, argument);
+                    let argument_name = ArgumentName::new("root");
+                    let argument = Argument::new_in(
+                        argument_name.clone(),
+                        engine
+                            .read()
+                            .unwrap()
+                            .functions
+                            .get(&FunctionName::new("root_element"))
+                            .unwrap()
+                            .run(
+                                Arguments::new(), 
+                                // @TODO pass store
+                                None)
+                            .await
+                    );
+                    arguments.insert(argument_name, argument);
 
-                arguments
-            })
+                    arguments
+                },
+                None
+            )
             .await,
     );
     engine.write().unwrap().variables.insert(variable_name, variable);
