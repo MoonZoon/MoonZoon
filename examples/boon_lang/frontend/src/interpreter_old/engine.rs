@@ -1,6 +1,3 @@
-// @TODO remove
-#![allow(dead_code)]
-
 use std::fmt;
 use std::future::Future;
 use std::pin::{Pin, pin};
