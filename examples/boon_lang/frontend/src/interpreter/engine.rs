@@ -75,14 +75,17 @@ impl Engine {
         let address_parts = address.split(".").collect::<Vec<_>>();
 
         if address_parts.len() == 1 {
-            let link_actor = self
+            let variable_actor = self
                 .variables
                 .get(&VariableName::new(address_parts[0]))
                 .unwrap()
                 .actor();
-            link_actor.set_value(VariableValue::Link(VariableValueLink { 
-                actor: Some(Arc::new(actor))
-            }));
+            match variable_actor.get_value().await {
+                VariableValue::Link(variable_value_link) => {
+                    variable_value_link.set_target(actor);
+                }
+                _ => panic!("Failed to set link value - the variable is not a Link")
+            }
         } else {
             let root = self
                 .variables
@@ -102,9 +105,12 @@ impl Engine {
                     _ => unreachable!("Link path parts have to be 'VariableValue::Object'")
                 }
             }
-            parent_or_link_actor.set_value(VariableValue::Link(VariableValueLink { 
-                actor: Some(Arc::new(actor))
-            }));
+            match parent_or_link_actor.get_value().await {
+                VariableValue::Link(variable_value_link) => {
+                    variable_value_link.set_target(actor);
+                }
+                _ => panic!("Failed to set link value - the variable is not a Link")
+            }
         }
     }
 }
@@ -441,6 +447,7 @@ pub enum VariableValue {
     TaggedObject(VariableValueTaggedObject),
     Tag(VariableValueTag),
     Text(VariableValueText),
+    Unset,
 }
 
 impl AsyncDebugFormat for VariableValue {
@@ -454,6 +461,7 @@ impl AsyncDebugFormat for VariableValue {
             Self::TaggedObject(value) => value.async_debug_format_with_formatter(formatter).await,
             Self::Tag(value) => value.async_debug_format_with_formatter(formatter).await,
             Self::Text(value) => value.async_debug_format_with_formatter(formatter).await,
+            Self::Unset => String::from("UNSET"),
         }
     }
 }
@@ -462,36 +470,47 @@ impl AsyncDebugFormat for VariableValue {
 
 #[derive(Debug, Clone)]
 pub struct VariableValueLink {
-    actor: Option<Arc<VariableActor>>
+    link_actor: VariableActor,
+    actor_sender: mpsc::UnboundedSender<VariableActor>,
 }
 
 impl VariableValueLink {
     pub fn new() -> Self {
-        Self { actor: None }
+        let (actor_sender, actor_receiver) = mpsc::unbounded::<VariableActor>();
+
+        let value_stream = actor_receiver.flat_map(|actor| {
+            actor.value_changes().then({
+                let actor = actor.clone();
+                move |_change| { 
+                    let actor = actor.clone();
+                    async move { actor.get_value().await }
+                }
+            })
+        });
+
+        let link_actor = VariableActor::new(async { 
+            stream::once( async { VariableValue::Unset }).chain(value_stream) 
+        });
+
+        Self { 
+            link_actor,
+            actor_sender 
+        }
     }
 
-    pub fn new_with_actor(variable_actor: VariableActor) -> Self {
-        Self { actor: Some(Arc::new(variable_actor)) }
+    pub fn link_actor(&self) -> VariableActor {
+        self.link_actor.clone()
     }
 
-    // @TODO remove?
-    // pub fn set(&mut self, variable_actor: VariableActor) {
-    //     self.actor = Some(Arc::new(variable_actor));
-    // }
-
-    pub fn actor(&self) -> Option<Arc<VariableActor>> {
-        self.actor.clone()
+    pub fn set_target(&self, target_actor: VariableActor) {
+        self.actor_sender.unbounded_send(target_actor).unwrap();
     }
 }
 
 impl AsyncDebugFormat for VariableValueLink {
     async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
-        if let Some(actor) = &self.actor {
-            let actor = Box::pin(actor.async_debug_format_with_formatter(formatter)).await;
-            format!("LINK {{ {actor} }}")
-        } else {
-            "LINK { UNSET }".to_owned()
-        }
+        let link_actor = Box::pin(self.link_actor.async_debug_format_with_formatter(formatter)).await;
+        format!("LINK {{ {link_actor} }}")
     }
 }
 

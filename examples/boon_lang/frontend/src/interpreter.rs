@@ -339,16 +339,15 @@ pub async fn run(_program: &str) -> impl Element {
                                                                 VariableValue::Object(object) => {
                                                                     match object.variable(&VariableName::new("press")).unwrap().actor().get_value().await {
                                                                         VariableValue::Link(link) => {
-                                                                            println!("ASF: {:#?}", link.actor())   // @TODO this has to return Actor, add value UNSET to one of Actor values
+                                                                            println!("XXX increment_button event press: {:#?}", link.async_debug_format().await); 
+                                                                            link.link_actor().value_changes().map(|_change| {
+                                                                                // @TODO get VariableValue directly from event_press_actor and then map it
+                                                                                println!("value changed!");
+                                                                                VariableValue::Number(VariableValueNumber::new(123.))
+                                                                            })
                                                                         }
                                                                         _ => panic!("increment_button event press has to be 'Link'")
                                                                     }
-                                                                    // let event_press_actor = object.variable(&VariableName::new("press")).unwrap().actor();
-                                                                    // event_press_actor.value_changes().map(|_change| {
-                                                                    //     // @TODO get VariableValue directly from event_press_actor and then map it
-                                                                    //     println!("value changed!");
-                                                                    //     VariableValue::Number(VariableValueNumber::new(123.))
-                                                                    // })
                                                                 }
                                                                 _ => panic!("increment_button event has to be 'Object'")
                                                             }
@@ -511,13 +510,6 @@ async fn actor_to_element(actor: VariableActor) -> impl Element {
                                 match event.actor().get_value().await {
                                     VariableValue::Object(object) => {
                                         if let Some(press) = object.variable(&VariableName::new("press")) {
-                                            // @TODO Make Link value actor?
-                                            // match press.actor().get_value().await {
-                                            //     VariableValue::Link(link) => {
-                                            //         link.actor()
-                                            //     }
-                                            //     _ => panic!("Element event press has to be 'Link'")
-                                            // }
                                             let press_event_actor = VariableActor::new(async move { 
                                                 stream::once(async move { 
                                                     VariableValue::Object(VariableValueObject::new(Variables::new()))
@@ -526,7 +518,12 @@ async fn actor_to_element(actor: VariableActor) -> impl Element {
                                             let button = button.on_press(clone!((press_event_actor) move || { 
                                                 press_event_actor.set_value(VariableValue::Object(VariableValueObject::new(Variables::new())))
                                             }));
-                                            press.actor().set_value( VariableValue::Link(VariableValueLink::new_with_actor(press_event_actor)));
+                                            match press.actor().get_value().await {
+                                                VariableValue::Link(variable_value_link) => {
+                                                    variable_value_link.set_target(press_event_actor);
+                                                }
+                                                _ => panic!("Failed to set link value - the variable is not a Link")
+                                            }
                                             button
                                         } else {
                                             button.on_press(||{})
