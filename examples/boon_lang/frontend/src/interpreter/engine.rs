@@ -325,9 +325,11 @@ impl AsyncDebugFormat for Variable {
     }
 }
 
+#[derive(Debug)]
 enum VariableActorMessage {
     GetValue { value_sender: oneshot::Sender<VariableValue> },
-    SetValue { new_value: VariableValue },
+    // @TODO remove?
+    // SetValue { new_value: VariableValue },
     ValueChanges { change_sender: mpsc::UnboundedSender<VariableValueChanged> },
 }
 
@@ -336,12 +338,25 @@ enum VariableActorValueOrMessage {
     Message(VariableActorMessage)
 }
 
+impl AsyncDebugFormat for VariableActorValueOrMessage {
+    async fn async_debug_format_with_formatter(&self, formatter: Formatter) -> String {
+        match self {
+            Self::Value(variable_value) => {
+                variable_value.async_debug_format_with_formatter(formatter).await
+            }
+            Self::Message(variable_actor_message) => {
+                format!("{variable_actor_message:?}")
+            }
+        }
+    }
+}
+
 // @TODO Don't clone - only weak references
 #[derive(Debug, Clone)]
 pub struct VariableActor {
     #[allow(dead_code)]
     task_handle: Arc<TaskHandle>,
-    message_sender: mpsc::UnboundedSender<VariableActorMessage>,
+    message_sender: Arc<mpsc::UnboundedSender<VariableActorMessage>>,
 }
 
 impl VariableActor {
@@ -349,21 +364,34 @@ impl VariableActor {
         let (message_sender, message_receiver) = mpsc::unbounded::<VariableActorMessage>();
 
         let task_handle = Task::start_droppable(async move {
-            let mut values = pin!(values.await);
-            let mut value = values.next().await.unwrap();
+            let values = pin!(values.await);
+            let mut value = None::<VariableValue>;
+
             let mut change_senders = Vec::<mpsc::UnboundedSender<VariableValueChanged>>::new();
 
+            let mapped_values = pin!(values.map(VariableActorValueOrMessage::Value).then(|value| async {
+                zoon::println!("New actor value: {}", value.async_debug_format().await);
+                value
+            }));
+
+            let mapped_messages = pin!(message_receiver.map(VariableActorValueOrMessage::Message).then(|message| async {
+                // zoon::println!("New actor message: {}", message.async_debug_format().await);
+                message
+            }));
+
             let mut values_and_messages = stream::select(
-                values.map(VariableActorValueOrMessage::Value), 
-                message_receiver.map(VariableActorValueOrMessage::Message)
+                mapped_values, 
+                mapped_messages, 
             );
 
+            let mut value_getters = Vec::<oneshot::Sender<VariableValue>>::new();
+
             let set_value = |
-                old_value: &mut VariableValue, 
+                old_value: &mut Option<VariableValue>, 
                 new_value: VariableValue,
                 change_senders: &mut Vec<mpsc::UnboundedSender<VariableValueChanged>>,
             | {
-                *old_value = new_value;
+                *old_value = Some(new_value);
                 change_senders.retain(|change_sender| {
                     change_sender.unbounded_send(VariableValueChanged).is_ok()
                 });
@@ -372,16 +400,25 @@ impl VariableActor {
             while let Some(value_or_message) = values_and_messages.next().await {
                 match value_or_message {
                     VariableActorValueOrMessage::Value(new_value) => {
+                        // @TODO move to `set_value` closure?
+                        for value_getter in value_getters.drain(..) {
+                            let _ = value_getter.send(new_value.clone());
+                        };
                         set_value(&mut value, new_value, &mut change_senders);
                     }
                     VariableActorValueOrMessage::Message(message) => {
                         match message {
                             VariableActorMessage::GetValue { value_sender } => {
-                                value_sender.send(value.clone()).unwrap();
+                                if let Some(value) = value.as_ref() {
+                                    value_sender.send(value.clone()).unwrap();
+                                } else {
+                                    value_getters.push(value_sender);
+                                }
                             }
-                            VariableActorMessage::SetValue { new_value } => {
-                                set_value(&mut value, new_value, &mut change_senders);
-                            }
+                            // @TODO remove?
+                            // VariableActorMessage::SetValue { new_value } => {
+                            //     set_value(&mut value, new_value, &mut change_senders);
+                            // }
                             VariableActorMessage::ValueChanges { change_sender } => {
                                 if change_sender.unbounded_send(VariableValueChanged).is_ok() {
                                     change_senders.push(change_sender);
@@ -394,7 +431,7 @@ impl VariableActor {
         });
         Self {
             task_handle: Arc::new(task_handle),
-            message_sender
+            message_sender: Arc::new(message_sender)
         }
     }
 
@@ -405,15 +442,17 @@ impl VariableActor {
         value_receiver.await.unwrap()
     }
 
-    pub fn set_value(&self, new_value: VariableValue) {
-        let message = VariableActorMessage::SetValue { new_value };
-        self.message_sender.unbounded_send(message).unwrap()
-    }
+    // @TODO remove?
+    // pub fn set_value(&self, new_value: VariableValue) {
+    //     let message = VariableActorMessage::SetValue { new_value };
+    //     self.message_sender.unbounded_send(message).unwrap()
+    // }
 
     pub fn value_changes(&self) -> mpsc::UnboundedReceiver<VariableValueChanged> {
         let (change_sender, change_receiver) = mpsc::unbounded();
         let message = VariableActorMessage::ValueChanges { change_sender };
         self.message_sender.unbounded_send(message).unwrap();
+        zoon::println!("value_changes called");
         change_receiver
     }
 }
@@ -471,7 +510,7 @@ impl AsyncDebugFormat for VariableValue {
 #[derive(Debug, Clone)]
 pub struct VariableValueLink {
     link_actor: VariableActor,
-    actor_sender: mpsc::UnboundedSender<VariableActor>,
+    actor_sender: Arc<mpsc::UnboundedSender<VariableActor>>,
 }
 
 impl VariableValueLink {
@@ -483,7 +522,14 @@ impl VariableValueLink {
                 let actor = actor.clone();
                 move |_change| { 
                     let actor = actor.clone();
-                    async move { actor.get_value().await }
+                    async move { 
+                        zoon::println!("KKKKK");
+                        zoon::println!("Link_actor: {}", actor.async_debug_format().await);
+                        let value = actor.get_value().await;
+                        zoon::println!("LLLL");
+                        zoon::println!("Link_actor new value: {}", value.async_debug_format().await);
+                        value
+                    }
                 }
             })
         });
@@ -494,7 +540,7 @@ impl VariableValueLink {
 
         Self { 
             link_actor,
-            actor_sender 
+            actor_sender: Arc::new(actor_sender)
         }
     }
 

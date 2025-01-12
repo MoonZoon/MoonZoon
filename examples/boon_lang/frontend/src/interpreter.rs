@@ -327,7 +327,7 @@ pub async fn run(_program: &str) -> impl Element {
                                         argument_name.clone(),
                                         VariableActor::new(async move { stream::once(async move { VariableValue::List(VariableValueList::new(vec![
                                             // @TODO remove
-                                            // VariableActor::new(async { stream::once(async { VariableValue::Number(VariableValueNumber::new(25.)) })}),
+                                            // VariableActor::new(async { stream::once(async { VariableValue::Number(VariableValueNumber::new(255.)) })}),
                                             {
                                                 let engine = engine.clone();
                                                 VariableActor::new(async move { 
@@ -339,11 +339,29 @@ pub async fn run(_program: &str) -> impl Element {
                                                                 VariableValue::Object(object) => {
                                                                     match object.variable(&VariableName::new("press")).unwrap().actor().get_value().await {
                                                                         VariableValue::Link(link) => {
-                                                                            println!("XXX increment_button event press: {:#?}", link.async_debug_format().await); 
-                                                                            link.link_actor().value_changes().map(|_change| {
-                                                                                // @TODO get VariableValue directly from event_press_actor and then map it
-                                                                                println!("value changed!");
-                                                                                VariableValue::Number(VariableValueNumber::new(123.))
+                                                                            zoon::println!("XXX increment_button event press: {:#?}", link.async_debug_format().await); 
+                                                                            let link_actor = link.link_actor();
+                                                                            link_actor.value_changes().then({
+                                                                                let link_actor = link_actor.clone();
+                                                                                move |_change| {
+                                                                                    let link_actor = link_actor.clone();
+                                                                                    async move {
+                                                                                        match link_actor.get_value().await {
+                                                                                            VariableValue::Unset => {
+                                                                                                zoon::println!("LINK ACTOR IS UNSET ------------------");
+                                                                                                VariableValue::Number(VariableValueNumber::new(0.))
+                                                                                            },
+                                                                                            VariableValue::Object(_object) => {
+                                                                                                zoon::println!("LINK ACTOR IS OBJECT ------------------");
+                                                                                                VariableValue::Number(VariableValueNumber::new(12.))
+                                                                                            }
+                                                                                            _ => {
+                                                                                                zoon::println!("LINK ACTOR IS SOMETHING ELSE ------------------");
+                                                                                                VariableValue::Number(VariableValueNumber::new(12345.))
+                                                                                            }
+                                                                                        }
+                                                                                    }
+                                                                                }
                                                                             })
                                                                         }
                                                                         _ => panic!("increment_button event press has to be 'Link'")
@@ -510,21 +528,32 @@ async fn actor_to_element(actor: VariableActor) -> impl Element {
                                 match event.actor().get_value().await {
                                     VariableValue::Object(object) => {
                                         if let Some(press) = object.variable(&VariableName::new("press")) {
-                                            let press_event_actor = VariableActor::new(async move { 
-                                                stream::once(async move { 
-                                                    VariableValue::Object(VariableValueObject::new(Variables::new()))
-                                                })
+                                            let (press_event_sender, press_event_receiver) = mpsc::unbounded();
+                                            let target_actor = VariableActor::new(async move { 
+                                                press_event_receiver
                                             });
-                                            let button = button.on_press(clone!((press_event_actor) move || { 
-                                                press_event_actor.set_value(VariableValue::Object(VariableValueObject::new(Variables::new())))
-                                            }));
+                                            let button = button.on_press(move || { 
+                                                let mut press_event_sender = press_event_sender.clone();
+                                                Task::start(async move {
+                                                    let item_to_send = VariableValue::Object(VariableValueObject::new({
+                                                        let mut variables = Variables::new();
+                                                        let variable_name = VariableName::new("dummy_button_event_press_event");
+                                                        variables.insert(variable_name.clone(), Variable::new(variable_name, VariableActor::new(
+                                                            async { stream::once( async { VariableValue::Unset }) }
+                                                        )));
+                                                        variables
+                                                    }));
+                                                    press_event_sender.send(item_to_send).await.unwrap();
+                                                    println!("press event sent!!");
+                                                });
+                                            });
                                             match press.actor().get_value().await {
                                                 VariableValue::Link(variable_value_link) => {
-                                                    variable_value_link.set_target(press_event_actor);
+                                                    variable_value_link.set_target(target_actor.clone());
                                                 }
                                                 _ => panic!("Failed to set link value - the variable is not a Link")
                                             }
-                                            button
+                                            button.after_remove(move |_| drop(target_actor))
                                         } else {
                                             button.on_press(||{})
                                         }
