@@ -28,13 +28,15 @@ document: Document/new(root: Element/stripe(
     direction: Column
     style: []
     items: LIST {
-        counter: LATEST {
-            0
-            increment_button.event.press |> THEN { 1 } |> Math/sum()
-        }
+        counter
         increment_button
     }
 ))
+
+counter: LATEST {
+    0
+    increment_button.event.press |> THEN { 1 } |> Math/sum()
+}
 
 increment_button: Element/button(
     element: [event: [press: LINK]]
