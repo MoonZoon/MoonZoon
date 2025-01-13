@@ -392,8 +392,13 @@ impl VariableActor {
                 change_senders: &mut Vec<mpsc::UnboundedSender<VariableValueChanged>>,
             | {
                 *old_value = Some(new_value);
+                // change_senders.retain(|change_sender| {
+                //     change_sender.unbounded_send(VariableValueChanged).is_ok()
+                // });
+                zoon::println!("change_senders count: {}", change_senders.len());
                 change_senders.retain(|change_sender| {
-                    change_sender.unbounded_send(VariableValueChanged).is_ok()
+                    change_sender.unbounded_send(VariableValueChanged).unwrap();
+                    true
                 });
             };
 
@@ -423,6 +428,8 @@ impl VariableActor {
                                 if change_sender.unbounded_send(VariableValueChanged).is_ok() {
                                     change_senders.push(change_sender);
                                 }
+                                // change_sender.unbounded_send(VariableValueChanged).unwrap();
+                                // change_senders.push(change_sender);
                             }
                         }
                     }
@@ -518,24 +525,28 @@ impl VariableValueLink {
         let (actor_sender, actor_receiver) = mpsc::unbounded::<VariableActor>();
 
         let value_stream = actor_receiver.flat_map(|actor| {
-            actor.value_changes().then({
+            let value_changes_receiver = actor.value_changes();
+            value_changes_receiver.then({
                 let actor = actor.clone();
                 move |_change| { 
                     let actor = actor.clone();
                     async move { 
                         zoon::println!("KKKKK");
-                        zoon::println!("Link_actor: {}", actor.async_debug_format().await);
-                        let value = actor.get_value().await;
-                        zoon::println!("LLLL");
-                        zoon::println!("Link_actor new value: {}", value.async_debug_format().await);
-                        value
+                        // zoon::println!("Link_actor: {}", actor.async_debug_format().await);
+                        // let value = actor.get_value().await;
+                        // zoon::println!("LLLL");
+                        // zoon::println!("Link_actor new value: {}", value.async_debug_format().await);
+                        // value
+
+                        VariableValue::Object(VariableValueObject::new(Variables::new()))
                     }
                 }
             })
         });
 
         let link_actor = VariableActor::new(async { 
-            stream::once( async { VariableValue::Unset }).chain(value_stream) 
+            // stream::once( async { VariableValue::Unset }).chain(value_stream) 
+            value_stream
         });
 
         Self { 
