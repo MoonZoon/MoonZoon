@@ -10,20 +10,20 @@ type ArgumentName = &'static str;
 pub async fn run(_program: &str) -> impl Element {
 
     let document_new_function_definition = |arguments_actor: ArgumentsActor, _passed_actor: PassedActor| {
-        let root_argument_actors = arguments_actor.argument_actor_stream("root");
+        let root_argument_actor_stream = arguments_actor.actor_stream("root");
 
         let document_new_output_object_actor_32 = ObjectActor::new("Document/new output object", 32);
 
         let document_new_output_root_element_variable_actor_33 = VariableActor::new("Document/new output root_element", 33, "root_element");
 
-        document_new_output_object_actor_32
+        stream::once(future::ready(document_new_output_object_actor_32))
     };
 
     let element_stripe_function_definition = |arguments_actor: ArgumentsActor, _passed_actor: PassedActor| {
-        let element_argument_actors = arguments_actor.argument_actor_stream("element");
-        let direction_argument_actors = arguments_actor.argument_actor_stream("direction");
-        let style_argument_actors = arguments_actor.argument_actor_stream("style");
-        let items_argument_actors = arguments_actor.argument_actor_stream("items");
+        let element_actor_stream = arguments_actor.actor_stream("element");
+        let direction_actor_stream = arguments_actor.actor_stream("direction");
+        let style_actor_stream = arguments_actor.actor_stream("style");
+        let items_actor_stream = arguments_actor.actor_stream("items");
 
         let element_stripe_output_object_actor_34 = ObjectActor::new("Element/stripe output object", 34);
 
@@ -33,13 +33,13 @@ pub async fn run(_program: &str) -> impl Element {
 
         let element_stripe_output_type_tag_actor_37 = TagActor::new("Element/stripe output type tag", 37, stream::once(future::ready("Stripe")));
 
-        element_stripe_output_object_actor_34
+        stream::once(future::ready(element_stripe_output_object_actor_34))
     };
 
     let element_button_function_definition = |arguments_actor: ArgumentsActor, _passed_actor: PassedActor| {
-        let element_argument_actors = arguments_actor.argument_actor_stream("element");
-        let style_argument_actors = arguments_actor.argument_actor_stream("style");
-        let label_argument_actors = arguments_actor.argument_actor_stream("label");
+        let element_actor_stream = arguments_actor.actor_stream("element");
+        let style_actor_stream = arguments_actor.actor_stream("style");
+        let label_actor_stream = arguments_actor.actor_stream("label");
 
         let element_button_output_object_actor_38 = ObjectActor::new("Element/button output object", 38);
 
@@ -49,26 +49,24 @@ pub async fn run(_program: &str) -> impl Element {
 
         let element_button_output_type_tag_actor_41 = TagActor::new("Element/button output type tag", 41, stream::once(future::ready("Button")));
 
-        element_button_output_object_actor_38
+        stream::once(future::ready(element_button_output_object_actor_38))
     };
 
     let math_sum_function_definition = |arguments_actor: ArgumentsActor, _passed_actor: PassedActor| async {
-        let increment_argument_actors = arguments_actor.argument_actor_stream("increment");
-
         let counter_default_number_actor_43 = NumberActor::new(
             "counter default number", 
             43,
-            increment_argument_actors
-                .flat_map(|increment_argument_actor| {
-                    increment_argument_actor.unwrap_number_actor().number_stream()
+            arguments_actor
+                .actor_stream("increment")
+                .flat_map(|increment_actor| {
+                    increment_actor.unwrap_number_actor().number_stream()
                 })
                 .scan(0, |state, increment| {
                     *state += increment;
                     future::ready(Some(*state))
                 })
         );
-
-        counter_default_number_actor_43
+        stream::once(future::ready(counter_default_number_actor_43))
     };
 
 
