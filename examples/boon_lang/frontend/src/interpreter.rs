@@ -10,12 +10,14 @@ type ArgumentName = &'static str;
 pub async fn run(_program: &str) -> impl Element {
 
     let document_new_function_definition = |arguments_actor: ArgumentsActor, _passed_actor: PassedActor| {
-        let root_argument_actor_stream = arguments_actor.actor_stream("root");
-
         let document_new_output_object_actor_32 = ObjectActor::new("Document/new output object", 32);
-
-        let document_new_output_root_element_variable_actor_33 = VariableActor::new("Document/new output root_element", 33, "root_element");
-
+        let document_new_output_root_element_variable_actor_33 = VariableActor::new(
+            "Document/new output root_element", 
+            33, 
+            "root_element",
+            arguments_actor.actor_stream("root")
+        );
+        document_new_output_object_actor_32.add_variable_actor(document_new_output_root_element_variable_actor_33);
         stream::once(future::ready(document_new_output_object_actor_32))
     };
 
