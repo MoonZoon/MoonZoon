@@ -7,16 +7,13 @@ use engine::*;
 
 type ArgumentName = &'static str;
 
-// @TODO ObjectActor - value = stream of Vec<PropertyName> or Vec<VariableActor> ?
-// @TODO ObjectActor, VariableActor and others (?) - add input parameter stream?
-
 fn stream_one<T>(item: T) -> impl Stream<Item = T> {
     stream::once(future::ready(item))
 }
 
 pub async fn run(_program: &str) -> impl Element {
 
-    let document_new_function_definition = |arguments: ObjectActor| {
+    let function_document_new = |arguments: ObjectActor| {
         stream_one(ObjectActor::new(
             "Document/new output object", 
             32,
@@ -31,27 +28,40 @@ pub async fn run(_program: &str) -> impl Element {
         ))
     };
 
-    let element_stripe_function_definition = |arguments: ObjectActor| {
-        let element_actor_stream = arguments.actor_stream("element");
-        let direction_actor_stream = arguments.actor_stream("direction");
-        let style_actor_stream = arguments.actor_stream("style");
-        let items_actor_stream = arguments.actor_stream("items");
-
-        let element_stripe_output_object_actor_34 = ObjectActor::new("Element/stripe output object", 34);
-
-        let element_stripe_output_settings_variable_actor_35 = VariableActor::new("Element/stripe output settings", 35, "settings");
-        element_stripe_output_object_actor_34.insert_variable_actor_as_property(element_stripe_output_settings_variable_actor_35);
-
-        let element_stripe_output_type_variable_output_36 = VariableActor::new("Element/stripe output type", 36, "type");
-        element_stripe_output_object_actor_34.insert_variable_actor_as_property(element_stripe_output_type_variable_output_36);
-
-        let element_stripe_output_type_tag_actor_37 = TagActor::new("Element/stripe output type tag", 37, stream::one("Stripe"));
-        element_stripe_output_type_variable_output_36.set_tag_actor_as_value(element_stripe_output_type_tag_actor_37);
-
-        stream::one(element_stripe_output_object_actor_34)
+    let function_element_stripe = |arguments: ObjectActor| {
+        stream::one(ObjectActor::new(
+            "Element/stripe output object", 
+            34,
+            stream::one(vec![
+                VariableActor::new(
+                    "Element/stripe output type", 
+                    36, 
+                    "type",
+                    TagActor::new("Element/stripe output type tag", 37, stream::one("Stripe"))
+                ),
+                VariableActor::new(
+                    "Element/stripe output settings", 
+                    35, 
+                    "settings",
+                    stream::one(vec![
+                        arguments.get_expected_variable_actor("direction"),
+                        arguments.get_expected_variable_actor("style"),
+                        arguments.get_expected_variable_actor("items"),
+                    ])
+                ),
+                VariableActor::new(
+                    "Element/button output event", 
+                    44, 
+                    "event",
+                    arguments.get_expected_variable_actor("element").actor_stream().map(|actor| {
+                        actor.expect_object_actor().get_variable_actor_or_unset("event")
+                    })
+                ),
+            ])
+        ))
     };
 
-    let element_button_function_definition = |arguments: ObjectActor| {
+    let function_element_button = |arguments: ObjectActor| {
         stream::one(ObjectActor::new(
             "Element/button output object", 
             38,
@@ -68,7 +78,7 @@ pub async fn run(_program: &str) -> impl Element {
                     "settings",
                     stream::one(ObjectActor::new(
                         "Element/button output settings object", 
-                        42,
+                        45,
                         stream::one(vec![
                             arguments.get_expected_variable_actor("style"),
                             arguments.get_expected_variable_actor("label"),
@@ -77,7 +87,7 @@ pub async fn run(_program: &str) -> impl Element {
                 ),
                 VariableActor::new(
                     "Element/button output event", 
-                    44, 
+                    46, 
                     "event",
                     arguments.get_expected_variable_actor("element").actor_stream().map(|actor| {
                         actor.expect_object_actor().get_variable_actor_or_unset("event")
@@ -87,7 +97,7 @@ pub async fn run(_program: &str) -> impl Element {
         ))
     };
 
-    let math_sum_function_definition = |arguments: ObjectActor, | {
+    let function_math_sum = |arguments: ObjectActor, | {
         stream::one(NumberActor::new(
             "counter default number", 
             43,
@@ -110,11 +120,11 @@ pub async fn run(_program: &str) -> impl Element {
 
     let document_variable_actor_1 = VariableActor::new("document", 1, "document");
 
-    let document_new_function_actor_2 = FunctionActor::new("Document/new call", 2, "Document/new", document_new_function_definition);
+    let document_new_function_actor_2 = FunctionActor::new("Document/new call", 2, "Document/new", function_document_new);
 
     let root_argument_actor_3 = ArgumentActor::new("Document/new root", 3, "root");
 
-    let element_stripe_function_actor_4 = FunctionActor::new("Element/stripe call", 4, "Element/stripe", element_stripe_function_definition);
+    let element_stripe_function_actor_4 = FunctionActor::new("Element/stripe call", 4, "Element/stripe", function_element_stripe);
 
     let element_stripe_element_argument_actor_5 = ArgumentActor::new("Element/stripe element", 5, "element");
 
@@ -145,14 +155,14 @@ pub async fn run(_program: &str) -> impl Element {
 
     let counter_after_button_press_number_actor_18 = NumberActor::new("counter after button press number", 18, stream::one(1.));
 
-    let counter_math_sum_function_actor_19 = FunctionActor::new("Math/sum call", 19, "Math/sum", math_sum_function_definition);
+    let counter_math_sum_function_actor_19 = FunctionActor::new("Math/sum call", 19, "Math/sum", function_math_sum);
 
     let counter_math_sum_increment_argument_actor_42 = ArgumentActor::new("Math/sum increment", 42, "increment");
 
 
     let increment_button_variable_actor_20 = VariableActor::new("increment_button", 20, "increment_button");
 
-    let element_button_function_actor_21 = FunctionActor::new("Element/button call", 21, "Element/button", element_button_function_definition);
+    let element_button_function_actor_21 = FunctionActor::new("Element/button call", 21, "Element/button", function_element_button);
 
     let element_button_element_argument_actor_22 = ArgumentActor::new("Element/button element", 22, "element");
 
