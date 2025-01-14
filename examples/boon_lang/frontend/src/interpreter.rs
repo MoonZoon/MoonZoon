@@ -17,7 +17,7 @@ pub async fn run(_program: &str) -> impl Element {
             "root_element",
             arguments_actor.actor_stream("root")
         );
-        document_new_output_object_actor_32.add_variable_actor(document_new_output_root_element_variable_actor_33);
+        document_new_output_object_actor_32.insert_variable_actor_as_property(document_new_output_root_element_variable_actor_33);
         stream::once(future::ready(document_new_output_object_actor_32))
     };
 
@@ -30,26 +30,36 @@ pub async fn run(_program: &str) -> impl Element {
         let element_stripe_output_object_actor_34 = ObjectActor::new("Element/stripe output object", 34);
 
         let element_stripe_output_settings_variable_actor_35 = VariableActor::new("Element/stripe output settings", 35, "settings");
+        element_stripe_output_object_actor_34.insert_variable_actor_as_property(element_stripe_output_settings_variable_actor_35);
 
         let element_stripe_output_type_variable_output_36 = VariableActor::new("Element/stripe output type", 36, "type");
+        element_stripe_output_object_actor_34.insert_variable_actor_as_property(element_stripe_output_type_variable_output_36);
 
         let element_stripe_output_type_tag_actor_37 = TagActor::new("Element/stripe output type tag", 37, stream::once(future::ready("Stripe")));
+        element_stripe_output_type_variable_output_36.set_tag_actor_as_value(element_stripe_output_type_tag_actor_37);
 
         stream::once(future::ready(element_stripe_output_object_actor_34))
     };
 
     let element_button_function_definition = |arguments_actor: ArgumentsActor, _passed_actor: PassedActor| {
         let element_actor_stream = arguments_actor.actor_stream("element");
-        let style_actor_stream = arguments_actor.actor_stream("style");
-        let label_actor_stream = arguments_actor.actor_stream("label");
 
         let element_button_output_object_actor_38 = ObjectActor::new("Element/button output object", 38);
 
         let element_button_output_settings_variable_actor_39 = VariableActor::new("Element/button output settings", 39, "settings");
+        
+        let element_button_output_settings_object_actor_42 = ObjectActor::new("Element/button output settings object", 42);
+        element_button_output_settings_object_actor_42.insert_variable_actor_as_property(arguments_actor.argument_to_variable_actor("style"));
+        element_button_output_settings_object_actor_42.insert_variable_actor_as_property(arguments_actor.argument_to_variable_actor("label"));
+        element_button_output_settings_variable_actor_39.set_object_actor_as_value(element_button_output_settings_object_actor_42);
+        
+        element_button_output_object_actor_38.insert_variable_actor_as_property(element_button_output_settings_variable_actor_39);
 
         let element_button_output_type_variable_output_40 = VariableActor::new("Element/button output type", 40, "type");
+        element_button_output_object_actor_38.insert_variable_actor_as_property(element_button_output_type_variable_output_40);
 
         let element_button_output_type_tag_actor_41 = TagActor::new("Element/button output type tag", 41, stream::once(future::ready("Button")));
+        element_button_output_type_variable_output_40.set_tag_actor_as_value(element_button_output_type_tag_actor_41);
 
         stream::once(future::ready(element_button_output_object_actor_38))
     };
