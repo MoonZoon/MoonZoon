@@ -7,16 +7,15 @@ use engine::*;
 
 type ArgumentName = &'static str;
 
+// @TODO ObjectActor - value = stream of Vec<PropertyName> or Vec<VariableActor> ?
+// @TODO ObjectActor, VariableActor and others (?) - add input parameter stream?
+
 pub async fn run(_program: &str) -> impl Element {
 
     let document_new_function_definition = |arguments_actor: ArgumentsActor, _passed_actor: PassedActor| {
         let document_new_output_object_actor_32 = ObjectActor::new("Document/new output object", 32);
-        let document_new_output_root_element_variable_actor_33 = VariableActor::new(
-            "Document/new output root_element", 
-            33, 
-            "root_element",
-            arguments_actor.actor_stream("root")
-        );
+        let document_new_output_root_element_variable_actor_33 = VariableActor::new("Document/new output root_element", 33, "root_element");
+        document_new_output_root_element_variable_actor_33.set_variable_actor_as_value(arguments_actor.argument_to_variable_actor("root"));
         document_new_output_object_actor_32.insert_variable_actor_as_property(document_new_output_root_element_variable_actor_33);
         stream::once(future::ready(document_new_output_object_actor_32))
     };
@@ -42,21 +41,24 @@ pub async fn run(_program: &str) -> impl Element {
     };
 
     let element_button_function_definition = |arguments_actor: ArgumentsActor, _passed_actor: PassedActor| {
-        let element_actor_stream = arguments_actor.actor_stream("element");
-
         let element_button_output_object_actor_38 = ObjectActor::new("Element/button output object", 38);
+        element_button_output_object_actor_38.insert_variable_actors_as_properties(
+            arguments_actor.argument_to_variable_actor("element").actor_stream().flat_map(|element_actor| {
+                element_actor.unwrap_object_actor().property_stream()
+            })
+        );
 
         let element_button_output_settings_variable_actor_39 = VariableActor::new("Element/button output settings", 39, "settings");
         
         let element_button_output_settings_object_actor_42 = ObjectActor::new("Element/button output settings object", 42);
-        element_button_output_settings_object_actor_42.insert_variable_actor_as_property(arguments_actor.argument_to_variable_actor("style"));
-        element_button_output_settings_object_actor_42.insert_variable_actor_as_property(arguments_actor.argument_to_variable_actor("label"));
+        element_button_output_settings_object_actor_42.insert_variable_actors_as_properties(stream::once(future::ready(arguments_actor.argument_to_variable_actor("style"))));
+        element_button_output_settings_object_actor_42.insert_variable_actors_as_properties(stream::once(future::ready(arguments_actor.argument_to_variable_actor("label"))));
         element_button_output_settings_variable_actor_39.set_object_actor_as_value(element_button_output_settings_object_actor_42);
         
-        element_button_output_object_actor_38.insert_variable_actor_as_property(element_button_output_settings_variable_actor_39);
+        element_button_output_object_actor_38.insert_variable_actors_as_properties(stream::once(future::ready(element_button_output_settings_variable_actor_39)));
 
         let element_button_output_type_variable_output_40 = VariableActor::new("Element/button output type", 40, "type");
-        element_button_output_object_actor_38.insert_variable_actor_as_property(element_button_output_type_variable_output_40);
+        element_button_output_object_actor_38.insert_variable_actors_as_properties(stream::once(future::ready(element_button_output_type_variable_output_40)));
 
         let element_button_output_type_tag_actor_41 = TagActor::new("Element/button output type tag", 41, stream::once(future::ready("Button")));
         element_button_output_type_variable_output_40.set_tag_actor_as_value(element_button_output_type_tag_actor_41);
@@ -69,7 +71,8 @@ pub async fn run(_program: &str) -> impl Element {
             "counter default number", 
             43,
             arguments_actor
-                .actor_stream("increment")
+                .argument_to_variable_actor("increment")
+                .actor_stream()
                 .flat_map(|increment_actor| {
                     increment_actor.unwrap_number_actor().number_stream()
                 })
