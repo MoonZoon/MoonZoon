@@ -123,11 +123,91 @@ pub async fn run(_program: &str) -> impl Element {
                 "document", 
                 1, 
                 "document",
+                stream_one(FunctionActor::new(
+                    "Document/new call", 
+                    2, 
+                    "Document/new", 
+                    function_document_new,
+                    vec![
+                        VariableActor::new(
+                            "Document/new root", 
+                            3, 
+                            "root",
+                            stream_one(
+                                FunctionActor::new(
+                                    "Element/stripe call", 
+                                    4, 
+                                    "Element/stripe", 
+                                    function_element_stripe,
+                                    vec![
+                                        VariableActor::new(
+                                            "Element/stripe element", 
+                                            5, 
+                                            "element",
+                                            stream_one(ObjectActor::new("Element/stripe element object", 6, stream_one(vec![])))
+                                        ),
+                                        VariableActor::new(
+                                            "Element/stripe direction", 
+                                            7, 
+                                            "direction",
+                                            stream_one(TagActor::new("Element/stripe direction tag", 8, stream_one("Column")))
+                                        ),
+                                        VariableActor::new(
+                                            "Element/stripe style", 
+                                            9, 
+                                            "style",
+                                            stream_one(ObjectActor::new("Element/stripe style object", 10, stream_one(vec![])))
+                                        ),
+                                        VariableActor::new(
+                                            "Element/stripe items", 
+                                            11, 
+                                            "items",
+                                            stream_one(ListActor::new(
+                                                "Element/stripe items list", 
+                                                12,
+                                                stream_one(vec![
+                                                    stream_one(ReferenceActor::new("document Element/stripe item 0", 47, "counter", 13)),
+                                                    stream_one(ReferenceActor::new("document Element/stripe item 1", 48, "increment_button", 20))
+                                                ])
+                                            ))
+                                        )
+                                    ]
+                                ))
+                        )
+                    ]
+                ))
             ),
             VariableActor::new(
                 "counter", 
                 13, 
                 "counter",
+                stream_one(LatestActor::new(
+                    "counter latest", 
+                    14,
+                    vec![
+                        NumberActor::new("counter default number", 15, stream_one(0.)),
+                        FunctionActor::new(
+                            "Math/sum call", 
+                            19, 
+                            "Math/sum", 
+                            function_math_sum,
+                            vec![
+                                VariableActor::new(
+                                    "Math/sum increment", 
+                                    42, 
+                                    "increment",
+                                    // @TODO think through
+                                    stream_one(ThenActor::new(
+                                        "counter button press then", 
+                                        17,
+                                        stream_one(ReferenceActor::new("counter button press", 16, "increment_button.event.press", 20)),
+                                        stream_one(NumberActor::new("counter after button press number", 18, stream_one(1.)),
+                                    )))
+                                )
+                            ]
+                        )
+                    ]
+                ))
             ),
             VariableActor::new(
                 "increment_button", 
@@ -186,47 +266,6 @@ pub async fn run(_program: &str) -> impl Element {
             )
         ])
     );
-
-
-    let document_new_function_actor_2 = FunctionActor::new("Document/new call", 2, "Document/new", function_document_new);
-
-    let root_argument_actor_3 = ArgumentActor::new("Document/new root", 3, "root");
-
-    let element_stripe_function_actor_4 = FunctionActor::new("Element/stripe call", 4, "Element/stripe", function_element_stripe);
-
-    let element_stripe_element_argument_actor_5 = ArgumentActor::new("Element/stripe element", 5, "element");
-
-    let element_stripe_element_object_actor_6 = ObjectActor::new("Element/stripe element object", 6);
-
-    let element_stripe_direction_argument_actor_7 = ArgumentActor::new("Element/stripe direction", 7, "direction");
-
-    let element_stripe_direction_tag_actor_8 = TagActor::new("Element/stripe direction tag", 8, stream_one("Column"));
-
-    let element_stripe_style_argument_actor_9 = ArgumentActor::new("Element/stripe style", 9, "style");
-
-    let element_stripe_style_object_actor_10 = ObjectActor::new("Element/stripe style object", 10);
-
-    let element_stripe_items_argument_actor_11 = ArgumentActor::new("Element/stripe items", 11, "items");
-
-    let element_stripe_items_list_actor_12 = ListActor::new("Element/stripe items list", 12);
-
-
-
-    let counter_latest_actor_14 = LatestActor::new("counter latest", 14);
-
-    let counter_default_number_actor_15 = NumberActor::new("counter default number", 15, stream_one(0.));
-
-    let counter_button_press_reference_actor_16 = ReferenceActor::new("counter button press", 16, "increment_button.event.press");
-
-    let counter_button_press_then_actor_17 = ThenActor::new("counter button press then", 17);
-
-    let counter_after_button_press_number_actor_18 = NumberActor::new("counter after button press number", 18, stream_one(1.));
-
-    let counter_math_sum_function_actor_19 = FunctionActor::new("Math/sum call", 19, "Math/sum", function_math_sum);
-
-    let counter_math_sum_increment_argument_actor_42 = ArgumentActor::new("Math/sum increment", 42, "increment");
-
-
 
     El::new().child("3. attempt")
 }
