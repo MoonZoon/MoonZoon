@@ -1,9 +1,8 @@
-use zoon::{*, println};
-use zoon::futures_util::{stream, future};
-use std::sync::Arc;
-
 mod engine;
 use engine::*;
+
+mod element_helper;
+use element_helper::*;
 
 type ArgumentName = &'static str;
 
@@ -23,7 +22,7 @@ pub async fn run(_program: &str) -> impl Element {
                     33, 
                     "root_element",
                 ),
-                arguments.get_expected_variable_actor("root").into_actor_stream()
+                arguments.get_expected_variable_actor("root").actor_stream()
             ])
         ))
     };
@@ -114,6 +113,9 @@ pub async fn run(_program: &str) -> impl Element {
         ))
     };
 
+    let increment_button_event_press_to_counter_then_variable_reference_actor_16 = VariableReferenceActor::new("counter button press", 16, "increment_button.event.press");
+    let counter_to_document_element_stripe_item_0_variable_reference_actor_47 =  VariableReferenceActor::new("document Element/stripe item 0", 47, "counter", 13);
+    let increment_button_to_document_element_stripe_item_1_variable_reference_actor_48 = VariableReferenceActor::new("document Element/stripe item 1", 48, "increment_button", 20);
 
     let root_actor = ObjectActor::new(
         "root", 
@@ -166,8 +168,8 @@ pub async fn run(_program: &str) -> impl Element {
                                                 "Element/stripe items list", 
                                                 12,
                                                 stream_one(vec![
-                                                    stream_one(ReferenceActor::new("document Element/stripe item 0", 47, "counter", 13)),
-                                                    stream_one(ReferenceActor::new("document Element/stripe item 1", 48, "increment_button", 20))
+                                                    counter_to_document_element_stripe_item_0_variable_reference_actor_47.actor_stream(),
+                                                    increment_button_to_document_element_stripe_item_1_variable_reference_actor_48.actor_stream(),
                                                 ])
                                             ))
                                         )
@@ -196,11 +198,10 @@ pub async fn run(_program: &str) -> impl Element {
                                     "Math/sum increment", 
                                     42, 
                                     "increment",
-                                    // @TODO think through
                                     stream_one(ThenActor::new(
                                         "counter button press then", 
                                         17,
-                                        stream_one(ReferenceActor::new("counter button press", 16, "increment_button.event.press", 20)),
+                                        increment_button_event_press_to_counter_then_variable_reference_actor_16.actor_stream(),
                                         stream_one(NumberActor::new("counter after button press number", 18, stream_one(1.)),
                                     )))
                                 )
@@ -208,7 +209,8 @@ pub async fn run(_program: &str) -> impl Element {
                         )
                     ]
                 ))
-            ),
+            )
+            .pass_as_reference_root(counter_to_document_element_stripe_item_0_variable_reference_actor_47),
             VariableActor::new(
                 "increment_button", 
                 20, 
@@ -264,8 +266,10 @@ pub async fn run(_program: &str) -> impl Element {
                     ]
                 ))
             )
+            .pass_as_reference_root(increment_button_event_press_to_counter_then_variable_reference_actor_16)
+            .pass_as_reference_root(increment_button_to_document_element_stripe_item_1_variable_reference_actor_48)
         ])
     );
 
-    El::new().child("3. attempt")
+    root_actor_to_element(root_actor).await
 }
