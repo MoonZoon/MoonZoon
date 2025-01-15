@@ -1,35 +1,21 @@
 use parent::engine::*;
 
 async fn root_actor_to_element(root_actor: ObjectActor) -> impl Element {
-    let root_element_stream = root_actor.get_expected_variable_actor("document").actor_stream().map(|actor| {
-        actor.expect_object_actor().get_expected_variable_actor("root_element")
-    });
+    let element_stream = root_actor
+        .get_expected_variable_actor("document")
+        .actor_stream()
+        .flat_map(|actor| {
+            actor
+                .expect_object_actor()
+                .get_expected_variable_actor("root_element")
+                .actor_stream()
+                .map(|actor| actor_to_element(actor.expect_tagged_object_actor()))
+        });
 
-    let document_variable_actor = engine
-        .read()
-        .unwrap()
-        .variables
-        .get(&VariableName::new("document"))
-        .unwrap()
-        .actor();
-
-    // @TODO get_value -> changes? (everywhere?)
-    let root_element = match document_variable_actor.get_value().await {
-        VariableValue::Object(object) => {
-            object.variable(&VariableName::new("root_element")).unwrap().actor()
-        }
-        _ => panic!("'document' has to be 'Object'")
-    };
-
-    println!("{}", root_element.async_debug_format().await);
-    println!("-----");
-
-    actor_to_element(root_element).await
+    El::new().child_signal(signal::from_stream(element_stream))
 }
 
-// @TODO `debug_assert_*` instead of `assert_*` everywhere?
-
-async fn actor_to_element(actor: VariableActor) -> impl Element {
+async fn actor_to_element(actor: TaggedObjectActor) -> impl Element {
     match actor.get_value().await {
         VariableValue::TaggedObject(tagged_object) => {
             assert_eq!(tagged_object.tag(), "Element");
