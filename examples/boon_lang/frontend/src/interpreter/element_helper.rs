@@ -1,6 +1,6 @@
 use parent::engine::*;
 
-async fn root_actor_to_element(root_actor: ObjectActor) -> impl Element {
+fn root_actor_to_element_signal(root_actor: ObjectActor) -> impl Signal<Item = RawElOrText> {
     let element_stream = root_actor
         .get_expected_variable_actor("document")
         .actor_stream()
@@ -9,13 +9,22 @@ async fn root_actor_to_element(root_actor: ObjectActor) -> impl Element {
                 .expect_object_actor()
                 .get_expected_variable_actor("root_element")
                 .actor_stream()
-                .map(|actor| actor_to_element(actor.expect_tagged_object_actor()))
+                .flat_map(|actor| actor_to_element_stream(actor))
         });
 
-    El::new().child_signal(signal::from_stream(element_stream))
+    signal::from_stream(element_stream)
 }
 
-async fn actor_to_element(actor: TaggedObjectActor) -> impl Element {
+fn object_to_element_stripe(object: Object) -> impl Element {
+    let settings_actor = object.get_expected_variable_actor("settings");
+    // let style_actor = settings_actor.get_expected_variable_actor("style");
+}
+
+fn object_to_element_button(object: Object) -> impl Element {
+    
+}
+
+fn to_remove() {
     match actor.get_value().await {
         VariableValue::TaggedObject(tagged_object) => {
             assert_eq!(tagged_object.tag(), "Element");
@@ -124,6 +133,41 @@ async fn actor_to_element(actor: TaggedObjectActor) -> impl Element {
         VariableValue::Text(text) => {
             Text::new(text.text()).unify()
         }
-        _ => panic!("Element cannot be created from provided VariableActor")
+        
+    }
+}
+
+fn actor_to_element_stream(element_actor: Actor) -> impl Stream<Item = RawElOrText> {
+    match element_actor {
+        Actor::TaggedObject(tagged_object_actor) => {
+            tagged_object_actor
+                .tagged_object_stream()
+                .flat_map(|tag, object| {
+                    assert_eq!(tag, "Element");
+                    object
+                        .get_expected_variable_actor("type")
+                        .actor_stream()
+                        .flat_map(|actor| actor.expect_tag_actor().tag_stream())
+                        .map({
+                            let object = object.clone();
+                            move |element_type| {
+                                match element_type {
+                                    "Stripe" => object_to_element_stripe(object).unify(),
+                                    "Button" => object_to_element_button(object).unify(),
+                                    unsupported_type => unreachable!("Element type '{unsupported_type}' is not supported")
+                                }
+                            }
+                        })
+
+                })
+                .boxed()
+        }
+        Actor::Number(number_actor) => {
+            number_actor.number_stream().map(|number| Text::new(number).unify()).boxed()
+        }
+        Actor::Text(text_actor) => {
+            text_actor.text_stream().map(|text| Text::new(text).unify()).boxed()
+        }
+        unsupported_type => unreachable!("Element cannot be created from provided Actor")
     }
 }

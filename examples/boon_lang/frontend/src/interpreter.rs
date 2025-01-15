@@ -28,9 +28,10 @@ pub async fn run(_program: &str) -> impl Element {
     };
 
     let function_element_stripe = |arguments: Arguments, function_actor_id: ActorId| {
-        stream_one(ObjectActor::new(
+        stream_one(TaggedObjectActor::new(
             "Element/stripe output object", 
             function_actor_id.push_child_id(34),
+            "Element",
             stream_one(vec![
                 VariableActor::new(
                     "Element/stripe output type", 
@@ -52,8 +53,11 @@ pub async fn run(_program: &str) -> impl Element {
                     "Element/button output event", 
                     function_actor_id.push_child_id(44), 
                     "event",
-                    arguments.get_expected_variable_actor("element").actor_stream().map(|actor| {
-                        actor.expect_object_actor().get_variable_actor_or_unset("event")
+                    arguments.get_expected_variable_actor("element").actor_stream().flat_map(|actor| {
+                        actor
+                            .expect_object_actor()
+                            .object_stream()
+                            .map(|object| object.get_variable_actor_or_unset_actor("event"))
                     })
                 ),
             ])
@@ -61,9 +65,10 @@ pub async fn run(_program: &str) -> impl Element {
     };
 
     let function_element_button = |arguments: Arguments, function_actor_id: ActorId| {
-        stream_one(ObjectActor::new(
+        stream_one(TaggedObjectActor::new(
             "Element/button output object", 
-            38,
+            function_actor_id.push_child_id(38),
+            "Element",
             stream_one(vec![
                 VariableActor::new(
                     "Element/button output type", 
@@ -88,8 +93,11 @@ pub async fn run(_program: &str) -> impl Element {
                     "Element/button output event", 
                     function_actor_id.push_child_id(46), 
                     "event",
-                    arguments.get_expected_variable_actor("element").actor_stream().map(|actor| {
-                        actor.expect_object_actor().get_variable_actor_or_unset("event")
+                    arguments.get_expected_variable_actor("element").actor_stream().flat_map(|actor| {
+                        actor
+                            .expect_object_actor()
+                            .object_stream()
+                            .map(|object| object.get_variable_actor_or_unset_actor("event"))
                     })
                 ),
             ])
@@ -271,5 +279,5 @@ pub async fn run(_program: &str) -> impl Element {
         ])
     );
 
-    root_actor_to_element(root_actor).await
+    El::new().child-signal(root_actor_to_element_signal(root_actor))
 }
