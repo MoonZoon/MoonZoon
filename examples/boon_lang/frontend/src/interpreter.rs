@@ -12,14 +12,14 @@ fn stream_one<T>(item: T) -> impl Stream<Item = T> {
 
 pub async fn run(_program: &str) -> impl Element {
 
-    let function_document_new = |arguments: Arguments| {
+    let function_document_new = |arguments: Arguments, function_actor_id: ActorId| {
         stream_one(ObjectActor::new(
             "Document/new output object", 
-            32,
+            function_actor_id.push_child_id(32),
             stream_one(vec![
                 VariableActor::new(
                     "Document/new output root_element", 
-                    33, 
+                    function_actor_id.push_child_id(33), 
                     "root_element",
                 ),
                 arguments.get_expected_variable_actor("root").actor_stream()
@@ -27,20 +27,20 @@ pub async fn run(_program: &str) -> impl Element {
         ))
     };
 
-    let function_element_stripe = |arguments: Arguments| {
+    let function_element_stripe = |arguments: Arguments, function_actor_id: ActorId| {
         stream_one(ObjectActor::new(
             "Element/stripe output object", 
-            34,
+            function_actor_id.push_child_id(34),
             stream_one(vec![
                 VariableActor::new(
                     "Element/stripe output type", 
-                    36, 
+                    function_actor_id.push_child_id(36), 
                     "type",
                     TagActor::new("Element/stripe output type tag", 37, stream_one("Stripe"))
                 ),
                 VariableActor::new(
                     "Element/stripe output settings", 
-                    35, 
+                    function_actor_id.push_child_id(35), 
                     "settings",
                     stream_one(vec![
                         arguments.get_expected_variable_actor("direction"),
@@ -50,7 +50,7 @@ pub async fn run(_program: &str) -> impl Element {
                 ),
                 VariableActor::new(
                     "Element/button output event", 
-                    44, 
+                    function_actor_id.push_child_id(44), 
                     "event",
                     arguments.get_expected_variable_actor("element").actor_stream().map(|actor| {
                         actor.expect_object_actor().get_variable_actor_or_unset("event")
@@ -60,24 +60,24 @@ pub async fn run(_program: &str) -> impl Element {
         ))
     };
 
-    let function_element_button = |arguments: Arguments| {
+    let function_element_button = |arguments: Arguments, function_actor_id: ActorId| {
         stream_one(ObjectActor::new(
             "Element/button output object", 
             38,
             stream_one(vec![
                 VariableActor::new(
                     "Element/button output type", 
-                    40, 
+                    function_actor_id.push_child_id(40), 
                     "type",
                     TagActor::new("Element/button output type tag", 41, stream_one("Button"))
                 ),
                 VariableActor::new(
                     "Element/button output settings", 
-                    39, 
+                    function_actor_id.push_child_id(39), 
                     "settings",
                     stream_one(ObjectActor::new(
                         "Element/button output settings object", 
-                        45,
+                        function_actor_id.push_child_id(45),
                         stream_one(vec![
                             arguments.get_expected_variable_actor("style"),
                             arguments.get_expected_variable_actor("label"),
@@ -86,7 +86,7 @@ pub async fn run(_program: &str) -> impl Element {
                 ),
                 VariableActor::new(
                     "Element/button output event", 
-                    46, 
+                    function_actor_id.push_child_id(46), 
                     "event",
                     arguments.get_expected_variable_actor("element").actor_stream().map(|actor| {
                         actor.expect_object_actor().get_variable_actor_or_unset("event")
@@ -96,10 +96,10 @@ pub async fn run(_program: &str) -> impl Element {
         ))
     };
 
-    let function_math_sum = |arguments: Arguments| {
+    let function_math_sum = |arguments: Arguments, function_actor_id: ActorId| {
         stream_one(NumberActor::new(
             "counter default number", 
-            43,
+            function_actor_id.push_child_id(43),
             arguments
                 .get_expected_variable_actor("increment")
                 .actor_stream()
