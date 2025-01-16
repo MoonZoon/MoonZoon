@@ -7,9 +7,13 @@ fn root_actor_to_element_signal(root_actor: ObjectActor) -> impl Signal<Item = R
         .flat_map(|actor| {
             actor
                 .expect_object_actor()
-                .get_expected_variable_actor("root_element")
-                .actor_stream()
-                .flat_map(|actor| actor_to_element_stream(actor))
+                .object_stream()
+                .flat_map(|object| {
+                    object
+                        .get_expected_variable_actor("root_element")
+                        .actor_stream()
+                        .flat_map(|actor| actor_to_element_stream(actor))
+                })
         });
 
     signal::from_stream(element_stream)
@@ -17,7 +21,46 @@ fn root_actor_to_element_signal(root_actor: ObjectActor) -> impl Signal<Item = R
 
 fn object_to_element_stripe(object: Object) -> impl Element {
     let settings_actor = object.get_expected_variable_actor("settings");
+
+    object
+        .get_expected_variable_actor("settings")
+        .actor_stream()
+        .map(|actor| {
+            actor.expect_object_actor()
+        })
+
+
+
     // let style_actor = settings_actor.get_expected_variable_actor("style");
+
+
+    // let settings = match tagged_object.variable(&VariableName::new("settings")).unwrap().actor().get_value().await {
+    //     VariableValue::Object(object) => object,
+    //     _ => panic!("Element settings has to be 'Object'")
+    // };
+    // let direction = settings.variable(&VariableName::new("direction")).unwrap().actor();
+    // let _direction = match direction.get_value().await {
+    //     VariableValue::Tag(direction) => {
+    //         match direction.tag() {
+    //             "Row" => {},
+    //             "Column" => {},
+    //             _ => panic!("Stripe direction has to be 'Row' or 'Column'")
+    //         }
+    //     },
+    //     _ => panic!("Button direction has to be 'Tag'")
+    // };
+    // let items = settings.variable(&VariableName::new("items")).unwrap().actor();
+    // let mut element_items = Vec::new();
+    // match items.get_value().await {
+    //     VariableValue::List(items) => {
+    //         for item in items.list() {
+    //             element_items.push(actor_to_element(item.to_owned()).boxed_local().await);
+    //         }
+    //     },
+    //     _ => panic!("Button direction has to be 'Tag'")
+    // };
+    // // @TODO Column -> Stripe
+    // Column::new().items(element_items).unify()
 }
 
 fn object_to_element_button(object: Object) -> impl Element {
@@ -154,7 +197,7 @@ fn actor_to_element_stream(element_actor: Actor) -> impl Stream<Item = RawElOrTe
                                 match element_type {
                                     "Stripe" => object_to_element_stripe(object).unify(),
                                     "Button" => object_to_element_button(object).unify(),
-                                    unsupported_type => unreachable!("Element type '{unsupported_type}' is not supported")
+                                    other => unreachable!("Element type '{other}' is not supported")
                                 }
                             }
                         })

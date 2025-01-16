@@ -12,27 +12,27 @@ fn stream_one<T>(item: T) -> impl Stream<Item = T> {
 
 pub async fn run(_program: &str) -> impl Element {
 
-    let function_document_new = |arguments: Arguments, function_actor_id: ActorId| {
+    let function_document_new = |arguments: Object, function_actor_id: ActorId| {
         stream_one(ObjectActor::new(
             "Document/new output object", 
             function_actor_id.push_child_id(32),
-            stream_one(vec![
+            stream_one(Object::new([
                 VariableActor::new(
                     "Document/new output root_element", 
                     function_actor_id.push_child_id(33), 
                     "root_element",
                 ),
                 arguments.get_expected_variable_actor("root").actor_stream()
-            ])
+            ]))
         ))
     };
 
-    let function_element_stripe = |arguments: Arguments, function_actor_id: ActorId| {
+    let function_element_stripe = |arguments: Object, function_actor_id: ActorId| {
         stream_one(TaggedObjectActor::new(
             "Element/stripe output object", 
             function_actor_id.push_child_id(34),
             "Element",
-            stream_one(vec![
+            stream_one(Object::new([
                 VariableActor::new(
                     "Element/stripe output type", 
                     function_actor_id.push_child_id(36), 
@@ -43,11 +43,11 @@ pub async fn run(_program: &str) -> impl Element {
                     "Element/stripe output settings", 
                     function_actor_id.push_child_id(35), 
                     "settings",
-                    stream_one(vec![
+                    stream_one(Object::new([
                         arguments.get_expected_variable_actor("direction"),
                         arguments.get_expected_variable_actor("style"),
                         arguments.get_expected_variable_actor("items"),
-                    ])
+                    ]))
                 ),
                 VariableActor::new(
                     "Element/button output event", 
@@ -60,16 +60,16 @@ pub async fn run(_program: &str) -> impl Element {
                             .map(|object| object.get_variable_actor_or_unset_actor("event"))
                     })
                 ),
-            ])
+            ]))
         ))
     };
 
-    let function_element_button = |arguments: Arguments, function_actor_id: ActorId| {
+    let function_element_button = |arguments: Object, function_actor_id: ActorId| {
         stream_one(TaggedObjectActor::new(
             "Element/button output object", 
             function_actor_id.push_child_id(38),
             "Element",
-            stream_one(vec![
+            stream_one(Object::new([
                 VariableActor::new(
                     "Element/button output type", 
                     function_actor_id.push_child_id(40), 
@@ -83,10 +83,10 @@ pub async fn run(_program: &str) -> impl Element {
                     stream_one(ObjectActor::new(
                         "Element/button output settings object", 
                         function_actor_id.push_child_id(45),
-                        stream_one(vec![
+                        stream_one(Object::new([
                             arguments.get_expected_variable_actor("style"),
                             arguments.get_expected_variable_actor("label"),
-                        ])
+                        ]))
                     ))
                 ),
                 VariableActor::new(
@@ -100,11 +100,11 @@ pub async fn run(_program: &str) -> impl Element {
                             .map(|object| object.get_variable_actor_or_unset_actor("event"))
                     })
                 ),
-            ])
+            ]))
         ))
     };
 
-    let function_math_sum = |arguments: Arguments, function_actor_id: ActorId| {
+    let function_math_sum = |arguments: Object, function_actor_id: ActorId| {
         stream_one(NumberActor::new(
             "counter default number", 
             function_actor_id.push_child_id(43),
@@ -122,13 +122,13 @@ pub async fn run(_program: &str) -> impl Element {
     };
 
     let increment_button_event_press_to_counter_then_variable_reference_actor_16 = VariableReferenceActor::new("counter button press", 16, "increment_button.event.press");
-    let counter_to_document_element_stripe_item_0_variable_reference_actor_47 =  VariableReferenceActor::new("document Element/stripe item 0", 47, "counter", 13);
-    let increment_button_to_document_element_stripe_item_1_variable_reference_actor_48 = VariableReferenceActor::new("document Element/stripe item 1", 48, "increment_button", 20);
+    let counter_to_document_element_stripe_item_0_variable_reference_actor_47 =  VariableReferenceActor::new("document Element/stripe item 0", 47, "counter");
+    let increment_button_to_document_element_stripe_item_1_variable_reference_actor_48 = VariableReferenceActor::new("document Element/stripe item 1", 48, "increment_button");
 
     let root_actor = ObjectActor::new(
         "root", 
         0,
-        stream_one(vec![
+        stream_one(Object::new([
             VariableActor::new(
                 "document", 
                 1, 
@@ -138,7 +138,7 @@ pub async fn run(_program: &str) -> impl Element {
                     2, 
                     "Document/new", 
                     function_document_new,
-                    vec![
+                    Object::new([
                         VariableActor::new(
                             "Document/new root", 
                             3, 
@@ -149,12 +149,12 @@ pub async fn run(_program: &str) -> impl Element {
                                     4, 
                                     "Element/stripe", 
                                     function_element_stripe,
-                                    vec![
+                                    Object::new([
                                         VariableActor::new(
                                             "Element/stripe element", 
                                             5, 
                                             "element",
-                                            stream_one(ObjectActor::new("Element/stripe element object", 6, stream_one(vec![])))
+                                            stream_one(ObjectActor::new("Element/stripe element object", 6, stream_one(Object::new([]))))
                                         ),
                                         VariableActor::new(
                                             "Element/stripe direction", 
@@ -166,7 +166,7 @@ pub async fn run(_program: &str) -> impl Element {
                                             "Element/stripe style", 
                                             9, 
                                             "style",
-                                            stream_one(ObjectActor::new("Element/stripe style object", 10, stream_one(vec![])))
+                                            stream_one(ObjectActor::new("Element/stripe style object", 10, stream_one(Object::new([]))))
                                         ),
                                         VariableActor::new(
                                             "Element/stripe items", 
@@ -175,16 +175,16 @@ pub async fn run(_program: &str) -> impl Element {
                                             stream_one(ListActor::new(
                                                 "Element/stripe items list", 
                                                 12,
-                                                stream_one(vec![
-                                                    counter_to_document_element_stripe_item_0_variable_reference_actor_47.actor_stream(),
-                                                    increment_button_to_document_element_stripe_item_1_variable_reference_actor_48.actor_stream(),
-                                                ])
+                                                stream_one(List::new([
+                                                    counter_to_document_element_stripe_item_0_variable_reference_actor_47,
+                                                    increment_button_to_document_element_stripe_item_1_variable_reference_actor_48,
+                                                ]))
                                             ))
                                         )
-                                    ]
+                                    ])
                                 ))
                         )
-                    ]
+                    ])
                 ))
             ),
             VariableActor::new(
@@ -194,14 +194,14 @@ pub async fn run(_program: &str) -> impl Element {
                 stream_one(LatestActor::new(
                     "counter latest", 
                     14,
-                    vec![
+                    List::new([
                         NumberActor::new("counter default number", 15, stream_one(0.)),
                         FunctionActor::new(
                             "Math/sum call", 
                             19, 
                             "Math/sum", 
                             function_math_sum,
-                            vec![
+                            Object::new([
                                 VariableActor::new(
                                     "Math/sum increment", 
                                     42, 
@@ -213,9 +213,9 @@ pub async fn run(_program: &str) -> impl Element {
                                         stream_one(NumberActor::new("counter after button press number", 18, stream_one(1.)),
                                     )))
                                 )
-                            ]
+                            ])
                         )
-                    ]
+                    ])
                 ))
             )
             .pass_as_reference_root(counter_to_document_element_stripe_item_0_variable_reference_actor_47),
@@ -227,8 +227,7 @@ pub async fn run(_program: &str) -> impl Element {
                     "Element/button call", 
                     21, 
                     "Element/button", 
-                    function_element_button,
-                    vec![
+                    Object::new([
                         VariableActor::new(
                             "Element/button argument element", 
                             22, 
@@ -236,7 +235,7 @@ pub async fn run(_program: &str) -> impl Element {
                             stream_one(ObjectActor::new(
                                 "Element/button element object", 
                                 23,
-                                stream_one(vec![
+                                stream_one(Object::new([
                                     VariableActor::new(
                                         "Element/button element event", 
                                         24, 
@@ -245,25 +244,25 @@ pub async fn run(_program: &str) -> impl Element {
                                             ObjectActor::new(
                                                 "Element/button element event object", 
                                                 25,
-                                                stream_one(vec![
+                                                stream_one(Object::new([
                                                     VariableActor::new(
                                                         "Element/button element event press", 
                                                         26, 
                                                         "press",
                                                         stream_one(LinkActor::new("Element/button element event press link", 27))
                                                     )
-                                                ])
+                                                ]))
                                             )
                                         )
                                     )
-                                ])
+                                ]))
                             ))
                         ),
                         VariableActor::new(
                             "Element/button style", 
                             28, 
                             "style",
-                            stream_one(ObjectActor::new("Element/button style object", 29, stream_one(vec![])))
+                            stream_one(ObjectActor::new("Element/button style object", 29, stream_one(Object::new([]))))
                         ),
                         VariableActor::new(
                             "Element/button label", 
@@ -271,13 +270,13 @@ pub async fn run(_program: &str) -> impl Element {
                             "label",
                             stream_one(TextActor::new("Element/button label text", 31, stream_one("+")))
                         )
-                    ]
+                    ])
                 ))
             )
             .pass_as_reference_root(increment_button_event_press_to_counter_then_variable_reference_actor_16)
             .pass_as_reference_root(increment_button_to_document_element_stripe_item_1_variable_reference_actor_48)
-        ])
+        ]))
     );
 
-    El::new().child-signal(root_actor_to_element_signal(root_actor))
+    El::new().child_signal(root_actor_to_element_signal(root_actor))
 }
