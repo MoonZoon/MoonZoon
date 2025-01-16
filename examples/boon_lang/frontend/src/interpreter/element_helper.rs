@@ -1,19 +1,19 @@
 use zoon::*;
 use parent::engine::*;
 
-fn root_actor_to_element_signal(root_actor: ObjectActor) -> impl Signal<Item = RawElOrText> {
-    let element_stream = root_actor
-        .get_expected_variable_actor("document")
-        .actor_stream()
-        .flat_map(|actor| {
-            actor
-                .expect_object_actor()
+fn root_object_value_to_element_signal(root: ObjectValue) -> impl Signal<Item = RawElOrText> {
+    let element_stream = root
+        .get_expected_variable("document")
+        .value_stream()
+        .flat_map(|value| {
+            value
+                .expect_object_value()
                 .object_stream()
                 .flat_map(|object| {
                     object
-                        .get_expected_variable_actor("root_element")
-                        .actor_stream()
-                        .flat_map(|actor| actor_to_element_stream(actor))
+                        .get_expected_variable("root_element")
+                        .value_stream()
+                        .flat_map(|value| value_to_element_stream(value))
                 })
         });
 
@@ -22,41 +22,40 @@ fn root_actor_to_element_signal(root_actor: ObjectActor) -> impl Signal<Item = R
 
 fn object_to_element_stripe(object: Object) -> impl Element {
     object
-        .get_expected_variable_actor("settings")
-        .actor_stream()
-        .flat_map(|actor| actor.expect_object_actor().object_stream())
+        .get_expected_variable("settings")
+        .value_stream()
+        .flat_map(|value| value.expect_object_value().object_stream())
         .map(|object| {
             let _direction_tag_stream = 
                 object
-                    .get_expected_variable_actor("direction")
-                    .actor_stream()
-                    .flat_map(|actor| actor.expect_tag_actor().tag_stream());
+                    .get_expected_variable("direction")
+                    .value_stream()
+                    .flat_map(|value| value.expect_tag_value().tag_stream());
 
             let _style_object_stream = 
                 object
-                    .get_expected_variable_actor("style")
-                    .actor_stream()
-                    .flat_map(|actor| actor.expect_object_actor().object_stream());
+                    .get_expected_variable("style")
+                    .value_stream()
+                    .flat_map(|value| value.expect_object_value().object_stream());
 
             let items_list_stream = 
                 object
-                    .get_expected_variable_actor("items")
-                    .actor_stream()
-                    .flat_map(|actor| actor.expect_list_actor().list_stream());
+                    .get_expected_variable("items")
+                    .value_stream()
+                    .flat_map(|value| value.expect_list_value().list_stream());
 
-            // @TODO DynamicList / ListValueActor / ?
             // @TODO Get rid of El::new()?
             let item_element_stream = items_list_stream.map(|list| {
                 list
                     .into_vec()
                     .into_iter()
-                    .map(|actor|
-                        El::new().child_signal(signal::from_stream(actor_to_element_stream(actor)))
+                    .map(|value|
+                        El::new().child_signal(signal::from_stream(value_to_element_stream(value)))
                     )
                     .collect::<Vec<_>>()
             });
 
-            // @TODO Stripe::new()
+            // @TODO Stripe::new(direction)
             Column::new().items_signal_vec(signal::from_stream(item_element_stream).to_signal_vec())
         })
 
@@ -211,17 +210,17 @@ fn to_remove() {
     }
 }
 
-fn actor_to_element_stream(element_actor: Actor) -> impl Stream<Item = RawElOrText> {
-    match element_actor {
-        Actor::TaggedObject(tagged_object_actor) => {
-            tagged_object_actor
+fn value_to_element_stream(value: Value) -> impl Stream<Item = RawElOrText> {
+    match value {
+        Value::TaggedObjectValue(tagged_object_value) => {
+            tagged_object_value
                 .tagged_object_stream()
                 .flat_map(|tag, object| {
-                    assert_eq!(tag, "Element");
+                    assert_eq!(tag, "Element", "Element cannot be created from Object with tag '{tag}'");
                     object
-                        .get_expected_variable_actor("type")
-                        .actor_stream()
-                        .flat_map(|actor| actor.expect_tag_actor().tag_stream())
+                        .get_expected_variable("type")
+                        .value_stream()
+                        .flat_map(|value| value.expect_tag_value().tag_stream())
                         .map({
                             let object = object.clone();
                             move |element_type| {
@@ -236,12 +235,12 @@ fn actor_to_element_stream(element_actor: Actor) -> impl Stream<Item = RawElOrTe
                 })
                 .boxed()
         }
-        Actor::Number(number_actor) => {
-            number_actor.number_stream().map(|number| Text::new(number).unify()).boxed()
+        Value::NumberValue(number_value) => {
+            number_value.number_stream().map(|number| Text::new(number).unify()).boxed()
         }
-        Actor::Text(text_actor) => {
-            text_actor.text_stream().map(|text| Text::new(text).unify()).boxed()
+        Value::TextValue(text_value) => {
+            text_value.text_stream().map(|text| Text::new(text).unify()).boxed()
         }
-        unsupported_type => unreachable!("Element cannot be created from provided Actor")
+        unsupported_type => unreachable!("Element cannot be created from provided Value")
     }
 }
