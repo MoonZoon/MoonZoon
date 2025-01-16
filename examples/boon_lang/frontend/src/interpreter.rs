@@ -37,7 +37,7 @@ pub async fn run(_program: &str) -> impl Element {
                     "Element/stripe output type", 
                     function_actor_id.push_child_id(36), 
                     "type",
-                    TagActor::new("Element/stripe output type tag", 37, stream_one("Stripe"))
+                    stream_one(TagActor::new("Element/stripe output type tag", 37, stream_one("Stripe")))
                 ),
                 VariableActor::new(
                     "Element/stripe output settings", 
@@ -74,7 +74,7 @@ pub async fn run(_program: &str) -> impl Element {
                     "Element/button output type", 
                     function_actor_id.push_child_id(40), 
                     "type",
-                    TagActor::new("Element/button output type tag", 41, stream_one("Button"))
+                    stream_one(TagActor::new("Element/button output type tag", 41, stream_one("Button")))
                 ),
                 VariableActor::new(
                     "Element/button output settings", 

@@ -1,3 +1,4 @@
+use zoon::*;
 use parent::engine::*;
 
 fn root_actor_to_element_signal(root_actor: ObjectActor) -> impl Signal<Item = RawElOrText> {
@@ -20,13 +21,43 @@ fn root_actor_to_element_signal(root_actor: ObjectActor) -> impl Signal<Item = R
 }
 
 fn object_to_element_stripe(object: Object) -> impl Element {
-    let settings_actor = object.get_expected_variable_actor("settings");
-
     object
         .get_expected_variable_actor("settings")
         .actor_stream()
-        .map(|actor| {
-            actor.expect_object_actor()
+        .flat_map(|actor| actor.expect_object_actor().object_stream())
+        .map(|object| {
+            let _direction_tag_stream = 
+                object
+                    .get_expected_variable_actor("direction")
+                    .actor_stream()
+                    .flat_map(|actor| actor.expect_tag_actor().tag_stream());
+
+            let _style_object_stream = 
+                object
+                    .get_expected_variable_actor("style")
+                    .actor_stream()
+                    .flat_map(|actor| actor.expect_object_actor().object_stream());
+
+            let items_list_stream = 
+                object
+                    .get_expected_variable_actor("items")
+                    .actor_stream()
+                    .flat_map(|actor| actor.expect_list_actor().list_stream());
+
+            // @TODO DynamicList / ListValueActor / ?
+            // @TODO Get rid of El::new()?
+            let item_element_stream = items_list_stream.map(|list| {
+                list
+                    .into_vec()
+                    .into_iter()
+                    .map(|actor|
+                        El::new().child_signal(signal::from_stream(actor_to_element_stream(actor)))
+                    )
+                    .collect::<Vec<_>>()
+            });
+
+            // @TODO Stripe::new()
+            Column::new().items_signal_vec(signal::from_stream(item_element_stream).to_signal_vec())
         })
 
 
