@@ -146,65 +146,35 @@ fn object_to_element_button(object: Object) -> impl Element {
             })
     );
 
+    let event_press_mutable = Mutable::new(None);
+    let event_press_mutable_setter_task = Task::start_droppable(
+        object
+            .get_expected_variable("event")
+            .value_stream()
+            .flat_map(|value| value.expect_object_value().object_stream())
+            .filter_map(|object| object.get_variable("press"))
+            .flat_map(|variable| variable.value_stream())
+            .map(|value| value.expect_link_value())
+            .for_each({
+                let event_press_mutable = event_press_mutable.clone();
+                move |link_value| {
+                    event_press_mutable.set(link_value);
+                }
+            })
+    );
+
     Button::new()
         .label(signal::from_stream(label_text_receiver))
+        .on_press(move|| {
+            if let Some(link_value) = event_press_mutable.lock_ref().as_ref() {
+                // @TODO set value every time? Link transparent?
+                link_value.set_value(ObjectValue::new(stream_one(Object::new([]))))
+            }
+        })
         .after_remove(move |_| { 
             drop(settings_reader_task);
+            drop(event_press_mutable_setter_task);
         })
-
-    // "Button" => {
-    //     let settings = match tagged_object.variable(&VariableName::new("settings")).unwrap().actor().get_value().await {
-    //         VariableValue::Object(object) => object,
-    //         _ => panic!("Element settings has to be 'Object'")
-    //     };
-    //     let label = settings.variable(&VariableName::new("label")).unwrap().actor();
-    //     let label = match label.get_value().await {
-    //         VariableValue::Text(label) => label.text().to_owned(),
-    //         _ => panic!("Button label has to be 'String'")
-    //     };
-    //     let button = Button::new().label(label);
-    //     let button = if let Some(event) = tagged_object.variable(&VariableName::new("event")) {
-    //         match event.actor().get_value().await {
-    //             VariableValue::Object(object) => {
-    //                 if let Some(press) = object.variable(&VariableName::new("press")) {
-    //                     let (press_event_sender, press_event_receiver) = mpsc::unbounded();
-    //                     let target_actor = VariableActor::new(async move { 
-    //                         press_event_receiver
-    //                     });
-    //                     let button = button.on_press(move || { 
-    //                         let mut press_event_sender = press_event_sender.clone();
-    //                         Task::start(async move {
-    //                             // let item_to_send = VariableValue::Object(VariableValueObject::new({
-    //                             //     let mut variables = Variables::new();
-    //                             //     let variable_name = VariableName::new("dummy_button_event_press_event");
-    //                             //     variables.insert(variable_name.clone(), Variable::new(variable_name, VariableActor::new(
-    //                             //         async { stream::once( async { VariableValue::Unset }) }
-    //                             //     )));
-    //                             //     variables
-    //                             // }));
-    //                             let item_to_send = VariableValue::Object(VariableValueObject::new(Variables::new()));
-    //                             press_event_sender.send(item_to_send).await.unwrap();
-    //                             println!("press event sent!!");
-    //                         });
-    //                     });
-    //                     match press.actor().get_value().await {
-    //                         VariableValue::Link(variable_value_link) => {
-    //                             variable_value_link.set_target(target_actor.clone());
-    //                         }
-    //                         _ => panic!("Failed to set link value - the variable is not a Link")
-    //                     }
-    //                     button.after_remove(move |_| drop(target_actor))
-    //                 } else {
-    //                     button.on_press(||{})
-    //                 }
-    //             },
-    //             _ => panic!("Element event has to be 'Object'")
-    //         }
-    //     } else {
-    //         button.on_press(||{})
-    //     };
-    //     button.unify()
-    // }
 }
 
 fn value_to_element_stream(value: Value) -> impl Stream<Item = RawElOrText> {

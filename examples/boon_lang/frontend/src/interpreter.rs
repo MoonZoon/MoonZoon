@@ -57,7 +57,12 @@ pub async fn run(_program: &str) -> impl Element {
                         value
                             .expect_object_value()
                             .object_stream()
-                            .map(|object| object.get_variable_or_unset("event"))
+                            .flat_map(|object| {
+                                object
+                                    .get_variable("event")
+                                    .map(|variable| variable.value_stream().boxed())
+                                    .or_else(|| stream_one(Object::new([])).boxed())
+                            })
                     })
                 ),
             ]))
@@ -97,7 +102,12 @@ pub async fn run(_program: &str) -> impl Element {
                         value
                             .expect_object_value()
                             .object_stream()
-                            .map(|object| object.get_variable_or_unset("event"))
+                            .flat_map(|object| {
+                                object
+                                    .get_variable("event")
+                                    .map(|variable| variable.value_stream().boxed())
+                                    .or_else(|| stream_one(Object::new([])).boxed())
+                            })
                     })
                 ),
             ]))
