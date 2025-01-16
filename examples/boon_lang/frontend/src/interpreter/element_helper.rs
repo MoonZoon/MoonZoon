@@ -25,58 +25,59 @@ fn object_to_element_stripe(object: Object) -> impl Element {
     let (style_object_sender, _style_object_receiver) = mpsc::unbounded();
     let (items_vec_diff_sender, items_vec_diff_receiver) = mpsc::unbounded();
 
-    let settings_reader_task = Task::start_droppable(object
-        .get_expected_variable("settings")
-        .value_stream()
-        .flat_map(|value| value.expect_object_value().object_stream())
-        .fold(vec![], move |tasks, object| {
-            future::ready((vec![
-                Task::start_droppable(
-                    object
-                        .get_expected_variable("direction")
-                        .value_stream()
-                        .flat_map(|value| value.expect_tag_value().tag_stream())
-                        .for_each({
-                            let direction_tag_sender = direction_tag_sender.clone();
-                            move |direction_tag| async move {
-                                if let Err(error) = direction_tag_sender.unbounded_send(direction_tag) {
-                                    eprintln!("Failed to send 'direction_tag' through 'direction_tag_sender'")
-                                };
-                            }
-                        })
-                ),
-                Task::start_droppable(
-                    object
-                        .get_expected_variable("style")
-                        .value_stream()
-                        .flat_map(|value| value.expect_object_value().object_stream())
-                        .for_each({
-                            let style_object_sender = style_object_sender.clone();
-                            move |style_object| async move {
-                                if let Err(error) = style_object_sender.unbounded_send(style_object) {
-                                    eprintln!("Failed to send 'style_object' through 'style_object_sender'")
-                                };
-                            }
-                        })
-                ),
-                Task::start_droppable(
-                    object
-                        .get_expected_variable("items")
-                        .value_stream()
-                        .flat_map(|value| value.expect_list_value().list_stream())
-                        .flat_map(|list| list.change_stream())
-                        .map(list_change_to_vec_diff)
-                        .for_each({
-                            let items_vec_diff_sender = items_vec_diff_sender.clone();
-                            move |items_vec_diff| async move {
-                                if let Err(error) = items_vec_diff_sender.unbounded_send(items_vec_diff) {
-                                    eprintln!("Failed to send 'items_vec_diff' through 'items_vec_diff_sender'")
-                                };
-                            }
-                        })
-                )
-            ]))
-        })
+    let settings_reader_task = Task::start_droppable(
+        object
+            .get_expected_variable("settings")
+            .value_stream()
+            .flat_map(|value| value.expect_object_value().object_stream())
+            .fold(vec![], move |tasks, object| {
+                future::ready((vec![
+                    Task::start_droppable(
+                        object
+                            .get_expected_variable("direction")
+                            .value_stream()
+                            .flat_map(|value| value.expect_tag_value().tag_stream())
+                            .for_each({
+                                let direction_tag_sender = direction_tag_sender.clone();
+                                move |direction_tag| async move {
+                                    if let Err(error) = direction_tag_sender.unbounded_send(direction_tag) {
+                                        eprintln!("Failed to send 'direction_tag' through 'direction_tag_sender'")
+                                    };
+                                }
+                            })
+                    ),
+                    Task::start_droppable(
+                        object
+                            .get_expected_variable("style")
+                            .value_stream()
+                            .flat_map(|value| value.expect_object_value().object_stream())
+                            .for_each({
+                                let style_object_sender = style_object_sender.clone();
+                                move |style_object| async move {
+                                    if let Err(error) = style_object_sender.unbounded_send(style_object) {
+                                        eprintln!("Failed to send 'style_object' through 'style_object_sender'")
+                                    };
+                                }
+                            })
+                    ),
+                    Task::start_droppable(
+                        object
+                            .get_expected_variable("items")
+                            .value_stream()
+                            .flat_map(|value| value.expect_list_value().list_stream())
+                            .flat_map(|list| list.change_stream())
+                            .map(list_change_to_vec_diff)
+                            .for_each({
+                                let items_vec_diff_sender = items_vec_diff_sender.clone();
+                                move |items_vec_diff| async move {
+                                    if let Err(error) = items_vec_diff_sender.unbounded_send(items_vec_diff) {
+                                        eprintln!("Failed to send 'items_vec_diff' through 'items_vec_diff_sender'")
+                                    };
+                                }
+                            })
+                    )
+                ]))
+            })
     );
 
     let mut items_mutable_vec = MutableVec::new();
@@ -103,6 +104,54 @@ fn object_to_element_stripe(object: Object) -> impl Element {
 }
 
 fn object_to_element_button(object: Object) -> impl Element {
+    let (style_object_sender, _style_object_receiver) = mpsc::unbounded();
+    let (label_text_sender, label_text_receiver) = mpsc::unbounded();
+
+    let settings_reader_task = Task::start_droppable(
+        object
+            .get_expected_variable("settings")
+            .value_stream()
+            .flat_map(|value| value.expect_object_value().object_stream())
+            .fold(vec![], move |tasks, object| {
+                future::ready((vec![
+                    Task::start_droppable(
+                        object
+                            .get_expected_variable("style")
+                            .value_stream()
+                            .flat_map(|value| value.expect_object_value().object_stream())
+                            .for_each({
+                                let style_object_sender = style_object_sender.clone();
+                                move |style_object| async move {
+                                    if let Err(error) = style_object_sender.unbounded_send(style_object) {
+                                        eprintln!("Failed to send 'style_object' through 'style_object_sender'")
+                                    };
+                                }
+                            })
+                    ),
+                    Task::start_droppable(
+                        object
+                            .get_expected_variable("label")
+                            .value_stream()
+                            .flat_map(|value| value.expect_text_value().text_stream())
+                            .for_each({
+                                let label_text_sender = label_text_sender.clone();
+                                move |label| async move {
+                                    if let Err(error) = label_text_sender.unbounded_send(label) {
+                                        eprintln!("Failed to send 'label' through 'label_text_sender'")
+                                    };
+                                }
+                            })
+                    )
+                ]))
+            })
+    );
+
+    Button::new()
+        .label(signal::from_stream(label_text_receiver))
+        .after_remove(move |_| { 
+            drop(settings_reader_task);
+        })
+
     // "Button" => {
     //     let settings = match tagged_object.variable(&VariableName::new("settings")).unwrap().actor().get_value().await {
     //         VariableValue::Object(object) => object,
