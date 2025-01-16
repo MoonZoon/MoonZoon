@@ -1,4 +1,4 @@
-use zoon::*;
+use zoon::{*, eprintln};
 use parent::engine::*;
 
 fn root_object_value_to_element_signal(root: ObjectValue) -> impl Signal<Item = RawElOrText> {
@@ -21,51 +21,84 @@ fn root_object_value_to_element_signal(root: ObjectValue) -> impl Signal<Item = 
 }
 
 fn object_to_element_stripe(object: Object) -> impl Element {
-    object
+    let (direction_tag_sender, _direction_tag_receiver) = mpsc::unbounded();
+    let (style_object_sender, _style_object_receiver) = mpsc::unbounded();
+    let (items_vec_diff_sender, items_vec_diff_receiver) = mpsc::unbounded();
+
+    let settings_reader_task = Task::start_droppable(object
         .get_expected_variable("settings")
         .value_stream()
         .flat_map(|value| value.expect_object_value().object_stream())
-        .map(|object| {
-            let _direction_tag_stream = 
-                object
-                    .get_expected_variable("direction")
-                    .value_stream()
-                    .flat_map(|value| value.expect_tag_value().tag_stream());
+        .fold(vec![], move |tasks, object| {
+            future::ready((vec![
+                Task::start_droppable(
+                    object
+                        .get_expected_variable("direction")
+                        .value_stream()
+                        .flat_map(|value| value.expect_tag_value().tag_stream())
+                        .for_each({
+                            let direction_tag_sender = direction_tag_sender.clone();
+                            move |direction_tag| async move {
+                                if let Err(error) = direction_tag_sender.unbounded_send(direction_tag) {
+                                    eprintln!("Failed to send 'direction_tag' through 'direction_tag_sender'")
+                                };
+                            }
+                        })
+                ),
+                Task::start_droppable(
+                    object
+                        .get_expected_variable("style")
+                        .value_stream()
+                        .flat_map(|value| value.expect_object_value().object_stream())
+                        .for_each({
+                            let style_object_sender = style_object_sender.clone();
+                            move |style_object| async move {
+                                if let Err(error) = style_object_sender.unbounded_send(style_object) {
+                                    eprintln!("Failed to send 'style_object' through 'style_object_sender'")
+                                };
+                            }
+                        })
+                ),
+                Task::start_droppable(
+                    object
+                        .get_expected_variable("items")
+                        .value_stream()
+                        .flat_map(|value| value.expect_list_value().list_stream())
+                        .flat_map(|list| list.change_stream())
+                        .map(list_change_to_vec_diff)
+                        .for_each({
+                            let items_vec_diff_sender = items_vec_diff_sender.clone();
+                            move |items_vec_diff| async move {
+                                if let Err(error) = items_vec_diff_sender.unbounded_send(items_vec_diff) {
+                                    eprintln!("Failed to send 'items_vec_diff' through 'items_vec_diff_sender'")
+                                };
+                            }
+                        })
+                )
+            ]))
+        })
+    );
 
-            let _style_object_stream = 
-                object
-                    .get_expected_variable("style")
-                    .value_stream()
-                    .flat_map(|value| value.expect_object_value().object_stream());
+    let mut items_mutable_vec = MutableVec::new();
+    let items_mutable_vec_setter_task = Task::start_droppable(
+        items_vec_diff_receiver.for_each({
+            let items_mutable_vec = items_mutable_vec.clone();
+            move |vec_diff| {
+                MutableVecLockMut::apply_vec_diff(&mut items_mutable_vec.lock_mut(), vec_diff); 
+                future::ready(())
+            }
+        })
+    );
+    let items_signal_vec = items_mutable_vec
+        .signal_vec_cloned()
+        .map_signal(|value| signal::from_stream(value_to_element_stream(value)));
 
-            let items_vec_diff_stream = 
-                object
-                    .get_expected_variable("items")
-                    .value_stream()
-                    .flat_map(|value| value.expect_list_value().list_stream())
-                    .flat_map(|list| list.change_stream())
-                    .map(list_change_to_vec_diff);
-                    
-            let mut items_mutable_vec = MutableVec::new();
-
-            let items_mutable_vec_setter = Task::start_droppable(
-                items_vec_diff_stream.for_each({
-                    let items_mutable_vec = items_mutable_vec.clone();
-                    move |vec_diff| {
-                        MutableVecLockMut::apply_vec_diff(&mut items_mutable_vec.lock_mut(), vec_diff); 
-                        future::ready(())
-                    }
-                })
-            );
-
-            let items_signal_vec = items_mutable_vec
-                .signal_vec_cloned()
-                .map_signal(|value| signal::from_stream(value_to_element_stream(value)));
-
-            // @TODO Stripe::new(direction)
-            Column::new()
-                .items_signal_vec(items_signal_vec)
-                .after_remove(move |_| drop(items_mutable_vec_setter))
+    // @TODO Stripe::new(direction)
+    Column::new()
+        .items_signal_vec(items_signal_vec)
+        .after_remove(move |_| { 
+            drop(items_mutable_vec_setter_task);
+            drop(settings_reader_task);
         })
 }
 
