@@ -146,7 +146,8 @@ fn object_to_element_button(object: Object) -> impl Element {
             })
     );
 
-    let event_press_mutable = Mutable::new(None);
+    let (event_press_object_sender, event_press_object_receiver) = mpsc::unbounded();
+    let event_press_object_value = ObjectValue::new(event_press_object_receiver);
     let event_press_mutable_setter_task = Task::start_droppable(
         object
             .get_expected_variable("event")
@@ -156,19 +157,19 @@ fn object_to_element_button(object: Object) -> impl Element {
             .flat_map(|variable| variable.value_stream())
             .map(|value| value.expect_link_value())
             .for_each({
-                let event_press_mutable = event_press_mutable.clone();
+                let event_press_object_value = event_press_object_value.clone();
                 move |link_value| {
-                    event_press_mutable.set(link_value);
+                    link_value.set(event_press_object_value);
                 }
             })
     );
 
     Button::new()
         .label(signal::from_stream(label_text_receiver))
-        .on_press(move|| {
-            if let Some(link_value) = event_press_mutable.lock_ref().as_ref() {
-                // @TODO set value every time? Link transparent?
-                link_value.set_value(ObjectValue::new(stream_one(Object::new([]))))
+        .on_press(move || { 
+            let event_data = Object::new([]);
+            if let Err(error) = event_press_object_sender.unbounded_send(event_data) {
+                eprintln!("Failed to send 'event_data' through 'event_press_object_sender'")
             }
         })
         .after_remove(move |_| { 
