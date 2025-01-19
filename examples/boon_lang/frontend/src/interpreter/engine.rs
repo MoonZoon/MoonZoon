@@ -5,6 +5,7 @@ use zoon::futures_util::stream::{self, Stream, StreamExt, BoxStream};
 use zoon::{Task, TaskHandle};
 use zoon::future;
 use zoon::eprintln;
+use zoon::futures_util::select;
 
 use pin_project::pin_project;
 
@@ -33,8 +34,8 @@ impl From<u64> for ConstructId {
 
 // --- Variable ---
 
-#[pin_project]
 pub struct Variable {
+    is_clone: bool,
     // @TODO remove
     #[allow(dead_code)]
     description: &'static str,
@@ -42,8 +43,8 @@ pub struct Variable {
     #[allow(dead_code)]
     id: ConstructId,
     name: &'static str,
-    #[pin]
-    value_stream: BoxStream<'static, Value>,
+    loop_task: TaskHandle,
+    value_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>,
 }
 
 impl Variable {
@@ -53,12 +54,56 @@ impl Variable {
         name: &'static str,
         value_stream: impl Stream<Item = impl Into<Value> + Send + 'static> + Send + 'static,
     ) -> Self {
+        let (value_sender_sender, value_sender_receiver) = mpsc::unbounded();
+        let loop_task = Task::start_droppable(async move {
+            let mut value_senders = Vec::<mpsc::UnboundedSender<Value>>::new();
+            let mut value = None::<Value>;
+            let value_stream = pin!(value_stream.map(Into::into).fuse());
+            loop {
+                select! {
+                    new_value = value_stream.next() => {
+                        let Some(new_value) = new_value else { break };
+                        value_senders.retain(|value_sender| {
+                            if let Err(error) = value_sender.unbounded_send(new_value.clone()) {
+                                eprintln!("Failed to send new Variable value through `value_sender`: {error:#}");
+                                false
+                            } else {
+                                true
+                            }
+                        });
+                        value = Some(new_value);
+                    }
+                    value_sender = value_sender_receiver.select_next_some() => {
+                        if let Some(value) = value.cloned() {
+                            if let Err(error) = value_sender.unbounded_send(value.clone()) {
+                                eprintln!("Failed to send Variable value through new `value_sender`: {error:#}");
+                            } else {
+                                value_senders.push(value_sender);
+                            }
+                        } else {
+                            value_senders.push(value_sender);
+                        }
+                    }
+                    complete => break
+                }
+            }
+        });
         Self {
+            is_clone: false,
             description,
             id: id.into(),
             name,
-            value_stream: value_stream.map(Into::into).boxed(),
+            loop_task,
+            value_sender_sender,
         }
+    }
+
+    fn subscribe(&self) -> impl Stream<Item = Value> {
+        let (value_sender, value_receiver) = mpsc::unbounded();
+        if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
+            eprintln!("Failed to send 'value_sender' through `value_sender_sender`: {error:#}");
+        }
+        value_receiver
     }
 }
 
@@ -66,11 +111,7 @@ impl Stream for Variable {
     type Item = Value;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        self.project().value_stream.poll_next(cx)
-    }
-
-    fn size_hint(&self) -> (usize, Option<usize>) {
-        self.value_stream.size_hint()
+        pin!(self.subscribe()).poll_next(cx)
     }
 }
 

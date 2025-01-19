@@ -1,6 +1,6 @@
 use std::future;
 
-use zoon::*;
+use zoon::{*, eprintln};
 use zoon::futures_channel::oneshot;
 
 mod engine;
@@ -261,10 +261,9 @@ pub async fn run(_program: &str) -> impl Element {
                         ])
                     )
                 );
-                // @TODO cloning
-                // if let Err(error) = counter_to_document_element_stripe_item_0_variable_reference_47_sender.send(variable.clone()) {
-                //     eprintln!("Failed to send Variable to VariableReference: {error:#}")
-                // }
+                if counter_to_document_element_stripe_item_0_variable_reference_47_sender.send(variable.clone()).is_err() {
+                    eprintln!("Failed to send Variable to VariableReference")
+                }
                 variable
             },
             {
@@ -324,13 +323,12 @@ pub async fn run(_program: &str) -> impl Element {
                     )
                     
                 );
-                // @TODO cloning
-                // if let Err(error) = increment_button_event_press_to_counter_then_variable_reference_16_sender.send(variable.clone()) {
-                //     eprintln!("Failed to send Variable to VariableReference: {error:#}")
-                // }
-                // if let Err(error) = increment_button_to_document_element_stripe_item_1_variable_reference_48_sender.send(variable.clone()) {
-                //     eprintln!("Failed to send Variable to VariableReference: {error:#}")
-                // }
+                if increment_button_event_press_to_counter_then_variable_reference_16_sender.send(variable.clone()).is_err() {
+                    eprintln!("Failed to send Variable to VariableReference")
+                }
+                if increment_button_to_document_element_stripe_item_1_variable_reference_48_sender.send(variable.clone()).is_err() {
+                    eprintln!("Failed to send Variable to VariableReference")
+                }
                 variable
             }
         ]))
