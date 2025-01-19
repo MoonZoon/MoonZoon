@@ -54,11 +54,32 @@ impl Variable {
         name: &'static str,
         value_stream: impl Stream<Item = impl Into<Value> + Send + 'static> + Send + 'static,
     ) -> Self {
+        let value_stream = value_stream.map(Into::into);
+        let (loop_task, value_sender_sender) = Self::loop_task_and_value_sender_sender(value_stream);
+        Self {
+            is_clone: false,
+            description,
+            id: id.into(),
+            name,
+            loop_task,
+            value_sender_sender,
+        }
+    }
+
+    fn subscribe(&self) -> impl Stream<Item = Value> {
+        let (value_sender, value_receiver) = mpsc::unbounded();
+        if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
+            eprintln!("Failed to send 'value_sender' through `value_sender_sender`: {error:#}");
+        }
+        value_receiver
+    }
+
+    fn loop_task_and_value_sender_sender(value_stream: impl Stream<Item = Value>) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>) {
         let (value_sender_sender, value_sender_receiver) = mpsc::unbounded();
         let loop_task = Task::start_droppable(async move {
             let mut value_senders = Vec::<mpsc::UnboundedSender<Value>>::new();
             let mut value = None::<Value>;
-            let value_stream = pin!(value_stream.map(Into::into).fuse());
+            let value_stream = pin!(value_stream.fuse());
             loop {
                 select! {
                     new_value = value_stream.next() => {
@@ -88,22 +109,22 @@ impl Variable {
                 }
             }
         });
-        Self {
-            is_clone: false,
-            description,
-            id: id.into(),
-            name,
-            loop_task,
-            value_sender_sender,
-        }
+        (loop_task, value_sender_sender)
     }
+}
 
-    fn subscribe(&self) -> impl Stream<Item = Value> {
-        let (value_sender, value_receiver) = mpsc::unbounded();
-        if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
-            eprintln!("Failed to send 'value_sender' through `value_sender_sender`: {error:#}");
+impl Clone for Variable {
+    fn clone(&self) -> Self {
+        let value_stream = self.subscribe();
+        let (loop_task, value_sender_sender) = Self::loop_task_and_value_sender_sender(value_stream);
+        Variable { 
+            is_clone: true,
+            description: self.description,
+            id: self.id.clone(),
+            name: self.name,
+            loop_task,
+            value_sender_sender 
         }
-        value_receiver
     }
 }
 
