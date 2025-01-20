@@ -3,10 +3,13 @@ use zoon::futures_util::select;
 use super::engine::*;
 
 pub fn root_object_value_to_element_signal(root: ObjectValue) -> impl Signal<Item = Option<RawElOrText>> {
+    zoon::println!("CCCCCCC");
+
     let element_stream = root
-        .flat_map(|mut object| 
+        .flat_map(|mut object| {
+            zoon::println!("EEEEEE");
             object.take_expected_variable("document")
-        )
+        })
         .flat_map(|value| {
             value
                 .expect_object_value()
@@ -21,6 +24,8 @@ pub fn root_object_value_to_element_signal(root: ObjectValue) -> impl Signal<Ite
 }
 
 fn object_to_element_stripe(mut object: Object) -> impl Element {
+    zoon::println!("BBBBBB");
+
     let (direction_tag_sender, _direction_tag_receiver) = mpsc::unbounded();
     let (style_object_sender, _style_object_receiver) = mpsc::unbounded();
     let (items_vec_diff_sender, items_vec_diff_receiver) = mpsc::unbounded();
@@ -84,6 +89,8 @@ fn object_to_element_stripe(mut object: Object) -> impl Element {
             })
             .map(|_|())
     );
+
+    zoon::println!("AAAAAAAAAAAAAAA");
 
     // @TODO Stripe::new(direction)
     Column::new()
@@ -244,6 +251,7 @@ fn object_to_element_button(mut object: Object) -> impl Element {
 }
 
 fn value_to_element_stream(value: Value) -> impl Stream<Item = RawElOrText> {
+    zoon::println!("DDDDDDDDDDDD");
     match value {
         Value::TaggedObjectValue(tagged_object_value) => {
             tagged_object_value
@@ -277,7 +285,7 @@ fn value_to_element_stream(value: Value) -> impl Stream<Item = RawElOrText> {
     }
 }
 
-fn list_change_to_vec_diff(change: ListChange) -> VecDiff<CloneableValueStream> {
+fn list_change_to_vec_diff(change: ListChange) -> VecDiff<CloneableStream<Value>> {
     match change {
         ListChange::Replace {
             items,

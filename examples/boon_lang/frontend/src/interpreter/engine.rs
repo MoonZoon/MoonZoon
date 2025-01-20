@@ -4,7 +4,7 @@ use zoon::futures_channel::{oneshot, mpsc};
 use zoon::futures_util::stream::{self, Stream, StreamExt, BoxStream};
 use zoon::{Task, TaskHandle};
 use zoon::future;
-use zoon::eprintln;
+use zoon::{println, eprintln};
 use zoon::futures_util::select;
 
 use pin_project::pin_project;
@@ -48,7 +48,7 @@ pub struct Variable {
     #[allow(dead_code)]
     loop_task: TaskHandle,
     value_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>,
-    output_value_stream: Option<CloneableValueStream>,
+    output_value_stream: Option<CloneableStream<Value>>,
 }
 
 impl Variable {
@@ -75,6 +75,11 @@ impl Variable {
         let (value_sender, value_receiver) = mpsc::unbounded();
         if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
             eprintln!("Failed to send Variable 'value_sender' through `value_sender_sender`: {error:#}");
+            println!("ERROR FOR: Variable dropped! Id: '{:?}', Description: '{}', Name: '{}'", 
+                self.id, 
+                self.description, 
+                self.name
+            );
         }
         value_receiver
     }
@@ -139,7 +144,7 @@ impl Stream for Variable {
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
         if self.output_value_stream.is_none() {
-            let stream = CloneableValueStream::new(self.subscribe());
+            let stream = CloneableStream::new(self.subscribe());
             self.output_value_stream = Some(stream);
 
         }
@@ -149,29 +154,29 @@ impl Stream for Variable {
 
 impl Drop for Variable {
     fn drop(&mut self) {
-        zoon::println!("Variable dropped!");
-        zoon::println!("Id: {:?}", self.id);
-        zoon::println!("Description: {}", self.description);
-        zoon::println!("Name: {}", self.name);
-        zoon::println!("Clone: {:?}", self.is_clone);
-        zoon::println!("______");
+        println!("Variable dropped! Id: '{:?}', Description: '{}', Name: '{}'", 
+            self.id, 
+            self.description, 
+            self.name
+        );
     }
 }
 
-// --- CloneableValueStream ---
+// --- CloneableStream ---
 
-pub struct CloneableValueStream {
+pub struct CloneableStream<T> {
     // @TODO remove
     #[allow(dead_code)]
     is_clone: bool,
     #[allow(dead_code)]
     loop_task: TaskHandle,
-    value_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>,
+    value_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<T>>,
+    output_value_stream: Option<BoxStream<'static, T>>,
 }
 
-impl CloneableValueStream {
+impl<T: 'static + Clone + Send> CloneableStream<T> {
     pub fn new(
-        value_stream: impl Stream<Item = impl Into<Value> + Send + 'static> + Send + 'static,
+        value_stream: impl Stream<Item = impl Into<T> + Send + 'static> + Send + 'static,
     ) -> Self {
         let value_stream = value_stream.map(Into::into);
         let (loop_task, value_sender_sender) = Self::loop_task_and_value_sender_sender(value_stream);
@@ -179,22 +184,23 @@ impl CloneableValueStream {
             is_clone: false,
             loop_task,
             value_sender_sender,
+            output_value_stream: None,
         }
     }
 
-    fn subscribe(&self) -> impl Stream<Item = Value> {
+    fn subscribe(&self) -> impl Stream<Item = T> {
         let (value_sender, value_receiver) = mpsc::unbounded();
         if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
-            eprintln!("Failed to send CloneableValueStream 'value_sender' through `value_sender_sender`: {error:#}");
+            eprintln!("Failed to send CloneableStream 'value_sender' through `value_sender_sender`: {error:#}");
         }
         value_receiver
     }
 
-    fn loop_task_and_value_sender_sender(value_stream: impl Stream<Item = Value> + 'static) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>) {
-        let (value_sender_sender, mut value_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<Value>>();
+    fn loop_task_and_value_sender_sender(value_stream: impl Stream<Item = T> + 'static) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<T>>) {
+        let (value_sender_sender, mut value_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<T>>();
         let loop_task = Task::start_droppable(async move {
-            let mut value_senders = Vec::<mpsc::UnboundedSender<Value>>::new();
-            let mut value = None::<Value>;
+            let mut value_senders = Vec::<mpsc::UnboundedSender<T>>::new();
+            let mut value = None::<T>;
             let mut value_stream = pin!(value_stream.fuse());
             loop {
                 select! {
@@ -202,7 +208,7 @@ impl CloneableValueStream {
                         let Some(new_value) = new_value else { break };
                         value_senders.retain(|value_sender| {
                             if let Err(error) = value_sender.unbounded_send(new_value.clone()) {
-                                eprintln!("Failed to send new CloneableValueStream value through `value_sender`: {error:#}");
+                                eprintln!("Failed to send new CloneableStream value through `value_sender`: {error:#}");
                                 false
                             } else {
                                 true
@@ -213,7 +219,7 @@ impl CloneableValueStream {
                     value_sender = value_sender_receiver.select_next_some() => {
                         if let Some(value) = value.clone() {
                             if let Err(error) = value_sender.unbounded_send(value.clone()) {
-                                eprintln!("Failed to send CloneableValueStream value through new `value_sender`: {error:#}");
+                                eprintln!("Failed to send CloneableStream value through new `value_sender`: {error:#}");
                             } else {
                                 value_senders.push(value_sender);
                             }
@@ -229,29 +235,40 @@ impl CloneableValueStream {
     }
 }
 
-impl Clone for CloneableValueStream {
+impl<T: 'static + Clone + Send> Clone for CloneableStream<T> {
     fn clone(&self) -> Self {
         let value_stream = self.subscribe();
         let (loop_task, value_sender_sender) = Self::loop_task_and_value_sender_sender(value_stream);
-        CloneableValueStream { 
+        CloneableStream { 
             is_clone: true,
             loop_task,
-            value_sender_sender 
+            value_sender_sender,
+            output_value_stream: None, 
         }
     }
 }
 
-impl Stream for CloneableValueStream {
-    type Item = Value;
+impl<T: 'static + Clone + Send> Stream for CloneableStream<T> {
+    type Item = T;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        pin!(self.subscribe()).poll_next(cx)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        if self.output_value_stream.is_none() {
+            let stream = self.subscribe().boxed();
+            self.output_value_stream = Some(stream);
+
+        }
+        pin!(self.output_value_stream.as_mut().unwrap()).poll_next(cx)
+    }
+}
+
+impl<T> Drop for CloneableStream<T> {
+    fn drop(&mut self) {
+        println!("CloneableStream dropped!");
     }
 }
 
 // --- VariableReference ---
 
-#[pin_project]
 pub struct VariableReference {
     // @TODO remove
     #[allow(dead_code)]
@@ -260,7 +277,6 @@ pub struct VariableReference {
     #[allow(dead_code)]
     id: ConstructId,
     alias: &'static str,
-    #[pin]
     value_stream: BoxStream<'static, Value>,
 }
 
@@ -294,12 +310,22 @@ impl VariableReference {
 impl Stream for VariableReference {
     type Item = Value;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        self.project().value_stream.poll_next(cx)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        self.value_stream.poll_next_unpin(cx)
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.value_stream.size_hint()
+    }
+}
+
+impl Drop for VariableReference {
+    fn drop(&mut self) {
+        println!("VariableReference dropped! Id: '{:?}', Description: '{}', Alias: '{}'", 
+            self.id, 
+            self.description, 
+            self.alias
+        );
     }
 }
 
@@ -433,6 +459,7 @@ pub struct ObjectValue {
     #[allow(dead_code)]
     loop_task: TaskHandle,
     object_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<Object>>,
+    output_object_stream: Option<CloneableStream<Object>>,
 }
 
 impl ObjectValue {
@@ -448,13 +475,15 @@ impl ObjectValue {
             id: id.into(),
             loop_task,
             object_sender_sender,
+            output_object_stream: None,
         }
     }
 
     fn subscribe(&self) -> impl Stream<Item = Object> {
         let (object_sender, object_receiver) = mpsc::unbounded();
         if let Err(error) = self.object_sender_sender.unbounded_send(object_sender) {
-            eprintln!("Failed to send 'object_sender' through `object_sender_sender`: {error:#}");
+            println!("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF: {}", self.description);
+            eprintln!("Failed to send 'object_sender' through 'object_sender_sender': {error:#}");
         }
         object_receiver
     }
@@ -507,7 +536,8 @@ impl Clone for ObjectValue {
             description: self.description,
             id: self.id.clone(),
             loop_task,
-            object_sender_sender 
+            object_sender_sender,
+            output_object_stream: None, 
         }
     }
 }
@@ -515,8 +545,39 @@ impl Clone for ObjectValue {
 impl Stream for ObjectValue {
     type Item = Object;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        pin!(self.subscribe()).poll_next(cx)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        // zoon::println!("FFFFF, object_description: {}", self.description);
+        // let value = pin!(self.subscribe()).poll_next(cx);
+        // zoon::println!("FFFFFFFFF, value: {}", match &value {
+        //     std::task::Poll::Ready(value) => {
+        //         if let Some(object) = value {
+        //             "some"
+        //         } else {
+        //             "none"
+        //         }
+        //     }
+        //     std::task::Poll::Pending => {
+        //         "pending"
+        //     }
+        // });
+        // value
+        println!("GGGGG");
+        if self.output_object_stream.is_none() {
+            let stream = CloneableStream::new(self.subscribe());
+            self.output_object_stream = Some(stream);
+            println!("HHHHHHH");
+        }
+        println!("CHHH");
+        pin!(self.output_object_stream.as_mut().unwrap()).poll_next(cx)
+    }
+}
+
+impl Drop for ObjectValue {
+    fn drop(&mut self) {
+        println!("ObjectValue dropped! Id: '{:?}', Description: '{}'", 
+            self.id, 
+            self.description, 
+        );
     }
 }
 
@@ -535,6 +596,7 @@ pub struct TaggedObjectValue {
     #[allow(dead_code)]
     loop_task: TaskHandle,
     tagged_object_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<(&'static str, Object)>>,
+    output_tagged_object_stream: Option<CloneableStream<(&'static str, Object)>>,
 }
 
 impl TaggedObjectValue {
@@ -550,6 +612,7 @@ impl TaggedObjectValue {
             id: id.into(),
             loop_task,
             tagged_object_sender_sender,
+            output_tagged_object_stream: None,
         }
     }
 
@@ -609,7 +672,8 @@ impl Clone for TaggedObjectValue {
             description: self.description,
             id: self.id.clone(),
             loop_task,
-            tagged_object_sender_sender 
+            tagged_object_sender_sender,
+            output_tagged_object_stream: None,
         }
     }
 }
@@ -617,8 +681,22 @@ impl Clone for TaggedObjectValue {
 impl Stream for TaggedObjectValue {
     type Item = (&'static str, Object);
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        pin!(self.subscribe()).poll_next(cx)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        if self.output_tagged_object_stream.is_none() {
+            let stream = CloneableStream::new(self.subscribe());
+            self.output_tagged_object_stream = Some(stream);
+
+        }
+        pin!(self.output_tagged_object_stream.as_mut().unwrap()).poll_next(cx)
+    }
+}
+
+impl Drop for TaggedObjectValue {
+    fn drop(&mut self) {
+        println!("TaggedObjectValue dropped! Id: '{:?}', Description: '{}'", 
+            self.id, 
+            self.description, 
+        );
     }
 }
 
@@ -637,6 +715,7 @@ pub struct NumberValue {
     #[allow(dead_code)]
     loop_task: TaskHandle,
     number_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<f64>>,
+    output_number_stream: Option<CloneableStream<f64>>, 
 }
 
 impl NumberValue {
@@ -652,6 +731,7 @@ impl NumberValue {
             id: id.into(),
             loop_task,
             number_sender_sender,
+            output_number_stream: None,
         }
     }
 
@@ -711,7 +791,8 @@ impl Clone for NumberValue {
             description: self.description,
             id: self.id.clone(),
             loop_task,
-            number_sender_sender 
+            number_sender_sender,
+            output_number_stream: None,
         }
     }
 }
@@ -719,8 +800,22 @@ impl Clone for NumberValue {
 impl Stream for NumberValue {
     type Item = f64;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        pin!(self.subscribe()).poll_next(cx)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        if self.output_number_stream.is_none() {
+            let stream = CloneableStream::new(self.subscribe());
+            self.output_number_stream = Some(stream);
+
+        }
+        pin!(self.output_number_stream.as_mut().unwrap()).poll_next(cx)
+    }
+}
+
+impl Drop for NumberValue {
+    fn drop(&mut self) {
+        println!("NumberValue dropped! Id: '{:?}', Description: '{}'", 
+            self.id, 
+            self.description, 
+        );
     }
 }
 
@@ -739,6 +834,7 @@ pub struct TextValue {
     #[allow(dead_code)]
     loop_task: TaskHandle,
     text_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<String>>,
+    output_text_stream: Option<CloneableStream<String>>,
 }
 
 impl TextValue {
@@ -754,6 +850,7 @@ impl TextValue {
             id: id.into(),
             loop_task,
             text_sender_sender,
+            output_text_stream: None,
         }
     }
 
@@ -813,7 +910,8 @@ impl Clone for TextValue {
             description: self.description,
             id: self.id.clone(),
             loop_task,
-            text_sender_sender 
+            text_sender_sender,
+            output_text_stream: None,
         }
     }
 }
@@ -821,8 +919,22 @@ impl Clone for TextValue {
 impl Stream for TextValue {
     type Item = String;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        pin!(self.subscribe()).poll_next(cx)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        if self.output_text_stream.is_none() {
+            let stream = CloneableStream::new(self.subscribe());
+            self.output_text_stream = Some(stream);
+
+        }
+        pin!(self.output_text_stream.as_mut().unwrap()).poll_next(cx)
+    }
+}
+
+impl Drop for TextValue {
+    fn drop(&mut self) {
+        println!("TextValue dropped! Id: '{:?}', Description: '{}'", 
+            self.id, 
+            self.description, 
+        );
     }
 }
 
@@ -841,6 +953,7 @@ pub struct ListValue {
     #[allow(dead_code)]
     loop_task: TaskHandle,
     list_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<List>>,
+    output_list_stream: Option<CloneableStream<List>>,
 }
 
 impl ListValue {
@@ -856,6 +969,7 @@ impl ListValue {
             id: id.into(),
             loop_task,
             list_sender_sender,
+            output_list_stream: None,
         }
     }
 
@@ -915,7 +1029,8 @@ impl Clone for ListValue {
             description: self.description,
             id: self.id.clone(),
             loop_task,
-            list_sender_sender 
+            list_sender_sender,
+            output_list_stream: None,
         }
     }
 }
@@ -923,14 +1038,27 @@ impl Clone for ListValue {
 impl Stream for ListValue {
     type Item = List;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        pin!(self.subscribe()).poll_next(cx)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        if self.output_list_stream.is_none() {
+            let stream = CloneableStream::new(self.subscribe());
+            self.output_list_stream = Some(stream);
+
+        }
+        pin!(self.output_list_stream.as_mut().unwrap()).poll_next(cx)
+    }
+}
+
+impl Drop for ListValue {
+    fn drop(&mut self) {
+        println!("ListValue dropped! Id: '{:?}', Description: '{}'", 
+            self.id, 
+            self.description, 
+        );
     }
 }
 
 // --- LinkValue ---
 
-#[pin_project]
 pub struct LinkValue {
     // @TODO remove
     #[allow(dead_code)]
@@ -945,6 +1073,7 @@ pub struct LinkValue {
     loop_task: TaskHandle,
     value_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>,
     value_stream_sender: mpsc::UnboundedSender<BoxStream<'static, Value>>,
+    output_value_stream: Option<CloneableStream<Value>>,
 }
 
 impl LinkValue {
@@ -961,7 +1090,8 @@ impl LinkValue {
             id: id.into(),
             loop_task,
             value_sender_sender,
-            value_stream_sender
+            value_stream_sender,
+            output_value_stream: None,
         }
     }
 
@@ -1030,8 +1160,9 @@ impl Clone for LinkValue {
             description: self.description,
             id: self.id.clone(),
             loop_task,
-            value_sender_sender ,
-            value_stream_sender
+            value_sender_sender,
+            value_stream_sender,
+            output_value_stream: None,
         }
     }
 }
@@ -1039,8 +1170,22 @@ impl Clone for LinkValue {
 impl Stream for LinkValue {
     type Item = Value;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        pin!(self.subscribe()).poll_next(cx)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        if self.output_value_stream.is_none() {
+            let stream = CloneableStream::new(self.subscribe());
+            self.output_value_stream = Some(stream);
+
+        }
+        pin!(self.output_value_stream.as_mut().unwrap()).poll_next(cx)
+    }
+}
+
+impl Drop for LinkValue {
+    fn drop(&mut self) {
+        println!("LinkValue dropped! Id: '{:?}', Description: '{}'", 
+            self.id, 
+            self.description, 
+        );
     }
 }
 
@@ -1059,6 +1204,7 @@ pub struct TagValue {
     #[allow(dead_code)]
     loop_task: TaskHandle,
     tag_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<String>>,
+    output_tag_stream: Option<CloneableStream<String>>,
 }
 
 impl TagValue {
@@ -1074,6 +1220,7 @@ impl TagValue {
             id: id.into(),
             loop_task,
             tag_sender_sender,
+            output_tag_stream: None,
         }
     }
 
@@ -1133,7 +1280,8 @@ impl Clone for TagValue {
             description: self.description,
             id: self.id.clone(),
             loop_task,
-            tag_sender_sender 
+            tag_sender_sender,
+            output_tag_stream: None, 
         }
     }
 }
@@ -1141,14 +1289,27 @@ impl Clone for TagValue {
 impl Stream for TagValue {
     type Item = String;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        pin!(self.subscribe()).poll_next(cx)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        if self.output_tag_stream.is_none() {
+            let stream = CloneableStream::new(self.subscribe());
+            self.output_tag_stream = Some(stream);
+
+        }
+        pin!(self.output_tag_stream.as_mut().unwrap()).poll_next(cx)
+    }
+}
+
+impl Drop for TagValue {
+    fn drop(&mut self) {
+        println!("TagValue dropped! Id: '{:?}', Description: '{}'", 
+            self.id, 
+            self.description, 
+        );
     }
 }
 
 // --- FunctionCall ---
 
-#[pin_project]
 pub struct FunctionCall {
     // @TODO remove
     #[allow(dead_code)]
@@ -1157,7 +1318,6 @@ pub struct FunctionCall {
     #[allow(dead_code)]
     id: ConstructId,
     name: &'static str,
-    #[pin]
     value_stream: BoxStream<'static, Value>,
 }
 
@@ -1182,12 +1342,22 @@ impl FunctionCall {
 impl Stream for FunctionCall {
     type Item = Value;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        self.project().value_stream.poll_next(cx)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        self.value_stream.poll_next_unpin(cx)
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.value_stream.size_hint()
+    }
+}
+
+impl Drop for FunctionCall {
+    fn drop(&mut self) {
+        println!("FunctionCall dropped! Id: '{:?}', Description: '{}', Name: '{}'", 
+            self.id, 
+            self.description, 
+            self.name
+        );
     }
 }
 
@@ -1223,6 +1393,12 @@ impl Object {
     }
 }
 
+impl Drop for Object {
+    fn drop(&mut self) {
+        println!("Object dropped!");
+    }
+}
+
 // --- FixedList ---
 
 pub struct FixedList {
@@ -1255,16 +1431,18 @@ pub struct List {
     #[allow(dead_code)]
     loop_task: TaskHandle,
     change_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<ListChange>>,
+    output_change_stream: Option<CloneableStream<ListChange>>,
 }
 
 impl List {
-    pub fn new<const N: usize>(items: [CloneableValueStream; N]) -> Self {
+    pub fn new<const N: usize>(items: [CloneableStream<Value>; N]) -> Self {
         let change_stream = stream_one(ListChange::Replace { items: Vec::from(items) });
         let (loop_task, change_sender_sender) = Self::loop_task_and_change_sender_sender(change_stream);
         Self {
             is_clone: false,
             loop_task,
             change_sender_sender,
+            output_change_stream: None,
         }
     }
 
@@ -1322,7 +1500,8 @@ impl Clone for List {
         List { 
             is_clone: true,
             loop_task,
-            change_sender_sender 
+            change_sender_sender,
+            output_change_stream: None, 
         }
     }
 }
@@ -1330,8 +1509,19 @@ impl Clone for List {
 impl Stream for List {
     type Item = ListChange;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        pin!(self.subscribe()).poll_next(cx)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        if self.output_change_stream.is_none() {
+            let stream = CloneableStream::new(self.subscribe());
+            self.output_change_stream = Some(stream);
+
+        }
+        pin!(self.output_change_stream.as_mut().unwrap()).poll_next(cx)
+    }
+}
+
+impl Drop for List {
+    fn drop(&mut self) {
+        println!("List dropped!");
     }
 }
 
@@ -1340,15 +1530,15 @@ impl Stream for List {
 #[derive(Clone)]
 pub enum ListChange {
     Replace {
-        items: Vec<CloneableValueStream>,
+        items: Vec<CloneableStream<Value>>,
     },
     InsertAt {
         index: usize,
-        item: CloneableValueStream,
+        item: CloneableStream<Value>,
     },
     UpdateAt {
         index: usize,
-        item: CloneableValueStream,
+        item: CloneableStream<Value>,
     },
     RemoveAt {
         index: usize,
@@ -1358,7 +1548,7 @@ pub enum ListChange {
         new_index: usize,
     },
     Push {
-        item: CloneableValueStream,
+        item: CloneableStream<Value>,
     },
     Pop,
     Clear,
@@ -1366,7 +1556,6 @@ pub enum ListChange {
 
 // --- LatestCombinator ---
 
-#[pin_project]
 pub struct LatestCombinator {
     // @TODO remove
     #[allow(dead_code)]
@@ -1374,7 +1563,6 @@ pub struct LatestCombinator {
     // @TODO remove
     #[allow(dead_code)]
     id: ConstructId,
-    #[pin]
     value_stream: BoxStream<'static, Value>,
 }
 
@@ -1395,8 +1583,8 @@ impl LatestCombinator {
 impl Stream for LatestCombinator {
     type Item = Value;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        self.project().value_stream.poll_next(cx)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        self.value_stream.poll_next_unpin(cx)
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
@@ -1404,9 +1592,17 @@ impl Stream for LatestCombinator {
     }
 }
 
+impl Drop for LatestCombinator {
+    fn drop(&mut self) {
+        println!("LatestCombinator dropped! Id: '{:?}', Description: '{}'", 
+            self.id, 
+            self.description, 
+        );
+    }
+}
+
 // --- ThenCombinator ---
 
-#[pin_project]
 pub struct ThenCombinator {
     // @TODO remove
     #[allow(dead_code)]
@@ -1414,7 +1610,6 @@ pub struct ThenCombinator {
     // @TODO remove
     #[allow(dead_code)]
     id: ConstructId,
-    #[pin]
     value_stream: BoxStream<'static, Value>,
 }
 
@@ -1442,11 +1637,20 @@ impl ThenCombinator {
 impl Stream for ThenCombinator {
     type Item = Value;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        self.project().value_stream.poll_next(cx)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        self.value_stream.poll_next_unpin(cx)
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
         self.value_stream.size_hint()
+    }
+}
+
+impl Drop for ThenCombinator {
+    fn drop(&mut self) {
+        println!("ThenCombinator dropped! Id: '{:?}', Description: '{}'", 
+            self.id, 
+            self.description, 
+        );
     }
 }

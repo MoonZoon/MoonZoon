@@ -210,8 +210,8 @@ pub async fn run(_program: &str) -> impl Element {
                                             "Element/stripe items list", 
                                             12,
                                             stream_one(List::new([
-                                                CloneableValueStream::new(counter_to_document_element_stripe_item_0_variable_reference_47),
-                                                CloneableValueStream::new(increment_button_to_document_element_stripe_item_1_variable_reference_48),
+                                                CloneableStream::new(counter_to_document_element_stripe_item_0_variable_reference_47),
+                                                CloneableStream::new(increment_button_to_document_element_stripe_item_1_variable_reference_48),
                                             ]))
                                         ))
                                     )
