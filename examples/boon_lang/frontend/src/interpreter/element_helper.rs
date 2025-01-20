@@ -1,5 +1,4 @@
 use zoon::{*, eprintln};
-use zoon::futures_util::stream::BoxStream;
 use zoon::futures_util::select;
 use super::engine::*;
 
@@ -278,7 +277,7 @@ fn value_to_element_stream(value: Value) -> impl Stream<Item = RawElOrText> {
     }
 }
 
-fn list_change_to_vec_diff(change: ListChange) -> VecDiff<BoxStream<'static, Value>> {
+fn list_change_to_vec_diff(change: ListChange) -> VecDiff<CloneableValueStream> {
     match change {
         ListChange::Replace {
             items,

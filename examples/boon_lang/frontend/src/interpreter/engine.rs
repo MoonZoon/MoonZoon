@@ -35,6 +35,8 @@ impl From<u64> for ConstructId {
 // --- Variable ---
 
 pub struct Variable {
+    // @TODO remove
+    #[allow(dead_code)]
     is_clone: bool,
     // @TODO remove
     #[allow(dead_code)]
@@ -43,6 +45,7 @@ pub struct Variable {
     #[allow(dead_code)]
     id: ConstructId,
     name: &'static str,
+    #[allow(dead_code)]
     loop_task: TaskHandle,
     value_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>,
 }
@@ -129,6 +132,97 @@ impl Clone for Variable {
 }
 
 impl Stream for Variable {
+    type Item = Value;
+
+    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        pin!(self.subscribe()).poll_next(cx)
+    }
+}
+
+// --- CloneableValueStream ---
+
+pub struct CloneableValueStream {
+    // @TODO remove
+    #[allow(dead_code)]
+    is_clone: bool,
+    #[allow(dead_code)]
+    loop_task: TaskHandle,
+    value_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>,
+}
+
+impl CloneableValueStream {
+    pub fn new(
+        value_stream: impl Stream<Item = impl Into<Value> + Send + 'static> + Send + 'static,
+    ) -> Self {
+        let value_stream = value_stream.map(Into::into);
+        let (loop_task, value_sender_sender) = Self::loop_task_and_value_sender_sender(value_stream);
+        Self {
+            is_clone: false,
+            loop_task,
+            value_sender_sender,
+        }
+    }
+
+    fn subscribe(&self) -> impl Stream<Item = Value> {
+        let (value_sender, value_receiver) = mpsc::unbounded();
+        if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
+            eprintln!("Failed to send 'value_sender' through `value_sender_sender`: {error:#}");
+        }
+        value_receiver
+    }
+
+    fn loop_task_and_value_sender_sender(value_stream: impl Stream<Item = Value> + 'static) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>) {
+        let (value_sender_sender, mut value_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<Value>>();
+        let loop_task = Task::start_droppable(async move {
+            let mut value_senders = Vec::<mpsc::UnboundedSender<Value>>::new();
+            let mut value = None::<Value>;
+            let mut value_stream = pin!(value_stream.fuse());
+            loop {
+                select! {
+                    new_value = value_stream.next() => {
+                        let Some(new_value) = new_value else { break };
+                        value_senders.retain(|value_sender| {
+                            if let Err(error) = value_sender.unbounded_send(new_value.clone()) {
+                                eprintln!("Failed to send new CloneableValueStream value through `value_sender`: {error:#}");
+                                false
+                            } else {
+                                true
+                            }
+                        });
+                        value = Some(new_value);
+                    }
+                    value_sender = value_sender_receiver.select_next_some() => {
+                        if let Some(value) = value.clone() {
+                            if let Err(error) = value_sender.unbounded_send(value.clone()) {
+                                eprintln!("Failed to send CloneableValueStream value through new `value_sender`: {error:#}");
+                            } else {
+                                value_senders.push(value_sender);
+                            }
+                        } else {
+                            value_senders.push(value_sender);
+                        }
+                    }
+                    complete => break
+                }
+            }
+        });
+        (loop_task, value_sender_sender)
+    }
+}
+
+impl Clone for CloneableValueStream {
+    fn clone(&self) -> Self {
+        let value_stream = self.subscribe();
+        let (loop_task, value_sender_sender) = Self::loop_task_and_value_sender_sender(value_stream);
+        CloneableValueStream { 
+            is_clone: true,
+            loop_task,
+            value_sender_sender 
+        }
+    }
+}
+
+impl Stream for CloneableValueStream {
     type Item = Value;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
@@ -308,6 +402,8 @@ impl From<ListValue> for Value {
 // --- ObjectValue ---
 
 pub struct ObjectValue {
+    // @TODO remove
+    #[allow(dead_code)]
     is_clone: bool,
     // @TODO remove
     #[allow(dead_code)]
@@ -315,6 +411,7 @@ pub struct ObjectValue {
     // @TODO remove
     #[allow(dead_code)]
     id: ConstructId,
+    #[allow(dead_code)]
     loop_task: TaskHandle,
     object_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<Object>>,
 }
@@ -407,6 +504,8 @@ impl Stream for ObjectValue {
 // --- TaggedObjectValue ---
 
 pub struct TaggedObjectValue {
+    // @TODO remove
+    #[allow(dead_code)]
     is_clone: bool,
     // @TODO remove
     #[allow(dead_code)]
@@ -414,6 +513,7 @@ pub struct TaggedObjectValue {
     // @TODO remove
     #[allow(dead_code)]
     id: ConstructId,
+    #[allow(dead_code)]
     loop_task: TaskHandle,
     tagged_object_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<(&'static str, Object)>>,
 }
@@ -506,6 +606,8 @@ impl Stream for TaggedObjectValue {
 // --- NumberValue ---
 
 pub struct NumberValue {
+    // @TODO remove
+    #[allow(dead_code)]
     is_clone: bool,
     // @TODO remove
     #[allow(dead_code)]
@@ -513,6 +615,7 @@ pub struct NumberValue {
     // @TODO remove
     #[allow(dead_code)]
     id: ConstructId,
+    #[allow(dead_code)]
     loop_task: TaskHandle,
     number_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<f64>>,
 }
@@ -605,6 +708,8 @@ impl Stream for NumberValue {
 // --- TextValue ---
 
 pub struct TextValue {
+    // @TODO remove
+    #[allow(dead_code)]
     is_clone: bool,
     // @TODO remove
     #[allow(dead_code)]
@@ -612,6 +717,7 @@ pub struct TextValue {
     // @TODO remove
     #[allow(dead_code)]
     id: ConstructId,
+    #[allow(dead_code)]
     loop_task: TaskHandle,
     text_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<String>>,
 }
@@ -704,6 +810,8 @@ impl Stream for TextValue {
 // --- ListValue ---
 
 pub struct ListValue {
+    // @TODO remove
+    #[allow(dead_code)]
     is_clone: bool,
     // @TODO remove
     #[allow(dead_code)]
@@ -711,6 +819,7 @@ pub struct ListValue {
     // @TODO remove
     #[allow(dead_code)]
     id: ConstructId,
+    #[allow(dead_code)]
     loop_task: TaskHandle,
     list_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<List>>,
 }
@@ -804,6 +913,8 @@ impl Stream for ListValue {
 
 #[pin_project]
 pub struct LinkValue {
+    // @TODO remove
+    #[allow(dead_code)]
     is_clone: bool,
     // @TODO remove
     #[allow(dead_code)]
@@ -811,6 +922,7 @@ pub struct LinkValue {
     // @TODO remove
     #[allow(dead_code)]
     id: ConstructId,
+    #[allow(dead_code)]
     loop_task: TaskHandle,
     value_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>,
     value_stream_sender: mpsc::UnboundedSender<BoxStream<'static, Value>>,
@@ -916,6 +1028,8 @@ impl Stream for LinkValue {
 // --- TagValue ---
 
 pub struct TagValue {
+    // @TODO remove
+    #[allow(dead_code)]
     is_clone: bool,
     // @TODO remove
     #[allow(dead_code)]
@@ -923,6 +1037,7 @@ pub struct TagValue {
     // @TODO remove
     #[allow(dead_code)]
     id: ConstructId,
+    #[allow(dead_code)]
     loop_task: TaskHandle,
     tag_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<String>>,
 }
@@ -1115,13 +1230,16 @@ impl IntoIterator for FixedList {
 // --- List ---
 
 pub struct List {
+    // @TODO remove
+    #[allow(dead_code)]
     is_clone: bool,
+    #[allow(dead_code)]
     loop_task: TaskHandle,
     change_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<ListChange>>,
 }
 
 impl List {
-    pub fn new<const N: usize>(items: [BoxStream<'static, Value>; N]) -> Self {
+    pub fn new<const N: usize>(items: [CloneableValueStream; N]) -> Self {
         let change_stream = stream_one(ListChange::Replace { items: Vec::from(items) });
         let (loop_task, change_sender_sender) = Self::loop_task_and_change_sender_sender(change_stream);
         Self {
@@ -1200,17 +1318,18 @@ impl Stream for List {
 
 // @TODO remove
 #[allow(dead_code)]
+#[derive(Clone)]
 pub enum ListChange {
     Replace {
-        items: Vec<BoxStream<'static, Value>>,
+        items: Vec<CloneableValueStream>,
     },
     InsertAt {
         index: usize,
-        item: BoxStream<'static, Value>,
+        item: CloneableValueStream,
     },
     UpdateAt {
         index: usize,
-        item: BoxStream<'static, Value>,
+        item: CloneableValueStream,
     },
     RemoveAt {
         index: usize,
@@ -1220,7 +1339,7 @@ pub enum ListChange {
         new_index: usize,
     },
     Push {
-        item: BoxStream<'static, Value>,
+        item: CloneableValueStream,
     },
     Pop,
     Clear,
