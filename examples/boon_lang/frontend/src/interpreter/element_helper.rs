@@ -5,20 +5,15 @@ use super::engine::*;
 
 pub fn root_object_value_to_element_signal(root: ObjectValue) -> impl Signal<Item = Option<RawElOrText>> {
     let element_stream = root
-        .object_stream()
         .flat_map(|mut object| 
-            object
-                .take_expected_variable("document")
-                
+            object.take_expected_variable("document")
         )
         .flat_map(|value| {
             value
                 .expect_object_value()
-                .object_stream()
                 .flat_map(|mut object| {
                     object
                         .take_expected_variable("root_element")
-                        
                         .flat_map(|value| value_to_element_stream(value))
                 })
         });
@@ -34,7 +29,7 @@ fn object_to_element_stripe(mut object: Object) -> impl Element {
     let settings_reader_task = Task::start_droppable(
         object
             .take_expected_variable("settings")
-            .flat_map(|value| value.expect_object_value().object_stream())
+            .flat_map(|value| value.expect_object_value())
             .fold(vec![], move |_tasks, mut object| {
                 future::ready(vec![
                     Task::start_droppable(
@@ -56,7 +51,7 @@ fn object_to_element_stripe(mut object: Object) -> impl Element {
                     Task::start_droppable(
                         object
                             .take_expected_variable("style")
-                            .flat_map(|value| value.expect_object_value().object_stream())
+                            .flat_map(|value| value.expect_object_value())
                             .for_each({
                                 let style_object_sender = style_object_sender.clone();
                                 move |style_object| {
@@ -126,13 +121,13 @@ fn object_to_element_button(mut object: Object) -> impl Element {
         object
             .take_expected_variable("settings")
             
-            .flat_map(|value| value.expect_object_value().object_stream())
+            .flat_map(|value| value.expect_object_value())
             .fold(vec![], move |_tasks, mut object| {
                 future::ready(vec![
                     Task::start_droppable(
                         object
                             .take_expected_variable("style")
-                            .flat_map(|value| value.expect_object_value().object_stream())
+                            .flat_map(|value| value.expect_object_value())
                             .for_each({
                                 let style_object_sender = style_object_sender.clone();
                                 move |style_object| { 
@@ -171,7 +166,7 @@ fn object_to_element_button(mut object: Object) -> impl Element {
     let event_reader_task = Task::start_droppable(
         object
             .take_expected_variable("event")
-            .flat_map(|value| value.expect_object_value().object_stream())
+            .flat_map(|value| value.expect_object_value())
             .fold(vec![], move |_tasks, mut object| {
                 future::ready(vec![
                     Task::start_droppable({

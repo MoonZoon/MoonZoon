@@ -192,6 +192,7 @@ impl Stream for VariableReference {
 
 // --- Value ---
 
+#[derive(Clone)]
 pub enum Value {
     ObjectValue(ObjectValue),
     TaggedObjectValue(TaggedObjectValue),
@@ -307,13 +308,15 @@ impl From<ListValue> for Value {
 // --- ObjectValue ---
 
 pub struct ObjectValue {
+    is_clone: bool,
     // @TODO remove
     #[allow(dead_code)]
     description: &'static str,
     // @TODO remove
     #[allow(dead_code)]
     id: ConstructId,
-    object_stream: BoxStream<'static, Object>,
+    loop_task: TaskHandle,
+    object_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<Object>>,
 }
 
 impl ObjectValue {
@@ -322,15 +325,82 @@ impl ObjectValue {
         id: impl Into<ConstructId>,
         object_stream: impl Stream<Item = Object> + Send + 'static,
     ) -> Self {
+        let (loop_task, object_sender_sender) = Self::loop_task_and_object_sender_sender(object_stream);
         Self {
+            is_clone: false,
             description,
             id: id.into(),
-            object_stream: object_stream.boxed(),
+            loop_task,
+            object_sender_sender,
         }
     }
 
-    pub fn object_stream(self) -> impl Stream<Item = Object> + Send + 'static {
-        self.object_stream
+    fn subscribe(&self) -> impl Stream<Item = Object> {
+        let (object_sender, object_receiver) = mpsc::unbounded();
+        if let Err(error) = self.object_sender_sender.unbounded_send(object_sender) {
+            eprintln!("Failed to send 'object_sender' through `object_sender_sender`: {error:#}");
+        }
+        object_receiver
+    }
+
+    fn loop_task_and_object_sender_sender(object_stream: impl Stream<Item = Object> + 'static) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<Object>>) {
+        let (object_sender_sender, mut object_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<Object>>();
+        let loop_task = Task::start_droppable(async move {
+            let mut object_senders = Vec::<mpsc::UnboundedSender<Object>>::new();
+            let mut object = None::<Object>;
+            let mut object_stream = pin!(object_stream.fuse());
+            loop {
+                select! {
+                    new_object = object_stream.next() => {
+                        let Some(new_object) = new_object else { break };
+                        object_senders.retain(|object_sender| {
+                            if let Err(error) = object_sender.unbounded_send(new_object.clone()) {
+                                eprintln!("Failed to send new ObjectValue object through `object_sender`: {error:#}");
+                                false
+                            } else {
+                                true
+                            }
+                        });
+                        object = Some(new_object);
+                    }
+                    object_sender = object_sender_receiver.select_next_some() => {
+                        if let Some(object) = object.clone() {
+                            if let Err(error) = object_sender.unbounded_send(object.clone()) {
+                                eprintln!("Failed to send ObjectValue object through new `object_sender`: {error:#}");
+                            } else {
+                                object_senders.push(object_sender);
+                            }
+                        } else {
+                            object_senders.push(object_sender);
+                        }
+                    }
+                    complete => break
+                }
+            }
+        });
+        (loop_task, object_sender_sender)
+    }
+}
+
+impl Clone for ObjectValue {
+    fn clone(&self) -> Self {
+        let value_stream = self.subscribe();
+        let (loop_task, object_sender_sender) = Self::loop_task_and_object_sender_sender(value_stream);
+        ObjectValue { 
+            is_clone: true,
+            description: self.description,
+            id: self.id.clone(),
+            loop_task,
+            object_sender_sender 
+        }
+    }
+}
+
+impl Stream for ObjectValue {
+    type Item = Object;
+
+    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        pin!(self.subscribe()).poll_next(cx)
     }
 }
 
@@ -580,6 +650,7 @@ impl Stream for FunctionCall {
 
 // --- Object ---
 
+#[derive(Clone)]
 pub struct Object {
     variables: Vec<Variable>,
 }

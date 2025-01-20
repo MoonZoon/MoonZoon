@@ -57,7 +57,6 @@ pub async fn run(_program: &str) -> impl Element {
                     arguments.take_expected_variable("element").flat_map(|value| {
                         value
                             .expect_object_value()
-                            .object_stream()
                             .flat_map(|mut object| {
                                 object
                                     .take_variable("event")
@@ -107,7 +106,6 @@ pub async fn run(_program: &str) -> impl Element {
                     arguments.take_expected_variable("element").flat_map(|value| {
                         value
                             .expect_object_value()
-                            .object_stream()
                             .flat_map(|mut object| {
                                 object
                                     .take_variable("event")
@@ -130,7 +128,6 @@ pub async fn run(_program: &str) -> impl Element {
             function_call_id.push_child_id(43),
             arguments
                 .take_expected_variable("increment")
-                
                 .flat_map(|value| {
                     value.expect_number_value().number_stream()
                 })
