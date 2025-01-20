@@ -35,7 +35,7 @@ fn object_to_element_stripe(mut object: Object) -> impl Element {
                     Task::start_droppable(
                         object
                             .take_expected_variable("direction")
-                            .flat_map(|value| value.expect_tag_value().tag_stream())
+                            .flat_map(|value| value.expect_tag_value())
                             .for_each({
                                 let direction_tag_sender = direction_tag_sender.clone();
                                 move |direction_tag| {
@@ -67,7 +67,7 @@ fn object_to_element_stripe(mut object: Object) -> impl Element {
                     Task::start_droppable(
                         object
                             .take_expected_variable("items")
-                            .flat_map(|value| value.expect_list_value().list_stream())
+                            .flat_map(|value| value.expect_list_value())
                             .flat_map(|list| list.change_stream())
                             .map(list_change_to_vec_diff)
                             .for_each({
@@ -143,7 +143,7 @@ fn object_to_element_button(mut object: Object) -> impl Element {
                     Task::start_droppable(
                         object
                             .take_expected_variable("label")
-                            .flat_map(|value| value.expect_text_value().text_stream())
+                            .flat_map(|value| value.expect_text_value())
                             .for_each({
                                 let label_text_sender = label_text_sender.clone();
                                 move |label| { 
@@ -257,7 +257,6 @@ fn value_to_element_stream(value: Value) -> impl Stream<Item = RawElOrText> {
                         .await
                         .expect("failed to get Element type")
                         .expect_tag_value()
-                        .tag_stream()
                         .next()
                         .await
                         .expect("failed to get Element type tag");
@@ -271,10 +270,10 @@ fn value_to_element_stream(value: Value) -> impl Stream<Item = RawElOrText> {
                 .boxed()
         }
         Value::NumberValue(number_value) => {
-            number_value.number_stream().map(|number| Text::new(number).unify()).boxed()
+            number_value.map(|number| Text::new(number).unify()).boxed()
         }
         Value::TextValue(text_value) => {
-            text_value.text_stream().map(|text| Text::new(text).unify()).boxed()
+            text_value.map(|text| Text::new(text).unify()).boxed()
         }
         _ => unreachable!("Element cannot be created from the given Value")
     }
