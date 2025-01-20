@@ -15,7 +15,7 @@ pub fn stream_one<T>(item: T) -> impl Stream<Item = T> {
 
 // --- ConstructId ---
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ConstructId(Vec<u64>);
 
 impl ConstructId {
@@ -48,6 +48,7 @@ pub struct Variable {
     #[allow(dead_code)]
     loop_task: TaskHandle,
     value_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>,
+    output_value_stream: Option<CloneableValueStream>,
 }
 
 impl Variable {
@@ -66,13 +67,14 @@ impl Variable {
             name,
             loop_task,
             value_sender_sender,
+            output_value_stream: None,
         }
     }
 
     fn subscribe(&self) -> impl Stream<Item = Value> {
         let (value_sender, value_receiver) = mpsc::unbounded();
         if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
-            eprintln!("Failed to send 'value_sender' through `value_sender_sender`: {error:#}");
+            eprintln!("Failed to send Variable 'value_sender' through `value_sender_sender`: {error:#}");
         }
         value_receiver
     }
@@ -126,7 +128,8 @@ impl Clone for Variable {
             id: self.id.clone(),
             name: self.name,
             loop_task,
-            value_sender_sender 
+            value_sender_sender,
+            output_value_stream: None, 
         }
     }
 }
@@ -134,8 +137,24 @@ impl Clone for Variable {
 impl Stream for Variable {
     type Item = Value;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        pin!(self.subscribe()).poll_next(cx)
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        if self.output_value_stream.is_none() {
+            let stream = CloneableValueStream::new(self.subscribe());
+            self.output_value_stream = Some(stream);
+
+        }
+        pin!(self.output_value_stream.as_mut().unwrap()).poll_next(cx)
+    }
+}
+
+impl Drop for Variable {
+    fn drop(&mut self) {
+        zoon::println!("Variable dropped!");
+        zoon::println!("Id: {:?}", self.id);
+        zoon::println!("Description: {}", self.description);
+        zoon::println!("Name: {}", self.name);
+        zoon::println!("Clone: {:?}", self.is_clone);
+        zoon::println!("______");
     }
 }
 
@@ -166,7 +185,7 @@ impl CloneableValueStream {
     fn subscribe(&self) -> impl Stream<Item = Value> {
         let (value_sender, value_receiver) = mpsc::unbounded();
         if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
-            eprintln!("Failed to send 'value_sender' through `value_sender_sender`: {error:#}");
+            eprintln!("Failed to send CloneableValueStream 'value_sender' through `value_sender_sender`: {error:#}");
         }
         value_receiver
     }
@@ -956,7 +975,7 @@ impl LinkValue {
     fn subscribe(&self) -> impl Stream<Item = Value> {
         let (value_sender, value_receiver) = mpsc::unbounded();
         if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
-            eprintln!("Failed to send 'value_sender' through `value_sender_sender`: {error:#}");
+            eprintln!("Failed to send LinkValue 'value_sender' through `value_sender_sender`: {error:#}");
         }
         value_receiver
     }
