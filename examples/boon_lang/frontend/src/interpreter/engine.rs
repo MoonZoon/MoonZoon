@@ -1115,23 +1115,86 @@ impl IntoIterator for FixedList {
 // --- List ---
 
 pub struct List {
-    items: Vec<BoxStream<'static, Value>>,
-    change_sender: mpsc::UnboundedSender<ListChange>,
-    change_stream: BoxStream<'static, ListChange>,
+    is_clone: bool,
+    loop_task: TaskHandle,
+    change_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<ListChange>>,
 }
 
 impl List {
     pub fn new<const N: usize>(items: [BoxStream<'static, Value>; N]) -> Self {
-        let (change_sender, change_receiver) = mpsc::unbounded();
-        Self { 
-            items: Vec::from(items),
-            change_sender,
-            change_stream: change_receiver.boxed(),
+        let change_stream = stream_one(ListChange::Replace { items: Vec::from(items) });
+        let (loop_task, change_sender_sender) = Self::loop_task_and_change_sender_sender(change_stream);
+        Self {
+            is_clone: false,
+            loop_task,
+            change_sender_sender,
         }
     }
 
-    pub fn change_stream(self) -> impl Stream<Item = ListChange> + Send + 'static {
-        self.change_stream
+    fn subscribe(&self) -> impl Stream<Item = ListChange> {
+        let (change_sender, change_receiver) = mpsc::unbounded();
+        if let Err(error) = self.change_sender_sender.unbounded_send(change_sender) {
+            eprintln!("Failed to send 'change_sender' through `change_sender_sender`: {error:#}");
+        }
+        change_receiver
+    }
+
+    fn loop_task_and_change_sender_sender(change_stream: impl Stream<Item = ListChange> + 'static) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<ListChange>>) {
+        let (change_sender_sender, mut change_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<ListChange>>();
+        let loop_task = Task::start_droppable(async move {
+            let mut change_senders = Vec::<mpsc::UnboundedSender<ListChange>>::new();
+            let mut change = None::<ListChange>;
+            let mut change_stream = pin!(change_stream.fuse());
+            loop {
+                select! {
+                    new_change = change_stream.next() => {
+                        let Some(new_change) = new_change else { break };
+                        change_senders.retain(|change_sender| {
+                            if let Err(error) = change_sender.unbounded_send(new_change.clone()) {
+                                eprintln!("Failed to send new List through `change_sender`: {error:#}");
+                                false
+                            } else {
+                                true
+                            }
+                        });
+                        change = Some(new_change);
+                    }
+                    change_sender = change_sender_receiver.select_next_some() => {
+                        if let Some(change) = change.clone() {
+                            if let Err(error) = change_sender.unbounded_send(change.clone()) {
+                                eprintln!("Failed to send List through new `change_sender`: {error:#}");
+                            } else {
+                                change_senders.push(change_sender);
+                            }
+                        } else {
+                            change_senders.push(change_sender);
+                        }
+                    }
+                    complete => break
+                }
+            }
+        });
+        (loop_task, change_sender_sender)
+    }
+}
+
+impl Clone for List {
+    fn clone(&self) -> Self {
+        let change_stream = self.subscribe();
+        let (loop_task, change_sender_sender) = Self::loop_task_and_change_sender_sender(change_stream);
+        List { 
+            is_clone: true,
+            loop_task,
+            change_sender_sender 
+        }
+    }
+}
+
+impl Stream for List {
+    type Item = ListChange;
+
+    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        pin!(self.subscribe()).poll_next(cx)
     }
 }
 
@@ -1139,15 +1202,15 @@ impl List {
 #[allow(dead_code)]
 pub enum ListChange {
     Replace {
-        values: Vec<BoxStream<'static, Value>>,
+        items: Vec<BoxStream<'static, Value>>,
     },
     InsertAt {
         index: usize,
-        value: BoxStream<'static, Value>,
+        item: BoxStream<'static, Value>,
     },
     UpdateAt {
         index: usize,
-        value: BoxStream<'static, Value>,
+        item: BoxStream<'static, Value>,
     },
     RemoveAt {
         index: usize,
@@ -1157,7 +1220,7 @@ pub enum ListChange {
         new_index: usize,
     },
     Push {
-        value: BoxStream<'static, Value>,
+        item: BoxStream<'static, Value>,
     },
     Pop,
     Clear,

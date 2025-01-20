@@ -67,8 +67,7 @@ fn object_to_element_stripe(mut object: Object) -> impl Element {
                     Task::start_droppable(
                         object
                             .take_expected_variable("items")
-                            .flat_map(|value| value.expect_list_value())
-                            .flat_map(|list| list.change_stream())
+                            .flat_map(|value| value.expect_list_value().flatten())
                             .map(list_change_to_vec_diff)
                             .for_each({
                                 let items_vec_diff_sender = items_vec_diff_sender.clone();
@@ -282,28 +281,28 @@ fn value_to_element_stream(value: Value) -> impl Stream<Item = RawElOrText> {
 fn list_change_to_vec_diff(change: ListChange) -> VecDiff<BoxStream<'static, Value>> {
     match change {
         ListChange::Replace {
-            values,
+            items,
         } => {
             VecDiff::Replace {
-                values,
+                values: items,
             }
         },
         ListChange::InsertAt {
             index,
-            value,
+            item,
         } => {
             VecDiff::InsertAt {
                 index,
-                value,
+                value: item,
             }
         },
         ListChange::UpdateAt {
             index,
-            value,
+            item,
         } => {
             VecDiff::UpdateAt {
                 index,
-                value,
+                value: item,
             }
         },
         ListChange::RemoveAt {
@@ -323,10 +322,10 @@ fn list_change_to_vec_diff(change: ListChange) -> VecDiff<BoxStream<'static, Val
             }
         },
         ListChange::Push {
-            value,
+            item,
         } => {
             VecDiff::Push {
-                value,
+                value: item,
             }
         },
         ListChange::Pop => {
