@@ -249,7 +249,6 @@ fn value_to_element_stream(value: Value) -> impl Stream<Item = RawElOrText> {
     match value {
         Value::TaggedObjectValue(tagged_object_value) => {
             tagged_object_value
-                .tagged_object_stream()
                 .then(|(tag, mut object)| async move {
                     assert_eq!(tag, "Element", "Element cannot be created from Object with tag '{tag}'");
                     let mut type_variable = object.take_expected_variable("type");

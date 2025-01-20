@@ -407,13 +407,15 @@ impl Stream for ObjectValue {
 // --- TaggedObjectValue ---
 
 pub struct TaggedObjectValue {
+    is_clone: bool,
     // @TODO remove
     #[allow(dead_code)]
     description: &'static str,
     // @TODO remove
     #[allow(dead_code)]
     id: ConstructId,
-    tagged_object_stream: BoxStream<'static, (&'static str, Object)>,
+    loop_task: TaskHandle,
+    tagged_object_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<(&'static str, Object)>>,
 }
 
 impl TaggedObjectValue {
@@ -422,15 +424,82 @@ impl TaggedObjectValue {
         id: impl Into<ConstructId>,
         tagged_object_stream: impl Stream<Item = (&'static str, Object)> + Send + 'static
     ) -> Self {
+        let (loop_task, tagged_object_sender_sender) = Self::loop_task_and_tagged_object_sender_sender(tagged_object_stream);
         Self {
+            is_clone: false,
             description,
             id: id.into(),
-            tagged_object_stream: tagged_object_stream.boxed(),
+            loop_task,
+            tagged_object_sender_sender,
         }
     }
 
-    pub fn tagged_object_stream(self) -> impl Stream<Item = (&'static str, Object)> + Send + 'static {
-        self.tagged_object_stream
+    fn subscribe(&self) -> impl Stream<Item = (&'static str, Object)> {
+        let (tagged_object_sender, tagged_object_receiver) = mpsc::unbounded();
+        if let Err(error) = self.tagged_object_sender_sender.unbounded_send(tagged_object_sender) {
+            eprintln!("Failed to send 'tagged_object_sender' through `tagged_object_sender_sender`: {error:#}");
+        }
+        tagged_object_receiver
+    }
+
+    fn loop_task_and_tagged_object_sender_sender(tagged_object_stream: impl Stream<Item = (&'static str, Object)> + 'static) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<(&'static str, Object)>>) {
+        let (tagged_object_sender_sender, mut tagged_object_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<(&'static str, Object)>>();
+        let loop_task = Task::start_droppable(async move {
+            let mut tagged_object_senders = Vec::<mpsc::UnboundedSender<(&'static str, Object)>>::new();
+            let mut tagged_object = None::<(&'static str, Object)>;
+            let mut tagged_object_stream = pin!(tagged_object_stream.fuse());
+            loop {
+                select! {
+                    new_tagged_object = tagged_object_stream.next() => {
+                        let Some(new_tagged_object) = new_tagged_object else { break };
+                        tagged_object_senders.retain(|tagged_object_sender| {
+                            if let Err(error) = tagged_object_sender.unbounded_send(new_tagged_object.clone()) {
+                                eprintln!("Failed to send new TaggedObjectValue tagged_object through `tagged_object_sender`: {error:#}");
+                                false
+                            } else {
+                                true
+                            }
+                        });
+                        tagged_object = Some(new_tagged_object);
+                    }
+                    tagged_object_sender = tagged_object_sender_receiver.select_next_some() => {
+                        if let Some(tagged_object) = tagged_object.clone() {
+                            if let Err(error) = tagged_object_sender.unbounded_send(tagged_object.clone()) {
+                                eprintln!("Failed to send TaggedObjectValue tagged_object through new `tagged_object_sender`: {error:#}");
+                            } else {
+                                tagged_object_senders.push(tagged_object_sender);
+                            }
+                        } else {
+                            tagged_object_senders.push(tagged_object_sender);
+                        }
+                    }
+                    complete => break
+                }
+            }
+        });
+        (loop_task, tagged_object_sender_sender)
+    }
+}
+
+impl Clone for TaggedObjectValue {
+    fn clone(&self) -> Self {
+        let value_stream = self.subscribe();
+        let (loop_task, tagged_object_sender_sender) = Self::loop_task_and_tagged_object_sender_sender(value_stream);
+        TaggedObjectValue { 
+            is_clone: true,
+            description: self.description,
+            id: self.id.clone(),
+            loop_task,
+            tagged_object_sender_sender 
+        }
+    }
+}
+
+impl Stream for TaggedObjectValue {
+    type Item = (&'static str, Object);
+
+    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
+        pin!(self.subscribe()).poll_next(cx)
     }
 }
 
