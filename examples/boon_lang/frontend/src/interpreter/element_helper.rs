@@ -1,16 +1,26 @@
-use zoon::{*, eprintln};
+use zoon::{*, println, eprintln};
 use zoon::futures_util::select;
 use super::engine::*;
 
-pub fn root_object_value_to_element_signal(root: ObjectValue) -> impl Signal<Item = Option<RawElOrText>> {
-    zoon::println!("CCCCCCC");
+pub fn root_object_stream_to_element_signal(root_object_stream: impl Stream<Item = Object>) -> impl Signal<Item = Option<RawElOrText>> {
+    println!("CCCCCCC");
 
-    let element_stream = root
+    let element_stream = root_object_stream
         .flat_map(|mut object| {
-            zoon::println!("EEEEEE");
-            object.take_expected_variable("document")
+            println!("EEEEEE");
+            let document_variable = object.take_expected_variable("document");
+            std::mem::forget(object);
+            println!("KKKKK");
+            let stream = document_variable.subscribe().map(|object_value| {
+                println!("JJJJJJJJ");
+                object_value
+            });
+            std::mem::forget(document_variable);
+            println!("LLLLL");
+            stream
         })
         .flat_map(|value| {
+            println!("IIIII");
             value
                 .expect_object_value()
                 .flat_map(|mut object| {
@@ -24,7 +34,7 @@ pub fn root_object_value_to_element_signal(root: ObjectValue) -> impl Signal<Ite
 }
 
 fn object_to_element_stripe(mut object: Object) -> impl Element {
-    zoon::println!("BBBBBB");
+    println!("BBBBBB");
 
     let (direction_tag_sender, _direction_tag_receiver) = mpsc::unbounded();
     let (style_object_sender, _style_object_receiver) = mpsc::unbounded();
@@ -90,7 +100,7 @@ fn object_to_element_stripe(mut object: Object) -> impl Element {
             .map(|_|())
     );
 
-    zoon::println!("AAAAAAAAAAAAAAA");
+    println!("AAAAAAAAAAAAAAA");
 
     // @TODO Stripe::new(direction)
     Column::new()
@@ -251,7 +261,7 @@ fn object_to_element_button(mut object: Object) -> impl Element {
 }
 
 fn value_to_element_stream(value: Value) -> impl Stream<Item = RawElOrText> {
-    zoon::println!("DDDDDDDDDDDD");
+    println!("DDDDDDDDDDDD");
     match value {
         Value::TaggedObjectValue(tagged_object_value) => {
             tagged_object_value

@@ -357,5 +357,25 @@ pub async fn run(_program: &str) -> impl Element {
         ]))
     );
 
-    El::new().child_signal(root_object_value_to_element_signal(root_object_value))
+    // let root_object_value = ObjectValue::new(
+    //     "root", 
+    //     0,
+    //     stream_one(Object::with_id("root_object", 5, [
+    //         Variable::new(
+    //             "document", 
+    //             1, 
+    //             "document",
+    //             stream_one(ObjectValue::new(
+    //                 "document_object_value",
+    //                 2,
+    //                 stream_one(Object::with_id("document_object_value_object", 6, []))
+    //             ))
+    //         )
+    //     ]))
+    // );
+
+    El::new()
+        // .child("PPP")
+        .child_signal(root_object_stream_to_element_signal(root_object_value.subscribe()))
+        .after_remove(move |_| drop(root_object_value))
 }

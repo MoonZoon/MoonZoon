@@ -75,7 +75,7 @@ impl Variable {
         }
     }
 
-    fn subscribe(&self) -> impl Stream<Item = Value> {
+    pub fn subscribe(&self) -> impl Stream<Item = Value> {
         let (value_sender, value_receiver) = mpsc::unbounded();
         if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
             eprintln!("Failed to send Variable 'value_sender' through `value_sender_sender`: {error:#}");
@@ -120,7 +120,7 @@ impl Variable {
                         if let Some(original_value_sender) = original_value_sender.as_ref() {
                             value = Some(new_value.clone());
                             if let Err(error) = original_value_sender.unbounded_send(new_value) {
-                                eprintln!("Failed to send ObjectValue new_value through new `original_value_sender`: {error:#}");
+                                eprintln!("Failed to send Variable new_value through new `original_value_sender`: {error:#}");
                             }
                         } else {
                             value = Some(new_value);
@@ -138,17 +138,18 @@ impl Variable {
                         }
                     }
                     received_original_value_sender = original_value_sender_receiver => {
+                        original_value_sender = Some(received_original_value_sender.expect("Failed to get 'received_original_value_sender'"));
                         if let Some(original_value) = value {
-                            original_value_sender = Some(received_original_value_sender.expect("Failed to get 'received_original_value_sender'"));
                             value = Some(original_value.clone());
                             if let Err(error) = original_value_sender.as_ref().unwrap().unbounded_send(original_value) {
-                                eprintln!("Failed to send ObjectValue original_value through new `original_value_sender`: {error:#}");
+                                eprintln!("Failed to send Variable original_value through new `original_value_sender`: {error:#}");
                             }
                         }
                     }
                     complete => break
                 }
             }
+            println!("Variable loop end");
         });
         (loop_task, value_sender_sender, original_value_sender_sender)
     }
@@ -263,7 +264,7 @@ impl<T: 'static + Clone + Send> CloneableStream<T> {
                         if let Some(original_value_sender) = original_value_sender.as_ref() {
                             value = Some(new_value.clone());
                             if let Err(error) = original_value_sender.unbounded_send(new_value) {
-                                eprintln!("Failed to send ObjectValue new_value through new `original_value_sender`: {error:#}");
+                                eprintln!("Failed to send CloneableStream new_value through new `original_value_sender`: {error:#}");
                             }
                         } else {
                             value = Some(new_value);
@@ -281,11 +282,11 @@ impl<T: 'static + Clone + Send> CloneableStream<T> {
                         }
                     }
                     received_original_value_sender = original_value_sender_receiver => {
+                        original_value_sender = Some(received_original_value_sender.expect("Failed to get 'received_original_value_sender'"));
                         if let Some(original_value) = value {
-                            original_value_sender = Some(received_original_value_sender.expect("Failed to get 'received_original_value_sender'"));
                             value = Some(original_value.clone());
                             if let Err(error) = original_value_sender.as_ref().unwrap().unbounded_send(original_value) {
-                                eprintln!("Failed to send ObjectValue original_value through new `original_value_sender`: {error:#}");
+                                eprintln!("Failed to send CloneableStream original_value through new `original_value_sender`: {error:#}");
                             }
                         }
                     }
@@ -546,7 +547,7 @@ impl ObjectValue {
         }
     }
 
-    fn subscribe(&self) -> impl Stream<Item = Object> {
+    pub fn subscribe(&self) -> impl Stream<Item = Object> {
         let (object_sender, object_receiver) = mpsc::unbounded();
         if let Err(error) = self.object_sender_sender.unbounded_send(object_sender) {
             println!("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF: {}", self.description);
@@ -588,7 +589,9 @@ impl ObjectValue {
                             if let Err(error) = original_object_sender.unbounded_send(new_object) {
                                 eprintln!("Failed to send ObjectValue new_object through new `original_object_sender`: {error:#}");
                             }
+                            println!("XXXXXXXXXXXX11111");
                         } else {
+                            println!("XXXXXXXXXXXX222222 ObjectID: {:?}", new_object.id.clone());
                             object = Some(new_object);
                         }
                     }
@@ -604,8 +607,9 @@ impl ObjectValue {
                         }
                     }
                     received_original_object_sender = original_object_sender_receiver => {
+                        original_object_sender = Some(received_original_object_sender.expect("Failed to get 'received_original_object_sender'"));
                         if let Some(original_object) = object {
-                            original_object_sender = Some(received_original_object_sender.expect("Failed to get 'received_original_object_sender'"));
+                            println!("YYYYYYYYYYY");
                             object = Some(original_object.clone());
                             if let Err(error) = original_object_sender.as_ref().unwrap().unbounded_send(original_object) {
                                 eprintln!("Failed to send ObjectValue original_object through new `original_object_sender`: {error:#}");
@@ -615,6 +619,7 @@ impl ObjectValue {
                     complete => break
                 }
             }
+            println!("ObjectValue loop end");
         });
         (loop_task, object_sender_sender, original_object_sender_sender)
     }
@@ -990,8 +995,8 @@ impl TextValue {
                         }
                     }
                     received_original_text_sender = original_text_sender_receiver => {
+                        original_text_sender = Some(received_original_text_sender.expect("Failed to get 'received_original_text_sender'"));
                         if let Some(original_text) = text {
-                            original_text_sender = Some(received_original_text_sender.expect("Failed to get 'received_original_text_sender'"));
                             text = Some(original_text.clone());
                             if let Err(error) = original_text_sender.as_ref().unwrap().unbounded_send(original_text) {
                                 eprintln!("Failed to send TextValue original_text through new `original_text_sender`: {error:#}");
@@ -1001,6 +1006,7 @@ impl TextValue {
                     complete => break
                 }
             }
+            println!("TextValue loop end");
         });
         (loop_task, text_sender_sender, original_text_sender_sender)
     }
