@@ -136,196 +136,224 @@ pub async fn run(_program: &str) -> impl Element {
         ))
     };
 
-    let (increment_button_event_press_to_counter_then_variable_reference_16_sender, increment_button_event_press_to_counter_then_variable_reference_16_receiver) = oneshot::channel(); 
-    let increment_button_event_press_to_counter_then_variable_reference_16 = VariableReference::new(
-        "counter button press", 
-        16, 
-        "increment_button.event.press",
-        increment_button_event_press_to_counter_then_variable_reference_16_receiver 
-    );
+    // let (increment_button_event_press_to_counter_then_variable_reference_16_sender, increment_button_event_press_to_counter_then_variable_reference_16_receiver) = oneshot::channel(); 
+    // let increment_button_event_press_to_counter_then_variable_reference_16 = VariableReference::new(
+    //     "counter button press", 
+    //     16, 
+    //     "increment_button.event.press",
+    //     increment_button_event_press_to_counter_then_variable_reference_16_receiver 
+    // );
 
-    let (counter_to_document_element_stripe_item_0_variable_reference_47_sender, counter_to_document_element_stripe_item_0_variable_reference_47_receiver) = oneshot::channel(); 
-    let counter_to_document_element_stripe_item_0_variable_reference_47 =  VariableReference::new(
-        "document Element/stripe item 0", 
-        47, 
-        "counter",
-        counter_to_document_element_stripe_item_0_variable_reference_47_receiver
-    );
+    // let (counter_to_document_element_stripe_item_0_variable_reference_47_sender, counter_to_document_element_stripe_item_0_variable_reference_47_receiver) = oneshot::channel(); 
+    // let counter_to_document_element_stripe_item_0_variable_reference_47 =  VariableReference::new(
+    //     "document Element/stripe item 0", 
+    //     47, 
+    //     "counter",
+    //     counter_to_document_element_stripe_item_0_variable_reference_47_receiver
+    // );
 
-    let (increment_button_to_document_element_stripe_item_1_variable_reference_48_sender, increment_button_to_document_element_stripe_item_1_variable_reference_48_receiver) = oneshot::channel(); 
-    let increment_button_to_document_element_stripe_item_1_variable_reference_48 = VariableReference::new(
-        "document Element/stripe item 1", 
-        48, 
-        "increment_button",
-        increment_button_to_document_element_stripe_item_1_variable_reference_48_receiver
-    );
+    // let (increment_button_to_document_element_stripe_item_1_variable_reference_48_sender, increment_button_to_document_element_stripe_item_1_variable_reference_48_receiver) = oneshot::channel(); 
+    // let increment_button_to_document_element_stripe_item_1_variable_reference_48 = VariableReference::new(
+    //     "document Element/stripe item 1", 
+    //     48, 
+    //     "increment_button",
+    //     increment_button_to_document_element_stripe_item_1_variable_reference_48_receiver
+    // );
+
+    // let root_object_value = ObjectValue::new(
+    //     "root", 
+    //     0,
+    //     stream_one(Object::new([
+    //         Variable::new(
+    //             "document", 
+    //             1, 
+    //             "document",
+    //             FunctionCall::new(
+    //                 "Document/new call", 
+    //                 2, 
+    //                 "Document/new", 
+    //                 function_document_new,
+    //                 Object::new([
+    //                     Variable::new(
+    //                         "Document/new root", 
+    //                         3, 
+    //                         "root",
+    //                         FunctionCall::new(
+    //                             "Element/stripe call", 
+    //                             4, 
+    //                             "Element/stripe", 
+    //                             function_element_stripe,
+    //                             Object::new([
+    //                                 Variable::new(
+    //                                     "Element/stripe element", 
+    //                                     5, 
+    //                                     "element",
+    //                                     stream_one(ObjectValue::new("Element/stripe element object", 6, stream_one(Object::new([]))))
+    //                                 ),
+    //                                 Variable::new(
+    //                                     "Element/stripe direction", 
+    //                                     7, 
+    //                                     "direction",
+    //                                     stream_one(TagValue::new("Element/stripe direction tag", 8, stream_one(String::from("Column"))))
+    //                                 ),
+    //                                 Variable::new(
+    //                                     "Element/stripe style", 
+    //                                     9, 
+    //                                     "style",
+    //                                     stream_one(ObjectValue::new("Element/stripe style object", 10, stream_one(Object::new([]))))
+    //                                 ),
+    //                                 Variable::new(
+    //                                     "Element/stripe items", 
+    //                                     11, 
+    //                                     "items",
+    //                                     stream_one(ListValue::new(
+    //                                         "Element/stripe items list", 
+    //                                         12,
+    //                                         stream_one(List::new([
+    //                                             CloneableStream::new(counter_to_document_element_stripe_item_0_variable_reference_47),
+    //                                             CloneableStream::new(increment_button_to_document_element_stripe_item_1_variable_reference_48),
+    //                                         ]))
+    //                                     ))
+    //                                 )
+    //                             ])
+    //                         )
+                            
+    //                     )
+    //                 ])
+    //             )
+                
+    //         ),
+    //         {
+    //             let variable = Variable::new(
+    //                 "counter", 
+    //                 13, 
+    //                 "counter",
+    //                 LatestCombinator::new(
+    //                     "counter latest", 
+    //                     14,
+    //                     FixedList::new([
+    //                         stream_one(Value::from(NumberValue::new("counter default number", 15, stream_one(0.)))).boxed(),
+    //                         FunctionCall::new(
+    //                             "Math/sum call", 
+    //                             19, 
+    //                             "Math/sum", 
+    //                             function_math_sum,
+    //                             Object::new([
+    //                                 Variable::new(
+    //                                     "Math/sum increment", 
+    //                                     42, 
+    //                                     "increment",
+    //                                     ThenCombinator::new(
+    //                                         "counter button press then", 
+    //                                         17,
+    //                                         increment_button_event_press_to_counter_then_variable_reference_16,
+    //                                         stream_one(NumberValue::new("counter after button press number", 18, stream_one(1.)),
+    //                                     ))
+    //                                 )
+    //                             ])
+    //                         )
+    //                         .boxed()
+    //                     ])
+    //                 )
+    //             );
+    //             if counter_to_document_element_stripe_item_0_variable_reference_47_sender.send(variable.clone()).is_err() {
+    //                 eprintln!("Failed to send Variable to VariableReference")
+    //             }
+    //             variable
+    //         },
+    //         {
+    //             let variable = Variable::new(
+    //                 "increment_button", 
+    //                 20, 
+    //                 "increment_button",
+    //                 FunctionCall::new(
+    //                     "Element/button call", 
+    //                     21, 
+    //                     "Element/button", 
+    //                     function_element_button,
+    //                     Object::new([
+    //                         Variable::new(
+    //                             "Element/button argument element", 
+    //                             22, 
+    //                             "element",
+    //                             stream_one(ObjectValue::new(
+    //                                 "Element/button element object", 
+    //                                 23,
+    //                                 stream_one(Object::new([
+    //                                     Variable::new(
+    //                                         "Element/button element event", 
+    //                                         24, 
+    //                                         "event",
+    //                                         stream_one(
+    //                                             ObjectValue::new(
+    //                                                 "Element/button element event object", 
+    //                                                 25,
+    //                                                 stream_one(Object::new([
+    //                                                     Variable::new(
+    //                                                         "Element/button element event press", 
+    //                                                         26, 
+    //                                                         "press",
+    //                                                         stream_one(LinkValue::new("Element/button element event press link", 27))
+    //                                                     )
+    //                                                 ]))
+    //                                             )
+    //                                         )
+    //                                     )
+    //                                 ]))
+    //                             ))
+    //                         ),
+    //                         Variable::new(
+    //                             "Element/button style", 
+    //                             28, 
+    //                             "style",
+    //                             stream_one(ObjectValue::new("Element/button style object", 29, stream_one(Object::new([]))))
+    //                         ),
+    //                         Variable::new(
+    //                             "Element/button label", 
+    //                             30, 
+    //                             "label",
+    //                             stream_one(TextValue::new("Element/button label text", 31, stream_one(String::from("+"))))
+    //                         )
+    //                     ])
+    //                 )
+                    
+    //             );
+    //             if increment_button_event_press_to_counter_then_variable_reference_16_sender.send(variable.clone()).is_err() {
+    //                 eprintln!("Failed to send Variable to VariableReference")
+    //             }
+    //             if increment_button_to_document_element_stripe_item_1_variable_reference_48_sender.send(variable.clone()).is_err() {
+    //                 eprintln!("Failed to send Variable to VariableReference")
+    //             }
+    //             variable
+    //         }
+    //     ]))
+    // );
 
     let root_object_value = ObjectValue::new(
         "root", 
         0,
-        stream_one(Object::new([
+        stream_one(Object::with_id("root_object", 5, [
             Variable::new(
                 "document", 
                 1, 
                 "document",
-                FunctionCall::new(
-                    "Document/new call", 
-                    2, 
-                    "Document/new", 
-                    function_document_new,
-                    Object::new([
+                stream_one(ObjectValue::new(
+                    "document_object_value",
+                    2,
+                    stream_one(Object::with_id("document_object_value_object", 6, [
                         Variable::new(
-                            "Document/new root", 
+                            "root_element", 
                             3, 
-                            "root",
-                            FunctionCall::new(
-                                "Element/stripe call", 
+                            "root_element", 
+                            stream_one(TextValue::new(
+                                "dummy_text", 
                                 4, 
-                                "Element/stripe", 
-                                function_element_stripe,
-                                Object::new([
-                                    Variable::new(
-                                        "Element/stripe element", 
-                                        5, 
-                                        "element",
-                                        stream_one(ObjectValue::new("Element/stripe element object", 6, stream_one(Object::new([]))))
-                                    ),
-                                    Variable::new(
-                                        "Element/stripe direction", 
-                                        7, 
-                                        "direction",
-                                        stream_one(TagValue::new("Element/stripe direction tag", 8, stream_one(String::from("Column"))))
-                                    ),
-                                    Variable::new(
-                                        "Element/stripe style", 
-                                        9, 
-                                        "style",
-                                        stream_one(ObjectValue::new("Element/stripe style object", 10, stream_one(Object::new([]))))
-                                    ),
-                                    Variable::new(
-                                        "Element/stripe items", 
-                                        11, 
-                                        "items",
-                                        stream_one(ListValue::new(
-                                            "Element/stripe items list", 
-                                            12,
-                                            stream_one(List::new([
-                                                CloneableStream::new(counter_to_document_element_stripe_item_0_variable_reference_47),
-                                                CloneableStream::new(increment_button_to_document_element_stripe_item_1_variable_reference_48),
-                                            ]))
-                                        ))
-                                    )
-                                ])
-                            )
-                            
+                                stream_one(String::from("bflmpsvz"))
+                            ))
                         )
-                    ])
-                )
-                
-            ),
-            {
-                let variable = Variable::new(
-                    "counter", 
-                    13, 
-                    "counter",
-                    LatestCombinator::new(
-                        "counter latest", 
-                        14,
-                        FixedList::new([
-                            stream_one(Value::from(NumberValue::new("counter default number", 15, stream_one(0.)))).boxed(),
-                            FunctionCall::new(
-                                "Math/sum call", 
-                                19, 
-                                "Math/sum", 
-                                function_math_sum,
-                                Object::new([
-                                    Variable::new(
-                                        "Math/sum increment", 
-                                        42, 
-                                        "increment",
-                                        ThenCombinator::new(
-                                            "counter button press then", 
-                                            17,
-                                            increment_button_event_press_to_counter_then_variable_reference_16,
-                                            stream_one(NumberValue::new("counter after button press number", 18, stream_one(1.)),
-                                        ))
-                                    )
-                                ])
-                            )
-                            .boxed()
-                        ])
-                    )
-                );
-                if counter_to_document_element_stripe_item_0_variable_reference_47_sender.send(variable.clone()).is_err() {
-                    eprintln!("Failed to send Variable to VariableReference")
-                }
-                variable
-            },
-            {
-                let variable = Variable::new(
-                    "increment_button", 
-                    20, 
-                    "increment_button",
-                    FunctionCall::new(
-                        "Element/button call", 
-                        21, 
-                        "Element/button", 
-                        function_element_button,
-                        Object::new([
-                            Variable::new(
-                                "Element/button argument element", 
-                                22, 
-                                "element",
-                                stream_one(ObjectValue::new(
-                                    "Element/button element object", 
-                                    23,
-                                    stream_one(Object::new([
-                                        Variable::new(
-                                            "Element/button element event", 
-                                            24, 
-                                            "event",
-                                            stream_one(
-                                                ObjectValue::new(
-                                                    "Element/button element event object", 
-                                                    25,
-                                                    stream_one(Object::new([
-                                                        Variable::new(
-                                                            "Element/button element event press", 
-                                                            26, 
-                                                            "press",
-                                                            stream_one(LinkValue::new("Element/button element event press link", 27))
-                                                        )
-                                                    ]))
-                                                )
-                                            )
-                                        )
-                                    ]))
-                                ))
-                            ),
-                            Variable::new(
-                                "Element/button style", 
-                                28, 
-                                "style",
-                                stream_one(ObjectValue::new("Element/button style object", 29, stream_one(Object::new([]))))
-                            ),
-                            Variable::new(
-                                "Element/button label", 
-                                30, 
-                                "label",
-                                stream_one(TextValue::new("Element/button label text", 31, stream_one(String::from("+"))))
-                            )
-                        ])
-                    )
-                    
-                );
-                if increment_button_event_press_to_counter_then_variable_reference_16_sender.send(variable.clone()).is_err() {
-                    eprintln!("Failed to send Variable to VariableReference")
-                }
-                if increment_button_to_document_element_stripe_item_1_variable_reference_48_sender.send(variable.clone()).is_err() {
-                    eprintln!("Failed to send Variable to VariableReference")
-                }
-                variable
-            }
+                    ]))
+                ))
+            )
         ]))
     );
 

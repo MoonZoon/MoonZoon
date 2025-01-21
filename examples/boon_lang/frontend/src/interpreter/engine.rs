@@ -77,7 +77,7 @@ impl Variable {
         let (value_sender, value_receiver) = mpsc::unbounded();
         if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
             eprintln!("Failed to send Variable 'value_sender' through `value_sender_sender`: {error:#}");
-            println!("ERROR FOR: Variable dropped! Clone: {:?}, Id: '{:?}', Description: '{}', Name: '{}'", 
+            println!("ERROR FOR: Variable, Clone: {:?}, Id: '{:?}', Description: '{}', Name: '{}'", 
                 self.is_clone,
                 self.id, 
                 self.description, 
@@ -552,35 +552,18 @@ impl Stream for ObjectValue {
     type Item = Object;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
-        // zoon::println!("FFFFF, object_description: {}", self.description);
-        // let value = pin!(self.subscribe()).poll_next(cx);
-        // zoon::println!("FFFFFFFFF, value: {}", match &value {
-        //     std::task::Poll::Ready(value) => {
-        //         if let Some(object) = value {
-        //             "some"
-        //         } else {
-        //             "none"
-        //         }
-        //     }
-        //     std::task::Poll::Pending => {
-        //         "pending"
-        //     }
-        // });
-        // value
-        println!("GGGGG");
         if self.output_object_stream.is_none() {
             let stream = CloneableStream::new(self.subscribe());
             self.output_object_stream = Some(stream);
-            println!("HHHHHHH");
         }
-        println!("CHHH");
         pin!(self.output_object_stream.as_mut().unwrap()).poll_next(cx)
     }
 }
 
 impl Drop for ObjectValue {
     fn drop(&mut self) {
-        println!("ObjectValue dropped! Id: '{:?}', Description: '{}'", 
+        println!("ObjectValue dropped! Clone: {:?}, Id: '{:?}', Description: '{}'", 
+            self.is_clone,
             self.id, 
             self.description, 
         );
@@ -1369,14 +1352,38 @@ impl Drop for FunctionCall {
 
 // --- Object ---
 
-#[derive(Clone)]
 pub struct Object {
+    // @TODO remove
+    #[allow(dead_code)]
+    is_clone: bool,
+    // @TODO remove
+    #[allow(dead_code)]
+    description: &'static str,
+    // @TODO remove
+    #[allow(dead_code)]
+    id: ConstructId,
     variables: Vec<Variable>,
 }
 
 impl Object {
     pub fn new<const N: usize>(variables: [Variable; N]) -> Self {
         Self { 
+            is_clone: false,
+            description: "",
+            id: 9999999.into(),
+            variables: Vec::from(variables)
+        }
+    }
+
+    pub fn with_id<const N: usize>(
+        description: &'static str, 
+        id: impl Into<ConstructId>,
+        variables: [Variable; N]
+    ) -> Self {
+        Self { 
+            is_clone: false,
+            description,
+            id: id.into(),
             variables: Vec::from(variables)
         }
     }
@@ -1399,9 +1406,24 @@ impl Object {
     }
 }
 
+impl Clone for Object {
+    fn clone(&self) -> Self {
+        Object {
+            is_clone: true,
+            description: self.description,
+            id: self.id.clone(),
+            variables: self.variables.clone(),
+        }
+    }
+}
+
 impl Drop for Object {
     fn drop(&mut self) {
-        println!("Object dropped!");
+        println!("Object dropped! Clone: {:?}, Id: '{:?}', Description: '{}'",
+            self.is_clone,
+            self.id,
+            self.description,
+        );
     }
 }
 
