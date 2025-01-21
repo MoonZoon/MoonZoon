@@ -1,7 +1,9 @@
 use std::future;
+use std::sync::Arc;
 
-use zoon::{*, eprintln};
+use zoon::{println, eprintln};
 use zoon::futures_channel::oneshot;
+use zoon::{El, Element, HookableLifecycle};
 
 mod engine;
 use engine::*;
@@ -10,131 +12,131 @@ mod element_helper;
 use element_helper::*;
 
 pub async fn run(_program: &str) -> impl Element {
-    let function_document_new = |mut arguments: Object, function_call_id: ConstructId| {
-        stream_one(ObjectValue::new(
-            "Document/new output object", 
-            function_call_id.push_child_id(32),
-            stream_one(Object::new([
-                Variable::new(
-                    "Document/new output root_element", 
-                    function_call_id.push_child_id(33), 
-                    "root_element",
-                    arguments.take_expected_variable("root")
-                ),
-            ]))
-        ))
-    };
+    // let function_document_new = |mut arguments: Object, function_call_id: ConstructId| {
+    //     stream_one(ObjectValue::new(
+    //         "Document/new output object", 
+    //         function_call_id.push_child_id(32),
+    //         stream_one(Object::new([
+    //             Variable::new(
+    //                 "Document/new output root_element", 
+    //                 function_call_id.push_child_id(33), 
+    //                 "root_element",
+    //                 arguments.take_expected_variable("root")
+    //             ),
+    //         ]))
+    //     ))
+    // };
 
-    let function_element_stripe = |mut arguments: Object, function_call_id: ConstructId| {
-        stream_one(TaggedObjectValue::new(
-            "Element/stripe output object", 
-            function_call_id.push_child_id(34),
-            stream_one(("Element", Object::new([
-                Variable::new(
-                    "Element/stripe output type", 
-                    function_call_id.push_child_id(36), 
-                    "type",
-                    stream_one(TagValue::new("Element/stripe output type tag", 37, stream_one(String::from("Stripe"))))
-                ),
-                Variable::new(
-                    "Element/stripe output settings", 
-                    function_call_id.push_child_id(35), 
-                    "settings",
-                    stream_one(ObjectValue::new(
-                        "Element_stripe output object", 
-                        2000, 
-                        stream_one(Object::new([
-                            arguments.take_expected_variable("direction"),
-                            arguments.take_expected_variable("style"),
-                            arguments.take_expected_variable("items"),
-                        ]))
-                    ))
-                ),
-                Variable::new(
-                    "Element/button output event", 
-                    function_call_id.push_child_id(44), 
-                    "event",
-                    arguments.take_expected_variable("element").flat_map(|value| {
-                        value
-                            .expect_object_value()
-                            .flat_map(|mut object| {
-                                object
-                                    .take_variable("event")
-                                    .map(|variable| variable.boxed())
-                                    .unwrap_or_else(|| {
-                                        stream_one(Value::from(ObjectValue::new(
-                                            "Element/button output event default object",
-                                            1234,
-                                            stream_one(Object::new([]))
-                                        ))).boxed()
-                                    })
-                            })
-                    })
-                ),
-            ])))
-        ))
-    };
+    // let function_element_stripe = |mut arguments: Object, function_call_id: ConstructId| {
+    //     stream_one(TaggedObjectValue::new(
+    //         "Element/stripe output object", 
+    //         function_call_id.push_child_id(34),
+    //         stream_one(("Element", Object::new([
+    //             Variable::new(
+    //                 "Element/stripe output type", 
+    //                 function_call_id.push_child_id(36), 
+    //                 "type",
+    //                 stream_one(TagValue::new("Element/stripe output type tag", 37, stream_one(String::from("Stripe"))))
+    //             ),
+    //             Variable::new(
+    //                 "Element/stripe output settings", 
+    //                 function_call_id.push_child_id(35), 
+    //                 "settings",
+    //                 stream_one(ObjectValue::new(
+    //                     "Element_stripe output object", 
+    //                     2000, 
+    //                     stream_one(Object::new([
+    //                         arguments.take_expected_variable("direction"),
+    //                         arguments.take_expected_variable("style"),
+    //                         arguments.take_expected_variable("items"),
+    //                     ]))
+    //                 ))
+    //             ),
+    //             Variable::new(
+    //                 "Element/button output event", 
+    //                 function_call_id.push_child_id(44), 
+    //                 "event",
+    //                 arguments.take_expected_variable("element").flat_map(|value| {
+    //                     value
+    //                         .expect_object_value()
+    //                         .flat_map(|mut object| {
+    //                             object
+    //                                 .take_variable("event")
+    //                                 .map(|variable| variable.boxed())
+    //                                 .unwrap_or_else(|| {
+    //                                     stream_one(Value::from(ObjectValue::new(
+    //                                         "Element/button output event default object",
+    //                                         1234,
+    //                                         stream_one(Object::new([]))
+    //                                     ))).boxed()
+    //                                 })
+    //                         })
+    //                 })
+    //             ),
+    //         ])))
+    //     ))
+    // };
 
-    let function_element_button = |mut arguments: Object, function_call_id: ConstructId| {
-        stream_one(TaggedObjectValue::new(
-            "Element/button output object", 
-            function_call_id.push_child_id(38),
-            stream_one(("Element", Object::new([
-                Variable::new(
-                    "Element/button output type", 
-                    function_call_id.push_child_id(40), 
-                    "type",
-                    stream_one(TagValue::new("Element/button output type tag", 41, stream_one(String::from("Button"))))
-                ),
-                Variable::new(
-                    "Element/button output settings", 
-                    function_call_id.push_child_id(39), 
-                    "settings",
-                    stream_one(ObjectValue::new(
-                        "Element/button output settings object", 
-                        function_call_id.push_child_id(45),
-                        stream_one(Object::new([
-                            arguments.take_expected_variable("style"),
-                            arguments.take_expected_variable("label"),
-                        ]))
-                    ))
-                ),
-                Variable::new(
-                    "Element/button output event", 
-                    function_call_id.push_child_id(46), 
-                    "event",
-                    arguments.take_expected_variable("element").flat_map(|value| {
-                        value
-                            .expect_object_value()
-                            .flat_map(|mut object| {
-                                object
-                                    .take_variable("event")
-                                    .map(|variable| variable.boxed())
-                                    .unwrap_or_else(|| stream_one(Value::from(ObjectValue::new(
-                                        "empty event object value",
-                                        1000,
-                                        stream_one(Object::new([]))
-                                    ))).boxed())
-                            })
-                    })
-                ),
-            ])))
-        ))
-    };
+    // let function_element_button = |mut arguments: Object, function_call_id: ConstructId| {
+    //     stream_one(TaggedObjectValue::new(
+    //         "Element/button output object", 
+    //         function_call_id.push_child_id(38),
+    //         stream_one(("Element", Object::new([
+    //             Variable::new(
+    //                 "Element/button output type", 
+    //                 function_call_id.push_child_id(40), 
+    //                 "type",
+    //                 stream_one(TagValue::new("Element/button output type tag", 41, stream_one(String::from("Button"))))
+    //             ),
+    //             Variable::new(
+    //                 "Element/button output settings", 
+    //                 function_call_id.push_child_id(39), 
+    //                 "settings",
+    //                 stream_one(ObjectValue::new(
+    //                     "Element/button output settings object", 
+    //                     function_call_id.push_child_id(45),
+    //                     stream_one(Object::new([
+    //                         arguments.take_expected_variable("style"),
+    //                         arguments.take_expected_variable("label"),
+    //                     ]))
+    //                 ))
+    //             ),
+    //             Variable::new(
+    //                 "Element/button output event", 
+    //                 function_call_id.push_child_id(46), 
+    //                 "event",
+    //                 arguments.take_expected_variable("element").flat_map(|value| {
+    //                     value
+    //                         .expect_object_value()
+    //                         .flat_map(|mut object| {
+    //                             object
+    //                                 .take_variable("event")
+    //                                 .map(|variable| variable.boxed())
+    //                                 .unwrap_or_else(|| stream_one(Value::from(ObjectValue::new(
+    //                                     "empty event object value",
+    //                                     1000,
+    //                                     stream_one(Object::new([]))
+    //                                 ))).boxed())
+    //                         })
+    //                 })
+    //             ),
+    //         ])))
+    //     ))
+    // };
 
-    let function_math_sum = |mut arguments: Object, function_call_id: ConstructId| {
-        stream_one(NumberValue::new(
-            "counter default number", 
-            function_call_id.push_child_id(43),
-            arguments
-                .take_expected_variable("increment")
-                .flat_map(|value| value.expect_number_value())
-                .scan(0., |state, increment| {
-                    *state += increment;
-                    future::ready(Some(*state))
-                })
-        ))
-    };
+    // let function_math_sum = |mut arguments: Object, function_call_id: ConstructId| {
+    //     stream_one(NumberValue::new(
+    //         "counter default number", 
+    //         function_call_id.push_child_id(43),
+    //         arguments
+    //             .take_expected_variable("increment")
+    //             .flat_map(|value| value.expect_number_value())
+    //             .scan(0., |state, increment| {
+    //                 *state += increment;
+    //                 future::ready(Some(*state))
+    //             })
+    //     ))
+    // };
 
     // let (increment_button_event_press_to_counter_then_variable_reference_16_sender, increment_button_event_press_to_counter_then_variable_reference_16_receiver) = oneshot::channel(); 
     // let increment_button_event_press_to_counter_then_variable_reference_16 = VariableReference::new(
@@ -329,33 +331,33 @@ pub async fn run(_program: &str) -> impl Element {
     //     ]))
     // );
 
-    let root_object_value = ObjectValue::new(
-        "root", 
-        0,
-        stream_one(Object::with_id("root_object", 5, [
-            Variable::new(
-                "document", 
-                1, 
-                "document",
-                stream_one(ObjectValue::new(
-                    "document_object_value",
-                    2,
-                    stream_one(Object::with_id("document_object_value_object", 6, [
-                        Variable::new(
-                            "root_element", 
-                            3, 
-                            "root_element", 
-                            stream_one(TextValue::new(
-                                "dummy_text", 
-                                4, 
-                                stream_one(String::from("bflmpsvz"))
-                            ))
-                        )
-                    ]))
-                ))
-            )
-        ]))
-    );
+    // let root_object_value = ObjectValue::new(
+    //     "root", 
+    //     0,
+    //     stream_one(Object::with_id("root_object", 5, [
+    //         Variable::new(
+    //             "document", 
+    //             1, 
+    //             "document",
+    //             stream_one(ObjectValue::new(
+    //                 "document_object_value",
+    //                 2,
+    //                 stream_one(Object::with_id("document_object_value_object", 6, [
+    //                     Variable::new(
+    //                         "root_element", 
+    //                         3, 
+    //                         "root_element", 
+    //                         stream_one(TextValue::new(
+    //                             "dummy_text", 
+    //                             4, 
+    //                             stream_one(String::from("bflmpsvz"))
+    //                         ))
+    //                     )
+    //                 ]))
+    //             ))
+    //         )
+    //     ]))
+    // );
 
     // let root_object_value = ObjectValue::new(
     //     "root", 
@@ -374,8 +376,42 @@ pub async fn run(_program: &str) -> impl Element {
     //     ]))
     // );
 
+    let root_object = Arc::new(Object::new(
+        "root", 
+        ConstructId::new(0),
+        vec![
+            Arc::new(Variable::new(
+                "document",
+                ConstructId::new(1),
+                "document",
+                Arc::new(ValueActor::new(
+                    "document_value",
+                    ConstructId::new(2),
+                    constant(Value::Object(Arc::new(Object::new(
+                        "document_value_object",
+                        ConstructId::new(3),
+                        vec![
+                            Arc::new(Variable::new(
+                                "root_element",
+                                ConstructId::new(4),
+                                "root_element",
+                                Arc::new(ValueActor::new(
+                                    "root_element_value",
+                                    ConstructId::new(5),
+                                    constant(Value::Text(Arc::new(Text::new(
+                                        "dummy_text",
+                                        ConstructId::new(6),
+                                        String::from("bflmpsv")
+                                    ))))
+                                ))
+                            ))
+                        ]
+                    ))))
+                ))
+            ))
+    ]));
+
     El::new()
-        // .child("PPP")
-        .child_signal(root_object_stream_to_element_signal(root_object_value.subscribe()))
-        .after_remove(move |_| drop(root_object_value))
+        .child_signal(root_object_to_element_signal(root_object.clone()))
+        .after_remove(move |_| drop(root_object))
 }

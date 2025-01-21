@@ -3,8 +3,6 @@ use zoon::*;
 mod interpreter;
 
 fn main() {
-    // @TODO remove
-    zoon::println!("Hello!");
     start_app("app", root);
 }
 
