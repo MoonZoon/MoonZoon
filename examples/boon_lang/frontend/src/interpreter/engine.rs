@@ -50,6 +50,7 @@ pub struct Variable {
     #[allow(dead_code)]
     loop_task: TaskHandle,
     value_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>,
+    original_value_sender_sender: Option<oneshot::Sender<mpsc::UnboundedSender<Value>>>,
     output_value_stream: Option<CloneableStream<Value>>,
 }
 
@@ -61,7 +62,7 @@ impl Variable {
         value_stream: impl Stream<Item = impl Into<Value> + Send + 'static> + Send + 'static,
     ) -> Self {
         let value_stream = value_stream.map(Into::into);
-        let (loop_task, value_sender_sender) = Self::loop_task_and_value_sender_sender(value_stream);
+        let (loop_task, value_sender_sender, original_value_sender_sender) = Self::loop_task_and_value_sender_sender(value_stream);
         Self {
             is_clone: false,
             description,
@@ -69,6 +70,7 @@ impl Variable {
             name,
             loop_task,
             value_sender_sender,
+            original_value_sender_sender: Some(original_value_sender_sender),
             output_value_stream: None,
         }
     }
@@ -87,10 +89,20 @@ impl Variable {
         value_receiver
     }
 
-    fn loop_task_and_value_sender_sender(value_stream: impl Stream<Item = Value> + 'static) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>) {
+    fn subscribe_to_original(&mut self) -> impl Stream<Item = Value> {
+        let (original_value_sender, original_value_receiver) = mpsc::unbounded();
+        if let Err(_) = self.original_value_sender_sender.take().expect("Failed to get original_value_sender_sender").send(original_value_sender) {
+            eprintln!("Failed to send 'original_value_sender' through 'original_value_sender_sender'");
+        }
+        original_value_receiver
+    }
+
+    fn loop_task_and_value_sender_sender(value_stream: impl Stream<Item = Value> + 'static) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>, oneshot::Sender<mpsc::UnboundedSender<Value>>) {
         let (value_sender_sender, mut value_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<Value>>();
+        let (original_value_sender_sender, mut original_value_sender_receiver) = oneshot::channel::<mpsc::UnboundedSender<Value>>();
         let loop_task = Task::start_droppable(async move {
             let mut value_senders = Vec::<mpsc::UnboundedSender<Value>>::new();
+            let mut original_value_sender = None::<mpsc::UnboundedSender<Value>>;
             let mut value = None::<Value>;
             let mut value_stream = pin!(value_stream.fuse());
             loop {
@@ -105,7 +117,14 @@ impl Variable {
                                 true
                             }
                         });
-                        value = Some(new_value);
+                        if let Some(original_value_sender) = original_value_sender.as_ref() {
+                            value = Some(new_value.clone());
+                            if let Err(error) = original_value_sender.unbounded_send(new_value) {
+                                eprintln!("Failed to send ObjectValue new_value through new `original_value_sender`: {error:#}");
+                            }
+                        } else {
+                            value = Some(new_value);
+                        }
                     }
                     value_sender = value_sender_receiver.select_next_some() => {
                         if let Some(value) = value.clone() {
@@ -118,18 +137,27 @@ impl Variable {
                             value_senders.push(value_sender);
                         }
                     }
+                    received_original_value_sender = original_value_sender_receiver => {
+                        if let Some(original_value) = value {
+                            original_value_sender = Some(received_original_value_sender.expect("Failed to get 'received_original_value_sender'"));
+                            value = Some(original_value.clone());
+                            if let Err(error) = original_value_sender.as_ref().unwrap().unbounded_send(original_value) {
+                                eprintln!("Failed to send ObjectValue original_value through new `original_value_sender`: {error:#}");
+                            }
+                        }
+                    }
                     complete => break
                 }
             }
         });
-        (loop_task, value_sender_sender)
+        (loop_task, value_sender_sender, original_value_sender_sender)
     }
 }
 
 impl Clone for Variable {
     fn clone(&self) -> Self {
         let value_stream = self.subscribe();
-        let (loop_task, value_sender_sender) = Self::loop_task_and_value_sender_sender(value_stream);
+        let (loop_task, value_sender_sender, original_value_sender_sender) = Self::loop_task_and_value_sender_sender(value_stream);
         Variable { 
             is_clone: true,
             description: self.description,
@@ -137,6 +165,7 @@ impl Clone for Variable {
             name: self.name,
             loop_task,
             value_sender_sender,
+            original_value_sender_sender: Some(original_value_sender_sender),
             output_value_stream: None, 
         }
     }
@@ -147,7 +176,7 @@ impl Stream for Variable {
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
         if self.output_value_stream.is_none() {
-            let stream = CloneableStream::new(self.subscribe());
+            let stream = CloneableStream::new(self.subscribe_to_original());
             self.output_value_stream = Some(stream);
 
         }
@@ -177,6 +206,7 @@ pub struct CloneableStream<T> {
     #[allow(dead_code)]
     loop_task: TaskHandle,
     value_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<T>>,
+    original_value_sender_sender: Option<oneshot::Sender<mpsc::UnboundedSender<T>>>,
     output_value_stream: Option<BoxStream<'static, T>>,
 }
 
@@ -185,11 +215,12 @@ impl<T: 'static + Clone + Send> CloneableStream<T> {
         value_stream: impl Stream<Item = impl Into<T> + Send + 'static> + Send + 'static,
     ) -> Self {
         let value_stream = value_stream.map(Into::into);
-        let (loop_task, value_sender_sender) = Self::loop_task_and_value_sender_sender(value_stream);
+        let (loop_task, value_sender_sender, original_value_sender_sender) = Self::loop_task_and_value_sender_sender(value_stream);
         Self {
             is_clone: false,
             loop_task,
             value_sender_sender,
+            original_value_sender_sender: Some(original_value_sender_sender),
             output_value_stream: None,
         }
     }
@@ -201,11 +232,20 @@ impl<T: 'static + Clone + Send> CloneableStream<T> {
         }
         value_receiver
     }
+    fn subscribe_to_original(&mut self) -> impl Stream<Item = T> {
+        let (original_value_sender, original_value_receiver) = mpsc::unbounded();
+        if let Err(_) = self.original_value_sender_sender.take().expect("Failed to get original_value_sender_sender").send(original_value_sender) {
+            eprintln!("Failed to send CloneableStream 'original_value_sender' through 'original_value_sender_sender'");
+        }
+        original_value_receiver
+    }
 
-    fn loop_task_and_value_sender_sender(value_stream: impl Stream<Item = T> + 'static) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<T>>) {
+    fn loop_task_and_value_sender_sender(value_stream: impl Stream<Item = T> + 'static) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<T>>, oneshot::Sender<mpsc::UnboundedSender<T>>) {
         let (value_sender_sender, mut value_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<T>>();
+        let (original_value_sender_sender, mut original_value_sender_receiver) = oneshot::channel::<mpsc::UnboundedSender<T>>();
         let loop_task = Task::start_droppable(async move {
             let mut value_senders = Vec::<mpsc::UnboundedSender<T>>::new();
+            let mut original_value_sender = None::<mpsc::UnboundedSender<T>>;
             let mut value = None::<T>;
             let mut value_stream = pin!(value_stream.fuse());
             loop {
@@ -220,7 +260,14 @@ impl<T: 'static + Clone + Send> CloneableStream<T> {
                                 true
                             }
                         });
-                        value = Some(new_value);
+                        if let Some(original_value_sender) = original_value_sender.as_ref() {
+                            value = Some(new_value.clone());
+                            if let Err(error) = original_value_sender.unbounded_send(new_value) {
+                                eprintln!("Failed to send ObjectValue new_value through new `original_value_sender`: {error:#}");
+                            }
+                        } else {
+                            value = Some(new_value);
+                        }
                     }
                     value_sender = value_sender_receiver.select_next_some() => {
                         if let Some(value) = value.clone() {
@@ -233,22 +280,32 @@ impl<T: 'static + Clone + Send> CloneableStream<T> {
                             value_senders.push(value_sender);
                         }
                     }
+                    received_original_value_sender = original_value_sender_receiver => {
+                        if let Some(original_value) = value {
+                            original_value_sender = Some(received_original_value_sender.expect("Failed to get 'received_original_value_sender'"));
+                            value = Some(original_value.clone());
+                            if let Err(error) = original_value_sender.as_ref().unwrap().unbounded_send(original_value) {
+                                eprintln!("Failed to send ObjectValue original_value through new `original_value_sender`: {error:#}");
+                            }
+                        }
+                    }
                     complete => break
                 }
             }
         });
-        (loop_task, value_sender_sender)
+        (loop_task, value_sender_sender, original_value_sender_sender)
     }
 }
 
 impl<T: 'static + Clone + Send> Clone for CloneableStream<T> {
     fn clone(&self) -> Self {
         let value_stream = self.subscribe();
-        let (loop_task, value_sender_sender) = Self::loop_task_and_value_sender_sender(value_stream);
+        let (loop_task, value_sender_sender, original_value_sender_sender) = Self::loop_task_and_value_sender_sender(value_stream);
         CloneableStream { 
             is_clone: true,
             loop_task,
             value_sender_sender,
+            original_value_sender_sender: Some(original_value_sender_sender),
             output_value_stream: None, 
         }
     }
@@ -259,7 +316,7 @@ impl<T: 'static + Clone + Send> Stream for CloneableStream<T> {
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
         if self.output_value_stream.is_none() {
-            let stream = self.subscribe().boxed();
+            let stream = self.subscribe_to_original().boxed();
             self.output_value_stream = Some(stream);
 
         }
@@ -269,7 +326,9 @@ impl<T: 'static + Clone + Send> Stream for CloneableStream<T> {
 
 impl<T> Drop for CloneableStream<T> {
     fn drop(&mut self) {
-        println!("CloneableStream dropped!");
+        println!("CloneableStream dropped! Clone: {:?}",
+            self.is_clone
+        );
     }
 }
 
@@ -465,6 +524,7 @@ pub struct ObjectValue {
     #[allow(dead_code)]
     loop_task: TaskHandle,
     object_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<Object>>,
+    original_object_sender_sender: Option<oneshot::Sender<mpsc::UnboundedSender<Object>>>,
     output_object_stream: Option<CloneableStream<Object>>,
 }
 
@@ -474,13 +534,14 @@ impl ObjectValue {
         id: impl Into<ConstructId>,
         object_stream: impl Stream<Item = Object> + Send + 'static,
     ) -> Self {
-        let (loop_task, object_sender_sender) = Self::loop_task_and_object_sender_sender(object_stream);
+        let (loop_task, object_sender_sender, original_object_sender_sender) = Self::loop_task_and_object_sender_sender(object_stream);
         Self {
             is_clone: false,
             description,
             id: id.into(),
             loop_task,
             object_sender_sender,
+            original_object_sender_sender: Some(original_object_sender_sender),
             output_object_stream: None,
         }
     }
@@ -494,10 +555,20 @@ impl ObjectValue {
         object_receiver
     }
 
-    fn loop_task_and_object_sender_sender(object_stream: impl Stream<Item = Object> + 'static) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<Object>>) {
+    fn subscribe_to_original(&mut self) -> impl Stream<Item = Object> {
+        let (original_object_sender, original_object_receiver) = mpsc::unbounded();
+        if let Err(_) = self.original_object_sender_sender.take().expect("Failed to get original_object_sender_sender").send(original_object_sender) {
+            eprintln!("Failed to send 'original_object_sender' through 'original_object_sender_sender'");
+        }
+        original_object_receiver
+    }
+
+    fn loop_task_and_object_sender_sender(object_stream: impl Stream<Item = Object> + 'static) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<Object>>, oneshot::Sender<mpsc::UnboundedSender<Object>>) {
         let (object_sender_sender, mut object_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<Object>>();
+        let (original_object_sender_sender, mut original_object_sender_receiver) = oneshot::channel::<mpsc::UnboundedSender<Object>>();
         let loop_task = Task::start_droppable(async move {
             let mut object_senders = Vec::<mpsc::UnboundedSender<Object>>::new();
+            let mut original_object_sender = None::<mpsc::UnboundedSender<Object>>;
             let mut object = None::<Object>;
             let mut object_stream = pin!(object_stream.fuse());
             loop {
@@ -512,7 +583,14 @@ impl ObjectValue {
                                 true
                             }
                         });
-                        object = Some(new_object);
+                        if let Some(original_object_sender) = original_object_sender.as_ref() {
+                            object = Some(new_object.clone());
+                            if let Err(error) = original_object_sender.unbounded_send(new_object) {
+                                eprintln!("Failed to send ObjectValue new_object through new `original_object_sender`: {error:#}");
+                            }
+                        } else {
+                            object = Some(new_object);
+                        }
                     }
                     object_sender = object_sender_receiver.select_next_some() => {
                         if let Some(object) = object.clone() {
@@ -525,24 +603,34 @@ impl ObjectValue {
                             object_senders.push(object_sender);
                         }
                     }
+                    received_original_object_sender = original_object_sender_receiver => {
+                        if let Some(original_object) = object {
+                            original_object_sender = Some(received_original_object_sender.expect("Failed to get 'received_original_object_sender'"));
+                            object = Some(original_object.clone());
+                            if let Err(error) = original_object_sender.as_ref().unwrap().unbounded_send(original_object) {
+                                eprintln!("Failed to send ObjectValue original_object through new `original_object_sender`: {error:#}");
+                            }
+                        }
+                    }
                     complete => break
                 }
             }
         });
-        (loop_task, object_sender_sender)
+        (loop_task, object_sender_sender, original_object_sender_sender)
     }
 }
 
 impl Clone for ObjectValue {
     fn clone(&self) -> Self {
         let value_stream = self.subscribe();
-        let (loop_task, object_sender_sender) = Self::loop_task_and_object_sender_sender(value_stream);
+        let (loop_task, object_sender_sender, original_object_sender_sender) = Self::loop_task_and_object_sender_sender(value_stream);
         ObjectValue { 
             is_clone: true,
             description: self.description,
             id: self.id.clone(),
             loop_task,
             object_sender_sender,
+            original_object_sender_sender: Some(original_object_sender_sender),
             output_object_stream: None, 
         }
     }
@@ -553,7 +641,7 @@ impl Stream for ObjectValue {
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
         if self.output_object_stream.is_none() {
-            let stream = CloneableStream::new(self.subscribe());
+            let stream = CloneableStream::new(self.subscribe_to_original());
             self.output_object_stream = Some(stream);
         }
         pin!(self.output_object_stream.as_mut().unwrap()).poll_next(cx)
@@ -823,6 +911,7 @@ pub struct TextValue {
     #[allow(dead_code)]
     loop_task: TaskHandle,
     text_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<String>>,
+    original_text_sender_sender: Option<oneshot::Sender<mpsc::UnboundedSender<String>>>,
     output_text_stream: Option<CloneableStream<String>>,
 }
 
@@ -832,13 +921,14 @@ impl TextValue {
         id: impl Into<ConstructId>,
         text_stream: impl Stream<Item = String> + Send + 'static,
     ) -> Self {
-        let (loop_task, text_sender_sender) = Self::loop_task_and_text_sender_sender(text_stream);
+        let (loop_task, text_sender_sender, original_text_sender_sender) = Self::loop_task_and_text_sender_sender(text_stream);
         Self {
             is_clone: false,
             description,
             id: id.into(),
             loop_task,
             text_sender_sender,
+            original_text_sender_sender: Some(original_text_sender_sender),
             output_text_stream: None,
         }
     }
@@ -851,10 +941,20 @@ impl TextValue {
         text_receiver
     }
 
-    fn loop_task_and_text_sender_sender(text_stream: impl Stream<Item = String> + 'static) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<String>>) {
+    fn subscribe_to_original(&mut self) -> impl Stream<Item = String> {
+        let (original_text_sender, original_text_receiver) = mpsc::unbounded();
+        if let Err(_) = self.original_text_sender_sender.take().expect("Failed to get original_text_sender_sender").send(original_text_sender) {
+            eprintln!("Failed to send 'original_text_sender' through 'original_text_sender_sender'");
+        }
+        original_text_receiver
+    }
+
+    fn loop_task_and_text_sender_sender(text_stream: impl Stream<Item = String> + 'static) -> (TaskHandle, mpsc::UnboundedSender<mpsc::UnboundedSender<String>>, oneshot::Sender<mpsc::UnboundedSender<String>>) {
         let (text_sender_sender, mut text_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<String>>();
+        let (original_text_sender_sender, mut original_text_sender_receiver) = oneshot::channel::<mpsc::UnboundedSender<String>>();
         let loop_task = Task::start_droppable(async move {
             let mut text_senders = Vec::<mpsc::UnboundedSender<String>>::new();
+            let mut original_text_sender = None::<mpsc::UnboundedSender<String>>;
             let mut text = None::<String>;
             let mut text_stream = pin!(text_stream.fuse());
             loop {
@@ -869,7 +969,14 @@ impl TextValue {
                                 true
                             }
                         });
-                        text = Some(new_text);
+                        if let Some(original_text_sender) = original_text_sender.as_ref() {
+                            text = Some(new_text.clone());
+                            if let Err(error) = original_text_sender.unbounded_send(new_text) {
+                                eprintln!("Failed to send TextValue new_text through new `original_text_sender`: {error:#}");
+                            }
+                        } else {
+                            text = Some(new_text);
+                        }
                     }
                     text_sender = text_sender_receiver.select_next_some() => {
                         if let Some(text) = text.clone() {
@@ -882,24 +989,34 @@ impl TextValue {
                             text_senders.push(text_sender);
                         }
                     }
+                    received_original_text_sender = original_text_sender_receiver => {
+                        if let Some(original_text) = text {
+                            original_text_sender = Some(received_original_text_sender.expect("Failed to get 'received_original_text_sender'"));
+                            text = Some(original_text.clone());
+                            if let Err(error) = original_text_sender.as_ref().unwrap().unbounded_send(original_text) {
+                                eprintln!("Failed to send TextValue original_text through new `original_text_sender`: {error:#}");
+                            }
+                        }
+                    }
                     complete => break
                 }
             }
         });
-        (loop_task, text_sender_sender)
+        (loop_task, text_sender_sender, original_text_sender_sender)
     }
 }
 
 impl Clone for TextValue {
     fn clone(&self) -> Self {
         let value_stream = self.subscribe();
-        let (loop_task, text_sender_sender) = Self::loop_task_and_text_sender_sender(value_stream);
+        let (loop_task, text_sender_sender, original_text_sender_sender) = Self::loop_task_and_text_sender_sender(value_stream);
         TextValue { 
             is_clone: true,
             description: self.description,
             id: self.id.clone(),
             loop_task,
             text_sender_sender,
+            original_text_sender_sender: Some(original_text_sender_sender),
             output_text_stream: None,
         }
     }
@@ -910,7 +1027,7 @@ impl Stream for TextValue {
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> std::task::Poll<Option<Self::Item>> {
         if self.output_text_stream.is_none() {
-            let stream = CloneableStream::new(self.subscribe());
+            let stream = CloneableStream::new(self.subscribe_to_original());
             self.output_text_stream = Some(stream);
 
         }
@@ -920,7 +1037,8 @@ impl Stream for TextValue {
 
 impl Drop for TextValue {
     fn drop(&mut self) {
-        println!("TextValue dropped! Id: '{:?}', Description: '{}'", 
+        println!("TextValue dropped! Clone: {:?}, Id: '{:?}', Description: '{}'", 
+            self.is_clone,
             self.id, 
             self.description, 
         );
