@@ -9,8 +9,10 @@ use zoon::futures_util::select;
 
 use pin_project::pin_project;
 
+// @TODO rename to `constant` and refactor
 pub fn stream_one<T>(item: T) -> impl Stream<Item = T> {
     stream::once(future::ready(item))
+        .chain(stream::once(future::pending()))
 }
 
 // --- ConstructId ---
@@ -75,7 +77,8 @@ impl Variable {
         let (value_sender, value_receiver) = mpsc::unbounded();
         if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
             eprintln!("Failed to send Variable 'value_sender' through `value_sender_sender`: {error:#}");
-            println!("ERROR FOR: Variable dropped! Id: '{:?}', Description: '{}', Name: '{}'", 
+            println!("ERROR FOR: Variable dropped! Clone: {:?}, Id: '{:?}', Description: '{}', Name: '{}'", 
+                self.is_clone,
                 self.id, 
                 self.description, 
                 self.name
@@ -154,11 +157,14 @@ impl Stream for Variable {
 
 impl Drop for Variable {
     fn drop(&mut self) {
-        println!("Variable dropped! Id: '{:?}', Description: '{}', Name: '{}'", 
-            self.id, 
-            self.description, 
-            self.name
-        );
+        if !self.is_clone {
+            println!("Variable dropped! Clone: {:?}, Id: '{:?}', Description: '{}', Name: '{}'", 
+                self.is_clone,
+                self.id, 
+                self.description, 
+                self.name
+            );
+        }
     }
 }
 
