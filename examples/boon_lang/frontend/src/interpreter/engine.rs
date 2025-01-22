@@ -1,5 +1,6 @@
 use std::pin::{Pin, pin};
 use std::sync::Arc;
+use std::borrow::Cow;
 
 use zoon::futures_channel::{oneshot, mpsc};
 use zoon::futures_util::stream::{self, Stream, StreamExt, BoxStream};
@@ -78,7 +79,7 @@ impl ConstructId {
         Self(vec![id])
     }
 
-    pub fn push_child_id(&self, child: u64) -> Self {
+    pub fn with_child_id(&self, child: u64) -> Self {
         let mut cloned = self.clone();
         cloned.0.push(child);
         cloned
@@ -108,8 +109,12 @@ impl Variable {
         }
     }
 
-    pub fn value_actor(&self) -> Arc<ValueActor> {
-        self.value_actor.clone()
+    pub fn new_arc(construct_info: ConstructInfo, name: &'static str, value_actor: Arc<ValueActor>) -> Arc<Self> {
+        Arc::new(Self::new(construct_info, name, value_actor))
+    }
+
+    pub fn subscribe(&self) -> impl Stream<Item = Value> {
+        self.value_actor.subscribe()
     }
 }
 
@@ -174,6 +179,10 @@ impl ValueActor {
         }
     }
 
+    pub fn new_arc(construct_info: ConstructInfo, value_stream: impl Stream<Item = Value> + 'static) -> Arc<Self> {
+        Arc::new(Self::new(construct_info, value_stream))
+    }
+
     pub fn subscribe(&self) -> impl Stream<Item = Value> {
         let (value_sender, value_receiver) = mpsc::unbounded();
         if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
@@ -228,6 +237,14 @@ impl Object {
         }
     }
 
+    pub fn new_arc(construct_info: ConstructInfo, variables: Vec<Arc<Variable>>) -> Arc<Self> {
+        Arc::new(Self::new(construct_info, variables))
+    }
+
+    pub fn new_constant(construct_info: ConstructInfo, variables: Vec<Arc<Variable>>) -> impl Stream<Item = Value> {
+        constant(Value::Object(Self::new_arc(construct_info, variables)))
+    }
+
     pub fn expect_variable(&self, name: &str) -> Arc<Variable> {
         let Some(index) = self.variables.iter().position(|variable| { 
             variable.name == name
@@ -248,15 +265,23 @@ impl Drop for Object {
 
 pub struct Text {
     construct_info: ConstructInfoComplete,
-    text: String,
+    text: Cow<'static, str>,
 }
 
 impl Text {
-    pub fn new(construct_info: ConstructInfo, text: String) -> Self {
+    pub fn new(construct_info: ConstructInfo, text: impl Into<Cow<'static, str>>) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::Text),
-            text
+            text: text.into()
         }
+    }
+
+    pub fn new_arc(construct_info: ConstructInfo, text: impl Into<Cow<'static, str>>) -> Arc<Self> {
+        Arc::new(Self::new(construct_info, text))
+    }
+
+    pub fn new_constant(construct_info: ConstructInfo, text: impl Into<Cow<'static, str>>) -> impl Stream<Item = Value> {
+        constant(Value::Text(Self::new_arc(construct_info, text)))
     }
 
     pub fn text(&self) -> &str {

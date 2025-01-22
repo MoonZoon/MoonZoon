@@ -376,40 +376,35 @@ pub async fn run(_program: &str) -> impl Element {
     //     ]))
     // );
 
-    let root_object = Arc::new(Object::new(
-        "root", 
-        ConstructId::new(0),
+    let root_object = Object::new_arc(
+        ConstructInfo::new(0, "root"),
         vec![
-            Arc::new(Variable::new(
+            Variable::new_arc(
                 ConstructInfo::new(1, "document"),
                 "document",
-                Arc::new(ValueActor::new(
-                    "document_value",
-                    ConstructId::new(2),
-                    constant(Value::Object(Arc::new(Object::new(
-                        "document_value_object",
-                        ConstructId::new(3),
+                ValueActor::new_arc(
+                    ConstructInfo::new(2, "document_actor"),
+                    Object::new_constant(
+                        ConstructInfo::new(3, "document_object"),
                         vec![
-                            Arc::new(Variable::new(
+                            Variable::new_arc(
                                 ConstructInfo::new(4, "root_element"),
                                 "root_element",
-                                Arc::new(ValueActor::new(
-                                    "root_element_value",
-                                    ConstructId::new(5),
-                                    constant(Value::Text(Arc::new(Text::new(
-                                        "dummy_text",
-                                        ConstructId::new(6),
-                                        String::from("bflmpsv")
-                                    ))))
-                                ))
-                            ))
+                                ValueActor::new_arc(
+                                    ConstructInfo::new(5, "root_element_actor"),
+                                    Text::new_constant(
+                                        ConstructInfo::new(6, "dummy_text"),
+                                        "bflmpsv"
+                                    )
+                                )
+                            )
                         ]
-                    ))))
-                ))
-            ))
-    ]));
+                    )
+                )
+            )
+    ]);
 
     El::new()
         .child_signal(root_object_to_element_signal(root_object.clone()))
-        // .after_remove(move |_| drop(root_object))
+        .after_remove(move |_| drop(root_object))
 }
