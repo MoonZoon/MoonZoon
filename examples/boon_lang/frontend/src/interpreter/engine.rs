@@ -14,6 +14,60 @@ pub fn constant<T>(item: T) -> impl Stream<Item = T> {
     stream::once(future::ready(item)).chain(stream::once(future::pending()))
 }
 
+// --- ConstructInfo ---
+
+pub struct ConstructInfo {
+    id: ConstructId,
+    description: &'static str,
+}
+
+impl ConstructInfo {
+    pub fn new(id: impl Into<ConstructId>, description: &'static str) -> Self {
+        Self {
+            id: id.into(),
+            description,
+        }
+    }
+
+    pub fn complete(self, r#type: ConstructType) -> ConstructInfoComplete {
+        ConstructInfoComplete {
+            r#type,
+            id: self.id,
+            description: self.description
+        }
+    }
+}
+
+// --- ConstructInfoComplete ---
+
+pub struct ConstructInfoComplete {
+    r#type: ConstructType,
+    id: ConstructId,
+    description: &'static str,
+}
+
+impl ConstructInfoComplete {
+    pub fn id(&self) -> &ConstructId {
+        &self.id
+    }
+}
+
+impl std::fmt::Display for ConstructInfoComplete {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "({:?} {:?} '{}')", self.r#type, self.id.0, self.description)
+    }
+}
+
+// --- ConstructType ---
+
+#[derive(Debug)]
+pub enum ConstructType {
+    Variable,
+    ValueActor,
+    Object,
+    Text,
+}
+
 // --- ConstructId ---
 
 #[derive(Clone, Debug)]
@@ -31,20 +85,24 @@ impl ConstructId {
     }
 }
 
+impl From<u64> for ConstructId {
+    fn from(value: u64) -> Self {
+        ConstructId(vec![value])
+    }
+}
+
 // --- Variable ---
 
 pub struct Variable {
-    description: &'static str,
-    id: ConstructId,
+    construct_info: ConstructInfoComplete,
     name: &'static str,
     value_actor: Arc<ValueActor>,
 }
 
 impl Variable {
-    pub fn new(description: &'static str, id: ConstructId, name: &'static str, value_actor: Arc<ValueActor>) -> Self {
+    pub fn new(construct_info: ConstructInfo, name: &'static str, value_actor: Arc<ValueActor>) -> Self {
         Self {
-            description,
-            id,
+            construct_info: construct_info.complete(ConstructType::Variable),
             name,
             value_actor
         }
@@ -57,24 +115,24 @@ impl Variable {
 
 impl Drop for Variable {
     fn drop(&mut self) {
-        println!("Variable dropped. Id: '{:?}', Description: '{}'", self.id, self.description);
+        println!("Dropped: {}", self.construct_info);
     }
 }
 
 // --- ValueActor ---
 
 pub struct ValueActor {
-    description: &'static str,
-    id: ConstructId,
+    construct_info: Arc<ConstructInfoComplete>,
     loop_task: TaskHandle,
     value_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<Value>>,
 }
 
 impl ValueActor {
-    pub fn new(description: &'static str, id: ConstructId, value_stream: impl Stream<Item = Value> + 'static) -> Self {
+    pub fn new(construct_info: ConstructInfo, value_stream: impl Stream<Item = Value> + 'static) -> Self {
+        let construct_info = Arc::new(construct_info.complete(ConstructType::ValueActor));
         let (value_sender_sender, mut value_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<Value>>();
         let loop_task = Task::start_droppable({
-            let id = id.clone();
+            let construct_info = construct_info.clone();
             async move {
                 let mut value_stream = pin!(value_stream.fuse());
                 let mut value = None;
@@ -106,12 +164,11 @@ impl ValueActor {
                         }
                     }
                 }
-                println!("ValueActor loop ended. Id: '{:?}', Description: '{}'", id, description);
+                println!("Loop ended {construct_info}");
             }
         });
         Self {
-            description,
-            id,
+            construct_info,
             loop_task,
             value_sender_sender,
         }
@@ -120,7 +177,7 @@ impl ValueActor {
     pub fn subscribe(&self) -> impl Stream<Item = Value> {
         let (value_sender, value_receiver) = mpsc::unbounded();
         if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
-            eprintln!("Failed to subscribe to ValueActor Id: '{:?}', Description: '{}': {error:#}", self.id, self.description);
+            eprintln!("Failed to subscribe to {}: {error:#}", self.construct_info);
         }
         value_receiver
     }
@@ -128,7 +185,7 @@ impl ValueActor {
 
 impl Drop for ValueActor {
     fn drop(&mut self) {
-        println!("ValueActor dropped. Id: '{:?}', Description: '{}'", self.id, self.description);
+        println!("Dropped: {}", self.construct_info);
     }
 }
 
@@ -159,16 +216,14 @@ impl Value {
 // --- Object ---
 
 pub struct Object {
-    description: &'static str,
-    id: ConstructId,
+    construct_info: ConstructInfoComplete,
     variables: Vec<Arc<Variable>>,
 }
 
 impl Object {
-    pub fn new(description: &'static str, id: ConstructId, variables: Vec<Arc<Variable>>) -> Self {
+    pub fn new(construct_info: ConstructInfo, variables: Vec<Arc<Variable>>) -> Self {
         Self {
-            description,
-            id,
+            construct_info: construct_info.complete(ConstructType::Object),
             variables
         }
     }
@@ -177,7 +232,7 @@ impl Object {
         let Some(index) = self.variables.iter().position(|variable| { 
             variable.name == name
         }) else {
-            panic!("Failed to get expected Variable '{name}' from Object Id: '{:?}', Description: '{}'", self.id, self.description);
+            panic!("Failed to get expected Variable '{name}' from {}", self.construct_info);
         };
         self.variables[index].clone()
     }
@@ -185,23 +240,21 @@ impl Object {
 
 impl Drop for Object {
     fn drop(&mut self) {
-        println!("Object dropped. Id: '{:?}', Description: '{}'", self.id, self.description);
+        println!("Dropped: {}", self.construct_info);
     }
 }
 
 // --- Text ---
 
 pub struct Text {
-    description: &'static str,
-    id: ConstructId,
+    construct_info: ConstructInfoComplete,
     text: String,
 }
 
 impl Text {
-    pub fn new(description: &'static str, id: ConstructId, text: String) -> Self {
+    pub fn new(construct_info: ConstructInfo, text: String) -> Self {
         Self {
-            description,
-            id,
+            construct_info: construct_info.complete(ConstructType::Text),
             text
         }
     }
@@ -213,6 +266,6 @@ impl Text {
 
 impl Drop for Text {
     fn drop(&mut self) {
-        println!("Text dropped. Id: '{:?}', Description: '{}'", self.id, self.description);
+        println!("Dropped: {}", self.construct_info);
     }
 }

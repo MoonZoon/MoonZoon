@@ -381,8 +381,7 @@ pub async fn run(_program: &str) -> impl Element {
         ConstructId::new(0),
         vec![
             Arc::new(Variable::new(
-                "document",
-                ConstructId::new(1),
+                ConstructInfo::new(1, "document"),
                 "document",
                 Arc::new(ValueActor::new(
                     "document_value",
@@ -392,8 +391,7 @@ pub async fn run(_program: &str) -> impl Element {
                         ConstructId::new(3),
                         vec![
                             Arc::new(Variable::new(
-                                "root_element",
-                                ConstructId::new(4),
+                                ConstructInfo::new(4, "root_element"),
                                 "root_element",
                                 Arc::new(ValueActor::new(
                                     "root_element_value",
@@ -413,5 +411,5 @@ pub async fn run(_program: &str) -> impl Element {
 
     El::new()
         .child_signal(root_object_to_element_signal(root_object.clone()))
-        .after_remove(move |_| drop(root_object))
+        // .after_remove(move |_| drop(root_object))
 }
