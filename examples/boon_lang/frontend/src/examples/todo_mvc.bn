@@ -182,7 +182,7 @@ FUNCTION header() {
                 weight: Hairline
             ]
         ]
-        child: Element/Container(element: [tag: H1], style: [], child: 'todos')
+        child: Element/container(element: [tag: H1], style: [], child: 'todos')
     ) 
 }
 

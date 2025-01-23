@@ -376,25 +376,70 @@ pub async fn run(_program: &str) -> impl Element {
     //     ]))
     // );
 
+
+
+
+    // let root_object = Object::new_arc(
+    //     ConstructInfo::new(0, "root"),
+    //     vec![
+    //         Variable::new_arc(
+    //             ConstructInfo::new(1, "document"),
+    //             "document",
+    //             ValueActor::new_arc(
+    //                 ConstructInfo::new(2, "document_actor"),
+    //                 Object::new_constant(
+    //                     ConstructInfo::new(3, "document_object"),
+    //                     vec![
+    //                         Variable::new_arc(
+    //                             ConstructInfo::new(4, "root_element"),
+    //                             "root_element",
+    //                             ValueActor::new_arc(
+    //                                 ConstructInfo::new(5, "root_element_actor"),
+    //                                 Text::new_constant(
+    //                                     ConstructInfo::new(6, "dummy_text"),
+    //                                     "bflmpsv"
+    //                                 )
+    //                             )
+    //                         )
+    //                     ]
+    //                 )
+    //             )
+    //         )
+    // ]);
+
+    let function_document_new = |arguments: Arc<Object>, function_call_id: ConstructId| {
+        Object::new_constant(
+            ConstructInfo::new(function_call_id.with_child_id(0), "Document/new output object"),
+            vec![
+                Variable::new_arc(
+                    ConstructInfo::new(function_call_id.with_child_id(1), "Document/new output root_element"),
+                    "root_element",
+                    arguments.expect_variable("root").value_actor()
+                )
+            ]
+        )
+    };
+
     let root_object = Object::new_arc(
         ConstructInfo::new(0, "root"),
         vec![
             Variable::new_arc(
                 ConstructInfo::new(1, "document"),
                 "document",
-                ValueActor::new_arc(
-                    ConstructInfo::new(2, "document_actor"),
-                    Object::new_constant(
-                        ConstructInfo::new(3, "document_object"),
+                FunctionCall::new_arc_value_actor(
+                    ConstructInfo::new(2, "Document/new call"),
+                    function_document_new,
+                    Object::new_arc(
+                        ConstructInfo::new(3, "Document/new arguments"), 
                         vec![
                             Variable::new_arc(
-                                ConstructInfo::new(4, "root_element"),
-                                "root_element",
+                                ConstructInfo::new(4, "Document/new argument root"), 
+                                "root", 
                                 ValueActor::new_arc(
-                                    ConstructInfo::new(5, "root_element_actor"),
+                                    ConstructInfo::new(5, "Document/new argument root actor"),
                                     Text::new_constant(
                                         ConstructInfo::new(6, "dummy_text"),
-                                        "bflmpsv"
+                                        "I'm Root"
                                     )
                                 )
                             )
