@@ -67,6 +67,7 @@ pub enum ConstructType {
     FunctionCall,
     ValueActor,
     Object,
+    TaggedObject,
     Text,
     Number,
 }
@@ -137,10 +138,10 @@ impl Drop for Variable {
 pub struct FunctionCall {}
 
 impl FunctionCall {
-    pub fn new_arc_value_actor<FR: Stream<Item = Value> + 'static>(
+    pub fn new_arc_value_actor<const AN: usize, FR: Stream<Item = Value> + 'static>(
         construct_info: ConstructInfo,
-        definition: impl Fn(Arc<Object>, ConstructId) -> FR + 'static,
-        arguments: Arc<Object>,
+        definition: impl Fn([Arc<ValueActor>; AN], ConstructId) -> FR + 'static,
+        arguments: [Arc<ValueActor>; AN],
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::FunctionCall);
         let value_stream = definition(arguments, construct_info.id());
@@ -158,7 +159,7 @@ pub struct ValueActor {
 
 impl ValueActor {
     pub fn new(construct_info: ConstructInfo, value_stream: impl Stream<Item = Value> + 'static) -> Self {
-        let construct_info =construct_info.complete(ConstructType::ValueActor);
+        let construct_info = construct_info.complete(ConstructType::ValueActor);
         Self::new_with_construct_info_complete(construct_info, value_stream)
     }
 
@@ -232,6 +233,7 @@ impl Drop for ValueActor {
 #[derive(Clone)]
 pub enum Value {
     Object(Arc<Object>),
+    TaggedObject(Arc<TaggedObject>),
     Text(Arc<Text>),
     Number(Arc<Number>),
 }
@@ -242,6 +244,17 @@ impl Value {
             panic!("Failed to get expected Object: The Value has a different type")
         };
         object
+    }
+
+    pub fn expect_tagged_object(self, tag: &str) -> Arc<TaggedObject> {
+        let Self::TaggedObject(tagged_object) = self else {
+            panic!("Failed to get expected TaggedObject: The Value has a different type")
+        };
+        let found_tag = tagged_object.tag;
+        if found_tag != tag {
+            panic!("Failed to get expected TaggedObject: Expected tag: '{tag}', found tag: '{found_tag}'")
+        }
+        tagged_object
     }
 
     pub fn expect_text(self) -> Arc<Text> {
@@ -263,36 +276,95 @@ impl Value {
 
 pub struct Object {
     construct_info: ConstructInfoComplete,
-    variables: Vec<Arc<Variable>>,
+    variables: Box<[Arc<Variable>]>,
 }
 
 impl Object {
-    pub fn new(construct_info: ConstructInfo, variables: Vec<Arc<Variable>>) -> Self {
+    pub fn new<const VN: usize>(construct_info: ConstructInfo, variables: [Arc<Variable>; VN]) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::Object),
-            variables
+            variables: Box::new(variables)
         }
     }
 
-    pub fn new_arc(construct_info: ConstructInfo, variables: Vec<Arc<Variable>>) -> Arc<Self> {
+    pub fn new_arc<const VN: usize>(construct_info: ConstructInfo, variables: [Arc<Variable>; VN]) -> Arc<Self> {
         Arc::new(Self::new(construct_info, variables))
     }
 
-    pub fn new_constant(construct_info: ConstructInfo, variables: Vec<Arc<Variable>>) -> impl Stream<Item = Value> {
-        constant(Value::Object(Self::new_arc(construct_info, variables)))
+    pub fn new_value<const VN: usize>(construct_info: ConstructInfo, variables: [Arc<Variable>; VN]) -> Value {
+        Value::Object(Self::new_arc(construct_info, variables))
+    }
+
+    pub fn new_constant<const VN: usize>(construct_info: ConstructInfo, variables: [Arc<Variable>; VN]) -> impl Stream<Item = Value> {
+        constant(Self::new_value(construct_info, variables))
+    }
+
+    pub fn variable(&self, name: &str) -> Option<Arc<Variable>> {
+        self
+            .variables
+            .iter()
+            .position(|variable| variable.name == name)
+            .map(|index| self.variables[index].clone())
     }
 
     pub fn expect_variable(&self, name: &str) -> Arc<Variable> {
-        let Some(index) = self.variables.iter().position(|variable| { 
-            variable.name == name
-        }) else {
-            panic!("Failed to get expected Variable '{name}' from {}", self.construct_info);
-        };
-        self.variables[index].clone()
+        self.variable(name).unwrap_or_else(|| {
+            panic!("Failed to get expected Variable '{name}' from {}", self.construct_info)
+        })
     }
 }
 
 impl Drop for Object {
+    fn drop(&mut self) {
+        println!("Dropped: {}", self.construct_info);
+    }
+}
+
+// --- Object ---
+
+pub struct TaggedObject {
+    construct_info: ConstructInfoComplete,
+    tag: &'static str,
+    variables: Box<[Arc<Variable>]>,
+}
+
+impl TaggedObject {
+    pub fn new<const VN: usize>(construct_info: ConstructInfo, tag: &'static str, variables: [Arc<Variable>; VN]) -> Self {
+        Self {
+            construct_info: construct_info.complete(ConstructType::TaggedObject),
+            tag,
+            variables: Box::new(variables)
+        }
+    }
+
+    pub fn new_arc<const VN: usize>(construct_info: ConstructInfo, tag: &'static str, variables: [Arc<Variable>; VN]) -> Arc<Self> {
+        Arc::new(Self::new(construct_info, tag, variables))
+    }
+
+    pub fn new_value<const VN: usize>(construct_info: ConstructInfo, tag: &'static str, variables: [Arc<Variable>; VN]) -> Value {
+        Value::TaggedObject(Self::new_arc(construct_info, tag, variables))
+    }
+
+    pub fn new_constant<const VN: usize>(construct_info: ConstructInfo, tag: &'static str, variables: [Arc<Variable>; VN]) -> impl Stream<Item = Value> {
+        constant(Self::new_value(construct_info, tag, variables))
+    }
+
+    pub fn variable(&self, name: &str) -> Option<Arc<Variable>> {
+        self
+            .variables
+            .iter()
+            .position(|variable| variable.name == name)
+            .map(|index| self.variables[index].clone())
+    }
+
+    pub fn expect_variable(&self, name: &str) -> Arc<Variable> {
+        self.variable(name).unwrap_or_else(|| {
+            panic!("Failed to get expected Variable '{name}' from {}", self.construct_info)
+        })
+    }
+}
+
+impl Drop for TaggedObject {
     fn drop(&mut self) {
         println!("Dropped: {}", self.construct_info);
     }
@@ -317,8 +389,12 @@ impl Text {
         Arc::new(Self::new(construct_info, text))
     }
 
+    pub fn new_value(construct_info: ConstructInfo, text: impl Into<Cow<'static, str>>) -> Value {
+        Value::Text(Self::new_arc(construct_info, text))
+    }
+
     pub fn new_constant(construct_info: ConstructInfo, text: impl Into<Cow<'static, str>>) -> impl Stream<Item = Value> {
-        constant(Value::Text(Self::new_arc(construct_info, text)))
+        constant(Self::new_value(construct_info, text))
     }
 
     pub fn text(&self) -> &str {
@@ -351,8 +427,12 @@ impl Number {
         Arc::new(Self::new(construct_info, number))
     }
 
+    pub fn new_value(construct_info: ConstructInfo, number: impl Into<f64>) -> Value {
+        Value::Number(Self::new_arc(construct_info, number))
+    }
+
     pub fn new_constant(construct_info: ConstructInfo, number: impl Into<f64>) -> impl Stream<Item = Value> {
-        constant(Value::Number(Self::new_arc(construct_info, number)))
+        constant(Self::new_value(construct_info, number))
     }
 
     pub fn number(&self) -> f64 {

@@ -3,6 +3,8 @@ use std::sync::Arc;
 
 use zoon::{println, eprintln};
 use zoon::futures_channel::oneshot;
+use zoon::futures_util::stream::{self, StreamExt};
+use zoon::Timer;
 use zoon::{El, Element, HookableLifecycle};
 
 mod engine;
@@ -407,44 +409,104 @@ pub async fn run(_program: &str) -> impl Element {
     //         )
     // ]);
 
-    let function_document_new = |arguments: Arc<Object>, function_call_id: ConstructId| {
+    let function_document_new = |arguments: [Arc<ValueActor>; 1], function_call_id: ConstructId| {
+        let [argument_root] = arguments;
         Object::new_constant(
             ConstructInfo::new(function_call_id.with_child_id(0), "Document/new output object"),
-            vec![
+            [
                 Variable::new_arc(
                     ConstructInfo::new(function_call_id.with_child_id(1), "Document/new output root_element"),
                     "root_element",
-                    arguments.expect_variable("root").value_actor()
+                    argument_root
                 )
             ]
         )
     };
 
+    let function_timer_interval = |arguments: [Arc<ValueActor>; 1], function_call_id: ConstructId| {
+        let [argument_duration] = arguments;
+        argument_duration
+            .subscribe()
+            .flat_map(|value| {
+                let duration_object = value.expect_tagged_object("Duration");
+                if let Some(seconds) = duration_object.variable("seconds") {
+                    seconds.subscribe().map(|value| value.expect_number().number() * 1000.).left_stream()
+                } else if let Some(milliseconds) = duration_object.variable("milliseconds") {
+                    milliseconds.subscribe().map(|value| value.expect_number().number()).right_stream()
+                } else {
+                    panic!("Failed to get property 'seconds' or 'milliseconds' from tagged object 'Duration'");
+                }
+            })
+            .flat_map(|milliseconds| {
+
+            });
+        stream::unfold((), move |_| {
+            let function_call_id  = function_call_id.clone();
+            async move {
+                Timer::sleep(2000).await;
+                // let output = Object::new_constant(
+                //     ConstructInfo::new(function_call_id.with_child_id(0), "Timer/interval output object"),
+                //     vec![]
+                // );
+                let output = Number::new_value(
+                    ConstructInfo::new(function_call_id.with_child_id(0), "Timer/interval output number"),
+                    1024
+                );
+                Some((output, ()))
+            }
+        })
+    };
+
     let root_object = Object::new_arc(
         ConstructInfo::new(0, "root"),
-        vec![
+        [
             Variable::new_arc(
                 ConstructInfo::new(1, "document"),
                 "document",
                 FunctionCall::new_arc_value_actor(
                     ConstructInfo::new(2, "Document/new call"),
                     function_document_new,
-                    Object::new_arc(
-                        ConstructInfo::new(3, "Document/new arguments"), 
-                        vec![
-                            Variable::new_arc(
-                                ConstructInfo::new(4, "Document/new argument root"), 
-                                "root", 
-                                ValueActor::new_arc(
-                                    ConstructInfo::new(5, "Document/new argument root actor"),
-                                    Number::new_constant(
-                                        ConstructInfo::new(6, "dummy_number"),
-                                        193
-                                    )
-                                )
+                    [
+                        ValueActor::new_arc(
+                            ConstructInfo::new(5, "Document/new argument root actor"),
+                            Number::new_constant(
+                                ConstructInfo::new(6, "dummy_number"),
+                                193
                             )
-                        ]
-                    )
+                        )
+                        // FunctionCall::new_arc_value_actor(
+                        //     ConstructInfo::new(5, "Timer/interval call"),
+                        //     function_timer_interval,
+                        //     Object::new_arc(
+                        //         ConstructInfo::new(6, "Timer/interval arguments"), 
+                        //         vec![]
+                        //     )
+                        // )
+                    ]
+                    // Object::new_arc(
+                    //     ConstructInfo::new(3, "Document/new arguments"), 
+                    //     vec![
+                    //         Variable::new_arc(
+                    //             ConstructInfo::new(4, "Document/new argument root"), 
+                    //             "root", 
+                    //             // ValueActor::new_arc(
+                    //             //     ConstructInfo::new(5, "Document/new argument root actor"),
+                    //             //     Number::new_constant(
+                    //             //         ConstructInfo::new(6, "dummy_number"),
+                    //             //         193
+                    //             //     )
+                    //             // )
+                    //             FunctionCall::new_arc_value_actor(
+                    //                 ConstructInfo::new(5, "Timer/interval call"),
+                    //                 function_timer_interval,
+                    //                 Object::new_arc(
+                    //                     ConstructInfo::new(6, "Timer/interval arguments"), 
+                    //                     vec![]
+                    //                 )
+                    //             )
+                    //         )
+                    //     ]
+                    // )
                 )
             )
     ]);
