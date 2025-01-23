@@ -437,24 +437,25 @@ pub async fn run(_program: &str) -> impl Element {
                     panic!("Failed to get property 'seconds' or 'milliseconds' from tagged object 'Duration'");
                 }
             })
-            .flat_map(|milliseconds| {
-
-            });
-        stream::unfold((), move |_| {
-            let function_call_id  = function_call_id.clone();
-            async move {
-                Timer::sleep(2000).await;
-                // let output = Object::new_constant(
-                //     ConstructInfo::new(function_call_id.with_child_id(0), "Timer/interval output object"),
-                //     vec![]
-                // );
-                let output = Number::new_value(
+            .flat_map(move |milliseconds| {
+                let function_call_id = function_call_id.clone();
+                // @TODO replace with `output_value` below
+                let output_value = Number::new_value(
                     ConstructInfo::new(function_call_id.with_child_id(0), "Timer/interval output number"),
                     1024
                 );
-                Some((output, ()))
-            }
-        })
+                // let output_value = Object::new_constant(
+                //     ConstructInfo::new(function_call_id.with_child_id(0), "Timer/interval output object"),
+                //     vec![]
+                // );
+                stream::unfold(output_value, move |output_value| {
+                    async move {
+                        Timer::sleep(milliseconds.round() as u32).await;
+                        println!("Tick!");
+                        Some((output_value.clone(), output_value))
+                    }
+                })
+            })
     };
 
     let root_object = Object::new_arc(
@@ -467,46 +468,33 @@ pub async fn run(_program: &str) -> impl Element {
                     ConstructInfo::new(2, "Document/new call"),
                     function_document_new,
                     [
-                        ValueActor::new_arc(
-                            ConstructInfo::new(5, "Document/new argument root actor"),
-                            Number::new_constant(
-                                ConstructInfo::new(6, "dummy_number"),
-                                193
-                            )
+                        FunctionCall::new_arc_value_actor(
+                            ConstructInfo::new(3, "Timer/interval call"),
+                            function_timer_interval,
+                            [
+                                ValueActor::new_arc(
+                                    ConstructInfo::new(4, "Timer/interval duration argument actor"),
+                                    TaggedObject::new_constant(
+                                        ConstructInfo::new(5, "Timer/interval duration argument tagged object Duration"),
+                                        "Duration",
+                                        [
+                                            Variable::new_arc(
+                                                ConstructInfo::new(6, "Duration seconds"), 
+                                                "seconds", 
+                                                ValueActor::new_arc(
+                                                    ConstructInfo::new(7, "Duration seconds actor"),
+                                                    Number::new_constant(
+                                                        ConstructInfo::new(8, "Duration seconds number"),
+                                                        2
+                                                    )
+                                                )
+                                            )
+                                        ]
+                                    )
+                                )
+                            ]
                         )
-                        // FunctionCall::new_arc_value_actor(
-                        //     ConstructInfo::new(5, "Timer/interval call"),
-                        //     function_timer_interval,
-                        //     Object::new_arc(
-                        //         ConstructInfo::new(6, "Timer/interval arguments"), 
-                        //         vec![]
-                        //     )
-                        // )
                     ]
-                    // Object::new_arc(
-                    //     ConstructInfo::new(3, "Document/new arguments"), 
-                    //     vec![
-                    //         Variable::new_arc(
-                    //             ConstructInfo::new(4, "Document/new argument root"), 
-                    //             "root", 
-                    //             // ValueActor::new_arc(
-                    //             //     ConstructInfo::new(5, "Document/new argument root actor"),
-                    //             //     Number::new_constant(
-                    //             //         ConstructInfo::new(6, "dummy_number"),
-                    //             //         193
-                    //             //     )
-                    //             // )
-                    //             FunctionCall::new_arc_value_actor(
-                    //                 ConstructInfo::new(5, "Timer/interval call"),
-                    //                 function_timer_interval,
-                    //                 Object::new_arc(
-                    //                     ConstructInfo::new(6, "Timer/interval arguments"), 
-                    //                     vec![]
-                    //                 )
-                    //             )
-                    //         )
-                    //     ]
-                    // )
                 )
             )
     ]);

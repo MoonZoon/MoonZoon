@@ -144,8 +144,8 @@ impl FunctionCall {
         arguments: [Arc<ValueActor>; AN],
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::FunctionCall);
-        let value_stream = definition(arguments, construct_info.id());
-        Arc::new(ValueActor::new_with_construct_info_complete(construct_info, value_stream))
+        let value_stream = definition(arguments.clone(), construct_info.id());
+        Arc::new(ValueActor::new_internal(construct_info, value_stream, arguments))
     }
 }
 
@@ -160,10 +160,14 @@ pub struct ValueActor {
 impl ValueActor {
     pub fn new(construct_info: ConstructInfo, value_stream: impl Stream<Item = Value> + 'static) -> Self {
         let construct_info = construct_info.complete(ConstructType::ValueActor);
-        Self::new_with_construct_info_complete(construct_info, value_stream)
+        Self::new_internal(construct_info, value_stream, ())
     }
 
-    fn new_with_construct_info_complete(construct_info: ConstructInfoComplete, value_stream: impl Stream<Item = Value> + 'static) -> Self {
+    fn new_internal<EOD: 'static>(
+        construct_info: ConstructInfoComplete, 
+        value_stream: impl Stream<Item = Value> + 'static,
+        extra_owned_data: EOD,
+    ) -> Self {
         let construct_info = Arc::new(construct_info);
         let (value_sender_sender, mut value_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<Value>>();
         let loop_task = Task::start_droppable({
@@ -200,6 +204,7 @@ impl ValueActor {
                     }
                 }
                 println!("Loop ended {construct_info}");
+                drop(data_to_drop);
             }
         });
         Self {
