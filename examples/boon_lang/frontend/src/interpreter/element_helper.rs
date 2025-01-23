@@ -25,6 +25,9 @@ pub fn value_to_element_stream(value: Value) -> impl Stream<Item = RawElOrText> 
         Value::Text(text) => {
             constant(zoon::Text::new(text.text()).unify())
         }
+        Value::Number(number) => {
+            constant(zoon::Text::new(number.number()).unify())
+        }
         _ => panic!("Element cannot be created from the given Value type")
     }
 }

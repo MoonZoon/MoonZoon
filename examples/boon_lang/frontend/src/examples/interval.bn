@@ -1,4 +1,6 @@
-document: Document/new(root: LATEST {
-    0
-    Time[ms: 500] |> Timer/interval() |> THEN { 1 } |> Math/sum()
-})
+document: 
+    Time[ms: 500] 
+    |> Timer/interval() 
+    |> THEN { 1 } 
+    |> Math/sum()
+    |> Document/new()

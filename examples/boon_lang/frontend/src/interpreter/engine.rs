@@ -68,6 +68,7 @@ pub enum ConstructType {
     ValueActor,
     Object,
     Text,
+    Number,
 }
 
 // --- ConstructId ---
@@ -232,6 +233,7 @@ impl Drop for ValueActor {
 pub enum Value {
     Object(Arc<Object>),
     Text(Arc<Text>),
+    Number(Arc<Number>),
 }
 
 impl Value {
@@ -245,6 +247,13 @@ impl Value {
     pub fn expect_text(self) -> Arc<Text> {
         let Self::Text(text) = self else {
             panic!("Failed to get expected Text: The Value has a different type")
+        };
+        text
+    }
+
+    pub fn expect_number(self) -> Arc<Number> {
+        let Self::Number(text) = self else {
+            panic!("Failed to get expected Number: The Value has a different type")
         };
         text
     }
@@ -318,6 +327,40 @@ impl Text {
 }
 
 impl Drop for Text {
+    fn drop(&mut self) {
+        println!("Dropped: {}", self.construct_info);
+    }
+}
+
+// --- Number ---
+
+pub struct Number {
+    construct_info: ConstructInfoComplete,
+    number: f64,
+}
+
+impl Number {
+    pub fn new(construct_info: ConstructInfo, number: impl Into<f64>) -> Self {
+        Self {
+            construct_info: construct_info.complete(ConstructType::Number),
+            number: number.into()
+        }
+    }
+
+    pub fn new_arc(construct_info: ConstructInfo, number: impl Into<f64>) -> Arc<Self> {
+        Arc::new(Self::new(construct_info, number))
+    }
+
+    pub fn new_constant(construct_info: ConstructInfo, number: impl Into<f64>) -> impl Stream<Item = Value> {
+        constant(Value::Number(Self::new_arc(construct_info, number)))
+    }
+
+    pub fn number(&self) -> f64 {
+        self.number
+    }
+}
+
+impl Drop for Number {
     fn drop(&mut self) {
         println!("Dropped: {}", self.construct_info);
     }

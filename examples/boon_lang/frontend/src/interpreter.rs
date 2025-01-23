@@ -437,9 +437,9 @@ pub async fn run(_program: &str) -> impl Element {
                                 "root", 
                                 ValueActor::new_arc(
                                     ConstructInfo::new(5, "Document/new argument root actor"),
-                                    Text::new_constant(
-                                        ConstructInfo::new(6, "dummy_text"),
-                                        "I'm Root"
+                                    Number::new_constant(
+                                        ConstructInfo::new(6, "dummy_number"),
+                                        193
                                     )
                                 )
                             )
