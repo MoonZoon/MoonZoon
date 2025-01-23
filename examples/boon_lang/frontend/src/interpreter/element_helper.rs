@@ -15,18 +15,18 @@ pub fn root_object_to_element_signal(root_object: Arc<Object>) -> impl Signal<It
                 .expect_variable("root_element")
                 .subscribe()
         })
-        .flat_map(value_to_element_stream);
+        .map(value_to_element);
 
     signal::from_stream(element_stream)
 }
 
-pub fn value_to_element_stream(value: Value) -> impl Stream<Item = RawElOrText> {
+pub fn value_to_element(value: Value) -> RawElOrText {
     match value {
         Value::Text(text) => {
-            constant(zoon::Text::new(text.text()).unify())
+            zoon::Text::new(text.text()).unify()
         }
         Value::Number(number) => {
-            constant(zoon::Text::new(number.number()).unify())
+            zoon::Text::new(number.number()).unify()
         }
         _ => panic!("Element cannot be created from the given Value type")
     }

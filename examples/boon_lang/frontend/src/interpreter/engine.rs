@@ -11,6 +11,8 @@ use zoon::futures_util::select;
 
 use pin_project::pin_project;
 
+// --- constant ---
+
 pub fn constant<T>(item: T) -> impl Stream<Item = T> {
     stream::once(future::ready(item)).chain(stream::once(future::pending()))
 }
@@ -204,7 +206,7 @@ impl ValueActor {
                     }
                 }
                 println!("Loop ended {construct_info}");
-                drop(data_to_drop);
+                drop(extra_owned_data);
             }
         });
         Self {

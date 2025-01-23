@@ -378,37 +378,6 @@ pub async fn run(_program: &str) -> impl Element {
     //     ]))
     // );
 
-
-
-
-    // let root_object = Object::new_arc(
-    //     ConstructInfo::new(0, "root"),
-    //     vec![
-    //         Variable::new_arc(
-    //             ConstructInfo::new(1, "document"),
-    //             "document",
-    //             ValueActor::new_arc(
-    //                 ConstructInfo::new(2, "document_actor"),
-    //                 Object::new_constant(
-    //                     ConstructInfo::new(3, "document_object"),
-    //                     vec![
-    //                         Variable::new_arc(
-    //                             ConstructInfo::new(4, "root_element"),
-    //                             "root_element",
-    //                             ValueActor::new_arc(
-    //                                 ConstructInfo::new(5, "root_element_actor"),
-    //                                 Text::new_constant(
-    //                                     ConstructInfo::new(6, "dummy_text"),
-    //                                     "bflmpsv"
-    //                                 )
-    //                             )
-    //                         )
-    //                     ]
-    //                 )
-    //             )
-    //         )
-    // ]);
-
     let function_document_new = |arguments: [Arc<ValueActor>; 1], function_call_id: ConstructId| {
         let [argument_root] = arguments;
         Object::new_constant(
@@ -421,6 +390,26 @@ pub async fn run(_program: &str) -> impl Element {
                 )
             ]
         )
+    };
+
+    let function_math_sum = |arguments: [Arc<ValueActor>; 1], function_call_id: ConstructId| {
+        let [argument_increment] = arguments;
+        argument_increment
+            .subscribe()
+            .map(|value| value.expect_number().number())
+            .scan(0., |sum, number| {
+                *sum += number;
+                future::ready(Some(*sum))
+            })
+            .map(move |sum| {
+                Number::new_value(
+                    ConstructInfo::new(
+                        function_call_id.with_child_id(0), 
+                        "sum"
+                    ),
+                    sum
+                )
+            })
     };
 
     let function_timer_interval = |arguments: [Arc<ValueActor>; 1], function_call_id: ConstructId| {
@@ -439,20 +428,19 @@ pub async fn run(_program: &str) -> impl Element {
             })
             .flat_map(move |milliseconds| {
                 let function_call_id = function_call_id.clone();
-                // @TODO replace with `output_value` below
-                let output_value = Number::new_value(
-                    ConstructInfo::new(function_call_id.with_child_id(0), "Timer/interval output number"),
-                    1024
-                );
-                // let output_value = Object::new_constant(
-                //     ConstructInfo::new(function_call_id.with_child_id(0), "Timer/interval output object"),
-                //     vec![]
-                // );
-                stream::unfold(output_value, move |output_value| {
+                stream::unfold(function_call_id, move |function_call_id| {
                     async move {
                         Timer::sleep(milliseconds.round() as u32).await;
-                        println!("Tick!");
-                        Some((output_value.clone(), output_value))
+                        // @TODO replace with `output_value` below
+                        let output_value = Number::new_value(
+                            ConstructInfo::new(function_call_id.with_child_id(0), "Timer/interval output number"),
+                            3
+                        );
+                        // let output_value = Object::new_constant(
+                        //     ConstructInfo::new(function_call_id.with_child_id(0), "Timer/interval output object"),
+                        //     vec![]
+                        // );
+                        Some((output_value, function_call_id))
                     }
                 })
             })
@@ -469,28 +457,34 @@ pub async fn run(_program: &str) -> impl Element {
                     function_document_new,
                     [
                         FunctionCall::new_arc_value_actor(
-                            ConstructInfo::new(3, "Timer/interval call"),
-                            function_timer_interval,
+                            ConstructInfo::new(3, "Math/sum call"), 
+                            function_math_sum,
                             [
-                                ValueActor::new_arc(
-                                    ConstructInfo::new(4, "Timer/interval duration argument actor"),
-                                    TaggedObject::new_constant(
-                                        ConstructInfo::new(5, "Timer/interval duration argument tagged object Duration"),
-                                        "Duration",
-                                        [
-                                            Variable::new_arc(
-                                                ConstructInfo::new(6, "Duration seconds"), 
-                                                "seconds", 
-                                                ValueActor::new_arc(
-                                                    ConstructInfo::new(7, "Duration seconds actor"),
-                                                    Number::new_constant(
-                                                        ConstructInfo::new(8, "Duration seconds number"),
-                                                        2
+                                FunctionCall::new_arc_value_actor(
+                                    ConstructInfo::new(4, "Timer/interval call"),
+                                    function_timer_interval,
+                                    [
+                                        ValueActor::new_arc(
+                                            ConstructInfo::new(5, "Timer/interval duration argument actor"),
+                                            TaggedObject::new_constant(
+                                                ConstructInfo::new(6, "Timer/interval duration argument tagged object Duration"),
+                                                "Duration",
+                                                [
+                                                    Variable::new_arc(
+                                                        ConstructInfo::new(7, "Duration seconds"), 
+                                                        "seconds", 
+                                                        ValueActor::new_arc(
+                                                            ConstructInfo::new(8, "Duration seconds actor"),
+                                                            Number::new_constant(
+                                                                ConstructInfo::new(9, "Duration seconds number"),
+                                                                1
+                                                            )
+                                                        )
                                                     )
-                                                )
+                                                ]
                                             )
-                                        ]
-                                    )
+                                        )
+                                    ]
                                 )
                             ]
                         )
