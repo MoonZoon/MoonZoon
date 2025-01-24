@@ -333,51 +333,6 @@ pub async fn run(_program: &str) -> impl Element {
     //     ]))
     // );
 
-    // let root_object_value = ObjectValue::new(
-    //     "root", 
-    //     0,
-    //     stream_one(Object::with_id("root_object", 5, [
-    //         Variable::new(
-    //             "document", 
-    //             1, 
-    //             "document",
-    //             stream_one(ObjectValue::new(
-    //                 "document_object_value",
-    //                 2,
-    //                 stream_one(Object::with_id("document_object_value_object", 6, [
-    //                     Variable::new(
-    //                         "root_element", 
-    //                         3, 
-    //                         "root_element", 
-    //                         stream_one(TextValue::new(
-    //                             "dummy_text", 
-    //                             4, 
-    //                             stream_one(String::from("bflmpsvz"))
-    //                         ))
-    //                     )
-    //                 ]))
-    //             ))
-    //         )
-    //     ]))
-    // );
-
-    // let root_object_value = ObjectValue::new(
-    //     "root", 
-    //     0,
-    //     stream_one(Object::with_id("root_object", 5, [
-    //         Variable::new(
-    //             "document", 
-    //             1, 
-    //             "document",
-    //             stream_one(ObjectValue::new(
-    //                 "document_object_value",
-    //                 2,
-    //                 stream_one(Object::with_id("document_object_value_object", 6, []))
-    //             ))
-    //         )
-    //     ]))
-    // );
-
     let function_document_new = |arguments: [Arc<ValueActor>; 1], function_call_id: ConstructId| {
         let [argument_root] = arguments;
         Object::new_constant(
@@ -447,51 +402,59 @@ pub async fn run(_program: &str) -> impl Element {
             Variable::new_arc(
                 ConstructInfo::new(1, "document"),
                 "document",
-                FunctionCall::new_arc_value_actor(
-                    ConstructInfo::new(2, "Document/new(..)"),
+                TaggedObject::new_arc_value_actor(
+                    ConstructInfo::new(6, "Duration[..]"),
                     RunDuration::Nonstop,
-                    function_document_new,
+                    "Duration",
                     [
-                        FunctionCall::new_arc_value_actor(
-                            ConstructInfo::new(3, "Math/sum(..)"), 
-                            RunDuration::Nonstop,
-                            function_math_sum,
-                            [
-                                ThenCombinator::new_arc_value_actor(
-                                    ConstructInfo::new(4, "THEN"),
-                                    RunDuration::Nonstop,
-                                    FunctionCall::new_arc_value_actor(
-                                        ConstructInfo::new(5, "Timer/interval(..)"),
-                                        RunDuration::Nonstop,
-                                        function_timer_interval,
-                                        [
-                                            TaggedObject::new_arc_value_actor(
-                                                ConstructInfo::new(6, "Duration[..]"),
-                                                RunDuration::Nonstop,
-                                                "Duration",
-                                                [
-                                                    Variable::new_arc(
-                                                        ConstructInfo::new(7, "Duration.seconds"), 
-                                                        "seconds", 
-                                                        Number::new_arc_value_actor(
-                                                            ConstructInfo::new(8, "Duration.seconds number"),
-                                                            RunDuration::Nonstop,
-                                                            1
-                                                        )
-                                                    )
-                                                ]
-                                            )
-                                        ]
-                                    ),
-                                    || Number::new_constant(
-                                        ConstructInfo::new(9, "number 1"),
-                                        1,
-                                    )
-                                )
-                            ]
+                        Variable::new_arc(
+                            ConstructInfo::new(7, "Duration.seconds"), 
+                            "seconds", 
+                            Number::new_arc_value_actor(
+                                ConstructInfo::new(8, "Duration.seconds number"),
+                                RunDuration::Nonstop,
+                                1
+                            )
                         )
                     ]
-                )
+                ).pipe_to(|piped| {
+                    FunctionCall::new_arc_value_actor(
+                        ConstructInfo::new(5, "Timer/interval(..)"),
+                        RunDuration::Nonstop,
+                        function_timer_interval,
+                        [
+                            piped
+                        ]
+                    ).pipe_to(|piped| {
+                        ThenCombinator::new_arc_value_actor(
+                            ConstructInfo::new(4, "THEN"),
+                            RunDuration::Nonstop,
+                            piped,
+                            || Number::new_constant(
+                                ConstructInfo::new(9, "number 1"),
+                                1,
+                            )
+                        ).pipe_to(|piped| {
+                            FunctionCall::new_arc_value_actor(
+                                ConstructInfo::new(3, "Math/sum(..)"), 
+                                RunDuration::Nonstop,
+                                function_math_sum,
+                                [
+                                    piped
+                                ]
+                            ).pipe_to(|piped| {
+                                FunctionCall::new_arc_value_actor(
+                                    ConstructInfo::new(2, "Document/new(..)"),
+                                    RunDuration::Nonstop,
+                                    function_document_new,
+                                    [
+                                        piped
+                                    ]
+                                )
+                            })
+                        })
+                    })
+                })
             )
     ]);
 

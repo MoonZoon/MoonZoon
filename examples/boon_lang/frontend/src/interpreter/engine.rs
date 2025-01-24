@@ -11,6 +11,16 @@ use zoon::futures_util::select;
 
 use pin_project::pin_project;
 
+// --- PipeTo ---
+
+pub trait PipeTo {
+    fn pipe_to<FR>(self, f: impl FnOnce(Self) -> FR) -> FR where Self: Sized {
+        f(self)
+    }
+}
+
+impl<T> PipeTo for T {}
+
 // --- constant ---
 
 pub fn constant<T>(item: T) -> impl Stream<Item = T> {
