@@ -17,6 +17,13 @@ pub fn constant<T>(item: T) -> impl Stream<Item = T> {
     stream::once(future::ready(item)).chain(stream::once(future::pending()))
 }
 
+// --- Run ---
+
+pub enum RunDuration {
+    Nonstop,
+    UntilFirstValue,
+}
+
 // --- ConstructInfo ---
 
 pub struct ConstructInfo {
@@ -143,12 +150,13 @@ pub struct FunctionCall {}
 impl FunctionCall {
     pub fn new_arc_value_actor<const AN: usize, FR: Stream<Item = Value> + 'static>(
         construct_info: ConstructInfo,
+        run_duration: RunDuration,
         definition: impl Fn([Arc<ValueActor>; AN], ConstructId) -> FR + 'static,
         arguments: [Arc<ValueActor>; AN],
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::FunctionCall);
         let value_stream = definition(arguments.clone(), construct_info.id());
-        Arc::new(ValueActor::new_internal(construct_info, value_stream, arguments))
+        Arc::new(ValueActor::new_internal(construct_info, run_duration, value_stream, arguments))
     }
 }
 
@@ -159,6 +167,7 @@ pub struct ThenCombinator {}
 impl ThenCombinator {
     pub fn new_arc_value_actor<FR: Stream<Item = Value> + 'static>(
         construct_info: ConstructInfo,
+        run_duration: RunDuration,
         observed: Arc<ValueActor>,
         stream_on_change: impl Fn() -> FR + 'static,
     ) -> Arc<ValueActor> {
@@ -168,7 +177,7 @@ impl ThenCombinator {
             let stream_on_change = stream_on_change.clone(); 
             async move { pin!(stream_on_change()).next().await }
         });
-        Arc::new(ValueActor::new_internal(construct_info, value_stream, observed))
+        Arc::new(ValueActor::new_internal(construct_info, run_duration, value_stream, observed))
     }
 }
 
@@ -181,13 +190,14 @@ pub struct ValueActor {
 }
 
 impl ValueActor {
-    pub fn new(construct_info: ConstructInfo, value_stream: impl Stream<Item = Value> + 'static) -> Self {
+    pub fn new(construct_info: ConstructInfo, run_duration: RunDuration, value_stream: impl Stream<Item = Value> + 'static) -> Self {
         let construct_info = construct_info.complete(ConstructType::ValueActor);
-        Self::new_internal(construct_info, value_stream, ())
+        Self::new_internal(construct_info, run_duration, value_stream, ())
     }
 
     fn new_internal<EOD: 'static>(
-        construct_info: ConstructInfoComplete, 
+        construct_info: ConstructInfoComplete,
+        run_duration: RunDuration,
         value_stream: impl Stream<Item = Value> + 'static,
         extra_owned_data: EOD,
     ) -> Self {
@@ -212,6 +222,9 @@ impl ValueActor {
                                 }
                             });
                             value = Some(new_value);
+                            if let RunDuration::UntilFirstValue = run_duration {
+                                break
+                            }
                         }
                         value_sender = value_sender_receiver.select_next_some() => {
                             if let Some(value) = value.as_ref() {
@@ -237,8 +250,8 @@ impl ValueActor {
         }
     }
 
-    pub fn new_arc(construct_info: ConstructInfo, value_stream: impl Stream<Item = Value> + 'static) -> Arc<Self> {
-        Arc::new(Self::new(construct_info, value_stream))
+    pub fn new_arc(construct_info: ConstructInfo, run_duration: RunDuration, value_stream: impl Stream<Item = Value> + 'static) -> Arc<Self> {
+        Arc::new(Self::new(construct_info, run_duration, value_stream))
     }
 
     pub fn subscribe(&self) -> impl Stream<Item = Value> {

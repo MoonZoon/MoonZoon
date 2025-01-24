@@ -449,20 +449,25 @@ pub async fn run(_program: &str) -> impl Element {
                 "document",
                 FunctionCall::new_arc_value_actor(
                     ConstructInfo::new(2, "Document/new call"),
+                    RunDuration::Nonstop,
                     function_document_new,
                     [
                         FunctionCall::new_arc_value_actor(
                             ConstructInfo::new(3, "Math/sum call"), 
+                            RunDuration::Nonstop,
                             function_math_sum,
                             [
                                 ThenCombinator::new_arc_value_actor(
                                     ConstructInfo::new(4, "THEN"),
+                                    RunDuration::Nonstop,
                                     FunctionCall::new_arc_value_actor(
                                         ConstructInfo::new(5, "Timer/interval call"),
+                                        RunDuration::Nonstop,
                                         function_timer_interval,
                                         [
                                             ValueActor::new_arc(
                                                 ConstructInfo::new(6, "Timer/interval duration argument actor"),
+                                                RunDuration::Nonstop,
                                                 TaggedObject::new_constant(
                                                     ConstructInfo::new(7, "Timer/interval duration argument tagged object Duration"),
                                                     "Duration",
@@ -472,6 +477,7 @@ pub async fn run(_program: &str) -> impl Element {
                                                             "seconds", 
                                                             ValueActor::new_arc(
                                                                 ConstructInfo::new(9, "Duration seconds actor"),
+                                                                RunDuration::Nonstop,
                                                                 Number::new_constant(
                                                                     ConstructInfo::new(10, "Duration seconds number"),
                                                                     1
@@ -486,7 +492,6 @@ pub async fn run(_program: &str) -> impl Element {
                                     || Number::new_constant(
                                         ConstructInfo::new(11, "number 1"),
                                         1,
-                                        // TODO nonstop?
                                     )
                                 )
                             ]
