@@ -448,12 +448,12 @@ pub async fn run(_program: &str) -> impl Element {
                 ConstructInfo::new(1, "document"),
                 "document",
                 FunctionCall::new_arc_value_actor(
-                    ConstructInfo::new(2, "Document/new call"),
+                    ConstructInfo::new(2, "Document/new(..)"),
                     RunDuration::Nonstop,
                     function_document_new,
                     [
                         FunctionCall::new_arc_value_actor(
-                            ConstructInfo::new(3, "Math/sum call"), 
+                            ConstructInfo::new(3, "Math/sum(..)"), 
                             RunDuration::Nonstop,
                             function_math_sum,
                             [
@@ -461,36 +461,30 @@ pub async fn run(_program: &str) -> impl Element {
                                     ConstructInfo::new(4, "THEN"),
                                     RunDuration::Nonstop,
                                     FunctionCall::new_arc_value_actor(
-                                        ConstructInfo::new(5, "Timer/interval call"),
+                                        ConstructInfo::new(5, "Timer/interval(..)"),
                                         RunDuration::Nonstop,
                                         function_timer_interval,
                                         [
-                                            ValueActor::new_arc(
-                                                ConstructInfo::new(6, "Timer/interval duration argument actor"),
+                                            TaggedObject::new_arc_value_actor(
+                                                ConstructInfo::new(6, "Duration[..]"),
                                                 RunDuration::Nonstop,
-                                                TaggedObject::new_constant(
-                                                    ConstructInfo::new(7, "Timer/interval duration argument tagged object Duration"),
-                                                    "Duration",
-                                                    [
-                                                        Variable::new_arc(
-                                                            ConstructInfo::new(8, "Duration seconds"), 
-                                                            "seconds", 
-                                                            ValueActor::new_arc(
-                                                                ConstructInfo::new(9, "Duration seconds actor"),
-                                                                RunDuration::Nonstop,
-                                                                Number::new_constant(
-                                                                    ConstructInfo::new(10, "Duration seconds number"),
-                                                                    1
-                                                                )
-                                                            )
+                                                "Duration",
+                                                [
+                                                    Variable::new_arc(
+                                                        ConstructInfo::new(7, "Duration.seconds"), 
+                                                        "seconds", 
+                                                        Number::new_arc_value_actor(
+                                                            ConstructInfo::new(8, "Duration.seconds number"),
+                                                            RunDuration::Nonstop,
+                                                            1
                                                         )
-                                                    ]
-                                                )
+                                                    )
+                                                ]
                                             )
                                         ]
                                     ),
                                     || Number::new_constant(
-                                        ConstructInfo::new(11, "number 1"),
+                                        ConstructInfo::new(9, "number 1"),
                                         1,
                                     )
                                 )
