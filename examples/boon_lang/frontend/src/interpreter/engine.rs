@@ -72,6 +72,7 @@ pub enum ConstructType {
     TaggedObject,
     Text,
     Number,
+    ThenCombinator,
 }
 
 // --- ConstructId ---
@@ -148,6 +149,26 @@ impl FunctionCall {
         let construct_info = construct_info.complete(ConstructType::FunctionCall);
         let value_stream = definition(arguments.clone(), construct_info.id());
         Arc::new(ValueActor::new_internal(construct_info, value_stream, arguments))
+    }
+}
+
+// --- ThenCombinator ---
+
+pub struct ThenCombinator {}
+
+impl ThenCombinator {
+    pub fn new_arc_value_actor<FR: Stream<Item = Value> + 'static>(
+        construct_info: ConstructInfo,
+        observed: Arc<ValueActor>,
+        stream_on_change: impl Fn() -> FR + 'static,
+    ) -> Arc<ValueActor> {
+        let construct_info = construct_info.complete(ConstructType::ThenCombinator);
+        let stream_on_change = Arc::new(stream_on_change);
+        let value_stream = observed.subscribe().filter_map(move |_| {
+            let stream_on_change = stream_on_change.clone(); 
+            async move { pin!(stream_on_change()).next().await }
+        });
+        Arc::new(ValueActor::new_internal(construct_info, value_stream, observed))
     }
 }
 

@@ -431,15 +431,10 @@ pub async fn run(_program: &str) -> impl Element {
                 stream::unfold(function_call_id, move |function_call_id| {
                     async move {
                         Timer::sleep(milliseconds.round() as u32).await;
-                        // @TODO replace with `output_value` below
-                        let output_value = Number::new_value(
-                            ConstructInfo::new(function_call_id.with_child_id(0), "Timer/interval output number"),
-                            3
+                        let output_value = Object::new_value(
+                            ConstructInfo::new(function_call_id.with_child_id(0), "Timer/interval output object"),
+                            []
                         );
-                        // let output_value = Object::new_constant(
-                        //     ConstructInfo::new(function_call_id.with_child_id(0), "Timer/interval output object"),
-                        //     vec![]
-                        // );
                         Some((output_value, function_call_id))
                     }
                 })
@@ -460,31 +455,39 @@ pub async fn run(_program: &str) -> impl Element {
                             ConstructInfo::new(3, "Math/sum call"), 
                             function_math_sum,
                             [
-                                FunctionCall::new_arc_value_actor(
-                                    ConstructInfo::new(4, "Timer/interval call"),
-                                    function_timer_interval,
-                                    [
-                                        ValueActor::new_arc(
-                                            ConstructInfo::new(5, "Timer/interval duration argument actor"),
-                                            TaggedObject::new_constant(
-                                                ConstructInfo::new(6, "Timer/interval duration argument tagged object Duration"),
-                                                "Duration",
-                                                [
-                                                    Variable::new_arc(
-                                                        ConstructInfo::new(7, "Duration seconds"), 
-                                                        "seconds", 
-                                                        ValueActor::new_arc(
-                                                            ConstructInfo::new(8, "Duration seconds actor"),
-                                                            Number::new_constant(
-                                                                ConstructInfo::new(9, "Duration seconds number"),
-                                                                1
+                                ThenCombinator::new_arc_value_actor(
+                                    ConstructInfo::new(4, "THEN"),
+                                    FunctionCall::new_arc_value_actor(
+                                        ConstructInfo::new(5, "Timer/interval call"),
+                                        function_timer_interval,
+                                        [
+                                            ValueActor::new_arc(
+                                                ConstructInfo::new(6, "Timer/interval duration argument actor"),
+                                                TaggedObject::new_constant(
+                                                    ConstructInfo::new(7, "Timer/interval duration argument tagged object Duration"),
+                                                    "Duration",
+                                                    [
+                                                        Variable::new_arc(
+                                                            ConstructInfo::new(8, "Duration seconds"), 
+                                                            "seconds", 
+                                                            ValueActor::new_arc(
+                                                                ConstructInfo::new(9, "Duration seconds actor"),
+                                                                Number::new_constant(
+                                                                    ConstructInfo::new(10, "Duration seconds number"),
+                                                                    1
+                                                                )
                                                             )
                                                         )
-                                                    )
-                                                ]
+                                                    ]
+                                                )
                                             )
-                                        )
-                                    ]
+                                        ]
+                                    ),
+                                    || Number::new_constant(
+                                        ConstructInfo::new(11, "number 1"),
+                                        1,
+                                        // TODO nonstop?
+                                    )
                                 )
                             ]
                         )
