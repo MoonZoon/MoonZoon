@@ -7,13 +7,11 @@ use zoon::futures_util::stream::{self, StreamExt};
 use zoon::Timer;
 use zoon::{El, Element, HookableLifecycle};
 
-mod engine;
-use engine::*;
+use crate::runtime::{element_helper::*, engine::*};
 
-mod element_helper;
-use element_helper::*;
+pub async fn run() -> impl Element {
+     let program = include_str!("examples/simple_counter.bn");
 
-pub async fn run(_program: &str) -> impl Element {
     // let function_document_new = |mut arguments: Object, function_call_id: ConstructId| {
     //     stream_one(ObjectValue::new(
     //         "Document/new output object", 

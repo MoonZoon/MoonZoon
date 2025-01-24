@@ -1,6 +1,9 @@
 use zoon::*;
 
-mod interpreter;
+mod runtime;
+
+mod example_interval;
+mod example_simple_counter;
 
 fn main() {
     start_app("app", root);
@@ -15,10 +18,6 @@ fn root() -> impl Element {
 }
 
 async fn boon_document_root() -> impl Element {
-    // let program = include_str!("examples/counter.bn");
-    // let program = include_str!("examples/simple_counter.bn");
-    let program = include_str!("examples/interval.bn");
-    // let program = include_str!("examples/todo_mvc.bn");
-
-    interpreter::run(program).await
+    // example_interval::run().await
+    example_simple_counter::run().await
 }
