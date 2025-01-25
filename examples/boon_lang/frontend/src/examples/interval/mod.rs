@@ -7,10 +7,11 @@ use zoon::futures_util::stream::{self, StreamExt};
 use zoon::Timer;
 use zoon::{El, Element, HookableLifecycle};
 
-use crate::runtime::{element_helper::*, engine::*};
+use crate::boon::platform::browser::engine::*;
 
-pub async fn run() -> impl Element {
-     let program = include_str!("examples/interval.bn");
+pub async fn run() -> Arc<Object> {
+    let program = include_str!("interval.bn");
+    println!("{program}");
 
     let function_document_new = |arguments: [Arc<ValueActor>; 1], function_call_id: ConstructId| {
         let [argument_root] = arguments;
@@ -75,7 +76,7 @@ pub async fn run() -> impl Element {
             })
     };
 
-    let root_object = Object::new_arc(
+    Object::new_arc(
         ConstructInfo::new(0, "root"),
         [
             Variable::new_arc(
@@ -135,9 +136,5 @@ pub async fn run() -> impl Element {
                     })
                 })
             )
-    ]);
-
-    El::new()
-        .child_signal(root_object_to_element_signal(root_object.clone()))
-        .after_remove(move |_| drop(root_object))
+    ])
 }

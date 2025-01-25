@@ -20,7 +20,7 @@ pub fn root_object_to_element_signal(root_object: Arc<Object>) -> impl Signal<It
     signal::from_stream(element_stream)
 }
 
-pub fn value_to_element(value: Value) -> RawElOrText {
+fn value_to_element(value: Value) -> RawElOrText {
     match value {
         Value::Text(text) => {
             zoon::Text::new(text.text()).unify()
