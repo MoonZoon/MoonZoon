@@ -15,4 +15,3 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 zoon.workspace = true
-pin-project = "1"

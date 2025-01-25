@@ -1,15 +1,16 @@
-use std::pin::{Pin, pin};
+// @TODO remove
+#![allow(dead_code)]
+
+use std::pin::pin;
 use std::sync::Arc;
 use std::borrow::Cow;
 
-use zoon::futures_channel::{oneshot, mpsc};
-use zoon::futures_util::stream::{self, Stream, StreamExt, BoxStream};
+use zoon::futures_channel::mpsc;
+use zoon::futures_util::stream::{self, Stream, StreamExt};
 use zoon::{Task, TaskHandle};
 use zoon::future;
 use zoon::{println, eprintln};
 use zoon::futures_util::select;
-
-use pin_project::pin_project;
 
 // --- PipeTo ---
 
