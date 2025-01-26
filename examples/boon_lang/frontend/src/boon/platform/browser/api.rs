@@ -33,7 +33,7 @@ use super::engine::*;
 ///     ]>
 ///     settings<[
 ///         style<[]>
-///         label<Text>
+///         label<INTO_ELEMENT>
 ///     ]>
 /// ]
 /// >
@@ -151,7 +151,7 @@ pub fn function_element_stripe(arguments: [Arc<ValueActor>; 4], function_call_id
 ///         ]>
 ///     ]>
 ///     style<[]>
-///     label<Text>
+///     label<INTO_ELEMENT>
 /// ) -> ELEMENT_BUTTON
 /// ```
 pub fn function_element_button(arguments: [Arc<ValueActor>; 3], function_call_id: ConstructId) -> impl Stream<Item = Value> {

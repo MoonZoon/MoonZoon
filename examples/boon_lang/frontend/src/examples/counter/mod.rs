@@ -45,6 +45,11 @@ pub async fn run() -> Arc<Object> {
                                             RunDuration::Nonstop, 
                                             5
                                         ),
+                                        Number::new_arc_value_actor(
+                                            ConstructInfo::new(8, "Number 5"), 
+                                            RunDuration::Nonstop, 
+                                            5
+                                        ),
                                     ]
                                 ),
                             ]

@@ -228,7 +228,7 @@ impl ValueActor {
                             let Some(new_value) = new_value else { break };
                             value_senders.retain(|value_sender| {
                                 if let Err(error) = value_sender.unbounded_send(new_value.clone()) {
-                                    eprintln!("Failed to send new {:?} value to subscriber: {error:#}", construct_info.r#type);
+                                    eprintln!("Failed to send new {} value to subscriber: {error:#}", construct_info);
                                     false
                                 } else {
                                     true
@@ -242,7 +242,7 @@ impl ValueActor {
                         value_sender = value_sender_receiver.select_next_some() => {
                             if let Some(value) = value.as_ref() {
                                 if let Err(error) = value_sender.unbounded_send(value.clone()) {
-                                    eprintln!("Failed to send {:?} value to subscriber: {error:#}", construct_info.r#type);
+                                    eprintln!("Failed to send {} value to subscriber: {error:#}", construct_info);
                                 } else {
                                     value_senders.push(value_sender);
                                 }
@@ -448,6 +448,10 @@ impl TaggedObject {
             panic!("Failed to get expected Variable '{name}' from {}", self.construct_info)
         })
     }
+
+    pub fn tag(&self) -> &str {
+        &self.tag
+    }
 }
 
 impl Drop for TaggedObject {
@@ -596,6 +600,7 @@ impl Drop for Number {
 
 // --- List ---
 
+// @TODO change streams?
 pub struct List {
     construct_info: ConstructInfoComplete,
     items: Vec<Arc<ValueActor>>,
