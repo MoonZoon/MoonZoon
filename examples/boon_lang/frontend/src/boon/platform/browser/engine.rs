@@ -86,6 +86,7 @@ pub enum ConstructType {
     Variable,
     VariableReference,
     FunctionCall,
+    LatestCombinator,
     ThenCombinator,
     ValueActor,
     Object,
@@ -169,6 +170,7 @@ impl VariableReference {
         variable_receiver: mpsc::UnboundedReceiver<Arc<Variable>>,
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::VariableReference);
+        // @TODO support nested (dot-separated) aliases
         let value_stream = variable_receiver
             .flat_map(|variable| variable.subscribe());
         Arc::new(ValueActor::new_internal(construct_info, run_duration, value_stream, ()))
@@ -189,6 +191,24 @@ impl FunctionCall {
         let construct_info = construct_info.complete(ConstructType::FunctionCall);
         let value_stream = definition(arguments.clone(), construct_info.id());
         Arc::new(ValueActor::new_internal(construct_info, run_duration, value_stream, arguments))
+    }
+}
+
+// --- LatestCombinator ---
+
+pub struct LatestCombinator {}
+
+impl LatestCombinator {
+    pub fn new_arc_value_actor<const IN: usize>(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        inputs: [Arc<ValueActor>; IN],
+    ) -> Arc<ValueActor> {
+        let construct_info = construct_info.complete(ConstructType::LatestCombinator);
+        let value_stream = stream::select_all(inputs.iter().map(|value_actor| {
+            value_actor.subscribe()
+        }));
+        Arc::new(ValueActor::new_internal(construct_info, run_duration, value_stream, inputs))
     }
 }
 
