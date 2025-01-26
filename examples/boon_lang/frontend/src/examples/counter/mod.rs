@@ -11,59 +11,56 @@ pub async fn run() -> Arc<Object> {
             Variable::new_arc(
                 ConstructInfo::new(1, "document"),
                 "document",
-                TaggedObject::new_arc_value_actor(
-                    ConstructInfo::new(6, "Duration[..]"),
+                FunctionCall::new_arc_value_actor(
+                    ConstructInfo::new(2, "Document/new(..)"),
                     RunDuration::Nonstop,
-                    "Duration",
+                    function_document_new,
                     [
-                        Variable::new_arc(
-                            ConstructInfo::new(7, "Duration.seconds"), 
-                            "seconds", 
-                            Number::new_arc_value_actor(
-                                ConstructInfo::new(8, "Duration.seconds number"),
-                                RunDuration::Nonstop,
-                                1
-                            )
+                        FunctionCall::new_arc_value_actor(
+                            ConstructInfo::new(3, "Element/stripe(..)"),
+                            RunDuration::Nonstop,
+                            function_element_stripe,
+                            [
+                                Object::new_arc_value_actor(
+                                    ConstructInfo::new(4, "Element/stripe(element)"), 
+                                    RunDuration::Nonstop, 
+                                    []
+                                ),
+                                Tag::new_arc_value_actor(
+                                    ConstructInfo::new(5, "Element/stripe(direction)"),
+                                    RunDuration::Nonstop,
+                                    "Column",
+                                ),
+                                Object::new_arc_value_actor(
+                                    ConstructInfo::new(6, "Element/stripe(style)"), 
+                                    RunDuration::Nonstop, 
+                                    []
+                                ),
+                                List::new_arc_value_actor(
+                                    ConstructInfo::new(7, "Element/stripe(items)"), 
+                                    RunDuration::Nonstop, 
+                                    [
+                                        Number::new_arc_value_actor(
+                                            ConstructInfo::new(8, "Number 5"), 
+                                            RunDuration::Nonstop, 
+                                            5
+                                        ),
+                                    ]
+                                ),
+                            ]
                         )
                     ]
-                ).pipe_to(|piped| {
-                    FunctionCall::new_arc_value_actor(
-                        ConstructInfo::new(5, "Timer/interval(..)"),
-                        RunDuration::Nonstop,
-                        function_timer_interval,
-                        [
-                            piped
-                        ]
-                    ).pipe_to(|piped| {
-                        ThenCombinator::new_arc_value_actor(
-                            ConstructInfo::new(4, "THEN"),
-                            RunDuration::Nonstop,
-                            piped,
-                            || Number::new_constant(
-                                ConstructInfo::new(9, "Number 1"),
-                                1,
-                            )
-                        ).pipe_to(|piped| {
-                            FunctionCall::new_arc_value_actor(
-                                ConstructInfo::new(3, "Math/sum(..)"), 
-                                RunDuration::Nonstop,
-                                function_math_sum,
-                                [
-                                    piped
-                                ]
-                            ).pipe_to(|piped| {
-                                FunctionCall::new_arc_value_actor(
-                                    ConstructInfo::new(2, "Document/new(..)"),
-                                    RunDuration::Nonstop,
-                                    function_document_new,
-                                    [
-                                        piped
-                                    ]
-                                )
-                            })
-                        })
-                    })
-                })
-            )
-    ])
+                )
+            ),
+            Variable::new_arc(
+                ConstructInfo::new(10, "counter"),
+                "counter",
+                Number::new_arc_value_actor(
+                    ConstructInfo::new(11, "Number 62"), 
+                    RunDuration::Nonstop, 
+                    62
+                ),
+            ),
+        ]
+    )
 }

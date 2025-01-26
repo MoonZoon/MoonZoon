@@ -85,12 +85,14 @@ impl std::fmt::Display for ConstructInfoComplete {
 pub enum ConstructType {
     Variable,
     FunctionCall,
+    ThenCombinator,
     ValueActor,
     Object,
     TaggedObject,
     Text,
+    Tag,
     Number,
-    ThenCombinator,
+    List,
 }
 
 // --- ConstructId ---
@@ -287,7 +289,9 @@ pub enum Value {
     Object(Arc<Object>),
     TaggedObject(Arc<TaggedObject>),
     Text(Arc<Text>),
+    Tag(Arc<Tag>),
     Number(Arc<Number>),
+    List(Arc<List>),
 }
 
 impl Value {
@@ -316,11 +320,25 @@ impl Value {
         text
     }
 
+    pub fn expect_tag(self) -> Arc<Tag> {
+        let Self::Tag(tag) = self else {
+            panic!("Failed to get expected Tag: The Value has a different type")
+        };
+        tag
+    }
+
     pub fn expect_number(self) -> Arc<Number> {
-        let Self::Number(text) = self else {
+        let Self::Number(number) = self else {
             panic!("Failed to get expected Number: The Value has a different type")
         };
-        text
+        number
+    }
+
+    pub fn expect_list(self) -> Arc<List> {
+        let Self::List(list) = self else {
+            panic!("Failed to get expected List: The Value has a different type")
+        };
+        list
     }
 }
 
@@ -484,6 +502,52 @@ impl Drop for Text {
     }
 }
 
+// --- Tag ---
+
+pub struct Tag {
+    construct_info: ConstructInfoComplete,
+    tag: Cow<'static, str>,
+}
+
+impl Tag {
+    pub fn new(construct_info: ConstructInfo, tag: impl Into<Cow<'static, str>>) -> Self {
+        Self {
+            construct_info: construct_info.complete(ConstructType::Tag),
+            tag: tag.into()
+        }
+    }
+
+    pub fn new_arc(construct_info: ConstructInfo, tag: impl Into<Cow<'static, str>>) -> Arc<Self> {
+        Arc::new(Self::new(construct_info, tag))
+    }
+
+    pub fn new_value(construct_info: ConstructInfo, tag: impl Into<Cow<'static, str>>) -> Value {
+        Value::Tag(Self::new_arc(construct_info, tag))
+    }
+
+    pub fn new_constant(construct_info: ConstructInfo, tag: impl Into<Cow<'static, str>>) -> impl Stream<Item = Value> {
+        constant(Self::new_value(construct_info, tag))
+    }
+
+    pub fn new_arc_value_actor(construct_info: ConstructInfo, run_duration: RunDuration, tag: impl Into<Cow<'static, str>>) -> Arc<ValueActor> {
+        let ConstructInfo { id: actor_id, description: tag_description } = construct_info;
+        let construct_info = ConstructInfo::new(actor_id.with_child_id(0), tag_description);
+        let actor_construct_info = ConstructInfo::new(actor_id, "Constant tag wrapper").complete(ConstructType::ValueActor);
+        let value_stream = Self::new_constant(construct_info, tag.into());
+        Arc::new(ValueActor::new_internal(actor_construct_info, run_duration, value_stream, ()))
+    }
+
+    pub fn tag(&self) -> &str {
+        &self.tag
+    }
+}
+
+impl Drop for Tag {
+    fn drop(&mut self) {
+        println!("Dropped: {}", self.construct_info);
+    }
+}
+
 // --- Number ---
 
 pub struct Number {
@@ -525,6 +589,52 @@ impl Number {
 }
 
 impl Drop for Number {
+    fn drop(&mut self) {
+        println!("Dropped: {}", self.construct_info);
+    }
+}
+
+// --- List ---
+
+pub struct List {
+    construct_info: ConstructInfoComplete,
+    items: Vec<Arc<ValueActor>>,
+}
+
+impl List {
+    pub fn new<const IN: usize>(construct_info: ConstructInfo, items: [Arc<ValueActor>; IN]) -> Self {
+        Self {
+            construct_info: construct_info.complete(ConstructType::List),
+            items: Vec::from(items),
+        }
+    }
+
+    pub fn new_arc<const IN: usize>(construct_info: ConstructInfo, items: [Arc<ValueActor>; IN]) -> Arc<Self> {
+        Arc::new(Self::new(construct_info, items))
+    }
+
+    pub fn new_value<const IN: usize>(construct_info: ConstructInfo, items: [Arc<ValueActor>; IN]) -> Value {
+        Value::List(Self::new_arc(construct_info, items))
+    }
+
+    pub fn new_constant<const IN: usize>(construct_info: ConstructInfo, items: [Arc<ValueActor>; IN]) -> impl Stream<Item = Value> {
+        constant(Self::new_value(construct_info, items))
+    }
+
+    pub fn new_arc_value_actor<const IN: usize>(construct_info: ConstructInfo, run_duration: RunDuration, items: [Arc<ValueActor>; IN]) -> Arc<ValueActor> {
+        let ConstructInfo { id: actor_id, description: list_description } = construct_info;
+        let construct_info = ConstructInfo::new(actor_id.with_child_id(0), list_description);
+        let actor_construct_info = ConstructInfo::new(actor_id, "Constant list wrapper").complete(ConstructType::ValueActor);
+        let value_stream = Self::new_constant(construct_info, items);
+        Arc::new(ValueActor::new_internal(actor_construct_info, run_duration, value_stream, ()))
+    }
+
+    pub fn items(&self) -> &[Arc<ValueActor>] {
+        &self.items
+    }
+}
+
+impl Drop for List {
     fn drop(&mut self) {
         println!("Dropped: {}", self.construct_info);
     }
