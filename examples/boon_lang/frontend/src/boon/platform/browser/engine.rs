@@ -84,6 +84,7 @@ impl std::fmt::Display for ConstructInfoComplete {
 #[derive(Debug, Clone, Copy)]
 pub enum ConstructType {
     Variable,
+    VariableReference,
     FunctionCall,
     ThenCombinator,
     ValueActor,
@@ -153,6 +154,24 @@ impl Variable {
 impl Drop for Variable {
     fn drop(&mut self) {
         println!("Dropped: {}", self.construct_info);
+    }
+}
+
+// --- VariableReference ---
+
+pub struct VariableReference {}
+
+impl VariableReference {
+    pub fn new_arc_value_actor(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        alias: &'static str,
+        variable_receiver: mpsc::UnboundedReceiver<Arc<Variable>>,
+    ) -> Arc<ValueActor> {
+        let construct_info = construct_info.complete(ConstructType::VariableReference);
+        let value_stream = variable_receiver
+            .flat_map(|variable| variable.subscribe());
+        Arc::new(ValueActor::new_internal(construct_info, run_duration, value_stream, ()))
     }
 }
 

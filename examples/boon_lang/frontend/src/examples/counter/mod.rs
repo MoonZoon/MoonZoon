@@ -5,6 +5,8 @@ pub async fn run() -> Arc<Object> {
     let program = include_str!("counter.bn");
     println!("{program}");
 
+    let (counter_variable_sender, counter_variable_receiver) = mpsc::unbounded();
+
     Object::new_arc(
         ConstructInfo::new(0, "root"),
         [
@@ -40,15 +42,11 @@ pub async fn run() -> Arc<Object> {
                                     ConstructInfo::new(7, "Element/stripe(items)"), 
                                     RunDuration::Nonstop, 
                                     [
-                                        Number::new_arc_value_actor(
-                                            ConstructInfo::new(8, "Number 5"), 
+                                        VariableReference::new_arc_value_actor(
+                                            ConstructInfo::new(8, "counter reference"), 
                                             RunDuration::Nonstop, 
-                                            5
-                                        ),
-                                        Number::new_arc_value_actor(
-                                            ConstructInfo::new(8, "Number 5"), 
-                                            RunDuration::Nonstop, 
-                                            5
+                                            "counter",
+                                            counter_variable_receiver,
                                         ),
                                     ]
                                 ),
@@ -57,15 +55,21 @@ pub async fn run() -> Arc<Object> {
                     ]
                 )
             ),
-            Variable::new_arc(
-                ConstructInfo::new(10, "counter"),
-                "counter",
-                Number::new_arc_value_actor(
-                    ConstructInfo::new(11, "Number 62"), 
-                    RunDuration::Nonstop, 
-                    62
-                ),
-            ),
+            { 
+                let variable = Variable::new_arc(
+                    ConstructInfo::new(10, "counter"),
+                    "counter",
+                    Number::new_arc_value_actor(
+                        ConstructInfo::new(11, "Number 62"), 
+                        RunDuration::Nonstop, 
+                        62
+                    ),
+                );
+                if let Err(error) = counter_variable_sender.unbounded_send(variable.clone()) {
+                    panic!("Failed to send variable through `counter_variable_sender` channel:  {error}");
+                }
+                variable
+            },
         ]
     )
 }
