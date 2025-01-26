@@ -6,14 +6,41 @@ use zoon::Timer;
 
 use super::engine::*;
 
-/// `Document/new(root<Element[..] | Text | Number>)`
+/// `Document/new(root<INTO_ELEMENT>) -> [root_element<INTO_ELEMENT>]`
+/// 
+/// `INTO_ELEMENT: <ELEMENT | Text | Number>`
+/// 
+/// ```
+/// ELEMENT: <
+///     ElementContainer[
+///         settings<[
+///             style<[]>
+///             child<INTO_ELEMENT>
+///         ]>
+///     ]
+///     | ElementStripe [
+///         settings<[
+///             direction<Column | Row>
+///             style<[]>
+///             items<List<INTO_ELEMENT>>
+///         ]>
+///     ]
+///     | ElementButton[
+///         event?<[press?<LINK<[]>>]>
+///         settings<[
+///             style<[]>
+///             label<Text>
+///         ]>
+///     ]
+/// >
+/// ```
 pub fn function_document_new(arguments: [Arc<ValueActor>; 1], function_call_id: ConstructId) -> impl Stream<Item = Value> {
     let [argument_root] = arguments;
     Object::new_constant(
         ConstructInfo::new(function_call_id.with_child_id(0), "Document/new(..) -> [..]"),
         [
             Variable::new_arc(
-                ConstructInfo::new(function_call_id.with_child_id(1), "Document/new(..) -> [..].root_element"),
+                ConstructInfo::new(function_call_id.with_child_id(1), "Document/new(..) -> [root_element]"),
                 "root_element",
                 argument_root
             )
@@ -21,7 +48,7 @@ pub fn function_document_new(arguments: [Arc<ValueActor>; 1], function_call_id: 
     )
 }
 
-/// `Math/sum(increment<Number>)`
+/// `Math/sum(increment<Number>) -> Number`
 pub fn function_math_sum(arguments: [Arc<ValueActor>; 1], function_call_id: ConstructId) -> impl Stream<Item = Value> {
     let [argument_increment] = arguments;
     argument_increment
@@ -42,7 +69,7 @@ pub fn function_math_sum(arguments: [Arc<ValueActor>; 1], function_call_id: Cons
         })
 }
 
-/// `Timer/interval(duration<Duration[seconds<Number> | milliseconds<Number>]>)`
+/// `Timer/interval(duration<Duration[seconds<Number> | milliseconds<Number>]>) -> []`
 pub fn function_timer_interval(arguments: [Arc<ValueActor>; 1], function_call_id: ConstructId) -> impl Stream<Item = Value> {
     let [argument_duration] = arguments;
     argument_duration
