@@ -735,6 +735,7 @@ dependencies = [
 name = "frontend"
 version = "0.1.0"
 dependencies = [
+ "pin-project",
  "wasm-bindgen-test",
  "zoon",
 ]

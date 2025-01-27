@@ -55,25 +55,17 @@ fn element_container(tagged_object: Arc<TaggedObject>) -> impl Element {
 fn element_stripe(tagged_object: Arc<TaggedObject>) -> impl Element {
     let settings_stream = tagged_object.expect_variable("settings");
 
-    let item_list_stream = settings_stream
+    let items_vec_diff_stream = settings_stream
         .subscribe()
         .flat_map(|value| value.expect_object().expect_variable("items").subscribe())
-        .map(|value| 
-            value
-                .expect_list()
-                .items()
-                .iter()
-                .map(|actor| signal::from_stream(actor.subscribe().map(value_to_element)))
-                .collect::<Vec<_>>()
-        );
+        .flat_map(|value| value.expect_list().subscribe())
+        .map(list_change_to_vec_diff);
 
     // @TODO Column -> Stripe + direction
     Column::new()
-        .items_signal_vec(signal::from_stream(item_list_stream)
-            .map(Option::unwrap_or_default)
-            .to_signal_vec()
-            .map_signal(|item| item)
-        )
+        .items_signal_vec(VecDiffStreamSignalVec(items_vec_diff_stream).map_signal(|value_actor| { 
+            signal::from_stream(value_actor.subscribe().map(value_to_element))
+        }))
 }
 
 fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
@@ -135,4 +127,77 @@ fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
             }
         })
         .after_remove(move |_| drop(press_handler_task))
+}
+
+#[pin_project]
+#[derive(Debug)]
+#[must_use = "SignalVecs do nothing unless polled"]
+struct VecDiffStreamSignalVec<A>(#[pin] A);
+
+impl<A, T> SignalVec for VecDiffStreamSignalVec<A> where A: Stream<Item = VecDiff<T>> {
+    type Item = T;
+
+    #[inline]
+    fn poll_vec_change(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context) -> std::task::Poll<Option<VecDiff<Self::Item>>> {
+        self.project().0.poll_next(cx)
+    }
+}
+
+fn list_change_to_vec_diff(change: ListChange) -> VecDiff<Arc<ValueActor>> {
+    match change {
+        ListChange::Replace {
+            items,
+        } => {
+            VecDiff::Replace {
+                values: items,
+            }
+        },
+        ListChange::InsertAt {
+            index,
+            item,
+        } => {
+            VecDiff::InsertAt {
+                index,
+                value: item,
+            }
+        },
+        ListChange::UpdateAt {
+            index,
+            item,
+        } => {
+            VecDiff::UpdateAt {
+                index,
+                value: item,
+            }
+        },
+        ListChange::RemoveAt {
+            index,
+        } => {
+            VecDiff::RemoveAt {
+                index,
+            }
+        },
+        ListChange::Move {
+            old_index,
+            new_index,
+        } => {
+            VecDiff::Move {
+                old_index,
+                new_index,
+            }
+        },
+        ListChange::Push {
+            item,
+        } => {
+            VecDiff::Push {
+                value: item,
+            }
+        },
+        ListChange::Pop => {
+            VecDiff::Pop {} 
+        },
+        ListChange::Clear => {
+            VecDiff::Clear {}
+        },
+    }
 }

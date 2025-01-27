@@ -30,6 +30,7 @@ pub fn constant<T>(item: T) -> impl Stream<Item = T> {
 
 // --- Run ---
 
+#[derive(Clone, Copy)]
 pub enum RunDuration {
     Nonstop,
     UntilFirstValue,
@@ -695,42 +696,99 @@ impl Drop for Number {
 
 // --- List ---
 
-// @TODO change streams?
 pub struct List {
-    construct_info: ConstructInfoComplete,
-    items: Vec<Arc<ValueActor>>,
+    construct_info: Arc<ConstructInfoComplete>,
+    loop_task: TaskHandle,
+    change_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<ListChange>>,
 }
 
 impl List {
-    pub fn new<const IN: usize>(construct_info: ConstructInfo, items: [Arc<ValueActor>; IN]) -> Self {
+    pub fn new<const IN: usize>(construct_info: ConstructInfo, run_duration: RunDuration, items: [Arc<ValueActor>; IN]) -> Self {
+        let change_stream = constant(ListChange::Replace { items: Vec::from(items) });
+        Self::new_with_change_stream(construct_info, run_duration, change_stream, ())
+    }
+
+    pub fn new_with_change_stream<EOD: 'static>(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        change_stream: impl Stream<Item = ListChange> + 'static,
+        extra_owned_data: EOD,
+    ) -> Self {
+        let construct_info = Arc::new(construct_info.complete(ConstructType::List));
+        let (change_sender_sender, mut change_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<ListChange>>();
+        let loop_task = Task::start_droppable({
+            let construct_info = construct_info.clone();
+            async move {
+                let mut change_stream = pin!(change_stream.fuse());
+                let mut change = None;
+                let mut change_senders = Vec::<mpsc::UnboundedSender<ListChange>>::new();
+                loop {
+                    select! {
+                        new_change = change_stream.next() => {
+                            let Some(new_change) = new_change else { break };
+                            change_senders.retain(|change_sender| {
+                                if let Err(error) = change_sender.unbounded_send(new_change.clone()) {
+                                    eprintln!("Failed to send new {} change to subscriber: {error:#}", construct_info);
+                                    false
+                                } else {
+                                    true
+                                }
+                            });
+                            change = Some(new_change);
+                            if let RunDuration::UntilFirstValue = run_duration {
+                                break
+                            }
+                        }
+                        change_sender = change_sender_receiver.select_next_some() => {
+                            if let Some(change) = change.as_ref() {
+                                if let Err(error) = change_sender.unbounded_send(change.clone()) {
+                                    eprintln!("Failed to send {} change to subscriber: {error:#}", construct_info);
+                                } else {
+                                    change_senders.push(change_sender);
+                                }
+                            } else {
+                                change_senders.push(change_sender);
+                            }
+                        }
+                    }
+                }
+                println!("Loop ended {construct_info}");
+                drop(extra_owned_data);
+            }
+        });
         Self {
-            construct_info: construct_info.complete(ConstructType::List),
-            items: Vec::from(items),
+            construct_info,
+            loop_task,
+            change_sender_sender,
         }
     }
 
-    pub fn new_arc<const IN: usize>(construct_info: ConstructInfo, items: [Arc<ValueActor>; IN]) -> Arc<Self> {
-        Arc::new(Self::new(construct_info, items))
+    pub fn new_arc<const IN: usize>(construct_info: ConstructInfo, run_duration: RunDuration, items: [Arc<ValueActor>; IN]) -> Arc<Self> {
+        Arc::new(Self::new(construct_info, run_duration, items))
     }
 
-    pub fn new_value<const IN: usize>(construct_info: ConstructInfo, items: [Arc<ValueActor>; IN]) -> Value {
-        Value::List(Self::new_arc(construct_info, items))
+    pub fn new_value<const IN: usize>(construct_info: ConstructInfo, run_duration: RunDuration, items: [Arc<ValueActor>; IN]) -> Value {
+        Value::List(Self::new_arc(construct_info, run_duration, items))
     }
 
-    pub fn new_constant<const IN: usize>(construct_info: ConstructInfo, items: [Arc<ValueActor>; IN]) -> impl Stream<Item = Value> {
-        constant(Self::new_value(construct_info, items))
+    pub fn new_constant<const IN: usize>(construct_info: ConstructInfo, run_duration: RunDuration, items: [Arc<ValueActor>; IN]) -> impl Stream<Item = Value> {
+        constant(Self::new_value(construct_info, run_duration, items))
     }
 
     pub fn new_arc_value_actor<const IN: usize>(construct_info: ConstructInfo, run_duration: RunDuration, items: [Arc<ValueActor>; IN]) -> Arc<ValueActor> {
         let ConstructInfo { id: actor_id, description: list_description } = construct_info;
         let construct_info = ConstructInfo::new(actor_id.with_child_id(0), list_description);
         let actor_construct_info = ConstructInfo::new(actor_id, "Constant list wrapper").complete(ConstructType::ValueActor);
-        let value_stream = Self::new_constant(construct_info, items);
+        let value_stream = Self::new_constant(construct_info, run_duration, items);
         Arc::new(ValueActor::new_internal(actor_construct_info, run_duration, value_stream, ()))
     }
 
-    pub fn items(&self) -> &[Arc<ValueActor>] {
-        &self.items
+    pub fn subscribe(&self) -> impl Stream<Item = ListChange> {
+        let (change_sender, change_receiver) = mpsc::unbounded();
+        if let Err(error) = self.change_sender_sender.unbounded_send(change_sender) {
+            eprintln!("Failed to subscribe to {}: {error:#}", self.construct_info);
+        }
+        change_receiver
     }
 }
 
@@ -738,4 +796,31 @@ impl Drop for List {
     fn drop(&mut self) {
         println!("Dropped: {}", self.construct_info);
     }
+}
+
+#[derive(Clone)]
+pub enum ListChange {
+    Replace {
+        items: Vec<Arc<ValueActor>>,
+    },
+    InsertAt {
+        index: usize,
+        item: Arc<ValueActor>,
+    },
+    UpdateAt {
+        index: usize,
+        item: Arc<ValueActor>,
+    },
+    RemoveAt {
+        index: usize,
+    },
+    Move {
+        old_index: usize,
+        new_index: usize,
+    },
+    Push {
+        item: Arc<ValueActor>,
+    },
+    Pop,
+    Clear,
 }
