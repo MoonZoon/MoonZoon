@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use zoon::*;
+use zoon::{*, eprintln};
+use zoon::futures_util::{stream, select};
 
 use super::engine::*;
 
@@ -66,6 +67,7 @@ fn element_stripe(tagged_object: Arc<TaggedObject>) -> impl Element {
                 .collect::<Vec<_>>()
         );
 
+    // @TODO Column -> Stripe + direction
     Column::new()
         .items_signal_vec(signal::from_stream(item_list_stream)
             .map(Option::unwrap_or_default)
@@ -75,9 +77,41 @@ fn element_stripe(tagged_object: Arc<TaggedObject>) -> impl Element {
 }
 
 fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
-    let settings_stream = tagged_object.expect_variable("settings");
+    let (press_event_sender, mut press_event_receiver) = mpsc::unbounded();
 
-    let label_stream = settings_stream
+    let event_stream = stream::iter(tagged_object.variable("event"))
+        .flat_map(|variable| variable.subscribe());
+
+    let mut press_stream = event_stream
+        .filter_map(|value| future::ready(value.expect_object().variable("press")))
+        .map(|variable| variable.expect_link_value_sender())
+        .fuse();
+
+    let press_handler_task = Task::start_droppable(async move {
+        let mut press_link_value_sender = None;
+        loop {
+            select! {
+                new_press_link_value_sender = press_stream.next() => {
+                    if let Some(new_press_link_value_sender) = new_press_link_value_sender {
+                        press_link_value_sender = Some(new_press_link_value_sender);
+                    } else {
+                        break
+                    }
+                }
+                press_event = press_event_receiver.select_next_some() => {
+                    if let Some(press_link_value_sender) = press_link_value_sender.as_ref() {
+                        if let Err(error) = press_link_value_sender.unbounded_send(press_event) {
+                            eprintln!("Failed to send button press event to event press link variable: {error}");
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    let settings_variable = tagged_object.expect_variable("settings");
+
+    let label_stream = settings_variable
         .subscribe()
         .flat_map(|value| value.expect_object().expect_variable("label").subscribe())
         .map(value_to_element);
@@ -90,4 +124,15 @@ fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
                 zoon::Text::new("").unify()
             }
         }))
+        .on_press(move || {
+            let press_event = Object::new_value(
+                // @TODO generate id
+                ConstructInfo::new(123, "Button press event"), 
+                []
+            );
+            if let Err(error) = press_event_sender.unbounded_send(press_event) {
+                eprintln!("Failed to send button press event from on_press handler: {error}");
+            }
+        })
+        .after_remove(move |_| drop(press_handler_task))
 }

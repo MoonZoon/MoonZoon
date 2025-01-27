@@ -168,8 +168,16 @@ impl Variable {
         self.value_actor.clone()
     }
 
-    pub fn link_value_sender(&self) -> Option<&mpsc::UnboundedSender<Value>> {
-        self.link_value_sender.as_ref()
+    pub fn link_value_sender(&self) -> Option<mpsc::UnboundedSender<Value>> {
+        self.link_value_sender.clone()
+    }
+
+    pub fn expect_link_value_sender(&self) -> mpsc::UnboundedSender<Value> {
+        if let Some(link_value_sender) = self.link_value_sender.clone() {
+            link_value_sender
+        } else {
+            panic!("Failed to get expected link value sender from {}", self.construct_info);
+        }
     }
 }
 
