@@ -167,12 +167,28 @@ impl VariableReference {
         construct_info: ConstructInfo,
         run_duration: RunDuration,
         alias: &'static str,
-        variable_receiver: mpsc::UnboundedReceiver<Arc<Variable>>,
+        root_variable_receiver: mpsc::UnboundedReceiver<Arc<Variable>>,
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::VariableReference);
-        // @TODO support nested (dot-separated) aliases
-        let value_stream = variable_receiver
-            .flat_map(|variable| variable.subscribe());
+        let variable_names = alias.split('.');
+        let mut value_stream = root_variable_receiver
+            .flat_map(|variable| variable.subscribe())
+            .boxed_local();
+        for variable_name in variable_names.skip(1) {
+            value_stream = value_stream
+                .flat_map(|value| {
+                    match value {
+                        Value::Object(object) => {
+                            object.expect_variable(variable_name).subscribe()
+                        },
+                        Value::TaggedObject(tagged_object) => {
+                            tagged_object.expect_variable(variable_name).subscribe()
+                        }
+                        other => panic!("Failed to get Object or TaggedObject: The Value has a different type {}", other.construct_info())
+                    }
+                })
+                .boxed_local();
+        }
         Arc::new(ValueActor::new_internal(construct_info, run_duration, value_stream, ()))
     }
 }
@@ -334,9 +350,20 @@ pub enum Value {
 }
 
 impl Value {
+    pub fn construct_info(&self) -> &ConstructInfoComplete {
+        match &self {
+            Self::Object(object) => &object.construct_info,
+            Self::TaggedObject(tagged_object) => &tagged_object.construct_info,
+            Self::Text(text) => &text.construct_info,
+            Self::Tag(tag) => &tag.construct_info,
+            Self::Number(number) => &number.construct_info,
+            Self::List(list) => &list.construct_info,
+        }
+    }
+
     pub fn expect_object(self) -> Arc<Object> {
         let Self::Object(object) = self else {
-            panic!("Failed to get expected Object: The Value has a different type")
+            panic!("Failed to get expected Object: The Value has a different type {}", self.construct_info())
         };
         object
     }

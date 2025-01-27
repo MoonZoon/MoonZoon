@@ -77,48 +77,29 @@ pub async fn run() -> Arc<Object> {
                                 RunDuration::Nonstop,
                                 0
                             ),
-                            TaggedObject::new_arc_value_actor(
-                                ConstructInfo::new(13, "Duration[..]"),
-                                RunDuration::Nonstop,
-                                "Duration",
-                                [
-                                    Variable::new_arc(
-                                        ConstructInfo::new(14, "Duration.seconds"), 
-                                        "seconds", 
-                                        Number::new_arc_value_actor(
-                                            ConstructInfo::new(15, "Duration.seconds number"),
-                                            RunDuration::Nonstop,
-                                            1
-                                        )
-                                    )
-                                ]
+                            VariableReference::new_arc_value_actor(
+                                ConstructInfo::new(9, "increment_button.event.press reference"), 
+                                RunDuration::Nonstop, 
+                                "increment_button.event.press",
+                                increment_button_receiver_1,
                             ).pipe_to(|piped| {
-                                FunctionCall::new_arc_value_actor(
-                                    ConstructInfo::new(16, "Timer/interval(..)"),
+                                ThenCombinator::new_arc_value_actor(
+                                    ConstructInfo::new(17, "THEN"),
                                     RunDuration::Nonstop,
-                                    function_timer_interval,
-                                    [
-                                        piped
-                                    ]
+                                    piped,
+                                    || Number::new_constant(
+                                        ConstructInfo::new(18, "Number 1"),
+                                        1,
+                                    )
                                 ).pipe_to(|piped| {
-                                    ThenCombinator::new_arc_value_actor(
-                                        ConstructInfo::new(17, "THEN"),
+                                    FunctionCall::new_arc_value_actor(
+                                        ConstructInfo::new(19, "Math/sum(..)"), 
                                         RunDuration::Nonstop,
-                                        piped,
-                                        || Number::new_constant(
-                                            ConstructInfo::new(18, "Number 1"),
-                                            1,
-                                        )
-                                    ).pipe_to(|piped| {
-                                        FunctionCall::new_arc_value_actor(
-                                            ConstructInfo::new(19, "Math/sum(..)"), 
-                                            RunDuration::Nonstop,
-                                            function_math_sum,
-                                            [
-                                                piped
-                                            ]
-                                        )
-                                    })
+                                        function_math_sum,
+                                        [
+                                            piped
+                                        ]
+                                    )
                                 })
                             })
                         ]
@@ -156,11 +137,31 @@ pub async fn run() -> Arc<Object> {
                                                     //     ConstructInfo::new(23, "Element/button(element: [event: [press: LINK]])"), 
                                                     //     RunDuration::Nonstop, 
                                                     // )
-                                                    Object::new_arc_value_actor(
-                                                        ConstructInfo::new(23, "remove me"), 
-                                                        RunDuration::Nonstop, 
-                                                        []
-                                                    )
+                                                    TaggedObject::new_arc_value_actor(
+                                                        ConstructInfo::new(13, "Duration[..]"),
+                                                        RunDuration::Nonstop,
+                                                        "Duration",
+                                                        [
+                                                            Variable::new_arc(
+                                                                ConstructInfo::new(14, "Duration.seconds"), 
+                                                                "seconds", 
+                                                                Number::new_arc_value_actor(
+                                                                    ConstructInfo::new(15, "Duration.seconds number"),
+                                                                    RunDuration::Nonstop,
+                                                                    1
+                                                                )
+                                                            )
+                                                        ]
+                                                    ).pipe_to(|piped| {
+                                                        FunctionCall::new_arc_value_actor(
+                                                            ConstructInfo::new(16, "Timer/interval(..)"),
+                                                            RunDuration::Nonstop,
+                                                            function_timer_interval,
+                                                            [
+                                                                piped
+                                                            ]
+                                                        )
+                                                    })
                                                 )
                                             ]
                                         )
