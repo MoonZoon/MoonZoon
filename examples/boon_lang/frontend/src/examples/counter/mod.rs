@@ -130,38 +130,10 @@ pub async fn run() -> Arc<Object> {
                                             ConstructInfo::new(23, "Element/button(element: [event: [..]])"), 
                                             RunDuration::Nonstop, 
                                             [
-                                                Variable::new_arc(
+                                                Variable::new_link_arc(
                                                     ConstructInfo::new(20, "Element/button(element: [event: [press]])"),
+                                                    RunDuration::Nonstop,
                                                     "press",
-                                                    // Link::new_arc_value_actor(
-                                                    //     ConstructInfo::new(23, "Element/button(element: [event: [press: LINK]])"), 
-                                                    //     RunDuration::Nonstop, 
-                                                    // )
-                                                    TaggedObject::new_arc_value_actor(
-                                                        ConstructInfo::new(13, "Duration[..]"),
-                                                        RunDuration::Nonstop,
-                                                        "Duration",
-                                                        [
-                                                            Variable::new_arc(
-                                                                ConstructInfo::new(14, "Duration.seconds"), 
-                                                                "seconds", 
-                                                                Number::new_arc_value_actor(
-                                                                    ConstructInfo::new(15, "Duration.seconds number"),
-                                                                    RunDuration::Nonstop,
-                                                                    1
-                                                                )
-                                                            )
-                                                        ]
-                                                    ).pipe_to(|piped| {
-                                                        FunctionCall::new_arc_value_actor(
-                                                            ConstructInfo::new(16, "Timer/interval(..)"),
-                                                            RunDuration::Nonstop,
-                                                            function_timer_interval,
-                                                            [
-                                                                piped
-                                                            ]
-                                                        )
-                                                    })
                                                 )
                                             ]
                                         )
@@ -182,10 +154,10 @@ pub async fn run() -> Arc<Object> {
                     )
                 );
                 if let Err(error) = increment_button_sender_0.unbounded_send(variable.clone()) {
-                    panic!("Failed to send variable through `increment_button_sender_0` channel:  {error}");
+                    panic!("Failed to send variable through `increment_button_sender_0` channel: {error}");
                 }
                 if let Err(error) = increment_button_sender_1.unbounded_send(variable.clone()) {
-                    panic!("Failed to send variable through `increment_button_sender_1` channel:  {error}");
+                    panic!("Failed to send variable through `increment_button_sender_1` channel: {error}");
                 }
                 variable
             },

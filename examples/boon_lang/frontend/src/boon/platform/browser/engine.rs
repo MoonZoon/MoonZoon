@@ -84,6 +84,7 @@ impl std::fmt::Display for ConstructInfoComplete {
 #[derive(Debug, Clone, Copy)]
 pub enum ConstructType {
     Variable,
+    LinkVariable,
     VariableReference,
     FunctionCall,
     LatestCombinator,
@@ -128,6 +129,7 @@ pub struct Variable {
     construct_info: ConstructInfoComplete,
     name: &'static str,
     value_actor: Arc<ValueActor>,
+    link_value_sender: Option<mpsc::UnboundedSender<Value>>,
 }
 
 impl Variable {
@@ -135,12 +137,27 @@ impl Variable {
         Self {
             construct_info: construct_info.complete(ConstructType::Variable),
             name,
-            value_actor
+            value_actor,
+            link_value_sender: None,
         }
     }
 
     pub fn new_arc(construct_info: ConstructInfo, name: &'static str, value_actor: Arc<ValueActor>) -> Arc<Self> {
         Arc::new(Self::new(construct_info, name, value_actor))
+    }
+
+    pub fn new_link_arc(construct_info: ConstructInfo, run_duration: RunDuration, name: &'static str) -> Arc<Self> {
+        let ConstructInfo { id: actor_id, description: variable_description } = construct_info;
+        let construct_info = ConstructInfo::new(actor_id.with_child_id(0), variable_description);
+        let actor_construct_info = ConstructInfo::new(actor_id, "Link variable value actor").complete(ConstructType::ValueActor);
+        let (link_value_sender, link_value_receiver) = mpsc::unbounded();
+        let value_actor = ValueActor::new_internal(actor_construct_info, run_duration, link_value_receiver, ());
+        Arc::new(Self {
+            construct_info: construct_info.complete(ConstructType::LinkVariable),
+            name,
+            value_actor: Arc::new(value_actor),
+            link_value_sender: Some(link_value_sender),
+        })
     }
 
     pub fn subscribe(&self) -> impl Stream<Item = Value> {
@@ -149,6 +166,10 @@ impl Variable {
 
     pub fn value_actor(&self) -> Arc<ValueActor> {
         self.value_actor.clone()
+    }
+
+    pub fn link_value_sender(&self) -> Option<&mpsc::UnboundedSender<Value>> {
+        self.link_value_sender.as_ref()
     }
 }
 
