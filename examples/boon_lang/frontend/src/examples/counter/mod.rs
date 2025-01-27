@@ -5,7 +5,10 @@ pub async fn run() -> Arc<Object> {
     let program = include_str!("counter.bn");
     println!("{program}");
 
-    let (counter_variable_sender, counter_variable_receiver) = mpsc::unbounded();
+    let (counter_variable_sender_0, counter_variable_receiver_0) = mpsc::unbounded();
+
+    let (increment_button_sender_0, increment_button_receiver_0) = mpsc::unbounded();
+    let (increment_button_sender_1, increment_button_receiver_1) = mpsc::unbounded();
 
     Object::new_arc(
         ConstructInfo::new(0, "root"),
@@ -46,7 +49,13 @@ pub async fn run() -> Arc<Object> {
                                             ConstructInfo::new(8, "counter reference"), 
                                             RunDuration::Nonstop, 
                                             "counter",
-                                            counter_variable_receiver,
+                                            counter_variable_receiver_0,
+                                        ),
+                                        VariableReference::new_arc_value_actor(
+                                            ConstructInfo::new(9, "increment_button reference"), 
+                                            RunDuration::Nonstop, 
+                                            "increment_button",
+                                            increment_button_receiver_0,
                                         ),
                                     ]
                                 ),
@@ -115,8 +124,67 @@ pub async fn run() -> Arc<Object> {
                         ]
                     )
                 );
-                if let Err(error) = counter_variable_sender.unbounded_send(variable.clone()) {
-                    panic!("Failed to send variable through `counter_variable_sender` channel:  {error}");
+                if let Err(error) = counter_variable_sender_0.unbounded_send(variable.clone()) {
+                    panic!("Failed to send variable through `counter_variable_sender_0` channel: {error}");
+                }
+                variable
+            },
+            { 
+                let variable = Variable::new_arc(
+                    ConstructInfo::new(20, "increment_button"),
+                    "increment_button",
+                    FunctionCall::new_arc_value_actor(
+                        ConstructInfo::new(21, "Element/button(..)"),
+                        RunDuration::Nonstop,
+                        function_element_button,
+                        [
+                            Object::new_arc_value_actor(
+                                ConstructInfo::new(22, "Element/button(element)"), 
+                                RunDuration::Nonstop, 
+                                [
+                                    Variable::new_arc(
+                                        ConstructInfo::new(20, "Element/button(element: [event])"),
+                                        "event",
+                                        Object::new_arc_value_actor(
+                                            ConstructInfo::new(23, "Element/button(element: [event: [..]])"), 
+                                            RunDuration::Nonstop, 
+                                            [
+                                                Variable::new_arc(
+                                                    ConstructInfo::new(20, "Element/button(element: [event: [press]])"),
+                                                    "press",
+                                                    // Link::new_arc_value_actor(
+                                                    //     ConstructInfo::new(23, "Element/button(element: [event: [press: LINK]])"), 
+                                                    //     RunDuration::Nonstop, 
+                                                    // )
+                                                    Object::new_arc_value_actor(
+                                                        ConstructInfo::new(23, "remove me"), 
+                                                        RunDuration::Nonstop, 
+                                                        []
+                                                    )
+                                                )
+                                            ]
+                                        )
+                                    )
+                                ]
+                            ),
+                            Object::new_arc_value_actor(
+                                ConstructInfo::new(6, "Element/button(style)"), 
+                                RunDuration::Nonstop, 
+                                []
+                            ),
+                            Text::new_arc_value_actor(
+                                ConstructInfo::new(5, "Element/button(label)"),
+                                RunDuration::Nonstop,
+                                "+",
+                            ),
+                        ]
+                    )
+                );
+                if let Err(error) = increment_button_sender_0.unbounded_send(variable.clone()) {
+                    panic!("Failed to send variable through `increment_button_sender_0` channel:  {error}");
+                }
+                if let Err(error) = increment_button_sender_1.unbounded_send(variable.clone()) {
+                    panic!("Failed to send variable through `increment_button_sender_1` channel:  {error}");
                 }
                 variable
             },
