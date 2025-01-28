@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use std::future;
+use std::sync::Arc;
 
 use zoon::futures_util::stream::{self, Stream, StreamExt};
 use zoon::Timer;
@@ -10,8 +10,8 @@ use super::engine::*;
 /// Document/new(root<INTO_ELEMENT>) -> [root_element<INTO_ELEMENT>]
 /// INTO_ELEMENT: <ELEMENT | Text | Number>
 /// ELEMENT: <
-///     ELEMENT_CONTAINER 
-///     | ELEMENT_STRIPE 
+///     ELEMENT_CONTAINER
+///     | ELEMENT_STRIPE
 ///     | ELEMENT_BUTTON
 /// >
 /// ELEMENT_CONTAINER: ElementContainer[
@@ -38,17 +38,24 @@ use super::engine::*;
 /// ]
 /// >
 /// ```
-pub fn function_document_new(arguments: [Arc<ValueActor>; 1], function_call_id: ConstructId) -> impl Stream<Item = Value> {
+pub fn function_document_new(
+    arguments: [Arc<ValueActor>; 1],
+    function_call_id: ConstructId,
+) -> impl Stream<Item = Value> {
     let [argument_root] = arguments;
     Object::new_constant(
-        ConstructInfo::new(function_call_id.with_child_id(0), "Document/new(..) -> [..]"),
-        [
-            Variable::new_arc(
-                ConstructInfo::new(function_call_id.with_child_id(1), "Document/new(..) -> [root_element]"),
-                "root_element",
-                argument_root
-            )
-        ]
+        ConstructInfo::new(
+            function_call_id.with_child_id(0),
+            "Document/new(..) -> [..]",
+        ),
+        [Variable::new_arc(
+            ConstructInfo::new(
+                function_call_id.with_child_id(1),
+                "Document/new(..) -> [root_element]",
+            ),
+            "root_element",
+            argument_root,
+        )],
     )
 }
 
@@ -61,37 +68,49 @@ pub fn function_document_new(arguments: [Arc<ValueActor>; 1], function_call_id: 
 ///     child<INTO_ELEMENT>
 /// ) -> ELEMENT_CONTAINER
 /// ```
-pub fn function_element_container(arguments: [Arc<ValueActor>; 3], function_call_id: ConstructId) -> impl Stream<Item = Value> {
-    let [
-        _argument_element, 
-        argument_style,
-        argument_child,
-    ] = arguments;
+pub fn function_element_container(
+    arguments: [Arc<ValueActor>; 3],
+    function_call_id: ConstructId,
+) -> impl Stream<Item = Value> {
+    let [_argument_element, argument_style, argument_child] = arguments;
     TaggedObject::new_constant(
-        ConstructInfo::new(function_call_id.with_child_id(0), "Element/container(..) -> ElementContainer[..]"),
-        "ElementContainer", 
-        [
-            Variable::new_arc(
-                ConstructInfo::new(function_call_id.with_child_id(1), "Element/container(..) -> ElementContainer[settings]"), 
-                "settings", 
-                Object::new_arc_value_actor(
-                    ConstructInfo::new(function_call_id.with_child_id(2), "Element/container(..) -> ElementContainer[settings: [..]]"), 
-                    RunDuration::Nonstop, 
-                    [
-                        Variable::new_arc(
-                            ConstructInfo::new(function_call_id.with_child_id(3), "Element/container(..) -> ElementContainer[settings: [style]]"), 
-                            "style", 
-                            argument_style
-                        ),
-                        Variable::new_arc(
-                            ConstructInfo::new(function_call_id.with_child_id(4), "Element/container(..) -> ElementContainer[settings: [child]]"), 
-                            "child", 
-                            argument_child
-                        ),
-                    ]
-                )
+        ConstructInfo::new(
+            function_call_id.with_child_id(0),
+            "Element/container(..) -> ElementContainer[..]",
+        ),
+        "ElementContainer",
+        [Variable::new_arc(
+            ConstructInfo::new(
+                function_call_id.with_child_id(1),
+                "Element/container(..) -> ElementContainer[settings]",
             ),
-        ]
+            "settings",
+            Object::new_arc_value_actor(
+                ConstructInfo::new(
+                    function_call_id.with_child_id(2),
+                    "Element/container(..) -> ElementContainer[settings: [..]]",
+                ),
+                RunDuration::Nonstop,
+                [
+                    Variable::new_arc(
+                        ConstructInfo::new(
+                            function_call_id.with_child_id(3),
+                            "Element/container(..) -> ElementContainer[settings: [style]]",
+                        ),
+                        "style",
+                        argument_style,
+                    ),
+                    Variable::new_arc(
+                        ConstructInfo::new(
+                            function_call_id.with_child_id(4),
+                            "Element/container(..) -> ElementContainer[settings: [child]]",
+                        ),
+                        "child",
+                        argument_child,
+                    ),
+                ],
+            ),
+        )],
     )
 }
 
@@ -103,43 +122,57 @@ pub fn function_element_container(arguments: [Arc<ValueActor>; 3], function_call
 ///     items<List<INTO_ELEMENT>>
 /// ) -> ELEMENT_STRIPE
 /// ```
-pub fn function_element_stripe(arguments: [Arc<ValueActor>; 4], function_call_id: ConstructId) -> impl Stream<Item = Value> {
-    let [
-        _argument_element, 
-        argument_direction, 
-        argument_style,
-        argument_items,
-    ] = arguments;
+pub fn function_element_stripe(
+    arguments: [Arc<ValueActor>; 4],
+    function_call_id: ConstructId,
+) -> impl Stream<Item = Value> {
+    let [_argument_element, argument_direction, argument_style, argument_items] = arguments;
     TaggedObject::new_constant(
-        ConstructInfo::new(function_call_id.with_child_id(0), "Element/stripe(..) -> ElementStripe[..]"),
-        "ElementStripe", 
-        [
-            Variable::new_arc(
-                ConstructInfo::new(function_call_id.with_child_id(1), "Element/stripe(..) -> ElementStripe[settings]"), 
-                "settings", 
-                Object::new_arc_value_actor(
-                    ConstructInfo::new(function_call_id.with_child_id(2), "Element/stripe(..) -> ElementStripe[settings: [..]]"), 
-                    RunDuration::Nonstop, 
-                    [
-                        Variable::new_arc(
-                            ConstructInfo::new(function_call_id.with_child_id(3), "Element/stripe(..) -> ElementStripe[settings: [direction]]"), 
-                            "direction", 
-                            argument_direction
-                        ),
-                        Variable::new_arc(
-                            ConstructInfo::new(function_call_id.with_child_id(4), "Element/stripe(..) -> ElementStripe[settings: [style]]"), 
-                            "style", 
-                            argument_style
-                        ),
-                        Variable::new_arc(
-                            ConstructInfo::new(function_call_id.with_child_id(5), "Element/stripe(..) -> ElementStripe[settings: [items]]"), 
-                            "items", 
-                            argument_items
-                        ),
-                    ]
-                )
+        ConstructInfo::new(
+            function_call_id.with_child_id(0),
+            "Element/stripe(..) -> ElementStripe[..]",
+        ),
+        "ElementStripe",
+        [Variable::new_arc(
+            ConstructInfo::new(
+                function_call_id.with_child_id(1),
+                "Element/stripe(..) -> ElementStripe[settings]",
             ),
-        ]
+            "settings",
+            Object::new_arc_value_actor(
+                ConstructInfo::new(
+                    function_call_id.with_child_id(2),
+                    "Element/stripe(..) -> ElementStripe[settings: [..]]",
+                ),
+                RunDuration::Nonstop,
+                [
+                    Variable::new_arc(
+                        ConstructInfo::new(
+                            function_call_id.with_child_id(3),
+                            "Element/stripe(..) -> ElementStripe[settings: [direction]]",
+                        ),
+                        "direction",
+                        argument_direction,
+                    ),
+                    Variable::new_arc(
+                        ConstructInfo::new(
+                            function_call_id.with_child_id(4),
+                            "Element/stripe(..) -> ElementStripe[settings: [style]]",
+                        ),
+                        "style",
+                        argument_style,
+                    ),
+                    Variable::new_arc(
+                        ConstructInfo::new(
+                            function_call_id.with_child_id(5),
+                            "Element/stripe(..) -> ElementStripe[settings: [items]]",
+                        ),
+                        "items",
+                        argument_items,
+                    ),
+                ],
+            ),
+        )],
     )
 }
 
@@ -154,56 +187,79 @@ pub fn function_element_stripe(arguments: [Arc<ValueActor>; 4], function_call_id
 ///     label<INTO_ELEMENT>
 /// ) -> ELEMENT_BUTTON
 /// ```
-pub fn function_element_button(arguments: [Arc<ValueActor>; 3], function_call_id: ConstructId) -> impl Stream<Item = Value> {
-    let [
-        argument_element, 
-        argument_style,
-        argument_label,
-    ] = arguments;
+pub fn function_element_button(
+    arguments: [Arc<ValueActor>; 3],
+    function_call_id: ConstructId,
+) -> impl Stream<Item = Value> {
+    let [argument_element, argument_style, argument_label] = arguments;
     TaggedObject::new_constant(
-        ConstructInfo::new(function_call_id.with_child_id(0), "Element/stripe(..) -> ElementButton[..]"),
-        "ElementButton", 
+        ConstructInfo::new(
+            function_call_id.with_child_id(0),
+            "Element/stripe(..) -> ElementButton[..]",
+        ),
+        "ElementButton",
         [
             Variable::new_arc(
-                ConstructInfo::new(function_call_id.with_child_id(1), "Element/stripe(..) -> ElementButton[event]"), 
-                "event", 
+                ConstructInfo::new(
+                    function_call_id.with_child_id(1),
+                    "Element/stripe(..) -> ElementButton[event]",
+                ),
+                "event",
                 ValueActor::new_arc(
-                    ConstructInfo::new(function_call_id.with_child_id(2), "Element/stripe(..) -> ElementButton[event: [..]]"), 
-                    RunDuration::Nonstop, 
+                    ConstructInfo::new(
+                        function_call_id.with_child_id(2),
+                        "Element/stripe(..) -> ElementButton[event: [..]]",
+                    ),
+                    RunDuration::Nonstop,
                     argument_element
                         .subscribe()
                         .filter_map(|value| future::ready(value.expect_object().variable("event")))
-                        .flat_map(|variable| variable.subscribe())
-                )
+                        .flat_map(|variable| variable.subscribe()),
+                ),
             ),
             Variable::new_arc(
-                ConstructInfo::new(function_call_id.with_child_id(1), "Element/stripe(..) -> ElementButton[settings]"), 
-                "settings", 
+                ConstructInfo::new(
+                    function_call_id.with_child_id(1),
+                    "Element/stripe(..) -> ElementButton[settings]",
+                ),
+                "settings",
                 Object::new_arc_value_actor(
-                    ConstructInfo::new(function_call_id.with_child_id(2), "Element/stripe(..) -> ElementButton[settings: [..]]"), 
-                    RunDuration::Nonstop, 
+                    ConstructInfo::new(
+                        function_call_id.with_child_id(2),
+                        "Element/stripe(..) -> ElementButton[settings: [..]]",
+                    ),
+                    RunDuration::Nonstop,
                     [
                         Variable::new_arc(
-                            ConstructInfo::new(function_call_id.with_child_id(1), "Element/stripe(..) -> ElementButton[settings: [style]]"), 
-                            "style", 
-                            argument_style
+                            ConstructInfo::new(
+                                function_call_id.with_child_id(1),
+                                "Element/stripe(..) -> ElementButton[settings: [style]]",
+                            ),
+                            "style",
+                            argument_style,
                         ),
                         Variable::new_arc(
-                            ConstructInfo::new(function_call_id.with_child_id(1), "Element/stripe(..) -> ElementButton[settings: [label]]"), 
-                            "label", 
-                            argument_label
+                            ConstructInfo::new(
+                                function_call_id.with_child_id(1),
+                                "Element/stripe(..) -> ElementButton[settings: [label]]",
+                            ),
+                            "label",
+                            argument_label,
                         ),
-                    ]
-                )
+                    ],
+                ),
             ),
-        ]
+        ],
     )
 }
 
 /// ```
 /// Math/sum(increment<Number>) -> Number
 /// ``````
-pub fn function_math_sum(arguments: [Arc<ValueActor>; 1], function_call_id: ConstructId) -> impl Stream<Item = Value> {
+pub fn function_math_sum(
+    arguments: [Arc<ValueActor>; 1],
+    function_call_id: ConstructId,
+) -> impl Stream<Item = Value> {
     let [argument_increment] = arguments;
     argument_increment
         .subscribe()
@@ -214,11 +270,8 @@ pub fn function_math_sum(arguments: [Arc<ValueActor>; 1], function_call_id: Cons
         })
         .map(move |sum| {
             Number::new_value(
-                ConstructInfo::new(
-                    function_call_id.with_child_id(0), 
-                    "Math/sum(..) -> Number"
-                ),
-                sum
+                ConstructInfo::new(function_call_id.with_child_id(0), "Math/sum(..) -> Number"),
+                sum,
             )
         })
 }
@@ -226,7 +279,10 @@ pub fn function_math_sum(arguments: [Arc<ValueActor>; 1], function_call_id: Cons
 /// ```
 /// Timer/interval(duration<Duration[seconds<Number> | milliseconds<Number>]>) -> []
 /// ```
-pub fn function_timer_interval(arguments: [Arc<ValueActor>; 1], function_call_id: ConstructId) -> impl Stream<Item = Value> {
+pub fn function_timer_interval(
+    arguments: [Arc<ValueActor>; 1],
+    function_call_id: ConstructId,
+) -> impl Stream<Item = Value> {
     let [argument_duration] = arguments;
     argument_duration
         .subscribe()

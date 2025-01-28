@@ -1,5 +1,5 @@
-use std::future::Future;
 use futures_signals::signal::{self, Signal};
+use std::future::Future;
 
 pub trait IntoSignalOption {
     type Item;

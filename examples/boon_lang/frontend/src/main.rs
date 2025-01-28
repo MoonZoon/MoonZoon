@@ -15,7 +15,7 @@ fn root() -> impl Element {
         .s(Height::fill())
         .s(Background::new().color(color!("oklch(0.4 0 0)")))
         .s(Font::new().color(color!("oklch(0.8 0 0)")))
-        .child_signal(boon_document_root().into_signal_option())    
+        .child_signal(boon_document_root().into_signal_option())
 }
 
 async fn boon_document_root() -> impl Element {

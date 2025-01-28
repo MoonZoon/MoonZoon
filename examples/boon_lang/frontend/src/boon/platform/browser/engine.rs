@@ -1,21 +1,24 @@
 // @TODO remove
 #![allow(dead_code)]
 
+use std::borrow::Cow;
 use std::pin::pin;
 use std::sync::Arc;
-use std::borrow::Cow;
 
-use zoon::futures_channel::mpsc;
-use zoon::futures_util::stream::{self, Stream, StreamExt};
-use zoon::{Task, TaskHandle};
 use zoon::future;
-use zoon::{println, eprintln};
+use zoon::futures_channel::mpsc;
 use zoon::futures_util::select;
+use zoon::futures_util::stream::{self, Stream, StreamExt};
+use zoon::{eprintln, println};
+use zoon::{Task, TaskHandle};
 
 // --- PipeTo ---
 
 pub trait PipeTo {
-    fn pipe_to<FR>(self, f: impl FnOnce(Self) -> FR) -> FR where Self: Sized {
+    fn pipe_to<FR>(self, f: impl FnOnce(Self) -> FR) -> FR
+    where
+        Self: Sized,
+    {
         f(self)
     }
 }
@@ -55,7 +58,7 @@ impl ConstructInfo {
         ConstructInfoComplete {
             r#type,
             id: self.id,
-            description: self.description
+            description: self.description,
         }
     }
 }
@@ -76,7 +79,11 @@ impl ConstructInfoComplete {
 
 impl std::fmt::Display for ConstructInfoComplete {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "({:?} {:?} '{}')", self.r#type, self.id.ids, self.description)
+        write!(
+            f,
+            "({:?} {:?} '{}')",
+            self.r#type, self.id.ids, self.description
+        )
     }
 }
 
@@ -103,12 +110,14 @@ pub enum ConstructType {
 
 #[derive(Clone, Debug)]
 pub struct ConstructId {
-    ids: Arc<Vec<u64>>
+    ids: Arc<Vec<u64>>,
 }
 
 impl ConstructId {
     pub fn new(id: u64) -> Self {
-        Self { ids: Arc::new(vec![id]) }
+        Self {
+            ids: Arc::new(vec![id]),
+        }
     }
 
     pub fn with_child_id(&self, child: u64) -> Self {
@@ -134,7 +143,11 @@ pub struct Variable {
 }
 
 impl Variable {
-    pub fn new(construct_info: ConstructInfo, name: &'static str, value_actor: Arc<ValueActor>) -> Self {
+    pub fn new(
+        construct_info: ConstructInfo,
+        name: &'static str,
+        value_actor: Arc<ValueActor>,
+    ) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::Variable),
             name,
@@ -143,16 +156,29 @@ impl Variable {
         }
     }
 
-    pub fn new_arc(construct_info: ConstructInfo, name: &'static str, value_actor: Arc<ValueActor>) -> Arc<Self> {
+    pub fn new_arc(
+        construct_info: ConstructInfo,
+        name: &'static str,
+        value_actor: Arc<ValueActor>,
+    ) -> Arc<Self> {
         Arc::new(Self::new(construct_info, name, value_actor))
     }
 
-    pub fn new_link_arc(construct_info: ConstructInfo, run_duration: RunDuration, name: &'static str) -> Arc<Self> {
-        let ConstructInfo { id: actor_id, description: variable_description } = construct_info;
+    pub fn new_link_arc(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        name: &'static str,
+    ) -> Arc<Self> {
+        let ConstructInfo {
+            id: actor_id,
+            description: variable_description,
+        } = construct_info;
         let construct_info = ConstructInfo::new(actor_id.with_child_id(0), variable_description);
-        let actor_construct_info = ConstructInfo::new(actor_id, "Link variable value actor").complete(ConstructType::ValueActor);
+        let actor_construct_info = ConstructInfo::new(actor_id, "Link variable value actor")
+            .complete(ConstructType::ValueActor);
         let (link_value_sender, link_value_receiver) = mpsc::unbounded();
-        let value_actor = ValueActor::new_internal(actor_construct_info, run_duration, link_value_receiver, ());
+        let value_actor =
+            ValueActor::new_internal(actor_construct_info, run_duration, link_value_receiver, ());
         Arc::new(Self {
             construct_info: construct_info.complete(ConstructType::LinkVariable),
             name,
@@ -177,7 +203,10 @@ impl Variable {
         if let Some(link_value_sender) = self.link_value_sender.clone() {
             link_value_sender
         } else {
-            panic!("Failed to get expected link value sender from {}", self.construct_info);
+            panic!(
+                "Failed to get expected link value sender from {}",
+                self.construct_info
+            );
         }
     }
 }
@@ -206,20 +235,24 @@ impl VariableReference {
             .boxed_local();
         for variable_name in variable_names.skip(1) {
             value_stream = value_stream
-                .flat_map(|value| {
-                    match value {
-                        Value::Object(object) => {
-                            object.expect_variable(variable_name).subscribe()
-                        },
-                        Value::TaggedObject(tagged_object) => {
-                            tagged_object.expect_variable(variable_name).subscribe()
-                        }
-                        other => panic!("Failed to get Object or TaggedObject: The Value has a different type {}", other.construct_info())
+                .flat_map(|value| match value {
+                    Value::Object(object) => object.expect_variable(variable_name).subscribe(),
+                    Value::TaggedObject(tagged_object) => {
+                        tagged_object.expect_variable(variable_name).subscribe()
                     }
+                    other => panic!(
+                        "Failed to get Object or TaggedObject: The Value has a different type {}",
+                        other.construct_info()
+                    ),
                 })
                 .boxed_local();
         }
-        Arc::new(ValueActor::new_internal(construct_info, run_duration, value_stream, ()))
+        Arc::new(ValueActor::new_internal(
+            construct_info,
+            run_duration,
+            value_stream,
+            (),
+        ))
     }
 }
 
@@ -236,7 +269,12 @@ impl FunctionCall {
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::FunctionCall);
         let value_stream = definition(arguments.clone(), construct_info.id());
-        Arc::new(ValueActor::new_internal(construct_info, run_duration, value_stream, arguments))
+        Arc::new(ValueActor::new_internal(
+            construct_info,
+            run_duration,
+            value_stream,
+            arguments,
+        ))
     }
 }
 
@@ -251,10 +289,14 @@ impl LatestCombinator {
         inputs: [Arc<ValueActor>; IN],
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::LatestCombinator);
-        let value_stream = stream::select_all(inputs.iter().map(|value_actor| {
-            value_actor.subscribe()
-        }));
-        Arc::new(ValueActor::new_internal(construct_info, run_duration, value_stream, inputs))
+        let value_stream =
+            stream::select_all(inputs.iter().map(|value_actor| value_actor.subscribe()));
+        Arc::new(ValueActor::new_internal(
+            construct_info,
+            run_duration,
+            value_stream,
+            inputs,
+        ))
     }
 }
 
@@ -272,10 +314,15 @@ impl ThenCombinator {
         let construct_info = construct_info.complete(ConstructType::ThenCombinator);
         let stream_on_change = Arc::new(stream_on_change);
         let value_stream = observed.subscribe().filter_map(move |_| {
-            let stream_on_change = stream_on_change.clone(); 
+            let stream_on_change = stream_on_change.clone();
             async move { pin!(stream_on_change()).next().await }
         });
-        Arc::new(ValueActor::new_internal(construct_info, run_duration, value_stream, observed))
+        Arc::new(ValueActor::new_internal(
+            construct_info,
+            run_duration,
+            value_stream,
+            observed,
+        ))
     }
 }
 
@@ -288,7 +335,11 @@ pub struct ValueActor {
 }
 
 impl ValueActor {
-    pub fn new(construct_info: ConstructInfo, run_duration: RunDuration, value_stream: impl Stream<Item = Value> + 'static) -> Self {
+    pub fn new(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        value_stream: impl Stream<Item = Value> + 'static,
+    ) -> Self {
         let construct_info = construct_info.complete(ConstructType::ValueActor);
         Self::new_internal(construct_info, run_duration, value_stream, ())
     }
@@ -300,7 +351,8 @@ impl ValueActor {
         extra_owned_data: EOD,
     ) -> Self {
         let construct_info = Arc::new(construct_info);
-        let (value_sender_sender, mut value_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<Value>>();
+        let (value_sender_sender, mut value_sender_receiver) =
+            mpsc::unbounded::<mpsc::UnboundedSender<Value>>();
         let loop_task = Task::start_droppable({
             let construct_info = construct_info.clone();
             async move {
@@ -348,7 +400,11 @@ impl ValueActor {
         }
     }
 
-    pub fn new_arc(construct_info: ConstructInfo, run_duration: RunDuration, value_stream: impl Stream<Item = Value> + 'static) -> Arc<Self> {
+    pub fn new_arc(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        value_stream: impl Stream<Item = Value> + 'static,
+    ) -> Arc<Self> {
         Arc::new(Self::new(construct_info, run_duration, value_stream))
     }
 
@@ -393,7 +449,10 @@ impl Value {
 
     pub fn expect_object(self) -> Arc<Object> {
         let Self::Object(object) = self else {
-            panic!("Failed to get expected Object: The Value has a different type {}", self.construct_info())
+            panic!(
+                "Failed to get expected Object: The Value has a different type {}",
+                self.construct_info()
+            )
         };
         object
     }
@@ -446,36 +505,61 @@ pub struct Object {
 }
 
 impl Object {
-    pub fn new<const VN: usize>(construct_info: ConstructInfo, variables: [Arc<Variable>; VN]) -> Self {
+    pub fn new<const VN: usize>(
+        construct_info: ConstructInfo,
+        variables: [Arc<Variable>; VN],
+    ) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::Object),
-            variables: Box::new(variables)
+            variables: Box::new(variables),
         }
     }
 
-    pub fn new_arc<const VN: usize>(construct_info: ConstructInfo, variables: [Arc<Variable>; VN]) -> Arc<Self> {
+    pub fn new_arc<const VN: usize>(
+        construct_info: ConstructInfo,
+        variables: [Arc<Variable>; VN],
+    ) -> Arc<Self> {
         Arc::new(Self::new(construct_info, variables))
     }
 
-    pub fn new_value<const VN: usize>(construct_info: ConstructInfo, variables: [Arc<Variable>; VN]) -> Value {
+    pub fn new_value<const VN: usize>(
+        construct_info: ConstructInfo,
+        variables: [Arc<Variable>; VN],
+    ) -> Value {
         Value::Object(Self::new_arc(construct_info, variables))
     }
 
-    pub fn new_constant<const VN: usize>(construct_info: ConstructInfo, variables: [Arc<Variable>; VN]) -> impl Stream<Item = Value> {
+    pub fn new_constant<const VN: usize>(
+        construct_info: ConstructInfo,
+        variables: [Arc<Variable>; VN],
+    ) -> impl Stream<Item = Value> {
         constant(Self::new_value(construct_info, variables))
     }
 
-    pub fn new_arc_value_actor<const VN: usize>(construct_info: ConstructInfo, run_duration: RunDuration, variables: [Arc<Variable>; VN]) -> Arc<ValueActor> {
-        let ConstructInfo { id: actor_id, description: tagged_object_description } = construct_info;
-        let construct_info = ConstructInfo::new(actor_id.with_child_id(0), tagged_object_description);
-        let actor_construct_info = ConstructInfo::new(actor_id, "Constant object wrapper").complete(ConstructType::ValueActor);
+    pub fn new_arc_value_actor<const VN: usize>(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        variables: [Arc<Variable>; VN],
+    ) -> Arc<ValueActor> {
+        let ConstructInfo {
+            id: actor_id,
+            description: tagged_object_description,
+        } = construct_info;
+        let construct_info =
+            ConstructInfo::new(actor_id.with_child_id(0), tagged_object_description);
+        let actor_construct_info = ConstructInfo::new(actor_id, "Constant object wrapper")
+            .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, variables);
-        Arc::new(ValueActor::new_internal(actor_construct_info, run_duration, value_stream, ()))
+        Arc::new(ValueActor::new_internal(
+            actor_construct_info,
+            run_duration,
+            value_stream,
+            (),
+        ))
     }
 
     pub fn variable(&self, name: &str) -> Option<Arc<Variable>> {
-        self
-            .variables
+        self.variables
             .iter()
             .position(|variable| variable.name == name)
             .map(|index| self.variables[index].clone())
@@ -483,7 +567,10 @@ impl Object {
 
     pub fn expect_variable(&self, name: &str) -> Arc<Variable> {
         self.variable(name).unwrap_or_else(|| {
-            panic!("Failed to get expected Variable '{name}' from {}", self.construct_info)
+            panic!(
+                "Failed to get expected Variable '{name}' from {}",
+                self.construct_info
+            )
         })
     }
 }
@@ -503,37 +590,67 @@ pub struct TaggedObject {
 }
 
 impl TaggedObject {
-    pub fn new<const VN: usize>(construct_info: ConstructInfo, tag: &'static str, variables: [Arc<Variable>; VN]) -> Self {
+    pub fn new<const VN: usize>(
+        construct_info: ConstructInfo,
+        tag: &'static str,
+        variables: [Arc<Variable>; VN],
+    ) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::TaggedObject),
             tag,
-            variables: Box::new(variables)
+            variables: Box::new(variables),
         }
     }
 
-    pub fn new_arc<const VN: usize>(construct_info: ConstructInfo, tag: &'static str, variables: [Arc<Variable>; VN]) -> Arc<Self> {
+    pub fn new_arc<const VN: usize>(
+        construct_info: ConstructInfo,
+        tag: &'static str,
+        variables: [Arc<Variable>; VN],
+    ) -> Arc<Self> {
         Arc::new(Self::new(construct_info, tag, variables))
     }
 
-    pub fn new_value<const VN: usize>(construct_info: ConstructInfo, tag: &'static str, variables: [Arc<Variable>; VN]) -> Value {
+    pub fn new_value<const VN: usize>(
+        construct_info: ConstructInfo,
+        tag: &'static str,
+        variables: [Arc<Variable>; VN],
+    ) -> Value {
         Value::TaggedObject(Self::new_arc(construct_info, tag, variables))
     }
 
-    pub fn new_constant<const VN: usize>(construct_info: ConstructInfo, tag: &'static str, variables: [Arc<Variable>; VN]) -> impl Stream<Item = Value> {
+    pub fn new_constant<const VN: usize>(
+        construct_info: ConstructInfo,
+        tag: &'static str,
+        variables: [Arc<Variable>; VN],
+    ) -> impl Stream<Item = Value> {
         constant(Self::new_value(construct_info, tag, variables))
     }
 
-    pub fn new_arc_value_actor<const VN: usize>(construct_info: ConstructInfo, run_duration: RunDuration, tag: &'static str, variables: [Arc<Variable>; VN]) -> Arc<ValueActor> {
-        let ConstructInfo { id: actor_id, description: tagged_object_description } = construct_info;
-        let construct_info = ConstructInfo::new(actor_id.with_child_id(0), tagged_object_description);
-        let actor_construct_info = ConstructInfo::new(actor_id, "Tagged object wrapper").complete(ConstructType::ValueActor);
+    pub fn new_arc_value_actor<const VN: usize>(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        tag: &'static str,
+        variables: [Arc<Variable>; VN],
+    ) -> Arc<ValueActor> {
+        let ConstructInfo {
+            id: actor_id,
+            description: tagged_object_description,
+        } = construct_info;
+        let construct_info =
+            ConstructInfo::new(actor_id.with_child_id(0), tagged_object_description);
+        let actor_construct_info = ConstructInfo::new(actor_id, "Tagged object wrapper")
+            .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, tag, variables);
-        Arc::new(ValueActor::new_internal(actor_construct_info, run_duration, value_stream, ()))
+        Arc::new(ValueActor::new_internal(
+            actor_construct_info,
+            run_duration,
+            value_stream,
+            (),
+        ))
     }
 
     pub fn variable(&self, name: &str) -> Option<Arc<Variable>> {
-        self
-            .variables
+        self.variables
             .iter()
             .position(|variable| variable.name == name)
             .map(|index| self.variables[index].clone())
@@ -541,7 +658,10 @@ impl TaggedObject {
 
     pub fn expect_variable(&self, name: &str) -> Arc<Variable> {
         self.variable(name).unwrap_or_else(|| {
-            panic!("Failed to get expected Variable '{name}' from {}", self.construct_info)
+            panic!(
+                "Failed to get expected Variable '{name}' from {}",
+                self.construct_info
+            )
         })
     }
 
@@ -567,7 +687,7 @@ impl Text {
     pub fn new(construct_info: ConstructInfo, text: impl Into<Cow<'static, str>>) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::Text),
-            text: text.into()
+            text: text.into(),
         }
     }
 
@@ -579,16 +699,32 @@ impl Text {
         Value::Text(Self::new_arc(construct_info, text))
     }
 
-    pub fn new_constant(construct_info: ConstructInfo, text: impl Into<Cow<'static, str>>) -> impl Stream<Item = Value> {
+    pub fn new_constant(
+        construct_info: ConstructInfo,
+        text: impl Into<Cow<'static, str>>,
+    ) -> impl Stream<Item = Value> {
         constant(Self::new_value(construct_info, text))
     }
 
-    pub fn new_arc_value_actor(construct_info: ConstructInfo, run_duration: RunDuration, text: impl Into<Cow<'static, str>>) -> Arc<ValueActor> {
-        let ConstructInfo { id: actor_id, description: text_description } = construct_info;
+    pub fn new_arc_value_actor(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        text: impl Into<Cow<'static, str>>,
+    ) -> Arc<ValueActor> {
+        let ConstructInfo {
+            id: actor_id,
+            description: text_description,
+        } = construct_info;
         let construct_info = ConstructInfo::new(actor_id.with_child_id(0), text_description);
-        let actor_construct_info = ConstructInfo::new(actor_id, "Constant text wrapper").complete(ConstructType::ValueActor);
+        let actor_construct_info = ConstructInfo::new(actor_id, "Constant text wrapper")
+            .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, text.into());
-        Arc::new(ValueActor::new_internal(actor_construct_info, run_duration, value_stream, ()))
+        Arc::new(ValueActor::new_internal(
+            actor_construct_info,
+            run_duration,
+            value_stream,
+            (),
+        ))
     }
 
     pub fn text(&self) -> &str {
@@ -613,7 +749,7 @@ impl Tag {
     pub fn new(construct_info: ConstructInfo, tag: impl Into<Cow<'static, str>>) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::Tag),
-            tag: tag.into()
+            tag: tag.into(),
         }
     }
 
@@ -625,16 +761,32 @@ impl Tag {
         Value::Tag(Self::new_arc(construct_info, tag))
     }
 
-    pub fn new_constant(construct_info: ConstructInfo, tag: impl Into<Cow<'static, str>>) -> impl Stream<Item = Value> {
+    pub fn new_constant(
+        construct_info: ConstructInfo,
+        tag: impl Into<Cow<'static, str>>,
+    ) -> impl Stream<Item = Value> {
         constant(Self::new_value(construct_info, tag))
     }
 
-    pub fn new_arc_value_actor(construct_info: ConstructInfo, run_duration: RunDuration, tag: impl Into<Cow<'static, str>>) -> Arc<ValueActor> {
-        let ConstructInfo { id: actor_id, description: tag_description } = construct_info;
+    pub fn new_arc_value_actor(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        tag: impl Into<Cow<'static, str>>,
+    ) -> Arc<ValueActor> {
+        let ConstructInfo {
+            id: actor_id,
+            description: tag_description,
+        } = construct_info;
         let construct_info = ConstructInfo::new(actor_id.with_child_id(0), tag_description);
-        let actor_construct_info = ConstructInfo::new(actor_id, "Constant tag wrapper").complete(ConstructType::ValueActor);
+        let actor_construct_info = ConstructInfo::new(actor_id, "Constant tag wrapper")
+            .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, tag.into());
-        Arc::new(ValueActor::new_internal(actor_construct_info, run_duration, value_stream, ()))
+        Arc::new(ValueActor::new_internal(
+            actor_construct_info,
+            run_duration,
+            value_stream,
+            (),
+        ))
     }
 
     pub fn tag(&self) -> &str {
@@ -659,7 +811,7 @@ impl Number {
     pub fn new(construct_info: ConstructInfo, number: impl Into<f64>) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::Number),
-            number: number.into()
+            number: number.into(),
         }
     }
 
@@ -671,16 +823,32 @@ impl Number {
         Value::Number(Self::new_arc(construct_info, number))
     }
 
-    pub fn new_constant(construct_info: ConstructInfo, number: impl Into<f64>) -> impl Stream<Item = Value> {
+    pub fn new_constant(
+        construct_info: ConstructInfo,
+        number: impl Into<f64>,
+    ) -> impl Stream<Item = Value> {
         constant(Self::new_value(construct_info, number))
     }
 
-    pub fn new_arc_value_actor(construct_info: ConstructInfo, run_duration: RunDuration, number: impl Into<f64>) -> Arc<ValueActor> {
-        let ConstructInfo { id: actor_id, description: number_description } = construct_info;
+    pub fn new_arc_value_actor(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        number: impl Into<f64>,
+    ) -> Arc<ValueActor> {
+        let ConstructInfo {
+            id: actor_id,
+            description: number_description,
+        } = construct_info;
         let construct_info = ConstructInfo::new(actor_id.with_child_id(0), number_description);
-        let actor_construct_info = ConstructInfo::new(actor_id, "Constant number wrapper)").complete(ConstructType::ValueActor);
+        let actor_construct_info = ConstructInfo::new(actor_id, "Constant number wrapper)")
+            .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, number.into());
-        Arc::new(ValueActor::new_internal(actor_construct_info, run_duration, value_stream, ()))
+        Arc::new(ValueActor::new_internal(
+            actor_construct_info,
+            run_duration,
+            value_stream,
+            (),
+        ))
     }
 
     pub fn number(&self) -> f64 {
@@ -703,8 +871,14 @@ pub struct List {
 }
 
 impl List {
-    pub fn new<const IN: usize>(construct_info: ConstructInfo, run_duration: RunDuration, items: [Arc<ValueActor>; IN]) -> Self {
-        let change_stream = constant(ListChange::Replace { items: Vec::from(items) });
+    pub fn new<const IN: usize>(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        items: [Arc<ValueActor>; IN],
+    ) -> Self {
+        let change_stream = constant(ListChange::Replace {
+            items: Vec::from(items),
+        });
         Self::new_with_change_stream(construct_info, run_duration, change_stream, ())
     }
 
@@ -715,7 +889,8 @@ impl List {
         extra_owned_data: EOD,
     ) -> Self {
         let construct_info = Arc::new(construct_info.complete(ConstructType::List));
-        let (change_sender_sender, mut change_sender_receiver) = mpsc::unbounded::<mpsc::UnboundedSender<ListChange>>();
+        let (change_sender_sender, mut change_sender_receiver) =
+            mpsc::unbounded::<mpsc::UnboundedSender<ListChange>>();
         let loop_task = Task::start_droppable({
             let construct_info = construct_info.clone();
             async move {
@@ -749,7 +924,7 @@ impl List {
                         }
                         change_sender = change_sender_receiver.select_next_some() => {
                             if let Some(list) = list.as_ref() {
-                                let first_change_to_send = ListChange::Replace { items: list.clone() }; 
+                                let first_change_to_send = ListChange::Replace { items: list.clone() };
                                 if let Err(error) = change_sender.unbounded_send(first_change_to_send) {
                                     eprintln!("Failed to send {} change to subscriber: {error:#}", construct_info);
                                 } else {
@@ -772,24 +947,49 @@ impl List {
         }
     }
 
-    pub fn new_arc<const IN: usize>(construct_info: ConstructInfo, run_duration: RunDuration, items: [Arc<ValueActor>; IN]) -> Arc<Self> {
+    pub fn new_arc<const IN: usize>(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        items: [Arc<ValueActor>; IN],
+    ) -> Arc<Self> {
         Arc::new(Self::new(construct_info, run_duration, items))
     }
 
-    pub fn new_value<const IN: usize>(construct_info: ConstructInfo, run_duration: RunDuration, items: [Arc<ValueActor>; IN]) -> Value {
+    pub fn new_value<const IN: usize>(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        items: [Arc<ValueActor>; IN],
+    ) -> Value {
         Value::List(Self::new_arc(construct_info, run_duration, items))
     }
 
-    pub fn new_constant<const IN: usize>(construct_info: ConstructInfo, run_duration: RunDuration, items: [Arc<ValueActor>; IN]) -> impl Stream<Item = Value> {
+    pub fn new_constant<const IN: usize>(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        items: [Arc<ValueActor>; IN],
+    ) -> impl Stream<Item = Value> {
         constant(Self::new_value(construct_info, run_duration, items))
     }
 
-    pub fn new_arc_value_actor<const IN: usize>(construct_info: ConstructInfo, run_duration: RunDuration, items: [Arc<ValueActor>; IN]) -> Arc<ValueActor> {
-        let ConstructInfo { id: actor_id, description: list_description } = construct_info;
+    pub fn new_arc_value_actor<const IN: usize>(
+        construct_info: ConstructInfo,
+        run_duration: RunDuration,
+        items: [Arc<ValueActor>; IN],
+    ) -> Arc<ValueActor> {
+        let ConstructInfo {
+            id: actor_id,
+            description: list_description,
+        } = construct_info;
         let construct_info = ConstructInfo::new(actor_id.with_child_id(0), list_description);
-        let actor_construct_info = ConstructInfo::new(actor_id, "Constant list wrapper").complete(ConstructType::ValueActor);
+        let actor_construct_info = ConstructInfo::new(actor_id, "Constant list wrapper")
+            .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, run_duration, items);
-        Arc::new(ValueActor::new_internal(actor_construct_info, run_duration, value_stream, ()))
+        Arc::new(ValueActor::new_internal(
+            actor_construct_info,
+            run_duration,
+            value_stream,
+            (),
+        ))
     }
 
     pub fn subscribe(&self) -> impl Stream<Item = ListChange> {
@@ -809,27 +1009,12 @@ impl Drop for List {
 
 #[derive(Clone)]
 pub enum ListChange {
-    Replace {
-        items: Vec<Arc<ValueActor>>,
-    },
-    InsertAt {
-        index: usize,
-        item: Arc<ValueActor>,
-    },
-    UpdateAt {
-        index: usize,
-        item: Arc<ValueActor>,
-    },
-    RemoveAt {
-        index: usize,
-    },
-    Move {
-        old_index: usize,
-        new_index: usize,
-    },
-    Push {
-        item: Arc<ValueActor>,
-    },
+    Replace { items: Vec<Arc<ValueActor>> },
+    InsertAt { index: usize, item: Arc<ValueActor> },
+    UpdateAt { index: usize, item: Arc<ValueActor> },
+    RemoveAt { index: usize },
+    Move { old_index: usize, new_index: usize },
+    Push { item: Arc<ValueActor> },
     Pop,
     Clear,
 }
@@ -839,29 +1024,32 @@ impl ListChange {
         match self {
             Self::Replace { items } => {
                 *vec = items;
-            },
+            }
             Self::InsertAt { index, item } => {
                 vec.insert(index, item);
-            },
+            }
             Self::UpdateAt { index, item } => {
                 vec[index] = item;
-            },
+            }
             Self::Push { item } => {
                 vec.push(item);
-            },
+            }
             Self::RemoveAt { index } => {
                 vec.remove(index);
-            },
-            Self::Move { old_index, new_index } => {
+            }
+            Self::Move {
+                old_index,
+                new_index,
+            } => {
                 let item = vec.remove(old_index);
                 vec.insert(new_index, item);
-            },
+            }
             Self::Pop => {
                 vec.pop().unwrap();
-            },
+            }
             Self::Clear => {
                 vec.clear();
-            },
+            }
         }
     }
 }

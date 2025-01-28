@@ -1,11 +1,13 @@
 use std::sync::Arc;
 
-use zoon::{*, eprintln};
-use zoon::futures_util::{stream, select};
+use zoon::futures_util::{select, stream};
+use zoon::{eprintln, *};
 
 use super::engine::*;
 
-pub fn root_object_to_element_signal(root_object: Arc<Object>) -> impl Signal<Item = Option<RawElOrText>> {
+pub fn root_object_to_element_signal(
+    root_object: Arc<Object>,
+) -> impl Signal<Item = Option<RawElOrText>> {
     let element_stream = root_object
         .expect_variable("document")
         .subscribe()
@@ -22,21 +24,15 @@ pub fn root_object_to_element_signal(root_object: Arc<Object>) -> impl Signal<It
 
 fn value_to_element(value: Value) -> RawElOrText {
     match value {
-        Value::Text(text) => {
-            zoon::Text::new(text.text()).unify()
-        }
-        Value::Number(number) => {
-            zoon::Text::new(number.number()).unify()
-        }
-        Value::TaggedObject(tagged_object) => {
-            match tagged_object.tag() {
-                "ElementContainer" => element_container(tagged_object).unify(),
-                "ElementStripe" => element_stripe(tagged_object).unify(),
-                "ElementButton" => element_button(tagged_object).unify(),
-                other => panic!("Element cannot be created from the tagged objectwith tag '{other}'")
-            }
-        }
-        _ => panic!("Element cannot be created from the given Value type")
+        Value::Text(text) => zoon::Text::new(text.text()).unify(),
+        Value::Number(number) => zoon::Text::new(number.number()).unify(),
+        Value::TaggedObject(tagged_object) => match tagged_object.tag() {
+            "ElementContainer" => element_container(tagged_object).unify(),
+            "ElementStripe" => element_stripe(tagged_object).unify(),
+            "ElementButton" => element_button(tagged_object).unify(),
+            other => panic!("Element cannot be created from the tagged objectwith tag '{other}'"),
+        },
+        _ => panic!("Element cannot be created from the given Value type"),
     }
 }
 
@@ -48,8 +44,7 @@ fn element_container(tagged_object: Arc<TaggedObject>) -> impl Element {
         .flat_map(|value| value.expect_object().expect_variable("child").subscribe())
         .map(value_to_element);
 
-    El::new()
-        .child_signal(signal::from_stream(child_stream))
+    El::new().child_signal(signal::from_stream(child_stream))
 }
 
 fn element_stripe(tagged_object: Arc<TaggedObject>) -> impl Element {
@@ -62,17 +57,16 @@ fn element_stripe(tagged_object: Arc<TaggedObject>) -> impl Element {
         .map(list_change_to_vec_diff);
 
     // @TODO Column -> Stripe + direction
-    Column::new()
-        .items_signal_vec(VecDiffStreamSignalVec(items_vec_diff_stream).map_signal(|value_actor| { 
-            signal::from_stream(value_actor.subscribe().map(value_to_element))
-        }))
+    Column::new().items_signal_vec(VecDiffStreamSignalVec(items_vec_diff_stream).map_signal(
+        |value_actor| signal::from_stream(value_actor.subscribe().map(value_to_element)),
+    ))
 }
 
 fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
     let (press_event_sender, mut press_event_receiver) = mpsc::unbounded();
 
-    let event_stream = stream::iter(tagged_object.variable("event"))
-        .flat_map(|variable| variable.subscribe());
+    let event_stream =
+        stream::iter(tagged_object.variable("event")).flat_map(|variable| variable.subscribe());
 
     let mut press_stream = event_stream
         .filter_map(|value| future::ready(value.expect_object().variable("press")))
@@ -119,8 +113,8 @@ fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
         .on_press(move || {
             let press_event = Object::new_value(
                 // @TODO generate id
-                ConstructInfo::new(123, "Button press event"), 
-                []
+                ConstructInfo::new(123, "Button press event"),
+                [],
             );
             if let Err(error) = press_event_sender.unbounded_send(press_event) {
                 eprintln!("Failed to send button press event from on_press handler: {error}");
@@ -134,70 +128,36 @@ fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
 #[must_use = "SignalVecs do nothing unless polled"]
 struct VecDiffStreamSignalVec<A>(#[pin] A);
 
-impl<A, T> SignalVec for VecDiffStreamSignalVec<A> where A: Stream<Item = VecDiff<T>> {
+impl<A, T> SignalVec for VecDiffStreamSignalVec<A>
+where
+    A: Stream<Item = VecDiff<T>>,
+{
     type Item = T;
 
     #[inline]
-    fn poll_vec_change(self: std::pin::Pin<&mut Self>, cx: &mut std::task::Context) -> std::task::Poll<Option<VecDiff<Self::Item>>> {
+    fn poll_vec_change(
+        self: std::pin::Pin<&mut Self>,
+        cx: &mut std::task::Context,
+    ) -> std::task::Poll<Option<VecDiff<Self::Item>>> {
         self.project().0.poll_next(cx)
     }
 }
 
 fn list_change_to_vec_diff(change: ListChange) -> VecDiff<Arc<ValueActor>> {
     match change {
-        ListChange::Replace {
-            items,
-        } => {
-            VecDiff::Replace {
-                values: items,
-            }
-        },
-        ListChange::InsertAt {
-            index,
-            item,
-        } => {
-            VecDiff::InsertAt {
-                index,
-                value: item,
-            }
-        },
-        ListChange::UpdateAt {
-            index,
-            item,
-        } => {
-            VecDiff::UpdateAt {
-                index,
-                value: item,
-            }
-        },
-        ListChange::RemoveAt {
-            index,
-        } => {
-            VecDiff::RemoveAt {
-                index,
-            }
-        },
+        ListChange::Replace { items } => VecDiff::Replace { values: items },
+        ListChange::InsertAt { index, item } => VecDiff::InsertAt { index, value: item },
+        ListChange::UpdateAt { index, item } => VecDiff::UpdateAt { index, value: item },
+        ListChange::RemoveAt { index } => VecDiff::RemoveAt { index },
         ListChange::Move {
             old_index,
             new_index,
-        } => {
-            VecDiff::Move {
-                old_index,
-                new_index,
-            }
+        } => VecDiff::Move {
+            old_index,
+            new_index,
         },
-        ListChange::Push {
-            item,
-        } => {
-            VecDiff::Push {
-                value: item,
-            }
-        },
-        ListChange::Pop => {
-            VecDiff::Pop {} 
-        },
-        ListChange::Clear => {
-            VecDiff::Clear {}
-        },
+        ListChange::Push { item } => VecDiff::Push { value: item },
+        ListChange::Pop => VecDiff::Pop {},
+        ListChange::Clear => VecDiff::Clear {},
     }
 }
