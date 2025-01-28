@@ -2,7 +2,6 @@
 flowchart RL
     classDef root_variable_class stroke:Orange
     
-    
     document__0["document"]:::root_variable_class
     OBJECT__1["OBJECT"]
     VAR_root_element__2["root_element"]
