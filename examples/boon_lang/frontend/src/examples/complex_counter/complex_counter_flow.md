@@ -51,8 +51,8 @@ flowchart LR
             NUM_1__15 .-> THEN_OUT__74
         end
 
-        GET_elements.decrement_button.event.press__10 .-> THEN_IN__71
-        GET_elements.increment_button.event.press__11 .-> THEN_IN__73
+        GET_elements.decrement_button.event.press__10 ==> THEN_IN__71
+        GET_elements.increment_button.event.press__11 ==> THEN_IN__73
 
         NUM_0__9 ==> |"1"| LATEST__8
         THEN_OUT__72 .-> |"2"| LATEST__8
@@ -202,10 +202,10 @@ flowchart LR
         NUM_0.07__55 ==> VAR_chroma__53
         NUM_320__56 ==> VAR_hue__54
 
-        VAR_hovered__39 .-> ARM_IN__82
-        VAR_hovered__39 .-> ARM_IN__84
-        ARM_OUT__83 .-> VAR_lightness__52
-        ARM_OUT__85 .-> VAR_lightness__52
+        VAR_hovered__39 --> ARM_IN__82
+        VAR_hovered__39 --> ARM_IN__84
+        ARM_OUT__83 ==> VAR_lightness__52
+        ARM_OUT__85 ==> VAR_lightness__52
 
         ARG_label__46 ==> |"label"| CALL_Element_button__33
 

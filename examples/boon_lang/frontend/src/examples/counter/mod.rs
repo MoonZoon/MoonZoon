@@ -76,24 +76,24 @@ pub async fn run() -> Arc<Object> {
                                 0,
                             ),
                             VariableReference::new_arc_value_actor(
-                                ConstructInfo::new(9, "increment_button.event.press reference"),
+                                ConstructInfo::new(13, "increment_button.event.press reference"),
                                 RunDuration::Nonstop,
                                 "increment_button.event.press",
                                 increment_button_receiver_1,
                             )
                             .pipe_to(|piped| {
                                 ThenCombinator::new_arc_value_actor(
-                                    ConstructInfo::new(17, "THEN"),
+                                    ConstructInfo::new(14, "THEN"),
                                     RunDuration::Nonstop,
                                     piped,
-                                    || Number::new_constant(ConstructInfo::new(18, "Number 1"), 1),
+                                    || Number::new_constant(ConstructInfo::new(15, "Number 1"), 1),
                                 )
                             }),
                         ],
                     )
                     .pipe_to(|piped| {
                         FunctionCall::new_arc_value_actor(
-                            ConstructInfo::new(19, "Math/sum(..)"),
+                            ConstructInfo::new(16, "Math/sum(..)"),
                             RunDuration::Nonstop,
                             function_math_sum,
                             [piped],
@@ -107,28 +107,28 @@ pub async fn run() -> Arc<Object> {
             },
             {
                 let variable = Variable::new_arc(
-                    ConstructInfo::new(20, "increment_button"),
+                    ConstructInfo::new(17, "increment_button"),
                     "increment_button",
                     FunctionCall::new_arc_value_actor(
-                        ConstructInfo::new(21, "Element/button(..)"),
+                        ConstructInfo::new(18, "Element/button(..)"),
                         RunDuration::Nonstop,
                         function_element_button,
                         [
                             Object::new_arc_value_actor(
-                                ConstructInfo::new(22, "Element/button(element)"),
+                                ConstructInfo::new(19, "Element/button(element)"),
                                 RunDuration::Nonstop,
                                 [Variable::new_arc(
                                     ConstructInfo::new(20, "Element/button(element: [event])"),
                                     "event",
                                     Object::new_arc_value_actor(
                                         ConstructInfo::new(
-                                            23,
+                                            21,
                                             "Element/button(element: [event: [..]])",
                                         ),
                                         RunDuration::Nonstop,
                                         [Variable::new_link_arc(
                                             ConstructInfo::new(
-                                                20,
+                                                22,
                                                 "Element/button(element: [event: [press]])",
                                             ),
                                             RunDuration::Nonstop,
@@ -138,12 +138,12 @@ pub async fn run() -> Arc<Object> {
                                 )],
                             ),
                             Object::new_arc_value_actor(
-                                ConstructInfo::new(6, "Element/button(style)"),
+                                ConstructInfo::new(23, "Element/button(style)"),
                                 RunDuration::Nonstop,
                                 [],
                             ),
                             Text::new_arc_value_actor(
-                                ConstructInfo::new(5, "Element/button(label)"),
+                                ConstructInfo::new(24, "Element/button(label)"),
                                 RunDuration::Nonstop,
                                 "+",
                             ),
