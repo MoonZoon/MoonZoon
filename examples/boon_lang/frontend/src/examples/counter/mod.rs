@@ -91,19 +91,19 @@ pub async fn run() -> Arc<Object> {
                                         ConstructInfo::new(18, "Number 1"),
                                         1,
                                     )
-                                ).pipe_to(|piped| {
-                                    FunctionCall::new_arc_value_actor(
-                                        ConstructInfo::new(19, "Math/sum(..)"), 
-                                        RunDuration::Nonstop,
-                                        function_math_sum,
-                                        [
-                                            piped
-                                        ]
-                                    )
-                                })
+                                )
                             })
                         ]
-                    )
+                    ).pipe_to(|piped| {
+                        FunctionCall::new_arc_value_actor(
+                            ConstructInfo::new(19, "Math/sum(..)"), 
+                            RunDuration::Nonstop,
+                            function_math_sum,
+                            [
+                                piped
+                            ]
+                        )
+                    })
                 );
                 if let Err(error) = counter_variable_sender_0.unbounded_send(variable.clone()) {
                     panic!("Failed to send variable through `counter_variable_sender_0` channel: {error}");
