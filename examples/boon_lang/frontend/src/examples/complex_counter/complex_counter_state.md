@@ -23,9 +23,7 @@ flowchart RL
     document__-1["document"]:::root_variable_class
     OBJECT__10["OBJECT"]
     VAR_root_element__11["root_element"]
-    VAR_Element_OBJECT__12["Element OBJECT"]
-    VAR_type__13["type"]
-    TAG_Stripe__14["Stripe"]
+    VAR_ElementStripe_OBJECT__12["ElementStripe OBJECT"]
     VAR_settings__15["settings"]
     OBJECT__16["OBJECT"]
     VAR_direction__17["direction"]
@@ -41,10 +39,8 @@ flowchart RL
                             
     OBJECT__10 ==> document__-1
     VAR_root_element__11 ==> OBJECT__10
-    VAR_Element_OBJECT__12 ==> VAR_root_element__11
-    VAR_type__13 ==> VAR_Element_OBJECT__12
-    TAG_Stripe__14 ==> VAR_type__13
-    VAR_settings__15 ==> VAR_Element_OBJECT__12
+    VAR_ElementStripe_OBJECT__12 ==> VAR_root_element__11
+    VAR_settings__15 ==> VAR_ElementStripe_OBJECT__12
     OBJECT__16 ==> VAR_settings__15
     VAR_direction__17 ==> OBJECT__16
     TAG_Row__18 ==> VAR_direction__17
@@ -56,11 +52,9 @@ flowchart RL
     TAG_Center__24 ==> VAR_align__23
     VAR_items__25 ==> OBJECT__16
     LIST__26 ==> VAR_items__25
-    %% ^ edge 23
+    %% ^ edge 21
 
-    VAR_Element_OBJECT__26["Element OBJECT"]
-    VAR_type__27["type"]
-    TAG_Button__28["Button"]
+    VAR_ElementButton_OBJECT__26["ElementButton OBJECT"]
     VAR_event__49["event"]
     OBJECT__50["OBJECT"]
     VAR_press__51["press"]
@@ -89,19 +83,17 @@ flowchart RL
     TXT_minus__48["\-"]
 
     %% Ref
-    VAR_Element_OBJECT__26 ==> VAR_decrement_button__4
-    VAR_Element_OBJECT__26 ==> |"1"| LIST__26
-    VAR_type__27 ==> VAR_Element_OBJECT__26
-    TAG_Button__28 ==> VAR_type__27
-    VAR_event__49 ==> VAR_Element_OBJECT__26
+    VAR_ElementButton_OBJECT__26 ==> VAR_decrement_button__4
+    VAR_ElementButton_OBJECT__26 ==> |"1"| LIST__26
+    VAR_event__49 ==> VAR_ElementButton_OBJECT__26
     OBJECT__50 ==> VAR_event__49
     VAR_press__51 ==> OBJECT__50
     %% Ref
     OBJECT__52 ==> VAR_press__51
-    VAR_hovered__53 ==> VAR_Element_OBJECT__26
+    VAR_hovered__53 ==> VAR_ElementButton_OBJECT__26
     %% Ref
     TAG_False__54 ==> VAR_hovered__53
-    VAR_settings__29 ==> VAR_Element_OBJECT__26
+    VAR_settings__29 ==> VAR_ElementButton_OBJECT__26
     OBJECT__30 ==> VAR_settings__29
     VAR_style__31 ==> OBJECT__30
     OBJECT__32 ==> VAR_style__31
@@ -121,14 +113,12 @@ flowchart RL
     NUM_320__46 ==> VAR_hue__45
     VAR_label__47 ==> OBJECT__30
     TXT_minus__48 ==> VAR_label__47
-    %% ^ edge 53
+    %% ^ edge 49
 
     %% Ref
     NUM_123__9 ==> |"2"| LIST__26
 
-    VAR_Element_OBJECT__55["Element OBJECT"]
-    VAR_type__56["type"]
-    TAG_Button__57["Button"]
+    VAR_ElementButton_OBJECT__55["ElementButton OBJECT"]
     VAR_event__58["event"]
     OBJECT__59["OBJECT"]
     VAR_press__60["press"]
@@ -157,19 +147,17 @@ flowchart RL
     TXT_plus__93["\+"]
 
     %% Ref
-    VAR_Element_OBJECT__55 ==> VAR_increment_button__6
-    VAR_Element_OBJECT__55 ==> |"3"| LIST__26
-    VAR_type__56 ==> VAR_Element_OBJECT__55
-    TAG_Button__57 ==> VAR_type__56
-    VAR_event__58 ==> VAR_Element_OBJECT__55
+    VAR_ElementButton_OBJECT__55 ==> VAR_increment_button__6
+    VAR_ElementButton_OBJECT__55 ==> |"3"| LIST__26
+    VAR_event__58 ==> VAR_ElementButton_OBJECT__55
     OBJECT__59 ==> VAR_event__58
     VAR_press__60 ==> OBJECT__59
     %% Ref
     OBJECT__61 ==> VAR_press__60
-    VAR_hovered__62 ==> VAR_Element_OBJECT__55
+    VAR_hovered__62 ==> VAR_ElementButton_OBJECT__55
     %% Ref
     TAG_True__63 ==> VAR_hovered__62
-    VAR_settings__64 ==> VAR_Element_OBJECT__55
+    VAR_settings__64 ==> VAR_ElementButton_OBJECT__55
     OBJECT__65 ==> VAR_settings__64
     VAR_style__66 ==> OBJECT__65
     OBJECT__67 ==> VAR_style__66
@@ -190,5 +178,5 @@ flowchart RL
     VAR_label__92 ==> OBJECT__65
     TXT_plus__93 ==> VAR_label__92
 
-    linkStyle 24,31,33,54,55,62,64 stroke:Blue;
+    linkStyle 22,27,29,50,51,56,58 stroke:Blue;
 ```
