@@ -720,28 +720,37 @@ impl List {
             let construct_info = construct_info.clone();
             async move {
                 let mut change_stream = pin!(change_stream.fuse());
-                let mut change = None;
                 let mut change_senders = Vec::<mpsc::UnboundedSender<ListChange>>::new();
+                let mut list = None;
                 loop {
                     select! {
-                        new_change = change_stream.next() => {
-                            let Some(new_change) = new_change else { break };
+                        change = change_stream.next() => {
+                            let Some(change) = change else { break };
                             change_senders.retain(|change_sender| {
-                                if let Err(error) = change_sender.unbounded_send(new_change.clone()) {
+                                if let Err(error) = change_sender.unbounded_send(change.clone()) {
                                     eprintln!("Failed to send new {} change to subscriber: {error:#}", construct_info);
                                     false
                                 } else {
                                     true
                                 }
                             });
-                            change = Some(new_change);
+                            if let Some(list) = &mut list {
+                                change.clone().apply_to_vec(list);
+                            } else {
+                                if let ListChange::Replace { items } = &change {
+                                    list = Some(items.clone());
+                                } else {
+                                    panic!("Failed to initialize {}: The first change has to be 'ListChange::Replace'", construct_info)
+                                }
+                            }
                             if let RunDuration::UntilFirstValue = run_duration {
                                 break
                             }
                         }
                         change_sender = change_sender_receiver.select_next_some() => {
-                            if let Some(change) = change.as_ref() {
-                                if let Err(error) = change_sender.unbounded_send(change.clone()) {
+                            if let Some(list) = list.as_ref() {
+                                let first_change_to_send = ListChange::Replace { items: list.clone() }; 
+                                if let Err(error) = change_sender.unbounded_send(first_change_to_send) {
                                     eprintln!("Failed to send {} change to subscriber: {error:#}", construct_info);
                                 } else {
                                     change_senders.push(change_sender);
@@ -823,4 +832,36 @@ pub enum ListChange {
     },
     Pop,
     Clear,
+}
+
+impl ListChange {
+    pub fn apply_to_vec(self, vec: &mut Vec<Arc<ValueActor>>) {
+        match self {
+            Self::Replace { items } => {
+                *vec = items;
+            },
+            Self::InsertAt { index, item } => {
+                vec.insert(index, item);
+            },
+            Self::UpdateAt { index, item } => {
+                vec[index] = item;
+            },
+            Self::Push { item } => {
+                vec.push(item);
+            },
+            Self::RemoveAt { index } => {
+                vec.remove(index);
+            },
+            Self::Move { old_index, new_index } => {
+                let item = vec.remove(old_index);
+                vec.insert(new_index, item);
+            },
+            Self::Pop => {
+                vec.pop().unwrap();
+            },
+            Self::Clear => {
+                vec.clear();
+            },
+        }
+    }
 }
