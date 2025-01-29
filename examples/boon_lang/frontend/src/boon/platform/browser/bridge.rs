@@ -37,9 +37,9 @@ fn value_to_element(value: Value) -> RawElOrText {
 }
 
 fn element_container(tagged_object: Arc<TaggedObject>) -> impl Element {
-    let settings_stream = tagged_object.expect_variable("settings");
+    let settings_variable = tagged_object.expect_variable("settings");
 
-    let child_stream = settings_stream
+    let child_stream = settings_variable
         .subscribe()
         .flat_map(|value| value.expect_object().expect_variable("child").subscribe())
         .map(value_to_element);
@@ -48,18 +48,30 @@ fn element_container(tagged_object: Arc<TaggedObject>) -> impl Element {
 }
 
 fn element_stripe(tagged_object: Arc<TaggedObject>) -> impl Element {
-    let settings_stream = tagged_object.expect_variable("settings");
+    let settings_variable = tagged_object.expect_variable("settings");
 
-    let items_vec_diff_stream = settings_stream
+    let direction_stream = settings_variable
+        .subscribe()
+        .flat_map(|value| value.expect_object().expect_variable("direction").subscribe())
+        .map(|direction| match direction.expect_tag().tag() {
+            "Column" => Direction::Column,
+            "Row" => Direction::Row,
+            other => panic!("Invalid Stripe element direction value: Found: '{other}', Expected: 'Column' or 'Row'"),
+        });
+
+    let items_vec_diff_stream = settings_variable
         .subscribe()
         .flat_map(|value| value.expect_object().expect_variable("items").subscribe())
         .flat_map(|value| value.expect_list().subscribe())
         .map(list_change_to_vec_diff);
 
-    // @TODO Column -> Stripe + direction
-    Column::new().items_signal_vec(VecDiffStreamSignalVec(items_vec_diff_stream).map_signal(
-        |value_actor| signal::from_stream(value_actor.subscribe().map(value_to_element)),
-    ))
+    Stripe::new()
+        .direction_signal(signal::from_stream(direction_stream).map(Option::unwrap_or_default))
+        .items_signal_vec(
+            VecDiffStreamSignalVec(items_vec_diff_stream).map_signal(|value_actor| {
+                signal::from_stream(value_actor.subscribe().map(value_to_element))
+            }),
+        )
 }
 
 fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
@@ -112,7 +124,7 @@ fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
         }))
         .on_press(move || {
             let press_event = Object::new_value(
-                // @TODO generate id
+                // @TODO generate id?
                 ConstructInfo::new(123, "Button press event"),
                 [],
             );
