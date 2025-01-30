@@ -19,7 +19,8 @@ fn root() -> impl Element {
 }
 
 async fn boon_document_root() -> impl Element {
-    let root_object = examples::interval::run().await;
+    let root_object = examples::call_document_new::run().await;
+    // let root_object = examples::interval::run().await;
     // let root_object = examples::counter::run().await;
 
     El::new()

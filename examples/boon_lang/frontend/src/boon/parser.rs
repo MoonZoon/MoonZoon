@@ -2,39 +2,14 @@ use chumsky::prelude::*;
 
 pub use chumsky::Parser;
 
-pub fn parser() -> impl Parser<char, Literal, Error = Simple<char>> {
+pub fn parser() -> impl Parser<char, Expression, Error = Simple<char>> {
+    // https://github.com/zesterer/chumsky/blob/main/tutorial.md
     let int = text::int(10)
-        .map(|s: String| Literal::Number(s.parse().unwrap()))
+        .map(|s: String| Expression::Literal(Literal::Number(s.parse().unwrap())))
         .padded();
 
-    int.then_ignore(end())
-}
-
-// original 'interval.bn':
-// document: 
-//     Duration[seconds: 1] 
-//     |> Timer/interval() 
-//     |> THEN { 1 } 
-//     |> Math/sum()
-//     |> Document/new()
-
-#[derive(Debug)]
-pub enum RootConstruct {
-    Variable(Variable),
-    Function(Function),
-}
-
-#[derive(Debug)]
-pub struct Variable {
-    pub name: String,
-    pub value: Expression,
-}
-
-#[derive(Debug)]
-pub struct Function {
-    pub name: String,
-    pub arguments: Vec<String>,
-    pub body: Expression,
+    int
+    // int.then_ignore(end())
 }
 
 #[derive(Debug)]
@@ -44,6 +19,7 @@ pub enum Expression {
     Object { variables: Vec<Variable> },
     TaggedObject { tag: String, variables: Vec<Variable> },
     Map { entries: Vec<MapEntry> },
+    Function { name: String, arguments: Vec<String>, body: Box<Expression> },
     FunctionCall { name: String, arguments: Vec<Argument> },
     Alias { path: String },
     Link,
@@ -55,6 +31,7 @@ pub enum Expression {
     Pipe { from: Box<Expression>, to: Box<Expression> },
     Skip,
     Block { variables: Vec<Variable>, output: Box<Expression> },
+    Comment,
     Negation { operand: Box<Expression> },
     Addition { operand_a: Box<Expression>, operand_b: Box<Expression> },
     Subtraction { operand_a: Box<Expression>, operand_b: Box<Expression> },
@@ -67,6 +44,12 @@ pub enum Literal {
     Number(f64),
     Text(String),
     Tag(String),
+}
+
+#[derive(Debug)]
+pub struct Variable {
+    pub name: String,
+    pub value: Expression,
 }
 
 #[derive(Debug)]
