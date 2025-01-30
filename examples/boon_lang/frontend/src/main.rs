@@ -19,8 +19,8 @@ fn root() -> impl Element {
 }
 
 async fn boon_document_root() -> impl Element {
-    // let root_object = examples::interval::run().await;
-    let root_object = examples::counter::run().await;
+    let root_object = examples::interval::run().await;
+    // let root_object = examples::counter::run().await;
 
     El::new()
         .child_signal(root_object_to_element_signal(root_object.clone()))
