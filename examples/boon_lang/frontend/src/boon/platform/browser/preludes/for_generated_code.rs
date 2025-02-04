@@ -4,4 +4,4 @@ pub use zoon::futures_channel::mpsc;
 #[allow(unused_imports)]
 pub use zoon::{eprintln, println};
 
-pub use super::super::{api::*, engine::*};
+pub use super::super::{api::*, engine::*, evaluator::*};
