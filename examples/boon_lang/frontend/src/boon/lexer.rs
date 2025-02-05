@@ -3,7 +3,8 @@ use chumsky::prelude::*;
 
 pub use chumsky::Parser;
 
-enum Token<'code> {
+#[derive(Debug)]
+pub enum Token<'code> {
     Comment(&'code str),
     Number(f64),
     Text(&'code str),
@@ -107,6 +108,7 @@ pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra
         .map(Token::Number);
 
     // @TODO multiline indentation?
+    // @TODO "raw" text or escape '?
     let text = just('\'')
         .ignore_then(none_of('\'').repeated().to_slice())
         .then_ignore(just('\''))

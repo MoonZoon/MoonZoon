@@ -1,14 +1,19 @@
 use crate::boon::platform::browser::preludes::for_generated_code::{println, eprintln, *};
 
 use crate::boon::parser::{parser, Parser};
+use crate::boon::lexer::lexer;
 
-#[allow(dead_code)]
-pub async fn run() -> Arc<Object> {
-    let program = include_str!("call_document_new.bn");
-    println!("{program}");
+pub fn run(source_code: &str) -> Arc<Object> {
+    println!("[Boon source code]");
+    println!("{source_code}");
 
-    let ast = parser().parse(program).into_result();
-    println!("{:#?}", ast);
+    let tokens = lexer().parse(source_code).into_result();
+    println!("[Tokens]");
+    println!("{tokens:#?}");
+    
+    let ast = parser().parse(source_code).into_result();
+    println!("[AST]");
+    println!("{ast:#?}");
     match ast {
         Ok(ast) => match evaluate(&ast) {
             Ok(output) => output,
@@ -20,7 +25,7 @@ pub async fn run() -> Arc<Object> {
             for parse_error in parse_errors {
                 eprintln!("Parse error: {parse_error}");
             }
-            panic!("Failed to parse the Boon program, see the errors above.")
+            panic!("Failed to parse the Boon source code, see the errors above.")
         }
     }
 }

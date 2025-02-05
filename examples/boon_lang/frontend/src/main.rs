@@ -1,7 +1,10 @@
 use zoon::*;
 
 mod boon;
-use boon::platform::browser::bridge::root_object_to_element_signal;
+use boon::platform::browser::{
+    bridge::root_object_to_element_signal,
+    interpreter
+};
 
 mod examples;
 
@@ -15,13 +18,25 @@ fn root() -> impl Element {
         .s(Height::fill())
         .s(Background::new().color(color!("oklch(0.4 0 0)")))
         .s(Font::new().color(color!("oklch(0.8 0 0)")))
-        .child_signal(boon_document_root().into_signal_option())
+        .child(boon_document_root())
 }
 
-async fn boon_document_root() -> impl Element {
-    let root_object = examples::call_document_new::run().await;
-    // let root_object = examples::interval::run().await;
-    // let root_object = examples::counter::run().await;
+fn boon_document_root() -> impl Element {
+    let root_object = interpreter::run(include_str!(
+        "examples/call_document_new/call_document_new.bn"
+    ));
+
+    // let root_object = interpreter::run(include_str!(
+    //     "examples/interval/interval.bn"
+    // ));
+
+    // let root_object = interpreter::run(include_str!(
+    //     "examples/counter/counter.bn"
+    // ));
+
+    // let root_object = interpreter::run(include_str!(
+    //     "examples/complex_counter/complex_counter.bn"
+    // ));
 
     El::new()
         .child_signal(root_object_to_element_signal(root_object.clone()))
