@@ -7,7 +7,7 @@ pub async fn run() -> Arc<Object> {
     let program = include_str!("call_document_new.bn");
     println!("{program}");
 
-    let ast = parser().parse(program);
+    let ast = parser().parse(program).into_result();
     println!("{:#?}", ast);
     match ast {
         Ok(ast) => match evaluate(&ast) {

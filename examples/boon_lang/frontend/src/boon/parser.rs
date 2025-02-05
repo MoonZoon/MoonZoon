@@ -91,14 +91,13 @@ impl fmt::Display for Token<'_> {
    }
 }
 
-pub fn parser<'code>() -> impl Parser<char, Expression<'code>, Error = Simple<char>> {
+pub fn parser<'code>() -> impl Parser<'code, &'code str, Expression<'code>, extra::Err<Rich<'code, char, SimpleSpan>>> {
     // https://github.com/zesterer/chumsky/blob/main/tutorial.md
     let int = text::int(10)
-        .map(|s: String| Expression::Literal(Literal::Number(s.parse().unwrap())))
+        .map(|s: &str| Expression::Literal(Literal::Number(s.parse().unwrap())))
         .padded();
 
-    int
-    // int.then_ignore(end())
+    int.then_ignore(any().repeated())
 }
 
 #[derive(Debug)]
