@@ -19,10 +19,10 @@ enum Token<'code> {
     Skip,
     Block,
     Pass,
-    SlashPath(Vec<&'code str>),
-    PassedDotPath(Vec<&'code str>),
-    DotPath(Vec<&'code str>),
+    SlashPath{ parts: Vec<&'code str> },
+    DotPath { parts: Vec<&'code str>, passed: bool },
     Passed,
+    Tag(&'code str),
     Identifier(&'code str),
     Implies,
     NotEqual,
@@ -50,7 +50,7 @@ impl fmt::Display for Token<'_> {
         match self {
             Self::Comment(comment) => write!(f, "--{comment}"),
             Self::Number(number) => write!(f, "{number}"),
-            Self::Text(text) => write!(f, "{text}"),
+            Self::Text(text) => write!(f, "'{text}'"),
             Self::List => write!(f, "LIST"),
             Self::Map => write!(f, "MAP"),
             Self::Function => write!(f, "FUNCTION"),
@@ -63,10 +63,10 @@ impl fmt::Display for Token<'_> {
             Self::Skip => write!(f, "SKIP"),
             Self::Block => write!(f, "BLOCK"),
             Self::Pass => write!(f, "PASS"),
-            Self::SlashPath(parts) => write!(f, "{}", parts.join("/")),
-            Self::PassedDotPath(parts) => write!(f, "PASSED.{}", parts.join(".")),
-            Self::DotPath(parts) => write!(f, "{}", parts.join(".")),
+            Self::SlashPath { parts } => write!(f, "{}", parts.join("/")),
+            Self::DotPath { parts, passed: _ } => write!(f, "{}", parts.join(".")),
             Self::Passed => write!(f, "PASSED"),
+            Self::Tag(tag) => write!(f, "{tag}"),
             Self::Identifier(identifier) => write!(f, "{identifier}"),
             Self::Implies => write!(f, "=>"),
             Self::NotEqual => write!(f, "=/="),
@@ -91,7 +91,7 @@ impl fmt::Display for Token<'_> {
    }
 }
 
-pub fn parser() -> impl Parser<char, Expression, Error = Simple<char>> {
+pub fn parser<'code>() -> impl Parser<char, Expression<'code>, Error = Simple<char>> {
     // https://github.com/zesterer/chumsky/blob/main/tutorial.md
     let int = text::int(10)
         .map(|s: String| Expression::Literal(Literal::Number(s.parse().unwrap())))
@@ -102,24 +102,24 @@ pub fn parser() -> impl Parser<char, Expression, Error = Simple<char>> {
 }
 
 #[derive(Debug)]
-pub enum Expression {
-    Literal(Literal),
+pub enum Expression<'code> {
+    Literal(Literal<'code>),
     List { items: Vec<Self> },
-    Object { variables: Vec<Variable> },
-    TaggedObject { tag: String, variables: Vec<Variable> },
-    Map { entries: Vec<MapEntry> },
-    Function { name: String, arguments: Vec<String>, body: Box<Self> },
-    FunctionCall { name: String, arguments: Vec<Argument> },
-    Alias { path: String },
+    Object { variables: Vec<Variable<'code>> },
+    TaggedObject { tag: &'code str, variables: Vec<Variable<'code>> },
+    Map { entries: Vec<MapEntry<'code>> },
+    Function { name: &'code str, arguments: Vec<&'code str>, body: Box<Self> },
+    FunctionCall { path: Vec<&'code str>, arguments: Vec<Argument<'code>> },
+    Alias(Alias<'code>),
     Link,
-    LinkSetter { alias: String },
+    LinkSetter { alias: Alias<'code> },
     Latest { inputs: Vec<Self> },
     Then { body: Box<Self> },
-    When { arms: Vec<Arm> },
-    While { arms: Vec<Arm> },
+    When { arms: Vec<Arm<'code>> },
+    While { arms: Vec<Arm<'code>> },
     Pipe { from: Box<Self>, to: Box<Self> },
     Skip,
-    Block { variables: Vec<Variable>, output: Box<Self> },
+    Block { variables: Vec<Variable<'code>>, output: Box<Self> },
     Comment,
     Equal { operand_a: Box<Self>, operand_b: Box<Self> },
     NotEqual { operand_a: Box<Self>, operand_b: Box<Self> },
@@ -135,55 +135,61 @@ pub enum Expression {
 }
 
 #[derive(Debug)]
-pub enum Literal {
+pub enum Literal<'code> {
     Number(f64),
-    Text(String),
-    Tag(String),
+    Text(&'code str),
+    Tag(&'code str),
 }
 
 #[derive(Debug)]
-pub struct Variable {
-    pub name: String,
-    pub value: Expression,
+pub struct Variable<'code> {
+    pub name: &'code str,
+    pub value: Expression<'code>,
 }
 
 #[derive(Debug)]
-pub struct MapEntry {
-    pub key: Expression,
-    pub value: Expression,
+pub struct MapEntry<'code> {
+    pub key: Expression<'code>,
+    pub value: Expression<'code>,
 }
 
 #[derive(Debug)]
-pub struct Argument {
-    pub name: String,
-    pub value: Option<Expression>,
+pub struct Argument<'code> {
+    pub name: &'code str,
+    pub value: Option<Expression<'code>>,
 }
 
 #[derive(Debug)]
-pub struct Arm {
-    pub pattern: Pattern,
-    pub body: Expression,
+pub struct Alias<'code> {
+    pub parts: Vec<&'code str>,
+    pub passed: bool,
 }
 
 #[derive(Debug)]
-pub enum Pattern {
-    Literal(Literal),
-    List { items: Vec<Pattern> },
-    Object { variables: Vec<PatternVariable> },
-    TaggedObject { tag: String, variables: Vec<PatternVariable> },
-    Map { entries: Vec<PatternMapEntry> },
-    Alias { name: String },
+pub struct Arm<'code> {
+    pub pattern: Pattern<'code>,
+    pub body: Expression<'code>,
+}
+
+#[derive(Debug)]
+pub enum Pattern<'code> {
+    Literal(Literal<'code>),
+    List { items: Vec<Pattern<'code>> },
+    Object { variables: Vec<PatternVariable<'code>> },
+    TaggedObject { tag: &'code str, variables: Vec<PatternVariable<'code>> },
+    Map { entries: Vec<PatternMapEntry<'code>> },
+    Alias { name: &'code str },
     WildCard,
 }
 
 #[derive(Debug)]
-pub struct PatternVariable {
-    pub name: String,
-    pub value: Option<Pattern>,
+pub struct PatternVariable<'code> {
+    pub name: &'code str,
+    pub value: Option<Pattern<'code>>,
 }
 
 #[derive(Debug)]
-pub struct PatternMapEntry {
-    pub key: Pattern,
-    pub value: Option<Pattern>,
+pub struct PatternMapEntry<'code> {
+    pub key: Pattern<'code>,
+    pub value: Option<Pattern<'code>>,
 }
