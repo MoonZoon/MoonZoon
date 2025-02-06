@@ -8,8 +8,6 @@ pub enum Token<'code> {
     Comment(&'code str),
     Number(f64),
     Text(&'code str),
-    SlashPath{ parts: Vec<&'code str> },
-    DotPath { parts: Vec<&'code str>, passed: bool },
     List,
     Map,
     Function,
@@ -22,8 +20,8 @@ pub enum Token<'code> {
     Block,
     Pass,
     Passed,
-    Tag(&'code str),
-    Identifier(&'code str),
+    PascalCaseIdentifier(&'code str),
+    SnakeCaseIdentifier(&'code str),
     Pipe,
     Wildcard,
     Implies,
@@ -45,6 +43,7 @@ pub enum Token<'code> {
     ParenthesisClose,
     Colon,
     Comma,
+    Dot,
 }
 
 impl fmt::Display for Token<'_> {
@@ -53,8 +52,6 @@ impl fmt::Display for Token<'_> {
             Self::Comment(comment) => write!(f, "--{comment}"),
             Self::Number(number) => write!(f, "{number}"),
             Self::Text(text) => write!(f, "'{text}'"),
-            Self::SlashPath { parts } => write!(f, "{}", parts.join("/")),
-            Self::DotPath { parts, passed: _ } => write!(f, "{}", parts.join(".")),
             Self::List => write!(f, "LIST"),
             Self::Map => write!(f, "MAP"),
             Self::Function => write!(f, "FUNCTION"),
@@ -67,8 +64,8 @@ impl fmt::Display for Token<'_> {
             Self::Block => write!(f, "BLOCK"),
             Self::Pass => write!(f, "PASS"),
             Self::Passed => write!(f, "PASSED"),
-            Self::Tag(tag) => write!(f, "{tag}"),
-            Self::Identifier(identifier) => write!(f, "{identifier}"),
+            Self::PascalCaseIdentifier(identifier) => write!(f, "{identifier}"),
+            Self::SnakeCaseIdentifier(identifier) => write!(f, "{identifier}"),
             Self::Pipe => write!(f, "|>"),
             Self::Wildcard => write!(f, "__"),
             Self::Implies => write!(f, "=>"),
@@ -90,6 +87,7 @@ impl fmt::Display for Token<'_> {
             Self::ParenthesisClose => write!(f, ")"),
             Self::Colon => write!(f, ":"),
             Self::Comma => write!(f, ","),
+            Self::Dot => write!(f, "."),
         }
    }
 }
