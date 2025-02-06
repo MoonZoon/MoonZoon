@@ -1,8 +1,6 @@
+use crate::boon::platform::browser::{api::*, engine::*};
 use std::sync::Arc;
 use zoon::println;
-use crate::boon::platform::browser::{
-    api::*, engine::*
-};
 
 #[allow(dead_code)]
 pub async fn run() -> Arc<Object> {

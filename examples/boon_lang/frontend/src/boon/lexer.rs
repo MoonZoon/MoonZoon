@@ -1,5 +1,5 @@
-use std::fmt;
 use chumsky::prelude::*;
+use std::fmt;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Token<'code> {
@@ -89,16 +89,17 @@ impl fmt::Display for Token<'_> {
             Self::Pass => write!(f, "PASS"),
             Self::Passed => write!(f, "PASSED"),
         }
-   }
+    }
 }
 
-pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra::Err<Rich<'code, char, SimpleSpan>>> {
+pub fn lexer<'code>(
+) -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra::Err<Rich<'code, char, SimpleSpan>>> {
     let comment = just("--")
         .ignore_then(
             any()
                 .and_is(text::inline_whitespace().then(text::newline()).not())
-                .repeated()
-            )
+                .repeated(),
+        )
         .to_slice()
         .map(Token::Comment);
 
@@ -124,7 +125,7 @@ pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra
                 .filter(char::is_ascii_lowercase)
                 .or(any().filter(char::is_ascii_digit))
                 .or(just('_'))
-                .repeated()
+                .repeated(),
         )
         .to_slice()
         .map(Token::SnakeCaseIdentifier);
@@ -138,7 +139,7 @@ pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra
                 .filter(char::is_ascii_uppercase)
                 .or(any().filter(char::is_ascii_lowercase))
                 .or(any().filter(char::is_ascii_digit))
-                .repeated()
+                .repeated(),
         )
         .to_slice()
         .map(Token::PascalCaseIdentifier);
@@ -148,22 +149,20 @@ pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra
         .repeated()
         .at_least(2)
         .to_slice()
-        .try_map(|keyword, span| {
-            match keyword {
-                "LIST" => Ok(Token::List),
-                "MAP" => Ok(Token::Map),
-                "FUNCTION" => Ok(Token::Function),
-                "LINK" => Ok(Token::Link),
-                "LATEST" => Ok(Token::Latest),
-                "THEN" => Ok(Token::Then),
-                "WHEN" => Ok(Token::When),
-                "WHILE" => Ok(Token::While),
-                "SKIP" => Ok(Token::Skip),
-                "BLOCK" => Ok(Token::Block),
-                "PASS" => Ok(Token::Pass),
-                "PASSED" => Ok(Token::Passed),
-                _ => Err(Rich::custom(span, format!("Unknown keyword '{keyword}'")))
-            }
+        .try_map(|keyword, span| match keyword {
+            "LIST" => Ok(Token::List),
+            "MAP" => Ok(Token::Map),
+            "FUNCTION" => Ok(Token::Function),
+            "LINK" => Ok(Token::Link),
+            "LATEST" => Ok(Token::Latest),
+            "THEN" => Ok(Token::Then),
+            "WHEN" => Ok(Token::When),
+            "WHILE" => Ok(Token::While),
+            "SKIP" => Ok(Token::Skip),
+            "BLOCK" => Ok(Token::Block),
+            "PASS" => Ok(Token::Pass),
+            "PASSED" => Ok(Token::Passed),
+            _ => Err(Rich::custom(span, format!("Unknown keyword '{keyword}'"))),
         });
 
     let token = comment

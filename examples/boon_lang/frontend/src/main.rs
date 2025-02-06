@@ -1,12 +1,7 @@
-
-
 use zoon::*;
 
 mod boon;
-use boon::platform::browser::{
-    bridge::object_with_document_to_element_signal,
-    interpreter
-};
+use boon::platform::browser::{bridge::object_with_document_to_element_signal, interpreter};
 
 mod examples;
 
@@ -26,10 +21,10 @@ fn root() -> impl Element {
 macro_rules! run_example {
     ($name:literal) => {{
         interpreter::run(
-            concat!($name, ".bn"), 
-            include_str!(concat!("examples/", $name, "/", $name, ".bn"))
+            concat!($name, ".bn"),
+            include_str!(concat!("examples/", $name, "/", $name, ".bn")),
         )
-    }}
+    }};
 }
 
 fn boon_object_with_document() -> impl Element {

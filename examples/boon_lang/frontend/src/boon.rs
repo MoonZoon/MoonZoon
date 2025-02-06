@@ -1,3 +1,3 @@
-pub mod platform;
-pub mod parser;
 pub mod lexer;
+pub mod parser;
+pub mod platform;
