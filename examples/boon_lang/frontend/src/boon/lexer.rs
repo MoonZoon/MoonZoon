@@ -3,6 +3,7 @@ use chumsky::prelude::*;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Token<'code> {
+    Comment(&'code str),
     Number(f64),
     Pipe,
     Wildcard,
@@ -26,6 +27,7 @@ pub enum Token<'code> {
     Colon,
     Comma,
     Dot,
+    Newline,
     Text(&'code str),
     SnakeCaseIdentifier(&'code str),
     PascalCaseIdentifier(&'code str),
@@ -46,6 +48,7 @@ pub enum Token<'code> {
 impl fmt::Display for Token<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Self::Comment(comment) => write!(f, "{comment}"),
             Self::Number(number) => write!(f, "{number}"),
             Self::Pipe => write!(f, "|>"),
             Self::Wildcard => write!(f, "__"),
@@ -69,6 +72,7 @@ impl fmt::Display for Token<'_> {
             Self::Colon => write!(f, ":"),
             Self::Comma => write!(f, ","),
             Self::Dot => write!(f, "."),
+            Self::Newline => write!(f, "\n"),
             Self::Text(text) => write!(f, "'{text}'"),
             Self::SnakeCaseIdentifier(identifier) => write!(f, "{identifier}"),
             Self::PascalCaseIdentifier(identifier) => write!(f, "{identifier}"),
@@ -88,9 +92,16 @@ impl fmt::Display for Token<'_> {
    }
 }
 
-// pub fn lex() -> 
-
 pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra::Err<Rich<'code, char, SimpleSpan>>> {
+    let comment = just("--")
+        .ignore_then(
+            any()
+                .and_is(text::inline_whitespace().then(text::newline()).not())
+                .repeated()
+            )
+        .to_slice()
+        .map(Token::Comment);
+
     // @TODO support number format like 1_000?
     let number = text::int(10)
         .then(just('.').then(text::digits(10)).or_not())
@@ -121,7 +132,7 @@ pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra
     let pascal_case_identifier = any()
         .filter(char::is_ascii_uppercase)
         // @TODO replace with `.repeated().exactly(1)` once it works as expected?
-        .then(any().filter(char::is_ascii_uppercase).not().rewind())
+        .then(any().filter(char::is_ascii_uppercase).not())
         .then(
             any()
                 .filter(char::is_ascii_uppercase)
@@ -155,7 +166,8 @@ pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra
             }
         });
 
-    let token = number
+    let token = comment
+        .or(number)
         .or(just("|>").to(Token::Pipe))
         .or(just("__").to(Token::Wildcard))
         .or(just("=>").to(Token::Implies))
@@ -178,18 +190,14 @@ pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra
         .or(just(':').to(Token::Colon))
         .or(just(',').to(Token::Comma))
         .or(just('.').to(Token::Dot))
+        .or(text::newline().to(Token::Newline))
         .or(text)
         .or(snake_case_identifier)
         .or(pascal_case_identifier)
         .or(keyword);
 
-    let comment = just("--")
-        .then(any().and_is(text::newline().not()).repeated())
-        .padded();
-
     token
-        .padded_by(comment.repeated())
-        .padded()
+        .padded_by(text::inline_whitespace())
         // If we encounter an error, skip and attempt to lex the next character as a token instead
         .recover_with(skip_then_retry_until(any().ignored(), end()))
         .repeated()
