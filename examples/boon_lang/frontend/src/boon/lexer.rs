@@ -7,21 +7,6 @@ pub use chumsky::Parser;
 pub enum Token<'code> {
     Comment(&'code str),
     Number(f64),
-    Text(&'code str),
-    List,
-    Map,
-    Function,
-    Link,
-    Latest,
-    Then,
-    When,
-    While,
-    Skip,
-    Block,
-    Pass,
-    Passed,
-    PascalCaseIdentifier(&'code str),
-    SnakeCaseIdentifier(&'code str),
     Pipe,
     Wildcard,
     Implies,
@@ -44,6 +29,21 @@ pub enum Token<'code> {
     Colon,
     Comma,
     Dot,
+    Text(&'code str),
+    SnakeCaseIdentifier(&'code str),
+    PascalCaseIdentifier(&'code str),
+    List,
+    Map,
+    Function,
+    Link,
+    Latest,
+    Then,
+    When,
+    While,
+    Skip,
+    Block,
+    Pass,
+    Passed,
 }
 
 impl fmt::Display for Token<'_> {
@@ -51,21 +51,6 @@ impl fmt::Display for Token<'_> {
         match self {
             Self::Comment(comment) => write!(f, "--{comment}"),
             Self::Number(number) => write!(f, "{number}"),
-            Self::Text(text) => write!(f, "'{text}'"),
-            Self::List => write!(f, "LIST"),
-            Self::Map => write!(f, "MAP"),
-            Self::Function => write!(f, "FUNCTION"),
-            Self::Link => write!(f, "LINK"),
-            Self::Latest => write!(f, "LATEST"),
-            Self::Then => write!(f, "THEN"),
-            Self::When => write!(f, "WHEN"),
-            Self::While => write!(f, "WHILE"),
-            Self::Skip => write!(f, "SKIP"),
-            Self::Block => write!(f, "BLOCK"),
-            Self::Pass => write!(f, "PASS"),
-            Self::Passed => write!(f, "PASSED"),
-            Self::PascalCaseIdentifier(identifier) => write!(f, "{identifier}"),
-            Self::SnakeCaseIdentifier(identifier) => write!(f, "{identifier}"),
             Self::Pipe => write!(f, "|>"),
             Self::Wildcard => write!(f, "__"),
             Self::Implies => write!(f, "=>"),
@@ -88,6 +73,21 @@ impl fmt::Display for Token<'_> {
             Self::Colon => write!(f, ":"),
             Self::Comma => write!(f, ","),
             Self::Dot => write!(f, "."),
+            Self::Text(text) => write!(f, "'{text}'"),
+            Self::SnakeCaseIdentifier(identifier) => write!(f, "{identifier}"),
+            Self::PascalCaseIdentifier(identifier) => write!(f, "{identifier}"),
+            Self::List => write!(f, "LIST"),
+            Self::Map => write!(f, "MAP"),
+            Self::Function => write!(f, "FUNCTION"),
+            Self::Link => write!(f, "LINK"),
+            Self::Latest => write!(f, "LATEST"),
+            Self::Then => write!(f, "THEN"),
+            Self::When => write!(f, "WHEN"),
+            Self::While => write!(f, "WHILE"),
+            Self::Skip => write!(f, "SKIP"),
+            Self::Block => write!(f, "BLOCK"),
+            Self::Pass => write!(f, "PASS"),
+            Self::Passed => write!(f, "PASSED"),
         }
    }
 }
@@ -112,18 +112,6 @@ pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra
         .then_ignore(just('\''))
         .map(Token::Text);
 
-    let pascal_case_identifier = any()
-        .filter(char::is_ascii_uppercase)
-        .then(
-            any()
-                .filter(char::is_ascii_uppercase)
-                .or(any().filter(char::is_ascii_lowercase))
-                .or(any().filter(char::is_ascii_digit))
-                .repeated()
-        )
-        .to_slice()
-        .map(Token::PascalCaseIdentifier);
-
     let snake_case_identifier = any()
         .filter(char::is_ascii_lowercase)
         .then(
@@ -136,22 +124,44 @@ pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra
         .to_slice()
         .map(Token::SnakeCaseIdentifier);
 
+    let pascal_case_identifier = any()
+        .filter(char::is_ascii_uppercase)
+        // @TODO replace with `.repeated().exactly(1)` once it works as expected?
+        .then(any().filter(char::is_ascii_uppercase).not().rewind())
+        .then(
+            any()
+                .filter(char::is_ascii_uppercase)
+                .or(any().filter(char::is_ascii_lowercase))
+                .or(any().filter(char::is_ascii_digit))
+                .repeated()
+        )
+        .to_slice()
+        .map(Token::PascalCaseIdentifier);
+
+    let keyword = any()
+        .filter(char::is_ascii_uppercase)
+        .repeated()
+        .at_least(2)
+        .to_slice()
+        .try_map(|keyword, span| {
+            match keyword {
+                "LIST" => Ok(Token::List),
+                "MAP" => Ok(Token::Map),
+                "FUNCTION" => Ok(Token::Function),
+                "LINK" => Ok(Token::Link),
+                "LATEST" => Ok(Token::Latest),
+                "THEN" => Ok(Token::Then),
+                "WHEN" => Ok(Token::When),
+                "WHILE" => Ok(Token::While),
+                "SKIP" => Ok(Token::Skip),
+                "BLOCK" => Ok(Token::Block),
+                "PASS" => Ok(Token::Pass),
+                "PASSED" => Ok(Token::Passed),
+                _ => Err(Rich::custom(span, format!("Unknown keyword '{keyword}'")))
+            }
+        });
+
     let token = number
-        .or(text)
-        .or(just("LIST").to(Token::List))
-        .or(just("MAP").to(Token::Map))
-        .or(just("FUNCTION").to(Token::Function))
-        .or(just("LINK").to(Token::Link))
-        .or(just("LATEST").to(Token::Latest))
-        .or(just("THEN").to(Token::Then))
-        .or(just("WHEN").to(Token::When))
-        .or(just("WHILE").to(Token::While))
-        .or(just("SKIP").to(Token::Skip))
-        .or(just("BLOCK").to(Token::Block))
-        .or(just("PASS").to(Token::Pass))
-        .or(just("PASSED").to(Token::Passed))
-        .or(pascal_case_identifier)
-        .or(snake_case_identifier)
         .or(just("|>").to(Token::Pipe))
         .or(just("__").to(Token::Wildcard))
         .or(just("=>").to(Token::Implies))
@@ -173,7 +183,11 @@ pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra
         .or(just(')').to(Token::ParenthesisClose))
         .or(just(':').to(Token::Colon))
         .or(just(',').to(Token::Comma))
-        .or(just('.').to(Token::Dot));
+        .or(just('.').to(Token::Dot))
+        .or(text)
+        .or(snake_case_identifier)
+        .or(pascal_case_identifier)
+        .or(keyword);
 
     token
         .padded_by(comment.repeated())
