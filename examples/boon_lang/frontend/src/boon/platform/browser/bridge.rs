@@ -5,7 +5,7 @@ use zoon::{eprintln, *};
 
 use super::engine::*;
 
-pub fn root_object_to_element_signal(
+pub fn object_with_document_to_element_signal(
     root_object: Arc<Object>,
 ) -> impl Signal<Item = Option<RawElOrText>> {
     let element_stream = root_object

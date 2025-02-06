@@ -24,7 +24,8 @@ pub fn run(filename: &str, source_code: &str) -> Arc<Object> {
     }
     report_errors(errors, filename, source_code);
     
-    let ast = parser().parse(source_code).into_result();
+    // @TODO replace `458`` woth `source_code``
+    let ast = parser().parse("458").into_result();
     println!("[AST]");
     println!("{ast:#?}");
     match ast {
