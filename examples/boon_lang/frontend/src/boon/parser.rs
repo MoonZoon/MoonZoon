@@ -1,8 +1,6 @@
 use std::fmt;
 use chumsky::prelude::*;
 
-pub use chumsky::Parser;
-
 enum Token<'code> {
     Comment(&'code str),
     Number(f64),

@@ -1,4 +1,9 @@
-use crate::boon::platform::browser::preludes::for_generated_code::{println, *};
+use std::sync::Arc;
+use zoon::futures_channel::mpsc;
+use zoon::println;
+use crate::boon::platform::browser::{
+    api::*, engine::*
+};
 
 #[allow(dead_code)]
 pub async fn run() -> Arc<Object> {

@@ -1,10 +1,16 @@
+use std::sync::Arc;
 use std::io::{Cursor, Read};
-use ariadne::{Source, Color, Label, Report, ReportKind, Config};
-use chumsky::prelude::{Rich, SimpleSpan};
-
-use crate::boon::platform::browser::preludes::for_generated_code::{println, eprintln, *};
-use crate::boon::parser::{parser, Parser};
-use crate::boon::lexer::lexer;
+use ariadne::{Source, Label, Report, ReportKind, Config};
+use chumsky::prelude::{Rich, SimpleSpan, Parser};
+use zoon::{eprintln, println, UnwrapThrowExt};
+use crate::boon::{
+    parser::parser,
+    lexer::lexer,
+};
+use crate::boon::platform::browser::{
+    evaluator::evaluate,
+    engine::Object,
+};
 
 pub fn run(filename: &str, source_code: &str) -> Arc<Object> {
     println!("[Source Code ({filename})]");
@@ -52,10 +58,10 @@ fn report_errors(errors: Vec<Rich<char, SimpleSpan>>, filename: &str, source_cod
             )
             .finish()
             .write((filename, Source::from(source_code)), &mut report_bytes)
-            .unwrap();
+            .unwrap_throw();
         report_bytes.set_position(0);
         report_string.clear();
-        report_bytes.read_to_string(&mut report_string).unwrap();
+        report_bytes.read_to_string(&mut report_string).unwrap_throw();
         eprintln!("{report_string}");
     }
 }

@@ -1,6 +1,8 @@
-use crate::boon::platform::browser::preludes::for_generated_code::{println, *};
-
-use crate::boon::parser::{parser, Parser};
+use std::sync::Arc;
+use zoon::println;
+use crate::boon::platform::browser::{
+    api::*, engine::*
+};
 
 #[allow(dead_code)]
 pub async fn run() -> Arc<Object> {

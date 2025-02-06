@@ -1,8 +1,6 @@
 use std::fmt;
 use chumsky::prelude::*;
 
-pub use chumsky::Parser;
-
 #[derive(Debug, Clone, Copy)]
 pub enum Token<'code> {
     Number(f64),
@@ -89,6 +87,8 @@ impl fmt::Display for Token<'_> {
         }
    }
 }
+
+// pub fn lex() -> 
 
 pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra::Err<Rich<'code, char, SimpleSpan>>> {
     // @TODO support number format like 1_000?
