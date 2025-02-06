@@ -5,7 +5,6 @@ pub use chumsky::Parser;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Token<'code> {
-    Comment(&'code str),
     Number(f64),
     Pipe,
     Wildcard,
@@ -49,7 +48,6 @@ pub enum Token<'code> {
 impl fmt::Display for Token<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Comment(comment) => write!(f, "--{comment}"),
             Self::Number(number) => write!(f, "{number}"),
             Self::Pipe => write!(f, "|>"),
             Self::Wildcard => write!(f, "__"),
@@ -93,10 +91,6 @@ impl fmt::Display for Token<'_> {
 }
 
 pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra::Err<Rich<'code, char, SimpleSpan>>> {
-    let comment = just("--")
-        .then(any().and_is(text::newline().not()).repeated())
-        .padded();
-
     // @TODO support number format like 1_000?
     let number = text::int(10)
         .then(just('.').then(text::digits(10)).or_not())
@@ -188,6 +182,10 @@ pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra
         .or(snake_case_identifier)
         .or(pascal_case_identifier)
         .or(keyword);
+
+    let comment = just("--")
+        .then(any().and_is(text::newline().not()).repeated())
+        .padded();
 
     token
         .padded_by(comment.repeated())

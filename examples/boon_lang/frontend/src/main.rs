@@ -1,4 +1,4 @@
-#![recursion_limit = "256"]
+
 
 use zoon::*;
 
@@ -24,19 +24,19 @@ fn root() -> impl Element {
 }
 
 fn boon_document_root() -> impl Element {
-    let root_object = interpreter::run(include_str!(
+    let root_object = interpreter::run("call_document_new.bn", include_str!(
         "examples/call_document_new/call_document_new.bn"
     ));
 
-    // let root_object = interpreter::run(include_str!(
+    // let root_object = interpreter::run("interval.bn", include_str!(
     //     "examples/interval/interval.bn"
     // ));
 
-    // let root_object = interpreter::run(include_str!(
+    // let root_object = interpreter::run("counter.bn", include_str!(
     //     "examples/counter/counter.bn"
     // ));
 
-    // let root_object = interpreter::run(include_str!(
+    // let root_object = interpreter::run("complex_counter.bn", include_str!(
     //     "examples/complex_counter/complex_counter.bn"
     // ));
 

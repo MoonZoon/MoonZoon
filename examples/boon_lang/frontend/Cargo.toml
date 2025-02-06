@@ -16,4 +16,5 @@ wasm-bindgen-test = "0.3.19"
 [dependencies]
 zoon.workspace = true
 chumsky = "1.0.0-alpha.8"
+ariadne = "0.5"
 pin-project = "1"
