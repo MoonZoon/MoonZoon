@@ -5,6 +5,9 @@ use super::api;
 use super::super::super::parser;
 
 pub fn evaluate(expression: &parser::Expression) -> Result<Arc<Object>, String> {
+    // call_document_new.bn
+    // -- Display number on web browser page
+    // document: Document/new(root: 123)
     Ok(Object::new_arc(
         ConstructInfo::new(0, "root"),
         [

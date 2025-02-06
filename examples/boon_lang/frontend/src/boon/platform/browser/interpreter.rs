@@ -9,7 +9,7 @@ pub fn run(source_code: &str) -> Arc<Object> {
 
     let tokens = lexer().parse(source_code).into_result();
     println!("[Tokens]");
-    println!("{tokens:#?}");
+    println!("{tokens:?}");
     
     let ast = parser().parse(source_code).into_result();
     println!("[AST]");

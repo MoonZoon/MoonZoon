@@ -3,7 +3,7 @@ use chumsky::prelude::*;
 
 pub use chumsky::Parser;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Token<'code> {
     Comment(&'code str),
     Number(f64),
@@ -112,12 +112,68 @@ pub fn lexer<'code>() -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra
         .then_ignore(just('\''))
         .map(Token::Text);
 
+    let pascal_case_identifier = any()
+        .filter(char::is_ascii_uppercase)
+        .then(
+            any()
+                .filter(char::is_ascii_uppercase)
+                .or(any().filter(char::is_ascii_lowercase))
+                .or(any().filter(char::is_ascii_digit))
+                .repeated()
+        )
+        .to_slice()
+        .map(Token::PascalCaseIdentifier);
 
-    // @TODO other parsers
-
+    let snake_case_identifier = any()
+        .filter(char::is_ascii_lowercase)
+        .then(
+            any()
+                .filter(char::is_ascii_lowercase)
+                .or(any().filter(char::is_ascii_digit))
+                .or(just('_'))
+                .repeated()
+        )
+        .to_slice()
+        .map(Token::SnakeCaseIdentifier);
 
     let token = number
-        .or(text);
+        .or(text)
+        .or(just("LIST").to(Token::List))
+        .or(just("MAP").to(Token::Map))
+        .or(just("FUNCTION").to(Token::Function))
+        .or(just("LINK").to(Token::Link))
+        .or(just("LATEST").to(Token::Latest))
+        .or(just("THEN").to(Token::Then))
+        .or(just("WHEN").to(Token::When))
+        .or(just("WHILE").to(Token::While))
+        .or(just("SKIP").to(Token::Skip))
+        .or(just("BLOCK").to(Token::Block))
+        .or(just("PASS").to(Token::Pass))
+        .or(just("PASSED").to(Token::Passed))
+        .or(pascal_case_identifier)
+        .or(snake_case_identifier)
+        .or(just("|>").to(Token::Pipe))
+        .or(just("__").to(Token::Wildcard))
+        .or(just("=>").to(Token::Implies))
+        .or(just("=/=").to(Token::NotEqual))
+        .or(just(">=").to(Token::GreaterOrEqual))
+        .or(just('>').to(Token::Greater))
+        .or(just("<=").to(Token::LessOrEqual))
+        .or(just('<').to(Token::Less))
+        .or(just('=').to(Token::Equal))
+        .or(just('-').to(Token::Minus))
+        .or(just('+').to(Token::Plus))
+        .or(just('*').to(Token::Asterisk))
+        .or(just('/').to(Token::Slash))
+        .or(just('{').to(Token::BraceOpen))
+        .or(just('}').to(Token::BraceClose))
+        .or(just('[').to(Token::BracketOpen))
+        .or(just(']').to(Token::BracketClose))
+        .or(just('(').to(Token::ParenthesisOpen))
+        .or(just(')').to(Token::ParenthesisClose))
+        .or(just(':').to(Token::Colon))
+        .or(just(',').to(Token::Comma))
+        .or(just('.').to(Token::Dot));
 
     token
         .padded_by(comment.repeated())
