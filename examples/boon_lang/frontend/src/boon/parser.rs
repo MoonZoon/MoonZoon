@@ -1,13 +1,19 @@
 use chumsky::prelude::*;
 
 mod lexer;
+use lexer::Token;
 
 pub use chumsky::prelude::Parser;
 pub use lexer::lexer;
 
 pub type Span = SimpleSpan;
-pub type Spanned<T> = (T, Span);
 pub type ParseError<'code> = Rich<'code, char, Span>;
+
+#[derive(Debug)]
+pub struct Spanned<T> {
+    pub node: T,
+    pub span: Span
+}
 
 pub fn parser<'code>(
 ) -> impl Parser<'code, &'code str, Expression<'code>, extra::Err<ParseError<'code>>> {

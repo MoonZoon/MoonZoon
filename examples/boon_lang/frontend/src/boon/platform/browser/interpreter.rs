@@ -21,7 +21,7 @@ pub fn run(filename: &str, source_code: &str) -> Arc<Object> {
 
     // @TODO replace `458`` woth `source_code``
     let ast = parser().parse("458").into_result();
-    println!("[AST]");
+    println!("[Abstract Syntax Tree]");
     println!("{ast:#?}");
     match ast {
         Ok(ast) => match evaluate(&ast) {
