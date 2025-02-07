@@ -3,11 +3,21 @@ use std::fmt;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Token<'code> {
+    BracketRoundOpen,
+    BracketRoundClose,
+    BracketCurlyOpen,
+    BracketCurlyClose,
+    BracketSquareOpen,
+    BracketSquareClose,
     Comment(&'code str),
     Number(f64),
     Pipe,
     Wildcard,
     Implies,
+    Colon,
+    Comma,
+    Dot,
+    Newline,
     NotEqual,
     GreaterOrEqual,
     Greater,
@@ -18,16 +28,6 @@ pub enum Token<'code> {
     Plus,
     Asterisk,
     Slash,
-    BraceOpen,
-    BraceClose,
-    BracketOpen,
-    BracketClose,
-    ParenthesisOpen,
-    ParenthesisClose,
-    Colon,
-    Comma,
-    Dot,
-    Newline,
     Text(&'code str),
     SnakeCaseIdentifier(&'code str),
     PascalCaseIdentifier(&'code str),
@@ -48,11 +48,21 @@ pub enum Token<'code> {
 impl fmt::Display for Token<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Self::BracketRoundOpen => write!(f, "("),
+            Self::BracketRoundClose => write!(f, ")"),
+            Self::BracketCurlyOpen => write!(f, "{{"),
+            Self::BracketCurlyClose => write!(f, "}}"),
+            Self::BracketSquareOpen => write!(f, "["),
+            Self::BracketSquareClose => write!(f, "]"),
             Self::Comment(comment) => write!(f, "{comment}"),
             Self::Number(number) => write!(f, "{number}"),
             Self::Pipe => write!(f, "|>"),
             Self::Wildcard => write!(f, "__"),
             Self::Implies => write!(f, "=>"),
+            Self::Colon => write!(f, ":"),
+            Self::Comma => write!(f, ","),
+            Self::Dot => write!(f, "."),
+            Self::Newline => write!(f, "\n"),
             Self::NotEqual => write!(f, "=/="),
             Self::GreaterOrEqual => write!(f, ">="),
             Self::Greater => write!(f, ">"),
@@ -63,16 +73,6 @@ impl fmt::Display for Token<'_> {
             Self::Plus => write!(f, "+"),
             Self::Asterisk => write!(f, "*"),
             Self::Slash => write!(f, "/"),
-            Self::BraceOpen => write!(f, "{{"),
-            Self::BraceClose => write!(f, "}}"),
-            Self::BracketOpen => write!(f, "["),
-            Self::BracketClose => write!(f, "]"),
-            Self::ParenthesisOpen => write!(f, "("),
-            Self::ParenthesisClose => write!(f, ")"),
-            Self::Colon => write!(f, ":"),
-            Self::Comma => write!(f, ","),
-            Self::Dot => write!(f, "."),
-            Self::Newline => write!(f, "\n"),
             Self::Text(text) => write!(f, "'{text}'"),
             Self::SnakeCaseIdentifier(identifier) => write!(f, "{identifier}"),
             Self::PascalCaseIdentifier(identifier) => write!(f, "{identifier}"),
@@ -94,6 +94,31 @@ impl fmt::Display for Token<'_> {
 
 pub fn lexer<'code>(
 ) -> impl Parser<'code, &'code str, Vec<Token<'code>>, extra::Err<Rich<'code, char, SimpleSpan>>> {
+    let bracket = choice((
+        just('(').to(Token::BracketRoundOpen),
+        just(')').to(Token::BracketRoundClose),
+        just('{').to(Token::BracketCurlyOpen),
+        just('}').to(Token::BracketCurlyClose),
+        just('[').to(Token::BracketSquareOpen),
+        just(']').to(Token::BracketSquareClose),
+    ));
+
+    let comparator = choice((
+        just("=/=").to(Token::NotEqual),
+        just(">=").to(Token::GreaterOrEqual),
+        just('>').to(Token::Greater),
+        just("<=").to(Token::LessOrEqual),
+        just('<').to(Token::Less),
+        just('=').to(Token::Equal),
+    ));
+
+    let arithmetic_operator_or_path_separator = choice((
+        just('-').to(Token::Minus),
+        just('+').to(Token::Plus),
+        just('*').to(Token::Asterisk),
+        just('/').to(Token::Slash),
+    ));
+
     let comment = just("--")
         .ignore_then(
             any()
@@ -122,9 +147,11 @@ pub fn lexer<'code>(
         .filter(char::is_ascii_lowercase)
         .then(
             any()
-                .filter(char::is_ascii_lowercase)
-                .or(any().filter(char::is_ascii_digit))
-                .or(just('_'))
+                .filter(|character: &char| {
+                    *character == '_'
+                        || character.is_ascii_lowercase()
+                        || character.is_ascii_digit()
+                })
                 .repeated(),
         )
         .to_slice()
@@ -132,13 +159,7 @@ pub fn lexer<'code>(
 
     let pascal_case_identifier = any()
         .filter(char::is_ascii_uppercase)
-        .then(
-            any()
-                .filter(char::is_ascii_uppercase)
-                .or(any().filter(char::is_ascii_lowercase))
-                .or(any().filter(char::is_ascii_digit))
-                .repeated(),
-        )
+        .then(any().filter(|character: &char| character.is_ascii_lowercase() || character.is_ascii_uppercase() || character.is_ascii_digit()).repeated())
         .to_slice()
         .try_map(|identifier: &str, span| {
             if identifier.len() == 1 || identifier.chars().rev().any(|character| {
@@ -171,35 +192,24 @@ pub fn lexer<'code>(
             _ => Err(Rich::custom(span, format!("Unknown keyword '{keyword}'"))),
         });
 
-    let token = comment
-        .or(number)
-        .or(just("|>").to(Token::Pipe))
-        .or(just("__").to(Token::Wildcard))
-        .or(just("=>").to(Token::Implies))
-        .or(just("=/=").to(Token::NotEqual))
-        .or(just(">=").to(Token::GreaterOrEqual))
-        .or(just('>').to(Token::Greater))
-        .or(just("<=").to(Token::LessOrEqual))
-        .or(just('<').to(Token::Less))
-        .or(just('=').to(Token::Equal))
-        .or(just('-').to(Token::Minus))
-        .or(just('+').to(Token::Plus))
-        .or(just('*').to(Token::Asterisk))
-        .or(just('/').to(Token::Slash))
-        .or(just('{').to(Token::BraceOpen))
-        .or(just('}').to(Token::BraceClose))
-        .or(just('[').to(Token::BracketOpen))
-        .or(just(']').to(Token::BracketClose))
-        .or(just('(').to(Token::ParenthesisOpen))
-        .or(just(')').to(Token::ParenthesisClose))
-        .or(just(':').to(Token::Colon))
-        .or(just(',').to(Token::Comma))
-        .or(just('.').to(Token::Dot))
-        .or(text::newline().to(Token::Newline))
-        .or(text)
-        .or(snake_case_identifier)
-        .or(pascal_case_identifier)
-        .or(keyword);
+    let token = choice((
+        bracket,
+        comment,
+        number,
+        just("|>").to(Token::Pipe),
+        just("__").to(Token::Wildcard),
+        just("=>").to(Token::Implies),
+        just(':').to(Token::Colon),
+        just(',').to(Token::Comma),
+        just('.').to(Token::Dot),
+        text::newline().to(Token::Newline),
+        comparator,
+        arithmetic_operator_or_path_separator,
+        text,
+        snake_case_identifier,
+        pascal_case_identifier,
+        keyword,
+    ));
 
     token
         .padded_by(text::inline_whitespace())
