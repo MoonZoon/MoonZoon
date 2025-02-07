@@ -1,7 +1,6 @@
+use crate::boon::parser::{lexer, parser, ParseError, Parser};
 use crate::boon::platform::browser::{engine::Object, evaluator::evaluate};
-use crate::boon::{lexer::lexer, parser::parser};
 use ariadne::{Config, Label, Report, ReportKind, Source};
-use chumsky::prelude::{Parser, Rich, SimpleSpan};
 use std::io::{Cursor, Read};
 use std::sync::Arc;
 use zoon::{eprintln, println, UnwrapThrowExt};
@@ -40,7 +39,7 @@ pub fn run(filename: &str, source_code: &str) -> Arc<Object> {
     }
 }
 
-fn report_errors(errors: Vec<Rich<char, SimpleSpan>>, filename: &str, source_code: &str) {
+fn report_errors(errors: Vec<ParseError>, filename: &str, source_code: &str) {
     let mut report_bytes = Cursor::new(Vec::new());
     let mut report_string = String::new();
     for error in errors {

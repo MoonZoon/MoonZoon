@@ -1,101 +1,16 @@
 use chumsky::prelude::*;
-use std::fmt;
 
-enum Token<'code> {
-    Comment(&'code str),
-    Number(f64),
-    Text(&'code str),
-    List,
-    Map,
-    Function,
-    Link,
-    Latest,
-    Then,
-    When,
-    While,
-    Pipe,
-    Skip,
-    Block,
-    Pass,
-    SlashPath {
-        parts: Vec<&'code str>,
-    },
-    DotPath {
-        parts: Vec<&'code str>,
-        passed: bool,
-    },
-    Passed,
-    Tag(&'code str),
-    Identifier(&'code str),
-    Implies,
-    NotEqual,
-    GreaterOrEqual,
-    Greater,
-    LessOrEqual,
-    Less,
-    Equal,
-    Minus,
-    Plus,
-    Asterisk,
-    Slash,
-    BraceOpen,
-    BraceClose,
-    BracketOpen,
-    BracketClose,
-    ParenthesisOpen,
-    ParenthesisClose,
-    Colon,
-    Comma,
-}
+mod lexer;
 
-impl fmt::Display for Token<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::Comment(comment) => write!(f, "--{comment}"),
-            Self::Number(number) => write!(f, "{number}"),
-            Self::Text(text) => write!(f, "'{text}'"),
-            Self::List => write!(f, "LIST"),
-            Self::Map => write!(f, "MAP"),
-            Self::Function => write!(f, "FUNCTION"),
-            Self::Link => write!(f, "LINK"),
-            Self::Latest => write!(f, "LATEST"),
-            Self::Then => write!(f, "THEN"),
-            Self::When => write!(f, "WHEN"),
-            Self::While => write!(f, "WHILE"),
-            Self::Pipe => write!(f, "|>"),
-            Self::Skip => write!(f, "SKIP"),
-            Self::Block => write!(f, "BLOCK"),
-            Self::Pass => write!(f, "PASS"),
-            Self::SlashPath { parts } => write!(f, "{}", parts.join("/")),
-            Self::DotPath { parts, passed: _ } => write!(f, "{}", parts.join(".")),
-            Self::Passed => write!(f, "PASSED"),
-            Self::Tag(tag) => write!(f, "{tag}"),
-            Self::Identifier(identifier) => write!(f, "{identifier}"),
-            Self::Implies => write!(f, "=>"),
-            Self::NotEqual => write!(f, "=/="),
-            Self::GreaterOrEqual => write!(f, ">="),
-            Self::Greater => write!(f, ">"),
-            Self::LessOrEqual => write!(f, "<="),
-            Self::Less => write!(f, "<"),
-            Self::Equal => write!(f, "="),
-            Self::Minus => write!(f, "-"),
-            Self::Plus => write!(f, "+"),
-            Self::Asterisk => write!(f, "*"),
-            Self::Slash => write!(f, "/"),
-            Self::BraceOpen => write!(f, "{{"),
-            Self::BraceClose => write!(f, "}}"),
-            Self::BracketOpen => write!(f, "["),
-            Self::BracketClose => write!(f, "]"),
-            Self::ParenthesisOpen => write!(f, "("),
-            Self::ParenthesisClose => write!(f, ")"),
-            Self::Colon => write!(f, ":"),
-            Self::Comma => write!(f, ","),
-        }
-    }
-}
+pub use chumsky::prelude::Parser;
+pub use lexer::lexer;
+
+pub type Span = SimpleSpan;
+pub type Spanned<T> = (T, Span);
+pub type ParseError<'code> = Rich<'code, char, Span>;
 
 pub fn parser<'code>(
-) -> impl Parser<'code, &'code str, Expression<'code>, extra::Err<Rich<'code, char, SimpleSpan>>> {
+) -> impl Parser<'code, &'code str, Expression<'code>, extra::Err<ParseError<'code>>> {
     // https://github.com/zesterer/chumsky/blob/main/tutorial.md
     let int = text::int(10)
         .map(|s: &str| Expression::Literal(Literal::Number(s.parse().unwrap())))
