@@ -1,16 +1,17 @@
-use crate::boon::parser::{lexer, parser, ParseError, Parser};
+use crate::boon::parser::{lexer, make_input, parser, ParseError, Parser, Span};
 use crate::boon::platform::browser::{engine::Object, evaluator::evaluate};
 use ariadne::{Config, Label, Report, ReportKind, Source};
+use std::fmt;
 use std::io::{Cursor, Read};
 use std::sync::Arc;
 use zoon::{eprintln, println, UnwrapThrowExt};
 
-pub fn run(filename: &str, source_code: &str) -> Arc<Object> {
+pub fn run(filename: &str, source_code: &str) -> Option<Arc<Object>> {
     println!("[Source Code ({filename})]");
     println!("{source_code}");
 
     let (tokens, errors) = lexer().parse(source_code).into_output_errors();
-    if let Some(tokens) = tokens {
+    if let Some(tokens) = tokens.as_ref() {
         println!("[Tokens]");
         println!("{tokens:?}");
     }
@@ -18,28 +19,35 @@ pub fn run(filename: &str, source_code: &str) -> Arc<Object> {
         println!("[Lex Errors]");
     }
     report_errors(errors, filename, source_code);
+    let Some(tokens) = tokens else {
+        return None;
+    };
 
-    // @TODO replace `458`` woth `source_code``
-    let ast = parser().parse("458").into_result();
-    println!("[Abstract Syntax Tree]");
-    println!("{ast:#?}");
-    match ast {
-        Ok(ast) => match evaluate(&ast) {
-            Ok(output) => output,
-            Err(evaluation_error) => {
-                panic!("Evaluation error: {evaluation_error}");
-            }
-        },
-        Err(parse_errors) => {
-            for parse_error in parse_errors {
-                eprintln!("Parse error: {parse_error}");
-            }
-            panic!("Failed to parse the Boon source code, see the errors above.")
+    let (ast, errors) = parser(make_input)
+        .parse(make_input(Span::new(0, source_code.len()), tokens.as_ref()))
+        .into_output_errors();
+    if let Some(ast) = ast.as_ref() {
+        println!("[Abstract Syntax Tree]");
+        println!("{ast:#?}");
+    }
+    if !errors.is_empty() {
+        println!("[Parse Errors]");
+    }
+    report_errors(errors, filename, source_code);
+    let Some(ast) = ast else {
+        return None;
+    };
+
+    match evaluate(&ast) {
+        Ok(output) => Some(output),
+        Err(evaluation_error) => {
+            eprintln!("Evaluation error: {evaluation_error}");
+            None
         }
     }
 }
 
-fn report_errors(errors: Vec<ParseError>, filename: &str, source_code: &str) {
+fn report_errors<T: fmt::Display>(errors: Vec<ParseError<T>>, filename: &str, source_code: &str) {
     let mut report_bytes = Cursor::new(Vec::new());
     let mut report_string = String::new();
     for error in errors {

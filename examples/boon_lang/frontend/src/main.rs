@@ -32,9 +32,17 @@ fn boon_object_with_document() -> impl Element {
     let object = run_example!("call_document_new");
     // let object = run_example!("interval");
     // let object = run_example!("counter");
-    // let object = run_example!("complex_counter");
 
-    El::new()
-        .child_signal(object_with_document_to_element_signal(object.clone()))
-        .after_remove(move |_| drop(object))
+    // NOT IMPLEMENTED YET
+    // let object = run_example!("complex_counter");
+    // let object = run_example!("todo_mvc");
+
+    if let Some(object) = object {
+        El::new()
+            .child_signal(object_with_document_to_element_signal(object.clone()))
+            .after_remove(move |_| drop(object))
+            .unify()
+    } else {
+        El::new().child("Failed to get Boon root Object").unify()
+    }
 }

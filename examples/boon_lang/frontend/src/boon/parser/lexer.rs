@@ -1,8 +1,8 @@
+use super::{ParseError, Spanned};
 use chumsky::prelude::*;
 use std::fmt;
-use super::{Spanned, ParseError};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Token<'code> {
     BracketRoundOpen,
     BracketRoundClose,
@@ -94,7 +94,8 @@ impl fmt::Display for Token<'_> {
 }
 
 pub fn lexer<'code>(
-) -> impl Parser<'code, &'code str, Vec<Spanned<Token<'code>>>, extra::Err<ParseError<'code>>> {
+) -> impl Parser<'code, &'code str, Vec<Spanned<Token<'code>>>, extra::Err<ParseError<'code, char>>>
+{
     let bracket = choice((
         just('(').to(Token::BracketRoundOpen),
         just(')').to(Token::BracketRoundClose),
@@ -190,7 +191,10 @@ pub fn lexer<'code>(
             "BLOCK" => Ok(Token::Block),
             "PASS" => Ok(Token::Pass),
             "PASSED" => Ok(Token::Passed),
-            _ => Err(ParseError::custom(span, format!("Unknown keyword '{keyword}'"))),
+            _ => Err(ParseError::custom(
+                span,
+                format!("Unknown keyword '{keyword}'"),
+            )),
         });
 
     let token = choice((
@@ -215,10 +219,9 @@ pub fn lexer<'code>(
     token
         .map_with(|token, extra| Spanned {
             node: token,
-            span: extra.span()
+            span: extra.span(),
         })
         .padded_by(text::inline_whitespace())
-        // If we encounter an error, skip and attempt to lex the next character as a token instead
         .recover_with(skip_then_retry_until(any().ignored(), end()))
         .repeated()
         .collect()

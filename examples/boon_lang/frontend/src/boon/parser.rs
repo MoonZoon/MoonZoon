@@ -1,4 +1,4 @@
-use chumsky::prelude::*;
+use chumsky::{input::ValueInput, prelude::*};
 
 mod lexer;
 use lexer::Token;
@@ -7,22 +7,32 @@ pub use chumsky::prelude::Parser;
 pub use lexer::lexer;
 
 pub type Span = SimpleSpan;
-pub type ParseError<'code> = Rich<'code, char, Span>;
+pub type ParseError<'code, T> = Rich<'code, T, Span>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Spanned<T> {
     pub node: T,
-    pub span: Span
+    pub span: Span,
 }
 
-pub fn parser<'code>(
-) -> impl Parser<'code, &'code str, Expression<'code>, extra::Err<ParseError<'code>>> {
-    // https://github.com/zesterer/chumsky/blob/main/tutorial.md
-    let int = text::int(10)
-        .map(|s: &str| Expression::Literal(Literal::Number(s.parse().unwrap())))
-        .padded();
+pub fn make_input<'code>(
+    end_of_input_span: Span,
+    tokens: &'code [Spanned<Token<'code>>],
+) -> impl ValueInput<'code, Token = Token<'code>, Span = Span> {
+    tokens.map(end_of_input_span, |Spanned { node, span }| (node, span))
+}
 
-    int.then_ignore(any().repeated())
+pub fn parser<'code, I, M>(
+    make_input: M,
+) -> impl Parser<'code, I, Spanned<Expression<'code>>, extra::Err<ParseError<'code, Token<'code>>>>
+where
+    I: ValueInput<'code, Token = Token<'code>, Span = Span>,
+    M: Fn(Span, &'code [Spanned<Token<'code>>]) -> I + Clone + 'code,
+{
+    any().repeated().map_with(|token, extra| Spanned {
+        node: Expression::Literal(Literal::Number(1.)),
+        span: extra.span(),
+    })
 }
 
 #[derive(Debug)]
