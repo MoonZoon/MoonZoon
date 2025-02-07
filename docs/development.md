@@ -5,7 +5,7 @@
 - [Rust](https://www.rust-lang.org/)
   ```bash
   rustup update
-  rustc -V # rustc 1.84.0 (9fc6b4312 2025-01-07)
+  rustc -V # rustc 1.84.1 (e71f9a9a9 2025-01-27)
   ```
 
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)

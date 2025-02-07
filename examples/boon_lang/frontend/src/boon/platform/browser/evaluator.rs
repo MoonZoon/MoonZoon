@@ -4,7 +4,7 @@ use super::super::super::parser::{Expression, Spanned};
 use super::api;
 use super::engine::*;
 
-pub fn evaluate(expression: &Spanned<Expression>) -> Result<Arc<Object>, String> {
+pub fn evaluate(expressions: &[Spanned<Expression>]) -> Result<Arc<Object>, String> {
     // call_document_new.bn
     // -- Display number on web browser page
     // document: Document/new(root: 123)

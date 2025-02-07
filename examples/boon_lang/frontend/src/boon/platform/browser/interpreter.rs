@@ -1,4 +1,4 @@
-use crate::boon::parser::{lexer, make_input, parser, ParseError, Parser, Span};
+use crate::boon::parser::{lexer, parser, ParseError, Parser, Span, Spanned, Input};
 use crate::boon::platform::browser::{engine::Object, evaluator::evaluate};
 use ariadne::{Config, Label, Report, ReportKind, Source};
 use std::fmt;
@@ -23,8 +23,15 @@ pub fn run(filename: &str, source_code: &str) -> Option<Arc<Object>> {
         return None;
     };
 
-    let (ast, errors) = parser(make_input)
-        .parse(make_input(Span::new(0, source_code.len()), tokens.as_ref()))
+    let (ast, errors) = parser()
+        .parse(
+            tokens
+                .as_slice()
+                .map(
+                    Span::splat(source_code.len()), 
+                    |Spanned { node, span }| (node, span)
+                )
+        )
         .into_output_errors();
     if let Some(ast) = ast.as_ref() {
         println!("[Abstract Syntax Tree]");

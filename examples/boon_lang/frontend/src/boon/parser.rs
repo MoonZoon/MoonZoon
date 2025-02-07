@@ -3,7 +3,7 @@ use chumsky::{input::ValueInput, prelude::*};
 mod lexer;
 use lexer::Token;
 
-pub use chumsky::prelude::Parser;
+pub use chumsky::prelude::{Parser, Input};
 pub use lexer::lexer;
 
 pub type Span = SimpleSpan;
@@ -15,28 +15,53 @@ pub struct Spanned<T> {
     pub span: Span,
 }
 
-pub fn make_input<'code>(
-    end_of_input_span: Span,
-    tokens: &'code [Spanned<Token<'code>>],
-) -> impl ValueInput<'code, Token = Token<'code>, Span = Span> {
-    tokens.map(end_of_input_span, |Spanned { node, span }| (node, span))
-}
-
-pub fn parser<'code, I, M>(
-    make_input: M,
-) -> impl Parser<'code, I, Spanned<Expression<'code>>, extra::Err<ParseError<'code, Token<'code>>>>
+pub fn parser<'code, I>() -> impl Parser<'code, I, Vec<Spanned<Expression<'code>>>, extra::Err<ParseError<'code, Token<'code>>>>
 where
     I: ValueInput<'code, Token = Token<'code>, Span = Span>,
-    M: Fn(Span, &'code [Spanned<Token<'code>>]) -> I + Clone + 'code,
 {
-    any().repeated().map_with(|token, extra| Spanned {
-        node: Expression::Literal(Literal::Number(1.)),
-        span: extra.span(),
+    recursive(|expression| {
+        let function = just(Token::Function).ignore_then(todo());
+
+        let comment = select!(Token::Comment(_)).ignored();
+        let newline = just(Token::Newline).ignored();
+
+        let colon = just(Token::Colon);
+        let slash = just(Token::Slash);
+
+        let snake_case_identifier = select! { Token::SnakeCaseIdentifier(identifier) => identifier };
+        let pascal_case_identifier = select! { Token::PascalCaseIdentifier(identifier) => identifier };
+
+        let number = select! { Token::Number(number) => Literal::Number(number) };
+        let text = select! { Token::Text(text) => Literal::Text(text) };
+        let tag = pascal_case_identifier.then_ignore(slash.not()).map(|identifier| {
+            Literal::Tag(identifier)
+        });
+        let literal = choice((number, text, tag)).map(Expression::Literal);
+
+        let variable = group((snake_case_identifier, colon, expression))
+            .map(|(name, _, value)| Expression::Variable(Box::new(Variable { name, value })));
+
+        let expression = choice((
+            variable,
+            function,
+            literal,
+        ));
+
+        expression
+            .map_with(|expression, extra| Spanned {
+                node: expression,
+                span: extra.span(),
+            })
+            .padded_by(newline.or(comment).repeated())
     })
+    .repeated()
+    .collect()
 }
 
+// @TODO not everything is expression, FUNCTIONs can be defined only in the root, etc. 
 #[derive(Debug)]
 pub enum Expression<'code> {
+    Variable(Box<Variable<'code>>),
     Literal(Literal<'code>),
     List {
         items: Vec<Self>,
@@ -133,16 +158,16 @@ pub enum Expression<'code> {
 }
 
 #[derive(Debug)]
+pub struct Variable<'code> {
+    pub name: &'code str,
+    pub value: Spanned<Expression<'code>>,
+}
+
+#[derive(Debug)]
 pub enum Literal<'code> {
     Number(f64),
     Text(&'code str),
     Tag(&'code str),
-}
-
-#[derive(Debug)]
-pub struct Variable<'code> {
-    pub name: &'code str,
-    pub value: Expression<'code>,
 }
 
 #[derive(Debug)]
