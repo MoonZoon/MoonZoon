@@ -11,8 +11,10 @@ pub fn run(filename: &str, source_code: &str) -> Arc<Object> {
     println!("{source_code}");
 
     let (tokens, errors) = lexer().parse(source_code).into_output_errors();
-    println!("[Tokens]");
-    println!("{tokens:?}");
+    if let Some(tokens) = tokens {
+        println!("[Tokens]");
+        println!("{tokens:?}");
+    }
     if !errors.is_empty() {
         println!("[Lex Errors]");
     }

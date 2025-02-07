@@ -132,8 +132,6 @@ pub fn lexer<'code>(
 
     let pascal_case_identifier = any()
         .filter(char::is_ascii_uppercase)
-        // @TODO replace with `.repeated().exactly(1)` once it works as expected?
-        .then(any().filter(char::is_ascii_uppercase).not())
         .then(
             any()
                 .filter(char::is_ascii_uppercase)
@@ -142,7 +140,15 @@ pub fn lexer<'code>(
                 .repeated(),
         )
         .to_slice()
-        .map(Token::PascalCaseIdentifier);
+        .try_map(|identifier: &str, span| {
+            if identifier.len() == 1 || identifier.chars().rev().any(|character| {
+                character.is_ascii_lowercase() || character.is_ascii_digit()
+            }) {
+                Ok(Token::PascalCaseIdentifier(identifier))
+            } else {
+                Err(Rich::custom(span, format!("PascalCase identifier has to contain at least one digit or lowercase character. Identifier: '{identifier}'")))
+            }
+        });
 
     let keyword = any()
         .filter(char::is_ascii_uppercase)
