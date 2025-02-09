@@ -1,5 +1,12 @@
 -- Display number on web browser page
--- document: Document/new(root: 123)
+document: Document/new(root: 123)
+
 x: 5
 abc: 'xyz'
 i_am_a_tag: IAmATag
+document: Document/new(root: 123, abc: 'drgdr', g)
+document: Document/new(
+    root: 123  -- 156
+    abc: 'drgdr'
+    g --cvb
+)

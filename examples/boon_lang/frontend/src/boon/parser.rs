@@ -20,31 +20,75 @@ where
     I: ValueInput<'code, Token = Token<'code>, Span = Span>,
 {
     recursive(|expression| {
-        let function = just(Token::Function).ignore_then(todo());
+        let comment = select!(Token::Comment(_));
 
-        let comment = select!(Token::Comment(_)).ignored();
-        let newline = just(Token::Newline).ignored();
-
+        let newline = just(Token::Newline);
         let colon = just(Token::Colon);
         let slash = just(Token::Slash);
+        let bracket_round_open = just(Token::BracketRoundOpen);
+        let bracket_round_close = just(Token::BracketRoundClose);
+        let comma = just(Token::Comma);
 
         let snake_case_identifier = select! { Token::SnakeCaseIdentifier(identifier) => identifier };
         let pascal_case_identifier = select! { Token::PascalCaseIdentifier(identifier) => identifier };
 
+        let variable = group((snake_case_identifier, colon, expression.clone()))
+            .map(|(name, _, value)| Expression::Variable(Box::new(Variable { name, value })));
+
+        let function_call = {
+            let path = pascal_case_identifier
+                .then_ignore(slash)
+                .repeated()
+                .collect::<Vec<_>>()
+                .then(snake_case_identifier)
+                .map(|(mut path, variable_name)| {
+                    path.push(variable_name);
+                    path
+                });
+
+            let argument = snake_case_identifier
+                .then(group((colon, expression)).or_not())
+                .padded_by(comment.repeated())
+                .map_with(|(name, value), extra| {
+                    let value = value.map(|(_, value)| value);
+                    Spanned {
+                        node: Argument { name, value },
+                        span: extra.span(),
+                    }
+                });
+
+            path
+                .then(
+                    argument
+                        .separated_by(comma.ignored().or(newline.repeated()))
+                        .collect()
+                        .delimited_by(bracket_round_open.then(newline.repeated()), newline.repeated().then(bracket_round_close))
+                )
+                .map(|(path, arguments)| {
+                    Expression::FunctionCall { path, arguments }
+                })
+        };
+
         let number = select! { Token::Number(number) => Literal::Number(number) };
         let text = select! { Token::Text(text) => Literal::Text(text) };
-        let tag = pascal_case_identifier.then_ignore(slash.not()).map(|identifier| {
-            Literal::Tag(identifier)
-        });
+        let tag = pascal_case_identifier.map(Literal::Tag);
         let literal = choice((number, text, tag)).map(Expression::Literal);
 
-        let variable = group((snake_case_identifier, colon, expression))
-            .map(|(name, _, value)| Expression::Variable(Box::new(Variable { name, value })));
+        let list = just(Token::List).ignore_then(todo());
+        let object = just(Token::BracketSquareOpen).ignore_then(todo());
+        let tagged_object = just(Token::BracketSquareOpen).ignore_then(todo());
+        let map = just(Token::Map).ignore_then(todo());
+        let function = just(Token::Function).ignore_then(todo());
 
         let expression = choice((
             variable,
-            function,
+            function_call,
+            list,
+            object,
+            tagged_object,
+            map,
             literal,
+            function,
         ));
 
         expression
@@ -52,7 +96,7 @@ where
                 node: expression,
                 span: extra.span(),
             })
-            .padded_by(newline.or(comment).repeated())
+            .padded_by(newline.ignored().or(comment).repeated())
     })
     .repeated()
     .collect()
@@ -83,7 +127,7 @@ pub enum Expression<'code> {
     },
     FunctionCall {
         path: Vec<&'code str>,
-        arguments: Vec<Argument<'code>>,
+        arguments: Vec<Spanned<Argument<'code>>>,
     },
     Alias(Alias<'code>),
     Link,
@@ -179,7 +223,7 @@ pub struct MapEntry<'code> {
 #[derive(Debug)]
 pub struct Argument<'code> {
     pub name: &'code str,
-    pub value: Option<Expression<'code>>,
+    pub value: Option<Spanned<Expression<'code>>>,
 }
 
 #[derive(Debug)]
