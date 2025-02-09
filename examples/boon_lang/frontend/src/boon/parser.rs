@@ -78,11 +78,14 @@ where
         let number = select! { Token::Number(number) => Literal::Number(number) };
         let text = select! { Token::Text(text) => Literal::Text(text) };
         let tag = pascal_case_identifier.map(Literal::Tag);
-        let literal = choice((number, text, tag)).map(Expression::Literal);
+
+        let literal = choice((number, text, tag));
+        let expression_literal = literal.map(Expression::Literal);
 
         let list = just(Token::List)
             .ignore_then(
                 expression
+                    .clone()
                     .separated_by(comma.ignored().or(newlines))
                     .collect()
                     .delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close))
@@ -109,7 +112,29 @@ where
             .then(object)
             .map(|(tag, object)| Expression::TaggedObject { tag, object });
 
-        let map = just(Token::Map).ignore_then(todo());
+        let map = {
+            // @TODO Can a dotted alias or a path to a variable be the key?
+            let key = literal
+                .map(MapEntryKey::Literal)
+                .or(snake_case_identifier.map(MapEntryKey::VariableName))
+                .map_with(|key, extra| Spanned {
+                    span: extra.span(),
+                    node: key
+                });
+
+            let key_value_pair = group((key, colon, expression.clone()))
+                .map(|(key, _, value)| MapEntry { key, value });
+
+            just(Token::Map)
+                .ignore_then(
+                    key_value_pair
+                        .separated_by(comma.ignored().or(newlines))
+                        .collect()
+                        .delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close))
+                )
+                .map(|entries| Expression::Map { entries })
+        };
+
         let function = just(Token::Function).ignore_then(todo());
 
         let expression = choice((
@@ -119,7 +144,7 @@ where
             expression_object,
             tagged_object,
             map,
-            literal,
+            expression_literal,
             function,
         ));
 
@@ -261,8 +286,14 @@ pub enum Literal<'code> {
 
 #[derive(Debug)]
 pub struct MapEntry<'code> {
-    pub key: Expression<'code>,
-    pub value: Expression<'code>,
+    pub key: Spanned<MapEntryKey<'code>>,
+    pub value: Spanned<Expression<'code>>,
+}
+
+#[derive(Debug)]
+pub enum MapEntryKey<'code> {
+    Literal(Literal<'code>),
+    VariableName(&'code str),
 }
 
 #[derive(Debug)]
