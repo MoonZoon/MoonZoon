@@ -23,15 +23,23 @@ where
         let newlines = just(Token::Newline).repeated();
         let colon = just(Token::Colon);
         let slash = just(Token::Slash);
+        let comma = just(Token::Comma);
         let bracket_round_open = just(Token::BracketRoundOpen);
         let bracket_round_close = just(Token::BracketRoundClose);
-        let comma = just(Token::Comma);
+        let bracket_curly_open = just(Token::BracketCurlyOpen);
+        let bracket_curly_close = just(Token::BracketCurlyClose);
+        let bracket_square_open = just(Token::BracketSquareOpen);
+        let bracket_square_close = just(Token::BracketSquareClose);
 
         let snake_case_identifier = select! { Token::SnakeCaseIdentifier(identifier) => identifier };
         let pascal_case_identifier = select! { Token::PascalCaseIdentifier(identifier) => identifier };
 
         let variable = group((snake_case_identifier, colon, expression.clone()))
-            .map(|(name, _, value)| Expression::Variable(Box::new(Variable { name, value })));
+            .map(|(name, _, value)| Variable { name, value });
+
+        let expression_variable = variable
+            .clone()
+            .map(|variable| Expression::Variable(Box::new(variable)));
 
         let function_call = {
             let path = pascal_case_identifier
@@ -45,7 +53,7 @@ where
                 });
 
             let argument = snake_case_identifier
-                .then(group((colon, expression)).or_not())
+                .then(group((colon, expression.clone())).or_not())
                 .map_with(|(name, value), extra| {
                     let value = value.map(|(_, value)| value);
                     Spanned {
@@ -71,14 +79,33 @@ where
         let tag = pascal_case_identifier.map(Literal::Tag);
         let literal = choice((number, text, tag)).map(Expression::Literal);
 
-        let list = just(Token::List).ignore_then(todo());
-        let object = just(Token::BracketSquareOpen).ignore_then(todo());
+        let list = just(Token::List)
+            .ignore_then(
+                expression
+                    .separated_by(comma.ignored().or(newlines))
+                    .collect()
+                    .delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close))
+            )
+            .map(|items| Expression::List { items });
+
+        let object = variable
+            .map_with(|variable, extra| { 
+                Spanned {
+                    node: variable,
+                    span: extra.span()
+                }
+            })
+            .separated_by(comma.ignored().or(newlines))
+            .collect()
+            .delimited_by(bracket_square_open.then(newlines), newlines.then(bracket_square_close))
+            .map(|variables| Expression::Object { variables });
+
         let tagged_object = just(Token::BracketSquareOpen).ignore_then(todo());
         let map = just(Token::Map).ignore_then(todo());
         let function = just(Token::Function).ignore_then(todo());
 
         let expression = choice((
-            variable,
+            expression_variable,
             function_call,
             list,
             object,
@@ -105,14 +132,14 @@ pub enum Expression<'code> {
     Variable(Box<Variable<'code>>),
     Literal(Literal<'code>),
     List {
-        items: Vec<Self>,
+        items: Vec<Spanned<Self>>,
     },
     Object {
-        variables: Vec<Variable<'code>>,
+        variables: Vec<Spanned<Variable<'code>>>,
     },
     TaggedObject {
         tag: &'code str,
-        variables: Vec<Variable<'code>>,
+        variables: Vec<Spanned<Variable<'code>>>,
     },
     Map {
         entries: Vec<MapEntry<'code>>,
@@ -120,7 +147,7 @@ pub enum Expression<'code> {
     Function {
         name: &'code str,
         arguments: Vec<&'code str>,
-        body: Box<Self>,
+        body: Box<Spanned<Self>>,
     },
     FunctionCall {
         path: Vec<&'code str>,
@@ -132,10 +159,10 @@ pub enum Expression<'code> {
         alias: Alias<'code>,
     },
     Latest {
-        inputs: Vec<Self>,
+        inputs: Vec<Spanned<Self>>,
     },
     Then {
-        body: Box<Self>,
+        body: Box<Spanned<Self>>,
     },
     When {
         arms: Vec<Arm<'code>>,
@@ -144,57 +171,57 @@ pub enum Expression<'code> {
         arms: Vec<Arm<'code>>,
     },
     Pipe {
-        from: Box<Self>,
-        to: Box<Self>,
+        from: Box<Spanned<Self>>,
+        to: Box<Spanned<Self>>,
     },
     Skip,
     Block {
-        variables: Vec<Variable<'code>>,
-        output: Box<Self>,
+        variables: Vec<Spanned<Variable<'code>>>,
+        output: Box<Spanned<Self>>,
     },
     Comment,
     Equal {
-        operand_a: Box<Self>,
-        operand_b: Box<Self>,
+        operand_a: Box<Spanned<Self>>,
+        operand_b: Box<Spanned<Self>>,
     },
     NotEqual {
-        operand_a: Box<Self>,
-        operand_b: Box<Self>,
+        operand_a: Box<Spanned<Self>>,
+        operand_b: Box<Spanned<Self>>,
     },
     Greater {
-        operand_a: Box<Self>,
-        operand_b: Box<Self>,
+        operand_a: Box<Spanned<Self>>,
+        operand_b: Box<Spanned<Self>>,
     },
     GreaterOrEqual {
-        operand_a: Box<Self>,
-        operand_b: Box<Self>,
+        operand_a: Box<Spanned<Self>>,
+        operand_b: Box<Spanned<Self>>,
     },
     Less {
-        operand_a: Box<Self>,
-        operand_b: Box<Self>,
+        operand_a: Box<Spanned<Self>>,
+        operand_b: Box<Spanned<Self>>,
     },
     LessOrEqual {
-        operand_a: Box<Self>,
-        operand_b: Box<Self>,
+        operand_a: Box<Spanned<Self>>,
+        operand_b: Box<Spanned<Self>>,
     },
     Negate {
-        operand: Box<Self>,
+        operand: Box<Spanned<Self>>,
     },
     Add {
-        operand_a: Box<Self>,
-        operand_b: Box<Self>,
+        operand_a: Box<Spanned<Self>>,
+        operand_b: Box<Spanned<Self>>,
     },
     Subtract {
-        operand_a: Box<Self>,
-        operand_b: Box<Self>,
+        operand_a: Box<Spanned<Self>>,
+        operand_b: Box<Spanned<Self>>,
     },
     Multiply {
-        operand_a: Box<Self>,
-        operand_b: Box<Self>,
+        operand_a: Box<Spanned<Self>>,
+        operand_b: Box<Spanned<Self>>,
     },
     Divide {
-        operand_a: Box<Self>,
-        operand_b: Box<Self>,
+        operand_a: Box<Spanned<Self>>,
+        operand_b: Box<Spanned<Self>>,
     },
 }
 

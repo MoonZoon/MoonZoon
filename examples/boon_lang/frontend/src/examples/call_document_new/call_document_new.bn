@@ -1,13 +1,31 @@
 -- Display number on web browser page
-document: Document/new(root: 123)
+--document: Document/new(root: 123)
 
-x: 5
-abc: 'xyz'
-i_am_a_tag: IAmATag
-document: Document/new(root: 123, abc: 'drgdr', g)
-document: Document/new(
-    root: 123  -- 156
-    asd
-    abc: 'drgdr'
-    g --cvb
-)
+--x: 5
+--abc: 'xyz'
+--i_am_a_tag: IAmATag
+--document: Document/new(root: 123, abc: 'drgdr', g)
+--document: Document/new(
+--    root: 123  -- 156
+--    asd
+  --  abc: 'drgdr'
+   -- g --cvb
+--)
+LIST {}
+LIST { 'x', 'y' }
+LIST {
+    8
+    9
+}
+
+[]
+[ var_1: 'x', variable_b: 'y' ]
+[
+    c0: 8
+    c1: 9
+]
+
+
+
+
+153
