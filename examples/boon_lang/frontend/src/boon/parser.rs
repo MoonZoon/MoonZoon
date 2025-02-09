@@ -186,48 +186,58 @@ pub enum Expression<'code> {
         variables: Vec<Spanned<Variable<'code>>>,
         output: Box<Spanned<Self>>,
     },
+    Comparator(Comparator<'code>),
+    ArithmeticOperator(ArithmeticOperator<'code>),
+}
+
+#[derive(Debug)]
+pub enum Comparator<'code> {
     Equal {
-        operand_a: Box<Spanned<Self>>,
-        operand_b: Box<Spanned<Self>>,
+        operand_a: Box<Spanned<Expression<'code>>>,
+        operand_b: Box<Spanned<Expression<'code>>>,
     },
     NotEqual {
-        operand_a: Box<Spanned<Self>>,
-        operand_b: Box<Spanned<Self>>,
+        operand_a: Box<Spanned<Expression<'code>>>,
+        operand_b: Box<Spanned<Expression<'code>>>,
     },
     Greater {
-        operand_a: Box<Spanned<Self>>,
-        operand_b: Box<Spanned<Self>>,
+        operand_a: Box<Spanned<Expression<'code>>>,
+        operand_b: Box<Spanned<Expression<'code>>>,
     },
     GreaterOrEqual {
-        operand_a: Box<Spanned<Self>>,
-        operand_b: Box<Spanned<Self>>,
+        operand_a: Box<Spanned<Expression<'code>>>,
+        operand_b: Box<Spanned<Expression<'code>>>,
     },
     Less {
-        operand_a: Box<Spanned<Self>>,
-        operand_b: Box<Spanned<Self>>,
+        operand_a: Box<Spanned<Expression<'code>>>,
+        operand_b: Box<Spanned<Expression<'code>>>,
     },
     LessOrEqual {
-        operand_a: Box<Spanned<Self>>,
-        operand_b: Box<Spanned<Self>>,
+        operand_a: Box<Spanned<Expression<'code>>>,
+        operand_b: Box<Spanned<Expression<'code>>>,
     },
+}
+
+#[derive(Debug)]
+pub enum ArithmeticOperator<'code> {
     Negate {
-        operand: Box<Spanned<Self>>,
+        operand: Box<Spanned<Expression<'code>>>,
     },
     Add {
-        operand_a: Box<Spanned<Self>>,
-        operand_b: Box<Spanned<Self>>,
+        operand_a: Box<Spanned<Expression<'code>>>,
+        operand_b: Box<Spanned<Expression<'code>>>,
     },
     Subtract {
-        operand_a: Box<Spanned<Self>>,
-        operand_b: Box<Spanned<Self>>,
+        operand_a: Box<Spanned<Expression<'code>>>,
+        operand_b: Box<Spanned<Expression<'code>>>,
     },
     Multiply {
-        operand_a: Box<Spanned<Self>>,
-        operand_b: Box<Spanned<Self>>,
+        operand_a: Box<Spanned<Expression<'code>>>,
+        operand_b: Box<Spanned<Expression<'code>>>,
     },
     Divide {
-        operand_a: Box<Spanned<Self>>,
-        operand_b: Box<Spanned<Self>>,
+        operand_a: Box<Spanned<Expression<'code>>>,
+        operand_b: Box<Spanned<Expression<'code>>>,
     },
 }
 
