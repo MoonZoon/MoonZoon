@@ -1,7 +1,7 @@
 use chumsky::{input::ValueInput, prelude::*};
 
 mod lexer;
-use lexer::Token;
+pub use lexer::Token;
 
 pub use chumsky::prelude::{Parser, Input};
 pub use lexer::lexer;
@@ -20,9 +20,7 @@ where
     I: ValueInput<'code, Token = Token<'code>, Span = Span>,
 {
     recursive(|expression| {
-        let comment = select!(Token::Comment(_));
-
-        let newline = just(Token::Newline);
+        let newlines = just(Token::Newline).repeated();
         let colon = just(Token::Colon);
         let slash = just(Token::Slash);
         let bracket_round_open = just(Token::BracketRoundOpen);
@@ -48,7 +46,6 @@ where
 
             let argument = snake_case_identifier
                 .then(group((colon, expression)).or_not())
-                .padded_by(comment.repeated())
                 .map_with(|(name, value), extra| {
                     let value = value.map(|(_, value)| value);
                     Spanned {
@@ -60,9 +57,9 @@ where
             path
                 .then(
                     argument
-                        .separated_by(comma.ignored().or(newline.repeated()))
+                        .separated_by(comma.ignored().or(newlines))
                         .collect()
-                        .delimited_by(bracket_round_open.then(newline.repeated()), newline.repeated().then(bracket_round_close))
+                        .delimited_by(bracket_round_open.then(newlines), newlines.then(bracket_round_close))
                 )
                 .map(|(path, arguments)| {
                     Expression::FunctionCall { path, arguments }
@@ -96,7 +93,7 @@ where
                 node: expression,
                 span: extra.span(),
             })
-            .padded_by(newline.ignored().or(comment).repeated())
+            .padded_by(newlines)
     })
     .repeated()
     .collect()
