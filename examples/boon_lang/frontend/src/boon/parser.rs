@@ -11,16 +11,17 @@ pub type ParseError<'code, T> = Rich<'code, T, Span>;
 
 #[derive(Debug, Clone)]
 pub struct Spanned<T> {
-    pub node: T,
     pub span: Span,
+    pub node: T,
 }
 
 pub fn parser<'code, I>() -> impl Parser<'code, I, Vec<Spanned<Expression<'code>>>, extra::Err<ParseError<'code, Token<'code>>>>
 where
     I: ValueInput<'code, Token = Token<'code>, Span = Span>,
 {
+    let newlines = just(Token::Newline).repeated();
+
     recursive(|expression| {
-        let newlines = just(Token::Newline).repeated();
         let colon = just(Token::Colon);
         let slash = just(Token::Slash);
         let comma = just(Token::Comma);
@@ -98,9 +99,16 @@ where
             .separated_by(comma.ignored().or(newlines))
             .collect()
             .delimited_by(bracket_square_open.then(newlines), newlines.then(bracket_square_close))
-            .map(|variables| Expression::Object { variables });
+            .map(|variables| Object { variables });
 
-        let tagged_object = just(Token::BracketSquareOpen).ignore_then(todo());
+        let expression_object = object
+            .clone()
+            .map(Expression::Object);
+
+        let tagged_object = pascal_case_identifier
+            .then(object)
+            .map(|(tag, object)| Expression::TaggedObject { tag, object });
+
         let map = just(Token::Map).ignore_then(todo());
         let function = just(Token::Function).ignore_then(todo());
 
@@ -108,7 +116,7 @@ where
             expression_variable,
             function_call,
             list,
-            object,
+            expression_object,
             tagged_object,
             map,
             literal,
@@ -124,6 +132,7 @@ where
     })
     .repeated()
     .collect()
+    .padded_by(newlines)
 }
 
 // @TODO not everything is expression, FUNCTIONs can be defined only in the root, etc. 
@@ -134,12 +143,10 @@ pub enum Expression<'code> {
     List {
         items: Vec<Spanned<Self>>,
     },
-    Object {
-        variables: Vec<Spanned<Variable<'code>>>,
-    },
+    Object(Object<'code>),
     TaggedObject {
         tag: &'code str,
-        variables: Vec<Spanned<Variable<'code>>>,
+        object: Object<'code>,
     },
     Map {
         entries: Vec<MapEntry<'code>>,
@@ -179,7 +186,6 @@ pub enum Expression<'code> {
         variables: Vec<Spanned<Variable<'code>>>,
         output: Box<Spanned<Self>>,
     },
-    Comment,
     Equal {
         operand_a: Box<Spanned<Self>>,
         operand_b: Box<Spanned<Self>>,
@@ -223,6 +229,11 @@ pub enum Expression<'code> {
         operand_a: Box<Spanned<Self>>,
         operand_b: Box<Spanned<Self>>,
     },
+}
+
+#[derive(Debug)]
+pub struct Object<'code> {
+    variables: Vec<Spanned<Variable<'code>>>,
 }
 
 #[derive(Debug)]
