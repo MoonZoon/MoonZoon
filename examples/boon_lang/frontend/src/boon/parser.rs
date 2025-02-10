@@ -135,7 +135,27 @@ where
                 .map(|entries| Expression::Map { entries })
         };
 
-        let function = just(Token::Function).ignore_then(todo());
+        let function = { 
+            let parameters = snake_case_identifier
+                .map_with(|parameter_name, extra| { 
+                    Spanned {
+                        node: parameter_name,
+                        span: extra.span()
+                    }
+                })
+                .separated_by(comma.ignored().or(newlines))
+                .collect()
+                .delimited_by(bracket_round_open.then(newlines), newlines.then(bracket_round_close));
+
+            just(Token::Function)
+                .ignore_then(snake_case_identifier)
+                .then(parameters)
+                .then(expression.delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close))
+                )
+                .map_with(|((name, parameters), body), extra| {
+                    Expression::Function { name, parameters, body: Box::new(body) }
+                })
+        };
 
         let expression = choice((
             expression_variable,
@@ -178,7 +198,7 @@ pub enum Expression<'code> {
     },
     Function {
         name: &'code str,
-        arguments: Vec<&'code str>,
+        parameters: Vec<Spanned<&'code str>>,
         body: Box<Spanned<Self>>,
     },
     FunctionCall {
