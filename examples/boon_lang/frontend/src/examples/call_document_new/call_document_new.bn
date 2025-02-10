@@ -1,12 +1,9 @@
-a: 3
-b: a
-c: PASSED.something
+LINK
 
-items: LIST {
-    counter
-    increment_button
-}
+LINK { PASSED.elements.decrement_button }
 
-MAP {
-    PASSED.x.y2: b
-}
+LINK { i_am_an_alias }
+
+LINK
+
+asfe: SKIP

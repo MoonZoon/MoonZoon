@@ -182,14 +182,28 @@ where
                 })
         };
 
-        let link_setter = just(Token::Link).ignore_then(todo());
-        let link = just(Token::Link).ignore_then(todo());
+        let link = just(Token::Link);
+        let link_expression = link.map(|_| Expression::Link);
+        
+        let link_setter = link.ignore_then(
+            alias
+                .delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close))
+                .map_with(|alias, extra| {
+                    Expression::LinkSetter { alias: Spanned {
+                        span: extra.span(),
+                        node: alias
+                    }}
+                })
+        );
+
         let latest = just(Token::Latest).ignore_then(todo());
         let then = just(Token::Then).ignore_then(todo());
         let when = just(Token::When).ignore_then(todo());
         let while_ = just(Token::While).ignore_then(todo());
         let pipe = just(Token::Pipe).ignore_then(todo());
-        let skip = just(Token::Skip).ignore_then(todo());
+
+        let skip = select! { Token::Skip => Expression::Skip };
+
         let block = just(Token::Block).ignore_then(todo());
         
         // @TODO pass? A part of function calls?
@@ -207,7 +221,7 @@ where
             function,
             expression_alias,
             link_setter,
-            link,
+            link_expression,
             latest,
             then,
             when,
@@ -256,7 +270,7 @@ pub enum Expression<'code> {
     },
     Alias(Alias<'code>),
     LinkSetter {
-        alias: Alias<'code>,
+        alias: Spanned<Alias<'code>>,
     },
     Link,
     Latest {
