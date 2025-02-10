@@ -1,9 +1,12 @@
-LINK
+THEN { 
+    
+    i_am_an_alias 
+    
+ }
 
-LINK { PASSED.elements.decrement_button }
+LATEST {
+    0
+    b 
+} 
 
-LINK { i_am_an_alias }
-
-LINK
-
-asfe: SKIP
+LATEST{x,y}

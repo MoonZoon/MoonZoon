@@ -176,7 +176,7 @@ where
             just(Token::Function)
                 .ignore_then(snake_case_identifier)
                 .then(parameters)
-                .then(expression.delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close)))
+                .then(expression.clone().delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close)))
                 .map(|((name, parameters), body)| {
                     Expression::Function { name, parameters, body: Box::new(body) }
                 })
@@ -196,8 +196,24 @@ where
                 })
         );
 
-        let latest = just(Token::Latest).ignore_then(todo());
-        let then = just(Token::Then).ignore_then(todo());
+        let latest = just(Token::Latest)
+            .ignore_then(
+                expression
+                    .clone()
+                    .separated_by(comma.ignored().or(newlines))
+                    .collect()
+                    .delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close))
+            )
+            .map(|inputs| Expression::Latest { inputs });
+
+        let then = just(Token::Then).ignore_then(
+            expression
+                .delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close))
+                .map(|body| {
+                    Expression::Then { body: Box::new(body) }
+                })
+        );
+
         let when = just(Token::When).ignore_then(todo());
         let while_ = just(Token::While).ignore_then(todo());
         let pipe = just(Token::Pipe).ignore_then(todo());
