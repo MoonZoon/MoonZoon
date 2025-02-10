@@ -1,8 +1,2 @@
-FUNCTION counter_button(label) {
-    Element/button(
-        style: [
-            width: 45
-            rounded_corners: Fully
-        ]
-    )
-}
+-- Display number on web browser page
+document: Document/new(root: 123)

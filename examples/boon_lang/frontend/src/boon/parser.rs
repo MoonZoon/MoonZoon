@@ -150,12 +150,27 @@ where
             just(Token::Function)
                 .ignore_then(snake_case_identifier)
                 .then(parameters)
-                .then(expression.delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close))
-                )
-                .map_with(|((name, parameters), body), extra| {
+                .then(expression.delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close)))
+                .map(|((name, parameters), body)| {
                     Expression::Function { name, parameters, body: Box::new(body) }
                 })
         };
+
+        let alias = snake_case_identifier.ignore_then(todo());
+        let link_setter = just(Token::Link).ignore_then(todo());
+        let link = just(Token::Link).ignore_then(todo());
+        let latest = just(Token::Latest).ignore_then(todo());
+        let then = just(Token::Then).ignore_then(todo());
+        let when = just(Token::When).ignore_then(todo());
+        let while_ = just(Token::While).ignore_then(todo());
+        let pipe = just(Token::Pipe).ignore_then(todo());
+        let skip = just(Token::Skip).ignore_then(todo());
+        let block = just(Token::Block).ignore_then(todo());
+        
+        // @TODO pass? A part of function calls?
+        // @TODO passed? A part of aliases?
+        // @TODO comparator
+        // @TODO arithmetic operator
 
         let expression = choice((
             expression_variable,
@@ -166,6 +181,16 @@ where
             map,
             expression_literal,
             function,
+            alias,
+            link_setter,
+            link,
+            latest,
+            then,
+            when,
+            while_,
+            pipe,
+            skip,
+            block,
         ));
 
         expression
@@ -206,10 +231,10 @@ pub enum Expression<'code> {
         arguments: Vec<Spanned<Argument<'code>>>,
     },
     Alias(Alias<'code>),
-    Link,
     LinkSetter {
         alias: Alias<'code>,
     },
+    Link,
     Latest {
         inputs: Vec<Spanned<Self>>,
     },
