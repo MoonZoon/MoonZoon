@@ -1,6 +1,7 @@
 use super::{ParseError, Spanned};
 use chumsky::prelude::*;
 use std::fmt;
+use std::borrow::Cow;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Token<'code> {
@@ -46,50 +47,56 @@ pub enum Token<'code> {
     Passed,
 }
 
+impl<'code> Token<'code> {
+    pub fn into_cow_str(self) -> Cow<'code, str> {
+        match self {
+            Self::BracketRoundOpen => "(".into(),
+            Self::BracketRoundClose => ")".into(),
+            Self::BracketCurlyOpen => "{".into(),
+            Self::BracketCurlyClose => "}".into(),
+            Self::BracketSquareOpen => "[".into(),
+            Self::BracketSquareClose => "]".into(),
+            Self::Comment(comment) => comment.into(),
+            Self::Number(number) => number.to_string().into(),
+            Self::Pipe => "|>".into(),
+            Self::Wildcard => "__".into(),
+            Self::Implies => "=>".into(),
+            Self::Colon => ":".into(),
+            Self::Comma => ",".into(),
+            Self::Dot => ".".into(),
+            Self::Newline => "\n".into(),
+            Self::NotEqual => "=/=".into(),
+            Self::GreaterOrEqual => ">=".into(),
+            Self::Greater => ">".into(),
+            Self::LessOrEqual => "<=".into(),
+            Self::Less => "<".into(),
+            Self::Equal => "=".into(),
+            Self::Minus => "-".into(),
+            Self::Plus => "+".into(),
+            Self::Asterisk => "*".into(),
+            Self::Slash => "/".into(),
+            Self::Text(text) => text.into(),
+            Self::SnakeCaseIdentifier(identifier) => identifier.into(),
+            Self::PascalCaseIdentifier(identifier) => identifier.into(),
+            Self::List => "LIST".into(),
+            Self::Map => "MAP".into(),
+            Self::Function => "FUNCTION".into(),
+            Self::Link => "LINK".into(),
+            Self::Latest => "LATEST".into(),
+            Self::Then => "THEN".into(),
+            Self::When => "WHEN".into(),
+            Self::While => "WHILE".into(),
+            Self::Skip => "SKIP".into(),
+            Self::Block => "BLOCK".into(),
+            Self::Pass => "PASS".into(),
+            Self::Passed => "PASSED".into(),
+        }
+    }
+}
+
 impl fmt::Display for Token<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::BracketRoundOpen => write!(f, "("),
-            Self::BracketRoundClose => write!(f, ")"),
-            Self::BracketCurlyOpen => write!(f, "{{"),
-            Self::BracketCurlyClose => write!(f, "}}"),
-            Self::BracketSquareOpen => write!(f, "["),
-            Self::BracketSquareClose => write!(f, "]"),
-            Self::Comment(comment) => write!(f, "{comment}"),
-            Self::Number(number) => write!(f, "{number}"),
-            Self::Pipe => write!(f, "|>"),
-            Self::Wildcard => write!(f, "__"),
-            Self::Implies => write!(f, "=>"),
-            Self::Colon => write!(f, ":"),
-            Self::Comma => write!(f, ","),
-            Self::Dot => write!(f, "."),
-            Self::Newline => write!(f, "\n"),
-            Self::NotEqual => write!(f, "=/="),
-            Self::GreaterOrEqual => write!(f, ">="),
-            Self::Greater => write!(f, ">"),
-            Self::LessOrEqual => write!(f, "<="),
-            Self::Less => write!(f, "<"),
-            Self::Equal => write!(f, "="),
-            Self::Minus => write!(f, "-"),
-            Self::Plus => write!(f, "+"),
-            Self::Asterisk => write!(f, "*"),
-            Self::Slash => write!(f, "/"),
-            Self::Text(text) => write!(f, "'{text}'"),
-            Self::SnakeCaseIdentifier(identifier) => write!(f, "{identifier}"),
-            Self::PascalCaseIdentifier(identifier) => write!(f, "{identifier}"),
-            Self::List => write!(f, "LIST"),
-            Self::Map => write!(f, "MAP"),
-            Self::Function => write!(f, "FUNCTION"),
-            Self::Link => write!(f, "LINK"),
-            Self::Latest => write!(f, "LATEST"),
-            Self::Then => write!(f, "THEN"),
-            Self::When => write!(f, "WHEN"),
-            Self::While => write!(f, "WHILE"),
-            Self::Skip => write!(f, "SKIP"),
-            Self::Block => write!(f, "BLOCK"),
-            Self::Pass => write!(f, "PASS"),
-            Self::Passed => write!(f, "PASSED"),
-        }
+        write!(f, "{}", self.into_cow_str())
     }
 }
 

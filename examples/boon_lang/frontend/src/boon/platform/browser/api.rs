@@ -10,7 +10,7 @@ use super::engine::*;
 /// Document/new(root<INTO_ELEMENT>) -> [root_element<INTO_ELEMENT>]
 /// INTO_ELEMENT: <ELEMENT | Text | Number>
 /// ELEMENT: <
-///     ELEMENT_CONTAINER
+///     | ELEMENT_CONTAINER
 ///     | ELEMENT_STRIPE
 ///     | ELEMENT_BUTTON
 /// >

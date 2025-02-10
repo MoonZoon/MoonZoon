@@ -25,6 +25,7 @@ where
         let colon = just(Token::Colon);
         let slash = just(Token::Slash);
         let comma = just(Token::Comma);
+        let dot = just(Token::Dot);
         let bracket_round_open = just(Token::BracketRoundOpen);
         let bracket_round_close = just(Token::BracketRoundClose);
         let bracket_curly_open = just(Token::BracketCurlyOpen);
@@ -156,7 +157,32 @@ where
                 })
         };
 
-        let alias = snake_case_identifier.ignore_then(todo());
+        let alias = {
+            let alias_with_passed = just(Token::Passed)
+                .ignore_then(
+                    snake_case_identifier
+                        .separated_by(dot)
+                        .allow_leading()
+                        .collect::<Vec<_>>()
+                )
+                .map(|extra_parts| {
+                    Alias::WithPassed { extra_parts }
+                });
+
+            let alias_without_passed = snake_case_identifier
+                .separated_by(dot)
+                .at_least(1)
+                .collect::<Vec<_>>()
+                .map(|parts| {
+                    Alias::WithoutPassed { parts }
+                });
+
+            alias_with_passed.or(alias_without_passed)
+        };
+
+        let expression_alias = alias
+            .map(Expression::Alias);
+        
         let link_setter = just(Token::Link).ignore_then(todo());
         let link = just(Token::Link).ignore_then(todo());
         let latest = just(Token::Latest).ignore_then(todo());
@@ -181,7 +207,7 @@ where
             map,
             expression_literal,
             function,
-            alias,
+            expression_alias,
             link_setter,
             link,
             latest,
@@ -348,9 +374,9 @@ pub struct Argument<'code> {
 }
 
 #[derive(Debug)]
-pub struct Alias<'code> {
-    pub parts: Vec<&'code str>,
-    pub passed: bool,
+pub enum Alias<'code> {
+    WithoutPassed { parts: Vec<&'code str> },
+    WithPassed { extra_parts: Vec<&'code str> },
 }
 
 #[derive(Debug)]

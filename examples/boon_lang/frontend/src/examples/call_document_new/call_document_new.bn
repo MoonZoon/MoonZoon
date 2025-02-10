@@ -1,2 +1,8 @@
--- Display number on web browser page
-document: Document/new(root: 123)
+a: 3
+b: a
+c: PASSED.something
+
+items: LIST {
+    counter
+    increment_button
+}
