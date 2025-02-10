@@ -113,11 +113,36 @@ where
             .then(object)
             .map(|(tag, object)| Expression::TaggedObject { tag, object });
 
+        let alias = {
+            let alias_with_passed = just(Token::Passed)
+                .ignore_then(
+                    snake_case_identifier
+                        .separated_by(dot)
+                        .allow_leading()
+                        .collect::<Vec<_>>()
+                )
+                .map(|extra_parts| {
+                    Alias::WithPassed { extra_parts }
+                });
+
+            let alias_without_passed = snake_case_identifier
+                .separated_by(dot)
+                .at_least(1)
+                .collect::<Vec<_>>()
+                .map(|parts| {
+                    Alias::WithoutPassed { parts }
+                });
+
+            alias_with_passed.or(alias_without_passed)
+        };
+
+        let expression_alias = alias
+            .map(Expression::Alias);
+
         let map = {
-            // @TODO Can a dotted alias or a path to a variable be the key?
             let key = literal
                 .map(MapEntryKey::Literal)
-                .or(snake_case_identifier.map(MapEntryKey::VariableName))
+                .or(alias.map(MapEntryKey::Alias))
                 .map_with(|key, extra| Spanned {
                     span: extra.span(),
                     node: key
@@ -157,32 +182,6 @@ where
                 })
         };
 
-        let alias = {
-            let alias_with_passed = just(Token::Passed)
-                .ignore_then(
-                    snake_case_identifier
-                        .separated_by(dot)
-                        .allow_leading()
-                        .collect::<Vec<_>>()
-                )
-                .map(|extra_parts| {
-                    Alias::WithPassed { extra_parts }
-                });
-
-            let alias_without_passed = snake_case_identifier
-                .separated_by(dot)
-                .at_least(1)
-                .collect::<Vec<_>>()
-                .map(|parts| {
-                    Alias::WithoutPassed { parts }
-                });
-
-            alias_with_passed.or(alias_without_passed)
-        };
-
-        let expression_alias = alias
-            .map(Expression::Alias);
-        
         let link_setter = just(Token::Link).ignore_then(todo());
         let link = just(Token::Link).ignore_then(todo());
         let latest = just(Token::Latest).ignore_then(todo());
@@ -194,9 +193,8 @@ where
         let block = just(Token::Block).ignore_then(todo());
         
         // @TODO pass? A part of function calls?
-        // @TODO passed? A part of aliases?
         // @TODO comparator
-        // @TODO arithmetic operator
+        // @TODO arithmetic operator (chumsky Pratt?)
 
         let expression = choice((
             expression_variable,
@@ -364,7 +362,7 @@ pub struct MapEntry<'code> {
 #[derive(Debug)]
 pub enum MapEntryKey<'code> {
     Literal(Literal<'code>),
-    VariableName(&'code str),
+    Alias(Alias<'code>),
 }
 
 #[derive(Debug)]

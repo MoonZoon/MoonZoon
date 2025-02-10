@@ -6,3 +6,7 @@ items: LIST {
     counter
     increment_button
 }
+
+MAP {
+    PASSED.x.y2: b
+}
