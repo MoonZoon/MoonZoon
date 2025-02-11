@@ -1,12 +1,2 @@
-THEN { 
-    
-    i_am_an_alias 
-    
- }
-
-LATEST {
-    0
-    b 
-} 
-
-LATEST{x,y}
+-- Display number on web browser page
+document: Document/new(root: 123)

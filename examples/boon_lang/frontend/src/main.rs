@@ -33,7 +33,7 @@ fn boon_object_with_document() -> impl Element {
     // let object = run_example!("interval");
     // let object = run_example!("counter");
 
-    // NOT IMPLEMENTED YET
+    // NOT RUNNABLE YET
     // let object = run_example!("complex_counter");
     // let object = run_example!("todo_mvc");
 

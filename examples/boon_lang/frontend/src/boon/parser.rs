@@ -1,4 +1,4 @@
-use chumsky::{input::ValueInput, prelude::*};
+use chumsky::{input::ValueInput, prelude::*, pratt::*};
 
 mod lexer;
 pub use lexer::Token;
@@ -216,15 +216,18 @@ where
 
         let when = just(Token::When).ignore_then(todo());
         let while_ = just(Token::While).ignore_then(todo());
+
         let pipe = just(Token::Pipe).ignore_then(todo());
 
         let skip = select! { Token::Skip => Expression::Skip };
 
         let block = just(Token::Block).ignore_then(todo());
         
-        // @TODO pass? A part of function calls?
-        // @TODO comparator
-        // @TODO arithmetic operator (chumsky Pratt?)
+        // @TODO PASS, a part of function calls?
+        // @TODO when, while
+        // @TODO comparator + arithmetic operator (in pratt, update pipe binding power accordingly)
+        // @TODO text interpolation with {}, what about escaping {} and ''?
+        // @TODO parse todo_mvc.bn 
 
         let expression = choice((
             expression_variable,
@@ -253,6 +256,20 @@ where
                 span: extra.span(),
             })
             .padded_by(newlines)
+            .pratt((
+                infix(
+                    right(1), 
+                    just(Token::Pipe), |l, _, r, extra| { 
+                        let expression = Expression::Pipe { 
+                            from: Box::new(l), 
+                            to: Box::new(r) 
+                        };
+                        Spanned {
+                            span: extra.span(),
+                            node: expression
+                        }
+                }),
+            ))
     })
     .repeated()
     .collect()
