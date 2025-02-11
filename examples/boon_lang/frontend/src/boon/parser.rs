@@ -208,6 +208,7 @@ where
 
         let then = just(Token::Then).ignore_then(
             expression
+                .clone()
                 .delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close))
                 .map(|body| {
                     Expression::Then { body: Box::new(body) }
@@ -216,8 +217,6 @@ where
 
         let when = just(Token::When).ignore_then(todo());
         let while_ = just(Token::While).ignore_then(todo());
-
-        let pipe = just(Token::Pipe).ignore_then(todo());
 
         let skip = select! { Token::Skip => Expression::Skip };
 
@@ -228,6 +227,10 @@ where
         // @TODO comparator + arithmetic operator (in pratt, update pipe binding power accordingly)
         // @TODO text interpolation with {}, what about escaping {} and ''?
         // @TODO parse todo_mvc.bn 
+
+        let nested = bracket_round_open
+            .ignore_then(expression)
+            .then_ignore(bracket_round_close);
 
         let expression = choice((
             expression_variable,
@@ -245,7 +248,6 @@ where
             then,
             when,
             while_,
-            pipe,
             skip,
             block,
         ));
@@ -255,10 +257,11 @@ where
                 node: expression,
                 span: extra.span(),
             })
+            .or(nested)
             .padded_by(newlines)
             .pratt((
                 infix(
-                    right(1), 
+                    left(1), 
                     just(Token::Pipe), |l, _, r, extra| { 
                         let expression = Expression::Pipe { 
                             from: Box::new(l), 
