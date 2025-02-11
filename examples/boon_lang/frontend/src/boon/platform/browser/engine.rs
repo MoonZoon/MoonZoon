@@ -12,6 +12,9 @@ use zoon::futures_util::stream::{self, Stream, StreamExt};
 use zoon::{eprintln, println};
 use zoon::{Task, TaskHandle};
 
+// @TODO [] -> impl Into<Vec.. everywhere?
+
+
 // --- PipeTo ---
 
 pub trait PipeTo {
@@ -501,23 +504,23 @@ impl Value {
 
 pub struct Object {
     construct_info: ConstructInfoComplete,
-    variables: Box<[Arc<Variable>]>,
+    variables: Vec<Arc<Variable>>,
 }
 
 impl Object {
-    pub fn new<const VN: usize>(
+    pub fn new(
         construct_info: ConstructInfo,
-        variables: [Arc<Variable>; VN],
+        variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::Object),
-            variables: Box::new(variables),
+            variables: variables.into(),
         }
     }
 
-    pub fn new_arc<const VN: usize>(
+    pub fn new_arc(
         construct_info: ConstructInfo,
-        variables: [Arc<Variable>; VN],
+        variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Arc<Self> {
         Arc::new(Self::new(construct_info, variables))
     }

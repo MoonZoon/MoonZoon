@@ -44,16 +44,16 @@ pub fn run(filename: &str, source_code: &str) -> Option<Arc<Object>> {
         return None;
     };
 
-    match evaluate(&ast) {
-        Ok(output) => Some(output),
-        Err(evaluation_error) => {
-            eprintln!("Evaluation error: {evaluation_error}");
-            None
-        }
-    }
+    let errors = match evaluate(ast) {
+        Ok(root_object) => return Some(root_object),
+        Err(evaluation_error) => [evaluation_error]
+    };
+    println!("[Evaluation Errors]");
+    report_errors(errors, filename, source_code);
+    None
 }
 
-fn report_errors<T: fmt::Display>(errors: Vec<ParseError<T>>, filename: &str, source_code: &str) {
+fn report_errors<'code, T: fmt::Display + 'code>(errors: impl IntoIterator<Item = ParseError<'code, T>>, filename: &str, source_code: &str) {
     let mut report_bytes = Cursor::new(Vec::new());
     let mut report_string = String::new();
     for error in errors {
