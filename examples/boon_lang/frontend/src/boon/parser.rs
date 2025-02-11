@@ -1,9 +1,9 @@
-use chumsky::{input::ValueInput, prelude::*, pratt::*};
+use chumsky::{input::ValueInput, pratt::*, prelude::*};
 
 mod lexer;
 pub use lexer::Token;
 
-pub use chumsky::prelude::{Parser, Input};
+pub use chumsky::prelude::{Input, Parser};
 pub use lexer::lexer;
 
 pub type Span = SimpleSpan;
@@ -15,7 +15,8 @@ pub struct Spanned<T> {
     pub node: T,
 }
 
-pub fn parser<'code, I>() -> impl Parser<'code, I, Vec<Spanned<Expression<'code>>>, extra::Err<ParseError<'code, Token<'code>>>>
+pub fn parser<'code, I>(
+) -> impl Parser<'code, I, Vec<Spanned<Expression<'code>>>, extra::Err<ParseError<'code, Token<'code>>>>
 where
     I: ValueInput<'code, Token = Token<'code>, Span = Span>,
 {
@@ -33,8 +34,10 @@ where
         let bracket_square_open = just(Token::BracketSquareOpen);
         let bracket_square_close = just(Token::BracketSquareClose);
 
-        let snake_case_identifier = select! { Token::SnakeCaseIdentifier(identifier) => identifier };
-        let pascal_case_identifier = select! { Token::PascalCaseIdentifier(identifier) => identifier };
+        let snake_case_identifier =
+            select! { Token::SnakeCaseIdentifier(identifier) => identifier };
+        let pascal_case_identifier =
+            select! { Token::PascalCaseIdentifier(identifier) => identifier };
 
         let variable = group((snake_case_identifier, colon, expression.clone()))
             .map(|(name, _, value)| Variable { name, value });
@@ -64,16 +67,16 @@ where
                     }
                 });
 
-            path
-                .then(
-                    argument
-                        .separated_by(comma.ignored().or(newlines))
-                        .collect()
-                        .delimited_by(bracket_round_open.then(newlines), newlines.then(bracket_round_close))
-                )
-                .map(|(path, arguments)| {
-                    Expression::FunctionCall { path, arguments }
-                })
+            path.then(
+                argument
+                    .separated_by(comma.ignored().or(newlines))
+                    .collect()
+                    .delimited_by(
+                        bracket_round_open.then(newlines),
+                        newlines.then(bracket_round_close),
+                    ),
+            )
+            .map(|(path, arguments)| Expression::FunctionCall { path, arguments })
         };
 
         let number = select! { Token::Number(number) => Literal::Number(number) };
@@ -89,25 +92,27 @@ where
                     .clone()
                     .separated_by(comma.ignored().or(newlines))
                     .collect()
-                    .delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close))
+                    .delimited_by(
+                        bracket_curly_open.then(newlines),
+                        newlines.then(bracket_curly_close),
+                    ),
             )
             .map(|items| Expression::List { items });
 
         let object = variable
-            .map_with(|variable, extra| { 
-                Spanned {
-                    node: variable,
-                    span: extra.span()
-                }
+            .map_with(|variable, extra| Spanned {
+                node: variable,
+                span: extra.span(),
             })
             .separated_by(comma.ignored().or(newlines))
             .collect()
-            .delimited_by(bracket_square_open.then(newlines), newlines.then(bracket_square_close))
+            .delimited_by(
+                bracket_square_open.then(newlines),
+                newlines.then(bracket_square_close),
+            )
             .map(|variables| Object { variables });
 
-        let expression_object = object
-            .clone()
-            .map(Expression::Object);
+        let expression_object = object.clone().map(Expression::Object);
 
         let tagged_object = pascal_case_identifier
             .then(object)
@@ -119,25 +124,20 @@ where
                     snake_case_identifier
                         .separated_by(dot)
                         .allow_leading()
-                        .collect::<Vec<_>>()
+                        .collect::<Vec<_>>(),
                 )
-                .map(|extra_parts| {
-                    Alias::WithPassed { extra_parts }
-                });
+                .map(|extra_parts| Alias::WithPassed { extra_parts });
 
             let alias_without_passed = snake_case_identifier
                 .separated_by(dot)
                 .at_least(1)
                 .collect::<Vec<_>>()
-                .map(|parts| {
-                    Alias::WithoutPassed { parts }
-                });
+                .map(|parts| Alias::WithoutPassed { parts });
 
             alias_with_passed.or(alias_without_passed)
         };
 
-        let expression_alias = alias
-            .map(Expression::Alias);
+        let expression_alias = alias.map(Expression::Alias);
 
         let map = {
             let key = literal
@@ -145,7 +145,7 @@ where
                 .or(alias.map(MapEntryKey::Alias))
                 .map_with(|key, extra| Spanned {
                     span: extra.span(),
-                    node: key
+                    node: key,
                 });
 
             let key_value_pair = group((key, colon, expression.clone()))
@@ -156,44 +156,56 @@ where
                     key_value_pair
                         .separated_by(comma.ignored().or(newlines))
                         .collect()
-                        .delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close))
+                        .delimited_by(
+                            bracket_curly_open.then(newlines),
+                            newlines.then(bracket_curly_close),
+                        ),
                 )
                 .map(|entries| Expression::Map { entries })
         };
 
-        let function = { 
+        let function = {
             let parameters = snake_case_identifier
-                .map_with(|parameter_name, extra| { 
-                    Spanned {
-                        node: parameter_name,
-                        span: extra.span()
-                    }
+                .map_with(|parameter_name, extra| Spanned {
+                    node: parameter_name,
+                    span: extra.span(),
                 })
                 .separated_by(comma.ignored().or(newlines))
                 .collect()
-                .delimited_by(bracket_round_open.then(newlines), newlines.then(bracket_round_close));
+                .delimited_by(
+                    bracket_round_open.then(newlines),
+                    newlines.then(bracket_round_close),
+                );
 
             just(Token::Function)
                 .ignore_then(snake_case_identifier)
                 .then(parameters)
-                .then(expression.clone().delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close)))
-                .map(|((name, parameters), body)| {
-                    Expression::Function { name, parameters, body: Box::new(body) }
+                .then(expression.clone().delimited_by(
+                    bracket_curly_open.then(newlines),
+                    newlines.then(bracket_curly_close),
+                ))
+                .map(|((name, parameters), body)| Expression::Function {
+                    name,
+                    parameters,
+                    body: Box::new(body),
                 })
         };
 
         let link = just(Token::Link);
         let link_expression = link.map(|_| Expression::Link);
-        
+
         let link_setter = link.ignore_then(
             alias
-                .delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close))
-                .map_with(|alias, extra| {
-                    Expression::LinkSetter { alias: Spanned {
+                .delimited_by(
+                    bracket_curly_open.then(newlines),
+                    newlines.then(bracket_curly_close),
+                )
+                .map_with(|alias, extra| Expression::LinkSetter {
+                    alias: Spanned {
                         span: extra.span(),
-                        node: alias
-                    }}
-                })
+                        node: alias,
+                    },
+                }),
         );
 
         let latest = just(Token::Latest)
@@ -202,17 +214,23 @@ where
                     .clone()
                     .separated_by(comma.ignored().or(newlines))
                     .collect()
-                    .delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close))
+                    .delimited_by(
+                        bracket_curly_open.then(newlines),
+                        newlines.then(bracket_curly_close),
+                    ),
             )
             .map(|inputs| Expression::Latest { inputs });
 
         let then = just(Token::Then).ignore_then(
             expression
                 .clone()
-                .delimited_by(bracket_curly_open.then(newlines), newlines.then(bracket_curly_close))
-                .map(|body| {
-                    Expression::Then { body: Box::new(body) }
-                })
+                .delimited_by(
+                    bracket_curly_open.then(newlines),
+                    newlines.then(bracket_curly_close),
+                )
+                .map(|body| Expression::Then {
+                    body: Box::new(body),
+                }),
         );
 
         let when = just(Token::When).ignore_then(todo());
@@ -221,12 +239,12 @@ where
         let skip = select! { Token::Skip => Expression::Skip };
 
         let block = just(Token::Block).ignore_then(todo());
-        
+
         // @TODO PASS, a part of function calls?
         // @TODO when, while
         // @TODO comparator + arithmetic operator (in pratt, update pipe binding power accordingly)
         // @TODO text interpolation with {}, what about escaping {} and ''?
-        // @TODO parse todo_mvc.bn 
+        // @TODO parse todo_mvc.bn
 
         let nested = bracket_round_open
             .ignore_then(expression)
@@ -259,27 +277,23 @@ where
             })
             .or(nested)
             .padded_by(newlines)
-            .pratt((
-                infix(
-                    left(1), 
-                    just(Token::Pipe), |l, _, r, extra| { 
-                        let expression = Expression::Pipe { 
-                            from: Box::new(l), 
-                            to: Box::new(r) 
-                        };
-                        Spanned {
-                            span: extra.span(),
-                            node: expression
-                        }
-                }),
-            ))
+            .pratt((infix(left(1), just(Token::Pipe), |l, _, r, extra| {
+                let expression = Expression::Pipe {
+                    from: Box::new(l),
+                    to: Box::new(r),
+                };
+                Spanned {
+                    span: extra.span(),
+                    node: expression,
+                }
+            }),))
     })
     .repeated()
     .collect()
     .padded_by(newlines)
 }
 
-// @TODO not everything is expression, FUNCTIONs can be defined only in the root, etc. 
+// @TODO not everything is expression, FUNCTIONs can be defined only in the root, etc.
 #[derive(Debug)]
 pub enum Expression<'code> {
     Variable(Box<Variable<'code>>),

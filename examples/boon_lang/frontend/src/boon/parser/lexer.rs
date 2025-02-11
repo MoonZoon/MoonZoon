@@ -1,7 +1,7 @@
 use super::{ParseError, Spanned};
 use chumsky::prelude::*;
-use std::fmt;
 use std::borrow::Cow;
+use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Token<'code> {

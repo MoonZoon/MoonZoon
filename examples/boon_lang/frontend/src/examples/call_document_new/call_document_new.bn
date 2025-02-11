@@ -1,16 +1,2 @@
 -- Display number on web browser page
 document: Document/new(root: 123)
-
-
-A |> B |> C
-(A |> B |> C)
-
-
-(
-    A |> B
-) |> C
-
-
-A |> (
-    B |> C
-)
