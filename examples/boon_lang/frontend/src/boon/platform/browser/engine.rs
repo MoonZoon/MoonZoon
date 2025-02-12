@@ -12,7 +12,7 @@ use zoon::futures_util::stream::{self, Stream, StreamExt};
 use zoon::{eprintln, println};
 use zoon::{Task, TaskHandle};
 
-// @TODO [] -> impl Into<Vec.. everywhere?
+// @TODO Replace `[]` with `impl Into<Vec..` and `&'static str` with `Cow<'static, str>` everywhere?
 
 
 // --- PipeTo ---
@@ -46,14 +46,14 @@ pub enum RunDuration {
 
 pub struct ConstructInfo {
     id: ConstructId,
-    description: &'static str,
+    description: Cow<'static, str>,
 }
 
 impl ConstructInfo {
-    pub fn new(id: impl Into<ConstructId>, description: &'static str) -> Self {
+    pub fn new(id: impl Into<ConstructId>, description: impl Into<Cow<'static, str>>) -> Self {
         Self {
             id: id.into(),
-            description,
+            description: description.into(),
         }
     }
 
@@ -71,7 +71,7 @@ impl ConstructInfo {
 pub struct ConstructInfoComplete {
     r#type: ConstructType,
     id: ConstructId,
-    description: &'static str,
+    description: Cow<'static, str>,
 }
 
 impl ConstructInfoComplete {
@@ -140,7 +140,7 @@ impl From<u64> for ConstructId {
 
 pub struct Variable {
     construct_info: ConstructInfoComplete,
-    name: &'static str,
+    name: Cow<'static, str>,
     value_actor: Arc<ValueActor>,
     link_value_sender: Option<mpsc::UnboundedSender<Value>>,
 }
@@ -148,12 +148,12 @@ pub struct Variable {
 impl Variable {
     pub fn new(
         construct_info: ConstructInfo,
-        name: &'static str,
+        name: impl Into<Cow<'static, str>>,
         value_actor: Arc<ValueActor>,
     ) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::Variable),
-            name,
+            name: name.into(),
             value_actor,
             link_value_sender: None,
         }
@@ -161,7 +161,7 @@ impl Variable {
 
     pub fn new_arc(
         construct_info: ConstructInfo,
-        name: &'static str,
+        name: impl Into<Cow<'static, str>>,
         value_actor: Arc<ValueActor>,
     ) -> Arc<Self> {
         Arc::new(Self::new(construct_info, name, value_actor))
@@ -170,7 +170,7 @@ impl Variable {
     pub fn new_link_arc(
         construct_info: ConstructInfo,
         run_duration: RunDuration,
-        name: &'static str,
+        name: impl Into<Cow<'static, str>>,
     ) -> Arc<Self> {
         let ConstructInfo {
             id: actor_id,
@@ -184,7 +184,7 @@ impl Variable {
             ValueActor::new_internal(actor_construct_info, run_duration, link_value_receiver, ());
         Arc::new(Self {
             construct_info: construct_info.complete(ConstructType::LinkVariable),
-            name,
+            name: name.into(),
             value_actor: Arc::new(value_actor),
             link_value_sender: Some(link_value_sender),
         })
