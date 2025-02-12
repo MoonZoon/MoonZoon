@@ -9,12 +9,13 @@ use super::engine::*;
 type EvaluateResult<'code, T> = Result<T, ParseError<'code, Token<'code>>>;
 
 pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Arc<Object>> {
+    let run_duration = RunDuration::Nonstop;
     Ok(Object::new_arc(
         ConstructInfo::new(0, "root"),
         expressions.into_iter().map(|Spanned { span, node: expression }| {
             match expression {
                 Expression::Variable(variable) => {
-                    parser_variable_into_engine_variable(variable, span)
+                    parser_variable_into_engine_variable(variable, span, run_duration)
                 }
                 Expression::Function { name, parameters, body } => {
                     // @TODO implement
@@ -26,18 +27,17 @@ pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Arc<Obj
     ))
 }
 
-fn parser_variable_into_engine_variable(variable: Box<parser::Variable>, span: Span) -> EvaluateResult<Arc<Variable>> {
+fn parser_variable_into_engine_variable(variable: Box<parser::Variable>, span: Span, run_duration: RunDuration) -> EvaluateResult<Arc<Variable>> {
     // @TODO link variable
     Ok(Variable::new_arc(
         ConstructInfo::new(1, format!("{span}; {}", variable.name)),
         variable.name.to_owned(),
-        spanned_expression_into_value_actor(variable.value)?
+        spanned_expression_into_value_actor(variable.value, run_duration)?
     ))
 }
 
 // @TODO resolve ids
-// @TODO RunDuration
-fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> EvaluateResult<Arc<ValueActor>> {
+fn spanned_expression_into_value_actor(expression: Spanned<Expression>, run_duration: RunDuration) -> EvaluateResult<Arc<ValueActor>> {
     let Spanned { span, node: expression } = expression;
     let actor = match expression {
         Expression::Variable(variable) => {
@@ -48,7 +48,7 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> Evalu
                 parser::Literal::Number(number) => {
                     Number::new_arc_value_actor(
                         ConstructInfo::new(8, format!("{span}; Number {number}")),
-                        RunDuration::Nonstop,
+                        run_duration,
                         number,
                     )
                 }
@@ -56,7 +56,7 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> Evalu
                     let text = text.to_owned();
                     Text::new_arc_value_actor(
                         ConstructInfo::new(8, format!("{span}; Text {text}")),
-                        RunDuration::Nonstop,
+                        run_duration,
                         text,
                     )
                 }
@@ -64,7 +64,7 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> Evalu
                     let tag = tag.to_owned();
                     Tag::new_arc_value_actor(
                         ConstructInfo::new(8, format!("{span}; Tag {tag}")),
-                        RunDuration::Nonstop,
+                        run_duration,
                         tag,
                     )
                 }
@@ -89,7 +89,7 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> Evalu
             // @TODO better argument error handling
             FunctionCall::new_arc_value_actor(
                 ConstructInfo::new(2, format!("{span}; {}(..)", path.join("/"))),
-                RunDuration::Nonstop,
+                run_duration,
                 function_call_path_to_definition(&path, span)?,
                 arguments.into_iter().map(|Spanned { span, node: argument }| {
                     let parser::Argument { name, value } = argument;
@@ -97,7 +97,7 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> Evalu
                         // @TODO support out arguments
                         Err(ParseError::custom(span, "Out arguments not supported yet, sorry"))?
                     };
-                    spanned_expression_into_value_actor(value)
+                    spanned_expression_into_value_actor(value, run_duration)
                 }).collect::<Result<Vec<_>, _>>()?,
             )
         }
@@ -114,7 +114,7 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> Evalu
             Err(ParseError::custom(span, "Not supported yet, sorry"))?
         }
         Expression::Then { body } => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Err(ParseError::custom(span, "You have to pipe things into THEN - e.g. `..press |> THEN { .. }`"))?
         }
         Expression::When { arms } => {
             Err(ParseError::custom(span, "Not supported yet, sorry"))?
@@ -123,7 +123,7 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> Evalu
             Err(ParseError::custom(span, "Not supported yet, sorry"))?
         }
         Expression::Pipe { from, to } => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            pipe(from, to, run_duration)?
         }
         Expression::Skip => {
             Err(ParseError::custom(span, "Not supported yet, sorry"))?
@@ -152,6 +152,46 @@ fn function_call_path_to_definition<'code>(path: &[&'code str], span: Span) -> E
         _ => Err(ParseError::custom(span, format!("Unknown function '{}(..)'", path.join("/"))))?
     };
     Ok(definition)
+}
+
+fn pipe<'code>(from: Box<Spanned<Expression<'code>>>, mut to: Box<Spanned<Expression<'code>>>, run_duration: RunDuration) -> EvaluateResult<'code, Arc<ValueActor>> {
+    match to.node {
+        Expression::FunctionCall { ref path, ref mut arguments } => {
+            let argument = Spanned {
+                span: from.span,
+                node: parser::Argument { name: "", value: Some(*from) }
+            };
+            // @TODO arguments: Vec -> arguments: VecDeque?
+            arguments.insert(0, argument);
+            spanned_expression_into_value_actor(*to, run_duration)
+        }
+        Expression::LinkSetter { alias } => {
+            Err(ParseError::custom(to.span, "Piping into it is not supported yet, sorry"))?
+        }
+        Expression::Then { body } => {
+            Ok(ThenCombinator::new_arc_value_actor(
+                ConstructInfo::new(4, "THEN"),
+                run_duration,
+                spanned_expression_into_value_actor(*from, run_duration)?,
+                {
+                    let body_actor = spanned_expression_into_value_actor(*body, RunDuration::UntilFirstValue)?;
+                    move || body_actor.subscribe()
+                }),
+            )
+        }
+        Expression::When { arms } => {
+            Err(ParseError::custom(to.span, "Piping into it is not supported yet, sorry"))?
+        }
+        Expression::While { arms } => {
+            Err(ParseError::custom(to.span, "Piping into it is not supported yet, sorry"))?
+        }
+        Expression::Pipe { from, to } => {
+            Err(ParseError::custom(to.span, "Piping into it is not supported yet, sorry"))?
+        }
+        _ => {
+            Err(ParseError::custom(to.span, "Piping into this target is not supported"))?
+        }
+    }
 }
 
 
