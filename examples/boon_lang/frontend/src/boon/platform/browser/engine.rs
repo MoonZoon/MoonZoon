@@ -264,14 +264,15 @@ impl VariableReference {
 pub struct FunctionCall {}
 
 impl FunctionCall {
-    pub fn new_arc_value_actor<const AN: usize, FR: Stream<Item = Value> + 'static>(
+    pub fn new_arc_value_actor<FR: Stream<Item = Value> + 'static>(
         construct_info: ConstructInfo,
         run_duration: RunDuration,
-        definition: impl Fn([Arc<ValueActor>; AN], ConstructId) -> FR + 'static,
-        arguments: [Arc<ValueActor>; AN],
+        definition: impl Fn(&[Arc<ValueActor>], ConstructId) -> FR + 'static,
+        arguments: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::FunctionCall);
-        let value_stream = definition(arguments.clone(), construct_info.id());
+        let arguments = arguments.into();
+        let value_stream = definition(&arguments, construct_info.id());
         Arc::new(ValueActor::new_internal(
             construct_info,
             run_duration,

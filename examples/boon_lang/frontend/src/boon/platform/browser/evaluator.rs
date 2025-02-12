@@ -50,7 +50,22 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> Evalu
                         number,
                     )
                 }
-                _ => Err(ParseError::custom(span, "Not supported yet, sorry"))?
+                parser::Literal::Text(text) => {
+                    let text = text.to_owned();
+                    Text::new_arc_value_actor(
+                        ConstructInfo::new(8, format!("{span}; Text {text}")),
+                        RunDuration::Nonstop,
+                        text,
+                    )
+                }
+                parser::Literal::Tag(tag) => {
+                    let tag = tag.to_owned();
+                    Tag::new_arc_value_actor(
+                        ConstructInfo::new(8, format!("{span}; Tag {tag}")),
+                        RunDuration::Nonstop,
+                        tag,
+                    )
+                }
             }
         }
         Expression::List { items } => {
@@ -69,11 +84,19 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> Evalu
             Err(ParseError::custom(span, "Not supported yet, sorry"))?
         }
         Expression::FunctionCall { path, arguments } => {
+            // @TODO better argument error handling
             FunctionCall::new_arc_value_actor(
                 ConstructInfo::new(2, format!("{span}; {}(..)", path.join("/"))),
                 RunDuration::Nonstop,
                 api::function_document_new,
-                [],
+                arguments.into_iter().map(|Spanned { span, node: argument }| {
+                    let parser::Argument { name, value } = argument;
+                    let Some(value) = value else {
+                        // @TODO support out arguments
+                        Err(ParseError::custom(span, "Out arguments not supported yet, sorry"))?
+                    };
+                    spanned_expression_into_value_actor(value)
+                }).collect::<Result<Vec<_>, _>>()?,
             )
         }
         Expression::Alias(aliast) => {
@@ -115,3 +138,5 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> Evalu
     };
     Ok(actor)
 }
+
+
