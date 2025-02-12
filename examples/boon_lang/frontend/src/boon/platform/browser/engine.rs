@@ -267,12 +267,12 @@ impl FunctionCall {
     pub fn new_arc_value_actor<FR: Stream<Item = Value> + 'static>(
         construct_info: ConstructInfo,
         run_duration: RunDuration,
-        definition: impl Fn(&[Arc<ValueActor>], ConstructId) -> FR + 'static,
+        definition: impl Fn(Arc<Vec<Arc<ValueActor>>>, ConstructId) -> FR + 'static,
         arguments: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::FunctionCall);
-        let arguments = arguments.into();
-        let value_stream = definition(&arguments, construct_info.id());
+        let arguments = Arc::new(arguments.into());
+        let value_stream = definition(arguments.clone(), construct_info.id());
         Arc::new(ValueActor::new_internal(
             construct_info,
             run_duration,

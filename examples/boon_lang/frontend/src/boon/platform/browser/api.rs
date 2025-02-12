@@ -39,10 +39,10 @@ use super::engine::*;
 /// >
 /// ```
 pub fn function_document_new(
-    arguments: &[Arc<ValueActor>],
+    arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
 ) -> impl Stream<Item = Value> {
-    let [argument_root] = arguments else { panic!("Unexpected argument count") };
+    let [argument_root] = arguments.as_slice() else { panic!("Unexpected argument count") };
     Object::new_constant(
         ConstructInfo::new(
             function_call_id.with_child_id(0),
@@ -69,10 +69,10 @@ pub fn function_document_new(
 /// ) -> ELEMENT_CONTAINER
 /// ```
 pub fn function_element_container(
-    arguments: &[Arc<ValueActor>],
+    arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
 ) -> impl Stream<Item = Value> {
-    let [_argument_element, argument_style, argument_child] = arguments else { panic!("Unexpected argument count") };
+    let [_argument_element, argument_style, argument_child] = arguments.as_slice() else { panic!("Unexpected argument count") };
     TaggedObject::new_constant(
         ConstructInfo::new(
             function_call_id.with_child_id(0),
@@ -123,10 +123,10 @@ pub fn function_element_container(
 /// ) -> ELEMENT_STRIPE
 /// ```
 pub fn function_element_stripe(
-    arguments: &[Arc<ValueActor>],
+    arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
 ) -> impl Stream<Item = Value> {
-    let [_argument_element, argument_direction, argument_style, argument_items] = arguments else { panic!("Unexpected argument count") };
+    let [_argument_element, argument_direction, argument_style, argument_items] = arguments.as_slice() else { panic!("Unexpected argument count") };
     TaggedObject::new_constant(
         ConstructInfo::new(
             function_call_id.with_child_id(0),
@@ -188,10 +188,10 @@ pub fn function_element_stripe(
 /// ) -> ELEMENT_BUTTON
 /// ```
 pub fn function_element_button(
-    arguments: &[Arc<ValueActor>],
+    arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
 ) -> impl Stream<Item = Value> {
-    let [argument_element, argument_style, argument_label] = arguments else { panic!("Unexpected argument count") };
+    let [argument_element, argument_style, argument_label] = arguments.as_slice() else { panic!("Unexpected argument count") };
     TaggedObject::new_constant(
         ConstructInfo::new(
             function_call_id.with_child_id(0),
@@ -257,10 +257,10 @@ pub fn function_element_button(
 /// Math/sum(increment<Number>) -> Number
 /// ``````
 pub fn function_math_sum(
-    arguments: &[Arc<ValueActor>],
+    arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
 ) -> impl Stream<Item = Value> {
-    let [argument_increment] = arguments else { panic!("Unexpected argument count") };
+    let [argument_increment] = arguments.as_slice() else { panic!("Unexpected argument count") };
     argument_increment
         .subscribe()
         .map(|value| value.expect_number().number())
@@ -280,10 +280,10 @@ pub fn function_math_sum(
 /// Timer/interval(duration<Duration[seconds<Number> | milliseconds<Number>]>) -> []
 /// ```
 pub fn function_timer_interval(
-    arguments: &[Arc<ValueActor>],
+    arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
 ) -> impl Stream<Item = Value> {
-    let [argument_duration] = arguments else { panic!("Unexpected argument count") };
+    let [argument_duration] = arguments.as_slice() else { panic!("Unexpected argument count") };
     argument_duration
         .subscribe()
         .flat_map(|value| {

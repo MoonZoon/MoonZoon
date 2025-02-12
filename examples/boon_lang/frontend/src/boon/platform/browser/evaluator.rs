@@ -1,12 +1,14 @@
 use std::sync::Arc;
+use std::pin::Pin;
+use zoon::{Stream, StreamExt};
 
 use super::super::super::parser::{self, Expression, Spanned, ParseError, Token, Span};
 use super::api;
 use super::engine::*;
 
-type EvaluateResult<'code, T> = Result<Arc<T>, ParseError<'code, Token<'code>>>;
+type EvaluateResult<'code, T> = Result<T, ParseError<'code, Token<'code>>>;
 
-pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Object> {
+pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Arc<Object>> {
     Ok(Object::new_arc(
         ConstructInfo::new(0, "root"),
         expressions.into_iter().map(|Spanned { span, node: expression }| {
@@ -24,7 +26,7 @@ pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Object>
     ))
 }
 
-fn parser_variable_into_engine_variable(variable: Box<parser::Variable>, span: Span) -> EvaluateResult<Variable> {
+fn parser_variable_into_engine_variable(variable: Box<parser::Variable>, span: Span) -> EvaluateResult<Arc<Variable>> {
     // @TODO link variable
     Ok(Variable::new_arc(
         ConstructInfo::new(1, format!("{span}; {}", variable.name)),
@@ -35,7 +37,7 @@ fn parser_variable_into_engine_variable(variable: Box<parser::Variable>, span: S
 
 // @TODO resolve ids
 // @TODO RunDuration
-fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> EvaluateResult<ValueActor> {
+fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> EvaluateResult<Arc<ValueActor>> {
     let Spanned { span, node: expression } = expression;
     let actor = match expression {
         Expression::Variable(variable) => {
@@ -88,7 +90,7 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> Evalu
             FunctionCall::new_arc_value_actor(
                 ConstructInfo::new(2, format!("{span}; {}(..)", path.join("/"))),
                 RunDuration::Nonstop,
-                api::function_document_new,
+                function_call_path_to_definition(&path, span)?,
                 arguments.into_iter().map(|Spanned { span, node: argument }| {
                     let parser::Argument { name, value } = argument;
                     let Some(value) = value else {
@@ -137,6 +139,19 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>) -> Evalu
         }
     };
     Ok(actor)
+}
+
+fn function_call_path_to_definition<'code>(path: &[&'code str], span: Span) -> EvaluateResult<'code, impl Fn(Arc<Vec<Arc<ValueActor>>>, ConstructId) -> Pin<Box<dyn Stream<Item = Value>>>> {
+    let definition = match path {
+        ["Document", "new"] => |arguments, id| api::function_document_new(arguments, id).boxed_local(),
+        ["Element", "container"] => |arguments, id| api::function_element_container(arguments, id).boxed_local(),
+        ["Element", "stripe"] => |arguments, id| api::function_element_stripe(arguments, id).boxed_local(),
+        ["Element", "button"] => |arguments, id| api::function_element_button(arguments, id).boxed_local(),
+        ["Math", "sum"] => |arguments, id| api::function_math_sum(arguments, id).boxed_local(),
+        ["Timer", "interval"] => |arguments, id| api::function_timer_interval(arguments, id).boxed_local(),
+        _ => Err(ParseError::custom(span, format!("Unknown function '{}(..)'", path.join("/"))))?
+    };
+    Ok(definition)
 }
 
 
