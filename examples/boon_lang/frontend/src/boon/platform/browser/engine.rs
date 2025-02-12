@@ -465,7 +465,7 @@ impl Value {
         let Self::TaggedObject(tagged_object) = self else {
             panic!("Failed to get expected TaggedObject: The Value has a different type")
         };
-        let found_tag = tagged_object.tag;
+        let found_tag = &tagged_object.tag;
         if found_tag != tag {
             panic!("Failed to get expected TaggedObject: Expected tag: '{tag}', found tag: '{found_tag}'")
         }
@@ -526,34 +526,34 @@ impl Object {
         Arc::new(Self::new(construct_info, variables))
     }
 
-    pub fn new_value<const VN: usize>(
+    pub fn new_value(
         construct_info: ConstructInfo,
-        variables: [Arc<Variable>; VN],
+        variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Value {
         Value::Object(Self::new_arc(construct_info, variables))
     }
 
-    pub fn new_constant<const VN: usize>(
+    pub fn new_constant(
         construct_info: ConstructInfo,
-        variables: [Arc<Variable>; VN],
+        variables: impl Into<Vec<Arc<Variable>>>,
     ) -> impl Stream<Item = Value> {
         constant(Self::new_value(construct_info, variables))
     }
 
-    pub fn new_arc_value_actor<const VN: usize>(
+    pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
         run_duration: RunDuration,
-        variables: [Arc<Variable>; VN],
+        variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Arc<ValueActor> {
         let ConstructInfo {
             id: actor_id,
-            description: tagged_object_description,
+            description: object_description,
         } = construct_info;
         let construct_info =
-            ConstructInfo::new(actor_id.with_child_id(0), tagged_object_description);
+            ConstructInfo::new(actor_id.with_child_id(0), object_description);
         let actor_construct_info = ConstructInfo::new(actor_id, "Constant object wrapper")
             .complete(ConstructType::ValueActor);
-        let value_stream = Self::new_constant(construct_info, variables);
+        let value_stream = Self::new_constant(construct_info, variables.into());
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
             run_duration,
@@ -585,56 +585,56 @@ impl Drop for Object {
     }
 }
 
-// --- Object ---
+// --- TaggedObject ---
 
 pub struct TaggedObject {
     construct_info: ConstructInfoComplete,
-    tag: &'static str,
-    variables: Box<[Arc<Variable>]>,
+    tag: Cow<'static, str>,
+    variables: Vec<Arc<Variable>>,
 }
 
 impl TaggedObject {
-    pub fn new<const VN: usize>(
+    pub fn new(
         construct_info: ConstructInfo,
-        tag: &'static str,
-        variables: [Arc<Variable>; VN],
+        tag: impl Into<Cow<'static, str>>,
+        variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::TaggedObject),
-            tag,
-            variables: Box::new(variables),
+            tag: tag.into(),
+            variables: variables.into(),
         }
     }
 
-    pub fn new_arc<const VN: usize>(
+    pub fn new_arc(
         construct_info: ConstructInfo,
-        tag: &'static str,
-        variables: [Arc<Variable>; VN],
+        tag: impl Into<Cow<'static, str>>,
+        variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Arc<Self> {
         Arc::new(Self::new(construct_info, tag, variables))
     }
 
-    pub fn new_value<const VN: usize>(
+    pub fn new_value(
         construct_info: ConstructInfo,
-        tag: &'static str,
-        variables: [Arc<Variable>; VN],
+        tag: impl Into<Cow<'static, str>>,
+        variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Value {
         Value::TaggedObject(Self::new_arc(construct_info, tag, variables))
     }
 
-    pub fn new_constant<const VN: usize>(
+    pub fn new_constant(
         construct_info: ConstructInfo,
-        tag: &'static str,
-        variables: [Arc<Variable>; VN],
+        tag: impl Into<Cow<'static, str>>,
+        variables: impl Into<Vec<Arc<Variable>>>,
     ) -> impl Stream<Item = Value> {
         constant(Self::new_value(construct_info, tag, variables))
     }
 
-    pub fn new_arc_value_actor<const VN: usize>(
+    pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
         run_duration: RunDuration,
-        tag: &'static str,
-        variables: [Arc<Variable>; VN],
+        tag: impl Into<Cow<'static, str>>,
+        variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Arc<ValueActor> {
         let ConstructInfo {
             id: actor_id,
@@ -644,7 +644,7 @@ impl TaggedObject {
             ConstructInfo::new(actor_id.with_child_id(0), tagged_object_description);
         let actor_construct_info = ConstructInfo::new(actor_id, "Tagged object wrapper")
             .complete(ConstructType::ValueActor);
-        let value_stream = Self::new_constant(construct_info, tag, variables);
+        let value_stream = Self::new_constant(construct_info, tag.into(), variables.into());
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
             run_duration,
@@ -875,13 +875,13 @@ pub struct List {
 }
 
 impl List {
-    pub fn new<const IN: usize>(
+    pub fn new(
         construct_info: ConstructInfo,
         run_duration: RunDuration,
-        items: [Arc<ValueActor>; IN],
+        items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Self {
         let change_stream = constant(ListChange::Replace {
-            items: Vec::from(items),
+            items: items.into()
         });
         Self::new_with_change_stream(construct_info, run_duration, change_stream, ())
     }
@@ -951,34 +951,34 @@ impl List {
         }
     }
 
-    pub fn new_arc<const IN: usize>(
+    pub fn new_arc(
         construct_info: ConstructInfo,
         run_duration: RunDuration,
-        items: [Arc<ValueActor>; IN],
+        items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<Self> {
         Arc::new(Self::new(construct_info, run_duration, items))
     }
 
-    pub fn new_value<const IN: usize>(
+    pub fn new_value(
         construct_info: ConstructInfo,
         run_duration: RunDuration,
-        items: [Arc<ValueActor>; IN],
+        items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Value {
         Value::List(Self::new_arc(construct_info, run_duration, items))
     }
 
-    pub fn new_constant<const IN: usize>(
+    pub fn new_constant(
         construct_info: ConstructInfo,
         run_duration: RunDuration,
-        items: [Arc<ValueActor>; IN],
+        items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> impl Stream<Item = Value> {
         constant(Self::new_value(construct_info, run_duration, items))
     }
 
-    pub fn new_arc_value_actor<const IN: usize>(
+    pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
         run_duration: RunDuration,
-        items: [Arc<ValueActor>; IN],
+        items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<ValueActor> {
         let ConstructInfo {
             id: actor_id,
@@ -987,7 +987,7 @@ impl List {
         let construct_info = ConstructInfo::new(actor_id.with_child_id(0), list_description);
         let actor_construct_info = ConstructInfo::new(actor_id, "Constant list wrapper")
             .complete(ConstructType::ValueActor);
-        let value_stream = Self::new_constant(construct_info, run_duration, items);
+        let value_stream = Self::new_constant(construct_info, run_duration, items.into());
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
             run_duration,

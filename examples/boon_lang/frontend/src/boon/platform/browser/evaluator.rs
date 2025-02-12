@@ -15,7 +15,7 @@ pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Arc<Obj
         expressions.into_iter().map(|Spanned { span, node: expression }| {
             match expression {
                 Expression::Variable(variable) => {
-                    parser_variable_into_engine_variable(variable, span, run_duration)
+                    spanned_variable_into_variable(Spanned { span, node: *variable }, run_duration)
                 }
                 Expression::Function { name, parameters, body } => {
                     // @TODO implement
@@ -27,7 +27,8 @@ pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Arc<Obj
     ))
 }
 
-fn parser_variable_into_engine_variable(variable: Box<parser::Variable>, span: Span, run_duration: RunDuration) -> EvaluateResult<Arc<Variable>> {
+fn spanned_variable_into_variable(variable: Spanned<parser::Variable>, run_duration: RunDuration) -> EvaluateResult<Arc<Variable>> {
+    let Spanned { span, node: variable } = variable;
     // @TODO link variable
     Ok(Variable::new_arc(
         ConstructInfo::new(1, format!("{span}; {}", variable.name)),
@@ -41,7 +42,7 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>, run_dura
     let Spanned { span, node: expression } = expression;
     let actor = match expression {
         Expression::Variable(variable) => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::Variable]"))?
         }
         Expression::Literal(literal) => {
             match literal {
@@ -71,19 +72,43 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>, run_dura
             }
         }
         Expression::List { items } => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            List::new_arc_value_actor(
+                ConstructInfo::new(7, format!("{span}; LIST {{..}}")),
+                run_duration,
+                items
+                    .into_iter()
+                    .map(|item| spanned_expression_into_value_actor(item, run_duration))
+                    .collect::<Result<Vec<_>, _>>()?
+            )
         }
         Expression::Object(object) => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Object::new_arc_value_actor(
+                ConstructInfo::new(6, format!("{span}; [..]")),
+                run_duration,
+                object
+                    .variables
+                    .into_iter()
+                    .map(|variable| spanned_variable_into_variable(variable, run_duration))
+                    .collect::<Result<Vec<_>, _>>()?
+            )
         }
         Expression::TaggedObject { tag, object } => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            TaggedObject::new_arc_value_actor(
+                ConstructInfo::new(6, format!("{span}; {tag}[..]")),
+                run_duration,
+                tag.to_owned(),
+                object
+                    .variables
+                    .into_iter()
+                    .map(|variable| spanned_variable_into_variable(variable, run_duration))
+                    .collect::<Result<Vec<_>, _>>()?
+            )
         }
         Expression::Map { entries } => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::Map]"))?
         }
         Expression::Function { name, parameters, body } => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::Function]"))?
         }
         Expression::FunctionCall { path, arguments } => {
             // @TODO better argument error handling
@@ -102,40 +127,40 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>, run_dura
             )
         }
         Expression::Alias(aliast) => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::Alias]"))?
         }
         Expression::LinkSetter { alias } => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::LinkSetter]"))?
         }
         Expression::Link => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::Link]"))?
         }
         Expression::Latest { inputs } => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::Latest]"))?
         }
         Expression::Then { body } => {
             Err(ParseError::custom(span, "You have to pipe things into THEN - e.g. `..press |> THEN { .. }`"))?
         }
         Expression::When { arms } => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::When]"))?
         }
         Expression::While { arms } => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::While]"))?
         }
         Expression::Pipe { from, to } => {
             pipe(from, to, run_duration)?
         }
         Expression::Skip => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::Skip]"))?
         }
         Expression::Block { variables, output } => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::Block]"))?
         }
         Expression::Comparator(comparator) => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::Comparator]"))?
         }
         Expression::ArithmeticOperator(arithmetic_operator) => {
-            Err(ParseError::custom(span, "Not supported yet, sorry"))?
+            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::ArithmeticOperator]"))?
         }
     };
     Ok(actor)
@@ -155,6 +180,8 @@ fn function_call_path_to_definition<'code>(path: &[&'code str], span: Span) -> E
 }
 
 fn pipe<'code>(from: Box<Spanned<Expression<'code>>>, mut to: Box<Spanned<Expression<'code>>>, run_duration: RunDuration) -> EvaluateResult<'code, Arc<ValueActor>> {
+    // @TODO destructure to?
+    let to_span = to.span;
     match to.node {
         Expression::FunctionCall { ref path, ref mut arguments } => {
             let argument = Spanned {
@@ -166,27 +193,28 @@ fn pipe<'code>(from: Box<Spanned<Expression<'code>>>, mut to: Box<Spanned<Expres
             spanned_expression_into_value_actor(*to, run_duration)
         }
         Expression::LinkSetter { alias } => {
-            Err(ParseError::custom(to.span, "Piping into it is not supported yet, sorry"))?
+            Err(ParseError::custom(to.span, "Piping into it is not supported yet, sorry [Expression::LinkSetter]"))?
         }
         Expression::Then { body } => {
             Ok(ThenCombinator::new_arc_value_actor(
-                ConstructInfo::new(4, "THEN"),
+                ConstructInfo::new(4, format!("{to_span}; THEN")),
                 run_duration,
                 spanned_expression_into_value_actor(*from, run_duration)?,
                 {
-                    let body_actor = spanned_expression_into_value_actor(*body, RunDuration::UntilFirstValue)?;
+                    // @TODO replace `run_duration` with a working mechanism
+                    let body_actor = spanned_expression_into_value_actor(*body, run_duration)?;
                     move || body_actor.subscribe()
                 }),
             )
         }
         Expression::When { arms } => {
-            Err(ParseError::custom(to.span, "Piping into it is not supported yet, sorry"))?
+            Err(ParseError::custom(to.span, "Piping into it is not supported yet, sorry [Expression::When]"))?
         }
         Expression::While { arms } => {
-            Err(ParseError::custom(to.span, "Piping into it is not supported yet, sorry"))?
+            Err(ParseError::custom(to.span, "Piping into it is not supported yet, sorry [Expression::While]"))?
         }
         Expression::Pipe { from, to } => {
-            Err(ParseError::custom(to.span, "Piping into it is not supported yet, sorry"))?
+            Err(ParseError::custom(to.span, "Piping into it is not supported yet, sorry [Expression::Pipe]"))?
         }
         _ => {
             Err(ParseError::custom(to.span, "Piping into this target is not supported"))?

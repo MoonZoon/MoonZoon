@@ -401,7 +401,7 @@ pub enum ArithmeticOperator<'code> {
 
 #[derive(Debug)]
 pub struct Object<'code> {
-    variables: Vec<Spanned<Variable<'code>>>,
+    pub variables: Vec<Spanned<Variable<'code>>>,
 }
 
 #[derive(Debug)]

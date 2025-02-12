@@ -30,8 +30,8 @@ macro_rules! run_example {
 fn boon_object_with_document() -> impl Element {
     // -- Choose example! --
     // let object = run_example!("call_document_new");
-    let object = run_example!("interval");
-    // let object = run_example!("counter");
+    // let object = run_example!("interval");
+    let object = run_example!("counter");
 
     // NOT RUNNABLE YET
     // let object = run_example!("complex_counter");
