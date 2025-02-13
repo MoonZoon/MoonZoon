@@ -1,6 +1,7 @@
 use std::sync::Arc;
 use std::pin::Pin;
 use zoon::{Stream, StreamExt};
+use zoon::mpsc;
 
 use super::super::super::parser::{self, Expression, Spanned, ParseError, Token, Span};
 use super::api;
@@ -196,16 +197,17 @@ fn pipe<'code>(from: Box<Spanned<Expression<'code>>>, mut to: Box<Spanned<Expres
             Err(ParseError::custom(to.span, "Piping into it is not supported yet, sorry [Expression::LinkSetter]"))?
         }
         Expression::Then { body } => {
+            let (impulse_sender, impulse_receiver) = mpsc::unbounded();
+            let mut body_actor_context = actor_context.clone();
+            body_actor_context.output_valve_signal = Some(Arc::new(ActorOutputValveSignal::new(impulse_receiver)));
+
             Ok(ThenCombinator::new_arc_value_actor(
                 ConstructInfo::new(4, format!("{to_span}; THEN")),
                 actor_context.clone(),
                 spanned_expression_into_value_actor(*from, actor_context.clone())?,
-                {
-                    // @TODO replace `actor_context` with a working mechanism
-                    let body_actor = spanned_expression_into_value_actor(*body, actor_context)?;
-                    move || body_actor.subscribe()
-                }),
-            )
+                impulse_sender,
+                spanned_expression_into_value_actor(*body, body_actor_context)?,
+            ))
         }
         Expression::When { arms } => {
             Err(ParseError::custom(to.span, "Piping into it is not supported yet, sorry [Expression::When]"))?

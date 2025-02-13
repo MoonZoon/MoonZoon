@@ -56,14 +56,13 @@ impl ActorOutputValveSignal {
             impulse_sender_sender,
             loop_task: Task::start_droppable(async move {
                 let mut impulse_stream = pin!(impulse_stream.fuse());
+                let mut impulse_senders = Vec::<mpsc::UnboundedSender<()>>::new();
                 loop {
-                    let mut impulse_senders = Vec::<mpsc::UnboundedSender<()>>::new();
                     select! {
                         impulse = impulse_stream.next() => {
                             if impulse.is_none() { break };
                             impulse_senders.retain(|impulse_sender| {
                                 if let Err(error) = impulse_sender.unbounded_send(()) {
-                                    eprintln!("Failed to send new actor output valve impulse to subscriber: {error:#}");
                                     false
                                 } else {
                                     true
@@ -114,6 +113,7 @@ impl ConstructInfo {
 
 // --- ConstructInfoComplete ---
 
+#[derive(Clone)]
 pub struct ConstructInfoComplete {
     r#type: ConstructType,
     id: ConstructId,
@@ -355,23 +355,32 @@ impl LatestCombinator {
 pub struct ThenCombinator {}
 
 impl ThenCombinator {
-    pub fn new_arc_value_actor<FR: Stream<Item = Value> + 'static>(
+    pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
         actor_context: ActorContext,
         observed: Arc<ValueActor>,
-        stream_on_change: impl Fn() -> FR + 'static,
+        impulse_sender: mpsc::UnboundedSender<()>,
+        body: Arc<ValueActor>,
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::ThenCombinator);
-        let stream_on_change = Arc::new(stream_on_change);
-        let value_stream = observed.subscribe().filter_map(move |_| {
-            let stream_on_change = stream_on_change.clone();
-            async move { pin!(stream_on_change()).next().await }
-        });
+        let send_impulse_task = Task::start_droppable(observed
+            .subscribe()
+            .for_each({
+                let construct_info = construct_info.clone();
+                move |_| { 
+                    if let Err(error) = impulse_sender.unbounded_send(()) {
+                        eprintln!("Failed to send impulse in {construct_info}: {error:#}")
+                    }
+                    future::ready(())
+                }
+            })
+        );
+        let value_stream = body.subscribe();
         Arc::new(ValueActor::new_internal(
             construct_info,
             actor_context,
             value_stream,
-            observed,
+            (observed, send_impulse_task, body),
         ))
     }
 }
@@ -405,7 +414,14 @@ impl ValueActor {
             mpsc::unbounded::<mpsc::UnboundedSender<Value>>();
         let loop_task = Task::start_droppable({
             let construct_info = construct_info.clone();
+            let output_valve_signal = actor_context.output_valve_signal;
             async move {
+                let output_valve_signal = output_valve_signal;
+                let mut output_valve_impulse_stream = if let Some(output_valve_signal) = &output_valve_signal {
+                    output_valve_signal.subscribe().left_stream()
+                } else {
+                    stream::pending().right_stream()
+                }.fuse();
                 let mut value_stream = pin!(value_stream.fuse());
                 let mut value = None;
                 let mut value_senders = Vec::<mpsc::UnboundedSender<Value>>::new();
@@ -413,25 +429,46 @@ impl ValueActor {
                     select! {
                         new_value = value_stream.next() => {
                             let Some(new_value) = new_value else { break };
-                            value_senders.retain(|value_sender| {
-                                if let Err(error) = value_sender.unbounded_send(new_value.clone()) {
-                                    eprintln!("Failed to send new {construct_info} value to subscriber: {error:#}");
-                                    false
-                                } else {
-                                    true
-                                }
-                            });
+                            if output_valve_signal.is_none() {
+                                value_senders.retain(|value_sender| {
+                                    if let Err(error) = value_sender.unbounded_send(new_value.clone()) {
+                                        eprintln!("Failed to send new {construct_info} value to subscriber: {error:#}");
+                                        false
+                                    } else {
+                                        true
+                                    }
+                                });
+                            }
                             value = Some(new_value);
                         }
                         value_sender = value_sender_receiver.select_next_some() => {
-                            if let Some(value) = value.as_ref() {
-                                if let Err(error) = value_sender.unbounded_send(value.clone()) {
-                                    eprintln!("Failed to send {construct_info} value to subscriber: {error:#}");
+                            if output_valve_signal.is_none() {
+                                if let Some(value) = value.as_ref() {
+                                    if let Err(error) = value_sender.unbounded_send(value.clone()) {
+                                        eprintln!("Failed to send {construct_info} value to subscriber: {error:#}");
+                                    } else {
+                                        value_senders.push(value_sender);
+                                    }
                                 } else {
                                     value_senders.push(value_sender);
                                 }
                             } else {
                                 value_senders.push(value_sender);
+                            }
+                        }
+                        impulse = output_valve_impulse_stream.next() => {
+                            if impulse.is_none() { 
+                                break 
+                            }
+                            if let Some(value) = value.as_ref() {
+                                value_senders.retain(|value_sender| {
+                                    if let Err(error) = value_sender.unbounded_send(value.clone()) {
+                                        eprintln!("Failed to send {construct_info} value to subscriber on impulse: {error:#}");
+                                        false
+                                    } else {
+                                        true
+                                    }
+                                });
                             }
                         }
                     }
