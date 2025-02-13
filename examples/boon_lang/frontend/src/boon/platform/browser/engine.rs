@@ -34,12 +34,58 @@ pub fn constant<T>(item: T) -> impl Stream<Item = T> {
     stream::once(future::ready(item)).chain(stream::once(future::pending()))
 }
 
-// --- Run ---
+// --- ActorContext ---
 
-#[derive(Clone, Copy)]
-pub enum RunDuration {
-    Nonstop,
-    UntilFirstValue,
+#[derive(Default, Clone)]
+pub struct ActorContext {
+    pub output_valve_signal: Option<Arc<ActorOutputValveSignal>>,
+}
+
+// --- ActorOutputValveSignal ---
+
+pub struct ActorOutputValveSignal {
+    impulse_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<()>>,
+    loop_task: TaskHandle,
+}
+
+impl ActorOutputValveSignal {
+    pub fn new(impulse_stream: impl Stream<Item = ()> + 'static) -> Self {
+        let (impulse_sender_sender, mut impulse_sender_receiver) =
+            mpsc::unbounded::<mpsc::UnboundedSender<()>>();
+        Self {
+            impulse_sender_sender,
+            loop_task: Task::start_droppable(async move {
+                let mut impulse_stream = pin!(impulse_stream.fuse());
+                loop {
+                    let mut impulse_senders = Vec::<mpsc::UnboundedSender<()>>::new();
+                    select! {
+                        impulse = impulse_stream.next() => {
+                            if impulse.is_none() { break };
+                            impulse_senders.retain(|impulse_sender| {
+                                if let Err(error) = impulse_sender.unbounded_send(()) {
+                                    eprintln!("Failed to send new actor output valve impulse to subscriber: {error:#}");
+                                    false
+                                } else {
+                                    true
+                                }
+                            });
+                        }
+                        impulse_sender = impulse_sender_receiver.select_next_some() => {
+                            impulse_senders.push(impulse_sender);
+                        }
+                    }
+                }
+            })
+        }
+    }
+
+    pub fn subscribe(&self) -> impl Stream<Item = ()> {
+        let (impulse_sender, impulse_receiver) = mpsc::unbounded();
+        if let Err(error) = self.impulse_sender_sender.unbounded_send(impulse_sender) {
+            eprintln!("Failed to subscribe to actor output valve signal: {error:#}");
+        }
+        impulse_receiver
+    }
 }
 
 // --- ConstructInfo ---
@@ -169,7 +215,7 @@ impl Variable {
 
     pub fn new_link_arc(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         name: impl Into<Cow<'static, str>>,
     ) -> Arc<Self> {
         let ConstructInfo {
@@ -181,7 +227,7 @@ impl Variable {
             .complete(ConstructType::ValueActor);
         let (link_value_sender, link_value_receiver) = mpsc::unbounded();
         let value_actor =
-            ValueActor::new_internal(actor_construct_info, run_duration, link_value_receiver, ());
+            ValueActor::new_internal(actor_construct_info, actor_context, link_value_receiver, ());
         Arc::new(Self {
             construct_info: construct_info.complete(ConstructType::LinkVariable),
             name: name.into(),
@@ -227,7 +273,7 @@ pub struct VariableReference {}
 impl VariableReference {
     pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         alias: &'static str,
         root_variable_receiver: mpsc::UnboundedReceiver<Arc<Variable>>,
     ) -> Arc<ValueActor> {
@@ -252,7 +298,7 @@ impl VariableReference {
         }
         Arc::new(ValueActor::new_internal(
             construct_info,
-            run_duration,
+            actor_context,
             value_stream,
             (),
         ))
@@ -266,16 +312,16 @@ pub struct FunctionCall {}
 impl FunctionCall {
     pub fn new_arc_value_actor<FR: Stream<Item = Value> + 'static>(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
-        definition: impl Fn(Arc<Vec<Arc<ValueActor>>>, ConstructId) -> FR + 'static,
+        actor_context: ActorContext,
+        definition: impl Fn(Arc<Vec<Arc<ValueActor>>>, ConstructId, ActorContext) -> FR + 'static,
         arguments: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::FunctionCall);
         let arguments = Arc::new(arguments.into());
-        let value_stream = definition(arguments.clone(), construct_info.id());
+        let value_stream = definition(arguments.clone(), construct_info.id(), actor_context.clone());
         Arc::new(ValueActor::new_internal(
             construct_info,
-            run_duration,
+            actor_context,
             value_stream,
             arguments,
         ))
@@ -289,7 +335,7 @@ pub struct LatestCombinator {}
 impl LatestCombinator {
     pub fn new_arc_value_actor<const IN: usize>(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         inputs: [Arc<ValueActor>; IN],
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::LatestCombinator);
@@ -297,7 +343,7 @@ impl LatestCombinator {
             stream::select_all(inputs.iter().map(|value_actor| value_actor.subscribe()));
         Arc::new(ValueActor::new_internal(
             construct_info,
-            run_duration,
+            actor_context,
             value_stream,
             inputs,
         ))
@@ -311,7 +357,7 @@ pub struct ThenCombinator {}
 impl ThenCombinator {
     pub fn new_arc_value_actor<FR: Stream<Item = Value> + 'static>(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         observed: Arc<ValueActor>,
         stream_on_change: impl Fn() -> FR + 'static,
     ) -> Arc<ValueActor> {
@@ -323,7 +369,7 @@ impl ThenCombinator {
         });
         Arc::new(ValueActor::new_internal(
             construct_info,
-            run_duration,
+            actor_context,
             value_stream,
             observed,
         ))
@@ -341,16 +387,16 @@ pub struct ValueActor {
 impl ValueActor {
     pub fn new(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         value_stream: impl Stream<Item = Value> + 'static,
     ) -> Self {
         let construct_info = construct_info.complete(ConstructType::ValueActor);
-        Self::new_internal(construct_info, run_duration, value_stream, ())
+        Self::new_internal(construct_info, actor_context, value_stream, ())
     }
 
     fn new_internal<EOD: 'static>(
         construct_info: ConstructInfoComplete,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         value_stream: impl Stream<Item = Value> + 'static,
         extra_owned_data: EOD,
     ) -> Self {
@@ -369,21 +415,18 @@ impl ValueActor {
                             let Some(new_value) = new_value else { break };
                             value_senders.retain(|value_sender| {
                                 if let Err(error) = value_sender.unbounded_send(new_value.clone()) {
-                                    eprintln!("Failed to send new {} value to subscriber: {error:#}", construct_info);
+                                    eprintln!("Failed to send new {construct_info} value to subscriber: {error:#}");
                                     false
                                 } else {
                                     true
                                 }
                             });
                             value = Some(new_value);
-                            if let RunDuration::UntilFirstValue = run_duration {
-                                break
-                            }
                         }
                         value_sender = value_sender_receiver.select_next_some() => {
                             if let Some(value) = value.as_ref() {
                                 if let Err(error) = value_sender.unbounded_send(value.clone()) {
-                                    eprintln!("Failed to send {} value to subscriber: {error:#}", construct_info);
+                                    eprintln!("Failed to send {construct_info} value to subscriber: {error:#}");
                                 } else {
                                     value_senders.push(value_sender);
                                 }
@@ -406,10 +449,10 @@ impl ValueActor {
 
     pub fn new_arc(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         value_stream: impl Stream<Item = Value> + 'static,
     ) -> Arc<Self> {
-        Arc::new(Self::new(construct_info, run_duration, value_stream))
+        Arc::new(Self::new(construct_info, actor_context, value_stream))
     }
 
     pub fn subscribe(&self) -> impl Stream<Item = Value> {
@@ -542,7 +585,7 @@ impl Object {
 
     pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Arc<ValueActor> {
         let ConstructInfo {
@@ -556,7 +599,7 @@ impl Object {
         let value_stream = Self::new_constant(construct_info, variables.into());
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
-            run_duration,
+            actor_context,
             value_stream,
             (),
         ))
@@ -632,7 +675,7 @@ impl TaggedObject {
 
     pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         tag: impl Into<Cow<'static, str>>,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Arc<ValueActor> {
@@ -647,7 +690,7 @@ impl TaggedObject {
         let value_stream = Self::new_constant(construct_info, tag.into(), variables.into());
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
-            run_duration,
+            actor_context,
             value_stream,
             (),
         ))
@@ -712,7 +755,7 @@ impl Text {
 
     pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         text: impl Into<Cow<'static, str>>,
     ) -> Arc<ValueActor> {
         let ConstructInfo {
@@ -725,7 +768,7 @@ impl Text {
         let value_stream = Self::new_constant(construct_info, text.into());
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
-            run_duration,
+            actor_context,
             value_stream,
             (),
         ))
@@ -774,7 +817,7 @@ impl Tag {
 
     pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         tag: impl Into<Cow<'static, str>>,
     ) -> Arc<ValueActor> {
         let ConstructInfo {
@@ -787,7 +830,7 @@ impl Tag {
         let value_stream = Self::new_constant(construct_info, tag.into());
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
-            run_duration,
+            actor_context,
             value_stream,
             (),
         ))
@@ -836,7 +879,7 @@ impl Number {
 
     pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         number: impl Into<f64>,
     ) -> Arc<ValueActor> {
         let ConstructInfo {
@@ -849,7 +892,7 @@ impl Number {
         let value_stream = Self::new_constant(construct_info, number.into());
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
-            run_duration,
+            actor_context,
             value_stream,
             (),
         ))
@@ -877,18 +920,18 @@ pub struct List {
 impl List {
     pub fn new(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Self {
         let change_stream = constant(ListChange::Replace {
             items: items.into()
         });
-        Self::new_with_change_stream(construct_info, run_duration, change_stream, ())
+        Self::new_with_change_stream(construct_info, actor_context, change_stream, ())
     }
 
     pub fn new_with_change_stream<EOD: 'static>(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         change_stream: impl Stream<Item = ListChange> + 'static,
         extra_owned_data: EOD,
     ) -> Self {
@@ -907,7 +950,7 @@ impl List {
                             let Some(change) = change else { break };
                             change_senders.retain(|change_sender| {
                                 if let Err(error) = change_sender.unbounded_send(change.clone()) {
-                                    eprintln!("Failed to send new {} change to subscriber: {error:#}", construct_info);
+                                    eprintln!("Failed to send new {construct_info} change to subscriber: {error:#}");
                                     false
                                 } else {
                                     true
@@ -919,18 +962,15 @@ impl List {
                                 if let ListChange::Replace { items } = &change {
                                     list = Some(items.clone());
                                 } else {
-                                    panic!("Failed to initialize {}: The first change has to be 'ListChange::Replace'", construct_info)
+                                    panic!("Failed to initialize {construct_info}: The first change has to be 'ListChange::Replace'")
                                 }
-                            }
-                            if let RunDuration::UntilFirstValue = run_duration {
-                                break
                             }
                         }
                         change_sender = change_sender_receiver.select_next_some() => {
                             if let Some(list) = list.as_ref() {
                                 let first_change_to_send = ListChange::Replace { items: list.clone() };
                                 if let Err(error) = change_sender.unbounded_send(first_change_to_send) {
-                                    eprintln!("Failed to send {} change to subscriber: {error:#}", construct_info);
+                                    eprintln!("Failed to send {construct_info} change to subscriber: {error:#}");
                                 } else {
                                     change_senders.push(change_sender);
                                 }
@@ -953,31 +993,31 @@ impl List {
 
     pub fn new_arc(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<Self> {
-        Arc::new(Self::new(construct_info, run_duration, items))
+        Arc::new(Self::new(construct_info, actor_context, items))
     }
 
     pub fn new_value(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Value {
-        Value::List(Self::new_arc(construct_info, run_duration, items))
+        Value::List(Self::new_arc(construct_info, actor_context, items))
     }
 
     pub fn new_constant(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> impl Stream<Item = Value> {
-        constant(Self::new_value(construct_info, run_duration, items))
+        constant(Self::new_value(construct_info, actor_context, items))
     }
 
     pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
-        run_duration: RunDuration,
+        actor_context: ActorContext,
         items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<ValueActor> {
         let ConstructInfo {
@@ -987,10 +1027,10 @@ impl List {
         let construct_info = ConstructInfo::new(actor_id.with_child_id(0), list_description);
         let actor_construct_info = ConstructInfo::new(actor_id, "Constant list wrapper")
             .complete(ConstructType::ValueActor);
-        let value_stream = Self::new_constant(construct_info, run_duration, items.into());
+        let value_stream = Self::new_constant(construct_info, actor_context.clone(), items.into());
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
-            run_duration,
+            actor_context,
             value_stream,
             (),
         ))

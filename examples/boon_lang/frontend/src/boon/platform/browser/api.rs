@@ -41,6 +41,7 @@ use super::engine::*;
 pub fn function_document_new(
     arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
+    actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
     let [argument_root] = arguments.as_slice() else { panic!("Unexpected argument count") };
     Object::new_constant(
@@ -71,6 +72,7 @@ pub fn function_document_new(
 pub fn function_element_container(
     arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
+    actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
     let [_argument_element, argument_style, argument_child] = arguments.as_slice() else { panic!("Unexpected argument count") };
     TaggedObject::new_constant(
@@ -90,7 +92,7 @@ pub fn function_element_container(
                     function_call_id.with_child_id(2),
                     "Element/container(..) -> ElementContainer[settings: [..]]",
                 ),
-                RunDuration::Nonstop,
+                actor_context,
                 [
                     Variable::new_arc(
                         ConstructInfo::new(
@@ -125,6 +127,7 @@ pub fn function_element_container(
 pub fn function_element_stripe(
     arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
+    actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
     let [_argument_element, argument_direction, argument_style, argument_items] = arguments.as_slice() else { panic!("Unexpected argument count") };
     TaggedObject::new_constant(
@@ -144,7 +147,7 @@ pub fn function_element_stripe(
                     function_call_id.with_child_id(2),
                     "Element/stripe(..) -> ElementStripe[settings: [..]]",
                 ),
-                RunDuration::Nonstop,
+                actor_context,
                 [
                     Variable::new_arc(
                         ConstructInfo::new(
@@ -190,6 +193,7 @@ pub fn function_element_stripe(
 pub fn function_element_button(
     arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
+    actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
     let [argument_element, argument_style, argument_label] = arguments.as_slice() else { panic!("Unexpected argument count") };
     TaggedObject::new_constant(
@@ -210,7 +214,7 @@ pub fn function_element_button(
                         function_call_id.with_child_id(2),
                         "Element/stripe(..) -> ElementButton[event: [..]]",
                     ),
-                    RunDuration::Nonstop,
+                    actor_context.clone(),
                     argument_element
                         .subscribe()
                         .filter_map(|value| future::ready(value.expect_object().variable("event")))
@@ -228,7 +232,7 @@ pub fn function_element_button(
                         function_call_id.with_child_id(2),
                         "Element/stripe(..) -> ElementButton[settings: [..]]",
                     ),
-                    RunDuration::Nonstop,
+                    actor_context,
                     [
                         Variable::new_arc(
                             ConstructInfo::new(
@@ -259,6 +263,7 @@ pub fn function_element_button(
 pub fn function_math_sum(
     arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
+    actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
     let [argument_increment] = arguments.as_slice() else { panic!("Unexpected argument count") };
     argument_increment
@@ -282,6 +287,7 @@ pub fn function_math_sum(
 pub fn function_timer_interval(
     arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
+    actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
     let [argument_duration] = arguments.as_slice() else { panic!("Unexpected argument count") };
     argument_duration
