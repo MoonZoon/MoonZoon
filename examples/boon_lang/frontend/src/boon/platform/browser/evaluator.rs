@@ -137,7 +137,14 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>, actor_co
             Err(ParseError::custom(span, "Not supported yet, sorry [Expression::Link]"))?
         }
         Expression::Latest { inputs } => {
-            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::Latest]"))?
+            LatestCombinator::new_arc_value_actor(
+                ConstructInfo::new(11, format!("{span}; LATEST {{..}}")),
+                actor_context.clone(),
+                inputs
+                    .into_iter()
+                    .map(|input| spanned_expression_into_value_actor(input, actor_context.clone()))
+                    .collect::<Result<Vec<_>, _>>()?
+            )
         }
         Expression::Then { body } => {
             Err(ParseError::custom(span, "You have to pipe things into THEN - e.g. `..press |> THEN { .. }`"))?

@@ -1,22 +1,17 @@
 document: Document/new(root: Element/stripe(
     element: []
-    direction: Column
+    direction: Row
     style: []
     items: LIST {
-        counter
-        increment_button
+        Element/container(
+            element: []
+            style: []
+            child: 'I am a counter: '
+        )
+        LATEST {
+            0
+            Duration[seconds: 1] |> Timer/interval()  |> THEN { 1 } 
+        } 
+        |> Math/sum()
     }
 ))
-
-counter: 
-    LATEST {
-        0
-        increment_button.event.press |> THEN { 1 } 
-    } 
-    |> Math/sum()
-
-increment_button: Element/button(
-    element: [event: [press: LINK]]
-    style: []
-    label: '+'
-)

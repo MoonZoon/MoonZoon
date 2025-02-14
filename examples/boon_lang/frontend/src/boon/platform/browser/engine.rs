@@ -333,12 +333,13 @@ impl FunctionCall {
 pub struct LatestCombinator {}
 
 impl LatestCombinator {
-    pub fn new_arc_value_actor<const IN: usize>(
+    pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
         actor_context: ActorContext,
-        inputs: [Arc<ValueActor>; IN],
+        inputs: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::LatestCombinator);
+        let inputs = inputs.into();
         let value_stream =
             stream::select_all(inputs.iter().map(|value_actor| value_actor.subscribe()));
         Arc::new(ValueActor::new_internal(
