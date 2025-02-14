@@ -123,6 +123,7 @@ fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
             }
         }))
         .on_press(move || {
+            // @TODO handle press event only when it's defined in Boon code
             let press_event = Object::new_value(
                 // @TODO generate id?
                 ConstructInfo::new(123, "Button press event"),

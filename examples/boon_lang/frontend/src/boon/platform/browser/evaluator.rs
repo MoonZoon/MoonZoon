@@ -28,14 +28,21 @@ pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Arc<Obj
     ))
 }
 
+// @TODO Is the rule "LINK has to be the only variable value" necessary? Validate it by the parser?
 fn spanned_variable_into_variable(variable: Spanned<parser::Variable>, actor_context: ActorContext) -> EvaluateResult<Arc<Variable>> {
     let Spanned { span, node: variable } = variable;
-    // @TODO link variable
-    Ok(Variable::new_arc(
-        ConstructInfo::new(1, format!("{span}; {}", variable.name)),
-        variable.name.to_owned(),
-        spanned_expression_into_value_actor(variable.value, actor_context)?
-    ))
+    let variable_name = variable.name.to_owned();
+    let construct_info = ConstructInfo::new(1, format!("{span}; {variable_name}"));
+    let variable = if matches!(&variable.value, Spanned { span: _, node: Expression::Link }) {
+        Variable::new_link_arc(construct_info, variable_name, actor_context)
+    } else {
+        Variable::new_arc(
+            construct_info,
+            variable_name,
+            spanned_expression_into_value_actor(variable.value, actor_context)?
+        )
+    };
+    Ok(variable)
 }
 
 // @TODO resolve ids
@@ -134,7 +141,7 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>, actor_co
             Err(ParseError::custom(span, "Not supported yet, sorry [Expression::LinkSetter]"))?
         }
         Expression::Link => {
-            Err(ParseError::custom(span, "Not supported yet, sorry [Expression::Link]"))?
+            Err(ParseError::custom(span, "LINK has to be the only variable value - e.g. `press: LINK`"))?
         }
         Expression::Latest { inputs } => {
             LatestCombinator::new_arc_value_actor(

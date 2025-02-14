@@ -215,8 +215,8 @@ impl Variable {
 
     pub fn new_link_arc(
         construct_info: ConstructInfo,
-        actor_context: ActorContext,
         name: impl Into<Cow<'static, str>>,
+        actor_context: ActorContext,
     ) -> Arc<Self> {
         let ConstructInfo {
             id: actor_id,
