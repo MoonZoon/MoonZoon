@@ -5,6 +5,8 @@ use std::borrow::Cow;
 use std::pin::pin;
 use std::sync::Arc;
 
+use crate::boon::parser;
+
 use zoon::future;
 use zoon::futures_channel::mpsc;
 use zoon::futures_util::select;
@@ -142,7 +144,7 @@ impl std::fmt::Display for ConstructInfoComplete {
 pub enum ConstructType {
     Variable,
     LinkVariable,
-    VariableReference,
+    VariableOrArgumentReference,
     FunctionCall,
     LatestCombinator,
     ThenCombinator,
@@ -266,31 +268,39 @@ impl Drop for Variable {
     }
 }
 
-// --- VariableReference ---
+// --- VariableOrArgumentReference ---
 
-pub struct VariableReference {}
+pub struct VariableOrArgumentReference {}
 
-impl VariableReference {
-    pub fn new_arc_value_actor(
+impl VariableOrArgumentReference {
+    pub fn new_arc_value_actor<'code>(
         construct_info: ConstructInfo,
         actor_context: ActorContext,
-        alias: &'static str,
-        root_variable_receiver: mpsc::UnboundedReceiver<Arc<Variable>>,
+        alias: parser::Alias<'code>,
+        root_value_actor_receiver: mpsc::UnboundedReceiver<Arc<ValueActor>>,
     ) -> Arc<ValueActor> {
-        let construct_info = construct_info.complete(ConstructType::VariableReference);
-        let variable_names = alias.split('.');
-        let mut value_stream = root_variable_receiver
-            .flat_map(|variable| variable.subscribe())
+        let construct_info = construct_info.complete(ConstructType::VariableOrArgumentReference);
+        let mut skip_alias_parts = 0;
+        let alias_parts = match alias {
+            parser::Alias::WithoutPassed { parts } => {
+                skip_alias_parts = 1;
+                parts
+            }
+            parser::Alias::WithPassed { extra_parts } => extra_parts,
+        };
+        let mut value_stream = root_value_actor_receiver
+            .flat_map(|actor| actor.subscribe())
             .boxed_local();
-        for variable_name in variable_names.skip(1) {
+        for alias_part in alias_parts.into_iter().skip(skip_alias_parts) {
+            let alias_part = alias_part.to_owned();
             value_stream = value_stream
-                .flat_map(|value| match value {
-                    Value::Object(object) => object.expect_variable(variable_name).subscribe(),
+                .flat_map(move |value| match value {
+                    Value::Object(object) => object.expect_variable(&alias_part).subscribe(),
                     Value::TaggedObject(tagged_object) => {
-                        tagged_object.expect_variable(variable_name).subscribe()
+                        tagged_object.expect_variable(&alias_part).subscribe()
                     }
                     other => panic!(
-                        "Failed to get Object or TaggedObject: The Value has a different type {}",
+                        "Failed to get Object or TaggedObject to create VariableOrArgumentReference: The Value has a different type {}",
                         other.construct_info()
                     ),
                 })
