@@ -75,7 +75,9 @@ fn element_stripe(tagged_object: Arc<TaggedObject>) -> impl Element {
 }
 
 fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
-    let (press_event_sender, mut press_event_receiver) = mpsc::unbounded();
+    type PressEvent = ();
+
+    let (press_event_sender, mut press_event_receiver) = mpsc::unbounded::<PressEvent>();
 
     let event_stream =
         stream::iter(tagged_object.variable("event")).flat_map(|variable| variable.subscribe());
@@ -98,7 +100,12 @@ fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
                 }
                 press_event = press_event_receiver.select_next_some() => {
                     if let Some(press_link_value_sender) = press_link_value_sender.as_ref() {
-                        if let Err(error) = press_link_value_sender.unbounded_send(press_event) {
+                        let press_event_object_value = Object::new_value(
+                            // @TODO generate id?
+                            ConstructInfo::new(123, "Button press event"),
+                            [],
+                        );
+                        if let Err(error) = press_link_value_sender.unbounded_send(press_event_object_value) {
                             eprintln!("Failed to send button press event to event press link variable: {error}");
                         }
                     }
@@ -122,13 +129,9 @@ fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
                 zoon::Text::new("").unify()
             }
         }))
+        // @TODO Handle press event only when it's defined in Boon code? Add `.on_press_signal` to Zoon?
         .on_press(move || {
-            // @TODO handle press event only when it's defined in Boon code
-            let press_event = Object::new_value(
-                // @TODO generate id?
-                ConstructInfo::new(123, "Button press event"),
-                [],
-            );
+            let press_event: PressEvent = ();
             if let Err(error) = press_event_sender.unbounded_send(press_event) {
                 eprintln!("Failed to send button press event from on_press handler: {error}");
             }

@@ -21,6 +21,6 @@ document: Document/new(root: Element/stripe(
 counter: 
     LATEST {
         0
-        Duration[seconds: 1] |> Timer/interval()  |> THEN { 1 } 
+        Duration[seconds: 500] |> Timer/interval()  |> THEN { 1 } 
     } 
     |> Math/sum()
