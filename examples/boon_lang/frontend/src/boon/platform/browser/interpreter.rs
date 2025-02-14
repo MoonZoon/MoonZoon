@@ -34,7 +34,7 @@ pub fn run(filename: &str, source_code: &str) -> Option<Arc<Object>> {
         .into_output_errors();
     if let Some(ast) = ast.as_ref() {
         println!("[Abstract Syntax Tree]");
-        println!("{ast:#?}");
+        println!("{ast:?}");
     }
     if !errors.is_empty() {
         println!("[Parse Errors]");

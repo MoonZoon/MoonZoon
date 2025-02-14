@@ -1,4 +1,5 @@
 use chumsky::{input::ValueInput, pratt::*, prelude::*};
+use std::collections::BTreeMap;
 
 mod lexer;
 pub use lexer::Token;
@@ -40,7 +41,7 @@ where
             select! { Token::PascalCaseIdentifier(identifier) => identifier };
 
         let variable = group((snake_case_identifier, colon, expression.clone()))
-            .map(|(name, _, value)| Variable { name, value, reference_count: 0 });
+            .map(|(name, _, value)| Variable { name, reference_count: 0, value });
 
         let expression_variable = variable
             .clone()
@@ -62,7 +63,7 @@ where
                 .map_with(|(name, value), extra| {
                     let value = value.map(|(_, value)| value);
                     Spanned {
-                        node: Argument { name, value, reference_count: 0 },
+                        node: Argument { name, reference_count: 0, value },
                         span: extra.span(),
                     }
                 });
@@ -132,7 +133,7 @@ where
                 .separated_by(dot)
                 .at_least(1)
                 .collect::<Vec<_>>()
-                .map(|parts| Alias::WithoutPassed { parts });
+                .map(|parts| Alias::WithoutPassed { parts, referenceable_variables_and_arguments: BTreeMap::new() });
 
             alias_with_passed.or(alias_without_passed)
         };
@@ -407,8 +408,8 @@ pub struct Object<'code> {
 #[derive(Debug)]
 pub struct Variable<'code> {
     pub name: &'code str,
-    pub value: Spanned<Expression<'code>>,
     pub reference_count: usize,
+    pub value: Spanned<Expression<'code>>,
 }
 
 #[derive(Debug)]
@@ -433,14 +434,19 @@ pub enum MapEntryKey<'code> {
 #[derive(Debug)]
 pub struct Argument<'code> {
     pub name: &'code str,
-    pub value: Option<Spanned<Expression<'code>>>,
     pub reference_count: usize,
+    pub value: Option<Spanned<Expression<'code>>>,
 }
 
 #[derive(Debug)]
 pub enum Alias<'code> {
-    WithoutPassed { parts: Vec<&'code str> },
-    WithPassed { extra_parts: Vec<&'code str> },
+    WithoutPassed { 
+        parts: Vec<&'code str>, 
+        referenceable_variables_and_arguments: BTreeMap<&'code str, Span>,
+    },
+    WithPassed { 
+        extra_parts: Vec<&'code str>,
+    },
 }
 
 #[derive(Debug)]
