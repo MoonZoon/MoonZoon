@@ -125,7 +125,7 @@ fn spanned_expression_into_value_actor(expression: Spanned<Expression>, actor_co
                 actor_context.clone(),
                 function_call_path_to_definition(&path, span)?,
                 arguments.into_iter().map(|Spanned { span, node: argument }| {
-                    let parser::Argument { name, value } = argument;
+                    let parser::Argument { name, value, reference_count } = argument;
                     let Some(value) = value else {
                         // @TODO support out arguments
                         Err(ParseError::custom(span, "Out arguments not supported yet, sorry"))?
@@ -201,7 +201,7 @@ fn pipe<'code>(from: Box<Spanned<Expression<'code>>>, mut to: Box<Spanned<Expres
         Expression::FunctionCall { ref path, ref mut arguments } => {
             let argument = Spanned {
                 span: from.span,
-                node: parser::Argument { name: "", value: Some(*from) }
+                node: parser::Argument { name: "", value: Some(*from), reference_count: 0 }
             };
             // @TODO arguments: Vec -> arguments: VecDeque?
             arguments.insert(0, argument);

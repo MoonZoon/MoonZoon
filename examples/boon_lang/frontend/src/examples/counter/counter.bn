@@ -8,19 +8,13 @@ document: Document/new(root: Element/stripe(
             style: []
             child: 'I am a counter: '
         )
-        --counter
-        Element/button(
-            element: [event: [press: LINK]]
-            style: []
-            label: '+'
-        )
-
+        counter
     }
 ))
 
 counter: 
     LATEST {
         0
-        Duration[seconds: 500] |> Timer/interval()  |> THEN { 1 } 
+        Duration[seconds: 50] |> Timer/interval()  |> THEN { 1 } 
     } 
     |> Math/sum()

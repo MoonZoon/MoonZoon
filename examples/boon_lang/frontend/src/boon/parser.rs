@@ -40,7 +40,7 @@ where
             select! { Token::PascalCaseIdentifier(identifier) => identifier };
 
         let variable = group((snake_case_identifier, colon, expression.clone()))
-            .map(|(name, _, value)| Variable { name, value });
+            .map(|(name, _, value)| Variable { name, value, reference_count: 0 });
 
         let expression_variable = variable
             .clone()
@@ -62,7 +62,7 @@ where
                 .map_with(|(name, value), extra| {
                     let value = value.map(|(_, value)| value);
                     Spanned {
-                        node: Argument { name, value },
+                        node: Argument { name, value, reference_count: 0 },
                         span: extra.span(),
                     }
                 });
@@ -408,6 +408,7 @@ pub struct Object<'code> {
 pub struct Variable<'code> {
     pub name: &'code str,
     pub value: Spanned<Expression<'code>>,
+    pub reference_count: usize,
 }
 
 #[derive(Debug)]
@@ -433,6 +434,7 @@ pub enum MapEntryKey<'code> {
 pub struct Argument<'code> {
     pub name: &'code str,
     pub value: Option<Spanned<Expression<'code>>>,
+    pub reference_count: usize,
 }
 
 #[derive(Debug)]
