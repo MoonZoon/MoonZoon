@@ -977,7 +977,14 @@ impl List {
             mpsc::unbounded::<mpsc::UnboundedSender<ListChange>>();
         let loop_task = Task::start_droppable({
             let construct_info = construct_info.clone();
+            let output_valve_signal = actor_context.output_valve_signal;
             async move {
+                let output_valve_signal = output_valve_signal;
+                let mut output_valve_impulse_stream = if let Some(output_valve_signal) = &output_valve_signal {
+                    output_valve_signal.subscribe().left_stream()
+                } else {
+                    stream::pending().right_stream()
+                }.fuse();
                 let mut change_stream = pin!(change_stream.fuse());
                 let mut change_senders = Vec::<mpsc::UnboundedSender<ListChange>>::new();
                 let mut list = None;
@@ -985,14 +992,16 @@ impl List {
                     select! {
                         change = change_stream.next() => {
                             let Some(change) = change else { break };
-                            change_senders.retain(|change_sender| {
-                                if let Err(error) = change_sender.unbounded_send(change.clone()) {
-                                    eprintln!("Failed to send new {construct_info} change to subscriber: {error:#}");
-                                    false
-                                } else {
-                                    true
-                                }
-                            });
+                            if output_valve_signal.is_none() {
+                                change_senders.retain(|change_sender| {
+                                    if let Err(error) = change_sender.unbounded_send(change.clone()) {
+                                        eprintln!("Failed to send new {construct_info} change to subscriber: {error:#}");
+                                        false
+                                    } else {
+                                        true
+                                    }
+                                });
+                            }
                             if let Some(list) = &mut list {
                                 change.clone().apply_to_vec(list);
                             } else {
@@ -1004,15 +1013,35 @@ impl List {
                             }
                         }
                         change_sender = change_sender_receiver.select_next_some() => {
-                            if let Some(list) = list.as_ref() {
-                                let first_change_to_send = ListChange::Replace { items: list.clone() };
-                                if let Err(error) = change_sender.unbounded_send(first_change_to_send) {
-                                    eprintln!("Failed to send {construct_info} change to subscriber: {error:#}");
+                            if output_valve_signal.is_none() {
+                                if let Some(list) = list.as_ref() {
+                                    let first_change_to_send = ListChange::Replace { items: list.clone() };
+                                    if let Err(error) = change_sender.unbounded_send(first_change_to_send) {
+                                        eprintln!("Failed to send {construct_info} change to subscriber: {error:#}");
+                                    } else {
+                                        change_senders.push(change_sender);
+                                    }
                                 } else {
                                     change_senders.push(change_sender);
                                 }
                             } else {
                                 change_senders.push(change_sender);
+                            }
+                        }
+                        impulse = output_valve_impulse_stream.next() => {
+                            if impulse.is_none() { 
+                                break 
+                            }
+                            if let Some(list) = list.as_ref() {
+                                change_senders.retain(|change_sender| {
+                                    let change_to_send = ListChange::Replace { items: list.clone() };
+                                    if let Err(error) = change_sender.unbounded_send(change_to_send) {
+                                        eprintln!("Failed to send {construct_info} change to subscriber on impulse: {error:#}");
+                                        false
+                                    } else {
+                                        true
+                                    }
+                                });
                             }
                         }
                     }
