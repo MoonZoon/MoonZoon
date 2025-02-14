@@ -146,7 +146,7 @@ pub fn lexer<'code>(
         .map(Token::Number);
 
     // @TODO multiline indentation?
-    // @TODO "raw" text or escape '? Idea: 'I am {name}' or #'I'm #{name}'# 
+    // @TODO "raw" text or escape '? Idea: 'I am {name}' or #'I'm #{name}'#
     // - the same number of # at the beginning, at the end and before aliases
     let text = just('\'')
         .ignore_then(none_of('\'').repeated().to_slice())

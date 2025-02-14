@@ -43,7 +43,9 @@ pub fn function_document_new(
     function_call_id: ConstructId,
     actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
-    let [argument_root] = arguments.as_slice() else { panic!("Unexpected argument count") };
+    let [argument_root] = arguments.as_slice() else {
+        panic!("Unexpected argument count")
+    };
     Object::new_constant(
         ConstructInfo::new(
             function_call_id.with_child_id(0),
@@ -74,7 +76,9 @@ pub fn function_element_container(
     function_call_id: ConstructId,
     actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
-    let [_argument_element, argument_style, argument_child] = arguments.as_slice() else { panic!("Unexpected argument count") };
+    let [_argument_element, argument_style, argument_child] = arguments.as_slice() else {
+        panic!("Unexpected argument count")
+    };
     TaggedObject::new_constant(
         ConstructInfo::new(
             function_call_id.with_child_id(0),
@@ -129,7 +133,11 @@ pub fn function_element_stripe(
     function_call_id: ConstructId,
     actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
-    let [_argument_element, argument_direction, argument_style, argument_items] = arguments.as_slice() else { panic!("Unexpected argument count") };
+    let [_argument_element, argument_direction, argument_style, argument_items] =
+        arguments.as_slice()
+    else {
+        panic!("Unexpected argument count")
+    };
     TaggedObject::new_constant(
         ConstructInfo::new(
             function_call_id.with_child_id(0),
@@ -195,7 +203,9 @@ pub fn function_element_button(
     function_call_id: ConstructId,
     actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
-    let [argument_element, argument_style, argument_label] = arguments.as_slice() else { panic!("Unexpected argument count") };
+    let [argument_element, argument_style, argument_label] = arguments.as_slice() else {
+        panic!("Unexpected argument count")
+    };
     TaggedObject::new_constant(
         ConstructInfo::new(
             function_call_id.with_child_id(0),
@@ -265,7 +275,9 @@ pub fn function_math_sum(
     function_call_id: ConstructId,
     actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
-    let [argument_increment] = arguments.as_slice() else { panic!("Unexpected argument count") };
+    let [argument_increment] = arguments.as_slice() else {
+        panic!("Unexpected argument count")
+    };
     argument_increment
         .subscribe()
         .map(|value| value.expect_number().number())
@@ -289,7 +301,9 @@ pub fn function_timer_interval(
     function_call_id: ConstructId,
     actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
-    let [argument_duration] = arguments.as_slice() else { panic!("Unexpected argument count") };
+    let [argument_duration] = arguments.as_slice() else {
+        panic!("Unexpected argument count")
+    };
     argument_duration
         .subscribe()
         .flat_map(|value| {

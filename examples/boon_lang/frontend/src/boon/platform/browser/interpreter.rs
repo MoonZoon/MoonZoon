@@ -1,4 +1,6 @@
-use crate::boon::parser::{lexer, parser, Input, ParseError, Parser, Span, Spanned, Token, resolve_references};
+use crate::boon::parser::{
+    lexer, parser, resolve_references, Input, ParseError, Parser, Span, Spanned, Token,
+};
 use crate::boon::platform::browser::{engine::Object, evaluator::evaluate};
 use ariadne::{Config, Label, Report, ReportKind, Source};
 use std::fmt;
@@ -49,7 +51,7 @@ pub fn run(filename: &str, source_code: &str) -> Option<Arc<Object>> {
         Err(errors) => {
             println!("[Reference Errors]");
             report_errors(errors, filename, source_code);
-            return None
+            return None;
         }
     };
     println!("[Abstract Syntax Tree with Reference Data]");
@@ -57,14 +59,18 @@ pub fn run(filename: &str, source_code: &str) -> Option<Arc<Object>> {
 
     let errors = match evaluate(ast_with_reference_data) {
         Ok(root_object) => return Some(root_object),
-        Err(evaluation_error) => [evaluation_error]
+        Err(evaluation_error) => [evaluation_error],
     };
     println!("[Evaluation Errors]");
     report_errors(errors, filename, source_code);
     None
 }
 
-fn report_errors<'code, T: fmt::Display + 'code>(errors: impl IntoIterator<Item = ParseError<'code, T>>, filename: &str, source_code: &str) {
+fn report_errors<'code, T: fmt::Display + 'code>(
+    errors: impl IntoIterator<Item = ParseError<'code, T>>,
+    filename: &str,
+    source_code: &str,
+) {
     let mut report_bytes = Cursor::new(Vec::new());
     let mut report_string = String::new();
     for error in errors {

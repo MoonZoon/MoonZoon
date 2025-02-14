@@ -16,7 +16,6 @@ use zoon::{Task, TaskHandle};
 
 // @TODO Replace `[]` with `impl Into<Vec..` and `&'static str` with `Cow<'static, str>` everywhere?
 
-
 // --- PipeTo ---
 
 pub trait PipeTo {
@@ -76,7 +75,7 @@ impl ActorOutputValveSignal {
                         }
                     }
                 }
-            })
+            }),
         }
     }
 
@@ -282,7 +281,10 @@ impl VariableOrArgumentReference {
         let construct_info = construct_info.complete(ConstructType::VariableOrArgumentReference);
         let mut skip_alias_parts = 0;
         let alias_parts = match alias {
-            parser::Alias::WithoutPassed { parts, referenceables: _ } => {
+            parser::Alias::WithoutPassed {
+                parts,
+                referenceables: _,
+            } => {
                 skip_alias_parts = 1;
                 parts
             }
@@ -328,7 +330,11 @@ impl FunctionCall {
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::FunctionCall);
         let arguments = Arc::new(arguments.into());
-        let value_stream = definition(arguments.clone(), construct_info.id(), actor_context.clone());
+        let value_stream = definition(
+            arguments.clone(),
+            construct_info.id(),
+            actor_context.clone(),
+        );
         Arc::new(ValueActor::new_internal(
             construct_info,
             actor_context,
@@ -374,18 +380,15 @@ impl ThenCombinator {
         body: Arc<ValueActor>,
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::ThenCombinator);
-        let send_impulse_task = Task::start_droppable(observed
-            .subscribe()
-            .for_each({
-                let construct_info = construct_info.clone();
-                move |_| { 
-                    if let Err(error) = impulse_sender.unbounded_send(()) {
-                        eprintln!("Failed to send impulse in {construct_info}: {error:#}")
-                    }
-                    future::ready(())
+        let send_impulse_task = Task::start_droppable(observed.subscribe().for_each({
+            let construct_info = construct_info.clone();
+            move |_| {
+                if let Err(error) = impulse_sender.unbounded_send(()) {
+                    eprintln!("Failed to send impulse in {construct_info}: {error:#}")
                 }
-            })
-        );
+                future::ready(())
+            }
+        }));
         let value_stream = body.subscribe();
         Arc::new(ValueActor::new_internal(
             construct_info,
@@ -428,11 +431,13 @@ impl ValueActor {
             let output_valve_signal = actor_context.output_valve_signal;
             async move {
                 let output_valve_signal = output_valve_signal;
-                let mut output_valve_impulse_stream = if let Some(output_valve_signal) = &output_valve_signal {
-                    output_valve_signal.subscribe().left_stream()
-                } else {
-                    stream::pending().right_stream()
-                }.fuse();
+                let mut output_valve_impulse_stream =
+                    if let Some(output_valve_signal) = &output_valve_signal {
+                        output_valve_signal.subscribe().left_stream()
+                    } else {
+                        stream::pending().right_stream()
+                    }
+                    .fuse();
                 let mut value_stream = pin!(value_stream.fuse());
                 let mut value = None;
                 let mut value_senders = Vec::<mpsc::UnboundedSender<Value>>::new();
@@ -468,8 +473,8 @@ impl ValueActor {
                             }
                         }
                         impulse = output_valve_impulse_stream.next() => {
-                            if impulse.is_none() { 
-                                break 
+                            if impulse.is_none() {
+                                break
                             }
                             if let Some(value) = value.as_ref() {
                                 value_senders.retain(|value_sender| {
@@ -600,10 +605,7 @@ pub struct Object {
 }
 
 impl Object {
-    pub fn new(
-        construct_info: ConstructInfo,
-        variables: impl Into<Vec<Arc<Variable>>>,
-    ) -> Self {
+    pub fn new(construct_info: ConstructInfo, variables: impl Into<Vec<Arc<Variable>>>) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::Object),
             variables: variables.into(),
@@ -640,8 +642,7 @@ impl Object {
             id: actor_id,
             description: object_description,
         } = construct_info;
-        let construct_info =
-            ConstructInfo::new(actor_id.with_child_id(0), object_description);
+        let construct_info = ConstructInfo::new(actor_id.with_child_id(0), object_description);
         let actor_construct_info = ConstructInfo::new(actor_id, "Constant object wrapper")
             .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, variables.into());
@@ -972,7 +973,7 @@ impl List {
         items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Self {
         let change_stream = constant(ListChange::Replace {
-            items: items.into()
+            items: items.into(),
         });
         Self::new_with_change_stream(construct_info, actor_context, change_stream, ())
     }
@@ -991,11 +992,13 @@ impl List {
             let output_valve_signal = actor_context.output_valve_signal;
             async move {
                 let output_valve_signal = output_valve_signal;
-                let mut output_valve_impulse_stream = if let Some(output_valve_signal) = &output_valve_signal {
-                    output_valve_signal.subscribe().left_stream()
-                } else {
-                    stream::pending().right_stream()
-                }.fuse();
+                let mut output_valve_impulse_stream =
+                    if let Some(output_valve_signal) = &output_valve_signal {
+                        output_valve_signal.subscribe().left_stream()
+                    } else {
+                        stream::pending().right_stream()
+                    }
+                    .fuse();
                 let mut change_stream = pin!(change_stream.fuse());
                 let mut change_senders = Vec::<mpsc::UnboundedSender<ListChange>>::new();
                 let mut list = None;
@@ -1040,8 +1043,8 @@ impl List {
                             }
                         }
                         impulse = output_valve_impulse_stream.next() => {
-                            if impulse.is_none() { 
-                                break 
+                            if impulse.is_none() {
+                                break
                             }
                             if let Some(list) = list.as_ref() {
                                 change_senders.retain(|change_sender| {

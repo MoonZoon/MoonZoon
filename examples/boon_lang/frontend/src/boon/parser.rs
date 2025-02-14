@@ -4,7 +4,7 @@ mod lexer;
 pub use lexer::{lexer, Token};
 
 mod scope_resolver;
-pub use scope_resolver::{Referenceables, resolve_references};
+pub use scope_resolver::{resolve_references, Referenceables};
 
 pub use chumsky::prelude::{Input, Parser};
 
@@ -41,8 +41,14 @@ where
         let pascal_case_identifier =
             select! { Token::PascalCaseIdentifier(identifier) => identifier };
 
-        let variable = group((snake_case_identifier, colon, expression.clone()))
-            .map(|(name, _, value)| Variable { name, reference_count: 0, value });
+        let variable =
+            group((snake_case_identifier, colon, expression.clone())).map(|(name, _, value)| {
+                Variable {
+                    name,
+                    reference_count: 0,
+                    value,
+                }
+            });
 
         let expression_variable = variable
             .clone()
@@ -64,7 +70,11 @@ where
                 .map_with(|(name, value), extra| {
                     let value = value.map(|(_, value)| value);
                     Spanned {
-                        node: Argument { name, reference_count: 0, value },
+                        node: Argument {
+                            name,
+                            reference_count: 0,
+                            value,
+                        },
                         span: extra.span(),
                     }
                 });
@@ -134,7 +144,10 @@ where
                 .separated_by(dot)
                 .at_least(1)
                 .collect::<Vec<_>>()
-                .map(|parts| Alias::WithoutPassed { parts, referenceables: Referenceables::new() });
+                .map(|parts| Alias::WithoutPassed {
+                    parts,
+                    referenceables: Referenceables::new(),
+                });
 
             alias_with_passed.or(alias_without_passed)
         };
@@ -441,11 +454,11 @@ pub struct Argument<'code> {
 
 #[derive(Debug)]
 pub enum Alias<'code> {
-    WithoutPassed { 
-        parts: Vec<&'code str>, 
+    WithoutPassed {
+        parts: Vec<&'code str>,
         referenceables: Referenceables<'code>,
     },
-    WithPassed { 
+    WithPassed {
         extra_parts: Vec<&'code str>,
     },
 }
