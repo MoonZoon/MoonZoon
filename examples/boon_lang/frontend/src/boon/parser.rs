@@ -1,11 +1,12 @@
 use chumsky::{input::ValueInput, pratt::*, prelude::*};
-use std::collections::BTreeMap;
 
 mod lexer;
-pub use lexer::Token;
+pub use lexer::{lexer, Token};
+
+mod scope_resolver;
+pub use scope_resolver::{Referenceables, resolve_references};
 
 pub use chumsky::prelude::{Input, Parser};
-pub use lexer::lexer;
 
 pub type Span = SimpleSpan;
 pub type ParseError<'code, T> = Rich<'code, T, Span>;
@@ -133,7 +134,7 @@ where
                 .separated_by(dot)
                 .at_least(1)
                 .collect::<Vec<_>>()
-                .map(|parts| Alias::WithoutPassed { parts, referenceable_variables_and_arguments: BTreeMap::new() });
+                .map(|parts| Alias::WithoutPassed { parts, referenceables: Referenceables::new() });
 
             alias_with_passed.or(alias_without_passed)
         };
@@ -442,7 +443,7 @@ pub struct Argument<'code> {
 pub enum Alias<'code> {
     WithoutPassed { 
         parts: Vec<&'code str>, 
-        referenceable_variables_and_arguments: BTreeMap<&'code str, Span>,
+        referenceables: Referenceables<'code>,
     },
     WithPassed { 
         extra_parts: Vec<&'code str>,

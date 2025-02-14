@@ -1,4 +1,4 @@
-use crate::boon::parser::{lexer, parser, Input, ParseError, Parser, Span, Spanned, Token};
+use crate::boon::parser::{lexer, parser, Input, ParseError, Parser, Span, Spanned, Token, resolve_references};
 use crate::boon::platform::browser::{engine::Object, evaluator::evaluate};
 use ariadne::{Config, Label, Report, ReportKind, Source};
 use std::fmt;
@@ -44,7 +44,18 @@ pub fn run(filename: &str, source_code: &str) -> Option<Arc<Object>> {
         return None;
     };
 
-    let errors = match evaluate(ast) {
+    let ast_with_reference_data = match resolve_references(ast) {
+        Ok(ast_with_reference_data) => ast_with_reference_data,
+        Err(errors) => {
+            println!("[Reference Errors]");
+            report_errors(errors, filename, source_code);
+            return None
+        }
+    };
+    println!("[Abstract Syntax Tree with Reference Data]");
+    println!("{ast_with_reference_data:#?}");
+
+    let errors = match evaluate(ast_with_reference_data) {
         Ok(root_object) => return Some(root_object),
         Err(evaluation_error) => [evaluation_error]
     };

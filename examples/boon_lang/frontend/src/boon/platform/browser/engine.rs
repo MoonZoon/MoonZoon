@@ -282,7 +282,7 @@ impl VariableOrArgumentReference {
         let construct_info = construct_info.complete(ConstructType::VariableOrArgumentReference);
         let mut skip_alias_parts = 0;
         let alias_parts = match alias {
-            parser::Alias::WithoutPassed { parts, referenceable_variables_and_arguments: _ } => {
+            parser::Alias::WithoutPassed { parts, referenceables: _ } => {
                 skip_alias_parts = 1;
                 parts
             }
