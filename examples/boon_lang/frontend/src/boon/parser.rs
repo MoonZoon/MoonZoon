@@ -146,7 +146,7 @@ where
                 .collect::<Vec<_>>()
                 .map(|parts| Alias::WithoutPassed {
                     parts,
-                    referenceables: Referenceables::new(),
+                    referenceables: None,
                 });
 
             alias_with_passed.or(alias_without_passed)
@@ -456,7 +456,7 @@ pub struct Argument<'code> {
 pub enum Alias<'code> {
     WithoutPassed {
         parts: Vec<&'code str>,
-        referenceables: Referenceables<'code>,
+        referenceables: Option<Referenceables<'code>>,
     },
     WithPassed {
         extra_parts: Vec<&'code str>,
