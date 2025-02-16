@@ -11,6 +11,7 @@ type EvaluateResult<'code, T> = Result<T, ParseError<'code, Token<'code>>>;
 
 pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Arc<Object>> {
     let actor_context = ActorContext::default();
+    let reference_connector = Arc::new(ReferenceConnector::new());
     Ok(Object::new_arc(
         ConstructInfo::new(0, "root"),
         expressions
@@ -27,6 +28,7 @@ pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Arc<Obj
                                 node: *variable,
                             },
                             actor_context.clone(),
+                            reference_connector.clone(),
                         ),
                         Expression::Function {
                             name,
@@ -51,28 +53,33 @@ pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Arc<Obj
 fn spanned_variable_into_variable(
     variable: Spanned<parser::Variable>,
     actor_context: ActorContext,
+    reference_connector: Arc<ReferenceConnector>,
 ) -> EvaluateResult<Arc<Variable>> {
     let Spanned {
         span,
         node: variable,
     } = variable;
-    let variable_name = variable.name.to_owned();
-    let construct_info = ConstructInfo::new(1, format!("{span}; {variable_name}"));
+    let parser::Variable { name, value, is_referenced } = variable;
+    let name: String = name.to_owned();
+    let construct_info = ConstructInfo::new(1, format!("{span}; {name}"));
     let variable = if matches!(
-        &variable.value,
+        &value,
         Spanned {
             span: _,
             node: Expression::Link
         }
     ) {
-        Variable::new_link_arc(construct_info, variable_name, actor_context)
+        Variable::new_link_arc(construct_info, name, actor_context)
     } else {
         Variable::new_arc(
             construct_info,
-            variable_name,
-            spanned_expression_into_value_actor(variable.value, actor_context)?,
+            name,
+            spanned_expression_into_value_actor(value, actor_context, reference_connector.clone())?,
         )
     };
+    if is_referenced {
+        reference_connector.register_referenceable(span, variable.value_actor());
+    }
     Ok(variable)
 }
 
@@ -80,6 +87,7 @@ fn spanned_variable_into_variable(
 fn spanned_expression_into_value_actor(
     expression: Spanned<Expression>,
     actor_context: ActorContext,
+    reference_connector: Arc<ReferenceConnector>,
 ) -> EvaluateResult<Arc<ValueActor>> {
     let Spanned {
         span,
@@ -118,7 +126,7 @@ fn spanned_expression_into_value_actor(
             actor_context.clone(),
             items
                 .into_iter()
-                .map(|item| spanned_expression_into_value_actor(item, actor_context.clone()))
+                .map(|item| spanned_expression_into_value_actor(item, actor_context.clone(), reference_connector.clone()))
                 .collect::<Result<Vec<_>, _>>()?,
         ),
         Expression::Object(object) => Object::new_arc_value_actor(
@@ -127,7 +135,7 @@ fn spanned_expression_into_value_actor(
             object
                 .variables
                 .into_iter()
-                .map(|variable| spanned_variable_into_variable(variable, actor_context.clone()))
+                .map(|variable| spanned_variable_into_variable(variable, actor_context.clone(), reference_connector.clone()))
                 .collect::<Result<Vec<_>, _>>()?,
         ),
         Expression::TaggedObject { tag, object } => TaggedObject::new_arc_value_actor(
@@ -137,7 +145,7 @@ fn spanned_expression_into_value_actor(
             object
                 .variables
                 .into_iter()
-                .map(|variable| spanned_variable_into_variable(variable, actor_context.clone()))
+                .map(|variable| spanned_variable_into_variable(variable, actor_context.clone(), reference_connector.clone()))
                 .collect::<Result<Vec<_>, _>>()?,
         ),
         Expression::Map { entries } => Err(ParseError::custom(
@@ -177,16 +185,48 @@ fn spanned_expression_into_value_actor(
                                     "Out arguments not supported yet, sorry",
                                 ))?
                             };
-                            spanned_expression_into_value_actor(value, actor_context.clone())
+                            let actor = spanned_expression_into_value_actor(value, actor_context.clone(), reference_connector.clone());
+                            if is_referenced {
+                                if let Ok(actor) = &actor {
+                                    reference_connector.register_referenceable(span, actor.clone());
+                                }
+                            }
+                            actor
                         },
                     )
                     .collect::<Result<Vec<_>, _>>()?,
             )
         }
-        Expression::Alias(aliast) => Err(ParseError::custom(
-            span,
-            "Not supported yet, sorry [Expression::Alias]",
-        ))?,
+        Expression::Alias(alias) => {
+            let root_value_actor = match &alias {
+                parser::Alias::WithPassed { extra_parts } => {
+                    Err(ParseError::custom(
+                        span,
+                        "Aliases with PASSED not supported yet, sorry",
+                    ))?
+                }
+                parser::Alias::WithoutPassed { parts, referenceables } => {
+                    let referenced = referenceables
+                        .as_ref()
+                        .expect("Failed to get alias referenceables in evaluator")
+                        .referenced;
+                    if let Some(referenced) = referenced {
+                        reference_connector.referenceable(referenced.span)
+                    } else {
+                        Err(ParseError::custom(
+                            span,
+                            "Failed to get aliased variable or argument",
+                        ))?
+                    }
+                }
+            };
+            VariableOrArgumentReference::new_arc_value_actor(
+                ConstructInfo::new(13, format!("{span}; {{..}} (alias)")),
+                actor_context,
+                alias,
+                root_value_actor,
+            )
+        },
         Expression::LinkSetter { alias } => Err(ParseError::custom(
             span,
             "Not supported yet, sorry [Expression::LinkSetter]",
@@ -200,7 +240,7 @@ fn spanned_expression_into_value_actor(
             actor_context.clone(),
             inputs
                 .into_iter()
-                .map(|input| spanned_expression_into_value_actor(input, actor_context.clone()))
+                .map(|input| spanned_expression_into_value_actor(input, actor_context.clone(), reference_connector.clone()))
                 .collect::<Result<Vec<_>, _>>()?,
         ),
         Expression::Then { body } => Err(ParseError::custom(
@@ -215,7 +255,7 @@ fn spanned_expression_into_value_actor(
             span,
             "Not supported yet, sorry [Expression::While]",
         ))?,
-        Expression::Pipe { from, to } => pipe(from, to, actor_context)?,
+        Expression::Pipe { from, to } => pipe(from, to, actor_context, reference_connector)?,
         Expression::Skip => Err(ParseError::custom(
             span,
             "Not supported yet, sorry [Expression::Skip]",
@@ -274,6 +314,7 @@ fn pipe<'code>(
     from: Box<Spanned<Expression<'code>>>,
     mut to: Box<Spanned<Expression<'code>>>,
     actor_context: ActorContext,
+    reference_connector: Arc<ReferenceConnector>,
 ) -> EvaluateResult<'code, Arc<ValueActor>> {
     // @TODO destructure to?
     let to_span = to.span;
@@ -292,7 +333,7 @@ fn pipe<'code>(
             };
             // @TODO arguments: Vec -> arguments: VecDeque?
             arguments.insert(0, argument);
-            spanned_expression_into_value_actor(*to, actor_context)
+            spanned_expression_into_value_actor(*to, actor_context, reference_connector)
         }
         Expression::LinkSetter { alias } => Err(ParseError::custom(
             to.span,
@@ -307,9 +348,9 @@ fn pipe<'code>(
             Ok(ThenCombinator::new_arc_value_actor(
                 ConstructInfo::new(4, format!("{to_span}; THEN")),
                 actor_context.clone(),
-                spanned_expression_into_value_actor(*from, actor_context.clone())?,
+                spanned_expression_into_value_actor(*from, actor_context.clone(), reference_connector.clone())?,
                 impulse_sender,
-                spanned_expression_into_value_actor(*body, body_actor_context)?,
+                spanned_expression_into_value_actor(*body, body_actor_context, reference_connector)?,
             ))
         }
         Expression::When { arms } => Err(ParseError::custom(

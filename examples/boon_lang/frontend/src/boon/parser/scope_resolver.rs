@@ -6,16 +6,16 @@ pub type ReachableReferenceables<'code> = BTreeMap<&'code str, Referenceable<'co
 
 #[derive(Debug)]
 pub struct Referenceables<'code> {
-    referenced: Option<Referenceable<'code>>,
+    pub referenced: Option<Referenceable<'code>>,
     // @TODO remove?
-    reachable: ReachableReferenceables<'code>,
+    pub reachable: ReachableReferenceables<'code>,
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Referenceable<'code> {
-    name: &'code str,
-    span: Span,
-    level: usize,
+    pub name: &'code str,
+    pub span: Span,
+    pub level: usize,
 }
 
 pub type ResolveError<'code> = ParseError<'code, Token<'code>>;
@@ -137,7 +137,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 set_is_referenced_and_alias_referenceables(&mut variable.value, reachable_referenceables.clone(), level, errors, all_referenced);
             }
             set_is_referenced_and_alias_referenceables(output, reachable_referenceables, level, errors, all_referenced);
-            for mut variable in variables.iter_mut() {
+            for variable in variables.iter_mut() {
                 let Spanned { span, node: variable } = variable;
                 let name = &variable.name;
                 if all_referenced.contains(&Referenceable { name, span: *span, level }) {
@@ -146,7 +146,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
             }
         }
         Expression::List { items } => {
-            for mut item in items {
+            for item in items {
                 set_is_referenced_and_alias_referenceables(item, reachable_referenceables.clone(), level, errors, all_referenced);
             }
         }
@@ -155,7 +155,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
             errors.push(ResolveError::custom(*span, "Scope resolver cannot resolve references in Expression::Map yet, sorry".to_owned()))
         }
         Expression::Latest { inputs } => {
-            for mut input in inputs {
+            for input in inputs {
                 set_is_referenced_and_alias_referenceables(input, reachable_referenceables.clone(), level, errors, all_referenced);
             }
         }
