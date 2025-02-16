@@ -1,5 +1,5 @@
 use super::{Expression, ParseError, Span, Spanned, Token, Alias};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 // @TODO immutable or different tree traversal algorithm?
 pub type ReachableReferenceables<'code> = BTreeMap<&'code str, Referenceable<'code>>;
@@ -11,7 +11,7 @@ pub struct Referenceables<'code> {
     reachable: ReachableReferenceables<'code>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct Referenceable<'code> {
     name: &'code str,
     span: Span,
@@ -26,7 +26,7 @@ pub fn resolve_references(
 ) -> Result<Vec<Spanned<Expression>>, Vec<ResolveError>> {
     let mut reachable_referenceables = ReachableReferenceables::default();
     let level = 0;
-    for mut expressions in &expressions {
+    for expressions in &expressions {
         let Spanned { span, node: expression } = expressions;
         if let Expression::Variable(variable) = expression {
             let name = &variable.name;
@@ -34,8 +34,18 @@ pub fn resolve_references(
         }
     }
     let mut errors = Vec::new();
+    let mut all_referenced = HashSet::new();
     for expression in &mut expressions {
-        set_reference_count_and_alias_referenceables(expression, reachable_referenceables.clone(), level, &mut errors);
+        set_is_referenced_and_alias_referenceables(expression, reachable_referenceables.clone(), level, &mut errors, &mut all_referenced);
+    }
+    for expressions in &mut expressions {
+        let Spanned { span, node: expression } = expressions;
+        if let Expression::Variable(variable) = expression {
+            let name = &variable.name;
+            if all_referenced.contains(&Referenceable { name, span: *span, level }) {
+                variable.is_referenced = true;
+            }
+        }
     }
     if errors.is_empty() {
         Ok(expressions)
@@ -44,16 +54,17 @@ pub fn resolve_references(
     }
 }
 
-fn set_reference_count_and_alias_referenceables<'a, 'code>(
+fn set_is_referenced_and_alias_referenceables<'a, 'code>(
     mut expression: &'a mut Spanned<Expression<'code>>,
     mut reachable_referenceables: ReachableReferenceables<'code>,
     mut level: usize,
     errors: &mut Vec<ResolveError>,
+    all_referenced: &mut HashSet<Referenceable<'code>>,
 ) {
     let Spanned { span, node: expression } = &mut expression;
     match expression {
         Expression::Variable(variable) => {
-            set_reference_count_and_alias_referenceables(&mut variable.value, reachable_referenceables, level, errors);
+            set_is_referenced_and_alias_referenceables(&mut variable.value, reachable_referenceables, level, errors, all_referenced);
         }
         Expression::Object(object) => {
             level += 1;
@@ -64,7 +75,14 @@ fn set_reference_count_and_alias_referenceables<'a, 'code>(
             }
             for mut variable in &mut object.variables {
                 let Spanned { span, node: variable } = variable;
-                set_reference_count_and_alias_referenceables(&mut variable.value, reachable_referenceables.clone(), level, errors);
+                set_is_referenced_and_alias_referenceables(&mut variable.value, reachable_referenceables.clone(), level, errors, all_referenced);
+            }
+            for mut variable in &mut object.variables {
+                let Spanned { span, node: variable } = variable;
+                let name = &variable.name;
+                if all_referenced.contains(&Referenceable { name, span: *span, level }) {
+                    variable.is_referenced = true;
+                }
             }
         }
         Expression::TaggedObject { tag, object } => {
@@ -76,7 +94,14 @@ fn set_reference_count_and_alias_referenceables<'a, 'code>(
             }
             for mut variable in &mut object.variables {
                 let Spanned { span, node: variable } = variable;
-                set_reference_count_and_alias_referenceables(&mut variable.value, reachable_referenceables.clone(), level, errors);
+                set_is_referenced_and_alias_referenceables(&mut variable.value, reachable_referenceables.clone(), level, errors, all_referenced);
+            }
+            for mut variable in &mut object.variables {
+                let Spanned { span, node: variable } = variable;
+                let name = &variable.name;
+                if all_referenced.contains(&Referenceable { name, span: *span, level }) {
+                    variable.is_referenced = true;
+                }
             }
         }
         Expression::FunctionCall { path, arguments } => {
@@ -86,10 +111,17 @@ fn set_reference_count_and_alias_referenceables<'a, 'code>(
                 let name = &argument.name;
                 reachable_referenceables.insert(name, Referenceable { name, span: *span, level });
             }
-            for mut argument in arguments {
+            for argument in arguments.iter_mut() {
                 let Spanned { span, node: argument } = argument;
                 if let Some(value) = argument.value.as_mut() {
-                    set_reference_count_and_alias_referenceables(value, reachable_referenceables.clone(), level, errors);
+                    set_is_referenced_and_alias_referenceables(value, reachable_referenceables.clone(), level, errors, all_referenced);
+                }
+            }
+            for argument in arguments.iter_mut() {
+                let Spanned { span, node: argument } = argument;
+                let name = &argument.name;
+                if all_referenced.contains(&Referenceable { name, span: *span, level }) {
+                    argument.is_referenced = true;
                 }
             }
         }
@@ -100,15 +132,22 @@ fn set_reference_count_and_alias_referenceables<'a, 'code>(
                 let name = &variable.name;
                 reachable_referenceables.insert(name, Referenceable { name, span: *span, level });
             }
-            for mut variable in variables {
+            for variable in variables.iter_mut() {
                 let Spanned { span, node: variable } = variable;
-                set_reference_count_and_alias_referenceables(&mut variable.value, reachable_referenceables.clone(), level, errors);
+                set_is_referenced_and_alias_referenceables(&mut variable.value, reachable_referenceables.clone(), level, errors, all_referenced);
             }
-            set_reference_count_and_alias_referenceables(output, reachable_referenceables, level, errors);
+            set_is_referenced_and_alias_referenceables(output, reachable_referenceables, level, errors, all_referenced);
+            for mut variable in variables.iter_mut() {
+                let Spanned { span, node: variable } = variable;
+                let name = &variable.name;
+                if all_referenced.contains(&Referenceable { name, span: *span, level }) {
+                    variable.is_referenced = true;
+                }
+            }
         }
         Expression::List { items } => {
             for mut item in items {
-                set_reference_count_and_alias_referenceables(item, reachable_referenceables.clone(), level, errors);
+                set_is_referenced_and_alias_referenceables(item, reachable_referenceables.clone(), level, errors, all_referenced);
             }
         }
         Expression::Map { entries } => {
@@ -117,11 +156,11 @@ fn set_reference_count_and_alias_referenceables<'a, 'code>(
         }
         Expression::Latest { inputs } => {
             for mut input in inputs {
-                set_reference_count_and_alias_referenceables(input, reachable_referenceables.clone(), level, errors);
+                set_is_referenced_and_alias_referenceables(input, reachable_referenceables.clone(), level, errors, all_referenced);
             }
         }
         Expression::Then { body } => {
-            set_reference_count_and_alias_referenceables(body, reachable_referenceables, level, errors);
+            set_is_referenced_and_alias_referenceables(body, reachable_referenceables, level, errors, all_referenced);
         }
         Expression::When { arms } => {
             // @TODO implement, see the error message below
@@ -132,8 +171,8 @@ fn set_reference_count_and_alias_referenceables<'a, 'code>(
             errors.push(ResolveError::custom(*span, "Scope resolver cannot resolve references in Expression::While yet, sorry".to_owned()))
         }
         Expression::Pipe { from, to } => {
-            set_reference_count_and_alias_referenceables(from, reachable_referenceables.clone(), level, errors);
-            set_reference_count_and_alias_referenceables(to, reachable_referenceables, level, errors);
+            set_is_referenced_and_alias_referenceables(from, reachable_referenceables.clone(), level, errors, all_referenced);
+            set_is_referenced_and_alias_referenceables(to, reachable_referenceables, level, errors, all_referenced);
         }
         Expression::ArithmeticOperator(_) => {
             // @TODO implement, see the error message below
@@ -148,11 +187,11 @@ fn set_reference_count_and_alias_referenceables<'a, 'code>(
             errors.push(ResolveError::custom(*span, "Scope resolver cannot resolve references in Expression::Function yet, sorry".to_owned()))
         },
         Expression::Alias(alias) => {
-            set_referenced_referenceable(alias, *span, reachable_referenceables, errors)
+            set_referenced_referenceable(alias, *span, reachable_referenceables, errors, all_referenced)
         }
         Expression::LinkSetter { alias } =>  {
             let Spanned { span, node: alias } = alias;
-            set_referenced_referenceable(alias, *span, reachable_referenceables, errors)
+            set_referenced_referenceable(alias, *span, reachable_referenceables, errors, all_referenced)
         },
         Expression::Literal(_) => (),
         Expression::Link => (),
@@ -165,6 +204,7 @@ fn set_referenced_referenceable<'code>(
     span: Span, 
     reachable_referenceables: ReachableReferenceables<'code>,
     errors: &mut Vec<ResolveError>,
+    all_referenced: &mut HashSet<Referenceable<'code>>,
 ) {
     match alias {
         Alias::WithPassed { extra_parts } => (),
@@ -176,7 +216,9 @@ fn set_referenced_referenceable<'code>(
                 return;
             }
             let referenced = reachable_referenceables.get(first_part).copied();
-            if referenced.is_none() {
+            if let Some(referenced) = referenced {
+                all_referenced.insert(referenced);
+            } else {
                 let reachable_names = reachable_referenceables.keys();
                 errors.push(ResolveError::custom(span, format!("Cannot find the variable or argument '{first_part}'. You can refer to: {reachable_names:?}")))
             }

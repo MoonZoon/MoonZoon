@@ -88,7 +88,7 @@ fn spanned_expression_into_value_actor(
     let actor = match expression {
         Expression::Variable(variable) => Err(ParseError::custom(
             span,
-            "Not supported yet, sorry [Expression::Variable]",
+            "Failed to evalute the variable in this context.",
         ))?,
         Expression::Literal(literal) => match literal {
             parser::Literal::Number(number) => Number::new_arc_value_actor(
@@ -168,7 +168,7 @@ fn spanned_expression_into_value_actor(
                             let parser::Argument {
                                 name,
                                 value,
-                                reference_count,
+                                is_referenced,
                             } = argument;
                             let Some(value) = value else {
                                 // @TODO support out arguments
@@ -287,7 +287,7 @@ fn pipe<'code>(
                 node: parser::Argument {
                     name: "",
                     value: Some(*from),
-                    reference_count: 0,
+                    is_referenced: false,
                 },
             };
             // @TODO arguments: Vec -> arguments: VecDeque?

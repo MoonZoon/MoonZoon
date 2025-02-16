@@ -45,7 +45,7 @@ where
             group((snake_case_identifier, colon, expression.clone())).map(|(name, _, value)| {
                 Variable {
                     name,
-                    reference_count: 0,
+                    is_referenced: false,
                     value,
                 }
             });
@@ -72,7 +72,7 @@ where
                     Spanned {
                         node: Argument {
                             name,
-                            reference_count: 0,
+                            is_referenced: false,
                             value,
                         },
                         span: extra.span(),
@@ -422,7 +422,7 @@ pub struct Object<'code> {
 #[derive(Debug)]
 pub struct Variable<'code> {
     pub name: &'code str,
-    pub reference_count: usize,
+    pub is_referenced: bool,
     pub value: Spanned<Expression<'code>>,
 }
 
@@ -448,7 +448,7 @@ pub enum MapEntryKey<'code> {
 #[derive(Debug)]
 pub struct Argument<'code> {
     pub name: &'code str,
-    pub reference_count: usize,
+    pub is_referenced: bool,
     pub value: Option<Spanned<Expression<'code>>>,
 }
 
