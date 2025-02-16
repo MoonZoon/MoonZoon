@@ -68,16 +68,16 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
         }
         Expression::Object(object) => {
             level += 1;
-            for mut variable in &object.variables {
+            for variable in &object.variables {
                 let Spanned { span, node: variable } = variable;
                 let name = &variable.name;
                 reachable_referenceables.insert(name, Referenceable { name, span: *span, level });
             }
-            for mut variable in &mut object.variables {
+            for variable in &mut object.variables {
                 let Spanned { span, node: variable } = variable;
                 set_is_referenced_and_alias_referenceables(&mut variable.value, reachable_referenceables.clone(), level, errors, all_referenced);
             }
-            for mut variable in &mut object.variables {
+            for variable in &mut object.variables {
                 let Spanned { span, node: variable } = variable;
                 let name = &variable.name;
                 if all_referenced.contains(&Referenceable { name, span: *span, level }) {
@@ -87,16 +87,16 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
         }
         Expression::TaggedObject { tag, object } => {
             level += 1;
-            for mut variable in &object.variables {
+            for variable in &object.variables {
                 let Spanned { span, node: variable } = variable;
                 let name = &variable.name;
                 reachable_referenceables.insert(name, Referenceable { name, span: *span, level });
             }
-            for mut variable in &mut object.variables {
+            for variable in &mut object.variables {
                 let Spanned { span, node: variable } = variable;
                 set_is_referenced_and_alias_referenceables(&mut variable.value, reachable_referenceables.clone(), level, errors, all_referenced);
             }
-            for mut variable in &mut object.variables {
+            for variable in &mut object.variables {
                 let Spanned { span, node: variable } = variable;
                 let name = &variable.name;
                 if all_referenced.contains(&Referenceable { name, span: *span, level }) {

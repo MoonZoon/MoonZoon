@@ -2,13 +2,15 @@
 #![allow(dead_code)]
 
 use std::borrow::Cow;
+use std::future::Future;
 use std::pin::pin;
 use std::sync::Arc;
+use std::collections::HashMap;
 
 use crate::boon::parser;
 
 use zoon::future;
-use zoon::futures_channel::mpsc;
+use zoon::futures_channel::{mpsc, oneshot};
 use zoon::futures_util::select;
 use zoon::futures_util::stream::{self, Stream, StreamExt};
 use zoon::{eprintln, println};
@@ -16,6 +18,7 @@ use zoon::{Task, TaskHandle};
 
 // @TODO Replace `[]` with `impl Into<Vec..` and `&'static str` with `Cow<'static, str>` everywhere?
 
+// @TODO remove?
 // --- PipeTo ---
 
 pub trait PipeTo {
@@ -276,7 +279,7 @@ impl VariableOrArgumentReference {
         construct_info: ConstructInfo,
         actor_context: ActorContext,
         alias: parser::Alias<'code>,
-        root_value_actor_receiver: mpsc::UnboundedReceiver<Arc<ValueActor>>,
+        root_value_actor: impl Future<Output =  Arc<ValueActor>> + 'static,
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::VariableOrArgumentReference);
         let mut skip_alias_parts = 0;
@@ -290,7 +293,7 @@ impl VariableOrArgumentReference {
             }
             parser::Alias::WithPassed { extra_parts } => extra_parts,
         };
-        let mut value_stream = root_value_actor_receiver
+        let mut value_stream = stream::once(root_value_actor)
             .flat_map(|actor| actor.subscribe())
             .boxed_local();
         for alias_part in alias_parts.into_iter().skip(skip_alias_parts) {
@@ -314,6 +317,67 @@ impl VariableOrArgumentReference {
             value_stream,
             (),
         ))
+    }
+}
+
+// --- ReferenceConnector ---
+
+pub struct ReferenceConnector {
+    referenceable_inserter_sender: mpsc::UnboundedSender<(parser::Span, Arc<ValueActor>)>,
+    referenceable_getter_sender: mpsc::UnboundedSender<(parser::Span, oneshot::Sender<Arc<ValueActor>>)>,
+    loop_task: TaskHandle
+}
+
+impl ReferenceConnector {
+    pub fn new() -> Self {
+        let (referenceable_inserter_sender, mut referenceable_inserter_receiver) = mpsc::unbounded();
+        let (referenceable_getter_sender, mut referenceable_getter_receiver) = mpsc::unbounded();
+        Self {
+            referenceable_inserter_sender,
+            referenceable_getter_sender,
+            loop_task: Task::start_droppable(async move {
+                let mut referenceables = HashMap::<parser::Span, Arc<ValueActor>>::new();
+                let mut referenceable_senders = HashMap::<parser::Span, Vec<oneshot::Sender<Arc<ValueActor>>>>::new();
+                loop {
+                    select! {
+                        (span, actor) = referenceable_inserter_receiver.select_next_some() => {
+                            if let Some(senders) = referenceable_senders.remove(&span) {
+                                for sender in senders {
+                                    if sender.send(actor.clone()).is_err() {
+                                        eprintln!("Failed to send referenceable actor from reference connector");
+                                    }
+                                }
+                            }
+                            referenceables.insert(span, actor);
+                        },
+                        (span, referenceable_sender) = referenceable_getter_receiver.select_next_some() => {
+                            if let Some(actor) = referenceables.get(&span) {
+                                if referenceable_sender.send(actor.clone()).is_err() {
+                                    eprintln!("Failed to send referenceable actor from reference connector");
+                                }
+                            } else {
+                                referenceable_senders.entry(span).or_default().push(referenceable_sender);
+                            }
+                        }
+                    }
+                }
+            })
+        }
+    }
+
+    pub fn register_referenceable(&self, span: parser::Span, actor: Arc<ValueActor>) {
+        if let Err(error) = self.referenceable_inserter_sender.unbounded_send((span, actor)) {
+            eprintln!("Failed to register referenceable: {error:#}")
+        }
+    }
+
+    // @TODO is &self enough?
+    pub async fn referenceable(self: Arc<Self>, span: parser::Span) -> Arc<ValueActor> {
+        let (referenceable_sender, referenceable_receiver) = oneshot::channel();
+        if let Err(error) = self.referenceable_getter_sender.unbounded_send((span, referenceable_sender)) {
+            eprintln!("Failed to register referenceable: {error:#}")
+        }
+        referenceable_receiver.await.expect("Failed to get referenceable from ReferenceConnector")
     }
 }
 
