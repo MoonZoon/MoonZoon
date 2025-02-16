@@ -1,4 +1,4 @@
-use super::{Expression, ParseError, Span, Spanned, Token, Alias};
+use super::{Alias, Expression, ParseError, Span, Spanned, Token};
 use std::collections::{BTreeMap, HashSet};
 
 // @TODO immutable or different tree traversal algorithm?
@@ -27,22 +27,45 @@ pub fn resolve_references(
     let mut reachable_referenceables = ReachableReferenceables::default();
     let level = 0;
     for expressions in &expressions {
-        let Spanned { span, node: expression } = expressions;
+        let Spanned {
+            span,
+            node: expression,
+        } = expressions;
         if let Expression::Variable(variable) = expression {
             let name = &variable.name;
-            reachable_referenceables.insert(name, Referenceable { name, span: *span, level });
+            reachable_referenceables.insert(
+                name,
+                Referenceable {
+                    name,
+                    span: *span,
+                    level,
+                },
+            );
         }
     }
     let mut errors = Vec::new();
     let mut all_referenced = HashSet::new();
     for expression in &mut expressions {
-        set_is_referenced_and_alias_referenceables(expression, reachable_referenceables.clone(), level, &mut errors, &mut all_referenced);
+        set_is_referenced_and_alias_referenceables(
+            expression,
+            reachable_referenceables.clone(),
+            level,
+            &mut errors,
+            &mut all_referenced,
+        );
     }
     for expressions in &mut expressions {
-        let Spanned { span, node: expression } = expressions;
+        let Spanned {
+            span,
+            node: expression,
+        } = expressions;
         if let Expression::Variable(variable) = expression {
             let name = &variable.name;
-            if all_referenced.contains(&Referenceable { name, span: *span, level }) {
+            if all_referenced.contains(&Referenceable {
+                name,
+                span: *span,
+                level,
+            }) {
                 variable.is_referenced = true;
             }
         }
@@ -61,26 +84,61 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
     errors: &mut Vec<ResolveError>,
     all_referenced: &mut HashSet<Referenceable<'code>>,
 ) {
-    let Spanned { span, node: expression } = &mut expression;
+    let Spanned {
+        span,
+        node: expression,
+    } = &mut expression;
     match expression {
         Expression::Variable(variable) => {
-            set_is_referenced_and_alias_referenceables(&mut variable.value, reachable_referenceables, level, errors, all_referenced);
+            set_is_referenced_and_alias_referenceables(
+                &mut variable.value,
+                reachable_referenceables,
+                level,
+                errors,
+                all_referenced,
+            );
         }
         Expression::Object(object) => {
             level += 1;
             for variable in &object.variables {
-                let Spanned { span, node: variable } = variable;
+                let Spanned {
+                    span,
+                    node: variable,
+                } = variable;
                 let name = &variable.name;
-                reachable_referenceables.insert(name, Referenceable { name, span: *span, level });
+                reachable_referenceables.insert(
+                    name,
+                    Referenceable {
+                        name,
+                        span: *span,
+                        level,
+                    },
+                );
             }
             for variable in &mut object.variables {
-                let Spanned { span, node: variable } = variable;
-                set_is_referenced_and_alias_referenceables(&mut variable.value, reachable_referenceables.clone(), level, errors, all_referenced);
+                let Spanned {
+                    span,
+                    node: variable,
+                } = variable;
+                set_is_referenced_and_alias_referenceables(
+                    &mut variable.value,
+                    reachable_referenceables.clone(),
+                    level,
+                    errors,
+                    all_referenced,
+                );
             }
             for variable in &mut object.variables {
-                let Spanned { span, node: variable } = variable;
+                let Spanned {
+                    span,
+                    node: variable,
+                } = variable;
                 let name = &variable.name;
-                if all_referenced.contains(&Referenceable { name, span: *span, level }) {
+                if all_referenced.contains(&Referenceable {
+                    name,
+                    span: *span,
+                    level,
+                }) {
                     variable.is_referenced = true;
                 }
             }
@@ -88,18 +146,44 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
         Expression::TaggedObject { tag, object } => {
             level += 1;
             for variable in &object.variables {
-                let Spanned { span, node: variable } = variable;
+                let Spanned {
+                    span,
+                    node: variable,
+                } = variable;
                 let name = &variable.name;
-                reachable_referenceables.insert(name, Referenceable { name, span: *span, level });
+                reachable_referenceables.insert(
+                    name,
+                    Referenceable {
+                        name,
+                        span: *span,
+                        level,
+                    },
+                );
             }
             for variable in &mut object.variables {
-                let Spanned { span, node: variable } = variable;
-                set_is_referenced_and_alias_referenceables(&mut variable.value, reachable_referenceables.clone(), level, errors, all_referenced);
+                let Spanned {
+                    span,
+                    node: variable,
+                } = variable;
+                set_is_referenced_and_alias_referenceables(
+                    &mut variable.value,
+                    reachable_referenceables.clone(),
+                    level,
+                    errors,
+                    all_referenced,
+                );
             }
             for variable in &mut object.variables {
-                let Spanned { span, node: variable } = variable;
+                let Spanned {
+                    span,
+                    node: variable,
+                } = variable;
                 let name = &variable.name;
-                if all_referenced.contains(&Referenceable { name, span: *span, level }) {
+                if all_referenced.contains(&Referenceable {
+                    name,
+                    span: *span,
+                    level,
+                }) {
                     variable.is_referenced = true;
                 }
             }
@@ -107,20 +191,46 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
         Expression::FunctionCall { path, arguments } => {
             level += 1;
             for argument in arguments.iter() {
-                let Spanned { span, node: argument } = argument;
+                let Spanned {
+                    span,
+                    node: argument,
+                } = argument;
                 let name = &argument.name;
-                reachable_referenceables.insert(name, Referenceable { name, span: *span, level });
+                reachable_referenceables.insert(
+                    name,
+                    Referenceable {
+                        name,
+                        span: *span,
+                        level,
+                    },
+                );
             }
             for argument in arguments.iter_mut() {
-                let Spanned { span, node: argument } = argument;
+                let Spanned {
+                    span,
+                    node: argument,
+                } = argument;
                 if let Some(value) = argument.value.as_mut() {
-                    set_is_referenced_and_alias_referenceables(value, reachable_referenceables.clone(), level, errors, all_referenced);
+                    set_is_referenced_and_alias_referenceables(
+                        value,
+                        reachable_referenceables.clone(),
+                        level,
+                        errors,
+                        all_referenced,
+                    );
                 }
             }
             for argument in arguments.iter_mut() {
-                let Spanned { span, node: argument } = argument;
+                let Spanned {
+                    span,
+                    node: argument,
+                } = argument;
                 let name = &argument.name;
-                if all_referenced.contains(&Referenceable { name, span: *span, level }) {
+                if all_referenced.contains(&Referenceable {
+                    name,
+                    span: *span,
+                    level,
+                }) {
                     argument.is_referenced = true;
                 }
             }
@@ -128,71 +238,162 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
         Expression::Block { variables, output } => {
             level += 1;
             for variable in variables.iter() {
-                let Spanned { span, node: variable } = variable;
+                let Spanned {
+                    span,
+                    node: variable,
+                } = variable;
                 let name = &variable.name;
-                reachable_referenceables.insert(name, Referenceable { name, span: *span, level });
+                reachable_referenceables.insert(
+                    name,
+                    Referenceable {
+                        name,
+                        span: *span,
+                        level,
+                    },
+                );
             }
             for variable in variables.iter_mut() {
-                let Spanned { span, node: variable } = variable;
-                set_is_referenced_and_alias_referenceables(&mut variable.value, reachable_referenceables.clone(), level, errors, all_referenced);
+                let Spanned {
+                    span,
+                    node: variable,
+                } = variable;
+                set_is_referenced_and_alias_referenceables(
+                    &mut variable.value,
+                    reachable_referenceables.clone(),
+                    level,
+                    errors,
+                    all_referenced,
+                );
             }
-            set_is_referenced_and_alias_referenceables(output, reachable_referenceables, level, errors, all_referenced);
+            set_is_referenced_and_alias_referenceables(
+                output,
+                reachable_referenceables,
+                level,
+                errors,
+                all_referenced,
+            );
             for variable in variables.iter_mut() {
-                let Spanned { span, node: variable } = variable;
+                let Spanned {
+                    span,
+                    node: variable,
+                } = variable;
                 let name = &variable.name;
-                if all_referenced.contains(&Referenceable { name, span: *span, level }) {
+                if all_referenced.contains(&Referenceable {
+                    name,
+                    span: *span,
+                    level,
+                }) {
                     variable.is_referenced = true;
                 }
             }
         }
         Expression::List { items } => {
             for item in items {
-                set_is_referenced_and_alias_referenceables(item, reachable_referenceables.clone(), level, errors, all_referenced);
+                set_is_referenced_and_alias_referenceables(
+                    item,
+                    reachable_referenceables.clone(),
+                    level,
+                    errors,
+                    all_referenced,
+                );
             }
         }
         Expression::Map { entries } => {
             // @TODO implement, see the error message below
-            errors.push(ResolveError::custom(*span, "Scope resolver cannot resolve references in Expression::Map yet, sorry".to_owned()))
+            errors.push(ResolveError::custom(
+                *span,
+                "Scope resolver cannot resolve references in Expression::Map yet, sorry".to_owned(),
+            ))
         }
         Expression::Latest { inputs } => {
             for input in inputs {
-                set_is_referenced_and_alias_referenceables(input, reachable_referenceables.clone(), level, errors, all_referenced);
+                set_is_referenced_and_alias_referenceables(
+                    input,
+                    reachable_referenceables.clone(),
+                    level,
+                    errors,
+                    all_referenced,
+                );
             }
         }
         Expression::Then { body } => {
-            set_is_referenced_and_alias_referenceables(body, reachable_referenceables, level, errors, all_referenced);
+            set_is_referenced_and_alias_referenceables(
+                body,
+                reachable_referenceables,
+                level,
+                errors,
+                all_referenced,
+            );
         }
         Expression::When { arms } => {
             // @TODO implement, see the error message below
-            errors.push(ResolveError::custom(*span, "Scope resolver cannot resolve references in Expression::When yet, sorry".to_owned()))
+            errors.push(ResolveError::custom(
+                *span,
+                "Scope resolver cannot resolve references in Expression::When yet, sorry"
+                    .to_owned(),
+            ))
         }
         Expression::While { arms } => {
             // @TODO implement, see the error message below
-            errors.push(ResolveError::custom(*span, "Scope resolver cannot resolve references in Expression::While yet, sorry".to_owned()))
+            errors.push(ResolveError::custom(
+                *span,
+                "Scope resolver cannot resolve references in Expression::While yet, sorry"
+                    .to_owned(),
+            ))
         }
         Expression::Pipe { from, to } => {
-            set_is_referenced_and_alias_referenceables(from, reachable_referenceables.clone(), level, errors, all_referenced);
-            set_is_referenced_and_alias_referenceables(to, reachable_referenceables, level, errors, all_referenced);
+            set_is_referenced_and_alias_referenceables(
+                from,
+                reachable_referenceables.clone(),
+                level,
+                errors,
+                all_referenced,
+            );
+            set_is_referenced_and_alias_referenceables(
+                to,
+                reachable_referenceables,
+                level,
+                errors,
+                all_referenced,
+            );
         }
         Expression::ArithmeticOperator(_) => {
             // @TODO implement, see the error message below
             errors.push(ResolveError::custom(*span, "Scope resolver cannot resolve references in Expression::ArithmeticOperator yet, sorry".to_owned()))
-        },
+        }
         Expression::Comparator(_) => {
             // @TODO implement, see the error message below
-            errors.push(ResolveError::custom(*span, "Scope resolver cannot resolve references in Expression::Comparator yet, sorry".to_owned()))
-        },
+            errors.push(ResolveError::custom(
+                *span,
+                "Scope resolver cannot resolve references in Expression::Comparator yet, sorry"
+                    .to_owned(),
+            ))
+        }
         Expression::Function { .. } => {
             // @TODO implement, see the error message below
-            errors.push(ResolveError::custom(*span, "Scope resolver cannot resolve references in Expression::Function yet, sorry".to_owned()))
-        },
-        Expression::Alias(alias) => {
-            set_referenced_referenceable(alias, *span, reachable_referenceables, errors, all_referenced)
+            errors.push(ResolveError::custom(
+                *span,
+                "Scope resolver cannot resolve references in Expression::Function yet, sorry"
+                    .to_owned(),
+            ))
         }
-        Expression::LinkSetter { alias } =>  {
+        Expression::Alias(alias) => set_referenced_referenceable(
+            alias,
+            *span,
+            reachable_referenceables,
+            errors,
+            all_referenced,
+        ),
+        Expression::LinkSetter { alias } => {
             let Spanned { span, node: alias } = alias;
-            set_referenced_referenceable(alias, *span, reachable_referenceables, errors, all_referenced)
-        },
+            set_referenced_referenceable(
+                alias,
+                *span,
+                reachable_referenceables,
+                errors,
+                all_referenced,
+            )
+        }
         Expression::Literal(_) => (),
         Expression::Link => (),
         Expression::Skip => (),
@@ -200,15 +401,18 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
 }
 
 fn set_referenced_referenceable<'code>(
-    alias: &mut Alias<'code>, 
-    span: Span, 
+    alias: &mut Alias<'code>,
+    span: Span,
     reachable_referenceables: ReachableReferenceables<'code>,
     errors: &mut Vec<ResolveError>,
     all_referenced: &mut HashSet<Referenceable<'code>>,
 ) {
     match alias {
         Alias::WithPassed { extra_parts } => (),
-        Alias::WithoutPassed { parts, referenceables: unset_referenceables } => {
+        Alias::WithoutPassed {
+            parts,
+            referenceables: unset_referenceables,
+        } => {
             // @TODO make the first part a standalone property (name or PASSED)?
             let first_part = parts.first().expect("Failed to get first alias part");
             // @TODO make Argument name optional to model the case when an argument is piped better?

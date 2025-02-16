@@ -2,10 +2,10 @@
 #![allow(dead_code)]
 
 use std::borrow::Cow;
+use std::collections::HashMap;
 use std::future::Future;
 use std::pin::pin;
 use std::sync::Arc;
-use std::collections::HashMap;
 
 use crate::boon::parser;
 
@@ -279,7 +279,7 @@ impl VariableOrArgumentReference {
         construct_info: ConstructInfo,
         actor_context: ActorContext,
         alias: parser::Alias<'code>,
-        root_value_actor: impl Future<Output =  Arc<ValueActor>> + 'static,
+        root_value_actor: impl Future<Output = Arc<ValueActor>> + 'static,
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::VariableOrArgumentReference);
         let mut skip_alias_parts = 0;
@@ -324,20 +324,23 @@ impl VariableOrArgumentReference {
 
 pub struct ReferenceConnector {
     referenceable_inserter_sender: mpsc::UnboundedSender<(parser::Span, Arc<ValueActor>)>,
-    referenceable_getter_sender: mpsc::UnboundedSender<(parser::Span, oneshot::Sender<Arc<ValueActor>>)>,
-    loop_task: TaskHandle
+    referenceable_getter_sender:
+        mpsc::UnboundedSender<(parser::Span, oneshot::Sender<Arc<ValueActor>>)>,
+    loop_task: TaskHandle,
 }
 
 impl ReferenceConnector {
     pub fn new() -> Self {
-        let (referenceable_inserter_sender, mut referenceable_inserter_receiver) = mpsc::unbounded();
+        let (referenceable_inserter_sender, mut referenceable_inserter_receiver) =
+            mpsc::unbounded();
         let (referenceable_getter_sender, mut referenceable_getter_receiver) = mpsc::unbounded();
         Self {
             referenceable_inserter_sender,
             referenceable_getter_sender,
             loop_task: Task::start_droppable(async move {
                 let mut referenceables = HashMap::<parser::Span, Arc<ValueActor>>::new();
-                let mut referenceable_senders = HashMap::<parser::Span, Vec<oneshot::Sender<Arc<ValueActor>>>>::new();
+                let mut referenceable_senders =
+                    HashMap::<parser::Span, Vec<oneshot::Sender<Arc<ValueActor>>>>::new();
                 loop {
                     select! {
                         (span, actor) = referenceable_inserter_receiver.select_next_some() => {
@@ -361,12 +364,15 @@ impl ReferenceConnector {
                         }
                     }
                 }
-            })
+            }),
         }
     }
 
     pub fn register_referenceable(&self, span: parser::Span, actor: Arc<ValueActor>) {
-        if let Err(error) = self.referenceable_inserter_sender.unbounded_send((span, actor)) {
+        if let Err(error) = self
+            .referenceable_inserter_sender
+            .unbounded_send((span, actor))
+        {
             eprintln!("Failed to register referenceable: {error:#}")
         }
     }
@@ -374,10 +380,15 @@ impl ReferenceConnector {
     // @TODO is &self enough?
     pub async fn referenceable(self: Arc<Self>, span: parser::Span) -> Arc<ValueActor> {
         let (referenceable_sender, referenceable_receiver) = oneshot::channel();
-        if let Err(error) = self.referenceable_getter_sender.unbounded_send((span, referenceable_sender)) {
+        if let Err(error) = self
+            .referenceable_getter_sender
+            .unbounded_send((span, referenceable_sender))
+        {
             eprintln!("Failed to register referenceable: {error:#}")
         }
-        referenceable_receiver.await.expect("Failed to get referenceable from ReferenceConnector")
+        referenceable_receiver
+            .await
+            .expect("Failed to get referenceable from ReferenceConnector")
     }
 }
 

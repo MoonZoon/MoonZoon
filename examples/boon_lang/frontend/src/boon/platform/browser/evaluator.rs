@@ -59,7 +59,11 @@ fn spanned_variable_into_variable(
         span,
         node: variable,
     } = variable;
-    let parser::Variable { name, value, is_referenced } = variable;
+    let parser::Variable {
+        name,
+        value,
+        is_referenced,
+    } = variable;
     let name: String = name.to_owned();
     let construct_info = ConstructInfo::new(1, format!("{span}; {name}"));
     let variable = if matches!(
@@ -126,7 +130,13 @@ fn spanned_expression_into_value_actor(
             actor_context.clone(),
             items
                 .into_iter()
-                .map(|item| spanned_expression_into_value_actor(item, actor_context.clone(), reference_connector.clone()))
+                .map(|item| {
+                    spanned_expression_into_value_actor(
+                        item,
+                        actor_context.clone(),
+                        reference_connector.clone(),
+                    )
+                })
                 .collect::<Result<Vec<_>, _>>()?,
         ),
         Expression::Object(object) => Object::new_arc_value_actor(
@@ -135,7 +145,13 @@ fn spanned_expression_into_value_actor(
             object
                 .variables
                 .into_iter()
-                .map(|variable| spanned_variable_into_variable(variable, actor_context.clone(), reference_connector.clone()))
+                .map(|variable| {
+                    spanned_variable_into_variable(
+                        variable,
+                        actor_context.clone(),
+                        reference_connector.clone(),
+                    )
+                })
                 .collect::<Result<Vec<_>, _>>()?,
         ),
         Expression::TaggedObject { tag, object } => TaggedObject::new_arc_value_actor(
@@ -145,7 +161,13 @@ fn spanned_expression_into_value_actor(
             object
                 .variables
                 .into_iter()
-                .map(|variable| spanned_variable_into_variable(variable, actor_context.clone(), reference_connector.clone()))
+                .map(|variable| {
+                    spanned_variable_into_variable(
+                        variable,
+                        actor_context.clone(),
+                        reference_connector.clone(),
+                    )
+                })
                 .collect::<Result<Vec<_>, _>>()?,
         ),
         Expression::Map { entries } => Err(ParseError::custom(
@@ -185,7 +207,11 @@ fn spanned_expression_into_value_actor(
                                     "Out arguments not supported yet, sorry",
                                 ))?
                             };
-                            let actor = spanned_expression_into_value_actor(value, actor_context.clone(), reference_connector.clone());
+                            let actor = spanned_expression_into_value_actor(
+                                value,
+                                actor_context.clone(),
+                                reference_connector.clone(),
+                            );
                             if is_referenced {
                                 if let Ok(actor) = &actor {
                                     reference_connector.register_referenceable(span, actor.clone());
@@ -199,13 +225,14 @@ fn spanned_expression_into_value_actor(
         }
         Expression::Alias(alias) => {
             let root_value_actor = match &alias {
-                parser::Alias::WithPassed { extra_parts } => {
-                    Err(ParseError::custom(
-                        span,
-                        "Aliases with PASSED not supported yet, sorry",
-                    ))?
-                }
-                parser::Alias::WithoutPassed { parts, referenceables } => {
+                parser::Alias::WithPassed { extra_parts } => Err(ParseError::custom(
+                    span,
+                    "Aliases with PASSED not supported yet, sorry",
+                ))?,
+                parser::Alias::WithoutPassed {
+                    parts,
+                    referenceables,
+                } => {
                     let referenced = referenceables
                         .as_ref()
                         .expect("Failed to get alias referenceables in evaluator")
@@ -226,7 +253,7 @@ fn spanned_expression_into_value_actor(
                 alias,
                 root_value_actor,
             )
-        },
+        }
         Expression::LinkSetter { alias } => Err(ParseError::custom(
             span,
             "Not supported yet, sorry [Expression::LinkSetter]",
@@ -240,7 +267,13 @@ fn spanned_expression_into_value_actor(
             actor_context.clone(),
             inputs
                 .into_iter()
-                .map(|input| spanned_expression_into_value_actor(input, actor_context.clone(), reference_connector.clone()))
+                .map(|input| {
+                    spanned_expression_into_value_actor(
+                        input,
+                        actor_context.clone(),
+                        reference_connector.clone(),
+                    )
+                })
                 .collect::<Result<Vec<_>, _>>()?,
         ),
         Expression::Then { body } => Err(ParseError::custom(
@@ -348,9 +381,17 @@ fn pipe<'code>(
             Ok(ThenCombinator::new_arc_value_actor(
                 ConstructInfo::new(4, format!("{to_span}; THEN")),
                 actor_context.clone(),
-                spanned_expression_into_value_actor(*from, actor_context.clone(), reference_connector.clone())?,
+                spanned_expression_into_value_actor(
+                    *from,
+                    actor_context.clone(),
+                    reference_connector.clone(),
+                )?,
                 impulse_sender,
-                spanned_expression_into_value_actor(*body, body_actor_context, reference_connector)?,
+                spanned_expression_into_value_actor(
+                    *body,
+                    body_actor_context,
+                    reference_connector,
+                )?,
             ))
         }
         Expression::When { arms } => Err(ParseError::custom(
