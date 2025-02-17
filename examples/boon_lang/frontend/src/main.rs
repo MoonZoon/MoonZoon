@@ -20,6 +20,30 @@ fn root() -> impl Element {
         .s(Scrollbars::both())
         .item(
             Row::new()
+                .s(Gap::new().x(20))
+                .multiline()
+                .items(example_buttons())
+        )
+        .item(
+            Paragraph::new()
+                .s(Align::new().center_x())
+                .content("Run: ")
+                .content(
+                    El::new()
+                        .s(Font::new().weight(FontWeight::Bold))
+                        .child("Shift + Enter")
+                )
+                .content("      ")
+                .content("Comment: ")
+                .content(
+                    El::new()
+                        .s(Font::new().weight(FontWeight::Bold))
+                        .child("Ctrl + /")
+                )
+        )
+        .item(
+            Row::new()
+                .s(Padding::new().top(5))
                 .s(Width::fill())
                 .s(Height::fill())
                 .s(Scrollbars::both())
@@ -75,14 +99,7 @@ macro_rules! run_example {
 }
 
 fn boon_object_with_document() -> impl Element {
-    // -- Choose example! --
-    // let object = run_example!("call_document_new");
-    // let object = run_example!("interval");
-    let object = run_example!("counter");
-
-    // NOT RUNNABLE YET
-    // let object = run_example!("complex_counter");
-    // let object = run_example!("todo_mvc");
+    let object = run_example!("hello_world");
 
     if let Some(object) = object {
         El::new()
@@ -90,6 +107,31 @@ fn boon_object_with_document() -> impl Element {
             .after_remove(move |_| drop(object))
             .unify()
     } else {
-        El::new().child("Failed to get Boon root Object").unify()
+        El::new().child("Failed to run the example. See errors in dev console.").unify()
     }
+}
+
+macro_rules! example_button {
+    ($name:literal) => {{
+        example_button(
+            concat!($name, ".bn"),
+            include_str!(concat!("examples/", $name, "/", $name, ".bn")),
+        )
+    }};
+}
+
+fn example_buttons() -> Vec<impl Element> {
+    vec![
+        example_button!("hello_world"),
+        example_button!("interval"),
+        example_button!("counter"),
+    ]
+}
+
+fn example_button(label: &'static str, code: &'static str) -> impl Element {
+    Button::new()
+        .s(Padding::new().x(10).y(5))
+        .s(Font::new().line(FontLine::new().underline().offset(3)))
+        .label(label)
+        .on_press(|| ())
 }

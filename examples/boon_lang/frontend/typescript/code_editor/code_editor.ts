@@ -19,21 +19,19 @@ export class CodeEditorController {
     }
 
     async init(parent_element: HTMLElement) {
-        const minHeightEditor = EditorView.theme({
-            ".cm-content, .cm-gutter": {minHeight: "200px"}
+        const min_height_editor = EditorView.theme({
+            ".cm-content, .cm-gutter": { minHeight: "200px" }
         })
         const state = EditorState.create({
             extensions: [
                 basicSetup,
                 oneDark,
-                minHeightEditor
+                min_height_editor
             ],
-            doc: `document: 
-    Duration[seconds: 1]
-    |> Timer/interval() 
-    |> THEN { 1 } 
-    |> Math/sum()
-    |> Document/new()`
+            doc: `------------ Hello world example ------------
+
+-- Display text on HTML document
+document: Document/new(root: 'Hello world!')`
         })
 
         this.editor_view = new EditorView({
