@@ -18,20 +18,6 @@ use zoon::{Task, TaskHandle};
 
 // @TODO Replace `[]` with `impl Into<Vec..` and `&'static str` with `Cow<'static, str>` everywhere?
 
-// @TODO remove?
-// --- PipeTo ---
-
-pub trait PipeTo {
-    fn pipe_to<FR>(self, f: impl FnOnce(Self) -> FR) -> FR
-    where
-        Self: Sized,
-    {
-        f(self)
-    }
-}
-
-impl<T> PipeTo for T {}
-
 // --- constant ---
 
 pub fn constant<T>(item: T) -> impl Stream<Item = T> {

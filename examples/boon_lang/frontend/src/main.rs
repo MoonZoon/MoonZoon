@@ -6,9 +6,6 @@ use boon::platform::browser::{bridge::object_with_document_to_element_signal, in
 mod code_editor;
 use code_editor::{CodeEditorController, CodeEditor};
 
-// @TODO remove
-// mod examples;
-
 fn main() {
     start_app("app", root);
 }
