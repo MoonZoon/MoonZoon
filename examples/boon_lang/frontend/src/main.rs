@@ -3,6 +3,8 @@ use zoon::*;
 mod boon;
 use boon::platform::browser::{bridge::object_with_document_to_element_signal, interpreter};
 
+mod code_editor;
+
 // @TODO remove
 // mod examples;
 

@@ -16,9 +16,9 @@ frontend = [
     "public",
     "frontend/Cargo.toml",
     "frontend/src",
+    "frontend/typescript/bundles",
     "../../crates/zoon/Cargo.toml",
     "../../crates/zoon/src",
-    "../../crates/color_macro/src",
 ]
 backend = [
     "backend/Cargo.toml",

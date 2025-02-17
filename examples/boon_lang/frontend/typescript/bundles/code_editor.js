@@ -21607,7 +21607,10 @@ var CodeEditorController = class {
 		}] });
 	}
 	async init(parent_element) {
-		const state = EditorState.create({ extensions: [basicSetup, oneDark] });
+		const state = EditorState.create({
+			extensions: [basicSetup, oneDark],
+			doc: "ASDFGHJKL"
+		});
 		this.editor_view = new EditorView({
 			parent: parent_element,
 			state

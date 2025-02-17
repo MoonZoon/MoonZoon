@@ -24,6 +24,7 @@ export class CodeEditorController {
                 basicSetup,
                 oneDark,
             ],
+            doc: "ASDFGHJKL"
         })
 
         this.editor_view = new EditorView({
