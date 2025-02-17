@@ -16,7 +16,7 @@ fn root() -> impl Element {
         .s(Width::fill())
         .s(Height::fill())
         .s(Background::new().color(color!("Black")))
-        .s(Font::new().size(17).color(color!("oklch(0.8 0 0)")))
+        .s(Font::new().color(color!("oklch(0.8 0 0)")))
         .s(Scrollbars::both())
         .item(
             Row::new()

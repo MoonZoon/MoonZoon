@@ -21607,7 +21607,10 @@ var CodeEditorController = class {
 		}] });
 	}
 	async init(parent_element) {
-		const min_height_editor = EditorView.theme({ ".cm-content, .cm-gutter": { minHeight: "200px" } });
+		const min_height_editor = EditorView.theme({
+			".cm-content, .cm-gutter": { minHeight: "200px" },
+			".cm-content": { "font-family": "Fira Code" }
+		});
 		const state = EditorState.create({
 			extensions: [
 				basicSetup,
