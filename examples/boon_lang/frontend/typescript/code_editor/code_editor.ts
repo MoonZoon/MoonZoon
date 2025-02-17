@@ -1,7 +1,9 @@
-import { EditorState, Compartment, Extension } from '@codemirror/state'
-import { EditorView } from '@codemirror/view'
+import { EditorState, Compartment } from '@codemirror/state'
+import { EditorView, keymap } from '@codemirror/view'
 import { basicSetup } from 'codemirror'
 import { oneDark } from '@codemirror/theme-one-dark'
+import { indentWithTab, defaultKeymap, CommentTokens } from "@codemirror/commands"
+import { indentUnit } from "@codemirror/language"
 
 export class CodeEditorController {
     constructor() {}
@@ -27,7 +29,10 @@ export class CodeEditorController {
             extensions: [
                 basicSetup,
                 oneDark,
-                min_height_editor
+                min_height_editor,
+                keymap.of(defaultKeymap),
+                keymap.of([indentWithTab]),
+                indentUnit.of("    "),
             ],
             doc: `------------ Hello world example ------------
 

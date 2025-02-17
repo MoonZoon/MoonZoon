@@ -18181,6 +18181,17 @@ const defaultKeymap = /*@__PURE__*/ [
 		run: toggleTabFocusMode
 	}
 ].concat(standardKeymap);
+/**
+A binding that binds Tab to [`indentMore`](https://codemirror.net/6/docs/ref/#commands.indentMore) and
+Shift-Tab to [`indentLess`](https://codemirror.net/6/docs/ref/#commands.indentLess).
+Please see the [Tab example](../../examples/tab/) before using
+this.
+*/
+const indentWithTab = {
+	key: "Tab",
+	run: indentMore,
+	shift: indentLess
+};
 
 //#endregion
 //#region node_modules/crelt/index.js
@@ -21615,7 +21626,10 @@ var CodeEditorController = class {
 			extensions: [
 				basicSetup,
 				oneDark,
-				min_height_editor
+				min_height_editor,
+				keymap.of(defaultKeymap),
+				keymap.of([indentWithTab]),
+				indentUnit.of("    ")
 			],
 			doc: `------------ Hello world example ------------
 
