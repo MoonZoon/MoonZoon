@@ -4,6 +4,7 @@ mod boon;
 use boon::platform::browser::{bridge::object_with_document_to_element_signal, interpreter};
 
 mod code_editor;
+use code_editor::{CodeEditorController, CodeEditor};
 
 // @TODO remove
 // mod examples;
@@ -13,12 +14,58 @@ fn main() {
 }
 
 fn root() -> impl Element {
-    El::new()
+    let code_editor_controller = Mutable::default();
+    Column::new()
         .s(Width::fill())
         .s(Height::fill())
-        .s(Background::new().color(color!("oklch(0.4 0 0)")))
-        .s(Font::new().color(color!("oklch(0.8 0 0)")))
-        .child(boon_object_with_document())
+        .s(Background::new().color(color!("Black")))
+        .s(Font::new().size(17).color(color!("oklch(0.8 0 0)")))
+        .s(Scrollbars::both())
+        .item(
+            Row::new()
+                .s(Width::fill())
+                .s(Height::fill())
+                .s(Scrollbars::both())
+                .item(code_editor_panel(code_editor_controller))
+                .item(example_panel())
+        )
+}
+
+fn code_editor_panel(code_editor_controller: Mutable<Mutable<Option<SendWrapper<CodeEditorController>>>>) -> impl Element {
+    El::new()
+        .s(Align::new().top())
+        .s(Width::fill())
+        .s(Height::fill())
+        .s(Padding::all(5))
+        .s(Scrollbars::both())
+        .child(
+            CodeEditor::new()
+                .s(RoundedCorners::all(10))
+                .s(Scrollbars::both())
+                .task_with_controller(move |controller| {
+                    code_editor_controller.set(controller.clone());
+                    async {}
+                })
+        )
+}
+
+fn example_panel() -> impl Element {
+    El::new()
+        .s(Align::new().top())
+        .s(Width::fill())
+        .s(Height::fill())
+        .s(Padding::all(5))
+        .child(
+            El::new()
+                .s(RoundedCorners::all(10))
+                .s(Clip::both())
+                .s(Borders::all(
+                    Border::new()
+                    .color(color!("#282c34"))
+                    .width(4)
+                ))
+                .child(boon_object_with_document())
+        )
 }
 
 macro_rules! run_example {

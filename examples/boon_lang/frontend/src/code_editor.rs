@@ -33,8 +33,6 @@ impl CodeEditor {
             controller: controller.clone(),
             task_with_controller: task_with_controller.clone(),
             raw_el: El::new()
-                .s(RoundedCorners::new().bottom(10))
-                .s(Clip::both())
                 .after_insert(clone!((controller) move |element| {
                     Task::start(async move {
                         let code_editor_controller = SendWrapper::new(js_bridge::CodeEditorController::new());

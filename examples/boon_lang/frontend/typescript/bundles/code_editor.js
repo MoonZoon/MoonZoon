@@ -21607,14 +21607,25 @@ var CodeEditorController = class {
 		}] });
 	}
 	async init(parent_element) {
+		const minHeightEditor = EditorView.theme({ ".cm-content, .cm-gutter": { minHeight: "200px" } });
 		const state = EditorState.create({
-			extensions: [basicSetup, oneDark],
-			doc: "ASDFGHJKL"
+			extensions: [
+				basicSetup,
+				oneDark,
+				minHeightEditor
+			],
+			doc: `document: 
+    Duration[seconds: 1]
+    |> Timer/interval() 
+    |> THEN { 1 } 
+    |> Math/sum()
+    |> Document/new()`
 		});
 		this.editor_view = new EditorView({
 			parent: parent_element,
 			state
 		});
+		EditorView.theme;
 	}
 };
 
