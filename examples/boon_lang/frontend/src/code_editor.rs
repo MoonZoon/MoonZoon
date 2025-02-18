@@ -43,11 +43,11 @@ impl CodeEditor {
         }
     }
 
-    pub fn content_signal(self, content: impl Signal<Item = String> + 'static) -> Self {
+    pub fn content_signal(self, content: impl Signal<Item = impl IntoCowStr<'static>> + 'static) -> Self {
         let controller = self.controller.clone();
         let task = Task::start_droppable(async move {
             let controller = controller.wait_for_some_cloned().await;
-            content.for_each_sync(|content| controller.set_content(content)).await;
+            content.for_each_sync(|content| controller.set_content(&content.into_cow_str())).await;
         });
         self.after_remove(move |_| drop(task))
     }
@@ -86,7 +86,7 @@ mod js_bridge {
         pub fn init(this: &CodeEditorController, parent_element: &JsValue);
 
         #[wasm_bindgen(method)]
-        pub fn set_content(this: &CodeEditorController, content: String);
+        pub fn set_content(this: &CodeEditorController, content: &str);
 
         #[wasm_bindgen(method)]
         pub fn on_change(this: &CodeEditorController, on_change: &Closure<dyn FnMut(JsString)>);

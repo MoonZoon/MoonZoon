@@ -1,10 +1,17 @@
 use zoon::*;
+use std::borrow::Cow;
 
 mod boon;
 use boon::platform::browser::{bridge::object_with_document_to_element_signal, interpreter};
 
 mod code_editor;
 use code_editor::{CodeEditorController, CodeEditor};
+
+#[derive(Clone, Copy)]
+struct ExampleData {
+    filename: &'static str, 
+    source_code: &'static str
+}
 
 macro_rules! run_example {
     ($name:literal) => {{
@@ -15,12 +22,12 @@ macro_rules! run_example {
     }};
 }
 
-macro_rules! example_button {
-    ($self:ident, $name:literal) => {{
-        $self.example_button(
-            concat!($name, ".bn"),
-            include_str!(concat!("examples/", $name, "/", $name, ".bn")),
-        )
+macro_rules! make_example_data {
+    ($name:literal) => {{
+        ExampleData {
+            filename: concat!($name, ".bn"),
+            source_code: include_str!(concat!("examples/", $name, "/", $name, ".bn")),
+        }
     }};
 }
 
@@ -30,12 +37,12 @@ fn main() {
 
 #[derive(Clone)]
 struct Playground {
-    source_code: Mutable<String>,
+    source_code: Mutable<Cow<'static, str>>,
 }
 
 impl Playground {
     fn new() -> impl Element {
-        let source_code = Mutable::new(String::from("document: Document/new(root: 123)"));
+        let source_code = Mutable::new(Cow::from("document: Document/new(root: 123)"));
         Self { source_code }.root()
     }
 
@@ -97,7 +104,7 @@ impl Playground {
                     .on_change({
                         let source_code = self.source_code.clone();
                         move |content| {
-                            source_code.set_neq(content)
+                            source_code.set_neq(Cow::from(content))
                         }
                     })
             )
@@ -137,17 +144,22 @@ impl Playground {
     
     fn example_buttons(&self) -> Vec<impl Element> {
         vec![
-            example_button!(self, "hello_world"),
-            example_button!(self, "interval"),
-            example_button!(self, "counter"),
+            self.example_button(make_example_data!("hello_world")),
+            self.example_button(make_example_data!("interval")),
+            self.example_button(make_example_data!("counter")),
         ]
     }
     
-    fn example_button(&self, label: &'static str, example_code: &'static str) -> impl Element {
+    fn example_button(&self, example_data: ExampleData) -> impl Element {
         Button::new()
             .s(Padding::new().x(10).y(5))
             .s(Font::new().line(FontLine::new().underline().offset(3)))
-            .label(label)
-            .on_press(|| ())
+            .label(example_data.filename)
+            .on_press({
+                let source_code= self.source_code.clone();
+                move || { 
+                    source_code.set_neq(Cow::from(example_data.source_code))
+                }
+            })
     }
 }
