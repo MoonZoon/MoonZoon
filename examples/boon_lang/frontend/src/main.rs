@@ -33,6 +33,7 @@ fn root() -> impl Element {
                         .s(Font::new().weight(FontWeight::Bold))
                         .child("Shift + Enter")
                 )
+                .content(" in editor")
         )
         .item(
             Row::new()
@@ -56,6 +57,14 @@ fn code_editor_panel(code_editor_controller: Mutable<Mutable<Option<SendWrapper<
             CodeEditor::new()
                 .s(RoundedCorners::all(10))
                 .s(Scrollbars::both())
+                .on_key_down_event_with_options(EventOptions::new().preventable().parents_first(), |keyboard_event| {
+                    let RawKeyboardEvent::KeyDown(raw_event) = &keyboard_event.raw_event;
+                    if keyboard_event.key() == &Key::Enter && raw_event.shift_key() {
+                        keyboard_event.pass_to_parent(false);
+                        // @TODO remove + run example
+                        zoon::println!("SHIFT + ENTER!");
+                    }
+                })
                 .task_with_controller(move |controller| {
                     code_editor_controller.set(controller.clone());
                     async {}

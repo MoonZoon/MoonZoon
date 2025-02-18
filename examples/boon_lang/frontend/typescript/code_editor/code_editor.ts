@@ -45,6 +45,7 @@ document: Document/new(root: 'Hello world!')`
             parent: parent_element,
             state,
         });
-        EditorView.theme
+
+        this.editor_view.focus()
     }
 }
