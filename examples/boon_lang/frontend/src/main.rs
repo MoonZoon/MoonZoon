@@ -1,25 +1,16 @@
-use zoon::*;
+use zoon::{println, *};
 use std::borrow::Cow;
 
 mod boon;
 use boon::platform::browser::{bridge::object_with_document_to_element_signal, interpreter};
 
 mod code_editor;
-use code_editor::{CodeEditorController, CodeEditor};
+use code_editor::CodeEditor;
 
 #[derive(Clone, Copy)]
 struct ExampleData {
     filename: &'static str, 
     source_code: &'static str
-}
-
-macro_rules! run_example {
-    ($name:literal) => {{
-        interpreter::run(
-            concat!($name, ".bn"),
-            include_str!(concat!("examples/", $name, "/", $name, ".bn")),
-        )
-    }};
 }
 
 macro_rules! make_example_data {
@@ -31,6 +22,11 @@ macro_rules! make_example_data {
     }};
 }
 
+#[derive(Clone, Copy)]
+struct RunCommand {
+    filename: Option<&'static str>, 
+}
+
 fn main() {
     start_app("app", Playground::new);
 }
@@ -38,19 +34,22 @@ fn main() {
 #[derive(Clone)]
 struct Playground {
     source_code: Mutable<Cow<'static, str>>,
+    run_command: Mutable<Option<RunCommand>>,
 }
 
 impl Playground {
     fn new() -> impl Element {
         let source_code = Mutable::new(Cow::from("document: Document/new(root: 123)"));
-        Self { source_code }.root()
+        Self { 
+            source_code,
+            run_command: Mutable::new(None), 
+        }.root()
     }
 
     fn root(&self) -> impl Element {
         Column::new()
             .s(Width::fill())
             .s(Height::fill())
-            .s(Background::new().color(color!("Black")))
             .s(Font::new().color(color!("oklch(0.8 0 0)")))
             .s(Scrollbars::both())
             .item(
@@ -92,12 +91,14 @@ impl Playground {
                 CodeEditor::new()
                     .s(RoundedCorners::all(10))
                     .s(Scrollbars::both())
-                    .on_key_down_event_with_options(EventOptions::new().preventable().parents_first(), |keyboard_event| {
-                        let RawKeyboardEvent::KeyDown(raw_event) = &keyboard_event.raw_event;
-                        if keyboard_event.key() == &Key::Enter && raw_event.shift_key() {
-                            keyboard_event.pass_to_parent(false);
-                            // @TODO remove + run example
-                            zoon::println!("SHIFT + ENTER!");
+                    .on_key_down_event_with_options(EventOptions::new().preventable().parents_first(), {
+                        let run_command = self.run_command.clone();
+                        move |keyboard_event| {
+                            let RawKeyboardEvent::KeyDown(raw_event) = &keyboard_event.raw_event;
+                            if keyboard_event.key() == &Key::Enter && raw_event.shift_key() {
+                                keyboard_event.pass_to_parent(false);
+                                run_command.set(Some(RunCommand { filename: None }));
+                            }
                         }
                     })
                     .content_signal(self.source_code.signal_cloned())
@@ -125,13 +126,21 @@ impl Playground {
                         .color(color!("#282c34"))
                         .width(4)
                     ))
-                    .child(self.boon_object_with_document())
+                    .child_signal(self.run_command.signal().map_some({
+                        let this = self.clone();
+                        move |run_command| {
+                            this.example_runner(run_command)
+                        }
+                }))
             )
     }
     
-    fn boon_object_with_document(&self) -> impl Element {
-        let object = run_example!("hello_world");
-    
+    fn example_runner(&self, run_command: RunCommand) -> impl Element {
+        println!("Command to run example received!");
+        let filename = run_command.filename.unwrap_or("custom code");
+        let source_code = self.source_code.lock_ref();
+        let object = interpreter::run(filename, &source_code);
+        drop(source_code);
         if let Some(object) = object {
             El::new()
                 .child_signal(object_with_document_to_element_signal(object.clone()))
@@ -157,8 +166,10 @@ impl Playground {
             .label(example_data.filename)
             .on_press({
                 let source_code= self.source_code.clone();
+                let run_command = self.run_command.clone();
                 move || { 
-                    source_code.set_neq(Cow::from(example_data.source_code))
+                    source_code.set_neq(Cow::from(example_data.source_code));
+                    run_command.set(Some(RunCommand { filename: Some(example_data.filename) }));
                 }
             })
     }
