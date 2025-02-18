@@ -21607,9 +21607,29 @@ const oneDark = [oneDarkTheme, /*@__PURE__*/ syntaxHighlighting(oneDarkHighlight
 var CodeEditorController = class {
 	constructor() {}
 	editor_view = null;
-	file_content = new Compartment();
+	on_change_handler = new Compartment();
+	init(parent_element) {
+		const min_height_editor = EditorView.theme({
+			".cm-content, .cm-gutter": { minHeight: "200px" },
+			".cm-content": { "font-family": "Fira Code" }
+		});
+		const state = EditorState.create({ extensions: [
+			basicSetup,
+			oneDark,
+			min_height_editor,
+			keymap.of(defaultKeymap),
+			keymap.of([indentWithTab]),
+			indentUnit.of("    "),
+			this.on_change_handler.of([])
+		] });
+		this.editor_view = new EditorView({
+			parent: parent_element,
+			state
+		});
+		this.editor_view.focus();
+	}
 	set_content(content$1) {
-		this.editor_view.dispatch({ changes: [{
+		if (this.editor_view.state.doc.toString() !== content$1) this.editor_view.dispatch({ changes: [{
 			from: 0,
 			to: this.editor_view.state.doc.length
 		}, {
@@ -21617,30 +21637,14 @@ var CodeEditorController = class {
 			insert: content$1
 		}] });
 	}
-	async init(parent_element) {
-		const min_height_editor = EditorView.theme({
-			".cm-content, .cm-gutter": { minHeight: "200px" },
-			".cm-content": { "font-family": "Fira Code" }
+	on_change(on_change) {
+		const on_change_extension = EditorView.updateListener.of((view_update) => {
+			if (view_update.docChanged) {
+				const document$1 = view_update.state.doc.toString();
+				on_change(document$1);
+			}
 		});
-		const state = EditorState.create({
-			extensions: [
-				basicSetup,
-				oneDark,
-				min_height_editor,
-				keymap.of(defaultKeymap),
-				keymap.of([indentWithTab]),
-				indentUnit.of("    ")
-			],
-			doc: `------------ Hello world example ------------
-
--- Display text on HTML document
-document: Document/new(root: 'Hello world!')`
-		});
-		this.editor_view = new EditorView({
-			parent: parent_element,
-			state
-		});
-		this.editor_view.focus();
+		this.editor_view.dispatch({ effects: this.on_change_handler.reconfigure(on_change_extension) });
 	}
 };
 

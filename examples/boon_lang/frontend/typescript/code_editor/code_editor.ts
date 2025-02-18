@@ -9,23 +9,13 @@ export class CodeEditorController {
     constructor() {}
 
     editor_view: EditorView | null = null
-    file_content = new Compartment()
+    on_change_handler = new Compartment
 
-    set_content(content: string) {
-        this.editor_view!.dispatch({
-            changes: [
-                { from: 0, to: this.editor_view!.state.doc.length },
-                { from: 0, insert: content },
-            ]
-        })
-    }
-
-    async init(parent_element: HTMLElement) {
+    init(parent_element: HTMLElement) {
         const min_height_editor = EditorView.theme({
             ".cm-content, .cm-gutter": { minHeight: "200px" },
             ".cm-content": { "font-family": "Fira Code" },
         })
-
         const state = EditorState.create({
             extensions: [
                 basicSetup,
@@ -34,18 +24,36 @@ export class CodeEditorController {
                 keymap.of(defaultKeymap),
                 keymap.of([indentWithTab]),
                 indentUnit.of("    "),
+                this.on_change_handler.of([])
             ],
-            doc: `------------ Hello world example ------------
-
--- Display text on HTML document
-document: Document/new(root: 'Hello world!')`
         })
-
         this.editor_view = new EditorView({
             parent: parent_element,
             state,
-        });
-
+        })
         this.editor_view.focus()
+    }
+
+    set_content(content: string) {
+        if (this.editor_view!.state.doc.toString() !== content) {
+            this.editor_view!.dispatch({
+                changes: [
+                    { from: 0, to: this.editor_view!.state.doc.length },
+                    { from: 0, insert: content },
+                ]
+            })
+        }
+    }
+
+    on_change(on_change: (content: string) => void) {
+        const on_change_extension = EditorView.updateListener.of(view_update => {
+            if (view_update.docChanged) {
+                const document = view_update.state.doc.toString()
+                on_change(document)
+            }
+        })
+        this.editor_view!.dispatch({
+            effects: this.on_change_handler.reconfigure(on_change_extension)
+        })
     }
 }

@@ -1,10 +1,11 @@
-pub use js_bridge::CodeEditorController;
+use std::rc::Rc;
 use zoon::*;
+
+pub use js_bridge::CodeEditorController;
 
 pub struct CodeEditor {
     raw_el: RawHtmlEl<web_sys::HtmlElement>,
-    controller: Mutable<Option<SendWrapper<js_bridge::CodeEditorController>>>,
-    task_with_controller: Mutable<Option<TaskHandle>>,
+    controller: Mutable<Option<js_bridge::CodeEditorController>>,
 }
 
 impl Element for CodeEditor {}
@@ -26,34 +27,46 @@ impl HasIds for CodeEditor {}
 
 impl CodeEditor {
     pub fn new() -> Self {
-        let controller: Mutable<Option<SendWrapper<js_bridge::CodeEditorController>>> =
-            Mutable::new(None);
-        let task_with_controller = Mutable::new(None);
+        let controller: Mutable<Option<js_bridge::CodeEditorController>> = Mutable::new(None);
         Self {
             controller: controller.clone(),
-            task_with_controller: task_with_controller.clone(),
             raw_el: El::new()
                 .after_insert(clone!((controller) move |element| {
-                    Task::start(async move {
-                        let code_editor_controller = SendWrapper::new(js_bridge::CodeEditorController::new());
-                        code_editor_controller.init(&element).await;
-                        controller.set(Some(code_editor_controller));
-                    });
+                    let code_editor_controller = js_bridge::CodeEditorController::new();
+                    code_editor_controller.init(&element);
+                    controller.set(Some(code_editor_controller));
                 }))
                 .after_remove(move |_| {
-                    drop(task_with_controller);
+                    drop(controller);
                 })
                 .into_raw_el(),
         }
     }
 
-    pub fn task_with_controller<FUT: Future<Output = ()> + 'static>(
-        self,
-        f: impl FnOnce(Mutable<Option<SendWrapper<js_bridge::CodeEditorController>>>) -> FUT,
-    ) -> Self {
-        self.task_with_controller
-            .set(Some(Task::start_droppable(f(self.controller.clone()))));
-        self
+    pub fn content_signal(self, content: impl Signal<Item = String> + 'static) -> Self {
+        let controller = self.controller.clone();
+        let task = Task::start_droppable(async move {
+            let controller = controller.wait_for_some_cloned().await;
+            content.for_each_sync(|content| controller.set_content(content)).await;
+        });
+        self.after_remove(move |_| drop(task))
+    }
+
+    pub fn on_change(self, mut on_change: impl FnMut(String) + 'static) -> Self {
+        let callback = move |content: JsString| {
+            let content = content
+                .as_string()
+                .expect_throw("Failed to get CodeEditor content");
+            on_change(content)
+        };
+        let closure = Rc::new(Closure::new(callback));
+        let task = Task::start_droppable(self.controller.wait_for_some_ref(
+            clone!((closure) move |controller| controller.on_change(&closure)),
+        ));
+        self.after_remove(move |_| {
+            drop(task);
+            drop(closure);
+        })
     }
 }
 
@@ -70,12 +83,12 @@ mod js_bridge {
         pub fn new() -> CodeEditorController;
 
         #[wasm_bindgen(method)]
-        pub async fn init(this: &CodeEditorController, parent_element: &JsValue);
+        pub fn init(this: &CodeEditorController, parent_element: &JsValue);
 
         #[wasm_bindgen(method)]
-        pub fn set_content(
-            this: &CodeEditorController,
-            content: String,
-        );
+        pub fn set_content(this: &CodeEditorController, content: String);
+
+        #[wasm_bindgen(method)]
+        pub fn on_change(this: &CodeEditorController, on_change: &Closure<dyn FnMut(JsString)>);
     }
 }

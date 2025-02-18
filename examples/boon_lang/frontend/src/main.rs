@@ -11,7 +11,7 @@ fn main() {
 }
 
 fn root() -> impl Element {
-    let code_editor_controller = Mutable::default();
+    let source_code = Mutable::new("document: Document/new(root: 'Hello world!')".to_owned());
     Column::new()
         .s(Width::fill())
         .s(Height::fill())
@@ -41,12 +41,12 @@ fn root() -> impl Element {
                 .s(Width::fill())
                 .s(Height::fill())
                 .s(Scrollbars::both())
-                .item(code_editor_panel(code_editor_controller))
+                .item(code_editor_panel(source_code))
                 .item(example_panel())
         )
 }
 
-fn code_editor_panel(code_editor_controller: Mutable<Mutable<Option<SendWrapper<CodeEditorController>>>>) -> impl Element {
+fn code_editor_panel(source_code: Mutable<String>) -> impl Element {
     El::new()
         .s(Align::new().top())
         .s(Width::fill())
@@ -65,9 +65,9 @@ fn code_editor_panel(code_editor_controller: Mutable<Mutable<Option<SendWrapper<
                         zoon::println!("SHIFT + ENTER!");
                     }
                 })
-                .task_with_controller(move |controller| {
-                    code_editor_controller.set(controller.clone());
-                    async {}
+                .content_signal(source_code.signal_cloned())
+                .on_change(move |content| {
+                    source_code.set_neq(content)
                 })
         )
 }
@@ -130,7 +130,7 @@ fn example_buttons() -> Vec<impl Element> {
     ]
 }
 
-fn example_button(label: &'static str, code: &'static str) -> impl Element {
+fn example_button(label: &'static str, example_code: &'static str) -> impl Element {
     Button::new()
         .s(Padding::new().x(10).y(5))
         .s(Font::new().line(FontLine::new().underline().offset(3)))
