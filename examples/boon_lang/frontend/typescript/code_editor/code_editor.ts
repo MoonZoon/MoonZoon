@@ -2,7 +2,7 @@ import { EditorState, Compartment } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 import { basicSetup } from 'codemirror'
 import { oneDark } from '@codemirror/theme-one-dark'
-import { indentWithTab, defaultKeymap, CommentTokens } from "@codemirror/commands"
+import { indentWithTab, defaultKeymap } from "@codemirror/commands"
 import { indentUnit } from "@codemirror/language"
 
 export class CodeEditorController {
@@ -25,6 +25,7 @@ export class CodeEditorController {
             ".cm-content, .cm-gutter": { minHeight: "200px" },
             ".cm-content": { "font-family": "Fira Code" },
         })
+
         const state = EditorState.create({
             extensions: [
                 basicSetup,

@@ -33,13 +33,6 @@ fn root() -> impl Element {
                         .s(Font::new().weight(FontWeight::Bold))
                         .child("Shift + Enter")
                 )
-                .content("      ")
-                .content("Comment: ")
-                .content(
-                    El::new()
-                        .s(Font::new().weight(FontWeight::Bold))
-                        .child("Ctrl + /")
-                )
         )
         .item(
             Row::new()
