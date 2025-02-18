@@ -147,6 +147,7 @@ impl Playground {
                 .unify()
         } else {
             El::new()
+                .s(Font::new().color(color!("LightCoral")))
                 .child("Failed to run the example. See errors in dev console.")
                 .unify()
         }

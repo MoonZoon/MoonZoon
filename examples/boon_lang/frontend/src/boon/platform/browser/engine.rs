@@ -16,6 +16,8 @@ use zoon::futures_util::stream::{self, Stream, StreamExt};
 use zoon::{eprintln, println};
 use zoon::{Task, TaskHandle};
 
+const LOG_DROPS_AND_LOOP_ENDS: bool = false;
+
 // @TODO Replace `[]` with `impl Into<Vec..` and `&'static str` with `Cow<'static, str>` everywhere?
 
 // --- constant ---
@@ -252,7 +254,9 @@ impl Variable {
 
 impl Drop for Variable {
     fn drop(&mut self) {
-        println!("Dropped: {}", self.construct_info);
+        if LOG_DROPS_AND_LOOP_ENDS {
+            println!("Dropped: {}", self.construct_info);
+        }
     }
 }
 
@@ -550,7 +554,9 @@ impl ValueActor {
                         }
                     }
                 }
-                println!("Loop ended {construct_info}");
+                if LOG_DROPS_AND_LOOP_ENDS {
+                    println!("Loop ended {construct_info}");
+                }
                 drop(extra_owned_data);
             }
         });
@@ -580,7 +586,9 @@ impl ValueActor {
 
 impl Drop for ValueActor {
     fn drop(&mut self) {
-        println!("Dropped: {}", self.construct_info);
+        if LOG_DROPS_AND_LOOP_ENDS {
+            println!("Dropped: {}", self.construct_info);
+        }
     }
 }
 
@@ -734,7 +742,9 @@ impl Object {
 
 impl Drop for Object {
     fn drop(&mut self) {
-        println!("Dropped: {}", self.construct_info);
+        if LOG_DROPS_AND_LOOP_ENDS {
+            println!("Dropped: {}", self.construct_info);
+        }
     }
 }
 
@@ -829,7 +839,9 @@ impl TaggedObject {
 
 impl Drop for TaggedObject {
     fn drop(&mut self) {
-        println!("Dropped: {}", self.construct_info);
+        if LOG_DROPS_AND_LOOP_ENDS {
+            println!("Dropped: {}", self.construct_info);
+        }
     }
 }
 
@@ -891,7 +903,9 @@ impl Text {
 
 impl Drop for Text {
     fn drop(&mut self) {
-        println!("Dropped: {}", self.construct_info);
+        if LOG_DROPS_AND_LOOP_ENDS {
+            println!("Dropped: {}", self.construct_info);
+        }
     }
 }
 
@@ -953,7 +967,9 @@ impl Tag {
 
 impl Drop for Tag {
     fn drop(&mut self) {
-        println!("Dropped: {}", self.construct_info);
+        if LOG_DROPS_AND_LOOP_ENDS {
+            println!("Dropped: {}", self.construct_info);
+        }
     }
 }
 
@@ -1015,7 +1031,9 @@ impl Number {
 
 impl Drop for Number {
     fn drop(&mut self) {
-        println!("Dropped: {}", self.construct_info);
+        if LOG_DROPS_AND_LOOP_ENDS {
+            println!("Dropped: {}", self.construct_info);
+        }
     }
 }
 
@@ -1121,7 +1139,9 @@ impl List {
                         }
                     }
                 }
-                println!("Loop ended {construct_info}");
+                if LOG_DROPS_AND_LOOP_ENDS {
+                    println!("Loop ended {construct_info}");
+                }
                 drop(extra_owned_data);
             }
         });
@@ -1188,7 +1208,9 @@ impl List {
 
 impl Drop for List {
     fn drop(&mut self) {
-        println!("Dropped: {}", self.construct_info);
+        if LOG_DROPS_AND_LOOP_ENDS {
+            println!("Dropped: {}", self.construct_info);
+        }
     }
 }
 
