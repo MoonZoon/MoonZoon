@@ -1,5 +1,5 @@
-use zoon::{println, *};
 use std::borrow::Cow;
+use zoon::{println, *};
 
 mod boon;
 use boon::platform::browser::{bridge::object_with_document_to_element_signal, interpreter};
@@ -9,8 +9,8 @@ use code_editor::CodeEditor;
 
 #[derive(Clone, Copy)]
 struct ExampleData {
-    filename: &'static str, 
-    source_code: &'static str
+    filename: &'static str,
+    source_code: &'static str,
 }
 
 macro_rules! make_example_data {
@@ -24,7 +24,7 @@ macro_rules! make_example_data {
 
 #[derive(Clone, Copy)]
 struct RunCommand {
-    filename: Option<&'static str>, 
+    filename: Option<&'static str>,
 }
 
 fn main() {
@@ -40,10 +40,11 @@ struct Playground {
 impl Playground {
     fn new() -> impl Element {
         let source_code = Mutable::new(Cow::from("document: Document/new(root: 123)"));
-        Self { 
+        Self {
             source_code,
-            run_command: Mutable::new(None), 
-        }.root()
+            run_command: Mutable::new(None),
+        }
+        .root()
     }
 
     fn root(&self) -> impl Element {
@@ -56,7 +57,7 @@ impl Playground {
                 Row::new()
                     .s(Gap::new().x(20))
                     .multiline()
-                    .items(self.example_buttons())
+                    .items(self.example_buttons()),
             )
             .item(
                 Paragraph::new()
@@ -65,9 +66,9 @@ impl Playground {
                     .content(
                         El::new()
                             .s(Font::new().weight(FontWeight::Bold))
-                            .child("Shift + Enter")
+                            .child("Shift + Enter"),
                     )
-                    .content(" in editor")
+                    .content(" in editor"),
             )
             .item(
                 Row::new()
@@ -76,10 +77,10 @@ impl Playground {
                     .s(Height::fill())
                     .s(Scrollbars::both())
                     .item(self.code_editor_panel())
-                    .item(self.example_panel())
+                    .item(self.example_panel()),
             )
     }
-    
+
     fn code_editor_panel(&self) -> impl Element {
         El::new()
             .s(Align::new().top())
@@ -91,26 +92,28 @@ impl Playground {
                 CodeEditor::new()
                     .s(RoundedCorners::all(10))
                     .s(Scrollbars::both())
-                    .on_key_down_event_with_options(EventOptions::new().preventable().parents_first(), {
-                        let run_command = self.run_command.clone();
-                        move |keyboard_event| {
-                            let RawKeyboardEvent::KeyDown(raw_event) = &keyboard_event.raw_event;
-                            if keyboard_event.key() == &Key::Enter && raw_event.shift_key() {
-                                keyboard_event.pass_to_parent(false);
-                                run_command.set(Some(RunCommand { filename: None }));
+                    .on_key_down_event_with_options(
+                        EventOptions::new().preventable().parents_first(),
+                        {
+                            let run_command = self.run_command.clone();
+                            move |keyboard_event| {
+                                let RawKeyboardEvent::KeyDown(raw_event) =
+                                    &keyboard_event.raw_event;
+                                if keyboard_event.key() == &Key::Enter && raw_event.shift_key() {
+                                    keyboard_event.pass_to_parent(false);
+                                    run_command.set(Some(RunCommand { filename: None }));
+                                }
                             }
-                        }
-                    })
+                        },
+                    )
                     .content_signal(self.source_code.signal_cloned())
                     .on_change({
                         let source_code = self.source_code.clone();
-                        move |content| {
-                            source_code.set_neq(Cow::from(content))
-                        }
-                    })
+                        move |content| source_code.set_neq(Cow::from(content))
+                    }),
             )
     }
-    
+
     fn example_panel(&self) -> impl Element {
         El::new()
             .s(Align::new().top())
@@ -122,19 +125,15 @@ impl Playground {
                     .s(RoundedCorners::all(10))
                     .s(Clip::both())
                     .s(Borders::all(
-                        Border::new()
-                        .color(color!("#282c34"))
-                        .width(4)
+                        Border::new().color(color!("#282c34")).width(4),
                     ))
                     .child_signal(self.run_command.signal().map_some({
                         let this = self.clone();
-                        move |run_command| {
-                            this.example_runner(run_command)
-                        }
-                }))
+                        move |run_command| this.example_runner(run_command)
+                    })),
             )
     }
-    
+
     fn example_runner(&self, run_command: RunCommand) -> impl Element {
         println!("Command to run example received!");
         let filename = run_command.filename.unwrap_or("custom code");
@@ -147,10 +146,12 @@ impl Playground {
                 .after_remove(move |_| drop(object))
                 .unify()
         } else {
-            El::new().child("Failed to run the example. See errors in dev console.").unify()
+            El::new()
+                .child("Failed to run the example. See errors in dev console.")
+                .unify()
         }
     }
-    
+
     fn example_buttons(&self) -> Vec<impl Element> {
         vec![
             self.example_button(make_example_data!("hello_world")),
@@ -158,18 +159,20 @@ impl Playground {
             self.example_button(make_example_data!("counter")),
         ]
     }
-    
+
     fn example_button(&self, example_data: ExampleData) -> impl Element {
         Button::new()
             .s(Padding::new().x(10).y(5))
             .s(Font::new().line(FontLine::new().underline().offset(3)))
             .label(example_data.filename)
             .on_press({
-                let source_code= self.source_code.clone();
+                let source_code = self.source_code.clone();
                 let run_command = self.run_command.clone();
-                move || { 
+                move || {
                     source_code.set_neq(Cow::from(example_data.source_code));
-                    run_command.set(Some(RunCommand { filename: Some(example_data.filename) }));
+                    run_command.set(Some(RunCommand {
+                        filename: Some(example_data.filename),
+                    }));
                 }
             })
     }

@@ -43,11 +43,16 @@ impl CodeEditor {
         }
     }
 
-    pub fn content_signal(self, content: impl Signal<Item = impl IntoCowStr<'static>> + 'static) -> Self {
+    pub fn content_signal(
+        self,
+        content: impl Signal<Item = impl IntoCowStr<'static>> + 'static,
+    ) -> Self {
         let controller = self.controller.clone();
         let task = Task::start_droppable(async move {
             let controller = controller.wait_for_some_cloned().await;
-            content.for_each_sync(|content| controller.set_content(&content.into_cow_str())).await;
+            content
+                .for_each_sync(|content| controller.set_content(&content.into_cow_str()))
+                .await;
         });
         self.after_remove(move |_| drop(task))
     }
@@ -60,9 +65,10 @@ impl CodeEditor {
             on_change(content)
         };
         let closure = Rc::new(Closure::new(callback));
-        let task = Task::start_droppable(self.controller.wait_for_some_ref(
-            clone!((closure) move |controller| controller.on_change(&closure)),
-        ));
+        let task =
+            Task::start_droppable(self.controller.wait_for_some_ref(
+                clone!((closure) move |controller| controller.on_change(&closure)),
+            ));
         self.after_remove(move |_| {
             drop(task);
             drop(closure);
