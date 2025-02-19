@@ -215,7 +215,10 @@ impl Variable {
             id: actor_id,
             description: variable_description,
         } = construct_info;
-        let construct_info = ConstructInfo::new(actor_id.with_child_id(0), variable_description);
+        let construct_info = ConstructInfo::new(
+            actor_id.with_child_id("wrapped Variable"),
+            variable_description,
+        );
         let actor_construct_info = ConstructInfo::new(actor_id, "Link variable value actor")
             .complete(ConstructType::ValueActor);
         let (link_value_sender, link_value_receiver) = mpsc::unbounded();
@@ -712,7 +715,8 @@ impl Object {
             id: actor_id,
             description: object_description,
         } = construct_info;
-        let construct_info = ConstructInfo::new(actor_id.with_child_id(0), object_description);
+        let construct_info =
+            ConstructInfo::new(actor_id.with_child_id("wrapped Object"), object_description);
         let actor_construct_info = ConstructInfo::new(actor_id, "Constant object wrapper")
             .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, variables.into());
@@ -804,8 +808,10 @@ impl TaggedObject {
             id: actor_id,
             description: tagged_object_description,
         } = construct_info;
-        let construct_info =
-            ConstructInfo::new(actor_id.with_child_id(0), tagged_object_description);
+        let construct_info = ConstructInfo::new(
+            actor_id.with_child_id("wrapped TaggedObject"),
+            tagged_object_description,
+        );
         let actor_construct_info = ConstructInfo::new(actor_id, "Tagged object wrapper")
             .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, tag.into(), variables.into());
@@ -885,7 +891,8 @@ impl Text {
             id: actor_id,
             description: text_description,
         } = construct_info;
-        let construct_info = ConstructInfo::new(actor_id.with_child_id(0), text_description);
+        let construct_info =
+            ConstructInfo::new(actor_id.with_child_id("wrapped Text"), text_description);
         let actor_construct_info = ConstructInfo::new(actor_id, "Constant text wrapper")
             .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, text.into());
@@ -949,7 +956,8 @@ impl Tag {
             id: actor_id,
             description: tag_description,
         } = construct_info;
-        let construct_info = ConstructInfo::new(actor_id.with_child_id(0), tag_description);
+        let construct_info =
+            ConstructInfo::new(actor_id.with_child_id("wrapped Tag"), tag_description);
         let actor_construct_info = ConstructInfo::new(actor_id, "Constant tag wrapper")
             .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, tag.into());
@@ -1013,7 +1021,8 @@ impl Number {
             id: actor_id,
             description: number_description,
         } = construct_info;
-        let construct_info = ConstructInfo::new(actor_id.with_child_id(0), number_description);
+        let construct_info =
+            ConstructInfo::new(actor_id.with_child_id("wrapped Number"), number_description);
         let actor_construct_info = ConstructInfo::new(actor_id, "Constant number wrapper)")
             .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, number.into());
@@ -1186,7 +1195,8 @@ impl List {
             id: actor_id,
             description: list_description,
         } = construct_info;
-        let construct_info = ConstructInfo::new(actor_id.with_child_id(0), list_description);
+        let construct_info =
+            ConstructInfo::new(actor_id.with_child_id("wrapped List"), list_description);
         let actor_construct_info = ConstructInfo::new(actor_id, "Constant list wrapper")
             .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, actor_context.clone(), items.into());

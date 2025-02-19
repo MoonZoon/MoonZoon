@@ -233,20 +233,20 @@ pub fn function_element_button(
             ),
             Variable::new_arc(
                 ConstructInfo::new(
-                    function_call_id.with_child_id(1),
+                    function_call_id.with_child_id(3),
                     "Element/stripe(..) -> ElementButton[settings]",
                 ),
                 "settings",
                 Object::new_arc_value_actor(
                     ConstructInfo::new(
-                        function_call_id.with_child_id(2),
+                        function_call_id.with_child_id(4),
                         "Element/stripe(..) -> ElementButton[settings: [..]]",
                     ),
                     actor_context,
                     [
                         Variable::new_arc(
                             ConstructInfo::new(
-                                function_call_id.with_child_id(1),
+                                function_call_id.with_child_id(5),
                                 "Element/stripe(..) -> ElementButton[settings: [style]]",
                             ),
                             "style",
@@ -254,7 +254,7 @@ pub fn function_element_button(
                         ),
                         Variable::new_arc(
                             ConstructInfo::new(
-                                function_call_id.with_child_id(1),
+                                function_call_id.with_child_id(6),
                                 "Element/stripe(..) -> ElementButton[settings: [label]]",
                             ),
                             "label",
@@ -287,7 +287,10 @@ pub fn function_math_sum(
         })
         .map(move |sum| {
             Number::new_value(
-                ConstructInfo::new(function_call_id.with_child_id(0), "Math/sum(..) -> Number"),
+                ConstructInfo::new(
+                    function_call_id.with_child_id("Math/sum result"),
+                    "Math/sum(..) -> Number",
+                ),
                 sum,
             )
         })
@@ -320,9 +323,10 @@ pub fn function_timer_interval(
             let function_call_id = function_call_id.clone();
             stream::unfold(function_call_id, move |function_call_id| {
                 async move {
+                    // @TODO how to properly resolve resuming?
                     Timer::sleep(milliseconds.round() as u32).await;
                     let output_value = Object::new_value(
-                        ConstructInfo::new(function_call_id.with_child_id(0), "Timer/interval(.. ) -> [..]"),
+                        ConstructInfo::new(function_call_id.with_child_id("Timer/interval result"), "Timer/interval(.. ) -> [..]"),
                         []
                     );
                     Some((output_value, function_call_id))

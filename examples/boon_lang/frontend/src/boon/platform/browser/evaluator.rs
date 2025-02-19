@@ -13,7 +13,7 @@ pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Arc<Obj
     let actor_context = ActorContext::default();
     let reference_connector = Arc::new(ReferenceConnector::new());
     Ok(Object::new_arc(
-        ConstructInfo::new(0, "root"),
+        ConstructInfo::new("root", "root"),
         expressions
             .into_iter()
             .map(
@@ -65,7 +65,7 @@ fn spanned_variable_into_variable(
         is_referenced,
     } = variable;
     let name: String = name.to_owned();
-    let construct_info = ConstructInfo::new(1, format!("{span}; {name}"));
+    let construct_info = ConstructInfo::new(format!("Span: {span}"), format!("{span}; {name}"));
     let variable = if matches!(
         &value,
         Spanned {
@@ -104,14 +104,14 @@ fn spanned_expression_into_value_actor(
         ))?,
         Expression::Literal(literal) => match literal {
             parser::Literal::Number(number) => Number::new_arc_value_actor(
-                ConstructInfo::new(8, format!("{span}; Number {number}")),
+                ConstructInfo::new(format!("Span: {span}"), format!("{span}; Number {number}")),
                 actor_context,
                 number,
             ),
             parser::Literal::Text(text) => {
                 let text = text.to_owned();
                 Text::new_arc_value_actor(
-                    ConstructInfo::new(8, format!("{span}; Text {text}")),
+                    ConstructInfo::new(format!("Span: {span}"), format!("{span}; Text {text}")),
                     actor_context,
                     text,
                 )
@@ -119,14 +119,14 @@ fn spanned_expression_into_value_actor(
             parser::Literal::Tag(tag) => {
                 let tag = tag.to_owned();
                 Tag::new_arc_value_actor(
-                    ConstructInfo::new(8, format!("{span}; Tag {tag}")),
+                    ConstructInfo::new(format!("Span: {span}"), format!("{span}; Tag {tag}")),
                     actor_context,
                     tag,
                 )
             }
         },
         Expression::List { items } => List::new_arc_value_actor(
-            ConstructInfo::new(7, format!("{span}; LIST {{..}}")),
+            ConstructInfo::new(format!("Span: {span}"), format!("{span}; LIST {{..}}")),
             actor_context.clone(),
             items
                 .into_iter()
@@ -140,7 +140,7 @@ fn spanned_expression_into_value_actor(
                 .collect::<Result<Vec<_>, _>>()?,
         ),
         Expression::Object(object) => Object::new_arc_value_actor(
-            ConstructInfo::new(6, format!("{span}; [..]")),
+            ConstructInfo::new(format!("Span: {span}"), format!("{span}; [..]")),
             actor_context.clone(),
             object
                 .variables
@@ -155,7 +155,7 @@ fn spanned_expression_into_value_actor(
                 .collect::<Result<Vec<_>, _>>()?,
         ),
         Expression::TaggedObject { tag, object } => TaggedObject::new_arc_value_actor(
-            ConstructInfo::new(6, format!("{span}; {tag}[..]")),
+            ConstructInfo::new(format!("Span: {span}"), format!("{span}; {tag}[..]")),
             actor_context.clone(),
             tag.to_owned(),
             object
@@ -185,7 +185,10 @@ fn spanned_expression_into_value_actor(
         Expression::FunctionCall { path, arguments } => {
             // @TODO better argument error handling
             FunctionCall::new_arc_value_actor(
-                ConstructInfo::new(2, format!("{span}; {}(..)", path.join("/"))),
+                ConstructInfo::new(
+                    format!("Span: {span}"),
+                    format!("{span}; {}(..)", path.join("/")),
+                ),
                 actor_context.clone(),
                 function_call_path_to_definition(&path, span)?,
                 arguments
@@ -248,7 +251,7 @@ fn spanned_expression_into_value_actor(
                 }
             };
             VariableOrArgumentReference::new_arc_value_actor(
-                ConstructInfo::new(13, format!("{span}; {{..}} (alias)")),
+                ConstructInfo::new(format!("Span: {span}"), format!("{span}; {{..}} (alias)")),
                 actor_context,
                 alias,
                 root_value_actor,
@@ -263,7 +266,7 @@ fn spanned_expression_into_value_actor(
             "LINK has to be the only variable value - e.g. `press: LINK`",
         ))?,
         Expression::Latest { inputs } => LatestCombinator::new_arc_value_actor(
-            ConstructInfo::new(11, format!("{span}; LATEST {{..}}")),
+            ConstructInfo::new(format!("Span: {span}"), format!("{span}; LATEST {{..}}")),
             actor_context.clone(),
             inputs
                 .into_iter()
@@ -379,7 +382,7 @@ fn pipe<'code>(
                 Some(Arc::new(ActorOutputValveSignal::new(impulse_receiver)));
 
             Ok(ThenCombinator::new_arc_value_actor(
-                ConstructInfo::new(4, format!("{to_span}; THEN")),
+                ConstructInfo::new(format!("Span: {to_span}"), format!("{to_span}; THEN")),
                 actor_context.clone(),
                 spanned_expression_into_value_actor(
                     *from,

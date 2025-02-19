@@ -101,8 +101,7 @@ fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
                 press_event = press_event_receiver.select_next_some() => {
                     if let Some(press_link_value_sender) = press_link_value_sender.as_ref() {
                         let press_event_object_value = Object::new_value(
-                            // @TODO generate id?
-                            ConstructInfo::new(123, "Button press event"),
+                            ConstructInfo::new("bridge::element_button::press_event", "Button press event"),
                             [],
                         );
                         if let Err(error) = press_link_value_sender.unbounded_send(press_event_object_value) {
