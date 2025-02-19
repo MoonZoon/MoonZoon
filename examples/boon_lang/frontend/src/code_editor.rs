@@ -1,8 +1,6 @@
 use std::rc::Rc;
 use zoon::*;
 
-pub use js_bridge::CodeEditorController;
-
 pub struct CodeEditor {
     raw_el: RawHtmlEl<web_sys::HtmlElement>,
     controller: Mutable<Option<js_bridge::CodeEditorController>>,

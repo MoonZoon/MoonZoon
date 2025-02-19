@@ -22,6 +22,13 @@ macro_rules! make_example_data {
     }};
 }
 
+static EXAMPLE_DATAS: [ExampleData; 4] = [
+    make_example_data!("minimal"),
+    make_example_data!("hello_world"),
+    make_example_data!("interval"),
+    make_example_data!("counter"),
+];
+
 #[derive(Clone, Copy)]
 struct RunCommand {
     filename: Option<&'static str>,
@@ -39,7 +46,7 @@ struct Playground {
 
 impl Playground {
     fn new() -> impl Element {
-        let source_code = Mutable::new(Cow::from("document: Document/new(root: 123)"));
+        let source_code = Mutable::new(Cow::from(EXAMPLE_DATAS[0].source_code));
         Self {
             source_code,
             run_command: Mutable::new(None),
@@ -57,7 +64,7 @@ impl Playground {
                 Row::new()
                     .s(Gap::new().x(20))
                     .multiline()
-                    .items(self.example_buttons()),
+                    .items(EXAMPLE_DATAS.map(|example_data| self.example_button(example_data))),
             )
             .item(
                 Paragraph::new()
@@ -151,14 +158,6 @@ impl Playground {
                 .child("Failed to run the example. See errors in dev console.")
                 .unify()
         }
-    }
-
-    fn example_buttons(&self) -> Vec<impl Element> {
-        vec![
-            self.example_button(make_example_data!("hello_world")),
-            self.example_button(make_example_data!("interval")),
-            self.example_button(make_example_data!("counter")),
-        ]
     }
 
     fn example_button(&self, example_data: ExampleData) -> impl Element {
