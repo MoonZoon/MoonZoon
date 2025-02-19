@@ -1,5 +1,6 @@
 use std::borrow::Cow;
-use zoon::{println, *};
+use std::rc::Rc;
+use zoon::{eprintln, println, *};
 
 mod boon;
 use boon::platform::browser::{bridge::object_with_document_to_element_signal, interpreter};
@@ -29,6 +30,8 @@ static EXAMPLE_DATAS: [ExampleData; 4] = [
     make_example_data!("counter"),
 ];
 
+static SOURCE_CODE_STORAGE_KEY: &str = "boon-example-source-code";
+
 #[derive(Clone, Copy)]
 struct RunCommand {
     filename: Option<&'static str>,
@@ -40,14 +43,30 @@ fn main() {
 
 #[derive(Clone)]
 struct Playground {
-    source_code: Mutable<Cow<'static, str>>,
+    source_code: Mutable<Rc<Cow<'static, str>>>,
     run_command: Mutable<Option<RunCommand>>,
+    store_source_code_task: Rc<TaskHandle>,
 }
 
 impl Playground {
     fn new() -> impl Element {
-        let source_code = Mutable::new(Cow::from(EXAMPLE_DATAS[0].source_code));
+        let source_code =
+            if let Some(Ok(source_code)) = local_storage().get(SOURCE_CODE_STORAGE_KEY) {
+                Cow::Owned(source_code)
+            } else {
+                Cow::Borrowed(EXAMPLE_DATAS[0].source_code)
+            };
+        let source_code = Mutable::new(Rc::new(source_code));
         Self {
+            store_source_code_task: Rc::new(Task::start_droppable(
+                source_code.signal_cloned().for_each_sync(|source_code| {
+                    if let Err(error) =
+                        local_storage().insert(SOURCE_CODE_STORAGE_KEY, &source_code)
+                    {
+                        eprintln!("Failed to store source code: {error:#?}");
+                    }
+                }),
+            )),
             source_code,
             run_command: Mutable::new(None),
         }
@@ -116,7 +135,7 @@ impl Playground {
                     .content_signal(self.source_code.signal_cloned())
                     .on_change({
                         let source_code = self.source_code.clone();
-                        move |content| source_code.set_neq(Cow::from(content))
+                        move |content| source_code.set_neq(Rc::new(Cow::from(content)))
                     }),
             )
     }
@@ -169,7 +188,7 @@ impl Playground {
                 let source_code = self.source_code.clone();
                 let run_command = self.run_command.clone();
                 move || {
-                    source_code.set_neq(Cow::from(example_data.source_code));
+                    source_code.set_neq(Rc::new(Cow::from(example_data.source_code)));
                     run_command.set(Some(RunCommand {
                         filename: Some(example_data.filename),
                     }));
