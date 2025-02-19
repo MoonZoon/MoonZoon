@@ -13,6 +13,7 @@ use zoon::future;
 use zoon::futures_channel::{mpsc, oneshot};
 use zoon::futures_util::select;
 use zoon::futures_util::stream::{self, Stream, StreamExt};
+use zoon::IntoCowStr;
 use zoon::{eprintln, println};
 use zoon::{Task, TaskHandle};
 
@@ -151,25 +152,25 @@ pub enum ConstructType {
 
 #[derive(Clone, Debug)]
 pub struct ConstructId {
-    ids: Arc<Vec<u64>>,
+    ids: Arc<Vec<Cow<'static, str>>>,
 }
 
 impl ConstructId {
-    pub fn new(id: u64) -> Self {
+    pub fn new(id: impl IntoCowStr<'static>) -> Self {
         Self {
-            ids: Arc::new(vec![id]),
+            ids: Arc::new(vec![id.into_cow_str()]),
         }
     }
 
-    pub fn with_child_id(&self, child: u64) -> Self {
+    pub fn with_child_id(&self, child: impl IntoCowStr<'static>) -> Self {
         let mut ids = Vec::clone(&self.ids);
-        ids.push(child);
+        ids.push(child.into_cow_str());
         Self { ids: Arc::new(ids) }
     }
 }
 
-impl From<u64> for ConstructId {
-    fn from(id: u64) -> Self {
+impl<T: IntoCowStr<'static>> From<T> for ConstructId {
+    fn from(id: T) -> Self {
         ConstructId::new(id)
     }
 }
