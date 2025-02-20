@@ -7,6 +7,7 @@ use super::engine::*;
 
 pub fn object_with_document_to_element_signal(
     root_object: Arc<Object>,
+    construct_context: ConstructContext,
 ) -> impl Signal<Item = Option<RawElOrText>> {
     let element_stream = root_object
         .expect_variable("document")
@@ -17,37 +18,37 @@ pub fn object_with_document_to_element_signal(
                 .expect_variable("root_element")
                 .subscribe()
         })
-        .map(value_to_element);
+        .map(move |value| value_to_element(value, construct_context.clone()));
 
     signal::from_stream(element_stream)
 }
 
-fn value_to_element(value: Value) -> RawElOrText {
+fn value_to_element(value: Value, construct_context: ConstructContext) -> RawElOrText {
     match value {
         Value::Text(text) => zoon::Text::new(text.text()).unify(),
         Value::Number(number) => zoon::Text::new(number.number()).unify(),
         Value::TaggedObject(tagged_object) => match tagged_object.tag() {
-            "ElementContainer" => element_container(tagged_object).unify(),
-            "ElementStripe" => element_stripe(tagged_object).unify(),
-            "ElementButton" => element_button(tagged_object).unify(),
+            "ElementContainer" => element_container(tagged_object, construct_context).unify(),
+            "ElementStripe" => element_stripe(tagged_object, construct_context).unify(),
+            "ElementButton" => element_button(tagged_object, construct_context).unify(),
             other => panic!("Element cannot be created from the tagged objectwith tag '{other}'"),
         },
         _ => panic!("Element cannot be created from the given Value type"),
     }
 }
 
-fn element_container(tagged_object: Arc<TaggedObject>) -> impl Element {
+fn element_container(tagged_object: Arc<TaggedObject>, construct_context: ConstructContext) -> impl Element {
     let settings_variable = tagged_object.expect_variable("settings");
 
     let child_stream = settings_variable
         .subscribe()
         .flat_map(|value| value.expect_object().expect_variable("child").subscribe())
-        .map(value_to_element);
+        .map(move |value| value_to_element(value, construct_context.clone()));
 
     El::new().child_signal(signal::from_stream(child_stream))
 }
 
-fn element_stripe(tagged_object: Arc<TaggedObject>) -> impl Element {
+fn element_stripe(tagged_object: Arc<TaggedObject>, construct_context: ConstructContext) -> impl Element {
     let settings_variable = tagged_object.expect_variable("settings");
 
     let direction_stream = settings_variable
@@ -68,13 +69,16 @@ fn element_stripe(tagged_object: Arc<TaggedObject>) -> impl Element {
     Stripe::new()
         .direction_signal(signal::from_stream(direction_stream).map(Option::unwrap_or_default))
         .items_signal_vec(
-            VecDiffStreamSignalVec(items_vec_diff_stream).map_signal(|value_actor| {
-                signal::from_stream(value_actor.subscribe().map(value_to_element))
+            VecDiffStreamSignalVec(items_vec_diff_stream).map_signal(move |value_actor| {
+                signal::from_stream(value_actor.subscribe().map({
+                    let construct_context = construct_context.clone();
+                    move |value| value_to_element(value, construct_context.clone())
+                }))
             }),
         )
 }
 
-fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
+fn element_button(tagged_object: Arc<TaggedObject>, construct_context: ConstructContext) -> impl Element {
     type PressEvent = ();
 
     let (press_event_sender, mut press_event_receiver) = mpsc::unbounded::<PressEvent>();
@@ -87,27 +91,31 @@ fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
         .map(|variable| variable.expect_link_value_sender())
         .fuse();
 
-    let press_handler_task = Task::start_droppable(async move {
-        let mut press_link_value_sender = None;
-        let mut press_event_object_value_version = 0u64;
-        loop {
-            select! {
-                new_press_link_value_sender = press_stream.next() => {
-                    if let Some(new_press_link_value_sender) = new_press_link_value_sender {
-                        press_link_value_sender = Some(new_press_link_value_sender);
-                    } else {
-                        break
+    let press_handler_task = Task::start_droppable({ 
+        let construct_context = construct_context.clone();
+        async move {
+            let mut press_link_value_sender = None;
+            let mut press_event_object_value_version = 0u64;
+            loop {
+                select! {
+                    new_press_link_value_sender = press_stream.next() => {
+                        if let Some(new_press_link_value_sender) = new_press_link_value_sender {
+                            press_link_value_sender = Some(new_press_link_value_sender);
+                        } else {
+                            break
+                        }
                     }
-                }
-                press_event = press_event_receiver.select_next_some() => {
-                    if let Some(press_link_value_sender) = press_link_value_sender.as_ref() {
-                        let press_event_object_value = Object::new_value(
-                            ConstructInfo::new(format!("bridge::element_button::press_event, version: {press_event_object_value_version}"), "Button press event"),
-                            [],
-                        );
-                        press_event_object_value_version += 1;
-                        if let Err(error) = press_link_value_sender.unbounded_send(press_event_object_value) {
-                            eprintln!("Failed to send button press event to event press link variable: {error}");
+                    press_event = press_event_receiver.select_next_some() => {
+                        if let Some(press_link_value_sender) = press_link_value_sender.as_ref() {
+                            let press_event_object_value = Object::new_value(
+                                ConstructInfo::new(format!("bridge::element_button::press_event, version: {press_event_object_value_version}"), "Button press event"),
+                                construct_context.clone(),
+                                [],
+                            );
+                            press_event_object_value_version += 1;
+                            if let Err(error) = press_link_value_sender.unbounded_send(press_event_object_value) {
+                                eprintln!("Failed to send button press event to event press link variable: {error}");
+                            }
                         }
                     }
                 }
@@ -120,7 +128,7 @@ fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
     let label_stream = settings_variable
         .subscribe()
         .flat_map(|value| value.expect_object().expect_variable("label").subscribe())
-        .map(value_to_element);
+        .map(move |value| value_to_element(value, construct_context.clone()));
 
     Button::new()
         .label_signal(signal::from_stream(label_stream).map(|label| {

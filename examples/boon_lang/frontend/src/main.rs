@@ -1,3 +1,6 @@
+// @TODO remove
+#![allow(unused_variables)]
+
 use std::borrow::Cow;
 use std::rc::Rc;
 use zoon::{eprintln, println, *};
@@ -164,11 +167,11 @@ impl Playground {
         println!("Command to run example received!");
         let filename = run_command.filename.unwrap_or("custom code");
         let source_code = self.source_code.lock_ref();
-        let object = interpreter::run(filename, &source_code);
+        let object_and_construct_context = interpreter::run(filename, &source_code);
         drop(source_code);
-        if let Some(object) = object {
+        if let Some((object, construct_context)) = object_and_construct_context {
             El::new()
-                .child_signal(object_with_document_to_element_signal(object.clone()))
+                .child_signal(object_with_document_to_element_signal(object.clone(), construct_context))
                 .after_remove(move |_| drop(object))
                 .unify()
         } else {

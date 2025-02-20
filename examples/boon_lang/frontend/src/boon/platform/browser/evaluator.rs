@@ -9,12 +9,13 @@ use super::engine::*;
 
 type EvaluateResult<'code, T> = Result<T, ParseError<'code, Token<'code>>>;
 
-pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Arc<Object>> {
+pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<(Arc<Object>, ConstructContext)> {
     let construct_context = ConstructContext::default();
     let actor_context = ActorContext::default();
     let reference_connector = Arc::new(ReferenceConnector::new());
-    Ok(Object::new_arc(
+    let root_object = Object::new_arc(
         ConstructInfo::new("root", "root"),
+        construct_context.clone(),
         expressions
             .into_iter()
             .map(
@@ -28,6 +29,7 @@ pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Arc<Obj
                                 span,
                                 node: *variable,
                             },
+                            construct_context.clone(),
                             actor_context.clone(),
                             reference_connector.clone(),
                         ),
@@ -47,12 +49,14 @@ pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Arc<Obj
                 },
             )
             .collect::<Result<Vec<_>, _>>()?,
-    ))
+    );
+    Ok((root_object, construct_context))
 }
 
 // @TODO Is the rule "LINK has to be the only variable value" necessary? Validate it by the parser?
 fn spanned_variable_into_variable(
     variable: Spanned<parser::Variable>,
+    construct_context: ConstructContext,
     actor_context: ActorContext,
     reference_connector: Arc<ReferenceConnector>,
 ) -> EvaluateResult<Arc<Variable>> {
@@ -74,12 +78,13 @@ fn spanned_variable_into_variable(
             node: Expression::Link
         }
     ) {
-        Variable::new_link_arc(construct_info, name, actor_context)
+        Variable::new_link_arc(construct_info, construct_context, name, actor_context)
     } else {
         Variable::new_arc(
             construct_info,
+            construct_context.clone(),
             name,
-            spanned_expression_into_value_actor(value, actor_context, reference_connector.clone())?,
+            spanned_expression_into_value_actor(value, construct_context, actor_context, reference_connector.clone())?,
         )
     };
     if is_referenced {
@@ -91,6 +96,7 @@ fn spanned_variable_into_variable(
 // @TODO resolve ids
 fn spanned_expression_into_value_actor(
     expression: Spanned<Expression>,
+    construct_context: ConstructContext,
     actor_context: ActorContext,
     reference_connector: Arc<ReferenceConnector>,
 ) -> EvaluateResult<Arc<ValueActor>> {
@@ -106,6 +112,7 @@ fn spanned_expression_into_value_actor(
         Expression::Literal(literal) => match literal {
             parser::Literal::Number(number) => Number::new_arc_value_actor(
                 ConstructInfo::new(format!("Span: {span}"), format!("{span}; Number {number}")),
+                construct_context,
                 actor_context,
                 number,
             ),
@@ -113,6 +120,7 @@ fn spanned_expression_into_value_actor(
                 let text = text.to_owned();
                 Text::new_arc_value_actor(
                     ConstructInfo::new(format!("Span: {span}"), format!("{span}; Text {text}")),
+                    construct_context,
                     actor_context,
                     text,
                 )
@@ -121,6 +129,7 @@ fn spanned_expression_into_value_actor(
                 let tag = tag.to_owned();
                 Tag::new_arc_value_actor(
                     ConstructInfo::new(format!("Span: {span}"), format!("{span}; Tag {tag}")),
+                    construct_context,
                     actor_context,
                     tag,
                 )
@@ -128,12 +137,14 @@ fn spanned_expression_into_value_actor(
         },
         Expression::List { items } => List::new_arc_value_actor(
             ConstructInfo::new(format!("Span: {span}"), format!("{span}; LIST {{..}}")),
+            construct_context.clone(),
             actor_context.clone(),
             items
                 .into_iter()
                 .map(|item| {
                     spanned_expression_into_value_actor(
                         item,
+                        construct_context.clone(),
                         actor_context.clone(),
                         reference_connector.clone(),
                     )
@@ -142,6 +153,7 @@ fn spanned_expression_into_value_actor(
         ),
         Expression::Object(object) => Object::new_arc_value_actor(
             ConstructInfo::new(format!("Span: {span}"), format!("{span}; [..]")),
+            construct_context.clone(),
             actor_context.clone(),
             object
                 .variables
@@ -149,6 +161,7 @@ fn spanned_expression_into_value_actor(
                 .map(|variable| {
                     spanned_variable_into_variable(
                         variable,
+                        construct_context.clone(),
                         actor_context.clone(),
                         reference_connector.clone(),
                     )
@@ -157,6 +170,7 @@ fn spanned_expression_into_value_actor(
         ),
         Expression::TaggedObject { tag, object } => TaggedObject::new_arc_value_actor(
             ConstructInfo::new(format!("Span: {span}"), format!("{span}; {tag}[..]")),
+            construct_context.clone(),
             actor_context.clone(),
             tag.to_owned(),
             object
@@ -165,6 +179,7 @@ fn spanned_expression_into_value_actor(
                 .map(|variable| {
                     spanned_variable_into_variable(
                         variable,
+                        construct_context.clone(),
                         actor_context.clone(),
                         reference_connector.clone(),
                     )
@@ -190,6 +205,7 @@ fn spanned_expression_into_value_actor(
                     format!("Span: {span}"),
                     format!("{span}; {}(..)", path.join("/")),
                 ),
+                construct_context.clone(),
                 actor_context.clone(),
                 function_call_path_to_definition(&path, span)?,
                 arguments
@@ -213,6 +229,7 @@ fn spanned_expression_into_value_actor(
                             };
                             let actor = spanned_expression_into_value_actor(
                                 value,
+                                construct_context.clone(),
                                 actor_context.clone(),
                                 reference_connector.clone(),
                             );
@@ -253,6 +270,7 @@ fn spanned_expression_into_value_actor(
             };
             VariableOrArgumentReference::new_arc_value_actor(
                 ConstructInfo::new(format!("Span: {span}"), format!("{span}; {alias} (alias)")),
+                construct_context,
                 actor_context,
                 alias,
                 root_value_actor,
@@ -268,12 +286,14 @@ fn spanned_expression_into_value_actor(
         ))?,
         Expression::Latest { inputs } => LatestCombinator::new_arc_value_actor(
             ConstructInfo::new(format!("Span: {span}"), format!("{span}; LATEST {{..}}")),
+            construct_context.clone(),
             actor_context.clone(),
             inputs
                 .into_iter()
                 .map(|input| {
                     spanned_expression_into_value_actor(
                         input,
+                        construct_context.clone(),
                         actor_context.clone(),
                         reference_connector.clone(),
                     )
@@ -292,7 +312,7 @@ fn spanned_expression_into_value_actor(
             span,
             "Not supported yet, sorry [Expression::While]",
         ))?,
-        Expression::Pipe { from, to } => pipe(from, to, actor_context, reference_connector)?,
+        Expression::Pipe { from, to } => pipe(from, to, construct_context, actor_context, reference_connector)?,
         Expression::Skip => Err(ParseError::custom(
             span,
             "Not supported yet, sorry [Expression::Skip]",
@@ -318,26 +338,26 @@ fn function_call_path_to_definition<'code>(
     span: Span,
 ) -> EvaluateResult<
     'code,
-    impl Fn(Arc<Vec<Arc<ValueActor>>>, ConstructId, ActorContext) -> Pin<Box<dyn Stream<Item = Value>>>,
+    impl Fn(Arc<Vec<Arc<ValueActor>>>, ConstructId, ConstructContext, ActorContext) -> Pin<Box<dyn Stream<Item = Value>>>,
 > {
     let definition = match path {
-        ["Document", "new"] => |arguments, id, actor_context| {
-            api::function_document_new(arguments, id, actor_context).boxed_local()
+        ["Document", "new"] => |arguments, id, construct_context, actor_context| {
+            api::function_document_new(arguments, id, construct_context, actor_context).boxed_local()
         },
-        ["Element", "container"] => |arguments, id, actor_context| {
-            api::function_element_container(arguments, id, actor_context).boxed_local()
+        ["Element", "container"] => |arguments, id, construct_context, actor_context| {
+            api::function_element_container(arguments, id, construct_context, actor_context).boxed_local()
         },
-        ["Element", "stripe"] => |arguments, id, actor_context| {
-            api::function_element_stripe(arguments, id, actor_context).boxed_local()
+        ["Element", "stripe"] => |arguments, id, construct_context, actor_context| {
+            api::function_element_stripe(arguments, id, construct_context, actor_context).boxed_local()
         },
-        ["Element", "button"] => |arguments, id, actor_context| {
-            api::function_element_button(arguments, id, actor_context).boxed_local()
+        ["Element", "button"] => |arguments, id, construct_context, actor_context| {
+            api::function_element_button(arguments, id, construct_context, actor_context).boxed_local()
         },
-        ["Math", "sum"] => |arguments, id, actor_context| {
-            api::function_math_sum(arguments, id, actor_context).boxed_local()
+        ["Math", "sum"] => |arguments, id, construct_context, actor_context| {
+            api::function_math_sum(arguments, id, construct_context, actor_context).boxed_local()
         },
-        ["Timer", "interval"] => |arguments, id, actor_context| {
-            api::function_timer_interval(arguments, id, actor_context).boxed_local()
+        ["Timer", "interval"] => |arguments, id, construct_context, actor_context| {
+            api::function_timer_interval(arguments, id, construct_context, actor_context).boxed_local()
         },
         _ => Err(ParseError::custom(
             span,
@@ -350,6 +370,7 @@ fn function_call_path_to_definition<'code>(
 fn pipe<'code>(
     from: Box<Spanned<Expression<'code>>>,
     mut to: Box<Spanned<Expression<'code>>>,
+    construct_context: ConstructContext,
     actor_context: ActorContext,
     reference_connector: Arc<ReferenceConnector>,
 ) -> EvaluateResult<'code, Arc<ValueActor>> {
@@ -370,7 +391,7 @@ fn pipe<'code>(
             };
             // @TODO arguments: Vec -> arguments: VecDeque?
             arguments.insert(0, argument);
-            spanned_expression_into_value_actor(*to, actor_context, reference_connector)
+            spanned_expression_into_value_actor(*to, construct_context, actor_context, reference_connector)
         }
         Expression::LinkSetter { alias } => Err(ParseError::custom(
             to.span,
@@ -384,15 +405,18 @@ fn pipe<'code>(
 
             Ok(ThenCombinator::new_arc_value_actor(
                 ConstructInfo::new(format!("Span: {to_span}"), format!("{to_span}; THEN")),
+                construct_context.clone(),
                 actor_context.clone(),
                 spanned_expression_into_value_actor(
                     *from,
+                    construct_context.clone(),
                     actor_context.clone(),
                     reference_connector.clone(),
                 )?,
                 impulse_sender,
                 spanned_expression_into_value_actor(
                     *body,
+                    construct_context,
                     body_actor_context,
                     reference_connector,
                 )?,

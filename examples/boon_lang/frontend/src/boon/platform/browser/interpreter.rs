@@ -1,14 +1,14 @@
 use crate::boon::parser::{
     lexer, parser, resolve_references, Input, ParseError, Parser, Span, Spanned, Token,
 };
-use crate::boon::platform::browser::{engine::Object, evaluator::evaluate};
+use crate::boon::platform::browser::{engine::{Object, ConstructContext}, evaluator::evaluate};
 use ariadne::{Config, Label, Report, ReportKind, Source};
 use std::fmt;
 use std::io::{Cursor, Read};
 use std::sync::Arc;
 use zoon::{eprintln, println, UnwrapThrowExt};
 
-pub fn run(filename: &str, source_code: &str) -> Option<Arc<Object>> {
+pub fn run(filename: &str, source_code: &str) -> Option<(Arc<Object>, ConstructContext)> {
     println!("[Source Code ({filename})]");
     println!("{source_code}");
 
@@ -58,7 +58,7 @@ pub fn run(filename: &str, source_code: &str) -> Option<Arc<Object>> {
     println!("{ast_with_reference_data:#?}");
 
     let errors = match evaluate(ast_with_reference_data) {
-        Ok(root_object) => return Some(root_object),
+        Ok((root_object, construct_context)) => return Some((root_object, construct_context)),
         Err(evaluation_error) => [evaluation_error],
     };
     println!("[Evaluation Errors]");
