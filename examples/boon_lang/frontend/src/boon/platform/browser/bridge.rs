@@ -89,6 +89,7 @@ fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
 
     let press_handler_task = Task::start_droppable(async move {
         let mut press_link_value_sender = None;
+        let mut press_event_object_value_version = 0u64;
         loop {
             select! {
                 new_press_link_value_sender = press_stream.next() => {
@@ -101,9 +102,10 @@ fn element_button(tagged_object: Arc<TaggedObject>) -> impl Element {
                 press_event = press_event_receiver.select_next_some() => {
                     if let Some(press_link_value_sender) = press_link_value_sender.as_ref() {
                         let press_event_object_value = Object::new_value(
-                            ConstructInfo::new("bridge::element_button::press_event", "Button press event"),
+                            ConstructInfo::new(format!("bridge::element_button::press_event, version: {press_event_object_value_version}"), "Button press event"),
                             [],
                         );
+                        press_event_object_value_version += 1;
                         if let Err(error) = press_link_value_sender.unbounded_send(press_event_object_value) {
                             eprintln!("Failed to send button press event to event press link variable: {error}");
                         }

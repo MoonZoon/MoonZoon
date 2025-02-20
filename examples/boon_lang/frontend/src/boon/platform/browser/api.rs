@@ -285,14 +285,20 @@ pub fn function_math_sum(
             *sum += number;
             future::ready(Some(*sum))
         })
-        .map(move |sum| {
-            Number::new_value(
-                ConstructInfo::new(
-                    function_call_id.with_child_id("Math/sum result"),
-                    "Math/sum(..) -> Number",
-                ),
-                sum,
-            )
+        .map({
+            let mut result_version = 0u64;
+            move |sum| {
+                let value = Number::new_value(
+                    ConstructInfo::new(
+                        function_call_id
+                            .with_child_id(format!("Math/sum result v.{result_version}")),
+                        "Math/sum(..) -> Number",
+                    ),
+                    sum,
+                );
+                result_version += 1;
+                value
+            }
         })
 }
 
@@ -321,15 +327,15 @@ pub fn function_timer_interval(
         })
         .flat_map(move |milliseconds| {
             let function_call_id = function_call_id.clone();
-            stream::unfold(function_call_id, move |function_call_id| {
+            stream::unfold((function_call_id, 0u64), move |(function_call_id, result_version)| {
                 async move {
                     // @TODO how to properly resolve resuming?
                     Timer::sleep(milliseconds.round() as u32).await;
                     let output_value = Object::new_value(
-                        ConstructInfo::new(function_call_id.with_child_id("Timer/interval result"), "Timer/interval(.. ) -> [..]"),
+                        ConstructInfo::new(function_call_id.with_child_id("Timer/interval result v.{result_version}"), "Timer/interval(.. ) -> [..]"),
                         []
                     );
-                    Some((output_value, function_call_id))
+                    Some((output_value, (function_call_id, result_version + 1)))
                 }
             })
         })
