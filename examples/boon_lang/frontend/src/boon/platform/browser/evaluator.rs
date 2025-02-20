@@ -258,7 +258,7 @@ fn spanned_expression_into_value_actor(
                 }
             };
             VariableOrArgumentReference::new_arc_value_actor(
-                ConstructInfo::new(format!("Span: {span}"), format!("{span}; {{..}} (alias)")),
+                ConstructInfo::new(format!("Span: {span}"), format!("{span}; {alias} (alias)")),
                 actor_context,
                 alias,
                 root_value_actor,

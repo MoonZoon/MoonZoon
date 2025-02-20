@@ -1,4 +1,5 @@
 use chumsky::{input::ValueInput, pratt::*, prelude::*};
+use std::fmt;
 
 mod lexer;
 pub use lexer::{lexer, Token};
@@ -461,6 +462,27 @@ pub enum Alias<'code> {
     WithPassed {
         extra_parts: Vec<&'code str>,
     },
+}
+
+impl<'code> fmt::Display for Alias<'code> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::WithPassed { extra_parts } => {
+                let passed = Token::Passed;
+                if extra_parts.is_empty() {
+                    write!(f, "{passed}")
+                } else {
+                    write!(f, "{passed}.{}", extra_parts.join("."))
+                }
+            }
+            Self::WithoutPassed {
+                parts,
+                referenceables: _,
+            } => {
+                write!(f, "{}", parts.join("."))
+            }
+        }
+    }
 }
 
 #[derive(Debug)]
