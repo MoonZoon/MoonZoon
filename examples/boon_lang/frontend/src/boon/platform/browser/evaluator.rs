@@ -9,7 +9,9 @@ use super::engine::*;
 
 type EvaluateResult<'code, T> = Result<T, ParseError<'code, Token<'code>>>;
 
-pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<(Arc<Object>, ConstructContext)> {
+pub fn evaluate(
+    expressions: Vec<Spanned<Expression>>,
+) -> EvaluateResult<(Arc<Object>, ConstructContext)> {
     let construct_context = ConstructContext::default();
     let actor_context = ActorContext::default();
     let reference_connector = Arc::new(ReferenceConnector::new());
@@ -84,7 +86,12 @@ fn spanned_variable_into_variable(
             construct_info,
             construct_context.clone(),
             name,
-            spanned_expression_into_value_actor(value, construct_context, actor_context, reference_connector.clone())?,
+            spanned_expression_into_value_actor(
+                value,
+                construct_context,
+                actor_context,
+                reference_connector.clone(),
+            )?,
         )
     };
     if is_referenced {
@@ -312,7 +319,13 @@ fn spanned_expression_into_value_actor(
             span,
             "Not supported yet, sorry [Expression::While]",
         ))?,
-        Expression::Pipe { from, to } => pipe(from, to, construct_context, actor_context, reference_connector)?,
+        Expression::Pipe { from, to } => pipe(
+            from,
+            to,
+            construct_context,
+            actor_context,
+            reference_connector,
+        )?,
         Expression::Skip => Err(ParseError::custom(
             span,
             "Not supported yet, sorry [Expression::Skip]",
@@ -338,26 +351,36 @@ fn function_call_path_to_definition<'code>(
     span: Span,
 ) -> EvaluateResult<
     'code,
-    impl Fn(Arc<Vec<Arc<ValueActor>>>, ConstructId, ConstructContext, ActorContext) -> Pin<Box<dyn Stream<Item = Value>>>,
+    impl Fn(
+        Arc<Vec<Arc<ValueActor>>>,
+        ConstructId,
+        ConstructContext,
+        ActorContext,
+    ) -> Pin<Box<dyn Stream<Item = Value>>>,
 > {
     let definition = match path {
         ["Document", "new"] => |arguments, id, construct_context, actor_context| {
-            api::function_document_new(arguments, id, construct_context, actor_context).boxed_local()
+            api::function_document_new(arguments, id, construct_context, actor_context)
+                .boxed_local()
         },
         ["Element", "container"] => |arguments, id, construct_context, actor_context| {
-            api::function_element_container(arguments, id, construct_context, actor_context).boxed_local()
+            api::function_element_container(arguments, id, construct_context, actor_context)
+                .boxed_local()
         },
         ["Element", "stripe"] => |arguments, id, construct_context, actor_context| {
-            api::function_element_stripe(arguments, id, construct_context, actor_context).boxed_local()
+            api::function_element_stripe(arguments, id, construct_context, actor_context)
+                .boxed_local()
         },
         ["Element", "button"] => |arguments, id, construct_context, actor_context| {
-            api::function_element_button(arguments, id, construct_context, actor_context).boxed_local()
+            api::function_element_button(arguments, id, construct_context, actor_context)
+                .boxed_local()
         },
         ["Math", "sum"] => |arguments, id, construct_context, actor_context| {
             api::function_math_sum(arguments, id, construct_context, actor_context).boxed_local()
         },
         ["Timer", "interval"] => |arguments, id, construct_context, actor_context| {
-            api::function_timer_interval(arguments, id, construct_context, actor_context).boxed_local()
+            api::function_timer_interval(arguments, id, construct_context, actor_context)
+                .boxed_local()
         },
         _ => Err(ParseError::custom(
             span,
@@ -391,7 +414,12 @@ fn pipe<'code>(
             };
             // @TODO arguments: Vec -> arguments: VecDeque?
             arguments.insert(0, argument);
-            spanned_expression_into_value_actor(*to, construct_context, actor_context, reference_connector)
+            spanned_expression_into_value_actor(
+                *to,
+                construct_context,
+                actor_context,
+                reference_connector,
+            )
         }
         Expression::LinkSetter { alias } => Err(ParseError::custom(
             to.span,

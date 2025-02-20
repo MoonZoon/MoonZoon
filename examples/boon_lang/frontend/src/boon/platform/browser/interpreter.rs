@@ -1,7 +1,10 @@
 use crate::boon::parser::{
     lexer, parser, resolve_references, Input, ParseError, Parser, Span, Spanned, Token,
 };
-use crate::boon::platform::browser::{engine::{Object, ConstructContext}, evaluator::evaluate};
+use crate::boon::platform::browser::{
+    engine::{ConstructContext, Object},
+    evaluator::evaluate,
+};
 use ariadne::{Config, Label, Report, ReportKind, Source};
 use std::fmt;
 use std::io::{Cursor, Read};

@@ -171,7 +171,10 @@ impl Playground {
         drop(source_code);
         if let Some((object, construct_context)) = object_and_construct_context {
             El::new()
-                .child_signal(object_with_document_to_element_signal(object.clone(), construct_context))
+                .child_signal(object_with_document_to_element_signal(
+                    object.clone(),
+                    construct_context,
+                ))
                 .after_remove(move |_| drop(object))
                 .unify()
         } else {

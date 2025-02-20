@@ -37,7 +37,10 @@ fn value_to_element(value: Value, construct_context: ConstructContext) -> RawElO
     }
 }
 
-fn element_container(tagged_object: Arc<TaggedObject>, construct_context: ConstructContext) -> impl Element {
+fn element_container(
+    tagged_object: Arc<TaggedObject>,
+    construct_context: ConstructContext,
+) -> impl Element {
     let settings_variable = tagged_object.expect_variable("settings");
 
     let child_stream = settings_variable
@@ -48,7 +51,10 @@ fn element_container(tagged_object: Arc<TaggedObject>, construct_context: Constr
     El::new().child_signal(signal::from_stream(child_stream))
 }
 
-fn element_stripe(tagged_object: Arc<TaggedObject>, construct_context: ConstructContext) -> impl Element {
+fn element_stripe(
+    tagged_object: Arc<TaggedObject>,
+    construct_context: ConstructContext,
+) -> impl Element {
     let settings_variable = tagged_object.expect_variable("settings");
 
     let direction_stream = settings_variable
@@ -68,17 +74,20 @@ fn element_stripe(tagged_object: Arc<TaggedObject>, construct_context: Construct
 
     Stripe::new()
         .direction_signal(signal::from_stream(direction_stream).map(Option::unwrap_or_default))
-        .items_signal_vec(
-            VecDiffStreamSignalVec(items_vec_diff_stream).map_signal(move |value_actor| {
+        .items_signal_vec(VecDiffStreamSignalVec(items_vec_diff_stream).map_signal(
+            move |value_actor| {
                 signal::from_stream(value_actor.subscribe().map({
                     let construct_context = construct_context.clone();
                     move |value| value_to_element(value, construct_context.clone())
                 }))
-            }),
-        )
+            },
+        ))
 }
 
-fn element_button(tagged_object: Arc<TaggedObject>, construct_context: ConstructContext) -> impl Element {
+fn element_button(
+    tagged_object: Arc<TaggedObject>,
+    construct_context: ConstructContext,
+) -> impl Element {
     type PressEvent = ();
 
     let (press_event_sender, mut press_event_receiver) = mpsc::unbounded::<PressEvent>();
@@ -91,7 +100,7 @@ fn element_button(tagged_object: Arc<TaggedObject>, construct_context: Construct
         .map(|variable| variable.expect_link_value_sender())
         .fuse();
 
-    let press_handler_task = Task::start_droppable({ 
+    let press_handler_task = Task::start_droppable({
         let construct_context = construct_context.clone();
         async move {
             let mut press_link_value_sender = None;

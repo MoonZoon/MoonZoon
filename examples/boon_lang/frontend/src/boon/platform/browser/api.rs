@@ -353,7 +353,7 @@ pub fn function_timer_interval(
         })
         .flat_map(move |milliseconds| {
             let function_call_id = function_call_id.clone();
-            stream::unfold((function_call_id, 0u64), { 
+            stream::unfold((function_call_id, 0u64), {
                 let construct_context = construct_context.clone();
                 move |(function_call_id, result_version)| {
                     let construct_context = construct_context.clone();
