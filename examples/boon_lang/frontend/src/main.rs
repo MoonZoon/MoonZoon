@@ -11,6 +11,9 @@ use boon::platform::browser::{bridge::object_with_document_to_element_signal, in
 mod code_editor;
 use code_editor::CodeEditor;
 
+static SOURCE_CODE_STORAGE_KEY: &str = "boon-example-source-code";
+static STATES_STORAGE_KEY: &str = "boon-example-states";
+
 #[derive(Clone, Copy)]
 struct ExampleData {
     filename: &'static str,
@@ -32,8 +35,6 @@ static EXAMPLE_DATAS: [ExampleData; 4] = [
     make_example_data!("interval"),
     make_example_data!("counter"),
 ];
-
-static SOURCE_CODE_STORAGE_KEY: &str = "boon-example-source-code";
 
 #[derive(Clone, Copy)]
 struct RunCommand {
@@ -167,7 +168,7 @@ impl Playground {
         println!("Command to run example received!");
         let filename = run_command.filename.unwrap_or("custom code");
         let source_code = self.source_code.lock_ref();
-        let object_and_construct_context = interpreter::run(filename, &source_code);
+        let object_and_construct_context = interpreter::run(filename, &source_code, STATES_STORAGE_KEY);
         drop(source_code);
         if let Some((object, construct_context)) = object_and_construct_context {
             El::new()

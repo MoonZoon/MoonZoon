@@ -302,12 +302,30 @@ pub fn function_math_sum(
     let [argument_increment] = arguments.as_slice() else {
         panic!("Unexpected argument count")
     };
-    argument_increment
-        .subscribe()
-        .map(|value| value.expect_number().number())
-        .scan(0., |sum, number| {
-            *sum += number;
-            future::ready(Some(*sum))
+    let storage = construct_context.construct_storage.clone();
+    stream::once( {
+            let storage = storage.clone();
+            let function_call_id = function_call_id.clone();
+            async move { storage.load_state(function_call_id).await }
+        })
+        .filter_map(future::ready)
+        .chain(
+            argument_increment
+                .subscribe()
+                .map(|value| value.expect_number().number())
+        )
+        .scan(0., {
+            let function_call_id = function_call_id.clone();
+            move |sum, number| { 
+                let storage = storage.clone();
+                let function_call_id = function_call_id.clone();
+                *sum += number;
+                let sum = *sum;
+                async move {
+                    storage.save_state(function_call_id, &sum).await;
+                    Some(sum)
+                }
+            }
         })
         .map({
             let mut result_version = 0u64;
@@ -358,7 +376,7 @@ pub fn function_timer_interval(
                 move |(function_call_id, result_version)| {
                     let construct_context = construct_context.clone();
                     async move {
-                        // @TODO how to properly resolve resuming?
+                        // @TODO How to properly resolve resuming? Only if it's a longer interval?
                         Timer::sleep(milliseconds.round() as u32).await;
                         let output_value = Object::new_value(
                             ConstructInfo::new(function_call_id.with_child_id("Timer/interval result v.{result_version}"), "Timer/interval(.. ) -> [..]"),

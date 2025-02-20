@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 
 use std::borrow::Cow;
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 use std::future::Future;
 use std::pin::pin;
 use std::sync::Arc;
@@ -15,11 +15,11 @@ use zoon::futures_util::select;
 use zoon::futures_util::stream::{self, Stream, StreamExt};
 use zoon::IntoCowStr;
 use zoon::{eprintln, println};
+use zoon::{serde_json, DeserializeOwned, Serialize, Deserialize, serde};
 use zoon::{Task, TaskHandle};
+use zoon::{local_storage, WebStorage};
 
 const LOG_DROPS_AND_LOOP_ENDS: bool = false;
-
-// @TODO Replace `[]` with `impl Into<Vec..` and `&'static str` with `Cow<'static, str>` everywhere?
 
 // --- constant ---
 
@@ -29,13 +29,105 @@ pub fn constant<T>(item: T) -> impl Stream<Item = T> {
 
 // --- ConstructContext ---
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct ConstructContext {
     pub construct_storage: Arc<ConstructStorage>,
 }
 
-#[derive(Default)]
-pub struct ConstructStorage {}
+// --- ConstructStorage ---
+
+pub struct ConstructStorage {
+    state_inserter_sender: 
+        mpsc::UnboundedSender<(ConstructId, serde_json::Value, oneshot::Sender<()>)>,
+    state_getter_sender:
+        mpsc::UnboundedSender<(ConstructId, oneshot::Sender<Option<serde_json::Value>>)>,
+    loop_task: TaskHandle,
+}
+
+impl ConstructStorage {
+    pub fn new(states_local_storage_key: impl Into<Cow<'static, str>>) -> Self {
+        let states_local_storage_key = states_local_storage_key.into();
+        let (state_inserter_sender, mut state_inserter_receiver) =
+            mpsc::unbounded();
+        let (state_getter_sender, mut state_getter_receiver) = mpsc::unbounded();
+        Self {
+            state_inserter_sender,
+            state_getter_sender,
+            loop_task: Task::start_droppable(async move {
+                let mut states = match local_storage().get(&states_local_storage_key) {
+                    None => BTreeMap::<String, serde_json::Value>::new(),
+                    Some(Ok(states)) => states,
+                    Some(Err(error)) => panic!("Failed to deserialize states: {error:#}"),
+                };
+                loop {
+                    select! {
+                        (construct_id, json_value, confirmation_sender) = state_inserter_receiver.select_next_some() => {
+                            // @TODO BTreeMap can be serialized only if the key is String:
+                            // - implement Display for ConstructId?
+                            // - remove derives for ConstructId?
+                            // - a better option?
+                            states.insert(format!("{construct_id:?}"), json_value);
+                            // @TODO Optimize?
+                            if let Err(error) = local_storage().insert(&states_local_storage_key, &states) {
+                                eprintln!("Failed to save states: {error:#}");
+                            }
+                            if confirmation_sender.send(()).is_err() {
+                                eprintln!("Failed to send save confirmation from construct storage");
+                            }
+                        },
+                        (construct_id, state_sender) = state_getter_receiver.select_next_some() => {
+                            // @TODO Cheaper cloning? Replace get with remove?
+                            let state = states.get(&format!("{construct_id:?}")).cloned();
+                            if state_sender.send(state).is_err() {
+                                eprintln!("Failed to send state from construct storage");
+                            }
+                        }
+                    }
+                }
+            }),
+        }
+    }
+
+    pub async fn save_state<T: Serialize>(&self, construct_id: ConstructId, state: &T) {
+        let json_value = match serde_json::to_value(state) {
+            Ok(json_value) => json_value,
+            Err(error) => {
+                eprintln!("Failed to save state: {error:#}");
+                return
+            }
+        };
+        let (confirmation_sender, confirmation_receiver) = oneshot::channel::<()>();
+        if let Err(error) = self
+            .state_inserter_sender
+            .unbounded_send((construct_id, json_value, confirmation_sender))
+        {
+            eprintln!("Failed to save state: {error:#}")
+        }
+        confirmation_receiver
+            .await
+            .expect("Failed to get confirmation from ConstructStorage")
+    }
+
+    // @TODO is &self enough?
+    pub async fn load_state<T: DeserializeOwned>(self: Arc<Self>, construct_id: ConstructId) -> Option<T> {
+        let (state_sender, state_receiver) = oneshot::channel::<Option<serde_json::Value>>();
+        if let Err(error) = self
+            .state_getter_sender
+            .unbounded_send((construct_id, state_sender))
+        {
+            eprintln!("Failed to load state: {error:#}")
+        }
+        let json_value = state_receiver
+            .await
+            .expect("Failed to get state from ConstructStorage")?;
+        match serde_json::from_value(json_value) {
+            Ok(state) => Some(state),
+            Err(error) => {
+                panic!("Failed to load state: {error:#}");
+            }
+        }
+    }
+}
 
 // --- ActorContext ---
 
@@ -160,7 +252,8 @@ pub enum ConstructType {
 
 // --- ConstructId ---
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(crate = "serde")]
 pub struct ConstructId {
     ids: Arc<Vec<Cow<'static, str>>>,
 }
