@@ -27,12 +27,21 @@ pub fn constant<T>(item: T) -> impl Stream<Item = T> {
     stream::once(future::ready(item)).chain(stream::once(future::pending()))
 }
 
+// --- ConstructContext ---
+
+#[derive(Default, Clone)]
+pub struct ConstructContext {
+    pub construct_storage: Arc<ConstructStorage>,
+}
+
+#[derive(Default)]
+pub struct ConstructStorage {}
+
 // --- ActorContext ---
 
-#[derive(Clone)]
+#[derive(Default, Clone)]
 pub struct ActorContext {
     pub output_valve_signal: Option<Arc<ActorOutputValveSignal>>,
-    pub store_value: fn(Arc<ConstructInfoComplete>, Value),
 }
 
 // --- ActorOutputValveSignal ---
@@ -499,7 +508,6 @@ impl ValueActor {
         let loop_task = Task::start_droppable({
             let construct_info = construct_info.clone();
             let output_valve_signal = actor_context.output_valve_signal;
-            let store_value = actor_context.store_value;
             async move {
                 let output_valve_signal = output_valve_signal;
                 let mut output_valve_impulse_stream =
@@ -516,7 +524,6 @@ impl ValueActor {
                     select! {
                         new_value = value_stream.next() => {
                             let Some(new_value) = new_value else { break };
-                            store_value(construct_info.clone(), new_value.clone());
                             if output_valve_signal.is_none() {
                                 value_senders.retain(|value_sender| {
                                     if let Err(error) = value_sender.unbounded_send(new_value.clone()) {

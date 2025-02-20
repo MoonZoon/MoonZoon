@@ -9,15 +9,9 @@ use super::engine::*;
 
 type EvaluateResult<'code, T> = Result<T, ParseError<'code, Token<'code>>>;
 
-fn store_value(construct_info: Arc<ConstructInfoComplete>, value: Value) {
-    zoon::println!("STORE VALUE of {construct_info}");
-}
-
 pub fn evaluate(expressions: Vec<Spanned<Expression>>) -> EvaluateResult<Arc<Object>> {
-    let actor_context = ActorContext {
-        output_valve_signal: None,
-        store_value,
-    };
+    let construct_context = ConstructContext::default();
+    let actor_context = ActorContext::default();
     let reference_connector = Arc::new(ReferenceConnector::new());
     Ok(Object::new_arc(
         ConstructInfo::new("root", "root"),
