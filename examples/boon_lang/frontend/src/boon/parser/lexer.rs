@@ -12,6 +12,7 @@ pub enum Token<'code> {
     BracketSquareOpen,
     BracketSquareClose,
     Comment(&'code str),
+    // @TODO decimal?
     Number(f64),
     Pipe,
     Wildcard,
@@ -138,8 +139,10 @@ pub fn lexer<'code>(
         .map(Token::Comment);
 
     // @TODO support number format like 1_000?
-    let number = text::int(10)
-        .then(just('.').then(text::digits(10)).or_not())
+    let number = just('-')
+        .repeated()
+        .at_most(1)
+        .then(text::int(10).then(just('.').then(text::digits(10)).or_not()))
         .to_slice()
         .from_str()
         .unwrapped()
