@@ -1,6 +1,6 @@
+use std::borrow::Cow;
 use std::pin::Pin;
 use std::sync::Arc;
-use std::borrow::Cow;
 
 use zoon::mpsc;
 use zoon::{Stream, StreamExt};
@@ -13,10 +13,10 @@ type EvaluateResult<'code, T> = Result<T, ParseError<'code, Token<'code>>>;
 
 pub fn evaluate(
     expressions: Vec<Spanned<Expression>>,
-    states_local_storage_key: impl Into<Cow<'static, str>>
+    states_local_storage_key: impl Into<Cow<'static, str>>,
 ) -> EvaluateResult<(Arc<Object>, ConstructContext)> {
     let construct_context = ConstructContext {
-        construct_storage: Arc::new(ConstructStorage::new(states_local_storage_key))
+        construct_storage: Arc::new(ConstructStorage::new(states_local_storage_key)),
     };
     let actor_context = ActorContext::default();
     let reference_connector = Arc::new(ReferenceConnector::new());

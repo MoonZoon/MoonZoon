@@ -1,7 +1,7 @@
+use std::borrow::Cow;
 use std::fmt;
 use std::io::{Cursor, Read};
 use std::sync::Arc;
-use std::borrow::Cow;
 
 use ariadne::{Config, Label, Report, ReportKind, Source};
 use zoon::{eprintln, println, UnwrapThrowExt};
@@ -14,7 +14,11 @@ use crate::boon::platform::browser::{
     evaluator::evaluate,
 };
 
-pub fn run(filename: &str, source_code: &str, states_local_storage_key: impl Into<Cow<'static, str>>) -> Option<(Arc<Object>, ConstructContext)> {
+pub fn run(
+    filename: &str,
+    source_code: &str,
+    states_local_storage_key: impl Into<Cow<'static, str>>,
+) -> Option<(Arc<Object>, ConstructContext)> {
     println!("[Source Code ({filename})]");
     println!("{source_code}");
 

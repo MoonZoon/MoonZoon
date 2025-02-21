@@ -303,46 +303,45 @@ pub fn function_math_sum(
         panic!("Unexpected argument count")
     };
     let storage = construct_context.construct_storage.clone();
-    stream::once( {
+    stream::once({
+        let storage = storage.clone();
+        let function_call_id = function_call_id.clone();
+        async move { storage.load_state(function_call_id).await }
+    })
+    .filter_map(future::ready)
+    .chain(
+        argument_increment
+            .subscribe()
+            .map(|value| value.expect_number().number()),
+    )
+    .scan(0., {
+        let function_call_id = function_call_id.clone();
+        move |sum, number| {
             let storage = storage.clone();
             let function_call_id = function_call_id.clone();
-            async move { storage.load_state(function_call_id).await }
-        })
-        .filter_map(future::ready)
-        .chain(
-            argument_increment
-                .subscribe()
-                .map(|value| value.expect_number().number())
-        )
-        .scan(0., {
-            let function_call_id = function_call_id.clone();
-            move |sum, number| { 
-                let storage = storage.clone();
-                let function_call_id = function_call_id.clone();
-                *sum += number;
-                let sum = *sum;
-                async move {
-                    storage.save_state(function_call_id, &sum).await;
-                    Some(sum)
-                }
+            *sum += number;
+            let sum = *sum;
+            async move {
+                storage.save_state(function_call_id, &sum).await;
+                Some(sum)
             }
-        })
-        .map({
-            let mut result_version = 0u64;
-            move |sum| {
-                let value = Number::new_value(
-                    ConstructInfo::new(
-                        function_call_id
-                            .with_child_id(format!("Math/sum result v.{result_version}")),
-                        "Math/sum(..) -> Number",
-                    ),
-                    construct_context.clone(),
-                    sum,
-                );
-                result_version += 1;
-                value
-            }
-        })
+        }
+    })
+    .map({
+        let mut result_version = 0u64;
+        move |sum| {
+            let value = Number::new_value(
+                ConstructInfo::new(
+                    function_call_id.with_child_id(format!("Math/sum result v.{result_version}")),
+                    "Math/sum(..) -> Number",
+                ),
+                construct_context.clone(),
+                sum,
+            );
+            result_version += 1;
+            value
+        }
+    })
 }
 
 /// ```

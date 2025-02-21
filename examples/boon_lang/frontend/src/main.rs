@@ -168,7 +168,8 @@ impl Playground {
         println!("Command to run example received!");
         let filename = run_command.filename.unwrap_or("custom code");
         let source_code = self.source_code.lock_ref();
-        let object_and_construct_context = interpreter::run(filename, &source_code, STATES_STORAGE_KEY);
+        let object_and_construct_context =
+            interpreter::run(filename, &source_code, STATES_STORAGE_KEY);
         drop(source_code);
         if let Some((object, construct_context)) = object_and_construct_context {
             El::new()

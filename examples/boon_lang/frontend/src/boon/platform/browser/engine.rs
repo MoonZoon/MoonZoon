@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 
 use std::borrow::Cow;
-use std::collections::{HashMap, BTreeMap};
+use std::collections::{BTreeMap, HashMap};
 use std::future::Future;
 use std::pin::pin;
 use std::sync::Arc;
@@ -15,9 +15,9 @@ use zoon::futures_util::select;
 use zoon::futures_util::stream::{self, Stream, StreamExt};
 use zoon::IntoCowStr;
 use zoon::{eprintln, println};
-use zoon::{serde_json, DeserializeOwned, Serialize, Deserialize, serde};
-use zoon::{Task, TaskHandle};
 use zoon::{local_storage, WebStorage};
+use zoon::{serde, serde_json, Deserialize, DeserializeOwned, Serialize};
+use zoon::{Task, TaskHandle};
 
 const LOG_DROPS_AND_LOOP_ENDS: bool = false;
 
@@ -37,7 +37,7 @@ pub struct ConstructContext {
 // --- ConstructStorage ---
 
 pub struct ConstructStorage {
-    state_inserter_sender: 
+    state_inserter_sender:
         mpsc::UnboundedSender<(ConstructId, serde_json::Value, oneshot::Sender<()>)>,
     state_getter_sender:
         mpsc::UnboundedSender<(ConstructId, oneshot::Sender<Option<serde_json::Value>>)>,
@@ -47,8 +47,7 @@ pub struct ConstructStorage {
 impl ConstructStorage {
     pub fn new(states_local_storage_key: impl Into<Cow<'static, str>>) -> Self {
         let states_local_storage_key = states_local_storage_key.into();
-        let (state_inserter_sender, mut state_inserter_receiver) =
-            mpsc::unbounded();
+        let (state_inserter_sender, mut state_inserter_receiver) = mpsc::unbounded();
         let (state_getter_sender, mut state_getter_receiver) = mpsc::unbounded();
         Self {
             state_inserter_sender,
@@ -93,14 +92,15 @@ impl ConstructStorage {
             Ok(json_value) => json_value,
             Err(error) => {
                 eprintln!("Failed to save state: {error:#}");
-                return
+                return;
             }
         };
         let (confirmation_sender, confirmation_receiver) = oneshot::channel::<()>();
-        if let Err(error) = self
-            .state_inserter_sender
-            .unbounded_send((construct_id, json_value, confirmation_sender))
-        {
+        if let Err(error) = self.state_inserter_sender.unbounded_send((
+            construct_id,
+            json_value,
+            confirmation_sender,
+        )) {
             eprintln!("Failed to save state: {error:#}")
         }
         confirmation_receiver
@@ -109,7 +109,10 @@ impl ConstructStorage {
     }
 
     // @TODO is &self enough?
-    pub async fn load_state<T: DeserializeOwned>(self: Arc<Self>, construct_id: ConstructId) -> Option<T> {
+    pub async fn load_state<T: DeserializeOwned>(
+        self: Arc<Self>,
+        construct_id: ConstructId,
+    ) -> Option<T> {
         let (state_sender, state_receiver) = oneshot::channel::<Option<serde_json::Value>>();
         if let Err(error) = self
             .state_getter_sender
