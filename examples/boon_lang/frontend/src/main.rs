@@ -85,9 +85,12 @@ impl Playground {
             .s(Scrollbars::both())
             .item(
                 Row::new()
-                    .s(Gap::new().x(20))
-                    .multiline()
-                    .items(EXAMPLE_DATAS.map(|example_data| self.example_button(example_data))),
+                    .item(
+                        Row::new().s(Gap::new().x(20)).multiline().items(
+                            EXAMPLE_DATAS.map(|example_data| self.example_button(example_data)),
+                        ),
+                    )
+                    .item(self.clear_saved_states_button()),
             )
             .item(
                 Paragraph::new()
@@ -109,6 +112,17 @@ impl Playground {
                     .item(self.code_editor_panel())
                     .item(self.example_panel()),
             )
+    }
+
+    fn clear_saved_states_button(&self) -> impl Element {
+        let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+        Button::new()
+            .s(Padding::new().x(10).y(5))
+            .s(Font::new()
+                .color_signal(hovered_signal.map_bool(|| color!("Coral"), || color!("LightCoral"))))
+            .label("Clear saved states")
+            .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+            .on_press(|| local_storage().remove(STATES_STORAGE_KEY))
     }
 
     fn code_editor_panel(&self) -> impl Element {
