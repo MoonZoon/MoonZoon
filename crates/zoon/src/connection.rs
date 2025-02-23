@@ -120,8 +120,9 @@ impl<UMsg: Serialize, DMsg: DeserializeOwned + 'static> Connection<UMsg, DMsg> {
         #[cfg(feature = "serde")]
         let body = serde_json::to_string(&up_msg).unwrap_throw();
 
-        let mut request_init = RequestInit::new();
-        request_init.method("POST").body(Some(&JsValue::from(body)));
+        let request_init = RequestInit::new();
+        request_init.set_method("POST");
+        request_init.set_body(&JsValue::from(body));
 
         // ---- Request ----
         let request =

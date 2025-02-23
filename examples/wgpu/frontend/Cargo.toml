@@ -15,9 +15,13 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 zoon.workspace = true
+wgpu = { version = "24.0.1", features = ["wgsl"], default-features = false }
+winit = "0.30.9"
+
+[features]
 # @TODO replace `webgl` with `webgpu` once all relevant browsers and WebViews support WebGPU 
 # NOTE: Compressed Wasm module with`webgpu` has 125KB, with `webgl` 534KB, see
 # https://github.com/gfx-rs/wgpu/issues/1464
-wgpu = { version = "0.20.0", features = ["wgsl", "webgl"], default-features = false }
-# @TODO switch to `0.30.0` or newer once the integrated examples are updated in their original repos
-winit = "0.29.0"
+default = ["webgl"]
+webgl = ["wgpu/webgl"]
+webgpu = ["wgpu/webgpu"]
