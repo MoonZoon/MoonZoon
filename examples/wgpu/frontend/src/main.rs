@@ -1,6 +1,8 @@
 use zoon::*;
 
+#[allow(dead_code)]
 mod hello_triangle;
+mod hello_world;
 
 const CANVAS_WIDTH: u32 = 350;
 const CANVAS_HEIGHT: u32 = 350;
@@ -14,6 +16,7 @@ fn root() -> impl Element {
         .s(Height::fill())
         .s(Background::new().color(color!("Black")))
         .item(panel_with_canvas(hello_triangle::run))
+        .item(panel_with_canvas(hello_world::run))
 }
 
 fn panel_with_canvas(
@@ -22,6 +25,7 @@ fn panel_with_canvas(
     El::new()
         .s(Align::center())
         .s(Clip::both())
+        .s(Borders::all(Border::new().color(color!("Gray"))))
         .child(
             Canvas::new()
                 .width(CANVAS_WIDTH)
