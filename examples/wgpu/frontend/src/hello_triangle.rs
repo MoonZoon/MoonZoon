@@ -20,7 +20,7 @@ use winit::{
 };
 use winit::platform::web::WindowAttributesExtWebSys;
 
-pub async fn run(canvas: zoon::web_sys::HtmlCanvasElement) {
+pub fn run(canvas: zoon::web_sys::HtmlCanvasElement) {
     let event_loop = EventLoop::with_user_event().build().unwrap_throw();
     let mut app = Application::new(&event_loop, canvas);
     event_loop.run_app(&mut app).unwrap_throw();
