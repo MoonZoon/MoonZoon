@@ -1,4 +1,9 @@
-use std::{borrow::Cow, future::Future};
+// Based on:
+// - https://github.com/erer1243/wgpu-0.20-winit-0.30-web-example
+// - https://github.com/matthewjberger/wgpu-example
+// - https://github.com/gfx-rs/wgpu/tree/trunk/examples/features/src/hello_triangle
+
+use std::{borrow::Cow, future::Future, rc::Rc};
 
 #[allow(unused_imports)]
 use zoon::wasm_bindgen::{prelude::wasm_bindgen, throw_str, JsCast, UnwrapThrowExt};
@@ -8,67 +13,25 @@ use zoon::*;
 use wgpu::{Adapter, Device, Instance, Queue, RenderPipeline, Surface, SurfaceConfiguration};
 use winit::{
     application::ApplicationHandler,
-    dpi::PhysicalSize,
+    dpi::{PhysicalSize, LogicalSize},
     event::WindowEvent,
     event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy},
     window::{Window, WindowId},
 };
+use winit::platform::web::WindowAttributesExtWebSys;
 
-#[cfg(target_arch = "wasm32")]
-type Rc<T> = std::rc::Rc<T>;
-
-#[cfg(not(target_arch = "wasm32"))]
-type Rc<T> = std::sync::Arc<T>;
-
-#[cfg(target_arch = "wasm32")]
-const CANVAS_ID: &str = "wgpu-canvas";
-
-pub async fn run_with_canvas(canvas: zoon::web_sys::HtmlCanvasElement) {
-
-}
-
-pub fn run() {
+pub async fn run(canvas: zoon::web_sys::HtmlCanvasElement) {
     let event_loop = EventLoop::with_user_event().build().unwrap_throw();
-    let mut app = Application::new(&event_loop);
+    let mut app = Application::new(&event_loop, canvas);
     event_loop.run_app(&mut app).unwrap_throw();
 }
 
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen]
-pub fn run_web() {
-    let window = web_sys::window().unwrap_throw();
-    let document = window.document().unwrap_throw();
-
-    let canvas = document.create_element("canvas").unwrap_throw();
-    canvas.set_id(CANVAS_ID);
-    canvas.set_attribute("width", "500").unwrap_throw();
-    canvas.set_attribute("height", "500").unwrap_throw();
-
-    let body = document
-        .get_elements_by_tag_name("body")
-        .item(0)
-        .unwrap_throw();
-    body.append_with_node_1(canvas.unchecked_ref())
-        .unwrap_throw();
-
-    run();
-}
-
-fn create_graphics(event_loop: &ActiveEventLoop) -> impl Future<Output = Graphics> + 'static {
-    #[allow(unused_mut)]
-    let mut window_attrs = Window::default_attributes();
-
-    #[cfg(target_arch = "wasm32")]
-    {
-        use web_sys::wasm_bindgen::JsCast;
-        use winit::platform::web::WindowAttributesExtWebSys;
-
-        let window = web_sys::window().unwrap_throw();
-        let document = window.document().unwrap_throw();
-        let canvas = document.get_element_by_id(CANVAS_ID).unwrap_throw();
-        let html_canvas_element = canvas.unchecked_into();
-        window_attrs = window_attrs.with_canvas(Some(html_canvas_element));
-    }
+fn create_graphics(event_loop: &ActiveEventLoop, canvas: zoon::web_sys::HtmlCanvasElement) -> impl Future<Output = Graphics> + 'static {
+    let window_attrs = Window::default_attributes()
+        .with_max_inner_size(LogicalSize::new(super::CANVAS_WIDTH, super::CANVAS_HEIGHT))
+        // NOTE: It has to be set to make it work in Firefox
+        .with_inner_size(LogicalSize::new(super::CANVAS_WIDTH, super::CANVAS_HEIGHT))
+        .with_canvas(Some(canvas));
 
     let window = Rc::new(event_loop.create_window(window_attrs).unwrap_throw());
     let instance = wgpu::Instance::default();
@@ -106,11 +69,6 @@ fn create_graphics(event_loop: &ActiveEventLoop) -> impl Future<Output = Graphic
         let surface_config = surface
             .get_default_config(&adapter, size.width, size.height)
             .unwrap_throw();
-
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            surface.configure(&device, &surface_config);
-        }
 
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: None,
@@ -186,12 +144,14 @@ struct Graphics {
 
 struct GraphicsBuilder {
     event_loop_proxy: Option<EventLoopProxy<Graphics>>,
+    canvas: zoon::web_sys::HtmlCanvasElement,
 }
 
 impl GraphicsBuilder {
-    fn new(event_loop_proxy: EventLoopProxy<Graphics>) -> Self {
+    fn new(event_loop_proxy: EventLoopProxy<Graphics>, canvas: zoon::web_sys::HtmlCanvasElement) -> Self {
         Self {
             event_loop_proxy: Some(event_loop_proxy),
+            canvas,
         }
     }
 
@@ -201,20 +161,11 @@ impl GraphicsBuilder {
             return;
         };
 
-        #[cfg(target_arch = "wasm32")]
-        {
-            let gfx_fut = create_graphics(event_loop);
-            wasm_bindgen_futures::spawn_local(async move {
-                let gfx = gfx_fut.await;
-                assert!(event_loop_proxy.send_event(gfx).is_ok());
-            });
-        }
-
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let gfx = pollster::block_on(create_graphics(event_loop));
+        let gfx_fut = create_graphics(event_loop, self.canvas.clone());
+        wasm_bindgen_futures::spawn_local(async move {
+            let gfx = gfx_fut.await;
             assert!(event_loop_proxy.send_event(gfx).is_ok());
-        }
+        });
     }
 }
 
@@ -228,9 +179,9 @@ struct Application {
 }
 
 impl Application {
-    fn new(event_loop: &EventLoop<Graphics>) -> Self {
+    fn new(event_loop: &EventLoop<Graphics>, canvas: zoon::web_sys::HtmlCanvasElement) -> Self {
         Self {
-            graphics: MaybeGraphics::Builder(GraphicsBuilder::new(event_loop.create_proxy())),
+            graphics: MaybeGraphics::Builder(GraphicsBuilder::new(event_loop.create_proxy(), canvas)),
         }
     }
 

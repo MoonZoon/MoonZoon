@@ -15,7 +15,7 @@ fn root() -> impl Element {
         .s(Background::new().color(color!("Black")))
         // https://github.com/gfx-rs/wgpu/tree/trunk/examples/src/hello_triangle
         .item(panel_with_canvas(|canvas| {
-            Task::start(hello_triangle::run_with_canvas(canvas))
+            Task::start(hello_triangle::run(canvas))
         }))
 }
 
@@ -24,7 +24,7 @@ fn panel_with_canvas(
 ) -> impl Element {
     El::new()
         .s(Align::center())
-        .s(RoundedCorners::all(30))
+        .s(Transform::new().move_up(20))
         .s(Clip::both())
         .child(
             Canvas::new()
