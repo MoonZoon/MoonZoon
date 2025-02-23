@@ -17,6 +17,7 @@ wasm-bindgen-test = "0.3.19"
 zoon.workspace = true
 wgpu = { version = "24.0.1", features = ["wgsl"], default-features = false }
 winit = "0.30.9"
+glyphon = "0.8.0"
 
 [features]
 # @TODO replace `webgl` with `webgpu` once all relevant browsers and WebViews support WebGPU 
