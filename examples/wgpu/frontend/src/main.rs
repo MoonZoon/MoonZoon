@@ -15,7 +15,7 @@ fn root() -> impl Element {
         .s(Background::new().color(color!("Black")))
         // https://github.com/gfx-rs/wgpu/tree/trunk/examples/src/hello_triangle
         .item(panel_with_canvas(|canvas| {
-            Task::start(hello_triangle::run(canvas))
+            Task::start(hello_triangle::run_with_canvas(canvas))
         }))
 }
 

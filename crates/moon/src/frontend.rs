@@ -130,6 +130,7 @@ impl Frontend {
         };
 
         let start_main_wasm_script = if CONFIG.frontend_multithreading {
+            // @TODO Add object with `module_or_path` like in the `else` below to resolve warning in dev console?
             format!(
                 r#"<script src="/_api/pkg/frontend{cache_busting_string}.js"></script>
                <script>
@@ -140,7 +141,7 @@ impl Frontend {
             format!(
                 r#"<script type="module">
                   import init from '/_api/pkg/frontend{cache_busting_string}.js';
-                  init('/_api/pkg/frontend_bg{cache_busting_string}.wasm');
+                  init({{ module_or_path: '/_api/pkg/frontend_bg{cache_busting_string}.wasm' }});
                 </script>"#
             )
         };

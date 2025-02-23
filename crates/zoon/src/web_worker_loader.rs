@@ -34,9 +34,11 @@ impl WebWorkerLoader {
         let array: js_sys::Array = js_sys::Array::new();
         array.push(&format!(r#"importScripts("{js_url}");wasm_bindgen("{wasm_url}");"#).into());
 
+        let options = web_sys::BlobPropertyBag::new();
+        options.set_type("application/javascript");
         let blob = web_sys::Blob::new_with_str_sequence_and_options(
             &array,
-            web_sys::BlobPropertyBag::new().type_("application/javascript"),
+            &options,
         )
         .unwrap_throw();
 
