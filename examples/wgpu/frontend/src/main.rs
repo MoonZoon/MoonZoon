@@ -2,7 +2,12 @@ use zoon::*;
 
 #[allow(dead_code)]
 mod hello_triangle;
+
+#[allow(dead_code)]
 mod hello_world;
+
+#[allow(dead_code)]
+mod rust_logo;
 
 const CANVAS_WIDTH: u32 = 350;
 const CANVAS_HEIGHT: u32 = 350;
@@ -12,11 +17,13 @@ pub fn main() {
 }
 
 fn root() -> impl Element {
+    // @TODO Share EventLoop to render all examples at once?
     Column::new()
         .s(Height::fill())
         .s(Background::new().color(color!("Black")))
-        .item(panel_with_canvas(hello_triangle::run))
+        // .item(panel_with_canvas(hello_triangle::run))
         .item(panel_with_canvas(hello_world::run))
+        // .item(panel_with_canvas(rust_logo::run))
 }
 
 fn panel_with_canvas(
