@@ -5,9 +5,7 @@
 
 use std::{borrow::Cow, future::Future, rc::Rc};
 
-#[allow(unused_imports)]
-use zoon::wasm_bindgen::{prelude::wasm_bindgen, throw_str, JsCast, UnwrapThrowExt};
-
+use zoon::wasm_bindgen::throw_str;
 use zoon::*;
 
 use wgpu::{Adapter, Device, Instance, Queue, RenderPipeline, Surface, SurfaceConfiguration};

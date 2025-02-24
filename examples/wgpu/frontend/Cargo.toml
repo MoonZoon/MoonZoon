@@ -18,6 +18,7 @@ zoon.workspace = true
 wgpu = { version = "24.0.1", features = ["wgsl"], default-features = false }
 winit = "0.30.9"
 glyphon = "0.8.0"
+lyon = { git = "https://github.com/nical/lyon", rev = "54169fb867a5aa8d9b56c207d42621cb880349a1" }
 
 [features]
 # @TODO replace `webgl` with `webgpu` once all relevant browsers and WebViews support WebGPU 
