@@ -3,8 +3,7 @@
 
 use std::{borrow::Cow, future::Future, rc::Rc};
 use std::ops::{Range, Rem};
-use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::sync::{Arc, Mutex};
 
 use zoon::wasm_bindgen::throw_str;
 use zoon::{*, println};
@@ -28,6 +27,8 @@ use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop, EventLoopProxy}
 use winit::keyboard::{KeyCode, PhysicalKey};
 use winit::window::{Window, WindowId};
 use winit::platform::web::WindowAttributesExtWebSys;
+
+type Milliseconds = f64;
 
 // For create_buffer_init()
 use wgpu::util::DeviceExt;
@@ -149,8 +150,8 @@ pub fn run(canvas: zoon::web_sys::HtmlCanvasElement) {
 
     let mut app = App {
         window: None,
-        state: app_state,
-        gfx_state: None,
+        state: Arc::new(Mutex::new(app_state)),
+        gfx_state: Arc::new(Mutex::new(None)),
     };
 
     event_loop.run_app(&mut app).unwrap();
@@ -228,44 +229,53 @@ impl Default for SceneParams {
 
 /// The application itself
 struct App {
+    // @TODO Rc? Loop + channels? EventLoopProxy?
+
     /// We need to store an `Arc` because both `App` (for `ApplicationHandler`) and `GfxState`
     /// (for the surface) require references to the `Window`.
     window: Option<Arc<Window>>,
-    gfx_state: Option<GfxState>,
-    state: AppState,
+    gfx_state: Arc<Mutex<Option<GfxState>>>,
+    state: Arc<Mutex<AppState>>,
 }
 
 impl ApplicationHandler for App {
     /// Create a new window
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
+        let self_gfx_state = self.gfx_state.clone();
+        let self_state = self.state.clone();
+
+        let self_state_lock = self_state.lock().unwrap();
+        let window_size = self_state_lock.scene.window_size;
+        let canvas = self_state_lock.canvas.clone();
+        drop(self_state_lock);
+
         let win_attrs = Window::default_attributes()
             .with_title("Lyon tessellation example")
-            .with_inner_size(self.state.scene.window_size)
-            .with_canvas(Some(self.state.canvas.clone()));;
+            .with_inner_size(window_size)
+            .with_canvas(Some(canvas));
         let window = Arc::new(event_loop.create_window(win_attrs).unwrap());
+        self.window = Some(window.clone());
 
         Task::start(async move {
-            let gfx_state = GfxState::new(Arc::clone(&window), &mut self.state).await;
+            let gfx_state = GfxState::new(window.clone(), &mut self_state.lock().unwrap()).await;
             window.request_redraw();
-
-            self.window = Some(window);
-            self.gfx_state = Some(gfx_state);
+            *self_gfx_state.lock().unwrap() = Some(gfx_state);
         });
     }
 
     /// Handle redraw requests and other state changes
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
-        let scene = &mut self.state.scene;
-
         match event {
             WindowEvent::RedrawRequested => {
                 self.window.as_ref().unwrap().request_redraw();
-                scene.render = true;
+                let mut self_state = self.state.lock().unwrap();
+                self_state.scene.render = true;
             }
             WindowEvent::Destroyed | WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::Resized(size) => {
-                scene.window_size = size;
-                scene.size_changed = true;
+                let mut self_state = self.state.lock().unwrap();
+                self_state.scene.window_size = size;
+                self_state.scene.size_changed = true;
             }
             WindowEvent::KeyboardInput {
                 event:
@@ -275,19 +285,27 @@ impl ApplicationHandler for App {
                         ..
                     },
                 ..
-            } => match key_code {
-                KeyCode::Escape => event_loop.exit(),
-                KeyCode::PageDown => scene.target_zoom *= 0.8,
-                KeyCode::PageUp => scene.target_zoom *= 1.25,
-                KeyCode::ArrowLeft => scene.target_scroll.x += 50.0 / scene.target_zoom,
-                KeyCode::ArrowRight => scene.target_scroll.x -= 50.0 / scene.target_zoom,
-                KeyCode::ArrowUp => scene.target_scroll.y -= 50.0 / scene.target_zoom,
-                KeyCode::ArrowDown => scene.target_scroll.y += 50.0 / scene.target_zoom,
-                KeyCode::KeyP => scene.show_points = !scene.show_points,
-                KeyCode::KeyB => scene.draw_background = !scene.draw_background,
-                KeyCode::KeyA => scene.target_stroke_width /= 0.8,
-                KeyCode::KeyZ => scene.target_stroke_width *= 0.8,
-                _key => {}
+            } => {
+                let mut self_state = self.state.lock().unwrap();
+                let scene = &mut self_state.scene;
+                match key_code {
+                    KeyCode::Escape => {
+                        drop(scene);
+                        drop(self_state);
+                        event_loop.exit()
+                    }
+                    KeyCode::PageDown => scene.target_zoom *= 0.8,
+                    KeyCode::PageUp => scene.target_zoom *= 1.25,
+                    KeyCode::ArrowLeft => scene.target_scroll.x += 50.0 / scene.target_zoom,
+                    KeyCode::ArrowRight => scene.target_scroll.x -= 50.0 / scene.target_zoom,
+                    KeyCode::ArrowUp => scene.target_scroll.y -= 50.0 / scene.target_zoom,
+                    KeyCode::ArrowDown => scene.target_scroll.y += 50.0 / scene.target_zoom,
+                    KeyCode::KeyP => scene.show_points = !scene.show_points,
+                    KeyCode::KeyB => scene.draw_background = !scene.draw_background,
+                    KeyCode::KeyA => scene.target_stroke_width /= 0.8,
+                    KeyCode::KeyZ => scene.target_stroke_width *= 0.8,
+                    _key => {}
+                }
             },
             _evt => {}
         };
@@ -296,12 +314,16 @@ impl ApplicationHandler for App {
             return;
         }
 
+        let mut self_state = self.state.lock().unwrap();
+        let scene = &mut self_state.scene;
         scene.zoom += (scene.target_zoom - scene.zoom) / 3.0;
         scene.scroll = scene.scroll + (scene.target_scroll - scene.scroll) / 3.0;
         scene.stroke_width =
             scene.stroke_width + (scene.target_stroke_width - scene.stroke_width) / 5.0;
+        drop(scene);
+        drop(self_state);
 
-        self.gfx_state.as_mut().unwrap().paint(&mut self.state);
+        self.gfx_state.lock().unwrap().as_mut().unwrap().paint(self.state.clone());
     }
 }
 
@@ -321,8 +343,8 @@ struct AppState {
     arrow_range: Range<u32>,
 
     // Values for FPS reporting
-    start: Instant,
-    next_report: Instant,
+    start: Milliseconds,
+    next_report: Milliseconds,
     frame_count: u32,
     time_secs: f32,
 
@@ -460,7 +482,7 @@ impl AppState {
             ];
         }
 
-        let start = Instant::now();
+        let start = performance().now();
 
         Self {
             scene,
@@ -471,7 +493,7 @@ impl AppState {
             geometry,
             bg_geometry,
             start,
-            next_report: start + Duration::from_secs(1),
+            next_report: start + 1_000.,
             frame_count: 0,
             time_secs: 0.0,
             path: logo_path,
@@ -790,9 +812,11 @@ impl GfxState {
         }
     }
 
-    fn paint(&mut self, state: &mut AppState) {
+    fn paint(&mut self, state: Arc<Mutex<AppState>>) {
+        let mut state = state.lock().unwrap();
+
         if state.scene.size_changed {
-            self.update_scene_size(state);
+            self.update_scene_size(&mut state);
         }
 
         if !state.scene.render {
@@ -948,13 +972,13 @@ impl GfxState {
         self.queue.submit(Some(encoder.finish()));
         frame.present();
 
-        let now = Instant::now();
+        let now = performance().now();
         state.frame_count += 1;
-        state.time_secs = (now - state.start).as_secs_f32();
+        state.time_secs = ((now - state.start) / 1_000.) as f32;
         if now >= state.next_report {
             println!("{} FPS", state.frame_count);
             state.frame_count = 0;
-            state.next_report = now + Duration::from_secs(1);
+            state.next_report = now + 1_000.;
         }
     }
 
