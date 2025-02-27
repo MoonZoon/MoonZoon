@@ -1160,6 +1160,7 @@ dependencies = [
 name = "frontend"
 version = "0.1.0"
 dependencies = [
+ "bytemuck",
  "glyphon",
  "lyon",
  "wasm-bindgen-test",
@@ -1766,6 +1767,7 @@ version = "1.0.1"
 source = "git+https://github.com/nical/lyon?rev=54169fb867a5aa8d9b56c207d42621cb880349a1#54169fb867a5aa8d9b56c207d42621cb880349a1"
 dependencies = [
  "lyon_algorithms",
+ "lyon_extra",
  "lyon_tessellation",
 ]
 
@@ -1776,6 +1778,15 @@ source = "git+https://github.com/nical/lyon?rev=54169fb867a5aa8d9b56c207d42621cb
 dependencies = [
  "lyon_path",
  "num-traits",
+]
+
+[[package]]
+name = "lyon_extra"
+version = "1.0.3"
+source = "git+https://github.com/nical/lyon?rev=54169fb867a5aa8d9b56c207d42621cb880349a1#54169fb867a5aa8d9b56c207d42621cb880349a1"
+dependencies = [
+ "lyon_path",
+ "thiserror 1.0.60",
 ]
 
 [[package]]
