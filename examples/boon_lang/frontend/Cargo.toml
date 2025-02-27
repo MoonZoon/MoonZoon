@@ -18,3 +18,5 @@ zoon.workspace = true
 chumsky = { version = "1.0.0-alpha.8", features = ["pratt"] }
 ariadne = "0.5"
 pin-project = "1"
+ulid = "1.2.0"
+getrandom = { version = "0.3", features = ["wasm_js"] }
