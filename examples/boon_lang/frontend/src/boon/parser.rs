@@ -7,6 +7,9 @@ pub use lexer::{lexer, Token};
 mod scope_resolver;
 pub use scope_resolver::{resolve_references, Referenceables};
 
+mod persistence_resolver;
+pub use persistence_resolver::{resolve_persistence, Persistence};
+
 pub use chumsky::prelude::{Input, Parser};
 
 pub type Span = SimpleSpan;
@@ -16,6 +19,7 @@ pub type ParseError<'code, T> = Rich<'code, T, Span>;
 pub struct Spanned<T> {
     pub span: Span,
     pub node: T,
+    pub persistence: Option<Persistence>,
 }
 
 pub fn parser<'code, I>(
@@ -77,6 +81,7 @@ where
                             value,
                         },
                         span: extra.span(),
+                        persistence: None,
                     }
                 });
 
@@ -116,6 +121,7 @@ where
             .map_with(|variable, extra| Spanned {
                 node: variable,
                 span: extra.span(),
+                persistence: None,
             })
             .separated_by(comma.ignored().or(newlines))
             .collect()
@@ -162,6 +168,7 @@ where
                 .map_with(|key, extra| Spanned {
                     span: extra.span(),
                     node: key,
+                    persistence: None,
                 });
 
             let key_value_pair = group((key, colon, expression.clone()))
@@ -185,6 +192,7 @@ where
                 .map_with(|parameter_name, extra| Spanned {
                     node: parameter_name,
                     span: extra.span(),
+                    persistence: None,
                 })
                 .separated_by(comma.ignored().or(newlines))
                 .collect()
@@ -220,6 +228,7 @@ where
                     alias: Spanned {
                         span: extra.span(),
                         node: alias,
+                        persistence: None,
                     },
                 }),
         );
@@ -290,6 +299,7 @@ where
             .map_with(|expression, extra| Spanned {
                 node: expression,
                 span: extra.span(),
+                persistence: None,
             })
             .or(nested)
             .padded_by(newlines)
@@ -301,6 +311,7 @@ where
                 Spanned {
                     span: extra.span(),
                     node: expression,
+                    persistence: None,
                 }
             }),))
     })

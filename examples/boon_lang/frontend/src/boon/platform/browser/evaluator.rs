@@ -29,12 +29,14 @@ pub fn evaluate(
                 |Spanned {
                      span,
                      node: expression,
+                     persistence,
                  }| {
                     match expression {
                         Expression::Variable(variable) => spanned_variable_into_variable(
                             Spanned {
                                 span,
                                 node: *variable,
+                                persistence,
                             },
                             construct_context.clone(),
                             actor_context.clone(),
@@ -70,6 +72,7 @@ fn spanned_variable_into_variable(
     let Spanned {
         span,
         node: variable,
+        persistence: _,
     } = variable;
     let parser::Variable {
         name,
@@ -82,7 +85,8 @@ fn spanned_variable_into_variable(
         &value,
         Spanned {
             span: _,
-            node: Expression::Link
+            node: Expression::Link,
+            persistence: _,
         }
     ) {
         Variable::new_link_arc(construct_info, construct_context, name, actor_context)
@@ -115,6 +119,7 @@ fn spanned_expression_into_value_actor(
     let Spanned {
         span,
         node: expression,
+        persistence: _,
     } = expression;
     let actor = match expression {
         Expression::Variable(variable) => Err(ParseError::custom(
@@ -226,6 +231,7 @@ fn spanned_expression_into_value_actor(
                         |Spanned {
                              span,
                              node: argument,
+                             persistence: _,
                          }| {
                             let parser::Argument {
                                 name,
@@ -411,6 +417,7 @@ fn pipe<'code>(
         } => {
             let argument = Spanned {
                 span: from.span,
+                persistence: from.persistence,
                 node: parser::Argument {
                     name: "",
                     value: Some(*from),

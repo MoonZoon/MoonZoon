@@ -231,6 +231,7 @@ pub fn lexer<'code>(
         .map_with(|token, extra| Spanned {
             node: token,
             span: extra.span(),
+            persistence: None,
         })
         .padded_by(text::inline_whitespace())
         .recover_with(skip_then_retry_until(any().ignored(), end()))

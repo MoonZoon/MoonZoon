@@ -30,6 +30,7 @@ pub fn resolve_references(
         let Spanned {
             span,
             node: expression,
+            persistence: _,
         } = expressions;
         if let Expression::Variable(variable) = expression {
             let name = &variable.name;
@@ -58,6 +59,7 @@ pub fn resolve_references(
         let Spanned {
             span,
             node: expression,
+            persistence: _,
         } = expressions;
         if let Expression::Variable(variable) = expression {
             let name = &variable.name;
@@ -87,6 +89,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
     let Spanned {
         span,
         node: expression,
+        persistence: _,
     } = &mut expression;
     match expression {
         Expression::Variable(variable) => {
@@ -104,6 +107,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 let Spanned {
                     span,
                     node: variable,
+                    persistence: _,
                 } = variable;
                 let name = &variable.name;
                 reachable_referenceables.insert(
@@ -119,6 +123,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 let Spanned {
                     span,
                     node: variable,
+                    persistence: _,
                 } = variable;
                 set_is_referenced_and_alias_referenceables(
                     &mut variable.value,
@@ -132,6 +137,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 let Spanned {
                     span,
                     node: variable,
+                    persistence: _,
                 } = variable;
                 let name = &variable.name;
                 if all_referenced.contains(&Referenceable {
@@ -149,6 +155,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 let Spanned {
                     span,
                     node: variable,
+                    persistence: _,
                 } = variable;
                 let name = &variable.name;
                 reachable_referenceables.insert(
@@ -164,6 +171,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 let Spanned {
                     span,
                     node: variable,
+                    persistence: _,
                 } = variable;
                 set_is_referenced_and_alias_referenceables(
                     &mut variable.value,
@@ -177,6 +185,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 let Spanned {
                     span,
                     node: variable,
+                    persistence: _,
                 } = variable;
                 let name = &variable.name;
                 if all_referenced.contains(&Referenceable {
@@ -194,6 +203,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 let Spanned {
                     span,
                     node: argument,
+                    persistence: _,
                 } = argument;
                 let name = &argument.name;
                 reachable_referenceables.insert(
@@ -209,6 +219,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 let Spanned {
                     span,
                     node: argument,
+                    persistence: _,
                 } = argument;
                 if let Some(value) = argument.value.as_mut() {
                     set_is_referenced_and_alias_referenceables(
@@ -224,6 +235,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 let Spanned {
                     span,
                     node: argument,
+                    persistence: _,
                 } = argument;
                 let name = &argument.name;
                 if all_referenced.contains(&Referenceable {
@@ -241,6 +253,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 let Spanned {
                     span,
                     node: variable,
+                    persistence: _,
                 } = variable;
                 let name = &variable.name;
                 reachable_referenceables.insert(
@@ -256,6 +269,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 let Spanned {
                     span,
                     node: variable,
+                    persistence: _,
                 } = variable;
                 set_is_referenced_and_alias_referenceables(
                     &mut variable.value,
@@ -276,6 +290,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 let Spanned {
                     span,
                     node: variable,
+                    persistence: _,
                 } = variable;
                 let name = &variable.name;
                 if all_referenced.contains(&Referenceable {
@@ -385,7 +400,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
             all_referenced,
         ),
         Expression::LinkSetter { alias } => {
-            let Spanned { span, node: alias } = alias;
+            let Spanned { span, node: alias, persistence: _, } = alias;
             set_referenced_referenceable(
                 alias,
                 *span,

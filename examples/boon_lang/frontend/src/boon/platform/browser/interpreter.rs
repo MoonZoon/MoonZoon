@@ -39,7 +39,7 @@ pub fn run(
 
     let (ast, errors) = parser()
         .parse(
-            tokens.map(Span::splat(source_code.len()), |Spanned { node, span }| {
+            tokens.map(Span::splat(source_code.len()), |Spanned { node, span, persistence: _ }| {
                 (node, span)
             }),
         )
