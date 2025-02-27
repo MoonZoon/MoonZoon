@@ -22,8 +22,8 @@ fn root() -> impl Element {
         .s(Height::fill())
         .s(Background::new().color(color!("Black")))
         // .item(panel_with_canvas(hello_triangle::run))
-        .item(panel_with_canvas(hello_world::run))
-        // .item(panel_with_canvas(rust_logo::run))
+        // .item(panel_with_canvas(hello_world::run))
+        .item(panel_with_canvas(rust_logo::run))
 }
 
 fn panel_with_canvas(
