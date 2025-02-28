@@ -85,8 +85,10 @@ impl<S: Signal<Item = bool>> SignalExtBool for S {
         MapBoolSignal {
             inner: self
                 .map_bool(
-                    Box::new(move || SignalEither::Left(t())) as Box<dyn FnMut() -> _ + Send + Sync>,
-                    Box::new(move || SignalEither::Right(f())) as Box<dyn FnMut() -> _ + Send + Sync>,
+                    Box::new(move || SignalEither::Left(t()))
+                        as Box<dyn FnMut() -> _ + Send + Sync>,
+                    Box::new(move || SignalEither::Right(f()))
+                        as Box<dyn FnMut() -> _ + Send + Sync>,
                 )
                 .flatten(),
         }

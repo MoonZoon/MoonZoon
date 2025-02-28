@@ -10,19 +10,19 @@ use zoon::wasm_bindgen::throw_str;
 use zoon::*;
 
 use glyphon::{
-    Attrs, Buffer, Cache, Color, Family, FontSystem, Metrics, Resolution, Shaping, SwashCache,
-    TextArea, TextAtlas, TextBounds, TextRenderer, Viewport, fontdb
+    fontdb, Attrs, Buffer, Cache, Color, Family, FontSystem, Metrics, Resolution, Shaping,
+    SwashCache, TextArea, TextAtlas, TextBounds, TextRenderer, Viewport,
 };
 
-use wgpu::{Device, Queue, Surface, SurfaceConfiguration, MultisampleState};
+use wgpu::{Device, MultisampleState, Queue, Surface, SurfaceConfiguration};
+use winit::platform::web::WindowAttributesExtWebSys;
 use winit::{
     application::ApplicationHandler,
-    dpi::{PhysicalSize, LogicalSize},
+    dpi::{LogicalSize, PhysicalSize},
     event::WindowEvent,
     event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy},
     window::{Window, WindowId},
 };
-use winit::platform::web::WindowAttributesExtWebSys;
 
 pub fn run(canvas: zoon::web_sys::HtmlCanvasElement) {
     let event_loop = EventLoop::with_user_event().build().unwrap_throw();
@@ -30,7 +30,10 @@ pub fn run(canvas: zoon::web_sys::HtmlCanvasElement) {
     event_loop.run_app(&mut app).unwrap_throw();
 }
 
-fn create_graphics(event_loop: &ActiveEventLoop, canvas: zoon::web_sys::HtmlCanvasElement) -> impl Future<Output = Graphics> + 'static {
+fn create_graphics(
+    event_loop: &ActiveEventLoop,
+    canvas: zoon::web_sys::HtmlCanvasElement,
+) -> impl Future<Output = Graphics> + 'static {
     let window_attrs = Window::default_attributes()
         .with_max_inner_size(LogicalSize::new(super::CANVAS_WIDTH, super::CANVAS_HEIGHT))
         // NOTE: It has to be set to make it work in Firefox
@@ -83,9 +86,7 @@ fn create_graphics(event_loop: &ActiveEventLoop, canvas: zoon::web_sys::HtmlCanv
         let mut font_system = {
             // NOTE: Smaller and compressed font would be probably better
             let font_data = include_bytes!("../fonts/FiraCode-Regular.ttf");
-            FontSystem::new_with_fonts([
-                fontdb::Source::Binary(Arc::new(font_data))
-            ])
+            FontSystem::new_with_fonts([fontdb::Source::Binary(Arc::new(font_data))])
         };
         let swash_cache = SwashCache::new();
         let cache = Cache::new(&device);
@@ -95,7 +96,12 @@ fn create_graphics(event_loop: &ActiveEventLoop, canvas: zoon::web_sys::HtmlCanv
             TextRenderer::new(&mut atlas, &device, MultisampleState::default(), None);
         let mut text_buffer = Buffer::new(&mut font_system, Metrics::new(30.0, 42.0));
 
-        text_buffer.set_text(&mut font_system, "Hello world!", Attrs::new().family(Family::Monospace), Shaping::Advanced);
+        text_buffer.set_text(
+            &mut font_system,
+            "Hello world!",
+            Attrs::new().family(Family::Monospace),
+            Shaping::Advanced,
+        );
         text_buffer.shape_until_scroll(&mut font_system, false);
 
         Graphics {
@@ -110,7 +116,7 @@ fn create_graphics(event_loop: &ActiveEventLoop, canvas: zoon::web_sys::HtmlCanv
             atlas,
             text_renderer,
             text_buffer,
-            
+
             window,
         }
     }
@@ -142,7 +148,10 @@ struct GraphicsBuilder {
 }
 
 impl GraphicsBuilder {
-    fn new(event_loop_proxy: EventLoopProxy<Graphics>, canvas: zoon::web_sys::HtmlCanvasElement) -> Self {
+    fn new(
+        event_loop_proxy: EventLoopProxy<Graphics>,
+        canvas: zoon::web_sys::HtmlCanvasElement,
+    ) -> Self {
         Self {
             event_loop_proxy: Some(event_loop_proxy),
             canvas,
@@ -175,7 +184,10 @@ struct Application {
 impl Application {
     fn new(event_loop: &EventLoop<Graphics>, canvas: zoon::web_sys::HtmlCanvasElement) -> Self {
         Self {
-            graphics: MaybeGraphics::Builder(GraphicsBuilder::new(event_loop.create_proxy(), canvas)),
+            graphics: MaybeGraphics::Builder(GraphicsBuilder::new(
+                event_loop.create_proxy(),
+                canvas,
+            )),
         }
     }
 
@@ -234,7 +246,9 @@ impl Application {
                 })],
                 ..Default::default()
             });
-            gfx.text_renderer.render(&gfx.atlas, &gfx.viewport, &mut rpass).unwrap();
+            gfx.text_renderer
+                .render(&gfx.atlas, &gfx.viewport, &mut rpass)
+                .unwrap();
         }
 
         let command_buffer = encoder.finish();

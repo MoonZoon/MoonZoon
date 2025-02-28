@@ -36,11 +36,8 @@ impl WebWorkerLoader {
 
         let options = web_sys::BlobPropertyBag::new();
         options.set_type("application/javascript");
-        let blob = web_sys::Blob::new_with_str_sequence_and_options(
-            &array,
-            &options,
-        )
-        .unwrap_throw();
+        let blob =
+            web_sys::Blob::new_with_str_sequence_and_options(&array, &options).unwrap_throw();
 
         Self {
             path: web_sys::Url::create_object_url_with_blob(&blob).unwrap_throw(),
