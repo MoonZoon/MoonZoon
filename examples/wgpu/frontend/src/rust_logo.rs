@@ -3,7 +3,7 @@
 
 use std::{borrow::Cow, future::Future, rc::Rc};
 use std::ops::{Range, Rem};
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 use zoon::wasm_bindgen::throw_str;
 use zoon::{*, println};
@@ -144,408 +144,43 @@ pub fn run(canvas: zoon::web_sys::HtmlCanvasElement) {
     println!("  b: toggle drawing the background");
     println!("  a/z: increase/decrease the stroke width");
 
-    let app_state = AppState::new(canvas);
-    let event_loop = EventLoop::new().unwrap();
-    event_loop.set_control_flow(ControlFlow::Poll);
-
-    let mut app = App {
-        window: None,
-        state: Arc::new(Mutex::new(app_state)),
-        gfx_state: Arc::new(Mutex::new(None)),
-    };
-
-    event_loop.run_app(&mut app).unwrap();
+    let event_loop = EventLoop::with_user_event().build().unwrap_throw();
+    let mut app = Application::new(&event_loop, canvas);
+    event_loop.run_app(&mut app).unwrap_throw();
 }
 
-/// This vertex constructor forwards the positions and normals provided by the
-/// tessellators and add a shape id.
-pub struct WithId(pub u32);
 
-impl FillVertexConstructor<GpuVertex> for WithId {
-    fn new_vertex(&mut self, vertex: tessellation::FillVertex) -> GpuVertex {
-        GpuVertex {
-            position: vertex.position().to_array(),
-            normal: [0.0, 0.0],
-            prim_id: self.0,
-        }
-    }
-}
 
-impl StrokeVertexConstructor<GpuVertex> for WithId {
-    fn new_vertex(&mut self, vertex: tessellation::StrokeVertex) -> GpuVertex {
-        GpuVertex {
-            position: vertex.position_on_path().to_array(),
-            normal: vertex.normal().to_array(),
-            prim_id: self.0,
-        }
-    }
-}
 
-pub struct Custom;
 
-impl FillVertexConstructor<BgPoint> for Custom {
-    fn new_vertex(&mut self, vertex: tessellation::FillVertex) -> BgPoint {
-        BgPoint {
-            point: vertex.position().to_array(),
-        }
-    }
-}
 
-/// The configured state of our application
-struct SceneParams {
-    target_zoom: f32,
-    zoom: f32,
-    target_scroll: Vector,
-    scroll: Vector,
-    show_points: bool,
-    stroke_width: f32,
-    target_stroke_width: f32,
-    draw_background: bool,
-    window_size: PhysicalSize<u32>,
-    size_changed: bool,
-    render: bool,
-}
 
-impl Default for SceneParams {
-    fn default() -> Self {
-        Self {
-            target_zoom: 5.0,
-            zoom: 5.0,
-            target_scroll: vector(70.0, 70.0),
-            scroll: vector(70.0, 70.0),
-            show_points: false,
-            stroke_width: 1.0,
-            target_stroke_width: 1.0,
-            draw_background: true,
-            window_size: PhysicalSize::new(
-                DEFAULT_WINDOW_WIDTH as u32,
-                DEFAULT_WINDOW_HEIGHT as u32,
-            ),
-            size_changed: true,
-            render: false,
-        }
-    }
-}
-
-/// The application itself
-struct App {
-    // @TODO Rc? Loop + channels? EventLoopProxy?
-
-    /// We need to store an `Arc` because both `App` (for `ApplicationHandler`) and `GfxState`
-    /// (for the surface) require references to the `Window`.
-    window: Option<Arc<Window>>,
-    gfx_state: Arc<Mutex<Option<GfxState>>>,
-    state: Arc<Mutex<AppState>>,
-}
-
-impl ApplicationHandler for App {
-    /// Create a new window
-    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
-        let self_gfx_state = self.gfx_state.clone();
-        let self_state = self.state.clone();
-
-        let self_state_lock = self_state.lock().unwrap();
-        let window_size = self_state_lock.scene.window_size;
-        let canvas = self_state_lock.canvas.clone();
-        drop(self_state_lock);
-
-        let win_attrs = Window::default_attributes()
-            .with_title("Lyon tessellation example")
-            .with_inner_size(window_size)
-            .with_canvas(Some(canvas));
-        let window = Arc::new(event_loop.create_window(win_attrs).unwrap());
-        self.window = Some(window.clone());
-
-        Task::start(async move {
-            let gfx_state = GfxState::new(window.clone(), &mut self_state.lock().unwrap()).await;
-            window.request_redraw();
-            *self_gfx_state.lock().unwrap() = Some(gfx_state);
-        });
-    }
-
-    /// Handle redraw requests and other state changes
-    fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
-        match event {
-            WindowEvent::RedrawRequested => {
-                self.window.as_ref().unwrap().request_redraw();
-                let mut self_state = self.state.lock().unwrap();
-                self_state.scene.render = true;
-            }
-            WindowEvent::Destroyed | WindowEvent::CloseRequested => event_loop.exit(),
-            WindowEvent::Resized(size) => {
-                let mut self_state = self.state.lock().unwrap();
-                self_state.scene.window_size = size;
-                self_state.scene.size_changed = true;
-            }
-            WindowEvent::KeyboardInput {
-                event:
-                    KeyEvent {
-                        physical_key: PhysicalKey::Code(key_code),
-                        state: ElementState::Pressed,
-                        ..
-                    },
-                ..
-            } => {
-                let mut self_state = self.state.lock().unwrap();
-                let scene = &mut self_state.scene;
-                match key_code {
-                    KeyCode::Escape => {
-                        drop(scene);
-                        drop(self_state);
-                        event_loop.exit()
-                    }
-                    KeyCode::PageDown => scene.target_zoom *= 0.8,
-                    KeyCode::PageUp => scene.target_zoom *= 1.25,
-                    KeyCode::ArrowLeft => scene.target_scroll.x += 50.0 / scene.target_zoom,
-                    KeyCode::ArrowRight => scene.target_scroll.x -= 50.0 / scene.target_zoom,
-                    KeyCode::ArrowUp => scene.target_scroll.y -= 50.0 / scene.target_zoom,
-                    KeyCode::ArrowDown => scene.target_scroll.y += 50.0 / scene.target_zoom,
-                    KeyCode::KeyP => scene.show_points = !scene.show_points,
-                    KeyCode::KeyB => scene.draw_background = !scene.draw_background,
-                    KeyCode::KeyA => scene.target_stroke_width /= 0.8,
-                    KeyCode::KeyZ => scene.target_stroke_width *= 0.8,
-                    _key => {}
-                }
-            },
-            _evt => {}
-        };
-
-        if event_loop.exiting() {
-            return;
-        }
-
-        let mut self_state = self.state.lock().unwrap();
-        let scene = &mut self_state.scene;
-        scene.zoom += (scene.target_zoom - scene.zoom) / 3.0;
-        scene.scroll = scene.scroll + (scene.target_scroll - scene.scroll) / 3.0;
-        scene.stroke_width =
-            scene.stroke_width + (scene.target_stroke_width - scene.stroke_width) / 5.0;
-        drop(scene);
-        drop(self_state);
-
-        self.gfx_state.lock().unwrap().as_mut().unwrap().paint(self.state.clone());
-    }
-}
-
-/// Store values that are reused throughout drawings
-struct AppState {
-    scene: SceneParams,
-    path: Path,
-    /// Tessellated vertices for the main geometry
-    geometry: VertexBuffers<GpuVertex, u16>,
-    /// Tessellated vertices for the background
-    bg_geometry: VertexBuffers<BgPoint, u16>,
-    cpu_primitives: Vec<Primitive>,
-
-    // Ranges of different primitive types in the buffer
-    logo_fill_range: Range<u32>,
-    logo_stroke_range: Range<u32>,
-    arrow_range: Range<u32>,
-
-    // Values for FPS reporting
-    start: Milliseconds,
-    next_report: Milliseconds,
-    frame_count: u32,
-    time_secs: f32,
-
+fn create_graphics(
+    event_loop: &ActiveEventLoop, 
     canvas: zoon::web_sys::HtmlCanvasElement,
-}
+    geometry: Rc<VertexBuffers<GpuVertex, u16>>,
+    bg_geometry: Rc<VertexBuffers<BgPoint, u16>>,
+) -> impl Future<Output = GfxState> + 'static {
+    let window_attrs = Window::default_attributes()
+        .with_max_inner_size(LogicalSize::new(super::CANVAS_WIDTH, super::CANVAS_HEIGHT))
+        // NOTE: It has to be set to make it work in Firefox
+        .with_inner_size(LogicalSize::new(super::CANVAS_WIDTH, super::CANVAS_HEIGHT))
+        .with_canvas(Some(canvas));
 
-impl AppState {
-    /// Tessellate the example geometry to create an initial application state
-    fn new(canvas: zoon::web_sys::HtmlCanvasElement) -> Self {
-        let scene = SceneParams::default();
-        let tolerance = 0.02;
-        let mut geometry: VertexBuffers<GpuVertex, u16> = VertexBuffers::new();
+    let window = Rc::new(event_loop.create_window(window_attrs).unwrap_throw());
+    let size = window.inner_size();
+    let instance = wgpu::Instance::default();
+    let surface = instance
+        .create_surface(window.clone())
+        .unwrap_or_else(|e| throw_str(&format!("{e:#?}")));
 
-        let mut fill_tess = FillTessellator::new();
-        let mut stroke_tess = StrokeTessellator::new();
-
-        /* Tessellate the fill and stroke of the Rust logo */
-
-        // Build a Path for the rust logo.
-        let mut logo_builder = Path::builder().with_svg();
-        build_logo_path(&mut logo_builder);
-        let logo_path = logo_builder.build();
-
-        fill_tess
-            .tessellate_path(
-                &logo_path,
-                &FillOptions::tolerance(tolerance).with_fill_rule(tessellation::FillRule::NonZero),
-                &mut BuffersBuilder::new(&mut geometry, WithId(LOGO_FILL_PRIM_ID as u32)),
-            )
-            .unwrap();
-
-        let logo_fill_range = 0..(geometry.indices.len() as u32);
-
-        stroke_tess
-            .tessellate_path(
-                &logo_path,
-                &StrokeOptions::tolerance(tolerance),
-                &mut BuffersBuilder::new(&mut geometry, WithId(LOGO_STROKE_PRIM_ID as u32)),
-            )
-            .unwrap();
-
-        let logo_stroke_range = logo_fill_range.end..(geometry.indices.len() as u32);
-
-        /* Tessellate an arrow primitive  */
-
-        // Create an arrow shape that we can reuse
-        let arrow_points = [
-            point(-1.0, -0.3),
-            point(0.0, -0.3),
-            point(0.0, -1.0),
-            point(1.5, 0.0),
-            point(0.0, 1.0),
-            point(0.0, 0.3),
-            point(-1.0, 0.3),
-        ];
-
-        let arrow_polygon = Polygon {
-            points: &arrow_points,
-            closed: true,
-        };
-
-        // Build a Path for the arrow.
-        let mut arrow_builder = Path::builder();
-        rounded_polygon::add_rounded_polygon(&mut arrow_builder, arrow_polygon, 0.2, NO_ATTRIBUTES);
-        let arrow_path = arrow_builder.build();
-
-        fill_tess
-            .tessellate_path(
-                &arrow_path,
-                &FillOptions::tolerance(tolerance),
-                &mut BuffersBuilder::new(&mut geometry, WithId(ARROWS_PRIM_ID)),
-            )
-            .unwrap();
-
-        let arrow_range = logo_stroke_range.end..(geometry.indices.len() as u32);
-
-        /* Create the background grid  */
-
-        let mut bg_geometry: VertexBuffers<BgPoint, u16> = VertexBuffers::new();
-
-        fill_tess
-            .tessellate_rectangle(
-                &Box2D {
-                    min: point(-1.0, -1.0),
-                    max: point(1.0, 1.0),
-                },
-                &FillOptions::DEFAULT,
-                &mut BuffersBuilder::new(&mut bg_geometry, Custom),
-            )
-            .unwrap();
-
-        /* Build all primitives */
-
-        // Create red primitives by default
-        let mut cpu_primitives = Vec::with_capacity(PRIM_BUFFER_LEN);
-        for _ in 0..PRIM_BUFFER_LEN {
-            cpu_primitives.push(Primitive {
-                color: [1.0, 0.0, 0.0, 1.0],
-                z_index: 0,
-                width: 0.0,
-                translate: [0.0, 0.0],
-                angle: 0.0,
-                ..Primitive::default()
-            });
-        }
-
-        // Stroke the logo with black
-        cpu_primitives[LOGO_STROKE_PRIM_ID] = Primitive {
-            color: [0.0, 0.0, 0.0, 1.0],
-            z_index: NUM_INSTANCES as i32 + 2,
-            width: 1.0,
-            ..Primitive::default()
-        };
-
-        // Fill the logo with white
-        cpu_primitives[LOGO_FILL_PRIM_ID] = Primitive {
-            color: [1.0, 1.0, 1.0, 1.0],
-            z_index: NUM_INSTANCES as i32 + 1,
-            ..Primitive::default()
-        };
-
-        // Instance primitives
-        for (idx, cpu_prim) in cpu_primitives
-            .iter_mut()
-            .enumerate()
-            .skip(LOGO_FILL_PRIM_ID + 1)
-            .take(NUM_INSTANCES as usize - 1)
-        {
-            cpu_prim.z_index = (idx as u32 + 1) as i32;
-            cpu_prim.color = [
-                (0.1 * idx as f32).rem(1.0),
-                (0.5 * idx as f32).rem(1.0),
-                (0.9 * idx as f32).rem(1.0),
-                1.0,
-            ];
-        }
-
-        let start = performance().now();
-
-        Self {
-            scene,
-            cpu_primitives,
-            logo_fill_range,
-            logo_stroke_range,
-            arrow_range,
-            geometry,
-            bg_geometry,
-            start,
-            next_report: start + 1_000.,
-            frame_count: 0,
-            time_secs: 0.0,
-            path: logo_path,
-            canvas,
-        }
-    }
-}
-
-/// Everything needed for wgpu graphics
-struct GfxState {
-    device: wgpu::Device,
-    surface_desc: wgpu::SurfaceConfiguration,
-    /// Drawable surface, which contains an `Arc<Window>`
-    surface: wgpu::Surface<'static>,
-    /// Primitive uniform buffer
-    prims_ubo: wgpu::Buffer,
-    /// Globals uniform buffer
-    globals_ubo: wgpu::Buffer,
-    /// Index buffer object for the main shader
-    geo_ibo: wgpu::Buffer,
-    /// Vertex buffer object for the main shader
-    geo_vbo: wgpu::Buffer,
-    /// Main shader render pipeline
-    geo_pipeline: wgpu::RenderPipeline,
-    /// Index buffer object for the background shader
-    bg_ibo: wgpu::Buffer,
-    /// Vertex buffer object for the backgroundshader
-    bg_vbo: wgpu::Buffer,
-    /// Background shader render pipeline
-    bg_pipeline: wgpu::RenderPipeline,
-    bind_group: wgpu::BindGroup,
-    queue: wgpu::Queue,
-    depth_texture_view: Option<wgpu::TextureView>,
-    multisampled_render_target: Option<wgpu::TextureView>,
-}
-
-impl GfxState {
-    // impl<'win> GfxState<'win> {
-    async fn new(window: Arc<Window>, app_state: &mut AppState) -> Self {
-        // Create an instance
-        let instance = wgpu::Instance::default();
-        let size = window.inner_size();
-
-        // Create a surface
-        let surface = instance.create_surface(window).unwrap();
-
+    async move {
         let (device, queue) = {
             // Create an adapter
             let adapter = instance
                 .request_adapter(&wgpu::RequestAdapterOptions {
-                    power_preference: wgpu::PowerPreference::LowPower,
                     compatible_surface: Some(&surface),
+                    power_preference: wgpu::PowerPreference::None,
                     force_fallback_adapter: false,
                 })
                 .await
@@ -555,10 +190,14 @@ impl GfxState {
             adapter
                 .request_device(
                     &wgpu::DeviceDescriptor {
-                        label: None,
-                        required_features: wgpu::Features::empty(),
-                        required_limits: wgpu::Limits::default(),
-                        memory_hints:wgpu::MemoryHints::MemoryUsage,
+                        label: Some("WGPU Device"),
+                        memory_hints: wgpu::MemoryHints::default(),
+                        required_features: wgpu::Features::default(),
+                        #[cfg(feature = "webgpu")]
+                        required_limits: wgpu::Limits::default().using_resolution(adapter.limits()),
+                        #[cfg(feature = "webgl")]
+                        required_limits: wgpu::Limits::downlevel_webgl2_defaults()
+                            .using_resolution(adapter.limits()),
                     },
                     None,
                 )
@@ -568,7 +207,7 @@ impl GfxState {
 
         let surface_desc = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: wgpu::TextureFormat::Bgra8Unorm,
+            format: wgpu::TextureFormat::Rgba8Unorm,
             width: size.width,
             height: size.height,
             present_mode: wgpu::PresentMode::AutoVsync,
@@ -578,33 +217,31 @@ impl GfxState {
             view_formats: vec![],
         };
 
-        surface.configure(&device, &surface_desc);
-
         // Geometry shader vertex buffer
         let geo_vbo = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("geo_vbo"),
-            contents: bytemuck::cast_slice(&app_state.geometry.vertices),
+            contents: bytemuck::cast_slice(&geometry.vertices),
             usage: wgpu::BufferUsages::VERTEX,
         });
 
         // Geometry shader index buffer
         let geo_ibo = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("geo_ibo"),
-            contents: bytemuck::cast_slice(&app_state.geometry.indices),
+            contents: bytemuck::cast_slice(&geometry.indices),
             usage: wgpu::BufferUsages::INDEX,
         });
 
         // Background shader vertex buffer
         let bg_vbo = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("bg_vbo"),
-            contents: bytemuck::cast_slice(&app_state.bg_geometry.vertices),
+            contents: bytemuck::cast_slice(&bg_geometry.vertices),
             usage: wgpu::BufferUsages::VERTEX,
         });
 
         // Background shader index buffer
         let bg_ibo = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("bg_ibo"),
-            contents: bytemuck::cast_slice(&app_state.bg_geometry.indices),
+            contents: bytemuck::cast_slice(&bg_geometry.indices),
             usage: wgpu::BufferUsages::INDEX,
         });
 
@@ -793,7 +430,8 @@ impl GfxState {
             cache: None,
         });
 
-        Self {
+        GfxState {
+            window,
             device,
             surface_desc,
             surface,
@@ -811,12 +449,146 @@ impl GfxState {
             multisampled_render_target: None,
         }
     }
+}
 
-    fn paint(&mut self, state: Arc<Mutex<AppState>>) {
-        let mut state = state.lock().unwrap();
+/// Everything needed for wgpu graphics
+struct GfxState {
+    window: Rc<Window>,
+    device: wgpu::Device,
+    surface_desc: wgpu::SurfaceConfiguration,
+    /// Drawable surface, which contains an `Arc<Window>`
+    surface: wgpu::Surface<'static>,
+    /// Primitive uniform buffer
+    prims_ubo: wgpu::Buffer,
+    /// Globals uniform buffer
+    globals_ubo: wgpu::Buffer,
+    /// Index buffer object for the main shader
+    geo_ibo: wgpu::Buffer,
+    /// Vertex buffer object for the main shader
+    geo_vbo: wgpu::Buffer,
+    /// Main shader render pipeline
+    geo_pipeline: wgpu::RenderPipeline,
+    /// Index buffer object for the background shader
+    bg_ibo: wgpu::Buffer,
+    /// Vertex buffer object for the backgroundshader
+    bg_vbo: wgpu::Buffer,
+    /// Background shader render pipeline
+    bg_pipeline: wgpu::RenderPipeline,
+    bind_group: wgpu::BindGroup,
+    queue: wgpu::Queue,
+    depth_texture_view: Option<wgpu::TextureView>,
+    multisampled_render_target: Option<wgpu::TextureView>,
+}
+
+impl GfxState {
+    fn update_scene_size(&mut self, state: &mut AppState) {
+        state.scene.size_changed = false;
+        let physical = state.scene.window_size;
+        self.surface_desc.width = physical.width;
+        self.surface_desc.height = physical.height;
+        self.surface.configure(&self.device, &self.surface_desc);
+
+        let depth_texture = self.device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("Depth texture"),
+            size: wgpu::Extent3d {
+                width: self.surface_desc.width,
+                height: self.surface_desc.height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: SAMPLE_COUNT,
+            dimension: wgpu::TextureDimension::D2,
+            format: wgpu::TextureFormat::Depth32Float,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[],
+        });
+
+        self.depth_texture_view =
+            Some(depth_texture.create_view(&wgpu::TextureViewDescriptor::default()));
+
+        self.multisampled_render_target = if SAMPLE_COUNT > 1 {
+            Some(create_multisampled_framebuffer(
+                &self.device,
+                &self.surface_desc,
+            ))
+        } else {
+            None
+        };
+    }
+}
+
+struct GfxStateBuilder {
+    event_loop_proxy: Option<EventLoopProxy<GfxState>>,
+    canvas: zoon::web_sys::HtmlCanvasElement,
+    geometry: Rc<VertexBuffers<GpuVertex, u16>>,
+    bg_geometry: Rc<VertexBuffers<BgPoint, u16>>,
+}
+
+impl GfxStateBuilder {
+    fn new(
+        event_loop_proxy: EventLoopProxy<GfxState>, 
+        canvas: zoon::web_sys::HtmlCanvasElement,
+        geometry: Rc<VertexBuffers<GpuVertex, u16>>,
+        bg_geometry: Rc<VertexBuffers<BgPoint, u16>>,
+    ) -> Self {
+        Self {
+            event_loop_proxy: Some(event_loop_proxy),
+            canvas,
+            geometry,
+            bg_geometry
+        }
+    }
+
+    fn build_and_send(&mut self, event_loop: &ActiveEventLoop) {
+        let Some(event_loop_proxy) = self.event_loop_proxy.take() else {
+            // event_loop_proxy is already spent - we already constructed GfxState
+            return;
+        };
+
+        let gfx_fut = create_graphics(
+            event_loop, 
+            self.canvas.clone(),
+            self.geometry.clone(),
+            self.bg_geometry.clone(),
+        );
+        wasm_bindgen_futures::spawn_local(async move {
+            let gfx = gfx_fut.await;
+            assert!(event_loop_proxy.send_event(gfx).is_ok());
+        });
+    }
+}
+
+enum MaybeGfxState {
+    Builder(GfxStateBuilder),
+    GfxState(GfxState),
+}
+
+struct Application {
+    graphics: MaybeGfxState,
+    state: AppState,
+}
+
+impl Application {
+    fn new(event_loop: &EventLoop<GfxState>, canvas: zoon::web_sys::HtmlCanvasElement) -> Self {
+        let state = AppState::new();
+        let geometry = Rc::clone(&state.geometry);
+        let bg_geometry = Rc::clone(&state.bg_geometry);
+        Self {
+            graphics: MaybeGfxState::Builder(GfxStateBuilder::new(event_loop.create_proxy(), canvas, geometry, bg_geometry)),
+            state,
+        }
+    }
+
+    fn draw(&mut self) {
+        let MaybeGfxState::GfxState(gfx) = &mut self.graphics else {
+            // draw call rejected because graphics doesn't exist yet
+            return;
+        };
+
+        let state = &mut self.state;
 
         if state.scene.size_changed {
-            self.update_scene_size(&mut state);
+            gfx.update_scene_size(state);
         }
 
         if !state.scene.render {
@@ -825,7 +597,7 @@ impl GfxState {
 
         state.scene.render = false;
 
-        let frame = match self.surface.get_current_texture() {
+        let frame = match gfx.surface.get_current_texture() {
             Ok(texture) => texture,
             Err(e) => {
                 println!("Swap-chain error: {e:?}");
@@ -837,7 +609,7 @@ impl GfxState {
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
 
-        let mut encoder = self
+        let mut encoder = gfx
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Encoder"),
@@ -889,8 +661,8 @@ impl GfxState {
             },
         );
 
-        self.queue.write_buffer(
-            &self.globals_ubo,
+        gfx.queue.write_buffer(
+            &gfx.globals_ubo,
             0,
             bytemuck::cast_slice(&[Globals {
                 resolution: [
@@ -903,8 +675,8 @@ impl GfxState {
             }]),
         );
 
-        self.queue.write_buffer(
-            &self.prims_ubo,
+        gfx.queue.write_buffer(
+            &gfx.prims_ubo,
             0,
             bytemuck::cast_slice(&state.cpu_primitives),
         );
@@ -912,7 +684,7 @@ impl GfxState {
         {
             // A resolve target is only supported if the attachment actually uses anti-aliasing
             // So if sample_count == 1 then we must render directly to the surface's buffer
-            let color_attachment = if let Some(msaa_target) = &self.multisampled_render_target {
+            let color_attachment = if let Some(msaa_target) = &gfx.multisampled_render_target {
                 wgpu::RenderPassColorAttachment {
                     view: msaa_target,
                     ops: wgpu::Operations {
@@ -936,7 +708,7 @@ impl GfxState {
                 label: None,
                 color_attachments: &[Some(color_attachment)],
                 depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
-                    view: self.depth_texture_view.as_ref().unwrap(),
+                    view: gfx.depth_texture_view.as_ref().unwrap(),
                     depth_ops: Some(wgpu::Operations {
                         load: wgpu::LoadOp::Clear(0.0),
                         store: wgpu::StoreOp::Store,
@@ -950,26 +722,26 @@ impl GfxState {
                 occlusion_query_set: None,
             });
 
-            pass.set_pipeline(&self.geo_pipeline);
-            pass.set_bind_group(0, &self.bind_group, &[]);
-            pass.set_index_buffer(self.geo_ibo.slice(..), wgpu::IndexFormat::Uint16);
-            pass.set_vertex_buffer(0, self.geo_vbo.slice(..));
+            pass.set_pipeline(&gfx.geo_pipeline);
+            pass.set_bind_group(0, &gfx.bind_group, &[]);
+            pass.set_index_buffer(gfx.geo_ibo.slice(..), wgpu::IndexFormat::Uint16);
+            pass.set_vertex_buffer(0, gfx.geo_vbo.slice(..));
 
             pass.draw_indexed(state.logo_fill_range.clone(), 0, 0..NUM_INSTANCES);
             pass.draw_indexed(state.logo_stroke_range.clone(), 0, 0..1);
             pass.draw_indexed(state.arrow_range.clone(), 0, 0..(arrow_count as u32));
 
             if state.scene.draw_background {
-                pass.set_pipeline(&self.bg_pipeline);
-                pass.set_bind_group(0, &self.bind_group, &[]);
-                pass.set_index_buffer(self.bg_ibo.slice(..), wgpu::IndexFormat::Uint16);
-                pass.set_vertex_buffer(0, self.bg_vbo.slice(..));
+                pass.set_pipeline(&gfx.bg_pipeline);
+                pass.set_bind_group(0, &gfx.bind_group, &[]);
+                pass.set_index_buffer(gfx.bg_ibo.slice(..), wgpu::IndexFormat::Uint16);
+                pass.set_vertex_buffer(0, gfx.bg_vbo.slice(..));
 
                 pass.draw_indexed(0..6, 0, 0..1);
             }
         }
 
-        self.queue.submit(Some(encoder.finish()));
+        gfx.queue.submit(Some(encoder.finish()));
         frame.present();
 
         let now = performance().now();
@@ -981,42 +753,327 @@ impl GfxState {
             state.next_report = now + 1_000.;
         }
     }
+}
 
-    fn update_scene_size(&mut self, state: &mut AppState) {
-        state.scene.size_changed = false;
-        let physical = state.scene.window_size;
-        self.surface_desc.width = physical.width;
-        self.surface_desc.height = physical.height;
-        self.surface.configure(&self.device, &self.surface_desc);
+impl ApplicationHandler<GfxState> for Application {
+    fn window_event(
+        &mut self,
+        event_loop: &ActiveEventLoop,
+        _window_id: WindowId,
+        event: WindowEvent,
+    ) {
+        let scene = &mut self.state.scene;
 
-        let depth_texture = self.device.create_texture(&wgpu::TextureDescriptor {
-            label: Some("Depth texture"),
-            size: wgpu::Extent3d {
-                width: self.surface_desc.width,
-                height: self.surface_desc.height,
-                depth_or_array_layers: 1,
+        match event {
+            WindowEvent::Resized(size) => {
+                scene.window_size = size;
+                scene.size_changed = true;
             },
-            mip_level_count: 1,
-            sample_count: SAMPLE_COUNT,
-            dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Depth32Float,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            view_formats: &[],
-        });
+            WindowEvent::RedrawRequested => { 
+                scene.render = true;
+            },
+            WindowEvent::Destroyed | WindowEvent::CloseRequested => event_loop.exit(),
+            WindowEvent::KeyboardInput {
+                event:
+                    KeyEvent {
+                        physical_key: PhysicalKey::Code(key_code),
+                        state: ElementState::Pressed,
+                        ..
+                    },
+                ..
+            } => {
+                match key_code {
+                    KeyCode::Escape => event_loop.exit(),
+                    KeyCode::PageDown => scene.target_zoom *= 0.8,
+                    KeyCode::PageUp => scene.target_zoom *= 1.25,
+                    KeyCode::ArrowLeft => scene.target_scroll.x += 50.0 / scene.target_zoom,
+                    KeyCode::ArrowRight => scene.target_scroll.x -= 50.0 / scene.target_zoom,
+                    KeyCode::ArrowUp => scene.target_scroll.y -= 50.0 / scene.target_zoom,
+                    KeyCode::ArrowDown => scene.target_scroll.y += 50.0 / scene.target_zoom,
+                    KeyCode::KeyP => scene.show_points = !scene.show_points,
+                    KeyCode::KeyB => scene.draw_background = !scene.draw_background,
+                    KeyCode::KeyA => scene.target_stroke_width /= 0.8,
+                    KeyCode::KeyZ => scene.target_stroke_width *= 0.8,
+                    _key => {}
+                }
+            },
+            _ => (),
+        }
 
-        self.depth_texture_view =
-            Some(depth_texture.create_view(&wgpu::TextureViewDescriptor::default()));
+        scene.zoom += (scene.target_zoom - scene.zoom) / 3.0;
+        scene.scroll = scene.scroll + (scene.target_scroll - scene.scroll) / 3.0;
+        scene.stroke_width =
+            scene.stroke_width + (scene.target_stroke_width - scene.stroke_width) / 5.0;
 
-        self.multisampled_render_target = if SAMPLE_COUNT > 1 {
-            Some(create_multisampled_framebuffer(
-                &self.device,
-                &self.surface_desc,
-            ))
-        } else {
-            None
-        };
+        self.draw();
+    }
+
+    fn resumed(&mut self, event_loop: &ActiveEventLoop) {
+        if let MaybeGfxState::Builder(builder) = &mut self.graphics {
+            builder.build_and_send(event_loop);
+        }
+    }
+
+    fn user_event(&mut self, _event_loop: &ActiveEventLoop, graphics: GfxState) {
+        self.graphics = MaybeGfxState::GfxState(graphics);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/// This vertex constructor forwards the positions and normals provided by the
+/// tessellators and add a shape id.
+pub struct WithId(pub u32);
+
+impl FillVertexConstructor<GpuVertex> for WithId {
+    fn new_vertex(&mut self, vertex: tessellation::FillVertex) -> GpuVertex {
+        GpuVertex {
+            position: vertex.position().to_array(),
+            normal: [0.0, 0.0],
+            prim_id: self.0,
+        }
+    }
+}
+
+impl StrokeVertexConstructor<GpuVertex> for WithId {
+    fn new_vertex(&mut self, vertex: tessellation::StrokeVertex) -> GpuVertex {
+        GpuVertex {
+            position: vertex.position_on_path().to_array(),
+            normal: vertex.normal().to_array(),
+            prim_id: self.0,
+        }
+    }
+}
+
+pub struct Custom;
+
+impl FillVertexConstructor<BgPoint> for Custom {
+    fn new_vertex(&mut self, vertex: tessellation::FillVertex) -> BgPoint {
+        BgPoint {
+            point: vertex.position().to_array(),
+        }
+    }
+}
+
+/// The configured state of our application
+struct SceneParams {
+    target_zoom: f32,
+    zoom: f32,
+    target_scroll: Vector,
+    scroll: Vector,
+    show_points: bool,
+    stroke_width: f32,
+    target_stroke_width: f32,
+    draw_background: bool,
+    window_size: PhysicalSize<u32>,
+    size_changed: bool,
+    render: bool,
+}
+
+impl Default for SceneParams {
+    fn default() -> Self {
+        Self {
+            target_zoom: 5.0,
+            zoom: 5.0,
+            target_scroll: vector(70.0, 70.0),
+            scroll: vector(70.0, 70.0),
+            show_points: false,
+            stroke_width: 1.0,
+            target_stroke_width: 1.0,
+            draw_background: true,
+            window_size: PhysicalSize::new(
+                DEFAULT_WINDOW_WIDTH as u32,
+                DEFAULT_WINDOW_HEIGHT as u32,
+            ),
+            size_changed: true,
+            render: false,
+        }
+    }
+}
+
+/// Store values that are reused throughout drawings
+struct AppState {
+    scene: SceneParams,
+    path: Path,
+    /// Tessellated vertices for the main geometry
+    geometry: Rc<VertexBuffers<GpuVertex, u16>>,
+    /// Tessellated vertices for the background
+    bg_geometry: Rc<VertexBuffers<BgPoint, u16>>,
+    cpu_primitives: Vec<Primitive>,
+
+    // Ranges of different primitive types in the buffer
+    logo_fill_range: Range<u32>,
+    logo_stroke_range: Range<u32>,
+    arrow_range: Range<u32>,
+
+    // Values for FPS reporting
+    start: Milliseconds,
+    next_report: Milliseconds,
+    frame_count: u32,
+    time_secs: f32,
+}
+
+impl AppState {
+    /// Tessellate the example geometry to create an initial application state
+    fn new() -> Self {
+        let scene = SceneParams::default();
+        let tolerance = 0.02;
+        let mut geometry: VertexBuffers<GpuVertex, u16> = VertexBuffers::new();
+
+        let mut fill_tess = FillTessellator::new();
+        let mut stroke_tess = StrokeTessellator::new();
+
+        /* Tessellate the fill and stroke of the Rust logo */
+
+        // Build a Path for the rust logo.
+        let mut logo_builder = Path::builder().with_svg();
+        build_logo_path(&mut logo_builder);
+        let logo_path = logo_builder.build();
+
+        fill_tess
+            .tessellate_path(
+                &logo_path,
+                &FillOptions::tolerance(tolerance).with_fill_rule(tessellation::FillRule::NonZero),
+                &mut BuffersBuilder::new(&mut geometry, WithId(LOGO_FILL_PRIM_ID as u32)),
+            )
+            .unwrap();
+
+        let logo_fill_range = 0..(geometry.indices.len() as u32);
+
+        stroke_tess
+            .tessellate_path(
+                &logo_path,
+                &StrokeOptions::tolerance(tolerance),
+                &mut BuffersBuilder::new(&mut geometry, WithId(LOGO_STROKE_PRIM_ID as u32)),
+            )
+            .unwrap();
+
+        let logo_stroke_range = logo_fill_range.end..(geometry.indices.len() as u32);
+
+        /* Tessellate an arrow primitive  */
+
+        // Create an arrow shape that we can reuse
+        let arrow_points = [
+            point(-1.0, -0.3),
+            point(0.0, -0.3),
+            point(0.0, -1.0),
+            point(1.5, 0.0),
+            point(0.0, 1.0),
+            point(0.0, 0.3),
+            point(-1.0, 0.3),
+        ];
+
+        let arrow_polygon = Polygon {
+            points: &arrow_points,
+            closed: true,
+        };
+
+        // Build a Path for the arrow.
+        let mut arrow_builder = Path::builder();
+        rounded_polygon::add_rounded_polygon(&mut arrow_builder, arrow_polygon, 0.2, NO_ATTRIBUTES);
+        let arrow_path = arrow_builder.build();
+
+        fill_tess
+            .tessellate_path(
+                &arrow_path,
+                &FillOptions::tolerance(tolerance),
+                &mut BuffersBuilder::new(&mut geometry, WithId(ARROWS_PRIM_ID)),
+            )
+            .unwrap();
+
+        let arrow_range = logo_stroke_range.end..(geometry.indices.len() as u32);
+
+        /* Create the background grid  */
+
+        let mut bg_geometry: VertexBuffers<BgPoint, u16> = VertexBuffers::new();
+
+        fill_tess
+            .tessellate_rectangle(
+                &Box2D {
+                    min: point(-1.0, -1.0),
+                    max: point(1.0, 1.0),
+                },
+                &FillOptions::DEFAULT,
+                &mut BuffersBuilder::new(&mut bg_geometry, Custom),
+            )
+            .unwrap();
+
+        /* Build all primitives */
+
+        // Create red primitives by default
+        let mut cpu_primitives = Vec::with_capacity(PRIM_BUFFER_LEN);
+        for _ in 0..PRIM_BUFFER_LEN {
+            cpu_primitives.push(Primitive {
+                color: [1.0, 0.0, 0.0, 1.0],
+                z_index: 0,
+                width: 0.0,
+                translate: [0.0, 0.0],
+                angle: 0.0,
+                ..Primitive::default()
+            });
+        }
+
+        // Stroke the logo with black
+        cpu_primitives[LOGO_STROKE_PRIM_ID] = Primitive {
+            color: [0.0, 0.0, 0.0, 1.0],
+            z_index: NUM_INSTANCES as i32 + 2,
+            width: 1.0,
+            ..Primitive::default()
+        };
+
+        // Fill the logo with white
+        cpu_primitives[LOGO_FILL_PRIM_ID] = Primitive {
+            color: [1.0, 1.0, 1.0, 1.0],
+            z_index: NUM_INSTANCES as i32 + 1,
+            ..Primitive::default()
+        };
+
+        // Instance primitives
+        for (idx, cpu_prim) in cpu_primitives
+            .iter_mut()
+            .enumerate()
+            .skip(LOGO_FILL_PRIM_ID + 1)
+            .take(NUM_INSTANCES as usize - 1)
+        {
+            cpu_prim.z_index = (idx as u32 + 1) as i32;
+            cpu_prim.color = [
+                (0.1 * idx as f32).rem(1.0),
+                (0.5 * idx as f32).rem(1.0),
+                (0.9 * idx as f32).rem(1.0),
+                1.0,
+            ];
+        }
+
+        let start = performance().now();
+
+        Self {
+            scene,
+            cpu_primitives,
+            logo_fill_range,
+            logo_stroke_range,
+            arrow_range,
+            geometry: Rc::new(geometry),
+            bg_geometry: Rc::new(bg_geometry),
+            start,
+            next_report: start + 1_000.,
+            frame_count: 0,
+            time_secs: 0.0,
+            path: logo_path,
+        }
+    }
+}
+
 
 /// Creates a texture that uses MSAA and fits a given swap chain
 fn create_multisampled_framebuffer(
