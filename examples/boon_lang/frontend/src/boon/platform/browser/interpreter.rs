@@ -4,10 +4,11 @@ use std::io::{Cursor, Read};
 use std::sync::Arc;
 
 use ariadne::{Config, Label, Report, ReportKind, Source};
+use chumsky::input::Stream;
 use zoon::{eprintln, println, UnwrapThrowExt};
 
 use crate::boon::parser::{
-    lexer, parser, resolve_references, Input, ParseError, Parser, Span, Spanned, Token,
+    lexer, parser, resolve_references, Input, ParseError, Parser, Span, Spanned, Token, Expression
 };
 use crate::boon::platform::browser::{
     engine::{ConstructContext, Object},
@@ -74,6 +75,46 @@ pub fn run(
     println!("[Evaluation Errors]");
     report_errors(errors, filename, source_code);
     None
+}
+
+fn parse_old<'filename, 'old_code>(filename: &'filename str, source_code: &'old_code str) -> Option<Vec<Spanned<Expression<'old_code>>>> {
+    let (tokens, errors) = lexer().parse(source_code).into_output_errors();
+    if !errors.is_empty() {
+        println!("[OLD Lex Errors]");
+    }
+    report_errors(errors, filename, source_code);
+    let Some(mut tokens) = tokens else {
+        return None;
+    };
+
+    tokens.retain(|spanned_token| !matches!(spanned_token.node, Token::Comment(_)));
+
+    let (ast, errors) = parser()
+        .parse(
+            Stream::from_iter(tokens).map(Span::splat(source_code.len()), |Spanned { node, span, persistence: _ }| {
+                (node, span)
+            })
+        )
+        .into_output_errors();
+    if !errors.is_empty() {
+        println!("[OLD Parse Errors]");
+    }
+    report_errors(errors, filename, source_code);
+    let Some(ast) = ast else {
+        return None;
+    };
+
+    let ast_with_reference_data = match resolve_references(ast) {
+        Ok(ast_with_reference_data) => ast_with_reference_data,
+        Err(errors) => {
+            println!("[OLD Reference Errors]");
+            report_errors(errors, filename, source_code);
+            return None;
+        }
+    };
+    println!("[OLD Abstract Syntax Tree with Reference Data]");
+    println!("{ast_with_reference_data:?}");
+    Some(ast_with_reference_data)
 }
 
 fn report_errors<'code, T: fmt::Display + 'code>(

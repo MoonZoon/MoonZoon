@@ -18,8 +18,8 @@ pub type ParseError<'code, T> = Rich<'code, T, Span>;
 #[derive(Debug, Clone)]
 pub struct Spanned<T> {
     pub span: Span,
-    pub node: T,
     pub persistence: Option<Persistence>,
+    pub node: T,
 }
 
 pub fn parser<'code, I>(

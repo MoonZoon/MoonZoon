@@ -7,8 +7,8 @@ pub type ReachableReferenceables<'code> = BTreeMap<&'code str, Referenceable<'co
 #[derive(Debug)]
 pub struct Referenceables<'code> {
     pub referenced: Option<Referenceable<'code>>,
-    // @TODO remove?
-    pub reachable: ReachableReferenceables<'code>,
+    // Uncomment here and in `set_referenced_referenceable` for debug purposes
+    // pub reachable: ReachableReferenceables<'code>,
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -443,7 +443,8 @@ fn set_referenced_referenceable<'code>(
             }
             let referenceables = Referenceables {
                 referenced,
-                reachable: reachable_referenceables,
+                // Uncomment for debug purposes
+                // reachable: reachable_referenceables,
             };
             *unset_referenceables = Some(referenceables);
         }

@@ -12,16 +12,16 @@ pub struct Persistence {
 
 #[derive(Debug, Clone, Copy)]
 pub enum PersistenceStatus {
-    New,
+    NewOrChanged,
     Unchanged,
-    Changed,
 }
 
 pub type ResolveError<'code> = ParseError<'code, Token<'code>>;
 
 // @TODO return diff to remove
-pub fn resolve_persistence(
-    mut expressions: Vec<Spanned<Expression>>,
-) -> Result<Vec<Spanned<Expression>>, Vec<ResolveError>> {
-    Ok(expressions)
+pub fn resolve_persistence<'new_code, 'old_code>(
+    mut new_expressions: Vec<Spanned<Expression<'new_code>>>,
+    mut old_expressions: Option<Vec<Spanned<Expression<'old_code>>>>,
+) -> Result<Vec<Spanned<Expression<'new_code>>>, Vec<ResolveError<'new_code>>> {
+    Ok(new_expressions)
 }
