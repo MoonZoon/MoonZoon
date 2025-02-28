@@ -9,14 +9,14 @@ use zoon::wasm_bindgen::throw_str;
 use zoon::*;
 
 use wgpu::{Adapter, Device, Instance, Queue, RenderPipeline, Surface, SurfaceConfiguration};
+use winit::platform::web::WindowAttributesExtWebSys;
 use winit::{
     application::ApplicationHandler,
-    dpi::{PhysicalSize, LogicalSize},
+    dpi::{LogicalSize, PhysicalSize},
     event::WindowEvent,
     event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy},
     window::{Window, WindowId},
 };
-use winit::platform::web::WindowAttributesExtWebSys;
 
 pub fn run(canvas: zoon::web_sys::HtmlCanvasElement) {
     let event_loop = EventLoop::with_user_event().build().unwrap_throw();
@@ -24,7 +24,10 @@ pub fn run(canvas: zoon::web_sys::HtmlCanvasElement) {
     event_loop.run_app(&mut app).unwrap_throw();
 }
 
-fn create_graphics(event_loop: &ActiveEventLoop, canvas: zoon::web_sys::HtmlCanvasElement) -> impl Future<Output = Graphics> + 'static {
+fn create_graphics(
+    event_loop: &ActiveEventLoop,
+    canvas: zoon::web_sys::HtmlCanvasElement,
+) -> impl Future<Output = Graphics> + 'static {
     let window_attrs = Window::default_attributes()
         .with_max_inner_size(LogicalSize::new(super::CANVAS_WIDTH, super::CANVAS_HEIGHT))
         // NOTE: It has to be set to make it work in Firefox
@@ -146,7 +149,10 @@ struct GraphicsBuilder {
 }
 
 impl GraphicsBuilder {
-    fn new(event_loop_proxy: EventLoopProxy<Graphics>, canvas: zoon::web_sys::HtmlCanvasElement) -> Self {
+    fn new(
+        event_loop_proxy: EventLoopProxy<Graphics>,
+        canvas: zoon::web_sys::HtmlCanvasElement,
+    ) -> Self {
         Self {
             event_loop_proxy: Some(event_loop_proxy),
             canvas,
@@ -179,7 +185,10 @@ struct Application {
 impl Application {
     fn new(event_loop: &EventLoop<Graphics>, canvas: zoon::web_sys::HtmlCanvasElement) -> Self {
         Self {
-            graphics: MaybeGraphics::Builder(GraphicsBuilder::new(event_loop.create_proxy(), canvas)),
+            graphics: MaybeGraphics::Builder(GraphicsBuilder::new(
+                event_loop.create_proxy(),
+                canvas,
+            )),
         }
     }
 

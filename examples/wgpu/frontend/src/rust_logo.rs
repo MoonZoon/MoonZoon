@@ -1,12 +1,11 @@
 // Based on:
 // - https://github.com/nical/lyon/tree/main/examples/wgpu
 
-use std::{borrow::Cow, future::Future, rc::Rc};
 use std::ops::{Range, Rem};
-use std::sync::Arc;
+use std::{future::Future, rc::Rc};
 
 use zoon::wasm_bindgen::throw_str;
-use zoon::{*, println};
+use zoon::{println, *};
 
 use lyon::extra::rust_logo::build_logo_path;
 use lyon::math::*;
@@ -18,15 +17,13 @@ use lyon::tessellation::{StrokeOptions, StrokeTessellator};
 
 use lyon::algorithms::{rounded_polygon, walk};
 
-use wgpu::{Adapter, Device, Instance, Queue, RenderPipeline, Surface, SurfaceConfiguration};
-
 use winit::application::ApplicationHandler;
-use winit::dpi::{PhysicalSize, LogicalSize};
+use winit::dpi::{LogicalSize, PhysicalSize};
 use winit::event::{ElementState, KeyEvent, WindowEvent};
-use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop, EventLoopProxy};
+use winit::event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy};
 use winit::keyboard::{KeyCode, PhysicalKey};
-use winit::window::{Window, WindowId};
 use winit::platform::web::WindowAttributesExtWebSys;
+use winit::window::{Window, WindowId};
 
 type Milliseconds = f64;
 
@@ -34,8 +31,6 @@ type Milliseconds = f64;
 use wgpu::util::DeviceExt;
 
 use bytemuck::{Pod, Zeroable};
-// @TODO remove
-// use futures::executor::block_on;
 
 const PRIM_BUFFER_LEN: usize = 256;
 
@@ -53,6 +48,22 @@ const ARROWS_PRIM_ID: u32 = NUM_INSTANCES + 1;
 const DEFAULT_WINDOW_WIDTH: f32 = 800.0;
 const DEFAULT_WINDOW_HEIGHT: f32 = 800.0;
 
+// @TODO resolve runtime error
+/*
+wgpu error: Validation Error
+
+Caused by:
+  In Device::create_render_pipeline
+    In the provided shader, the type given for group 0 binding 0 has a size of 24. As the device does not support `DownlevelFlags::BUFFER_BINDINGS_NOT_16_BYTE_ALIGNED`, the type must have a size that is a multiple of 16 bytes.
+*/
+// See:
+// - https://sotrh.github.io/learn-wgpu/showcase/alignment/#alignment-of-uniform-and-storage-buffers
+// - https://webgpufundamentals.org/webgpu/lessons/resources/wgsl-offset-computer.html#
+// - https://webgpufundamentals.org/webgpu/lessons/webgpu-memory-layout.html
+// - https://github.com/gfx-rs/wgpu/issues/2832
+// - https://github.com/gfx-rs/naga/issues/882
+// - https://github.com/Lokathor/bytemuck/discussions/86
+
 /// Globals stored in a uniform buffer
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Pod, Zeroable)]
@@ -60,7 +71,7 @@ struct Globals {
     resolution: [f32; 2],
     scroll_offset: [f32; 2],
     zoom: f32,
-    _pad: f32,
+    _pad: [f32; 2],
 }
 
 /// Data shared in the vertex buffer
@@ -149,14 +160,8 @@ pub fn run(canvas: zoon::web_sys::HtmlCanvasElement) {
     event_loop.run_app(&mut app).unwrap_throw();
 }
 
-
-
-
-
-
-
 fn create_graphics(
-    event_loop: &ActiveEventLoop, 
+    event_loop: &ActiveEventLoop,
     canvas: zoon::web_sys::HtmlCanvasElement,
     geometry: Rc<VertexBuffers<GpuVertex, u16>>,
     bg_geometry: Rc<VertexBuffers<BgPoint, u16>>,
@@ -312,10 +317,10 @@ fn create_graphics(
             &device.create_shader_module(wgpu::include_wgsl!("rust_logo_shaders/geometry.fs.wgsl"));
 
         // Background shaders
-        let bg_vs_module =
-            &device.create_shader_module(wgpu::include_wgsl!("rust_logo_shaders/background.vs.wgsl"));
-        let bg_fs_module =
-            &device.create_shader_module(wgpu::include_wgsl!("rust_logo_shaders/background.fs.wgsl"));
+        let bg_vs_module = &device
+            .create_shader_module(wgpu::include_wgsl!("rust_logo_shaders/background.vs.wgsl"));
+        let bg_fs_module = &device
+            .create_shader_module(wgpu::include_wgsl!("rust_logo_shaders/background.fs.wgsl"));
 
         let depth_stencil_state = Some(wgpu::DepthStencilState {
             format: wgpu::TextureFormat::Depth32Float,
@@ -526,7 +531,7 @@ struct GfxStateBuilder {
 
 impl GfxStateBuilder {
     fn new(
-        event_loop_proxy: EventLoopProxy<GfxState>, 
+        event_loop_proxy: EventLoopProxy<GfxState>,
         canvas: zoon::web_sys::HtmlCanvasElement,
         geometry: Rc<VertexBuffers<GpuVertex, u16>>,
         bg_geometry: Rc<VertexBuffers<BgPoint, u16>>,
@@ -535,7 +540,7 @@ impl GfxStateBuilder {
             event_loop_proxy: Some(event_loop_proxy),
             canvas,
             geometry,
-            bg_geometry
+            bg_geometry,
         }
     }
 
@@ -546,7 +551,7 @@ impl GfxStateBuilder {
         };
 
         let gfx_fut = create_graphics(
-            event_loop, 
+            event_loop,
             self.canvas.clone(),
             self.geometry.clone(),
             self.bg_geometry.clone(),
@@ -574,7 +579,12 @@ impl Application {
         let geometry = Rc::clone(&state.geometry);
         let bg_geometry = Rc::clone(&state.bg_geometry);
         Self {
-            graphics: MaybeGfxState::Builder(GfxStateBuilder::new(event_loop.create_proxy(), canvas, geometry, bg_geometry)),
+            graphics: MaybeGfxState::Builder(GfxStateBuilder::new(
+                event_loop.create_proxy(),
+                canvas,
+                geometry,
+                bg_geometry,
+            )),
             state,
         }
     }
@@ -671,7 +681,7 @@ impl Application {
                 ],
                 zoom: state.scene.zoom,
                 scroll_offset: state.scene.scroll.to_array(),
-                _pad: 0.0,
+                _pad: [0.0, 0.0],
             }]),
         );
 
@@ -768,10 +778,10 @@ impl ApplicationHandler<GfxState> for Application {
             WindowEvent::Resized(size) => {
                 scene.window_size = size;
                 scene.size_changed = true;
-            },
-            WindowEvent::RedrawRequested => { 
+            }
+            WindowEvent::RedrawRequested => {
                 scene.render = true;
-            },
+            }
             WindowEvent::Destroyed | WindowEvent::CloseRequested => event_loop.exit(),
             WindowEvent::KeyboardInput {
                 event:
@@ -781,21 +791,19 @@ impl ApplicationHandler<GfxState> for Application {
                         ..
                     },
                 ..
-            } => {
-                match key_code {
-                    KeyCode::Escape => event_loop.exit(),
-                    KeyCode::PageDown => scene.target_zoom *= 0.8,
-                    KeyCode::PageUp => scene.target_zoom *= 1.25,
-                    KeyCode::ArrowLeft => scene.target_scroll.x += 50.0 / scene.target_zoom,
-                    KeyCode::ArrowRight => scene.target_scroll.x -= 50.0 / scene.target_zoom,
-                    KeyCode::ArrowUp => scene.target_scroll.y -= 50.0 / scene.target_zoom,
-                    KeyCode::ArrowDown => scene.target_scroll.y += 50.0 / scene.target_zoom,
-                    KeyCode::KeyP => scene.show_points = !scene.show_points,
-                    KeyCode::KeyB => scene.draw_background = !scene.draw_background,
-                    KeyCode::KeyA => scene.target_stroke_width /= 0.8,
-                    KeyCode::KeyZ => scene.target_stroke_width *= 0.8,
-                    _key => {}
-                }
+            } => match key_code {
+                KeyCode::Escape => event_loop.exit(),
+                KeyCode::PageDown => scene.target_zoom *= 0.8,
+                KeyCode::PageUp => scene.target_zoom *= 1.25,
+                KeyCode::ArrowLeft => scene.target_scroll.x += 50.0 / scene.target_zoom,
+                KeyCode::ArrowRight => scene.target_scroll.x -= 50.0 / scene.target_zoom,
+                KeyCode::ArrowUp => scene.target_scroll.y -= 50.0 / scene.target_zoom,
+                KeyCode::ArrowDown => scene.target_scroll.y += 50.0 / scene.target_zoom,
+                KeyCode::KeyP => scene.show_points = !scene.show_points,
+                KeyCode::KeyB => scene.draw_background = !scene.draw_background,
+                KeyCode::KeyA => scene.target_stroke_width /= 0.8,
+                KeyCode::KeyZ => scene.target_stroke_width *= 0.8,
+                _key => {}
             },
             _ => (),
         }
@@ -818,19 +826,6 @@ impl ApplicationHandler<GfxState> for Application {
         self.graphics = MaybeGfxState::GfxState(graphics);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /// This vertex constructor forwards the positions and normals provided by the
 /// tessellators and add a shape id.
@@ -1073,7 +1068,6 @@ impl AppState {
         }
     }
 }
-
 
 /// Creates a texture that uses MSAA and fits a given swap chain
 fn create_multisampled_framebuffer(
