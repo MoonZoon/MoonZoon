@@ -2241,6 +2241,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ab82fc73182c29b02e2926a6df32f2241dbadb5cfc111fd595515b3598f46bb3"
 dependencies = [
  "rand 0.9.0",
+ "serde",
  "web-time",
 ]
 

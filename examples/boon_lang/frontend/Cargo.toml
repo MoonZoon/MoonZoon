@@ -15,10 +15,10 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 zoon.workspace = true
-chumsky = { version = "1.0.0-alpha.8", features = ["pratt"] }
+chumsky = { version = "1.0.0-alpha.8", features = ["pratt", "serde"] }
 ariadne = "0.5"
 pin-project = "1"
 
-ulid = "1.2.0"
+ulid = { version = "1.2.0", features = ["serde"] }
 # `rustflags = ["--cfg", 'getrandom_backend="wasm_js"']` has to be in workspace .cargo/config.toml
 getrandom = { version = "0.3", features = ["wasm_js"] }

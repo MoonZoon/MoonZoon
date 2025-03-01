@@ -14,6 +14,7 @@ use code_editor::CodeEditor;
 static SOURCE_CODE_STORAGE_KEY: &str = "boon-example-source-code";
 
 static OLD_SOURCE_CODE_STORAGE_KEY: &str = "boon-example-old-source-code";
+static OLD_SPAN_ID_PAIRS_STORAGE_KEY: &str = "boon-example-span-id-pairs";
 static STATES_STORAGE_KEY: &str = "boon-example-states";
 
 #[derive(Clone, Copy)]
@@ -127,6 +128,7 @@ impl Playground {
             .on_press(|| { 
                 local_storage().remove(STATES_STORAGE_KEY);
                 local_storage().remove(OLD_SOURCE_CODE_STORAGE_KEY);
+                local_storage().remove(OLD_SPAN_ID_PAIRS_STORAGE_KEY);
             })
     }
 
@@ -188,7 +190,7 @@ impl Playground {
         let filename = run_command.filename.unwrap_or("custom code");
         let source_code = self.source_code.lock_ref();
         let object_and_construct_context =
-            interpreter::run(filename, &source_code, STATES_STORAGE_KEY, OLD_SOURCE_CODE_STORAGE_KEY);
+            interpreter::run(filename, &source_code, STATES_STORAGE_KEY, OLD_SOURCE_CODE_STORAGE_KEY, OLD_SPAN_ID_PAIRS_STORAGE_KEY);
         drop(source_code);
         if let Some((object, construct_context)) = object_and_construct_context {
             El::new()

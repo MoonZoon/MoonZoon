@@ -1,5 +1,9 @@
 use super::{Alias, Expression, ParseError, Span, Spanned, Token};
-use std::collections::{BTreeMap, HashSet};
+
+use std::collections::{HashMap, HashSet};
+use std::borrow::Cow;
+
+use zoon::{local_storage, WebStorage, eprintln};
 use ulid::Ulid;
 
 pub type PersistenceId = Ulid;
@@ -21,20 +25,32 @@ pub type ResolveError<'code> = ParseError<'code, Token<'code>>;
 pub fn resolve_persistence<'new_code, 'old_code>(
     mut new_expressions: Vec<Spanned<Expression<'new_code>>>,
     old_expressions: Option<Vec<Spanned<Expression<'old_code>>>>,
-) -> Result<(Vec<Spanned<Expression<'new_code>>>, HashSet<PersistenceId>), Vec<ResolveError<'new_code>>> {
+    old_span_id_pairs_local_storage_key: impl Into<Cow<'static, str>>,
+) -> Result<(Vec<Spanned<Expression<'new_code>>>, HashMap<Span, PersistenceId>), Vec<ResolveError<'new_code>>> {
+    let old_span_id_pairs_local_storage_key = old_span_id_pairs_local_storage_key.into();
+    let old_span_id_pairs = if let Some(Ok(old_span_id_pairs)) = local_storage().get::<HashMap<Span, PersistenceId>>(&old_span_id_pairs_local_storage_key) {
+        Some(old_span_id_pairs)
+    } else {
+        None
+    };
+
     let old_expressions = old_expressions.unwrap_or_default();
-    let mut all_persistence_ids = HashSet::new();
+    let mut new_span_id_pairs = HashMap::new();
     let mut errors = Vec::new();
     for new_expression in &mut new_expressions {
         set_persistence(
             new_expression,
             &old_expressions.iter().collect::<Vec<_>>(),
-            &mut all_persistence_ids,
+            &mut new_span_id_pairs,
             &mut errors,
         );
     }
     if errors.is_empty() {
-        Ok((new_expressions, all_persistence_ids))
+        if let Err(error) = local_storage().insert(&old_span_id_pairs_local_storage_key, &new_span_id_pairs)
+        {
+            eprintln!("Failed to store Span-PersistenceId pairs: {error:#?}");
+        }
+        Ok((new_expressions, new_span_id_pairs))
     } else {
         Err(errors)
     }
@@ -43,7 +59,7 @@ pub fn resolve_persistence<'new_code, 'old_code>(
 fn set_persistence<'a, 'code, 'old_code>(
     mut new_expression: &'a mut Spanned<Expression<'code>>,
     old_expressions: &'a [&Spanned<Expression<'old_code>>],
-    all_persistence_ids: &mut HashSet<PersistenceId>,
+    new_span_id_pairs: &mut HashMap<Span, PersistenceId>,
     errors: &mut Vec<ResolveError>,
 ) {
     let Spanned {
@@ -54,7 +70,7 @@ fn set_persistence<'a, 'code, 'old_code>(
 
     if old_expressions.is_empty() {
         let id: Ulid = PersistenceId::new();
-        all_persistence_ids.insert(id);
+        new_span_id_pairs.insert(*span, id);
         *persistence = Some(Persistence {
             id,
             status: PersistenceStatus::NewOrChanged,
@@ -72,7 +88,7 @@ fn set_persistence<'a, 'code, 'old_code>(
                 }
             });
             if let Some((old_variable_value, id)) = old_variable_value_and_id {
-                all_persistence_ids.insert(id);
+                new_span_id_pairs.insert(*span, id);
                 *persistence = Some(Persistence {
                     id,
                     status: PersistenceStatus::Unchanged,
@@ -80,12 +96,12 @@ fn set_persistence<'a, 'code, 'old_code>(
                 set_persistence(
                     &mut variable.value,
                     &[old_variable_value],
-                    all_persistence_ids,
+                    new_span_id_pairs,
                     errors,
                 );
             } else {
                 let id: Ulid = PersistenceId::new();
-                all_persistence_ids.insert(id);
+                new_span_id_pairs.insert(*span, id);
                 *persistence = Some(Persistence {
                     id,
                     status: PersistenceStatus::NewOrChanged,
@@ -93,7 +109,7 @@ fn set_persistence<'a, 'code, 'old_code>(
                 set_persistence(
                     &mut variable.value,
                     &[],
-                    all_persistence_ids,
+                    new_span_id_pairs,
                     errors,
                 )
             }
@@ -108,14 +124,14 @@ fn set_persistence<'a, 'code, 'old_code>(
                 }
             });
             if let Some((old_object_variables, id)) = old_object_variables_and_id {
-                all_persistence_ids.insert(id);
+                new_span_id_pairs.insert(*span, id);
                 *persistence = Some(Persistence {
                     id,
                     status: PersistenceStatus::Unchanged,
                 });
                 for variable in &mut object.variables {
                     let Spanned {
-                        span: _,
+                        span,
                         node: variable,
                         persistence,
                     } = variable;
@@ -130,7 +146,7 @@ fn set_persistence<'a, 'code, 'old_code>(
                             }
                         });
                     if let Some((old_variable_value, id)) = old_variable_value_and_id {
-                        all_persistence_ids.insert(id);
+                        new_span_id_pairs.insert(*span, id);
                         *persistence = Some(Persistence {
                             id,
                             status: PersistenceStatus::Unchanged,
@@ -138,12 +154,12 @@ fn set_persistence<'a, 'code, 'old_code>(
                         set_persistence(
                             &mut variable.value,
                             &[old_variable_value],
-                            all_persistence_ids,
+                            new_span_id_pairs,
                             errors,
                         );
                     } else {
                         let id: Ulid = PersistenceId::new();
-                        all_persistence_ids.insert(id);
+                        new_span_id_pairs.insert(*span, id);
                         *persistence = Some(Persistence {
                             id,
                             status: PersistenceStatus::NewOrChanged,
@@ -151,26 +167,26 @@ fn set_persistence<'a, 'code, 'old_code>(
                         set_persistence(
                             &mut variable.value,
                             &[],
-                            all_persistence_ids,
+                            new_span_id_pairs,
                             errors,
                         )
                     }
                 }
             } else {
                 let id: Ulid = PersistenceId::new();
-                all_persistence_ids.insert(id);
+                new_span_id_pairs.insert(*span, id);
                 *persistence = Some(Persistence {
                     id,
                     status: PersistenceStatus::NewOrChanged,
                 });
                 for variable in &mut object.variables {
                     let Spanned {
-                        span: _,
+                        span,
                         node: variable,
                         persistence,
                     } = variable;
                     let id: Ulid = PersistenceId::new();
-                    all_persistence_ids.insert(id);
+                    new_span_id_pairs.insert(*span, id);
                     *persistence = Some(Persistence {
                         id,
                         status: PersistenceStatus::NewOrChanged,
@@ -178,7 +194,7 @@ fn set_persistence<'a, 'code, 'old_code>(
                     set_persistence(
                         &mut variable.value,
                         &[],
-                        all_persistence_ids,
+                        new_span_id_pairs,
                         errors,
                     );
                 }
@@ -194,7 +210,7 @@ fn set_persistence<'a, 'code, 'old_code>(
                 set_persistence(
                     &mut variable.value,
                     &[],
-                    all_persistence_ids,
+                    new_span_id_pairs,
                     errors,
                 );
             }
@@ -210,7 +226,7 @@ fn set_persistence<'a, 'code, 'old_code>(
                     set_persistence(
                         value,
                         &[],
-                        all_persistence_ids,
+                        new_span_id_pairs,
                         errors,
                     );
                 }
@@ -226,14 +242,14 @@ fn set_persistence<'a, 'code, 'old_code>(
                 set_persistence(
                     &mut variable.value,
                     &[],
-                    all_persistence_ids,
+                    new_span_id_pairs,
                     errors,
                 );
             }
             set_persistence(
                 output,
                 &[],
-                all_persistence_ids,
+                new_span_id_pairs,
                 errors,
             );
         }
@@ -242,7 +258,7 @@ fn set_persistence<'a, 'code, 'old_code>(
                 set_persistence(
                     item,
                     &[],
-                    all_persistence_ids,
+                    new_span_id_pairs,
                     errors,
                 );
             }
@@ -259,7 +275,7 @@ fn set_persistence<'a, 'code, 'old_code>(
                 set_persistence(
                     input,
                     &[],
-                    all_persistence_ids,
+                    new_span_id_pairs,
                     errors,
                 );
             }
@@ -268,7 +284,7 @@ fn set_persistence<'a, 'code, 'old_code>(
             set_persistence(
                 body,
                 &[],
-                all_persistence_ids,
+                new_span_id_pairs,
                 errors,
             );
         }
@@ -292,13 +308,13 @@ fn set_persistence<'a, 'code, 'old_code>(
             set_persistence(
                 from,
                 &[],
-                all_persistence_ids,
+                new_span_id_pairs,
                 errors,
             );
             set_persistence(
                 to,
                 &[],
-                all_persistence_ids,
+                new_span_id_pairs,
                 errors,
             );
         }

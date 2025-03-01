@@ -20,6 +20,7 @@ pub fn run(
     source_code: &str,
     states_local_storage_key: impl Into<Cow<'static, str>>,
     old_code_local_storage_key: impl Into<Cow<'static, str>>,
+    old_span_id_pairs_local_storage_key: impl Into<Cow<'static, str>>,
 ) -> Option<(Arc<Object>, ConstructContext)> {
     let old_code_local_storage_key = old_code_local_storage_key.into();
     let old_source_code = local_storage().get::<String>(&old_code_local_storage_key);
@@ -77,7 +78,11 @@ pub fn run(
     // println!("[Abstract Syntax Tree with Reference Data]");
     // println!("{ast:?}");
 
-    let (ast, all_persistence_ids) = match resolve_persistence(ast, old_ast) {
+    let (ast, new_span_id_pairs) = match resolve_persistence(
+        ast, 
+        old_ast,
+        old_span_id_pairs_local_storage_key
+    ) {
         Ok(ast) => ast,
         Err(errors) => {
             println!("[Persistence Errors]");
