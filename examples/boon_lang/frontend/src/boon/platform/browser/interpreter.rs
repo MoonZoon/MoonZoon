@@ -77,7 +77,7 @@ pub fn run(
     // println!("[Abstract Syntax Tree with Reference Data]");
     // println!("{ast:?}");
 
-    let ast = match resolve_persistence(ast, old_ast) {
+    let (ast, all_persistence_ids) = match resolve_persistence(ast, old_ast) {
         Ok(ast) => ast,
         Err(errors) => {
             println!("[Persistence Errors]");
@@ -87,6 +87,8 @@ pub fn run(
     };
     println!("[Abstract Syntax Tree with Reference Data and Persistence]");
     println!("{ast:#?}");
+
+    // @TODO remove persistence records from LocalStorage with ids not found in `all_persistence_ids`
 
     let (evaluation_result, errors) = match evaluate(ast, states_local_storage_key) {
         Ok(evaluation_result) => (Some(evaluation_result), vec![]),
