@@ -5,10 +5,10 @@ use std::sync::Arc;
 
 use ariadne::{Config, Label, Report, ReportKind, Source};
 use chumsky::input::Stream;
-use zoon::{eprintln, println, UnwrapThrowExt};
+use zoon::{eprintln, println, UnwrapThrowExt, local_storage, WebStorage};
 
 use crate::boon::parser::{
-    lexer, parser, resolve_references, Input, ParseError, Parser, Span, Spanned, Token, Expression
+    lexer, parser, resolve_references, Input, ParseError, Parser, Span, Spanned, Token, Expression, resolve_persistence
 };
 use crate::boon::platform::browser::{
     engine::{ConstructContext, Object},
@@ -19,14 +19,23 @@ pub fn run(
     filename: &str,
     source_code: &str,
     states_local_storage_key: impl Into<Cow<'static, str>>,
+    old_code_local_storage_key: impl Into<Cow<'static, str>>,
 ) -> Option<(Arc<Object>, ConstructContext)> {
+    let old_code_local_storage_key = old_code_local_storage_key.into();
+    let old_source_code = local_storage().get::<String>(&old_code_local_storage_key);
+    let old_ast = if let Some(Ok(old_source_code)) = &old_source_code {
+        parse_old(filename, old_source_code)
+    } else {
+        None
+    };
+    
     println!("[Source Code ({filename})]");
     println!("{source_code}");
 
     let (tokens, errors) = lexer().parse(source_code).into_output_errors();
     if let Some(tokens) = tokens.as_ref() {
-        println!("[Tokens]");
-        println!("{tokens:?}");
+        // println!("[Tokens]");
+        // println!("{tokens:?}");
     }
     if !errors.is_empty() {
         println!("[Lex Errors]");
@@ -46,8 +55,8 @@ pub fn run(
         )
         .into_output_errors();
     if let Some(ast) = ast.as_ref() {
-        println!("[Abstract Syntax Tree]");
-        println!("{ast:?}");
+        // println!("[Abstract Syntax Tree]");
+        // println!("{ast:?}");
     }
     if !errors.is_empty() {
         println!("[Parse Errors]");
@@ -57,24 +66,45 @@ pub fn run(
         return None;
     };
 
-    let ast_with_reference_data = match resolve_references(ast) {
-        Ok(ast_with_reference_data) => ast_with_reference_data,
+    let ast = match resolve_references(ast) {
+        Ok(ast) => ast,
         Err(errors) => {
             println!("[Reference Errors]");
             report_errors(errors, filename, source_code);
             return None;
         }
     };
-    println!("[Abstract Syntax Tree with Reference Data]");
-    println!("{ast_with_reference_data:#?}");
+    // println!("[Abstract Syntax Tree with Reference Data]");
+    // println!("{ast:?}");
 
-    let errors = match evaluate(ast_with_reference_data, states_local_storage_key) {
-        Ok((root_object, construct_context)) => return Some((root_object, construct_context)),
-        Err(evaluation_error) => [evaluation_error],
+    let ast = match resolve_persistence(ast, old_ast) {
+        Ok(ast) => ast,
+        Err(errors) => {
+            println!("[Persistence Errors]");
+            report_errors(errors, filename, source_code);
+            return None;
+        }
     };
-    println!("[Evaluation Errors]");
+    println!("[Abstract Syntax Tree with Reference Data and Persistence]");
+    println!("{ast:#?}");
+
+    let (evaluation_result, errors) = match evaluate(ast, states_local_storage_key) {
+        Ok(evaluation_result) => (Some(evaluation_result), vec![]),
+        Err(evaluation_error) => (None, vec![evaluation_error]),
+    };
+    if !errors.is_empty() {
+        println!("[Evaluation Errors]");
+    }
     report_errors(errors, filename, source_code);
-    None
+
+    if evaluation_result.is_some() {
+        if let Err(error) = local_storage().insert(&old_code_local_storage_key, &source_code)
+        {
+            eprintln!("Failed to store source code as old source code: {error:#?}");
+        }
+    }
+
+    evaluation_result
 }
 
 fn parse_old<'filename, 'old_code>(filename: &'filename str, source_code: &'old_code str) -> Option<Vec<Spanned<Expression<'old_code>>>> {
@@ -112,8 +142,6 @@ fn parse_old<'filename, 'old_code>(filename: &'filename str, source_code: &'old_
             return None;
         }
     };
-    println!("[OLD Abstract Syntax Tree with Reference Data]");
-    println!("{ast_with_reference_data:?}");
     Some(ast_with_reference_data)
 }
 

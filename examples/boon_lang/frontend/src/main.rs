@@ -12,6 +12,8 @@ mod code_editor;
 use code_editor::CodeEditor;
 
 static SOURCE_CODE_STORAGE_KEY: &str = "boon-example-source-code";
+
+static OLD_SOURCE_CODE_STORAGE_KEY: &str = "boon-example-old-source-code";
 static STATES_STORAGE_KEY: &str = "boon-example-states";
 
 #[derive(Clone, Copy)]
@@ -122,7 +124,10 @@ impl Playground {
                 .color_signal(hovered_signal.map_bool(|| color!("Coral"), || color!("LightCoral"))))
             .label("Clear saved states")
             .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
-            .on_press(|| local_storage().remove(STATES_STORAGE_KEY))
+            .on_press(|| { 
+                local_storage().remove(STATES_STORAGE_KEY);
+                local_storage().remove(OLD_SOURCE_CODE_STORAGE_KEY);
+            })
     }
 
     fn code_editor_panel(&self) -> impl Element {
@@ -183,7 +188,7 @@ impl Playground {
         let filename = run_command.filename.unwrap_or("custom code");
         let source_code = self.source_code.lock_ref();
         let object_and_construct_context =
-            interpreter::run(filename, &source_code, STATES_STORAGE_KEY);
+            interpreter::run(filename, &source_code, STATES_STORAGE_KEY, OLD_SOURCE_CODE_STORAGE_KEY);
         drop(source_code);
         if let Some((object, construct_context)) = object_and_construct_context {
             El::new()
