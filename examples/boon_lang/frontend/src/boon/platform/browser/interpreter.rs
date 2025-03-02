@@ -6,6 +6,7 @@ use std::sync::Arc;
 use ariadne::{Config, Label, Report, ReportKind, Source};
 use chumsky::input::Stream;
 use zoon::{eprintln, println, UnwrapThrowExt, local_storage, WebStorage};
+use serde_json_any_key::MapIterToJson;
 
 use crate::boon::parser::{
     lexer, parser, resolve_references, Input, ParseError, Parser, Span, Spanned, Token, Expression, resolve_persistence
@@ -23,6 +24,8 @@ pub fn run(
     old_span_id_pairs_local_storage_key: impl Into<Cow<'static, str>>,
 ) -> Option<(Arc<Object>, ConstructContext)> {
     let old_code_local_storage_key = old_code_local_storage_key.into();
+    let old_span_id_pairs_local_storage_key = old_span_id_pairs_local_storage_key.into();
+
     let old_source_code = local_storage().get::<String>(&old_code_local_storage_key);
     let old_ast = if let Some(Ok(old_source_code)) = &old_source_code {
         parse_old(filename, old_source_code)
@@ -81,7 +84,7 @@ pub fn run(
     let (ast, new_span_id_pairs) = match resolve_persistence(
         ast, 
         old_ast,
-        old_span_id_pairs_local_storage_key
+        &old_span_id_pairs_local_storage_key
     ) {
         Ok(ast) => ast,
         Err(errors) => {
@@ -108,6 +111,10 @@ pub fn run(
         if let Err(error) = local_storage().insert(&old_code_local_storage_key, &source_code)
         {
             eprintln!("Failed to store source code as old source code: {error:#?}");
+        }
+        if let Err(error) = local_storage().insert(&old_span_id_pairs_local_storage_key, &new_span_id_pairs.to_json_map().unwrap())
+        {
+            eprintln!("Failed to store Span-PersistenceId pairs: {error:#}");
         }
     }
 
