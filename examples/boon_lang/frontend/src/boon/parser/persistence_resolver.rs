@@ -1,17 +1,17 @@
-use super::{Expression, ParseError, Span, Spanned, Token, Literal};
+use super::{Expression, Literal, ParseError, Span, Spanned, Token};
 
 use std::collections::HashMap;
 
-use zoon::{local_storage, WebStorage, eprintln};
-use ulid::Ulid;
 use serde_json_any_key::*;
+use ulid::Ulid;
+use zoon::{eprintln, local_storage, WebStorage};
 
 pub type PersistenceId = Ulid;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Persistence {
     pub id: PersistenceId,
-    pub status: PersistenceStatus
+    pub status: PersistenceStatus,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -26,15 +26,23 @@ pub fn resolve_persistence<'new_code, 'old_code>(
     mut new_expressions: Vec<Spanned<Expression<'new_code>>>,
     old_expressions: Option<Vec<Spanned<Expression<'old_code>>>>,
     old_span_id_pairs_local_storage_key: &str,
-) -> Result<(Vec<Spanned<Expression<'new_code>>>, HashMap<Span, PersistenceId>), Vec<ResolveError<'new_code>>> {
-    // @TODO add a new Zoon WebStorage method like `get_raw_string`? 
-    let old_span_id_pairs = if let Some(Ok(old_span_id_pairs)) = local_storage().get::<String>(&old_span_id_pairs_local_storage_key) {
+) -> Result<
+    (
+        Vec<Spanned<Expression<'new_code>>>,
+        HashMap<Span, PersistenceId>,
+    ),
+    Vec<ResolveError<'new_code>>,
+> {
+    // @TODO add a new Zoon WebStorage method like `get_raw_string`?
+    let old_span_id_pairs = if let Some(Ok(old_span_id_pairs)) =
+        local_storage().get::<String>(&old_span_id_pairs_local_storage_key)
+    {
         match json_to_map::<Span, PersistenceId>(&old_span_id_pairs) {
-            Ok(old_span_id_pairs) => { 
+            Ok(old_span_id_pairs) => {
                 println!("old_span_id_pairs LOADED!");
                 Some(old_span_id_pairs)
             }
-            Err(error) => { 
+            Err(error) => {
                 eprintln!("Failed to deserialize Span-PersistenceId pairs: {error:#}");
                 None
             }
@@ -82,14 +90,19 @@ fn set_persistence<'a, 'code, 'old_code>(
 
     match expression {
         Expression::Variable(variable) => {
-            let old_variable_value_and_id = old_expressions.iter().find_map(|old_expression| {
-                match old_expression {
-                    Spanned { span, persistence: _, node: Expression::Variable(old_variable) } if variable.name == old_variable.name => {
-                        Some((&old_variable.value, old_span_id_pairs[span]))
-                    }
-                    _ => None
-                }
-            });
+            let old_variable_value_and_id =
+                old_expressions
+                    .iter()
+                    .find_map(|old_expression| match old_expression {
+                        Spanned {
+                            span,
+                            persistence: _,
+                            node: Expression::Variable(old_variable),
+                        } if variable.name == old_variable.name => {
+                            Some((&old_variable.value, old_span_id_pairs[span]))
+                        }
+                        _ => None,
+                    });
             if let Some((old_variable_value, id)) = old_variable_value_and_id {
                 new_span_id_pairs.insert(*span, id);
                 *persistence = Some(Persistence {
@@ -120,14 +133,17 @@ fn set_persistence<'a, 'code, 'old_code>(
             }
         }
         Expression::Object(object) => {
-            let old_object_variables_and_id = old_expressions.iter().find_map(|old_expression| {
-                match old_expression {
-                    Spanned { span, persistence: _, node: Expression::Object(old_object) } => {
-                        Some((&old_object.variables, old_span_id_pairs[span]))
-                    }
-                    _ => None
-                }
-            });
+            let old_object_variables_and_id =
+                old_expressions
+                    .iter()
+                    .find_map(|old_expression| match old_expression {
+                        Spanned {
+                            span,
+                            persistence: _,
+                            node: Expression::Object(old_object),
+                        } => Some((&old_object.variables, old_span_id_pairs[span])),
+                        _ => None,
+                    });
             if let Some((old_object_variables, id)) = old_object_variables_and_id {
                 new_span_id_pairs.insert(*span, id);
                 *persistence = Some(Persistence {
@@ -140,16 +156,19 @@ fn set_persistence<'a, 'code, 'old_code>(
                         node: variable,
                         persistence,
                     } = variable;
-                    let old_variable_value_and_id = old_object_variables
-                        .iter()
-                        .find_map(|old_variable| {
-                            match old_variable {
-                                Spanned { span, persistence: _, node: old_variable } if variable.name == old_variable.name => {
+                    let old_variable_value_and_id =
+                        old_object_variables
+                            .iter()
+                            .find_map(|old_variable| match old_variable {
+                                Spanned {
+                                    span,
+                                    persistence: _,
+                                    node: old_variable,
+                                } if variable.name == old_variable.name => {
                                     Some((&old_variable.value, old_span_id_pairs[span]))
-                                },
-                                _ => None
-                            }
-                        });
+                                }
+                                _ => None,
+                            });
                     if let Some((old_variable_value, id)) = old_variable_value_and_id {
                         new_span_id_pairs.insert(*span, id);
                         *persistence = Some(Persistence {
@@ -209,14 +228,23 @@ fn set_persistence<'a, 'code, 'old_code>(
             }
         }
         Expression::TaggedObject { tag, object } => {
-            let old_object_variables_and_id = old_expressions.iter().find_map(|old_expression| {
-                match old_expression {
-                    Spanned { span, persistence: _, node: Expression::TaggedObject { tag: old_tag, object: old_object} } if tag == old_tag => {
-                        Some((&old_object.variables, old_span_id_pairs[span]))
-                    }
-                    _ => None
-                }
-            });
+            let old_object_variables_and_id =
+                old_expressions
+                    .iter()
+                    .find_map(|old_expression| match old_expression {
+                        Spanned {
+                            span,
+                            persistence: _,
+                            node:
+                                Expression::TaggedObject {
+                                    tag: old_tag,
+                                    object: old_object,
+                                },
+                        } if tag == old_tag => {
+                            Some((&old_object.variables, old_span_id_pairs[span]))
+                        }
+                        _ => None,
+                    });
             if let Some((old_object_variables, id)) = old_object_variables_and_id {
                 new_span_id_pairs.insert(*span, id);
                 *persistence = Some(Persistence {
@@ -229,16 +257,19 @@ fn set_persistence<'a, 'code, 'old_code>(
                         node: variable,
                         persistence,
                     } = variable;
-                    let old_variable_value_and_id = old_object_variables
-                        .iter()
-                        .find_map(|old_variable| {
-                            match old_variable {
-                                Spanned { span, persistence: _, node: old_variable } if variable.name == old_variable.name => {
+                    let old_variable_value_and_id =
+                        old_object_variables
+                            .iter()
+                            .find_map(|old_variable| match old_variable {
+                                Spanned {
+                                    span,
+                                    persistence: _,
+                                    node: old_variable,
+                                } if variable.name == old_variable.name => {
                                     Some((&old_variable.value, old_span_id_pairs[span]))
-                                },
-                                _ => None
-                            }
-                        });
+                                }
+                                _ => None,
+                            });
                     if let Some((old_variable_value, id)) = old_variable_value_and_id {
                         new_span_id_pairs.insert(*span, id);
                         *persistence = Some(Persistence {
@@ -298,25 +329,45 @@ fn set_persistence<'a, 'code, 'old_code>(
             }
         }
         Expression::FunctionCall { path, arguments } => {
-            let old_arguments_and_id = old_expressions.iter().find_map(|old_expression| {
-                match old_expression {
-                    Spanned { span, persistence: _, node: Expression::FunctionCall { path: old_path, arguments: old_arguments } } if old_path == path => {
-                        Some((old_arguments, old_span_id_pairs[span]))
-                    }
-                    _ => None
-                }
-            });
+            let old_arguments_and_id =
+                old_expressions
+                    .iter()
+                    .find_map(|old_expression| match old_expression {
+                        Spanned {
+                            span,
+                            persistence: _,
+                            node:
+                                Expression::FunctionCall {
+                                    path: old_path,
+                                    arguments: old_arguments,
+                                },
+                        } if old_path == path => Some((old_arguments, old_span_id_pairs[span])),
+                        _ => None,
+                    });
             if let Some((old_arguments, id)) = old_arguments_and_id {
                 new_span_id_pairs.insert(*span, id);
                 *persistence = Some(Persistence {
                     id,
                     status: PersistenceStatus::Unchanged,
                 });
-                for (index, Spanned { span, persistence: _, node: argument }) in arguments.iter_mut().enumerate() {
+                for (
+                    index,
+                    Spanned {
+                        span,
+                        persistence: _,
+                        node: argument,
+                    },
+                ) in arguments.iter_mut().enumerate()
+                {
                     // @TODO is only position relevant or do name diff as well?
                     // @TODO what about the change from a piped to named argument?
                     // @TODO what about different function versions?
-                    let old_argument_value_and_id = if let Some(Spanned { span, persistence: _, node: old_argument }) = old_arguments.get(index) {
+                    let old_argument_value_and_id = if let Some(Spanned {
+                        span,
+                        persistence: _,
+                        node: old_argument,
+                    }) = old_arguments.get(index)
+                    {
                         Some((&old_argument.value, old_span_id_pairs[span]))
                     } else {
                         None
@@ -371,7 +422,12 @@ fn set_persistence<'a, 'code, 'old_code>(
                     id,
                     status: PersistenceStatus::NewOrChanged,
                 });
-                for Spanned { span, persistence: _, node: argument } in arguments {
+                for Spanned {
+                    span,
+                    persistence: _,
+                    node: argument,
+                } in arguments
+                {
                     let id: Ulid = PersistenceId::new();
                     new_span_id_pairs.insert(*span, id);
                     *persistence = Some(Persistence {
@@ -399,14 +455,17 @@ fn set_persistence<'a, 'code, 'old_code>(
             ))
         }
         Expression::List { items } => {
-            let old_items_and_id = old_expressions.iter().find_map(|old_expression| {
-                match old_expression {
-                    Spanned { span, persistence: _, node: Expression::List { items: old_items } } => {
-                        Some((old_items, old_span_id_pairs[span]))
-                    }
-                    _ => None
-                }
-            });
+            let old_items_and_id =
+                old_expressions
+                    .iter()
+                    .find_map(|old_expression| match old_expression {
+                        Spanned {
+                            span,
+                            persistence: _,
+                            node: Expression::List { items: old_items },
+                        } => Some((old_items, old_span_id_pairs[span])),
+                        _ => None,
+                    });
             if let Some((old_items, id)) = old_items_and_id {
                 new_span_id_pairs.insert(*span, id);
                 *persistence = Some(Persistence {
@@ -428,13 +487,7 @@ fn set_persistence<'a, 'code, 'old_code>(
                             errors,
                         );
                     } else {
-                        set_persistence(
-                            item,
-                            &[],
-                            &old_span_id_pairs,
-                            new_span_id_pairs,
-                            errors,
-                        )
+                        set_persistence(item, &[], &old_span_id_pairs, new_span_id_pairs, errors)
                     }
                 }
             } else {
@@ -445,13 +498,7 @@ fn set_persistence<'a, 'code, 'old_code>(
                     status: PersistenceStatus::NewOrChanged,
                 });
                 for item in items {
-                    set_persistence(
-                        item,
-                        &[],
-                        &old_span_id_pairs,
-                        new_span_id_pairs,
-                        errors,
-                    );
+                    set_persistence(item, &[], &old_span_id_pairs, new_span_id_pairs, errors);
                 }
             }
         }
@@ -459,18 +506,22 @@ fn set_persistence<'a, 'code, 'old_code>(
             // @TODO implement, see the error message below
             errors.push(ResolveError::custom(
                 *span,
-                "Persistence resolver cannot resolve Persistence in Expression::Map yet, sorry".to_owned(),
+                "Persistence resolver cannot resolve Persistence in Expression::Map yet, sorry"
+                    .to_owned(),
             ))
         }
         Expression::Latest { inputs } => {
-            let old_inputs_and_id = old_expressions.iter().find_map(|old_expression| {
-                match old_expression {
-                    Spanned { span, persistence: _, node: Expression::Latest { inputs: old_inputs } } => {
-                        Some((old_inputs, old_span_id_pairs[span]))
-                    }
-                    _ => None
-                }
-            });
+            let old_inputs_and_id =
+                old_expressions
+                    .iter()
+                    .find_map(|old_expression| match old_expression {
+                        Spanned {
+                            span,
+                            persistence: _,
+                            node: Expression::Latest { inputs: old_inputs },
+                        } => Some((old_inputs, old_span_id_pairs[span])),
+                        _ => None,
+                    });
             if let Some((old_inputs, id)) = old_inputs_and_id {
                 new_span_id_pairs.insert(*span, id);
                 *persistence = Some(Persistence {
@@ -492,13 +543,7 @@ fn set_persistence<'a, 'code, 'old_code>(
                             errors,
                         );
                     } else {
-                        set_persistence(
-                            input,
-                            &[],
-                            &old_span_id_pairs,
-                            new_span_id_pairs,
-                            errors,
-                        )
+                        set_persistence(input, &[], &old_span_id_pairs, new_span_id_pairs, errors)
                     }
                 }
             } else {
@@ -509,25 +554,22 @@ fn set_persistence<'a, 'code, 'old_code>(
                     status: PersistenceStatus::NewOrChanged,
                 });
                 for input in inputs {
-                    set_persistence(
-                        input,
-                        &[],
-                        &old_span_id_pairs,
-                        new_span_id_pairs,
-                        errors,
-                    );
+                    set_persistence(input, &[], &old_span_id_pairs, new_span_id_pairs, errors);
                 }
             }
         }
         Expression::Then { body } => {
-            let old_body_and_id = old_expressions.iter().find_map(|old_expression| {
-                match old_expression {
-                    Spanned { span, persistence: _, node: Expression::Then { body: old_body } } => {
-                        Some((old_body, old_span_id_pairs[span]))
-                    }
-                    _ => None
-                }
-            });
+            let old_body_and_id =
+                old_expressions
+                    .iter()
+                    .find_map(|old_expression| match old_expression {
+                        Spanned {
+                            span,
+                            persistence: _,
+                            node: Expression::Then { body: old_body },
+                        } => Some((old_body, old_span_id_pairs[span])),
+                        _ => None,
+                    });
             if let Some((old_body, id)) = old_body_and_id {
                 new_span_id_pairs.insert(*span, id);
                 *persistence = Some(Persistence {
@@ -548,13 +590,7 @@ fn set_persistence<'a, 'code, 'old_code>(
                     id,
                     status: PersistenceStatus::NewOrChanged,
                 });
-                set_persistence(
-                    body,
-                    &[],
-                    &old_span_id_pairs,
-                    new_span_id_pairs,
-                    errors,
-                )
+                set_persistence(body, &[], &old_span_id_pairs, new_span_id_pairs, errors)
             }
         }
         Expression::When { arms } => {
@@ -574,14 +610,21 @@ fn set_persistence<'a, 'code, 'old_code>(
             ))
         }
         Expression::Pipe { from, to } => {
-            let old_from_to_and_id = old_expressions.iter().find_map(|old_expression| {
-                match old_expression {
-                    Spanned { span, persistence: _, node: Expression::Pipe { from: old_from, to: old_to } } => {
-                        Some((old_from, old_to, old_span_id_pairs[span]))
-                    }
-                    _ => None
-                }
-            });
+            let old_from_to_and_id =
+                old_expressions
+                    .iter()
+                    .find_map(|old_expression| match old_expression {
+                        Spanned {
+                            span,
+                            persistence: _,
+                            node:
+                                Expression::Pipe {
+                                    from: old_from,
+                                    to: old_to,
+                                },
+                        } => Some((old_from, old_to, old_span_id_pairs[span])),
+                        _ => None,
+                    });
             if let Some((old_from, old_to, id)) = old_from_to_and_id {
                 new_span_id_pairs.insert(*span, id);
                 *persistence = Some(Persistence {
@@ -595,13 +638,7 @@ fn set_persistence<'a, 'code, 'old_code>(
                     new_span_id_pairs,
                     errors,
                 );
-                set_persistence(
-                    to,
-                    &[old_to],
-                    &old_span_id_pairs,
-                    new_span_id_pairs,
-                    errors,
-                );
+                set_persistence(to, &[old_to], &old_span_id_pairs, new_span_id_pairs, errors);
             } else {
                 let id: Ulid = PersistenceId::new();
                 new_span_id_pairs.insert(*span, id);
@@ -609,20 +646,8 @@ fn set_persistence<'a, 'code, 'old_code>(
                     id,
                     status: PersistenceStatus::NewOrChanged,
                 });
-                set_persistence(
-                    from,
-                    &[],
-                    &old_span_id_pairs,
-                    new_span_id_pairs,
-                    errors,
-                );
-                set_persistence(
-                    to,
-                    &[],
-                    &old_span_id_pairs,
-                    new_span_id_pairs,
-                    errors,
-                );
+                set_persistence(from, &[], &old_span_id_pairs, new_span_id_pairs, errors);
+                set_persistence(to, &[], &old_span_id_pairs, new_span_id_pairs, errors);
             }
         }
         Expression::ArithmeticOperator(_) => {
@@ -658,78 +683,12 @@ fn set_persistence<'a, 'code, 'old_code>(
             let id = old_expressions.iter().find_map(|old_expression| {
                 match old_expression {
                     // @TODO diff referenced variable/argument instead of stringified alias?
-                    Spanned { span, persistence: _, node: Expression::Alias(old_alias) } if old_alias.to_string() == alias_string => {
-                        Some(old_span_id_pairs[span])
-                    }
-                    _ => None
-                }
-            });
-            if let Some(id) = id {
-                new_span_id_pairs.insert(*span, id);
-                *persistence = Some(Persistence {
-                    id,
-                    status: PersistenceStatus::Unchanged,
-                });
-            } else {
-                let id: Ulid = PersistenceId::new();
-                new_span_id_pairs.insert(*span, id);
-                *persistence = Some(Persistence {
-                    id,
-                    status: PersistenceStatus::NewOrChanged,
-                });
-            }
-        },
-        Expression::Literal(literal) => {
-            let id = old_expressions.iter().find_map(|old_expression| {
-                match literal {
-                    Literal::Number(number) => {
-                        match old_expression {
-                            Spanned { span, persistence: _, node: Expression::Literal(Literal::Number(old_number)) } if old_number == number => {
-                                Some(old_span_id_pairs[span])
-                            }
-                            _ => None
-                        }
-                    }
-                    Literal::Tag(tag) => {
-                        match old_expression {
-                            Spanned { span, persistence: _, node: Expression::Literal(Literal::Tag(old_tag)) } if old_tag == tag => {
-                                Some(old_span_id_pairs[span])
-                            }
-                            _ => None
-                        }
-                    }
-                    Literal::Text(text) => {
-                        match old_expression {
-                            Spanned { span, persistence: _, node: Expression::Literal(Literal::Text(old_text)) } if old_text == text => {
-                                Some(old_span_id_pairs[span])
-                            }
-                            _ => None
-                        }
-                    }
-                }
-            });
-            if let Some(id) = id {
-                new_span_id_pairs.insert(*span, id);
-                *persistence = Some(Persistence {
-                    id,
-                    status: PersistenceStatus::Unchanged,
-                });
-            } else {
-                let id: Ulid = PersistenceId::new();
-                new_span_id_pairs.insert(*span, id);
-                *persistence = Some(Persistence {
-                    id,
-                    status: PersistenceStatus::NewOrChanged,
-                });
-            }
-        },
-        Expression::Link => {
-            let id = old_expressions.iter().find_map(|old_expression| {
-                match old_expression {
-                    Spanned { span, persistence: _, node: Expression::Link } => {
-                        Some(old_span_id_pairs[span])
-                    }
-                    _ => None
+                    Spanned {
+                        span,
+                        persistence: _,
+                        node: Expression::Alias(old_alias),
+                    } if old_alias.to_string() == alias_string => Some(old_span_id_pairs[span]),
+                    _ => None,
                 }
             });
             if let Some(id) = id {
@@ -747,15 +706,87 @@ fn set_persistence<'a, 'code, 'old_code>(
                 });
             }
         }
+        Expression::Literal(literal) => {
+            let id = old_expressions
+                .iter()
+                .find_map(|old_expression| match literal {
+                    Literal::Number(number) => match old_expression {
+                        Spanned {
+                            span,
+                            persistence: _,
+                            node: Expression::Literal(Literal::Number(old_number)),
+                        } if old_number == number => Some(old_span_id_pairs[span]),
+                        _ => None,
+                    },
+                    Literal::Tag(tag) => match old_expression {
+                        Spanned {
+                            span,
+                            persistence: _,
+                            node: Expression::Literal(Literal::Tag(old_tag)),
+                        } if old_tag == tag => Some(old_span_id_pairs[span]),
+                        _ => None,
+                    },
+                    Literal::Text(text) => match old_expression {
+                        Spanned {
+                            span,
+                            persistence: _,
+                            node: Expression::Literal(Literal::Text(old_text)),
+                        } if old_text == text => Some(old_span_id_pairs[span]),
+                        _ => None,
+                    },
+                });
+            if let Some(id) = id {
+                new_span_id_pairs.insert(*span, id);
+                *persistence = Some(Persistence {
+                    id,
+                    status: PersistenceStatus::Unchanged,
+                });
+            } else {
+                let id: Ulid = PersistenceId::new();
+                new_span_id_pairs.insert(*span, id);
+                *persistence = Some(Persistence {
+                    id,
+                    status: PersistenceStatus::NewOrChanged,
+                });
+            }
+        }
+        Expression::Link => {
+            let id = old_expressions
+                .iter()
+                .find_map(|old_expression| match old_expression {
+                    Spanned {
+                        span,
+                        persistence: _,
+                        node: Expression::Link,
+                    } => Some(old_span_id_pairs[span]),
+                    _ => None,
+                });
+            if let Some(id) = id {
+                new_span_id_pairs.insert(*span, id);
+                *persistence = Some(Persistence {
+                    id,
+                    status: PersistenceStatus::Unchanged,
+                });
+            } else {
+                let id: Ulid = PersistenceId::new();
+                new_span_id_pairs.insert(*span, id);
+                *persistence = Some(Persistence {
+                    id,
+                    status: PersistenceStatus::NewOrChanged,
+                });
+            }
+        }
         Expression::Skip => {
-            let id = old_expressions.iter().find_map(|old_expression| {
-                match old_expression {
-                    Spanned { span, persistence: _, node: Expression::Skip } => {
-                        Some(old_span_id_pairs[span])
-                    }
-                    _ => None
-                }
-            });
+            let id = old_expressions
+                .iter()
+                .find_map(|old_expression| match old_expression {
+                    Spanned {
+                        span,
+                        persistence: _,
+                        node: Expression::Skip,
+                    } => Some(old_span_id_pairs[span]),
+                    _ => None,
+                });
             if let Some(id) = id {
                 new_span_id_pairs.insert(*span, id);
                 *persistence = Some(Persistence {

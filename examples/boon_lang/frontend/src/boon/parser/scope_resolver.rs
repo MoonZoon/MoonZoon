@@ -33,13 +33,14 @@ pub fn resolve_references(
         } = expressions;
         if let Expression::Variable(variable) = expression {
             let name = &variable.name;
-            reachable_referenceables.entry(name).or_default().push(
-                Referenceable {
+            reachable_referenceables
+                .entry(name)
+                .or_default()
+                .push(Referenceable {
                     name,
                     span: *span,
                     level,
-                },
-            );
+                });
         }
     }
     let mut errors = Vec::new();
@@ -111,13 +112,14 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                     persistence: _,
                 } = variable;
                 let name = &variable.name;
-                reachable_referenceables.entry(name).or_default().push(
-                    Referenceable {
+                reachable_referenceables
+                    .entry(name)
+                    .or_default()
+                    .push(Referenceable {
                         name,
                         span: *span,
                         level,
-                    },
-                );
+                    });
             }
             for variable in &mut object.variables {
                 let Spanned {
@@ -159,13 +161,14 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                     persistence: _,
                 } = variable;
                 let name = &variable.name;
-                reachable_referenceables.entry(name).or_default().push(
-                    Referenceable {
+                reachable_referenceables
+                    .entry(name)
+                    .or_default()
+                    .push(Referenceable {
                         name,
                         span: *span,
                         level,
-                    },
-                );
+                    });
             }
             for variable in &mut object.variables {
                 let Spanned {
@@ -207,13 +210,14 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                     persistence: _,
                 } = argument;
                 let name = &argument.name;
-                reachable_referenceables.entry(name).or_default().push(
-                    Referenceable {
+                reachable_referenceables
+                    .entry(name)
+                    .or_default()
+                    .push(Referenceable {
                         name,
                         span: *span,
                         level,
-                    },
-                );
+                    });
             }
             for argument in arguments.iter_mut() {
                 let Spanned {
@@ -257,13 +261,14 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                     persistence: _,
                 } = variable;
                 let name = &variable.name;
-                reachable_referenceables.entry(name).or_default().push(
-                    Referenceable {
+                reachable_referenceables
+                    .entry(name)
+                    .or_default()
+                    .push(Referenceable {
                         name,
                         span: *span,
                         level,
-                    },
-                );
+                    });
             }
             for variable in variables.iter_mut() {
                 let Spanned {
@@ -408,7 +413,11 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
             all_referenced,
         ),
         Expression::LinkSetter { alias } => {
-            let Spanned { span, node: alias, persistence: _, } = alias;
+            let Spanned {
+                span,
+                node: alias,
+                persistence: _,
+            } = alias;
             set_referenced_referenceable(
                 alias,
                 *span,
@@ -447,17 +456,15 @@ fn set_referenced_referenceable<'code>(
             let reachable_referenceables: BTreeMap<&str, Referenceable> = reachable_referenceables
                 .into_iter()
                 .filter_map(|(name, referenceables)| {
-                    referenceables
-                        .into_iter()
-                        .rev()
-                        .enumerate()
-                        .find_map(|(index, referenceable)| {
+                    referenceables.into_iter().rev().enumerate().find_map(
+                        |(index, referenceable)| {
                             if index == 0 && Some(referenceable.name) == parent_name {
                                 None
                             } else {
                                 Some((referenceable.name, referenceable))
                             }
-                        })
+                        },
+                    )
                 })
                 .collect();
             let referenced = reachable_referenceables.get(first_part).copied();
@@ -467,9 +474,7 @@ fn set_referenced_referenceable<'code>(
                 let reachable_names = reachable_referenceables.keys();
                 errors.push(ResolveError::custom(span, format!("Cannot find the variable or argument '{first_part}'. You can refer to: {reachable_names:?}")))
             }
-            let referenceables = Referenceables {
-                referenced,
-            };
+            let referenceables = Referenceables { referenced };
             *unset_referenceables = Some(referenceables);
         }
     }

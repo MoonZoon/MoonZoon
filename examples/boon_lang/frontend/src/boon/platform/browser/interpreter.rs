@@ -5,11 +5,12 @@ use std::sync::Arc;
 
 use ariadne::{Config, Label, Report, ReportKind, Source};
 use chumsky::input::Stream;
-use zoon::{eprintln, println, UnwrapThrowExt, local_storage, WebStorage};
 use serde_json_any_key::MapIterToJson;
+use zoon::{eprintln, local_storage, println, UnwrapThrowExt, WebStorage};
 
 use crate::boon::parser::{
-    lexer, parser, resolve_references, Input, ParseError, Parser, Span, Spanned, Token, Expression, resolve_persistence
+    lexer, parser, resolve_persistence, resolve_references, Expression, Input, ParseError, Parser,
+    Span, Spanned, Token,
 };
 use crate::boon::platform::browser::{
     engine::{ConstructContext, Object},
@@ -32,7 +33,7 @@ pub fn run(
     } else {
         None
     };
-    
+
     println!("[Source Code ({filename})]");
     println!("{source_code}");
 
@@ -52,11 +53,14 @@ pub fn run(
     tokens.retain(|spanned_token| !matches!(spanned_token.node, Token::Comment(_)));
 
     let (ast, errors) = parser()
-        .parse(
-            tokens.map(Span::splat(source_code.len()), |Spanned { node, span, persistence: _ }| {
-                (node, span)
-            }),
-        )
+        .parse(tokens.map(
+            Span::splat(source_code.len()),
+            |Spanned {
+                 node,
+                 span,
+                 persistence: _,
+             }| { (node, span) },
+        ))
         .into_output_errors();
     if let Some(ast) = ast.as_ref() {
         // println!("[Abstract Syntax Tree]");
@@ -81,18 +85,15 @@ pub fn run(
     // println!("[Abstract Syntax Tree with Reference Data]");
     // println!("{ast:?}");
 
-    let (ast, new_span_id_pairs) = match resolve_persistence(
-        ast, 
-        old_ast,
-        &old_span_id_pairs_local_storage_key
-    ) {
-        Ok(ast) => ast,
-        Err(errors) => {
-            println!("[Persistence Errors]");
-            report_errors(errors, filename, source_code);
-            return None;
-        }
-    };
+    let (ast, new_span_id_pairs) =
+        match resolve_persistence(ast, old_ast, &old_span_id_pairs_local_storage_key) {
+            Ok(ast) => ast,
+            Err(errors) => {
+                println!("[Persistence Errors]");
+                report_errors(errors, filename, source_code);
+                return None;
+            }
+        };
     println!("[Abstract Syntax Tree with Reference Data and Persistence]");
     println!("{ast:#?}");
 
@@ -108,12 +109,13 @@ pub fn run(
     report_errors(errors, filename, source_code);
 
     if evaluation_result.is_some() {
-        if let Err(error) = local_storage().insert(&old_code_local_storage_key, &source_code)
-        {
+        if let Err(error) = local_storage().insert(&old_code_local_storage_key, &source_code) {
             eprintln!("Failed to store source code as old source code: {error:#?}");
         }
-        if let Err(error) = local_storage().insert(&old_span_id_pairs_local_storage_key, &new_span_id_pairs.to_json_map().unwrap())
-        {
+        if let Err(error) = local_storage().insert(
+            &old_span_id_pairs_local_storage_key,
+            &new_span_id_pairs.to_json_map().unwrap(),
+        ) {
             eprintln!("Failed to store Span-PersistenceId pairs: {error:#}");
         }
     }
@@ -121,7 +123,10 @@ pub fn run(
     evaluation_result
 }
 
-fn parse_old<'filename, 'old_code>(filename: &'filename str, source_code: &'old_code str) -> Option<Vec<Spanned<Expression<'old_code>>>> {
+fn parse_old<'filename, 'old_code>(
+    filename: &'filename str,
+    source_code: &'old_code str,
+) -> Option<Vec<Spanned<Expression<'old_code>>>> {
     let (tokens, errors) = lexer().parse(source_code).into_output_errors();
     if !errors.is_empty() {
         println!("[OLD Lex Errors]");
@@ -134,11 +139,14 @@ fn parse_old<'filename, 'old_code>(filename: &'filename str, source_code: &'old_
     tokens.retain(|spanned_token| !matches!(spanned_token.node, Token::Comment(_)));
 
     let (ast, errors) = parser()
-        .parse(
-            Stream::from_iter(tokens).map(Span::splat(source_code.len()), |Spanned { node, span, persistence: _ }| {
-                (node, span)
-            })
-        )
+        .parse(Stream::from_iter(tokens).map(
+            Span::splat(source_code.len()),
+            |Spanned {
+                 node,
+                 span,
+                 persistence: _,
+             }| { (node, span) },
+        ))
         .into_output_errors();
     if !errors.is_empty() {
         println!("[OLD Parse Errors]");
