@@ -117,7 +117,7 @@ fn element_button(
                     press_event = press_event_receiver.select_next_some() => {
                         if let Some(press_link_value_sender) = press_link_value_sender.as_ref() {
                             let press_event_object_value = Object::new_value(
-                                ConstructInfo::new(format!("bridge::element_button::press_event, version: {press_event_object_value_version}"), "Button press event"),
+                                ConstructInfo::new(format!("bridge::element_button::press_event, version: {press_event_object_value_version}"), None, "Button press event"),
                                 construct_context.clone(),
                                 [],
                             );

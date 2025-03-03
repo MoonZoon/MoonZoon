@@ -189,13 +189,16 @@ impl ActorOutputValveSignal {
 
 pub struct ConstructInfo {
     id: ConstructId,
+    // @TODO remove Option in the future once Persistence is created also inside API functions?
+    persistence: Option<parser::Persistence>,
     description: Cow<'static, str>,
 }
 
 impl ConstructInfo {
-    pub fn new(id: impl Into<ConstructId>, description: impl Into<Cow<'static, str>>) -> Self {
+    pub fn new(id: impl Into<ConstructId>, persistence: Option<parser::Persistence>, description: impl Into<Cow<'static, str>>) -> Self {
         Self {
             id: id.into(),
+            persistence,
             description: description.into(),
         }
     }
@@ -204,6 +207,7 @@ impl ConstructInfo {
         ConstructInfoComplete {
             r#type,
             id: self.id,
+            persistence: self.persistence,
             description: self.description,
         }
     }
@@ -215,6 +219,7 @@ impl ConstructInfo {
 pub struct ConstructInfoComplete {
     r#type: ConstructType,
     id: ConstructId,
+    persistence: Option<parser::Persistence>,
     description: Cow<'static, str>,
 }
 
@@ -327,13 +332,15 @@ impl Variable {
     ) -> Arc<Self> {
         let ConstructInfo {
             id: actor_id,
+            persistence,
             description: variable_description,
         } = construct_info;
         let construct_info = ConstructInfo::new(
             actor_id.with_child_id("wrapped Variable"),
+            persistence,
             variable_description,
         );
-        let actor_construct_info = ConstructInfo::new(actor_id, "Link variable value actor")
+        let actor_construct_info = ConstructInfo::new(actor_id, persistence, "Link variable value actor")
             .complete(ConstructType::ValueActor);
         let (link_value_sender, link_value_receiver) = mpsc::unbounded();
         let value_actor =
@@ -845,11 +852,12 @@ impl Object {
     ) -> Arc<ValueActor> {
         let ConstructInfo {
             id: actor_id,
+            persistence,
             description: object_description,
         } = construct_info;
         let construct_info =
-            ConstructInfo::new(actor_id.with_child_id("wrapped Object"), object_description);
-        let actor_construct_info = ConstructInfo::new(actor_id, "Constant object wrapper")
+            ConstructInfo::new(actor_id.with_child_id("wrapped Object"), persistence, object_description);
+        let actor_construct_info = ConstructInfo::new(actor_id, persistence, "Constant object wrapper")
             .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, construct_context, variables.into());
         Arc::new(ValueActor::new_internal(
@@ -953,13 +961,15 @@ impl TaggedObject {
     ) -> Arc<ValueActor> {
         let ConstructInfo {
             id: actor_id,
+            persistence,
             description: tagged_object_description,
         } = construct_info;
         let construct_info = ConstructInfo::new(
             actor_id.with_child_id("wrapped TaggedObject"),
+            persistence,
             tagged_object_description,
         );
-        let actor_construct_info = ConstructInfo::new(actor_id, "Tagged object wrapper")
+        let actor_construct_info = ConstructInfo::new(actor_id, persistence, "Tagged object wrapper")
             .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(
             construct_info,
@@ -1055,11 +1065,12 @@ impl Text {
     ) -> Arc<ValueActor> {
         let ConstructInfo {
             id: actor_id,
+            persistence,
             description: text_description,
         } = construct_info;
         let construct_info =
-            ConstructInfo::new(actor_id.with_child_id("wrapped Text"), text_description);
-        let actor_construct_info = ConstructInfo::new(actor_id, "Constant text wrapper")
+            ConstructInfo::new(actor_id.with_child_id("wrapped Text"), persistence, text_description);
+        let actor_construct_info = ConstructInfo::new(actor_id, persistence, "Constant text wrapper")
             .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, construct_context, text.into());
         Arc::new(ValueActor::new_internal(
@@ -1134,11 +1145,12 @@ impl Tag {
     ) -> Arc<ValueActor> {
         let ConstructInfo {
             id: actor_id,
+            persistence,
             description: tag_description,
         } = construct_info;
         let construct_info =
-            ConstructInfo::new(actor_id.with_child_id("wrapped Tag"), tag_description);
-        let actor_construct_info = ConstructInfo::new(actor_id, "Constant tag wrapper")
+            ConstructInfo::new(actor_id.with_child_id("wrapped Tag"), persistence, tag_description);
+        let actor_construct_info = ConstructInfo::new(actor_id, persistence, "Constant tag wrapper")
             .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, construct_context, tag.into());
         Arc::new(ValueActor::new_internal(
@@ -1213,11 +1225,12 @@ impl Number {
     ) -> Arc<ValueActor> {
         let ConstructInfo {
             id: actor_id,
+            persistence,
             description: number_description,
         } = construct_info;
         let construct_info =
-            ConstructInfo::new(actor_id.with_child_id("wrapped Number"), number_description);
-        let actor_construct_info = ConstructInfo::new(actor_id, "Constant number wrapper)")
+            ConstructInfo::new(actor_id.with_child_id("wrapped Number"), persistence, number_description);
+        let actor_construct_info = ConstructInfo::new(actor_id, persistence, "Constant number wrapper)")
             .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(construct_info, construct_context, number.into());
         Arc::new(ValueActor::new_internal(
@@ -1407,11 +1420,12 @@ impl List {
     ) -> Arc<ValueActor> {
         let ConstructInfo {
             id: actor_id,
+            persistence,
             description: list_description,
         } = construct_info;
         let construct_info =
-            ConstructInfo::new(actor_id.with_child_id("wrapped List"), list_description);
-        let actor_construct_info = ConstructInfo::new(actor_id, "Constant list wrapper")
+            ConstructInfo::new(actor_id.with_child_id("wrapped List"), persistence, list_description);
+        let actor_construct_info = ConstructInfo::new(actor_id, persistence, "Constant list wrapper")
             .complete(ConstructType::ValueActor);
         let value_stream = Self::new_constant(
             construct_info,
