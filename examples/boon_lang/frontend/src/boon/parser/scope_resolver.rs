@@ -1,14 +1,12 @@
 use super::{Alias, Expression, ParseError, Span, Spanned, Token};
 use std::collections::{BTreeMap, HashSet};
 
-// @TODO immutable or different tree traversal algorithm?
-pub type ReachableReferenceables<'code> = BTreeMap<&'code str, Referenceable<'code>>;
+// @TODO Immutables or different tree traversal algorithm?
+pub type ReachableReferenceables<'code> = BTreeMap<&'code str, Vec<Referenceable<'code>>>;
 
 #[derive(Debug)]
 pub struct Referenceables<'code> {
     pub referenced: Option<Referenceable<'code>>,
-    // Uncomment here and in `set_referenced_referenceable` for debug purposes
-    // pub reachable: ReachableReferenceables<'code>,
 }
 
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -35,8 +33,7 @@ pub fn resolve_references(
         } = expressions;
         if let Expression::Variable(variable) = expression {
             let name = &variable.name;
-            reachable_referenceables.insert(
-                name,
+            reachable_referenceables.entry(name).or_default().push(
                 Referenceable {
                     name,
                     span: *span,
@@ -114,8 +111,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                     persistence: _,
                 } = variable;
                 let name = &variable.name;
-                reachable_referenceables.insert(
-                    name,
+                reachable_referenceables.entry(name).or_default().push(
                     Referenceable {
                         name,
                         span: *span,
@@ -163,8 +159,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                     persistence: _,
                 } = variable;
                 let name = &variable.name;
-                reachable_referenceables.insert(
-                    name,
+                reachable_referenceables.entry(name).or_default().push(
                     Referenceable {
                         name,
                         span: *span,
@@ -212,8 +207,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                     persistence: _,
                 } = argument;
                 let name = &argument.name;
-                reachable_referenceables.insert(
-                    name,
+                reachable_referenceables.entry(name).or_default().push(
                     Referenceable {
                         name,
                         span: *span,
@@ -263,8 +257,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                     persistence: _,
                 } = variable;
                 let name = &variable.name;
-                reachable_referenceables.insert(
-                    name,
+                reachable_referenceables.entry(name).or_default().push(
                     Referenceable {
                         name,
                         span: *span,
@@ -451,23 +444,31 @@ fn set_referenced_referenceable<'code>(
             if first_part.is_empty() {
                 return;
             }
-            let referenced = match parent_name {
-                Some(parent_name) if parent_name == first_part => None,
-                _ => reachable_referenceables.get(first_part).copied()
-            };
+            let reachable_referenceables: BTreeMap<&str, Referenceable> = reachable_referenceables
+                .into_iter()
+                .filter_map(|(name, referenceables)| {
+                    referenceables
+                        .into_iter()
+                        .rev()
+                        .enumerate()
+                        .find_map(|(index, referenceable)| {
+                            if index == 0 && Some(referenceable.name) == parent_name {
+                                None
+                            } else {
+                                Some((referenceable.name, referenceable))
+                            }
+                        })
+                })
+                .collect();
+            let referenced = reachable_referenceables.get(first_part).copied();
             if let Some(referenced) = referenced {
                 all_referenced.insert(referenced);
             } else {
-                let reachable_names = reachable_referenceables
-                    .keys()
-                    .filter(|key| parent_name.is_none_or(|parent_name| parent_name != **key))
-                    .collect::<Vec<_>>();
+                let reachable_names = reachable_referenceables.keys();
                 errors.push(ResolveError::custom(span, format!("Cannot find the variable or argument '{first_part}'. You can refer to: {reachable_names:?}")))
             }
             let referenceables = Referenceables {
                 referenced,
-                // Uncomment for debug purposes
-                // reachable: reachable_referenceables,
             };
             *unset_referenceables = Some(referenceables);
         }
