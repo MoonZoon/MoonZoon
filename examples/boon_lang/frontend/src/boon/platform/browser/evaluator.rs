@@ -72,15 +72,16 @@ fn spanned_variable_into_variable(
     let Spanned {
         span,
         node: variable,
-        persistence: _,
+        persistence,
     } = variable;
     let parser::Variable {
         name,
         value,
         is_referenced,
     } = variable;
+    let persistence_id = persistence.expect("Failed to get Persistence").id;
     let name: String = name.to_owned();
-    let construct_info = ConstructInfo::new(format!("Span: {span}"), format!("{span}; {name}"));
+    let construct_info = ConstructInfo::new(format!("PersistenceId: {persistence_id}"), format!("{span}; {name}"));
     let variable = if matches!(
         &value,
         Spanned {
@@ -119,8 +120,9 @@ fn spanned_expression_into_value_actor(
     let Spanned {
         span,
         node: expression,
-        persistence: _,
+        persistence,
     } = expression;
+    let persistence_id = persistence.expect("Failed to get Persistence").id;
     let actor = match expression {
         Expression::Variable(variable) => Err(ParseError::custom(
             span,
@@ -128,7 +130,7 @@ fn spanned_expression_into_value_actor(
         ))?,
         Expression::Literal(literal) => match literal {
             parser::Literal::Number(number) => Number::new_arc_value_actor(
-                ConstructInfo::new(format!("Span: {span}"), format!("{span}; Number {number}")),
+                ConstructInfo::new(format!("PersistenceId: {persistence_id}"), format!("{span}; Number {number}")),
                 construct_context,
                 actor_context,
                 number,
@@ -136,7 +138,7 @@ fn spanned_expression_into_value_actor(
             parser::Literal::Text(text) => {
                 let text = text.to_owned();
                 Text::new_arc_value_actor(
-                    ConstructInfo::new(format!("Span: {span}"), format!("{span}; Text {text}")),
+                    ConstructInfo::new(format!("PersistenceId: {persistence_id}"), format!("{span}; Text {text}")),
                     construct_context,
                     actor_context,
                     text,
@@ -145,7 +147,7 @@ fn spanned_expression_into_value_actor(
             parser::Literal::Tag(tag) => {
                 let tag = tag.to_owned();
                 Tag::new_arc_value_actor(
-                    ConstructInfo::new(format!("Span: {span}"), format!("{span}; Tag {tag}")),
+                    ConstructInfo::new(format!("PersistenceId: {persistence_id}"), format!("{span}; Tag {tag}")),
                     construct_context,
                     actor_context,
                     tag,
@@ -153,7 +155,7 @@ fn spanned_expression_into_value_actor(
             }
         },
         Expression::List { items } => List::new_arc_value_actor(
-            ConstructInfo::new(format!("Span: {span}"), format!("{span}; LIST {{..}}")),
+            ConstructInfo::new(format!("PersistenceId: {persistence_id}"), format!("{span}; LIST {{..}}")),
             construct_context.clone(),
             actor_context.clone(),
             items
@@ -169,7 +171,7 @@ fn spanned_expression_into_value_actor(
                 .collect::<Result<Vec<_>, _>>()?,
         ),
         Expression::Object(object) => Object::new_arc_value_actor(
-            ConstructInfo::new(format!("Span: {span}"), format!("{span}; [..]")),
+            ConstructInfo::new(format!("PersistenceId: {persistence_id}"), format!("{span}; [..]")),
             construct_context.clone(),
             actor_context.clone(),
             object
@@ -186,7 +188,7 @@ fn spanned_expression_into_value_actor(
                 .collect::<Result<Vec<_>, _>>()?,
         ),
         Expression::TaggedObject { tag, object } => TaggedObject::new_arc_value_actor(
-            ConstructInfo::new(format!("Span: {span}"), format!("{span}; {tag}[..]")),
+            ConstructInfo::new(format!("PersistenceId: {persistence_id}"), format!("{span}; {tag}[..]")),
             construct_context.clone(),
             actor_context.clone(),
             tag.to_owned(),
@@ -219,7 +221,7 @@ fn spanned_expression_into_value_actor(
             // @TODO better argument error handling
             FunctionCall::new_arc_value_actor(
                 ConstructInfo::new(
-                    format!("Span: {span}"),
+                    format!("PersistenceId: {persistence_id}"),
                     format!("{span}; {}(..)", path.join("/")),
                 ),
                 construct_context.clone(),
@@ -287,7 +289,7 @@ fn spanned_expression_into_value_actor(
                 }
             };
             VariableOrArgumentReference::new_arc_value_actor(
-                ConstructInfo::new(format!("Span: {span}"), format!("{span}; {alias} (alias)")),
+                ConstructInfo::new(format!("PersistenceId: {persistence_id}"), format!("{span}; {alias} (alias)")),
                 construct_context,
                 actor_context,
                 alias,
@@ -303,7 +305,7 @@ fn spanned_expression_into_value_actor(
             "LINK has to be the only variable value - e.g. `press: LINK`",
         ))?,
         Expression::Latest { inputs } => LatestCombinator::new_arc_value_actor(
-            ConstructInfo::new(format!("Span: {span}"), format!("{span}; LATEST {{..}}")),
+            ConstructInfo::new(format!("PersistenceId: {persistence_id}"), format!("{span}; LATEST {{..}}")),
             construct_context.clone(),
             actor_context.clone(),
             inputs
