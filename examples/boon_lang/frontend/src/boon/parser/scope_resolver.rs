@@ -26,6 +26,7 @@ pub fn resolve_references(
 ) -> Result<Vec<Spanned<Expression>>, Vec<ResolveError>> {
     let mut reachable_referenceables = ReachableReferenceables::default();
     let level = 0;
+    let parent_name = None::<&str>;
     for expressions in &expressions {
         let Spanned {
             span,
@@ -51,6 +52,7 @@ pub fn resolve_references(
             expression,
             reachable_referenceables.clone(),
             level,
+            parent_name,
             &mut errors,
             &mut all_referenced,
         );
@@ -83,6 +85,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
     mut expression: &'a mut Spanned<Expression<'code>>,
     mut reachable_referenceables: ReachableReferenceables<'code>,
     mut level: usize,
+    parent_name: Option<&str>,
     errors: &mut Vec<ResolveError>,
     all_referenced: &mut HashSet<Referenceable<'code>>,
 ) {
@@ -97,6 +100,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 &mut variable.value,
                 reachable_referenceables,
                 level,
+                Some(variable.name),
                 errors,
                 all_referenced,
             );
@@ -129,6 +133,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                     &mut variable.value,
                     reachable_referenceables.clone(),
                     level,
+                    Some(variable.name),
                     errors,
                     all_referenced,
                 );
@@ -177,6 +182,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                     &mut variable.value,
                     reachable_referenceables.clone(),
                     level,
+                    Some(variable.name),
                     errors,
                     all_referenced,
                 );
@@ -226,6 +232,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                         value,
                         reachable_referenceables.clone(),
                         level,
+                        Some(argument.name),
                         errors,
                         all_referenced,
                     );
@@ -275,6 +282,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                     &mut variable.value,
                     reachable_referenceables.clone(),
                     level,
+                    Some(variable.name),
                     errors,
                     all_referenced,
                 );
@@ -283,6 +291,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 output,
                 reachable_referenceables,
                 level,
+                parent_name,
                 errors,
                 all_referenced,
             );
@@ -308,6 +317,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                     item,
                     reachable_referenceables.clone(),
                     level,
+                    parent_name,
                     errors,
                     all_referenced,
                 );
@@ -326,6 +336,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                     input,
                     reachable_referenceables.clone(),
                     level,
+                    parent_name,
                     errors,
                     all_referenced,
                 );
@@ -336,6 +347,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 body,
                 reachable_referenceables,
                 level,
+                parent_name,
                 errors,
                 all_referenced,
             );
@@ -361,6 +373,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 from,
                 reachable_referenceables.clone(),
                 level,
+                parent_name,
                 errors,
                 all_referenced,
             );
@@ -368,6 +381,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 to,
                 reachable_referenceables,
                 level,
+                parent_name,
                 errors,
                 all_referenced,
             );
@@ -396,6 +410,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
             alias,
             *span,
             reachable_referenceables,
+            parent_name,
             errors,
             all_referenced,
         ),
@@ -405,6 +420,7 @@ fn set_is_referenced_and_alias_referenceables<'a, 'code>(
                 alias,
                 *span,
                 reachable_referenceables,
+                parent_name,
                 errors,
                 all_referenced,
             )
@@ -419,6 +435,7 @@ fn set_referenced_referenceable<'code>(
     alias: &mut Alias<'code>,
     span: Span,
     reachable_referenceables: ReachableReferenceables<'code>,
+    parent_name: Option<&str>,
     errors: &mut Vec<ResolveError>,
     all_referenced: &mut HashSet<Referenceable<'code>>,
 ) {
@@ -429,16 +446,22 @@ fn set_referenced_referenceable<'code>(
             referenceables: unset_referenceables,
         } => {
             // @TODO make the first part a standalone property (name or PASSED)?
-            let first_part = parts.first().expect("Failed to get first alias part");
+            let first_part = *parts.first().expect("Failed to get first alias part");
             // @TODO make Argument name optional to model the case when an argument is piped better?
             if first_part.is_empty() {
                 return;
             }
-            let referenced = reachable_referenceables.get(first_part).copied();
+            let referenced = match parent_name {
+                Some(parent_name) if parent_name == first_part => None,
+                _ => reachable_referenceables.get(first_part).copied()
+            };
             if let Some(referenced) = referenced {
                 all_referenced.insert(referenced);
             } else {
-                let reachable_names = reachable_referenceables.keys();
+                let reachable_names = reachable_referenceables
+                    .keys()
+                    .filter(|key| parent_name.is_none_or(|parent_name| parent_name != **key))
+                    .collect::<Vec<_>>();
                 errors.push(ResolveError::custom(span, format!("Cannot find the variable or argument '{first_part}'. You can refer to: {reachable_names:?}")))
             }
             let referenceables = Referenceables {
