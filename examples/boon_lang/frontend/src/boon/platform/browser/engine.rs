@@ -40,9 +40,9 @@ pub struct ConstructContext {
 
 pub struct ConstructStorage {
     state_inserter_sender:
-        mpsc::UnboundedSender<(ConstructId, serde_json::Value, oneshot::Sender<()>)>,
+        mpsc::UnboundedSender<(parser::PersistenceId, serde_json::Value, oneshot::Sender<()>)>,
     state_getter_sender:
-        mpsc::UnboundedSender<(ConstructId, oneshot::Sender<Option<serde_json::Value>>)>,
+        mpsc::UnboundedSender<(parser::PersistenceId, oneshot::Sender<Option<serde_json::Value>>)>,
     loop_task: TaskHandle,
 }
 
@@ -66,13 +66,9 @@ impl ConstructStorage {
                 };
                 loop {
                     select! {
-                        (construct_id, json_value, confirmation_sender) = state_inserter_receiver.select_next_some() => {
-                            // @TODO BTreeMap can be serialized only if the key is String:
-                            // - implement Display for ConstructId?
-                            // - remove derives for ConstructId?
-                            // - a better option?
-                            states.insert(format!("{construct_id:?}"), json_value);
-                            // @TODO Optimize?
+                        (persistence_id, json_value, confirmation_sender) = state_inserter_receiver.select_next_some() => {
+                            // @TODO remove `.to_string()` call when LocalStorage is replaced with IndexedDB (?)
+                            states.insert(persistence_id.to_string(), json_value);
                             if let Err(error) = local_storage().insert(&states_local_storage_key, &states) {
                                 eprintln!("Failed to save states: {error:#}");
                             }
@@ -80,9 +76,9 @@ impl ConstructStorage {
                                 eprintln!("Failed to send save confirmation from construct storage");
                             }
                         },
-                        (construct_id, state_sender) = state_getter_receiver.select_next_some() => {
+                        (persistence_id, state_sender) = state_getter_receiver.select_next_some() => {
                             // @TODO Cheaper cloning? Replace get with remove?
-                            let state = states.get(&format!("{construct_id:?}")).cloned();
+                            let state = states.get(&persistence_id.to_string()).cloned();
                             if state_sender.send(state).is_err() {
                                 eprintln!("Failed to send state from construct storage");
                             }
@@ -93,7 +89,7 @@ impl ConstructStorage {
         }
     }
 
-    pub async fn save_state<T: Serialize>(&self, construct_id: ConstructId, state: &T) {
+    pub async fn save_state<T: Serialize>(&self, persistence_id: parser::PersistenceId, state: &T) {
         let json_value = match serde_json::to_value(state) {
             Ok(json_value) => json_value,
             Err(error) => {
@@ -103,7 +99,7 @@ impl ConstructStorage {
         };
         let (confirmation_sender, confirmation_receiver) = oneshot::channel::<()>();
         if let Err(error) = self.state_inserter_sender.unbounded_send((
-            construct_id,
+            persistence_id,
             json_value,
             confirmation_sender,
         )) {
@@ -117,12 +113,12 @@ impl ConstructStorage {
     // @TODO is &self enough?
     pub async fn load_state<T: DeserializeOwned>(
         self: Arc<Self>,
-        construct_id: ConstructId,
+        persistence_id: parser::PersistenceId,
     ) -> Option<T> {
         let (state_sender, state_receiver) = oneshot::channel::<Option<serde_json::Value>>();
         if let Err(error) = self
             .state_getter_sender
-            .unbounded_send((construct_id, state_sender))
+            .unbounded_send((persistence_id, state_sender))
         {
             eprintln!("Failed to load state: {error:#}")
         }

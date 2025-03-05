@@ -332,8 +332,7 @@ pub fn function_math_sum(
     let storage = construct_context.construct_storage.clone();
     stream::once({
         let storage = storage.clone();
-        let function_call_id = function_call_id.clone();
-        async move { storage.load_state(function_call_id).await }
+        async move { storage.load_state(function_call_persistence_id).await }
     })
     .filter_map(future::ready)
     .chain(
@@ -342,14 +341,12 @@ pub fn function_math_sum(
             .map(|value| value.expect_number().number()),
     )
     .scan(0., {
-        let function_call_id = function_call_id.clone();
         move |sum, number| {
             let storage = storage.clone();
-            let function_call_id = function_call_id.clone();
             *sum += number;
             let sum = *sum;
             async move {
-                storage.save_state(function_call_id, &sum).await;
+                storage.save_state(function_call_persistence_id, &sum).await;
                 Some(sum)
             }
         }
