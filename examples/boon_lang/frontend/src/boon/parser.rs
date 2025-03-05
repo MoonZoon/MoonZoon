@@ -8,7 +8,7 @@ mod scope_resolver;
 pub use scope_resolver::{resolve_references, Referenceables};
 
 mod persistence_resolver;
-pub use persistence_resolver::{resolve_persistence, Persistence};
+pub use persistence_resolver::{resolve_persistence, Persistence, PersistenceId};
 
 pub use chumsky::prelude::{Input, Parser};
 

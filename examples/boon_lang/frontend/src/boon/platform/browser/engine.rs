@@ -528,7 +528,7 @@ impl FunctionCall {
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
         actor_context: ActorContext,
-        definition: impl Fn(Arc<Vec<Arc<ValueActor>>>, ConstructId, ConstructContext, ActorContext) -> FR
+        definition: impl Fn(Arc<Vec<Arc<ValueActor>>>, ConstructId, parser::PersistenceId, ConstructContext, ActorContext) -> FR
             + 'static,
         arguments: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<ValueActor> {
@@ -537,6 +537,7 @@ impl FunctionCall {
         let value_stream = definition(
             arguments.clone(),
             construct_info.id(),
+            construct_info.persistence.expect("Failed to get FunctionCall Persistence").id,
             construct_context,
             actor_context.clone(),
         );

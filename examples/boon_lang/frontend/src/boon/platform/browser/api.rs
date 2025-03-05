@@ -6,6 +6,8 @@ use zoon::Timer;
 
 use super::engine::*;
 
+use crate::boon::parser::PersistenceId;
+
 /// ```
 /// Document/new(root<INTO_ELEMENT>) -> [root_element<INTO_ELEMENT>]
 /// INTO_ELEMENT: <ELEMENT | Text | Number>
@@ -41,6 +43,7 @@ use super::engine::*;
 pub fn function_document_new(
     arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
+    function_call_persistence_id: PersistenceId,
     construct_context: ConstructContext,
     actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
@@ -79,6 +82,7 @@ pub fn function_document_new(
 pub fn function_element_container(
     arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
+    function_call_persistence_id: PersistenceId,
     construct_context: ConstructContext,
     actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
@@ -147,6 +151,7 @@ pub fn function_element_container(
 pub fn function_element_stripe(
     arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
+    function_call_persistence_id: PersistenceId,
     construct_context: ConstructContext,
     actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
@@ -230,6 +235,7 @@ pub fn function_element_stripe(
 pub fn function_element_button(
     arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
+    function_call_persistence_id: PersistenceId,
     construct_context: ConstructContext,
     actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
@@ -316,6 +322,7 @@ pub fn function_element_button(
 pub fn function_math_sum(
     arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
+    function_call_persistence_id: PersistenceId,
     construct_context: ConstructContext,
     actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
@@ -371,6 +378,7 @@ pub fn function_math_sum(
 pub fn function_timer_interval(
     arguments: Arc<Vec<Arc<ValueActor>>>,
     function_call_id: ConstructId,
+    function_call_persistence_id: PersistenceId,
     construct_context: ConstructContext,
     actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
