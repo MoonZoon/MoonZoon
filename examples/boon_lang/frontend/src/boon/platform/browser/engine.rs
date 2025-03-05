@@ -9,6 +9,8 @@ use std::sync::Arc;
 
 use crate::boon::parser;
 
+use ulid::Ulid;
+
 use zoon::future;
 use zoon::futures_channel::{mpsc, oneshot};
 use zoon::futures_util::select;
@@ -44,6 +46,10 @@ pub struct ConstructStorage {
     loop_task: TaskHandle,
 }
 
+// @TODO Replace LocalStorage with IndexedDB
+// - https://crates.io/crates/indexed_db
+// - https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API
+// - https://blog.openreplay.com/the-ultimate-guide-to-browser-side-storage/
 impl ConstructStorage {
     pub fn new(states_local_storage_key: impl Into<Cow<'static, str>>) -> Self {
         let states_local_storage_key = states_local_storage_key.into();
@@ -555,9 +561,12 @@ impl LatestCombinator {
         inputs: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::LatestCombinator);
-        let inputs = inputs.into();
-        let value_stream =
-            stream::select_all(inputs.iter().map(|value_actor| value_actor.subscribe()));
+        let inputs: Vec<Arc<ValueActor>> = inputs.into();
+        let value_stream = stream::select_all(
+            inputs
+                .iter()
+                .map(|value_actor| value_actor.subscribe())
+        );
         Arc::new(ValueActor::new_internal(
             construct_info,
             actor_context,
@@ -728,6 +737,10 @@ impl Drop for ValueActor {
     }
 }
 
+// --- ValueIdempotencyKey ---
+
+pub type ValueIdempotencyKey = Ulid;
+
 // --- Value ---
 
 #[derive(Clone)]
@@ -749,6 +762,17 @@ impl Value {
             Self::Tag(tag) => &tag.construct_info,
             Self::Number(number) => &number.construct_info,
             Self::List(list) => &list.construct_info,
+        }
+    }
+
+    pub fn idempotency_key(&self) -> Option<ValueIdempotencyKey> {
+        match &self {
+            Self::Object(object) => object.value_idempotency_key,
+            Self::TaggedObject(tagged_object) => tagged_object.value_idempotency_key,
+            Self::Text(text) => text.value_idempotency_key,
+            Self::Tag(tag) => tag.value_idempotency_key,
+            Self::Number(number) => number.value_idempotency_key,
+            Self::List(list) => list.value_idempotency_key,
         }
     }
 
@@ -806,6 +830,7 @@ impl Value {
 
 pub struct Object {
     construct_info: ConstructInfoComplete,
+    value_idempotency_key: Option<ValueIdempotencyKey>,
     variables: Vec<Arc<Variable>>,
 }
 
@@ -816,6 +841,8 @@ impl Object {
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Self {
         Self {
+            // @TODO set it manually through public API (applies to all Values variants) (?)
+            value_idempotency_key: construct_info.persistence.map(|persistence| persistence.id),
             construct_info: construct_info.complete(ConstructType::Object),
             variables: variables.into(),
         }
@@ -906,6 +933,7 @@ impl Drop for Object {
 
 pub struct TaggedObject {
     construct_info: ConstructInfoComplete,
+    value_idempotency_key: Option<ValueIdempotencyKey>,
     tag: Cow<'static, str>,
     variables: Vec<Arc<Variable>>,
 }
@@ -918,6 +946,7 @@ impl TaggedObject {
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Self {
         Self {
+            value_idempotency_key: construct_info.persistence.map(|persistence| persistence.id),
             construct_info: construct_info.complete(ConstructType::TaggedObject),
             tag: tag.into(),
             variables: variables.into(),
@@ -1028,6 +1057,7 @@ impl Drop for TaggedObject {
 
 pub struct Text {
     construct_info: ConstructInfoComplete,
+    value_idempotency_key: Option<ValueIdempotencyKey>,
     text: Cow<'static, str>,
 }
 
@@ -1038,6 +1068,7 @@ impl Text {
         text: impl Into<Cow<'static, str>>,
     ) -> Self {
         Self {
+            value_idempotency_key: construct_info.persistence.map(|persistence| persistence.id),
             construct_info: construct_info.complete(ConstructType::Text),
             text: text.into(),
         }
@@ -1112,6 +1143,7 @@ impl Drop for Text {
 
 pub struct Tag {
     construct_info: ConstructInfoComplete,
+    value_idempotency_key: Option<ValueIdempotencyKey>,
     tag: Cow<'static, str>,
 }
 
@@ -1122,6 +1154,7 @@ impl Tag {
         tag: impl Into<Cow<'static, str>>,
     ) -> Self {
         Self {
+            value_idempotency_key: construct_info.persistence.map(|persistence| persistence.id),
             construct_info: construct_info.complete(ConstructType::Tag),
             tag: tag.into(),
         }
@@ -1196,6 +1229,7 @@ impl Drop for Tag {
 
 pub struct Number {
     construct_info: ConstructInfoComplete,
+    value_idempotency_key: Option<ValueIdempotencyKey>,
     number: f64,
 }
 
@@ -1206,6 +1240,7 @@ impl Number {
         number: impl Into<f64>,
     ) -> Self {
         Self {
+            value_idempotency_key: construct_info.persistence.map(|persistence| persistence.id),
             construct_info: construct_info.complete(ConstructType::Number),
             number: number.into(),
         }
@@ -1280,6 +1315,7 @@ impl Drop for Number {
 
 pub struct List {
     construct_info: Arc<ConstructInfoComplete>,
+    value_idempotency_key: Option<ValueIdempotencyKey>,
     loop_task: TaskHandle,
     change_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<ListChange>>,
 }
@@ -1386,6 +1422,7 @@ impl List {
             }
         });
         Self {
+            value_idempotency_key: construct_info.persistence.map(|persistence| persistence.id),
             construct_info,
             loop_task,
             change_sender_sender,
