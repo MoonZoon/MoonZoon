@@ -144,6 +144,7 @@ fn spanned_expression_into_value_actor(
                     format!("{span}; Number {number}"),
                 ),
                 construct_context,
+                persistence_id,
                 actor_context,
                 number,
             ),

@@ -1254,6 +1254,7 @@ impl Number {
     pub fn new_value(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         number: impl Into<f64>,
     ) -> Value {
         Value::Number(Self::new_arc(construct_info, construct_context, number))
@@ -1262,14 +1263,16 @@ impl Number {
     pub fn new_constant(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         number: impl Into<f64>,
     ) -> impl Stream<Item = Value> {
-        constant(Self::new_value(construct_info, construct_context, number))
+        constant(Self::new_value(construct_info, construct_context, idempotency_key, number))
     }
 
     pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         actor_context: ActorContext,
         number: impl Into<f64>,
     ) -> Arc<ValueActor> {
@@ -1286,7 +1289,7 @@ impl Number {
         let actor_construct_info =
             ConstructInfo::new(actor_id, persistence, "Constant number wrapper)")
                 .complete(ConstructType::ValueActor);
-        let value_stream = Self::new_constant(construct_info, construct_context, number.into());
+        let value_stream = Self::new_constant(construct_info, construct_context, idempotency_key, number.into());
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
             actor_context,

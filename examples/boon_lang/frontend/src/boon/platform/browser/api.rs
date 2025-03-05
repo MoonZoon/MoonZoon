@@ -2,6 +2,7 @@ use std::future;
 use std::sync::Arc;
 
 use zoon::futures_util::stream::{self, Stream, StreamExt};
+use zoon::{Serialize, Deserialize, serde};
 use zoon::Timer;
 
 use super::engine::*;
@@ -316,6 +317,7 @@ pub fn function_element_button(
     )
 }
 
+// @TODO refactor
 /// ```
 /// Math/sum(increment<Number>) -> Number
 /// ``````
@@ -326,47 +328,74 @@ pub fn function_math_sum(
     construct_context: ConstructContext,
     actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
+    #[derive(Default, Clone, Copy, Serialize, Deserialize)]
+    #[serde(crate = "serde")]
+    struct State {
+        input_value_idempotency_key: Option<ValueIdempotencyKey>,
+        sum: f64,
+        output_value_idempotency_key: Option<ValueIdempotencyKey>,
+    }
+
     let [argument_increment] = arguments.as_slice() else {
         panic!("Unexpected argument count")
     };
     let storage = construct_context.construct_storage.clone();
-    stream::once({
-        let storage = storage.clone();
-        async move { storage.load_state(function_call_persistence_id).await }
-    })
-    .filter_map(future::ready)
-    .chain(
-        argument_increment
-            .subscribe()
-            .map(|value| value.expect_number().number()),
-    )
-    .scan(0., {
-        move |sum, number| {
-            let storage = storage.clone();
-            *sum += number;
-            let sum = *sum;
-            async move {
-                storage.save_state(function_call_persistence_id, &sum).await;
-                Some(sum)
+    stream::once(storage.clone().load_state(function_call_persistence_id))
+        .filter_map(future::ready)
+        .chain(
+            argument_increment
+                .subscribe()
+                .map(|value| {
+                    State {
+                        input_value_idempotency_key: value.idempotency_key(),
+                        sum: value.expect_number().number(),
+                        output_value_idempotency_key: None,
+                    }
+                }),
+        )
+        // @TODO refactor with async closure once possible?
+        .scan(State::default(), {
+            move |state, State { input_value_idempotency_key, sum: number, output_value_idempotency_key }| {
+                let storage = storage.clone();
+                let skip_value = state.input_value_idempotency_key == input_value_idempotency_key;
+                if !skip_value {
+                    state.input_value_idempotency_key = input_value_idempotency_key;
+                    state.sum += number;
+                    state.output_value_idempotency_key = if output_value_idempotency_key.is_some() {
+                        output_value_idempotency_key
+                    } else {
+                        Some(ValueIdempotencyKey::new())
+                    };
+                }
+                let state = *state;
+                return async move {
+                    if skip_value {
+                        Some(None)
+                    } else {
+                        storage.save_state(function_call_persistence_id, &state).await;
+                        Some(Some((state.sum, state.output_value_idempotency_key.unwrap())))
+                    }
+                }
             }
-        }
-    })
-    .map({
-        let mut result_version = 0u64;
-        move |sum| {
-            let value = Number::new_value(
-                ConstructInfo::new(
-                    function_call_id.with_child_id(format!("Math/sum result v.{result_version}")),
-                    None,
-                    "Math/sum(..) -> Number",
-                ),
-                construct_context.clone(),
-                sum,
-            );
-            result_version += 1;
-            value
-        }
-    })
+        })
+        .filter_map(future::ready)
+        .map({
+            let mut result_version = 0u64;
+            move |(sum, idempotency_key)| {
+                let value = Number::new_value(
+                    ConstructInfo::new(
+                        function_call_id.with_child_id(format!("Math/sum result v.{result_version}")),
+                        None,
+                        "Math/sum(..) -> Number",
+                    ),
+                    construct_context.clone(),
+                    idempotency_key,
+                    sum,
+                );
+                result_version += 1;
+                value
+            }
+        })
 }
 
 /// ```
