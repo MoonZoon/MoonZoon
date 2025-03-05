@@ -557,13 +557,68 @@ impl LatestCombinator {
         actor_context: ActorContext,
         inputs: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<ValueActor> {
+        #[derive(Default, Clone, Serialize, Deserialize)]
+        #[serde(crate = "serde")]
+        struct State {
+            input_idempotency_keys: BTreeMap<usize, ValueIdempotencyKey>,
+        }
+
         let construct_info = construct_info.complete(ConstructType::LatestCombinator);
         let inputs: Vec<Arc<ValueActor>> = inputs.into();
+        let persistent_id = construct_info.persistence.expect("Failed to get Persistence in LatestCombinator").id;
+        let storage = construct_context.construct_storage.clone();
+
         let value_stream = stream::select_all(
             inputs
                 .iter()
-                .map(|value_actor| value_actor.subscribe())
-        );
+                .enumerate()
+                .map(|(index, value_actor)| { 
+                    value_actor
+                        .subscribe()
+                        .map(move |value| (index, value))
+                })
+        )
+        .scan(true, { 
+            let storage = storage.clone();
+            move |first_run, (index, value)| { 
+                let storage = storage.clone();
+                let previous_first_run = *first_run;
+                *first_run = false;
+                async move {
+                    if previous_first_run {
+                        Some((storage.clone().load_state::<State>(persistent_id).await, index, value))
+                    } else {
+                        Some((None, index, value))
+                    }
+                }
+            }
+        })
+        .scan(State::default(), move |state, (new_state, index, value)| {
+            if let Some(new_state) = new_state {
+                *state = new_state;
+            }
+            let idempotency_key = value.idempotency_key();
+            let skip_value = state
+                .input_idempotency_keys
+                .get(&index)
+                .is_some_and(|previous_idempotency_key| *previous_idempotency_key == idempotency_key);
+            if !skip_value {
+                state.input_idempotency_keys.insert(index, idempotency_key);
+            }
+            // @TODO Refactor to get rid of the `clone` call. Use async closure?
+            let state = state.clone();
+            let storage = storage.clone();
+            async move {
+                if skip_value {
+                    Some(None)
+                } else {
+                    storage.save_state(persistent_id, &state).await;
+                    Some(Some(value)) 
+                }
+            }
+        })
+        .filter_map(future::ready);
+
         Arc::new(ValueActor::new_internal(
             construct_info,
             actor_context,

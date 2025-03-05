@@ -377,7 +377,7 @@ pub fn function_math_sum(
                     };
                 }
                 let state = *state;
-                return async move {
+                async move {
                     if skip_value {
                         Some(None)
                     } else {
