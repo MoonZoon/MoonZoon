@@ -762,14 +762,14 @@ impl Value {
         }
     }
 
-    pub fn idempotency_key(&self) -> Option<ValueIdempotencyKey> {
+    pub fn idempotency_key(&self) -> ValueIdempotencyKey {
         match &self {
-            Self::Object(object) => object.value_idempotency_key,
-            Self::TaggedObject(tagged_object) => tagged_object.value_idempotency_key,
-            Self::Text(text) => text.value_idempotency_key,
-            Self::Tag(tag) => tag.value_idempotency_key,
-            Self::Number(number) => number.value_idempotency_key,
-            Self::List(list) => list.value_idempotency_key,
+            Self::Object(object) => object.idempotency_key,
+            Self::TaggedObject(tagged_object) => tagged_object.idempotency_key,
+            Self::Text(text) => text.idempotency_key,
+            Self::Tag(tag) => tag.idempotency_key,
+            Self::Number(number) => number.idempotency_key,
+            Self::List(list) => list.idempotency_key,
         }
     }
 
@@ -827,7 +827,7 @@ impl Value {
 
 pub struct Object {
     construct_info: ConstructInfoComplete,
-    value_idempotency_key: Option<ValueIdempotencyKey>,
+    idempotency_key: ValueIdempotencyKey,
     variables: Vec<Arc<Variable>>,
 }
 
@@ -835,12 +835,12 @@ impl Object {
     pub fn new(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Self {
         Self {
-            // @TODO set it manually through public API (applies to all Values variants) (?)
-            value_idempotency_key: construct_info.persistence.map(|persistence| persistence.id),
             construct_info: construct_info.complete(ConstructType::Object),
+            idempotency_key,
             variables: variables.into(),
         }
     }
@@ -848,27 +848,31 @@ impl Object {
     pub fn new_arc(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Arc<Self> {
-        Arc::new(Self::new(construct_info, construct_context, variables))
+        Arc::new(Self::new(construct_info, construct_context, idempotency_key, variables))
     }
 
     pub fn new_value(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Value {
-        Value::Object(Self::new_arc(construct_info, construct_context, variables))
+        Value::Object(Self::new_arc(construct_info, construct_context, idempotency_key, variables))
     }
 
     pub fn new_constant(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> impl Stream<Item = Value> {
         constant(Self::new_value(
             construct_info,
             construct_context,
+            idempotency_key,
             variables,
         ))
     }
@@ -876,6 +880,7 @@ impl Object {
     pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         actor_context: ActorContext,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Arc<ValueActor> {
@@ -892,7 +897,7 @@ impl Object {
         let actor_construct_info =
             ConstructInfo::new(actor_id, persistence, "Constant object wrapper")
                 .complete(ConstructType::ValueActor);
-        let value_stream = Self::new_constant(construct_info, construct_context, variables.into());
+        let value_stream = Self::new_constant(construct_info, construct_context, idempotency_key, variables.into());
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
             actor_context,
@@ -930,7 +935,7 @@ impl Drop for Object {
 
 pub struct TaggedObject {
     construct_info: ConstructInfoComplete,
-    value_idempotency_key: Option<ValueIdempotencyKey>,
+    idempotency_key: ValueIdempotencyKey,
     tag: Cow<'static, str>,
     variables: Vec<Arc<Variable>>,
 }
@@ -939,12 +944,13 @@ impl TaggedObject {
     pub fn new(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Self {
         Self {
-            value_idempotency_key: construct_info.persistence.map(|persistence| persistence.id),
             construct_info: construct_info.complete(ConstructType::TaggedObject),
+            idempotency_key,
             tag: tag.into(),
             variables: variables.into(),
         }
@@ -953,21 +959,24 @@ impl TaggedObject {
     pub fn new_arc(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Arc<Self> {
-        Arc::new(Self::new(construct_info, construct_context, tag, variables))
+        Arc::new(Self::new(construct_info, construct_context, idempotency_key, tag, variables))
     }
 
     pub fn new_value(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Value {
         Value::TaggedObject(Self::new_arc(
             construct_info,
             construct_context,
+            idempotency_key,
             tag,
             variables,
         ))
@@ -976,12 +985,14 @@ impl TaggedObject {
     pub fn new_constant(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> impl Stream<Item = Value> {
         constant(Self::new_value(
             construct_info,
             construct_context,
+            idempotency_key,
             tag,
             variables,
         ))
@@ -990,6 +1001,7 @@ impl TaggedObject {
     pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         actor_context: ActorContext,
         tag: impl Into<Cow<'static, str>>,
         variables: impl Into<Vec<Arc<Variable>>>,
@@ -1010,6 +1022,7 @@ impl TaggedObject {
         let value_stream = Self::new_constant(
             construct_info,
             construct_context,
+            idempotency_key,
             tag.into(),
             variables.into(),
         );
@@ -1054,7 +1067,7 @@ impl Drop for TaggedObject {
 
 pub struct Text {
     construct_info: ConstructInfoComplete,
-    value_idempotency_key: Option<ValueIdempotencyKey>,
+    idempotency_key: ValueIdempotencyKey,
     text: Cow<'static, str>,
 }
 
@@ -1062,11 +1075,12 @@ impl Text {
     pub fn new(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         text: impl Into<Cow<'static, str>>,
     ) -> Self {
         Self {
-            value_idempotency_key: construct_info.persistence.map(|persistence| persistence.id),
             construct_info: construct_info.complete(ConstructType::Text),
+            idempotency_key,
             text: text.into(),
         }
     }
@@ -1074,30 +1088,34 @@ impl Text {
     pub fn new_arc(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         text: impl Into<Cow<'static, str>>,
     ) -> Arc<Self> {
-        Arc::new(Self::new(construct_info, construct_context, text))
+        Arc::new(Self::new(construct_info, construct_context, idempotency_key, text))
     }
 
     pub fn new_value(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         text: impl Into<Cow<'static, str>>,
     ) -> Value {
-        Value::Text(Self::new_arc(construct_info, construct_context, text))
+        Value::Text(Self::new_arc(construct_info, construct_context, idempotency_key, text))
     }
 
     pub fn new_constant(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         text: impl Into<Cow<'static, str>>,
     ) -> impl Stream<Item = Value> {
-        constant(Self::new_value(construct_info, construct_context, text))
+        constant(Self::new_value(construct_info, construct_context, idempotency_key, text))
     }
 
     pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         actor_context: ActorContext,
         text: impl Into<Cow<'static, str>>,
     ) -> Arc<ValueActor> {
@@ -1114,7 +1132,7 @@ impl Text {
         let actor_construct_info =
             ConstructInfo::new(actor_id, persistence, "Constant text wrapper")
                 .complete(ConstructType::ValueActor);
-        let value_stream = Self::new_constant(construct_info, construct_context, text.into());
+        let value_stream = Self::new_constant(construct_info, construct_context, idempotency_key, text.into());
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
             actor_context,
@@ -1140,7 +1158,7 @@ impl Drop for Text {
 
 pub struct Tag {
     construct_info: ConstructInfoComplete,
-    value_idempotency_key: Option<ValueIdempotencyKey>,
+    idempotency_key: ValueIdempotencyKey,
     tag: Cow<'static, str>,
 }
 
@@ -1148,11 +1166,12 @@ impl Tag {
     pub fn new(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
     ) -> Self {
         Self {
-            value_idempotency_key: construct_info.persistence.map(|persistence| persistence.id),
             construct_info: construct_info.complete(ConstructType::Tag),
+            idempotency_key,
             tag: tag.into(),
         }
     }
@@ -1160,30 +1179,34 @@ impl Tag {
     pub fn new_arc(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
     ) -> Arc<Self> {
-        Arc::new(Self::new(construct_info, construct_context, tag))
+        Arc::new(Self::new(construct_info, construct_context, idempotency_key, tag))
     }
 
     pub fn new_value(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
     ) -> Value {
-        Value::Tag(Self::new_arc(construct_info, construct_context, tag))
+        Value::Tag(Self::new_arc(construct_info, construct_context, idempotency_key, tag))
     }
 
     pub fn new_constant(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
     ) -> impl Stream<Item = Value> {
-        constant(Self::new_value(construct_info, construct_context, tag))
+        constant(Self::new_value(construct_info, construct_context, idempotency_key, tag))
     }
 
     pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         actor_context: ActorContext,
         tag: impl Into<Cow<'static, str>>,
     ) -> Arc<ValueActor> {
@@ -1200,7 +1223,7 @@ impl Tag {
         let actor_construct_info =
             ConstructInfo::new(actor_id, persistence, "Constant tag wrapper")
                 .complete(ConstructType::ValueActor);
-        let value_stream = Self::new_constant(construct_info, construct_context, tag.into());
+        let value_stream = Self::new_constant(construct_info, construct_context, idempotency_key, tag.into());
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
             actor_context,
@@ -1226,7 +1249,7 @@ impl Drop for Tag {
 
 pub struct Number {
     construct_info: ConstructInfoComplete,
-    value_idempotency_key: Option<ValueIdempotencyKey>,
+    idempotency_key: ValueIdempotencyKey,
     number: f64,
 }
 
@@ -1234,11 +1257,12 @@ impl Number {
     pub fn new(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         number: impl Into<f64>,
     ) -> Self {
         Self {
-            value_idempotency_key: construct_info.persistence.map(|persistence| persistence.id),
             construct_info: construct_info.complete(ConstructType::Number),
+            idempotency_key,
             number: number.into(),
         }
     }
@@ -1246,9 +1270,10 @@ impl Number {
     pub fn new_arc(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         number: impl Into<f64>,
     ) -> Arc<Self> {
-        Arc::new(Self::new(construct_info, construct_context, number))
+        Arc::new(Self::new(construct_info, construct_context, idempotency_key, number))
     }
 
     pub fn new_value(
@@ -1257,7 +1282,7 @@ impl Number {
         idempotency_key: ValueIdempotencyKey,
         number: impl Into<f64>,
     ) -> Value {
-        Value::Number(Self::new_arc(construct_info, construct_context, number))
+        Value::Number(Self::new_arc(construct_info, construct_context, idempotency_key, number))
     }
 
     pub fn new_constant(
@@ -1315,7 +1340,7 @@ impl Drop for Number {
 
 pub struct List {
     construct_info: Arc<ConstructInfoComplete>,
-    value_idempotency_key: Option<ValueIdempotencyKey>,
+    idempotency_key: ValueIdempotencyKey,
     loop_task: TaskHandle,
     change_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<ListChange>>,
 }
@@ -1324,18 +1349,20 @@ impl List {
     pub fn new(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         actor_context: ActorContext,
         items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Self {
         let change_stream = constant(ListChange::Replace {
             items: items.into(),
         });
-        Self::new_with_change_stream(construct_info, actor_context, change_stream, ())
+        Self::new_with_change_stream(construct_info, actor_context, idempotency_key, change_stream, ())
     }
 
     pub fn new_with_change_stream<EOD: 'static>(
         construct_info: ConstructInfo,
         actor_context: ActorContext,
+        idempotency_key: ValueIdempotencyKey,
         change_stream: impl Stream<Item = ListChange> + 'static,
         extra_owned_data: EOD,
     ) -> Self {
@@ -1422,7 +1449,7 @@ impl List {
             }
         });
         Self {
-            value_idempotency_key: construct_info.persistence.map(|persistence| persistence.id),
+            idempotency_key,
             construct_info,
             loop_task,
             change_sender_sender,
@@ -1432,12 +1459,14 @@ impl List {
     pub fn new_arc(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         actor_context: ActorContext,
         items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<Self> {
         Arc::new(Self::new(
             construct_info,
             construct_context,
+            idempotency_key,
             actor_context,
             items,
         ))
@@ -1446,12 +1475,14 @@ impl List {
     pub fn new_value(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         actor_context: ActorContext,
         items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Value {
         Value::List(Self::new_arc(
             construct_info,
             construct_context,
+            idempotency_key,
             actor_context,
             items,
         ))
@@ -1460,12 +1491,14 @@ impl List {
     pub fn new_constant(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         actor_context: ActorContext,
         items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> impl Stream<Item = Value> {
         constant(Self::new_value(
             construct_info,
             construct_context,
+            idempotency_key,
             actor_context,
             items,
         ))
@@ -1474,6 +1507,7 @@ impl List {
     pub fn new_arc_value_actor(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
+        idempotency_key: ValueIdempotencyKey,
         actor_context: ActorContext,
         items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<ValueActor> {
@@ -1493,6 +1527,7 @@ impl List {
         let value_stream = Self::new_constant(
             construct_info,
             construct_context,
+            idempotency_key,
             actor_context.clone(),
             items.into(),
         );

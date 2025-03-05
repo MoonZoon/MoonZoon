@@ -9,6 +9,8 @@ use super::engine::*;
 
 use crate::boon::parser::PersistenceId;
 
+// @TODO make sure Values are deduplicated everywhere it makes sense
+
 /// ```
 /// Document/new(root<INTO_ELEMENT>) -> [root_element<INTO_ELEMENT>]
 /// INTO_ELEMENT: <ELEMENT | Text | Number>
@@ -58,6 +60,7 @@ pub fn function_document_new(
             "Document/new(..) -> [..]",
         ),
         construct_context.clone(),
+        ValueIdempotencyKey::new(),
         [Variable::new_arc(
             ConstructInfo::new(
                 function_call_id.with_child_id(1),
@@ -97,6 +100,7 @@ pub fn function_element_container(
             "Element/container(..) -> ElementContainer[..]",
         ),
         construct_context.clone(),
+        ValueIdempotencyKey::new(),
         "ElementContainer",
         [Variable::new_arc(
             ConstructInfo::new(
@@ -113,6 +117,7 @@ pub fn function_element_container(
                     "Element/container(..) -> ElementContainer[settings: [..]]",
                 ),
                 construct_context.clone(),
+                ValueIdempotencyKey::new(),
                 actor_context,
                 [
                     Variable::new_arc(
@@ -168,6 +173,7 @@ pub fn function_element_stripe(
             "Element/stripe(..) -> ElementStripe[..]",
         ),
         construct_context.clone(),
+        ValueIdempotencyKey::new(),
         "ElementStripe",
         [Variable::new_arc(
             ConstructInfo::new(
@@ -184,6 +190,7 @@ pub fn function_element_stripe(
                     "Element/stripe(..) -> ElementStripe[settings: [..]]",
                 ),
                 construct_context.clone(),
+                ValueIdempotencyKey::new(),
                 actor_context,
                 [
                     Variable::new_arc(
@@ -250,6 +257,7 @@ pub fn function_element_button(
             "Element/stripe(..) -> ElementButton[..]",
         ),
         construct_context.clone(),
+        ValueIdempotencyKey::new(),
         "ElementButton",
         [
             Variable::new_arc(
@@ -288,6 +296,7 @@ pub fn function_element_button(
                         "Element/stripe(..) -> ElementButton[settings: [..]]",
                     ),
                     construct_context.clone(),
+                    ValueIdempotencyKey::new(),
                     actor_context,
                     [
                         Variable::new_arc(
@@ -347,7 +356,7 @@ pub fn function_math_sum(
                 .subscribe()
                 .map(|value| {
                     State {
-                        input_value_idempotency_key: value.idempotency_key(),
+                        input_value_idempotency_key: Some(value.idempotency_key()),
                         sum: value.expect_number().number(),
                         output_value_idempotency_key: None,
                     }
@@ -435,6 +444,7 @@ pub fn function_timer_interval(
                         let output_value = Object::new_value(
                             ConstructInfo::new(function_call_id.with_child_id("Timer/interval result v.{result_version}"), None, "Timer/interval(.. ) -> [..]"),
                             construct_context.clone(),
+                            ValueIdempotencyKey::new(),
                             []
                         );
                         Some((output_value, (function_call_id, result_version + 1)))

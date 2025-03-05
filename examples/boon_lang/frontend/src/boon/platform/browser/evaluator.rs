@@ -23,6 +23,7 @@ pub fn evaluate(
     let root_object = Object::new_arc(
         ConstructInfo::new("root", None, "root"),
         construct_context.clone(),
+         ValueIdempotencyKey::new(),
         expressions
             .into_iter()
             .map(
@@ -130,6 +131,7 @@ fn spanned_expression_into_value_actor(
     } = expression;
 
     let persistence_id = persistence.expect("Failed to get Persistence").id;
+    let idempotency_key = persistence_id;
 
     let actor = match expression {
         Expression::Variable(variable) => Err(ParseError::custom(
@@ -144,7 +146,7 @@ fn spanned_expression_into_value_actor(
                     format!("{span}; Number {number}"),
                 ),
                 construct_context,
-                persistence_id,
+                idempotency_key,
                 actor_context,
                 number,
             ),
@@ -157,6 +159,7 @@ fn spanned_expression_into_value_actor(
                         format!("{span}; Text {text}"),
                     ),
                     construct_context,
+                    idempotency_key,
                     actor_context,
                     text,
                 )
@@ -170,6 +173,7 @@ fn spanned_expression_into_value_actor(
                         format!("{span}; Tag {tag}"),
                     ),
                     construct_context,
+                    idempotency_key,
                     actor_context,
                     tag,
                 )
@@ -182,6 +186,7 @@ fn spanned_expression_into_value_actor(
                 format!("{span}; LIST {{..}}"),
             ),
             construct_context.clone(),
+            idempotency_key,
             actor_context.clone(),
             items
                 .into_iter()
@@ -202,6 +207,7 @@ fn spanned_expression_into_value_actor(
                 format!("{span}; [..]"),
             ),
             construct_context.clone(),
+            idempotency_key,
             actor_context.clone(),
             object
                 .variables
@@ -223,6 +229,7 @@ fn spanned_expression_into_value_actor(
                 format!("{span}; {tag}[..]"),
             ),
             construct_context.clone(),
+            idempotency_key,
             actor_context.clone(),
             tag.to_owned(),
             object

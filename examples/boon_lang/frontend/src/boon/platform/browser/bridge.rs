@@ -119,6 +119,7 @@ fn element_button(
                             let press_event_object_value = Object::new_value(
                                 ConstructInfo::new(format!("bridge::element_button::press_event, version: {press_event_object_value_version}"), None, "Button press event"),
                                 construct_context.clone(),
+                                ValueIdempotencyKey::new(),
                                 [],
                             );
                             press_event_object_value_version += 1;
