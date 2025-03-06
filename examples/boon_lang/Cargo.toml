@@ -4,11 +4,11 @@ members = [
     "backend",
     "shared",
 ]
-resolver = "2"
+resolver = "3"
 
 [workspace.package]
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 repository = "https://github.com/MoonZoon/MoonZoon"
 authors = ["Martin Kavík <martin@kavik.cz>"]
 description = "Boon Lang - MoonZoon example"

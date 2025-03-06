@@ -365,7 +365,7 @@ impl Variable {
         })
     }
 
-    pub fn subscribe(&self) -> impl Stream<Item = Value> {
+    pub fn subscribe(&self) -> impl Stream<Item = Value> + use<> {
         self.value_actor.subscribe()
     }
 
@@ -846,7 +846,7 @@ impl ValueActor {
         Arc::new(Self::new(construct_info, actor_context, value_stream))
     }
 
-    pub fn subscribe(&self) -> impl Stream<Item = Value> {
+    pub fn subscribe(&self) -> impl Stream<Item = Value> + use<> {
         let (value_sender, value_receiver) = mpsc::unbounded();
         if let Err(error) = self.value_sender_sender.unbounded_send(value_sender) {
             eprintln!("Failed to subscribe to {}: {error:#}", self.construct_info);
@@ -1708,7 +1708,7 @@ impl List {
         ))
     }
 
-    pub fn subscribe(&self) -> impl Stream<Item = ListChange> {
+    pub fn subscribe(&self) -> impl Stream<Item = ListChange> + use<> {
         let (change_sender, change_receiver) = mpsc::unbounded();
         if let Err(error) = self.change_sender_sender.unbounded_send(change_sender) {
             eprintln!("Failed to subscribe to {}: {error:#}", self.construct_info);

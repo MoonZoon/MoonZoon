@@ -52,7 +52,7 @@ fn main() {
 struct Playground {
     source_code: Mutable<Rc<Cow<'static, str>>>,
     run_command: Mutable<Option<RunCommand>>,
-    store_source_code_task: Rc<TaskHandle>,
+    _store_source_code_task: Rc<TaskHandle>,
 }
 
 impl Playground {
@@ -65,7 +65,7 @@ impl Playground {
             };
         let source_code = Mutable::new(Rc::new(source_code));
         Self {
-            store_source_code_task: Rc::new(Task::start_droppable(
+            _store_source_code_task: Rc::new(Task::start_droppable(
                 source_code.signal_cloned().for_each_sync(|source_code| {
                     if let Err(error) =
                         local_storage().insert(SOURCE_CODE_STORAGE_KEY, &source_code)
@@ -80,7 +80,7 @@ impl Playground {
         .root()
     }
 
-    fn root(&self) -> impl Element {
+    fn root(&self) -> impl Element + use<> {
         Column::new()
             .s(Width::fill())
             .s(Height::fill())
@@ -203,7 +203,7 @@ impl Playground {
             )
     }
 
-    fn example_runner(&self, run_command: RunCommand) -> impl Element {
+    fn example_runner(&self, run_command: RunCommand) -> impl Element + use<> {
         println!("Command to run example received!");
         let filename = run_command.filename.unwrap_or("custom code");
         let source_code = self.source_code.lock_ref();
