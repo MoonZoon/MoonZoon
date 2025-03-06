@@ -423,8 +423,8 @@ impl VariableOrArgumentReference {
             let alias_part = alias_part.to_owned();
             value_stream = value_stream
                 .flat_map(move |value| match value {
-                    Value::Object(object) => object.expect_variable(&alias_part).subscribe(),
-                    Value::TaggedObject(tagged_object) => {
+                    Value::Object(object, _) => object.expect_variable(&alias_part).subscribe(),
+                    Value::TaggedObject(tagged_object, _) => {
                         tagged_object.expect_variable(&alias_part).subscribe()
                     }
                     other => panic!(
@@ -641,17 +641,71 @@ impl ThenCombinator {
         impulse_sender: mpsc::UnboundedSender<()>,
         body: Arc<ValueActor>,
     ) -> Arc<ValueActor> {
+        #[derive(Default, Copy, Clone, Serialize, Deserialize)]
+        #[serde(crate = "serde")]
+        struct State {
+            observed_idempotency_key: Option<ValueIdempotencyKey>,
+        }
+
         let construct_info = construct_info.complete(ConstructType::ThenCombinator);
-        let send_impulse_task = Task::start_droppable(observed.subscribe().for_each({
-            let construct_info = construct_info.clone();
-            move |_| {
-                if let Err(error) = impulse_sender.unbounded_send(()) {
-                    eprintln!("Failed to send impulse in {construct_info}: {error:#}")
-                }
-                future::ready(())
-            }
-        }));
-        let value_stream = body.subscribe();
+        let persistent_id = construct_info.persistence.expect("Failed to get Persistence in ThenCombinator").id;
+        let storage = construct_context.construct_storage.clone();
+
+        let send_impulse_task = Task::start_droppable(
+            observed
+                .subscribe()
+                .scan(true, { 
+                    let storage = storage.clone();
+                    move |first_run, value| { 
+                        let storage = storage.clone();
+                        let previous_first_run = *first_run;
+                        *first_run = false;
+                        async move {
+                            if previous_first_run {
+                                Some((storage.clone().load_state::<State>(persistent_id).await, value))
+                            } else {
+                                Some((None, value))
+                            }
+                        }
+                    }
+                })
+                .scan(State::default(), move |state, (new_state, value)| {
+                    if let Some(new_state) = new_state {
+                        *state = new_state;
+                    }
+                    let idempotency_key = value.idempotency_key();
+                    let skip_value = state.observed_idempotency_key.is_some_and(|key| key == idempotency_key);
+                    if !skip_value {
+                        state.observed_idempotency_key = Some(idempotency_key);
+                    }
+                    let state = *state;
+                    let storage = storage.clone();
+                    async move {
+                        if skip_value {
+                            Some(None)
+                        } else {
+                            storage.save_state(persistent_id, &state).await;
+                            Some(Some(value)) 
+                        }
+                    }
+                })
+                .filter_map(future::ready)
+                .for_each({
+                    let construct_info = construct_info.clone();
+                    move |_| {
+                        if let Err(error) = impulse_sender.unbounded_send(()) {
+                            eprintln!("Failed to send impulse in {construct_info}: {error:#}")
+                        }
+                        future::ready(())
+                    }
+                })
+        );
+        let value_stream = body
+            .subscribe()
+            .map(|mut value| { 
+                value.set_idempotency_key(ValueIdempotencyKey::new());
+                value
+            });
         Arc::new(ValueActor::new_internal(
             construct_info,
             actor_context,
@@ -793,43 +847,68 @@ impl Drop for ValueActor {
 
 pub type ValueIdempotencyKey = Ulid;
 
+// --- ValueMetadata ---
+
+#[derive(Clone, Copy)]
+pub struct ValueMetadata {
+    pub idempotency_key: ValueIdempotencyKey
+}
+
 // --- Value ---
 
 #[derive(Clone)]
 pub enum Value {
-    Object(Arc<Object>),
-    TaggedObject(Arc<TaggedObject>),
-    Text(Arc<Text>),
-    Tag(Arc<Tag>),
-    Number(Arc<Number>),
-    List(Arc<List>),
+    Object(Arc<Object>, ValueMetadata),
+    TaggedObject(Arc<TaggedObject>, ValueMetadata),
+    Text(Arc<Text>, ValueMetadata),
+    Tag(Arc<Tag>, ValueMetadata),
+    Number(Arc<Number>, ValueMetadata),
+    List(Arc<List>, ValueMetadata),
 }
 
 impl Value {
     pub fn construct_info(&self) -> &ConstructInfoComplete {
-        match &self {
-            Self::Object(object) => &object.construct_info,
-            Self::TaggedObject(tagged_object) => &tagged_object.construct_info,
-            Self::Text(text) => &text.construct_info,
-            Self::Tag(tag) => &tag.construct_info,
-            Self::Number(number) => &number.construct_info,
-            Self::List(list) => &list.construct_info,
+        match self {
+            Self::Object(object, _) => &object.construct_info,
+            Self::TaggedObject(tagged_object, _) => &tagged_object.construct_info,
+            Self::Text(text, _) => &text.construct_info,
+            Self::Tag(tag, _) => &tag.construct_info,
+            Self::Number(number, _) => &number.construct_info,
+            Self::List(list, _) => &list.construct_info,
+        }
+    }
+
+    pub fn metadata(&self) -> ValueMetadata {
+        match self {
+            Self::Object(_, metadata) => *metadata,
+            Self::TaggedObject(_, metadata) => *metadata,
+            Self::Text(_, metadata) => *metadata,
+            Self::Tag(_, metadata) => *metadata,
+            Self::Number(_, metadata) => *metadata,
+            Self::List(_, metadata) => *metadata,
+        }
+    }
+    pub fn metadata_mut(&mut self) -> &mut ValueMetadata {
+        match self {
+            Self::Object(_, metadata) => metadata,
+            Self::TaggedObject(_, metadata) => metadata,
+            Self::Text(_, metadata) => metadata,
+            Self::Tag(_, metadata) => metadata,
+            Self::Number(_, metadata) => metadata,
+            Self::List(_, metadata) => metadata,
         }
     }
 
     pub fn idempotency_key(&self) -> ValueIdempotencyKey {
-        match &self {
-            Self::Object(object) => object.idempotency_key,
-            Self::TaggedObject(tagged_object) => tagged_object.idempotency_key,
-            Self::Text(text) => text.idempotency_key,
-            Self::Tag(tag) => tag.idempotency_key,
-            Self::Number(number) => number.idempotency_key,
-            Self::List(list) => list.idempotency_key,
-        }
+        self.metadata().idempotency_key
+    }
+
+    pub fn set_idempotency_key(&mut self, key: ValueIdempotencyKey) {
+        self.metadata_mut().idempotency_key = key;
     }
 
     pub fn expect_object(self) -> Arc<Object> {
-        let Self::Object(object) = self else {
+        let Self::Object(object, _) = self else {
             panic!(
                 "Failed to get expected Object: The Value has a different type {}",
                 self.construct_info()
@@ -839,7 +918,7 @@ impl Value {
     }
 
     pub fn expect_tagged_object(self, tag: &str) -> Arc<TaggedObject> {
-        let Self::TaggedObject(tagged_object) = self else {
+        let Self::TaggedObject(tagged_object, _) = self else {
             panic!("Failed to get expected TaggedObject: The Value has a different type")
         };
         let found_tag = &tagged_object.tag;
@@ -850,28 +929,28 @@ impl Value {
     }
 
     pub fn expect_text(self) -> Arc<Text> {
-        let Self::Text(text) = self else {
+        let Self::Text(text, _) = self else {
             panic!("Failed to get expected Text: The Value has a different type")
         };
         text
     }
 
     pub fn expect_tag(self) -> Arc<Tag> {
-        let Self::Tag(tag) = self else {
+        let Self::Tag(tag, _) = self else {
             panic!("Failed to get expected Tag: The Value has a different type")
         };
         tag
     }
 
     pub fn expect_number(self) -> Arc<Number> {
-        let Self::Number(number) = self else {
+        let Self::Number(number, _) = self else {
             panic!("Failed to get expected Number: The Value has a different type")
         };
         number
     }
 
     pub fn expect_list(self) -> Arc<List> {
-        let Self::List(list) = self else {
+        let Self::List(list, _) = self else {
             panic!("Failed to get expected List: The Value has a different type")
         };
         list
@@ -882,7 +961,6 @@ impl Value {
 
 pub struct Object {
     construct_info: ConstructInfoComplete,
-    idempotency_key: ValueIdempotencyKey,
     variables: Vec<Arc<Variable>>,
 }
 
@@ -890,12 +968,10 @@ impl Object {
     pub fn new(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
-        idempotency_key: ValueIdempotencyKey,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::Object),
-            idempotency_key,
             variables: variables.into(),
         }
     }
@@ -903,10 +979,9 @@ impl Object {
     pub fn new_arc(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
-        idempotency_key: ValueIdempotencyKey,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Arc<Self> {
-        Arc::new(Self::new(construct_info, construct_context, idempotency_key, variables))
+        Arc::new(Self::new(construct_info, construct_context, variables))
     }
 
     pub fn new_value(
@@ -915,7 +990,7 @@ impl Object {
         idempotency_key: ValueIdempotencyKey,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Value {
-        Value::Object(Self::new_arc(construct_info, construct_context, idempotency_key, variables))
+        Value::Object(Self::new_arc(construct_info, construct_context, variables), ValueMetadata { idempotency_key })
     }
 
     pub fn new_constant(
@@ -990,7 +1065,6 @@ impl Drop for Object {
 
 pub struct TaggedObject {
     construct_info: ConstructInfoComplete,
-    idempotency_key: ValueIdempotencyKey,
     tag: Cow<'static, str>,
     variables: Vec<Arc<Variable>>,
 }
@@ -999,13 +1073,11 @@ impl TaggedObject {
     pub fn new(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
-        idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::TaggedObject),
-            idempotency_key,
             tag: tag.into(),
             variables: variables.into(),
         }
@@ -1014,11 +1086,10 @@ impl TaggedObject {
     pub fn new_arc(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
-        idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Arc<Self> {
-        Arc::new(Self::new(construct_info, construct_context, idempotency_key, tag, variables))
+        Arc::new(Self::new(construct_info, construct_context, tag, variables))
     }
 
     pub fn new_value(
@@ -1031,10 +1102,9 @@ impl TaggedObject {
         Value::TaggedObject(Self::new_arc(
             construct_info,
             construct_context,
-            idempotency_key,
             tag,
             variables,
-        ))
+        ), ValueMetadata { idempotency_key })
     }
 
     pub fn new_constant(
@@ -1122,7 +1192,6 @@ impl Drop for TaggedObject {
 
 pub struct Text {
     construct_info: ConstructInfoComplete,
-    idempotency_key: ValueIdempotencyKey,
     text: Cow<'static, str>,
 }
 
@@ -1130,12 +1199,10 @@ impl Text {
     pub fn new(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
-        idempotency_key: ValueIdempotencyKey,
         text: impl Into<Cow<'static, str>>,
     ) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::Text),
-            idempotency_key,
             text: text.into(),
         }
     }
@@ -1143,10 +1210,9 @@ impl Text {
     pub fn new_arc(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
-        idempotency_key: ValueIdempotencyKey,
         text: impl Into<Cow<'static, str>>,
     ) -> Arc<Self> {
-        Arc::new(Self::new(construct_info, construct_context, idempotency_key, text))
+        Arc::new(Self::new(construct_info, construct_context, text))
     }
 
     pub fn new_value(
@@ -1155,7 +1221,7 @@ impl Text {
         idempotency_key: ValueIdempotencyKey,
         text: impl Into<Cow<'static, str>>,
     ) -> Value {
-        Value::Text(Self::new_arc(construct_info, construct_context, idempotency_key, text))
+        Value::Text(Self::new_arc(construct_info, construct_context, text), ValueMetadata { idempotency_key })
     }
 
     pub fn new_constant(
@@ -1213,7 +1279,6 @@ impl Drop for Text {
 
 pub struct Tag {
     construct_info: ConstructInfoComplete,
-    idempotency_key: ValueIdempotencyKey,
     tag: Cow<'static, str>,
 }
 
@@ -1221,12 +1286,10 @@ impl Tag {
     pub fn new(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
-        idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
     ) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::Tag),
-            idempotency_key,
             tag: tag.into(),
         }
     }
@@ -1234,10 +1297,9 @@ impl Tag {
     pub fn new_arc(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
-        idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
     ) -> Arc<Self> {
-        Arc::new(Self::new(construct_info, construct_context, idempotency_key, tag))
+        Arc::new(Self::new(construct_info, construct_context, tag))
     }
 
     pub fn new_value(
@@ -1246,7 +1308,7 @@ impl Tag {
         idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
     ) -> Value {
-        Value::Tag(Self::new_arc(construct_info, construct_context, idempotency_key, tag))
+        Value::Tag(Self::new_arc(construct_info, construct_context, tag), ValueMetadata { idempotency_key })
     }
 
     pub fn new_constant(
@@ -1304,7 +1366,6 @@ impl Drop for Tag {
 
 pub struct Number {
     construct_info: ConstructInfoComplete,
-    idempotency_key: ValueIdempotencyKey,
     number: f64,
 }
 
@@ -1312,12 +1373,10 @@ impl Number {
     pub fn new(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
-        idempotency_key: ValueIdempotencyKey,
         number: impl Into<f64>,
     ) -> Self {
         Self {
             construct_info: construct_info.complete(ConstructType::Number),
-            idempotency_key,
             number: number.into(),
         }
     }
@@ -1325,10 +1384,9 @@ impl Number {
     pub fn new_arc(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
-        idempotency_key: ValueIdempotencyKey,
         number: impl Into<f64>,
     ) -> Arc<Self> {
-        Arc::new(Self::new(construct_info, construct_context, idempotency_key, number))
+        Arc::new(Self::new(construct_info, construct_context, number))
     }
 
     pub fn new_value(
@@ -1337,7 +1395,7 @@ impl Number {
         idempotency_key: ValueIdempotencyKey,
         number: impl Into<f64>,
     ) -> Value {
-        Value::Number(Self::new_arc(construct_info, construct_context, idempotency_key, number))
+        Value::Number(Self::new_arc(construct_info, construct_context, number), ValueMetadata { idempotency_key })
     }
 
     pub fn new_constant(
@@ -1395,7 +1453,6 @@ impl Drop for Number {
 
 pub struct List {
     construct_info: Arc<ConstructInfoComplete>,
-    idempotency_key: ValueIdempotencyKey,
     loop_task: TaskHandle,
     change_sender_sender: mpsc::UnboundedSender<mpsc::UnboundedSender<ListChange>>,
 }
@@ -1404,20 +1461,18 @@ impl List {
     pub fn new(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
-        idempotency_key: ValueIdempotencyKey,
         actor_context: ActorContext,
         items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Self {
         let change_stream = constant(ListChange::Replace {
             items: items.into(),
         });
-        Self::new_with_change_stream(construct_info, actor_context, idempotency_key, change_stream, ())
+        Self::new_with_change_stream(construct_info, actor_context, change_stream, ())
     }
 
     pub fn new_with_change_stream<EOD: 'static>(
         construct_info: ConstructInfo,
         actor_context: ActorContext,
-        idempotency_key: ValueIdempotencyKey,
         change_stream: impl Stream<Item = ListChange> + 'static,
         extra_owned_data: EOD,
     ) -> Self {
@@ -1504,7 +1559,6 @@ impl List {
             }
         });
         Self {
-            idempotency_key,
             construct_info,
             loop_task,
             change_sender_sender,
@@ -1514,14 +1568,12 @@ impl List {
     pub fn new_arc(
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
-        idempotency_key: ValueIdempotencyKey,
         actor_context: ActorContext,
         items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<Self> {
         Arc::new(Self::new(
             construct_info,
             construct_context,
-            idempotency_key,
             actor_context,
             items,
         ))
@@ -1537,10 +1589,9 @@ impl List {
         Value::List(Self::new_arc(
             construct_info,
             construct_context,
-            idempotency_key,
             actor_context,
             items,
-        ))
+        ), ValueMetadata { idempotency_key })
     }
 
     pub fn new_constant(

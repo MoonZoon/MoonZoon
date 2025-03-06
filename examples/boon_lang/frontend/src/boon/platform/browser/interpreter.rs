@@ -97,7 +97,7 @@ pub fn run(
     println!("[Abstract Syntax Tree with Reference Data and Persistence]");
     println!("{ast:#?}");
 
-    // @TODO remove persistence records from LocalStorage with ids not found in `all_persistence_ids`
+    // @TODO remove persistence records from LocalStorage with ids not found in `new_span_id_pairs` (?)
 
     let (evaluation_result, errors) = match evaluate(ast, states_local_storage_key) {
         Ok(evaluation_result) => (Some(evaluation_result), vec![]),
@@ -112,6 +112,7 @@ pub fn run(
         if let Err(error) = local_storage().insert(&old_code_local_storage_key, &source_code) {
             eprintln!("Failed to store source code as old source code: {error:#?}");
         }
+
         if let Err(error) = local_storage().insert(
             &old_span_id_pairs_local_storage_key,
             &new_span_id_pairs.to_json_map().unwrap(),

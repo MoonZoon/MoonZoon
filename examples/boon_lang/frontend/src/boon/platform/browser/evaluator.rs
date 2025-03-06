@@ -23,7 +23,6 @@ pub fn evaluate(
     let root_object = Object::new_arc(
         ConstructInfo::new("root", None, "root"),
         construct_context.clone(),
-         ValueIdempotencyKey::new(),
         expressions
             .into_iter()
             .map(

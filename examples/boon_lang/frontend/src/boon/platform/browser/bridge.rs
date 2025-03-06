@@ -25,9 +25,9 @@ pub fn object_with_document_to_element_signal(
 
 fn value_to_element(value: Value, construct_context: ConstructContext) -> RawElOrText {
     match value {
-        Value::Text(text) => zoon::Text::new(text.text()).unify(),
-        Value::Number(number) => zoon::Text::new(number.number()).unify(),
-        Value::TaggedObject(tagged_object) => match tagged_object.tag() {
+        Value::Text(text, _) => zoon::Text::new(text.text()).unify(),
+        Value::Number(number, _) => zoon::Text::new(number.number()).unify(),
+        Value::TaggedObject(tagged_object, _) => match tagged_object.tag() {
             "ElementContainer" => element_container(tagged_object, construct_context).unify(),
             "ElementStripe" => element_stripe(tagged_object, construct_context).unify(),
             "ElementButton" => element_button(tagged_object, construct_context).unify(),
