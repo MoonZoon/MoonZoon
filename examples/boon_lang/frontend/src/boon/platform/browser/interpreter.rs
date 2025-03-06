@@ -1,4 +1,5 @@
 use std::borrow::Cow;
+use std::collections::{BTreeMap, HashSet};
 use std::fmt;
 use std::io::{Cursor, Read};
 use std::sync::Arc;
@@ -6,7 +7,7 @@ use std::sync::Arc;
 use ariadne::{Config, Label, Report, ReportKind, Source};
 use chumsky::input::Stream;
 use serde_json_any_key::MapIterToJson;
-use zoon::{eprintln, local_storage, println, UnwrapThrowExt, WebStorage};
+use zoon::{eprintln, local_storage, println, serde_json, UnwrapThrowExt, WebStorage};
 
 use crate::boon::parser::{
     lexer, parser, resolve_persistence, resolve_references, Expression, Input, ParseError, Parser,
@@ -24,6 +25,7 @@ pub fn run(
     old_code_local_storage_key: impl Into<Cow<'static, str>>,
     old_span_id_pairs_local_storage_key: impl Into<Cow<'static, str>>,
 ) -> Option<(Arc<Object>, ConstructContext)> {
+    let states_local_storage_key = states_local_storage_key.into();
     let old_code_local_storage_key = old_code_local_storage_key.into();
     let old_span_id_pairs_local_storage_key = old_span_id_pairs_local_storage_key.into();
 
@@ -97,9 +99,7 @@ pub fn run(
     println!("[Abstract Syntax Tree with Reference Data and Persistence]");
     println!("{ast:#?}");
 
-    // @TODO remove persistence records from LocalStorage with ids not found in `new_span_id_pairs` (?)
-
-    let (evaluation_result, errors) = match evaluate(ast, states_local_storage_key) {
+    let (evaluation_result, errors) = match evaluate(ast, states_local_storage_key.clone()) {
         Ok(evaluation_result) => (Some(evaluation_result), vec![]),
         Err(evaluation_error) => (None, vec![evaluation_error]),
     };
@@ -118,6 +118,20 @@ pub fn run(
             &new_span_id_pairs.to_json_map().unwrap(),
         ) {
             eprintln!("Failed to store Span-PersistenceId pairs: {error:#}");
+        }
+
+        if let Some(states) =
+            local_storage().get::<BTreeMap<String, serde_json::Value>>(&states_local_storage_key)
+        {
+            let mut states = states.expect("Failed to deseralize states");
+            let persistent_ids = new_span_id_pairs
+                .values()
+                .map(|id| id.to_string())
+                .collect::<HashSet<_>>();
+            states.retain(|id, _| persistent_ids.contains(id));
+            if let Err(error) = local_storage().insert(&states_local_storage_key, &states) {
+                eprintln!("Failed to store states after removing old ones: {error:#?}");
+            }
         }
     }
 

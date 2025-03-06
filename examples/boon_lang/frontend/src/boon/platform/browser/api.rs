@@ -412,6 +412,7 @@ pub fn function_math_sum(
         })
 }
 
+// @TODO remember configuration?
 /// ```
 /// Timer/interval(duration<Duration[seconds<Number> | milliseconds<Number>]>) -> []
 /// ```
