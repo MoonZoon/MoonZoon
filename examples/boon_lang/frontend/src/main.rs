@@ -95,17 +95,7 @@ impl Playground {
                     )
                     .item(self.clear_saved_states_button()),
             )
-            .item(
-                Paragraph::new()
-                    .s(Align::new().center_x())
-                    .content("Run: ")
-                    .content(
-                        El::new()
-                            .s(Font::new().weight(FontWeight::Bold))
-                            .child("Shift + Enter"),
-                    )
-                    .content(" in editor"),
-            )
+            .item(self.run_button())
             .item(
                 Row::new()
                     .s(Padding::new().top(5))
@@ -115,6 +105,34 @@ impl Playground {
                     .item(self.code_editor_panel())
                     .item(self.example_panel()),
             )
+    }
+
+    fn run_button(&self) -> impl Element {
+        let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+        Button::new()
+            .s(Align::new().center_x())
+            .s(Padding::all(5))
+            .label(
+                Paragraph::new()
+                    .s(Font::new().color_signal(
+                        hovered_signal
+                            .map_bool(|| color!("MediumSpringGreen"), || color!("LimeGreen")),
+                    ))
+                    .content("Run (")
+                    .content(
+                        El::new()
+                            .s(Font::new().weight(FontWeight::Bold))
+                            .child("Shift + Enter"),
+                    )
+                    .content(" in editor)"),
+            )
+            .on_hovered_change(move |is_hovered| hovered.set(is_hovered))
+            .on_press({
+                let run_command = self.run_command.clone();
+                move || {
+                    run_command.set(Some(RunCommand { filename: None }));
+                }
+            })
     }
 
     fn clear_saved_states_button(&self) -> impl Element {
