@@ -2,8 +2,8 @@ use std::future;
 use std::sync::Arc;
 
 use zoon::futures_util::stream::{self, Stream, StreamExt};
-use zoon::{Serialize, Deserialize, serde};
 use zoon::Timer;
+use zoon::{serde, Deserialize, Serialize};
 
 use super::engine::*;
 
@@ -351,20 +351,19 @@ pub fn function_math_sum(
     let storage = construct_context.construct_storage.clone();
     stream::once(storage.clone().load_state(function_call_persistence_id))
         .filter_map(future::ready)
-        .chain(
-            argument_increment
-                .subscribe()
-                .map(|value| {
-                    State {
-                        input_value_idempotency_key: Some(value.idempotency_key()),
-                        sum: value.expect_number().number(),
-                        output_value_idempotency_key: None,
-                    }
-                }),
-        )
+        .chain(argument_increment.subscribe().map(|value| State {
+            input_value_idempotency_key: Some(value.idempotency_key()),
+            sum: value.expect_number().number(),
+            output_value_idempotency_key: None,
+        }))
         // @TODO refactor with async closure once possible?
         .scan(State::default(), {
-            move |state, State { input_value_idempotency_key, sum: number, output_value_idempotency_key }| {
+            move |state,
+                  State {
+                      input_value_idempotency_key,
+                      sum: number,
+                      output_value_idempotency_key,
+                  }| {
                 let storage = storage.clone();
                 let skip_value = state.input_value_idempotency_key == input_value_idempotency_key;
                 if !skip_value {
@@ -381,8 +380,13 @@ pub fn function_math_sum(
                     if skip_value {
                         Some(None)
                     } else {
-                        storage.save_state(function_call_persistence_id, &state).await;
-                        Some(Some((state.sum, state.output_value_idempotency_key.unwrap())))
+                        storage
+                            .save_state(function_call_persistence_id, &state)
+                            .await;
+                        Some(Some((
+                            state.sum,
+                            state.output_value_idempotency_key.unwrap(),
+                        )))
                     }
                 }
             }
@@ -393,7 +397,8 @@ pub fn function_math_sum(
             move |(sum, idempotency_key)| {
                 let value = Number::new_value(
                     ConstructInfo::new(
-                        function_call_id.with_child_id(format!("Math/sum result v.{result_version}")),
+                        function_call_id
+                            .with_child_id(format!("Math/sum result v.{result_version}")),
                         None,
                         "Math/sum(..) -> Number",
                     ),

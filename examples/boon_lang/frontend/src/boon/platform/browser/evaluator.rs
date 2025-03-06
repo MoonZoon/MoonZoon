@@ -5,7 +5,9 @@ use std::sync::Arc;
 use zoon::mpsc;
 use zoon::{Stream, StreamExt};
 
-use super::super::super::parser::{self, Expression, ParseError, Span, Spanned, Token, PersistenceId};
+use super::super::super::parser::{
+    self, Expression, ParseError, PersistenceId, Span, Spanned, Token,
+};
 use super::api;
 use super::engine::*;
 
@@ -422,28 +424,73 @@ fn function_call_path_to_definition<'code>(
 > {
     let definition = match path {
         ["Document", "new"] => |arguments, id, persistence_id, construct_context, actor_context| {
-            api::function_document_new(arguments, id, persistence_id, construct_context, actor_context)
-                .boxed_local()
+            api::function_document_new(
+                arguments,
+                id,
+                persistence_id,
+                construct_context,
+                actor_context,
+            )
+            .boxed_local()
         },
-        ["Element", "container"] => |arguments, id, persistence_id, construct_context, actor_context| {
-            api::function_element_container(arguments, id, persistence_id, construct_context, actor_context)
+        ["Element", "container"] => {
+            |arguments, id, persistence_id, construct_context, actor_context| {
+                api::function_element_container(
+                    arguments,
+                    id,
+                    persistence_id,
+                    construct_context,
+                    actor_context,
+                )
                 .boxed_local()
-        },
-        ["Element", "stripe"] => |arguments, id, persistence_id, construct_context, actor_context| {
-            api::function_element_stripe(arguments, id, persistence_id, construct_context, actor_context)
+            }
+        }
+        ["Element", "stripe"] => {
+            |arguments, id, persistence_id, construct_context, actor_context| {
+                api::function_element_stripe(
+                    arguments,
+                    id,
+                    persistence_id,
+                    construct_context,
+                    actor_context,
+                )
                 .boxed_local()
-        },
-        ["Element", "button"] => |arguments, id, persistence_id, construct_context, actor_context| {
-            api::function_element_button(arguments, id, persistence_id, construct_context, actor_context)
+            }
+        }
+        ["Element", "button"] => {
+            |arguments, id, persistence_id, construct_context, actor_context| {
+                api::function_element_button(
+                    arguments,
+                    id,
+                    persistence_id,
+                    construct_context,
+                    actor_context,
+                )
                 .boxed_local()
-        },
+            }
+        }
         ["Math", "sum"] => |arguments, id, persistence_id, construct_context, actor_context| {
-            api::function_math_sum(arguments, id, persistence_id, construct_context, actor_context).boxed_local()
+            api::function_math_sum(
+                arguments,
+                id,
+                persistence_id,
+                construct_context,
+                actor_context,
+            )
+            .boxed_local()
         },
-        ["Timer", "interval"] => |arguments, id, persistence_id, construct_context, actor_context| {
-            api::function_timer_interval(arguments, id, persistence_id, construct_context, actor_context)
+        ["Timer", "interval"] => {
+            |arguments, id, persistence_id, construct_context, actor_context| {
+                api::function_timer_interval(
+                    arguments,
+                    id,
+                    persistence_id,
+                    construct_context,
+                    actor_context,
+                )
                 .boxed_local()
-        },
+            }
+        }
         _ => Err(ParseError::custom(
             span,
             format!("Unknown function '{}(..)'", path.join("/")),

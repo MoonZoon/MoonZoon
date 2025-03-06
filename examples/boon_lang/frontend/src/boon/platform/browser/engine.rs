@@ -39,10 +39,15 @@ pub struct ConstructContext {
 // --- ConstructStorage ---
 
 pub struct ConstructStorage {
-    state_inserter_sender:
-        mpsc::UnboundedSender<(parser::PersistenceId, serde_json::Value, oneshot::Sender<()>)>,
-    state_getter_sender:
-        mpsc::UnboundedSender<(parser::PersistenceId, oneshot::Sender<Option<serde_json::Value>>)>,
+    state_inserter_sender: mpsc::UnboundedSender<(
+        parser::PersistenceId,
+        serde_json::Value,
+        oneshot::Sender<()>,
+    )>,
+    state_getter_sender: mpsc::UnboundedSender<(
+        parser::PersistenceId,
+        oneshot::Sender<Option<serde_json::Value>>,
+    )>,
     loop_task: TaskHandle,
 }
 
@@ -524,7 +529,13 @@ impl FunctionCall {
         construct_info: ConstructInfo,
         construct_context: ConstructContext,
         actor_context: ActorContext,
-        definition: impl Fn(Arc<Vec<Arc<ValueActor>>>, ConstructId, parser::PersistenceId, ConstructContext, ActorContext) -> FR
+        definition: impl Fn(
+                Arc<Vec<Arc<ValueActor>>>,
+                ConstructId,
+                parser::PersistenceId,
+                ConstructContext,
+                ActorContext,
+            ) -> FR
             + 'static,
         arguments: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<ValueActor> {
@@ -533,7 +544,10 @@ impl FunctionCall {
         let value_stream = definition(
             arguments.clone(),
             construct_info.id(),
-            construct_info.persistence.expect("Failed to get FunctionCall Persistence").id,
+            construct_info
+                .persistence
+                .expect("Failed to get FunctionCall Persistence")
+                .id,
             construct_context,
             actor_context.clone(),
         );
@@ -565,59 +579,59 @@ impl LatestCombinator {
 
         let construct_info = construct_info.complete(ConstructType::LatestCombinator);
         let inputs: Vec<Arc<ValueActor>> = inputs.into();
-        let persistent_id = construct_info.persistence.expect("Failed to get Persistence in LatestCombinator").id;
+        let persistent_id = construct_info
+            .persistence
+            .expect("Failed to get Persistence in LatestCombinator")
+            .id;
         let storage = construct_context.construct_storage.clone();
 
-        let value_stream = stream::select_all(
-            inputs
-                .iter()
-                .enumerate()
-                .map(|(index, value_actor)| { 
-                    value_actor
-                        .subscribe()
-                        .map(move |value| (index, value))
-                })
-        )
-        .scan(true, { 
-            let storage = storage.clone();
-            move |first_run, (index, value)| { 
+        let value_stream =
+            stream::select_all(inputs.iter().enumerate().map(|(index, value_actor)| {
+                value_actor.subscribe().map(move |value| (index, value))
+            }))
+            .scan(true, {
                 let storage = storage.clone();
-                let previous_first_run = *first_run;
-                *first_run = false;
-                async move {
-                    if previous_first_run {
-                        Some((storage.clone().load_state::<State>(persistent_id).await, index, value))
-                    } else {
-                        Some((None, index, value))
+                move |first_run, (index, value)| {
+                    let storage = storage.clone();
+                    let previous_first_run = *first_run;
+                    *first_run = false;
+                    async move {
+                        if previous_first_run {
+                            Some((
+                                storage.clone().load_state::<State>(persistent_id).await,
+                                index,
+                                value,
+                            ))
+                        } else {
+                            Some((None, index, value))
+                        }
                     }
                 }
-            }
-        })
-        .scan(State::default(), move |state, (new_state, index, value)| {
-            if let Some(new_state) = new_state {
-                *state = new_state;
-            }
-            let idempotency_key = value.idempotency_key();
-            let skip_value = state
-                .input_idempotency_keys
-                .get(&index)
-                .is_some_and(|previous_idempotency_key| *previous_idempotency_key == idempotency_key);
-            if !skip_value {
-                state.input_idempotency_keys.insert(index, idempotency_key);
-            }
-            // @TODO Refactor to get rid of the `clone` call. Use async closure?
-            let state = state.clone();
-            let storage = storage.clone();
-            async move {
-                if skip_value {
-                    Some(None)
-                } else {
-                    storage.save_state(persistent_id, &state).await;
-                    Some(Some(value)) 
+            })
+            .scan(State::default(), move |state, (new_state, index, value)| {
+                if let Some(new_state) = new_state {
+                    *state = new_state;
                 }
-            }
-        })
-        .filter_map(future::ready);
+                let idempotency_key = value.idempotency_key();
+                let skip_value = state.input_idempotency_keys.get(&index).is_some_and(
+                    |previous_idempotency_key| *previous_idempotency_key == idempotency_key,
+                );
+                if !skip_value {
+                    state.input_idempotency_keys.insert(index, idempotency_key);
+                }
+                // @TODO Refactor to get rid of the `clone` call. Use async closure?
+                let state = state.clone();
+                let storage = storage.clone();
+                async move {
+                    if skip_value {
+                        Some(None)
+                    } else {
+                        storage.save_state(persistent_id, &state).await;
+                        Some(Some(value))
+                    }
+                }
+            })
+            .filter_map(future::ready);
 
         Arc::new(ValueActor::new_internal(
             construct_info,
@@ -648,21 +662,27 @@ impl ThenCombinator {
         }
 
         let construct_info = construct_info.complete(ConstructType::ThenCombinator);
-        let persistent_id = construct_info.persistence.expect("Failed to get Persistence in ThenCombinator").id;
+        let persistent_id = construct_info
+            .persistence
+            .expect("Failed to get Persistence in ThenCombinator")
+            .id;
         let storage = construct_context.construct_storage.clone();
 
         let send_impulse_task = Task::start_droppable(
             observed
                 .subscribe()
-                .scan(true, { 
+                .scan(true, {
                     let storage = storage.clone();
-                    move |first_run, value| { 
+                    move |first_run, value| {
                         let storage = storage.clone();
                         let previous_first_run = *first_run;
                         *first_run = false;
                         async move {
                             if previous_first_run {
-                                Some((storage.clone().load_state::<State>(persistent_id).await, value))
+                                Some((
+                                    storage.clone().load_state::<State>(persistent_id).await,
+                                    value,
+                                ))
                             } else {
                                 Some((None, value))
                             }
@@ -674,7 +694,9 @@ impl ThenCombinator {
                         *state = new_state;
                     }
                     let idempotency_key = value.idempotency_key();
-                    let skip_value = state.observed_idempotency_key.is_some_and(|key| key == idempotency_key);
+                    let skip_value = state
+                        .observed_idempotency_key
+                        .is_some_and(|key| key == idempotency_key);
                     if !skip_value {
                         state.observed_idempotency_key = Some(idempotency_key);
                     }
@@ -685,7 +707,7 @@ impl ThenCombinator {
                             Some(None)
                         } else {
                             storage.save_state(persistent_id, &state).await;
-                            Some(Some(value)) 
+                            Some(Some(value))
                         }
                     }
                 })
@@ -698,14 +720,12 @@ impl ThenCombinator {
                         }
                         future::ready(())
                     }
-                })
+                }),
         );
-        let value_stream = body
-            .subscribe()
-            .map(|mut value| { 
-                value.set_idempotency_key(ValueIdempotencyKey::new());
-                value
-            });
+        let value_stream = body.subscribe().map(|mut value| {
+            value.set_idempotency_key(ValueIdempotencyKey::new());
+            value
+        });
         Arc::new(ValueActor::new_internal(
             construct_info,
             actor_context,
@@ -851,7 +871,7 @@ pub type ValueIdempotencyKey = Ulid;
 
 #[derive(Clone, Copy)]
 pub struct ValueMetadata {
-    pub idempotency_key: ValueIdempotencyKey
+    pub idempotency_key: ValueIdempotencyKey,
 }
 
 // --- Value ---
@@ -990,7 +1010,10 @@ impl Object {
         idempotency_key: ValueIdempotencyKey,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Value {
-        Value::Object(Self::new_arc(construct_info, construct_context, variables), ValueMetadata { idempotency_key })
+        Value::Object(
+            Self::new_arc(construct_info, construct_context, variables),
+            ValueMetadata { idempotency_key },
+        )
     }
 
     pub fn new_constant(
@@ -1027,7 +1050,12 @@ impl Object {
         let actor_construct_info =
             ConstructInfo::new(actor_id, persistence, "Constant object wrapper")
                 .complete(ConstructType::ValueActor);
-        let value_stream = Self::new_constant(construct_info, construct_context, idempotency_key, variables.into());
+        let value_stream = Self::new_constant(
+            construct_info,
+            construct_context,
+            idempotency_key,
+            variables.into(),
+        );
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
             actor_context,
@@ -1099,12 +1127,10 @@ impl TaggedObject {
         tag: impl Into<Cow<'static, str>>,
         variables: impl Into<Vec<Arc<Variable>>>,
     ) -> Value {
-        Value::TaggedObject(Self::new_arc(
-            construct_info,
-            construct_context,
-            tag,
-            variables,
-        ), ValueMetadata { idempotency_key })
+        Value::TaggedObject(
+            Self::new_arc(construct_info, construct_context, tag, variables),
+            ValueMetadata { idempotency_key },
+        )
     }
 
     pub fn new_constant(
@@ -1221,7 +1247,10 @@ impl Text {
         idempotency_key: ValueIdempotencyKey,
         text: impl Into<Cow<'static, str>>,
     ) -> Value {
-        Value::Text(Self::new_arc(construct_info, construct_context, text), ValueMetadata { idempotency_key })
+        Value::Text(
+            Self::new_arc(construct_info, construct_context, text),
+            ValueMetadata { idempotency_key },
+        )
     }
 
     pub fn new_constant(
@@ -1230,7 +1259,12 @@ impl Text {
         idempotency_key: ValueIdempotencyKey,
         text: impl Into<Cow<'static, str>>,
     ) -> impl Stream<Item = Value> {
-        constant(Self::new_value(construct_info, construct_context, idempotency_key, text))
+        constant(Self::new_value(
+            construct_info,
+            construct_context,
+            idempotency_key,
+            text,
+        ))
     }
 
     pub fn new_arc_value_actor(
@@ -1253,7 +1287,12 @@ impl Text {
         let actor_construct_info =
             ConstructInfo::new(actor_id, persistence, "Constant text wrapper")
                 .complete(ConstructType::ValueActor);
-        let value_stream = Self::new_constant(construct_info, construct_context, idempotency_key, text.into());
+        let value_stream = Self::new_constant(
+            construct_info,
+            construct_context,
+            idempotency_key,
+            text.into(),
+        );
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
             actor_context,
@@ -1308,7 +1347,10 @@ impl Tag {
         idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
     ) -> Value {
-        Value::Tag(Self::new_arc(construct_info, construct_context, tag), ValueMetadata { idempotency_key })
+        Value::Tag(
+            Self::new_arc(construct_info, construct_context, tag),
+            ValueMetadata { idempotency_key },
+        )
     }
 
     pub fn new_constant(
@@ -1317,7 +1359,12 @@ impl Tag {
         idempotency_key: ValueIdempotencyKey,
         tag: impl Into<Cow<'static, str>>,
     ) -> impl Stream<Item = Value> {
-        constant(Self::new_value(construct_info, construct_context, idempotency_key, tag))
+        constant(Self::new_value(
+            construct_info,
+            construct_context,
+            idempotency_key,
+            tag,
+        ))
     }
 
     pub fn new_arc_value_actor(
@@ -1340,7 +1387,12 @@ impl Tag {
         let actor_construct_info =
             ConstructInfo::new(actor_id, persistence, "Constant tag wrapper")
                 .complete(ConstructType::ValueActor);
-        let value_stream = Self::new_constant(construct_info, construct_context, idempotency_key, tag.into());
+        let value_stream = Self::new_constant(
+            construct_info,
+            construct_context,
+            idempotency_key,
+            tag.into(),
+        );
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
             actor_context,
@@ -1395,7 +1447,10 @@ impl Number {
         idempotency_key: ValueIdempotencyKey,
         number: impl Into<f64>,
     ) -> Value {
-        Value::Number(Self::new_arc(construct_info, construct_context, number), ValueMetadata { idempotency_key })
+        Value::Number(
+            Self::new_arc(construct_info, construct_context, number),
+            ValueMetadata { idempotency_key },
+        )
     }
 
     pub fn new_constant(
@@ -1404,7 +1459,12 @@ impl Number {
         idempotency_key: ValueIdempotencyKey,
         number: impl Into<f64>,
     ) -> impl Stream<Item = Value> {
-        constant(Self::new_value(construct_info, construct_context, idempotency_key, number))
+        constant(Self::new_value(
+            construct_info,
+            construct_context,
+            idempotency_key,
+            number,
+        ))
     }
 
     pub fn new_arc_value_actor(
@@ -1427,7 +1487,12 @@ impl Number {
         let actor_construct_info =
             ConstructInfo::new(actor_id, persistence, "Constant number wrapper)")
                 .complete(ConstructType::ValueActor);
-        let value_stream = Self::new_constant(construct_info, construct_context, idempotency_key, number.into());
+        let value_stream = Self::new_constant(
+            construct_info,
+            construct_context,
+            idempotency_key,
+            number.into(),
+        );
         Arc::new(ValueActor::new_internal(
             actor_construct_info,
             actor_context,
@@ -1586,12 +1651,10 @@ impl List {
         actor_context: ActorContext,
         items: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Value {
-        Value::List(Self::new_arc(
-            construct_info,
-            construct_context,
-            actor_context,
-            items,
-        ), ValueMetadata { idempotency_key })
+        Value::List(
+            Self::new_arc(construct_info, construct_context, actor_context, items),
+            ValueMetadata { idempotency_key },
+        )
     }
 
     pub fn new_constant(
