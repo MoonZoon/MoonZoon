@@ -420,7 +420,8 @@ fn function_call_path_to_definition<'code>(
         PersistenceId,
         ConstructContext,
         ActorContext,
-    ) -> Pin<Box<dyn Stream<Item = Value>>> + use<>,
+    ) -> Pin<Box<dyn Stream<Item = Value>>>
+    + use<>,
 > {
     let definition = match path {
         ["Document", "new"] => |arguments, id, persistence_id, construct_context, actor_context| {

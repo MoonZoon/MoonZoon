@@ -101,9 +101,8 @@ impl fmt::Display for Token<'_> {
     }
 }
 
-pub fn lexer<'code>(
-) -> impl Parser<'code, &'code str, Vec<Spanned<Token<'code>>>, extra::Err<ParseError<'code, char>>>
-{
+pub fn lexer<'code>()
+-> impl Parser<'code, &'code str, Vec<Spanned<Token<'code>>>, extra::Err<ParseError<'code, char>>> {
     let bracket = choice((
         just('(').to(Token::BracketRoundOpen),
         just(')').to(Token::BracketRoundClose),

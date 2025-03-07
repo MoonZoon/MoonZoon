@@ -5,13 +5,13 @@ use chumsky::{input::ValueInput, pratt::*, prelude::*};
 use std::fmt;
 
 mod lexer;
-pub use lexer::{lexer, Token};
+pub use lexer::{Token, lexer};
 
 mod scope_resolver;
-pub use scope_resolver::{resolve_references, Referenceables};
+pub use scope_resolver::{Referenceables, resolve_references};
 
 mod persistence_resolver;
-pub use persistence_resolver::{resolve_persistence, Persistence, PersistenceId};
+pub use persistence_resolver::{Persistence, PersistenceId, resolve_persistence};
 
 pub use chumsky::prelude::{Input, Parser};
 
@@ -25,8 +25,8 @@ pub struct Spanned<T> {
     pub node: T,
 }
 
-pub fn parser<'code, I>(
-) -> impl Parser<'code, I, Vec<Spanned<Expression<'code>>>, extra::Err<ParseError<'code, Token<'code>>>>
+pub fn parser<'code, I>()
+-> impl Parser<'code, I, Vec<Spanned<Expression<'code>>>, extra::Err<ParseError<'code, Token<'code>>>>
 where
     I: ValueInput<'code, Token = Token<'code>, Span = Span>,
 {

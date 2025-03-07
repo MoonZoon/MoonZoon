@@ -1,9 +1,9 @@
 use std::future;
 use std::sync::Arc;
 
-use zoon::futures_util::stream::{self, Stream, StreamExt};
 use zoon::Timer;
-use zoon::{serde, Deserialize, Serialize};
+use zoon::futures_util::stream::{self, Stream, StreamExt};
+use zoon::{Deserialize, Serialize, serde};
 
 use super::engine::*;
 
@@ -161,8 +161,12 @@ pub fn function_element_stripe(
     construct_context: ConstructContext,
     actor_context: ActorContext,
 ) -> impl Stream<Item = Value> {
-    let [_argument_element, argument_direction, argument_style, argument_items] =
-        arguments.as_slice()
+    let [
+        _argument_element,
+        argument_direction,
+        argument_style,
+        argument_items,
+    ] = arguments.as_slice()
     else {
         panic!("Unexpected argument count")
     };

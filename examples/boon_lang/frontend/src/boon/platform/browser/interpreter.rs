@@ -7,11 +7,11 @@ use std::sync::Arc;
 use ariadne::{Config, Label, Report, ReportKind, Source};
 use chumsky::input::Stream;
 use serde_json_any_key::MapIterToJson;
-use zoon::{eprintln, local_storage, println, serde_json, UnwrapThrowExt, WebStorage};
+use zoon::{UnwrapThrowExt, WebStorage, eprintln, local_storage, println, serde_json};
 
 use crate::boon::parser::{
-    lexer, parser, resolve_persistence, resolve_references, Expression, Input, ParseError, Parser,
-    Span, Spanned, Token,
+    Expression, Input, ParseError, Parser, Span, Spanned, Token, lexer, parser,
+    resolve_persistence, resolve_references,
 };
 use crate::boon::platform::browser::{
     engine::{ConstructContext, Object},

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use serde_json_any_key::*;
 use ulid::Ulid;
-use zoon::{eprintln, local_storage, WebStorage};
+use zoon::{WebStorage, eprintln, local_storage};
 
 pub type PersistenceId = Ulid;
 

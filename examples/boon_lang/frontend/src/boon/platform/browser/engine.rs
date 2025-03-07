@@ -11,15 +11,15 @@ use crate::boon::parser;
 
 use ulid::Ulid;
 
+use zoon::IntoCowStr;
 use zoon::future;
 use zoon::futures_channel::{mpsc, oneshot};
 use zoon::futures_util::select;
 use zoon::futures_util::stream::{self, Stream, StreamExt};
-use zoon::IntoCowStr;
-use zoon::{eprintln, println};
-use zoon::{local_storage, WebStorage};
-use zoon::{serde, serde_json, Deserialize, DeserializeOwned, Serialize};
+use zoon::{Deserialize, DeserializeOwned, Serialize, serde, serde_json};
 use zoon::{Task, TaskHandle};
+use zoon::{WebStorage, local_storage};
+use zoon::{eprintln, println};
 
 const LOG_DROPS_AND_LOOP_ENDS: bool = false;
 
@@ -530,13 +530,13 @@ impl FunctionCall {
         construct_context: ConstructContext,
         actor_context: ActorContext,
         definition: impl Fn(
-                Arc<Vec<Arc<ValueActor>>>,
-                ConstructId,
-                parser::PersistenceId,
-                ConstructContext,
-                ActorContext,
-            ) -> FR
-            + 'static,
+            Arc<Vec<Arc<ValueActor>>>,
+            ConstructId,
+            parser::PersistenceId,
+            ConstructContext,
+            ActorContext,
+        ) -> FR
+        + 'static,
         arguments: impl Into<Vec<Arc<ValueActor>>>,
     ) -> Arc<ValueActor> {
         let construct_info = construct_info.complete(ConstructType::FunctionCall);
@@ -943,7 +943,9 @@ impl Value {
         };
         let found_tag = &tagged_object.tag;
         if found_tag != tag {
-            panic!("Failed to get expected TaggedObject: Expected tag: '{tag}', found tag: '{found_tag}'")
+            panic!(
+                "Failed to get expected TaggedObject: Expected tag: '{tag}', found tag: '{found_tag}'"
+            )
         }
         tagged_object
     }
