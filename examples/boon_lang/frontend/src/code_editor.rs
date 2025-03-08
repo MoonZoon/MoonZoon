@@ -1,5 +1,5 @@
+use boon::zoon::*;
 use std::rc::Rc;
-use zoon::*;
 
 pub struct CodeEditor {
     raw_el: RawHtmlEl<web_sys::HtmlElement>,
@@ -75,7 +75,7 @@ impl CodeEditor {
 }
 
 mod js_bridge {
-    use zoon::*;
+    use boon::zoon::*;
 
     // Note: Add all corresponding methods to `frontend/typescript/code_editor/code_editor.ts`
     #[wasm_bindgen(module = "/typescript/bundles/code_editor.js")]

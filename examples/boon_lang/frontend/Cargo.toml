@@ -14,12 +14,5 @@ publish.workspace = true
 wasm-bindgen-test = "0.3.19"
 
 [dependencies]
-zoon.workspace = true
-chumsky = { version = "1.0.0-alpha.8", features = ["pratt", "serde"] }
-ariadne = "0.5"
-pin-project = "1"
-serde_json_any_key = "2.0.0"
-
-ulid = { version = "1.2.0", features = ["serde"] }
-# `rustflags = ["--cfg", 'getrandom_backend="wasm_js"']` has to be in workspace .cargo/config.toml
-getrandom = { version = "0.3", features = ["wasm_js"] }
+# boon = { path = "../../../../boon" }
+boon = { git = "https://github.com/BoonLang/boon", rev = "30fa3c9604214f4eb8db7385fdaf80d64da8317e" }

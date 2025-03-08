@@ -1,21 +1,20 @@
 // @TODO remove
 #![allow(unused_variables)]
 
+use boon::zoon::{eprintln, println, *};
 use std::borrow::Cow;
 use std::rc::Rc;
-use zoon::{eprintln, println, *};
 
-mod boon;
 use boon::platform::browser::{bridge::object_with_document_to_element_signal, interpreter};
 
 mod code_editor;
 use code_editor::CodeEditor;
 
-static SOURCE_CODE_STORAGE_KEY: &str = "boon-example-source-code";
+static SOURCE_CODE_STORAGE_KEY: &str = "mz-boon-example-source-code";
 
-static OLD_SOURCE_CODE_STORAGE_KEY: &str = "boon-example-old-source-code";
-static OLD_SPAN_ID_PAIRS_STORAGE_KEY: &str = "boon-example-span-id-pairs";
-static STATES_STORAGE_KEY: &str = "boon-example-states";
+static OLD_SOURCE_CODE_STORAGE_KEY: &str = "mz-boon-example-old-source-code";
+static OLD_SPAN_ID_PAIRS_STORAGE_KEY: &str = "mz-boon-example-span-id-pairs";
+static STATES_STORAGE_KEY: &str = "mz-boon-example-states";
 
 #[derive(Clone, Copy)]
 struct ExampleData {
