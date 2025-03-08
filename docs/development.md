@@ -5,13 +5,13 @@
 - [Rust](https://www.rust-lang.org/)
   ```bash
   rustup update
-  rustc -V # rustc 1.81.0 (eeb90cda1 2024-09-04)
+  rustc -V # rustc 1.85.0 (4d91de4e4 2025-02-17)
   ```
 
 - [cargo-make](https://sagiegurari.github.io/cargo-make/)
   ```bash
   cargo install cargo-make
-  makers -V # cargo-make 0.37.16
+  makers -V # cargo-make 0.37.24
   ```
 
   - _Note_: `cargo-make` is needed only for MoonZoon development and running its examples, you don't need it for your apps.

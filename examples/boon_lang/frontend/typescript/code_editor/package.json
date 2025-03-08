@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "rolldown": "^1.0.0-beta.3"
+  },
+  "dependencies": {
+    "@codemirror/state": "6.5.2",
+    "@codemirror/theme-one-dark": "6.1.2",
+    "@codemirror/view": "6.36.2",
+    "codemirror": "6.0.1"
+  }
+}

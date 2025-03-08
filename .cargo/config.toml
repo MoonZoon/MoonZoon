@@ -1,2 +1,4 @@
 [build]
 target-dir = "target"
+
+rustflags = ["--cfg", 'getrandom_backend="wasm_js"']

@@ -42,6 +42,9 @@ pub use spacer::Spacer;
 pub mod stack;
 pub use stack::Stack;
 
+pub mod stripe;
+pub use stripe::{Direction, Stripe};
+
 pub mod text;
 pub use text::Text;
 

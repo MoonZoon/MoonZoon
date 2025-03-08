@@ -5,7 +5,9 @@
         // examples are ignored because they have own workspaces
         // "examples/align/Cargo.toml",
         // "examples/align_content/Cargo.toml",
+        // "examples/async_and_stripe_element/Cargo.toml",
         // "examples/blocking_task/Cargo.toml",
+        "examples/boon_lang/Cargo.toml",
         // "examples/canvas/Cargo.toml",
         // "examples/chat/Cargo.toml",
         "examples/counter/Cargo.toml",
@@ -61,5 +63,9 @@
         "--profile",
         "rust-analyzer"
     ],
-    "rust-analyzer.cargo.features": ["zoon/frontend_multithreading"],
+    "rust-analyzer.cargo.features": [
+        "zoon/frontend_multithreading"
+    ],
+    "markdown.preview.scrollPreviewWithEditor": false,
+    "markdown.preview.scrollEditorWithPreview": false,
 }

@@ -139,6 +139,7 @@ impl Task {
 // ------ TaskHandle ------
 
 #[must_use]
+#[derive(Debug)]
 pub struct TaskHandle(AbortHandle);
 
 impl Drop for TaskHandle {

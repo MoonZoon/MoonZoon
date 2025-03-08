@@ -1,0 +1,22 @@
+[workspace]
+members = [
+    "frontend",
+    "backend",
+    "shared",
+]
+resolver = "3"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+repository = "https://github.com/MoonZoon/MoonZoon"
+authors = ["Martin Kavík <martin@kavik.cz>"]
+description = "Boon Lang - MoonZoon example"
+categories = ["MoonZoon", "example"]
+license = "MIT"
+readme = "../README.md"
+publish = false
+
+[workspace.dependencies]
+moon = { path = "../../crates/moon" }
+zoon = { path = "../../crates/zoon" }

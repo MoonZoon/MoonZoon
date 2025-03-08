@@ -1,0 +1,6 @@
+document: 
+    Duration[seconds: 1]
+    |> Timer/interval() 
+    |> THEN { 1 } 
+    |> Math/sum()
+    |> Document/new()

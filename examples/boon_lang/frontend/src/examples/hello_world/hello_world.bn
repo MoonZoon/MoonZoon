@@ -1,0 +1,4 @@
+------------ Hello world example ------------
+
+-- Display text on HTML document
+document: Document/new(root: 'Hello world!')

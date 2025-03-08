@@ -1,0 +1,48 @@
+store: [
+    elements: [
+        decrement_button: LINK
+        increment_button: LINK
+    ]
+    counter: 
+        LATEST {
+            0
+            elements.decrement_button.event.press |> THEN { -1 }
+            elements.increment_button.event.press |> THEN { 1 }
+        } 
+        |> Math/sum()
+]
+
+document: Document/new(root: root_element(PASS: store))
+
+FUNCTION root_element() { 
+    Element/stripe(
+        element: []
+        direction: Row
+        gap: 15
+        style: [align: Center]
+        items: LIST {
+            counter_button(label: '-') |> LINK { PASSED.elements.decrement_button }
+            PASSED.counter
+            counter_button(label: '+') |> LINK { PASSED.elements.increment_button }
+        }
+    )
+}
+
+FUNCTION counter_button(label) {
+    Element/button(
+        element: [
+            event: [press: LINK]
+            hovered: LINK
+        ]
+        style: [
+            width: 45
+            rounded_corners: Fully
+            background: [color: Oklch[
+                lightness: element.hovered |> WHEN { True => 0.85, False => 0.75 }
+                chroma: 0.07
+                hue: 320
+            ]]
+        ]
+        label: label
+    )
+}
