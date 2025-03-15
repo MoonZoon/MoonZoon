@@ -15,7 +15,7 @@ use glyphon::{
 };
 
 use wgpu::{Device, MultisampleState, Queue, Surface, SurfaceConfiguration};
-use winit::platform::web::WindowAttributesExtWebSys;
+use winit::platform::web::{EventLoopExtWebSys, WindowAttributesExtWebSys};
 use winit::{
     application::ApplicationHandler,
     dpi::{LogicalSize, PhysicalSize},
@@ -26,8 +26,8 @@ use winit::{
 
 pub fn run(canvas: zoon::web_sys::HtmlCanvasElement) {
     let event_loop = EventLoop::with_user_event().build().unwrap_throw();
-    let mut app = Application::new(&event_loop, canvas);
-    event_loop.run_app(&mut app).unwrap_throw();
+    let app = Application::new(&event_loop, canvas);
+    event_loop.spawn_app(app);
 }
 
 fn create_graphics(
