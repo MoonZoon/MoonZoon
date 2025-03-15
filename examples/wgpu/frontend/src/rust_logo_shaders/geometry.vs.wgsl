@@ -1,8 +1,11 @@
 struct Globals {
     resolution: vec2<f32>,
+    _pad1: vec2<f32>,
     scroll_offset: vec2<f32>,
+    _pad2: vec2<f32>,
     zoom: f32,
-    _pad: vec2<f32>
+    _pad3: vec3<f32>,
+    _pad4: vec4<f32>
 };
 
 struct Primitive {
@@ -12,8 +15,7 @@ struct Primitive {
     width: f32,
     angle: f32,
     scale: f32,
-    pad1: i32,
-    pad2: i32,
+    _pad: vec2<f32>,
 };
 
 struct Primitives {

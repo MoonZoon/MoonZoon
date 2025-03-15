@@ -68,10 +68,13 @@ Caused by:
 #[repr(C)]
 #[derive(Copy, Clone, Debug, Pod, Zeroable)]
 struct Globals {
-    resolution: [f32; 2],
-    scroll_offset: [f32; 2],
-    zoom: f32,
-    _pad: [f32; 2],
+    resolution: [f32; 2],    // 8 bytes
+    _pad1: [f32; 2],         // 8 bytes (pad to align resolution to 16 bytes)
+    scroll_offset: [f32; 2], // 8 bytes
+    _pad2: [f32; 2],         // 8 bytes (pad to align scroll_offset to 16 bytes)
+    zoom: f32,               // 4 bytes
+    _pad3: [f32; 3],         // 12 bytes (pad to align the whole struct to 16 bytes)
+    _pad4: [f32; 4],         // 16 bytes - additional padding
 }
 
 /// Data shared in the vertex buffer
@@ -113,7 +116,7 @@ impl GpuVertex {
 }
 
 /// Descriptor for primitives, which will be stored in an array in a uniform buffer.
-#[repr(C)]
+#[repr(C, align(16))]
 #[derive(Copy, Clone, Debug, Pod, Zeroable)]
 struct Primitive {
     color: [f32; 4],
@@ -122,8 +125,7 @@ struct Primitive {
     width: f32,
     angle: f32,
     scale: f32,
-    _pad1: i32,
-    _pad2: i32,
+    _pad: [f32; 2],
 }
 
 impl Default for Primitive {
@@ -135,8 +137,7 @@ impl Default for Primitive {
             width: 0.0,
             angle: 0.0,
             scale: 1.0,
-            _pad1: 0,
-            _pad2: 0,
+            _pad: [0.0; 2],
         }
     }
 }
@@ -253,10 +254,18 @@ fn create_graphics(
         let prim_buffer_byte_size = (PRIM_BUFFER_LEN * std::mem::size_of::<Primitive>()) as u64;
         let globals_buffer_byte_size = std::mem::size_of::<Globals>() as u64;
 
+        println!("Globals size: {} bytes", std::mem::size_of::<Globals>());
+        println!("Primitive size: {} bytes", std::mem::size_of::<Primitive>());
+        println!("Total primitives buffer size: {} bytes", prim_buffer_byte_size);
+
+        // Ensure sizes are multiples of 16
+        assert_eq!(std::mem::size_of::<Primitive>() % 16, 0, "Primitive size must be a multiple of 16");
+        assert_eq!(std::mem::size_of::<Globals>() % 16, 0, "Globals size must be a multiple of 16");
+
         // Primitive uniform buffer
         let prims_ubo = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Prims ubo"),
-            size: prim_buffer_byte_size,
+            size: ((prim_buffer_byte_size + 127) / 128) * 128, // Round up to multiple of 128
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -264,7 +273,7 @@ fn create_graphics(
         // Globals uniform buffer
         let globals_ubo = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Globals ubo"),
-            size: globals_buffer_byte_size,
+            size: ((globals_buffer_byte_size + 127) / 128) * 128, // Round up to multiple of 128
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
@@ -278,7 +287,7 @@ fn create_graphics(
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Uniform,
                         has_dynamic_offset: false,
-                        min_binding_size: wgpu::BufferSize::new(globals_buffer_byte_size),
+                        min_binding_size: None, //wgpu::BufferSize::new(globals_buffer_byte_size),
                     },
                     count: None,
                 },
@@ -288,7 +297,7 @@ fn create_graphics(
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Uniform,
                         has_dynamic_offset: false,
-                        min_binding_size: wgpu::BufferSize::new(prim_buffer_byte_size),
+                        min_binding_size: None, //wgpu::BufferSize::new(prim_buffer_byte_size),
                     },
                     count: None,
                 },
@@ -358,7 +367,7 @@ fn create_graphics(
                 module: geo_fs_module,
                 entry_point: Some("main"),
                 targets: &[Some(wgpu::ColorTargetState {
-                    format: wgpu::TextureFormat::Bgra8Unorm,
+                    format: wgpu::TextureFormat::Rgba8Unorm,
                     blend: None,
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
@@ -410,7 +419,7 @@ fn create_graphics(
                 module: bg_fs_module,
                 entry_point: Some("main"),
                 targets: &[Some(wgpu::ColorTargetState {
-                    format: wgpu::TextureFormat::Bgra8Unorm,
+                    format: wgpu::TextureFormat::Rgba8Unorm,
                     blend: None,
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
@@ -679,9 +688,12 @@ impl Application {
                     state.scene.window_size.width as f32,
                     state.scene.window_size.height as f32,
                 ],
-                zoom: state.scene.zoom,
+                _pad1: [0.0; 2],
                 scroll_offset: state.scene.scroll.to_array(),
-                _pad: [0.0, 0.0],
+                _pad2: [0.0; 2],
+                zoom: state.scene.zoom,
+                _pad3: [0.0; 3],
+                _pad4: [0.0; 4],
             }]),
         );
 
