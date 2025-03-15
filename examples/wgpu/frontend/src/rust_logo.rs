@@ -22,7 +22,7 @@ use winit::dpi::{LogicalSize, PhysicalSize};
 use winit::event::{ElementState, KeyEvent, WindowEvent};
 use winit::event_loop::{ActiveEventLoop, EventLoop, EventLoopProxy};
 use winit::keyboard::{KeyCode, PhysicalKey};
-use winit::platform::web::WindowAttributesExtWebSys;
+use winit::platform::web::{EventLoopExtWebSys, WindowAttributesExtWebSys};
 use winit::window::{Window, WindowId};
 
 type Milliseconds = f64;
@@ -157,8 +157,8 @@ pub fn run(canvas: zoon::web_sys::HtmlCanvasElement) {
     println!("  a/z: increase/decrease the stroke width");
 
     let event_loop = EventLoop::with_user_event().build().unwrap_throw();
-    let mut app = Application::new(&event_loop, canvas);
-    event_loop.run_app(&mut app).unwrap_throw();
+    let app = Application::new(&event_loop, canvas);
+    event_loop.spawn_app(app);
 }
 
 fn create_graphics(
