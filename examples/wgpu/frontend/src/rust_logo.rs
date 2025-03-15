@@ -48,7 +48,7 @@ const ARROWS_PRIM_ID: u32 = NUM_INSTANCES + 1;
 const DEFAULT_WINDOW_WIDTH: f32 = 800.0;
 const DEFAULT_WINDOW_HEIGHT: f32 = 800.0;
 
-// @TODO resolve runtime error
+// resolve runtime error  (UPDATE: resolved)
 /*
 wgpu error: Validation Error
 
@@ -256,11 +256,22 @@ fn create_graphics(
 
         println!("Globals size: {} bytes", std::mem::size_of::<Globals>());
         println!("Primitive size: {} bytes", std::mem::size_of::<Primitive>());
-        println!("Total primitives buffer size: {} bytes", prim_buffer_byte_size);
+        println!(
+            "Total primitives buffer size: {} bytes",
+            prim_buffer_byte_size
+        );
 
         // Ensure sizes are multiples of 16
-        assert_eq!(std::mem::size_of::<Primitive>() % 16, 0, "Primitive size must be a multiple of 16");
-        assert_eq!(std::mem::size_of::<Globals>() % 16, 0, "Globals size must be a multiple of 16");
+        assert_eq!(
+            std::mem::size_of::<Primitive>() % 16,
+            0,
+            "Primitive size must be a multiple of 16"
+        );
+        assert_eq!(
+            std::mem::size_of::<Globals>() % 16,
+            0,
+            "Globals size must be a multiple of 16"
+        );
 
         // Primitive uniform buffer
         let prims_ubo = device.create_buffer(&wgpu::BufferDescriptor {
@@ -465,6 +476,11 @@ fn create_graphics(
     }
 }
 
+enum UserEvent {
+    GfxState(GfxState),
+    AnimationLoopIteration,
+}
+
 /// Everything needed for wgpu graphics
 struct GfxState {
     window: Rc<Window>,
@@ -532,7 +548,7 @@ impl GfxState {
 }
 
 struct GfxStateBuilder {
-    event_loop_proxy: Option<EventLoopProxy<GfxState>>,
+    event_loop_proxy: Option<EventLoopProxy<UserEvent>>,
     canvas: zoon::web_sys::HtmlCanvasElement,
     geometry: Rc<VertexBuffers<GpuVertex, u16>>,
     bg_geometry: Rc<VertexBuffers<BgPoint, u16>>,
@@ -540,7 +556,7 @@ struct GfxStateBuilder {
 
 impl GfxStateBuilder {
     fn new(
-        event_loop_proxy: EventLoopProxy<GfxState>,
+        event_loop_proxy: EventLoopProxy<UserEvent>,
         canvas: zoon::web_sys::HtmlCanvasElement,
         geometry: Rc<VertexBuffers<GpuVertex, u16>>,
         bg_geometry: Rc<VertexBuffers<BgPoint, u16>>,
@@ -567,7 +583,9 @@ impl GfxStateBuilder {
         );
         wasm_bindgen_futures::spawn_local(async move {
             let gfx = gfx_fut.await;
-            assert!(event_loop_proxy.send_event(gfx).is_ok());
+            assert!(event_loop_proxy
+                .send_event(UserEvent::GfxState(gfx))
+                .is_ok());
         });
     }
 }
@@ -580,10 +598,11 @@ enum MaybeGfxState {
 struct Application {
     graphics: MaybeGfxState,
     state: AppState,
+    animation_loop: AnimationLoop,
 }
 
 impl Application {
-    fn new(event_loop: &EventLoop<GfxState>, canvas: zoon::web_sys::HtmlCanvasElement) -> Self {
+    fn new(event_loop: &EventLoop<UserEvent>, canvas: zoon::web_sys::HtmlCanvasElement) -> Self {
         let state = AppState::new();
         let geometry = Rc::clone(&state.geometry);
         let bg_geometry = Rc::clone(&state.bg_geometry);
@@ -595,6 +614,12 @@ impl Application {
                 bg_geometry,
             )),
             state,
+            animation_loop: AnimationLoop::new({
+                let proxy_event_loop = event_loop.create_proxy();
+                move |_| {
+                    let _ = proxy_event_loop.send_event(UserEvent::AnimationLoopIteration);
+                }
+            }),
         }
     }
 
@@ -777,7 +802,7 @@ impl Application {
     }
 }
 
-impl ApplicationHandler<GfxState> for Application {
+impl ApplicationHandler<UserEvent> for Application {
     fn window_event(
         &mut self,
         event_loop: &ActiveEventLoop,
@@ -834,8 +859,16 @@ impl ApplicationHandler<GfxState> for Application {
         }
     }
 
-    fn user_event(&mut self, _event_loop: &ActiveEventLoop, graphics: GfxState) {
-        self.graphics = MaybeGfxState::GfxState(graphics);
+    fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: UserEvent) {
+        match event {
+            UserEvent::GfxState(graphics) => {
+                self.graphics = MaybeGfxState::GfxState(graphics);
+            }
+            UserEvent::AnimationLoopIteration => {
+                self.state.scene.render = true;
+                self.draw();
+            }
+        }
     }
 }
 
