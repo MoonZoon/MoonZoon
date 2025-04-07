@@ -8,8 +8,7 @@ edition = "2021"
 proc-macro = true
 
 [dependencies]
-# @TODO migrate to the latest version (applies to all macros)
-syn = { version = "1.0", features = ["full"], default-features = false }
+syn = "2.0"
 quote = { version = "1.0", default-features = false }
 proc-macro2 = { version = "1.0.66", default-features = false }
 urlencoding = { version = "2.1.0", default-features = false }

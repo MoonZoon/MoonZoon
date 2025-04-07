@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 pin-project = { version = "1.0.11", default-features = false }
-futures-util = { version = "0.3.28", default-features = false }
+futures-util = { version = "0.3.31", features = ["sink"] }

@@ -182,7 +182,7 @@ fn take_route_attr(variant: &mut Variant) -> Attribute {
         .attrs
         .iter()
         .position(|attr| {
-            attr.path
+            attr.path()
                 .get_ident()
                 .map(|ident| ident == "route")
                 .unwrap_or_default()

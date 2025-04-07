@@ -9,7 +9,7 @@ proc-macro = true
 
 [dependencies]
 proc-macro2 = { version = "1.0", default-features = false }
-syn = { version = "1.0", default-features = false }
+syn = "2.0"
 quote = { version = "1.0", default-features = false }
 cssparser-color = { version = "0.1.0", default-features = false }
 cssparser = { version = "0.33.0", default-features = false }
