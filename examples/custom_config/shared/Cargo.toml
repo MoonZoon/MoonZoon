@@ -1,5 +1,5 @@
 [package]
-name = "shared"
+name = "shared_custom_config"
 version.workspace = true
 edition.workspace = true
 repository.workspace = true

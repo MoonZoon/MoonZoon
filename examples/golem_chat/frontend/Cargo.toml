@@ -15,7 +15,7 @@ wasm-bindgen-test = "0.3.19"
 
 [dependencies]
 zoon.workspace = true
-shared = { path = "../shared", features = ["frontend"] }
+shared = { package = "shared_golem_chat", path = "../shared", features = ["frontend"] }
 # @TODO `pest/pest_derive` 2.2.1 fails with "could not find `alloc` in the list of imported crates"
 pest = { version = "=2.1.3", default-features = false }
 pest_derive = { version = "=2.1.0", default-features = false }

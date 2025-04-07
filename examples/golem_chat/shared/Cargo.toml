@@ -1,5 +1,5 @@
 [package]
-name = "shared"
+name = "shared_golem_chat"
 version.workspace = true
 edition.workspace = true
 repository.workspace = true

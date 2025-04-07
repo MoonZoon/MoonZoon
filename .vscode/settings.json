@@ -7,7 +7,7 @@
         // "examples/align_content/Cargo.toml",
         // "examples/async_and_stripe_element/Cargo.toml",
         // "examples/blocking_task/Cargo.toml",
-        "examples/boon_lang/Cargo.toml",
+        // "examples/boon_lang/Cargo.toml",
         // "examples/canvas/Cargo.toml",
         // "examples/chat/Cargo.toml",
         "examples/counter/Cargo.toml",
@@ -48,7 +48,7 @@
         // "examples/wasm_components/Cargo.toml",
         // "examples/web_components/Cargo.toml",
         // "examples/web_workers/Cargo.toml",
-        "examples/wgpu/Cargo.toml",
+        // "examples/wgpu/Cargo.toml",
     ],
     "rust-analyzer.diagnostics.disabled": [
         "missing-unsafe",

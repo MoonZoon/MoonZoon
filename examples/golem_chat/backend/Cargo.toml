@@ -12,4 +12,4 @@ publish.workspace = true
 
 [dependencies]
 moon.workspace = true
-shared = { path = "../shared", features = ["backend"] }
+shared = { package = "shared_golem_chat", path = "../shared", features = ["backend"] }
