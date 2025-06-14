@@ -24,7 +24,7 @@ actix-tls = { version = "=3.3.0", default-features = false }
 actix-rt = { version = "=2.9.0", default-features = false }
 actix-router = { version = "=0.5.1", default-features = false }
 rustls = { version = "=0.21.11", default-features = false }
-rustls-pemfile = { version = "=2.0.0", features = ["std"], default-features = false }
+rustls-pemfile = { version = "2.2.0", features = ["std"], default-features = false }
 
 trait-set = { version = "0.3.0", default-features = false }
 envy = { version = "0.4.2", default-features = false }
