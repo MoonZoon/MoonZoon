@@ -50,7 +50,7 @@ mod private {
     }
 
     pub trait ReadOnlyMutableExt<T> {
-        fn lock_ref(&self) -> MutableLockRef<T>;
+        fn lock_ref(&self) -> MutableLockRef<'_, T>;
         fn get_cloned(&self) -> T
         where
             T: Clone;
@@ -59,7 +59,7 @@ mod private {
             T: Copy;
     }
     impl<T> ReadOnlyMutableExt<T> for ReadOnlyMutable<T> {
-        fn lock_ref(&self) -> MutableLockRef<T> {
+        fn lock_ref(&self) -> MutableLockRef<'_, T> {
             self.lock_ref()
         }
         fn get_cloned(&self) -> T

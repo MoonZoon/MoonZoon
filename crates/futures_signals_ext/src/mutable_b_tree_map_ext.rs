@@ -31,14 +31,14 @@ impl<K, V> MutableBTreeMapExt<K, V> for MutableBTreeMap<K, V> {}
 mod private {
     use super::*;
     pub trait MutableBTreeMapExt<K, V> {
-        fn lock_mut(&self) -> MutableBTreeMapLockMut<K, V>;
-        fn lock_ref(&self) -> MutableBTreeMapLockRef<K, V>;
+        fn lock_mut(&self) -> MutableBTreeMapLockMut<'_, K, V>;
+        fn lock_ref(&self) -> MutableBTreeMapLockRef<'_, K, V>;
     }
     impl<K, V> MutableBTreeMapExt<K, V> for MutableBTreeMap<K, V> {
-        fn lock_mut(&self) -> MutableBTreeMapLockMut<K, V> {
+        fn lock_mut(&self) -> MutableBTreeMapLockMut<'_, K, V> {
             self.lock_mut()
         }
-        fn lock_ref(&self) -> MutableBTreeMapLockRef<K, V> {
+        fn lock_ref(&self) -> MutableBTreeMapLockRef<'_, K, V> {
             self.lock_ref()
         }
     }

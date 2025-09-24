@@ -92,8 +92,8 @@ mod private {
     }
 
     pub trait MutableExt<T> {
-        fn lock_mut(&self) -> MutableLockMut<T>;
-        fn lock_ref(&self) -> MutableLockRef<T>;
+        fn lock_mut(&self) -> MutableLockMut<'_, T>;
+        fn lock_ref(&self) -> MutableLockRef<'_, T>;
         fn set(&self, value: T);
         fn get_cloned(&self) -> T
         where
@@ -103,10 +103,10 @@ mod private {
             T: Copy;
     }
     impl<T> MutableExt<T> for Mutable<T> {
-        fn lock_mut(&self) -> MutableLockMut<T> {
+        fn lock_mut(&self) -> MutableLockMut<'_, T> {
             self.lock_mut()
         }
-        fn lock_ref(&self) -> MutableLockRef<T> {
+        fn lock_ref(&self) -> MutableLockRef<'_, T> {
             self.deref().lock_ref()
         }
         fn set(&self, value: T) {

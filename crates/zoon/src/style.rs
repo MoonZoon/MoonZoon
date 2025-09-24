@@ -149,7 +149,7 @@ impl<'a> StaticCSSProps<'a> {
             .insert(name, CssPropValue::new_important_unchecked(value));
     }
 
-    pub fn remove(&mut self, name: &'a str) -> Option<CssPropValue> {
+    pub fn remove(&mut self, name: &'a str) -> Option<CssPropValue<'_>> {
         self.0.remove(name)
     }
 }

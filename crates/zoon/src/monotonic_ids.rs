@@ -9,7 +9,7 @@ pub struct MonotonicIds {
 
 impl MonotonicIds {
     /// u32 is both id and index
-    pub fn add_new_id(&self) -> (u32, MutexGuard<Vec<u32>>) {
+    pub fn add_new_id(&self) -> (u32, MutexGuard<'_, Vec<u32>>) {
         let mut ids = self.ids.lock().unwrap_throw();
         let id = self.generator.next_index();
         ids.insert(usize::try_from(id).unwrap_throw(), id);
@@ -17,7 +17,7 @@ impl MonotonicIds {
     }
 
     /// usize is index
-    pub fn remove_id(&self, id: u32) -> (usize, MutexGuard<Vec<u32>>) {
+    pub fn remove_id(&self, id: u32) -> (usize, MutexGuard<'_, Vec<u32>>) {
         let mut ids = self.ids.lock().unwrap_throw();
         self.generator.free_index(id);
         let index = ids.binary_search(&id).unwrap_throw();

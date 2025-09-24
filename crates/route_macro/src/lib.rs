@@ -151,7 +151,7 @@ pub fn route(_args: TokenStream, input: TokenStream) -> TokenStream {
 
 // ------ extract_routes ------
 
-fn extract_routes(input_enum: &mut ItemEnum) -> Vec<Route> {
+fn extract_routes(input_enum: &mut ItemEnum) -> Vec<Route<'_>> {
     let mut routes = Vec::new();
     for variant in &mut input_enum.variants {
         let route_attr = take_route_attr(variant);

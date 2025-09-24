@@ -23,14 +23,14 @@ impl<T> MutableVecExt<T> for MutableVec<T> {}
 mod private {
     use super::*;
     pub trait MutableVecExt<T> {
-        fn lock_mut(&self) -> MutableVecLockMut<T>;
-        fn lock_ref(&self) -> MutableVecLockRef<T>;
+        fn lock_mut(&self) -> MutableVecLockMut<'_, T>;
+        fn lock_ref(&self) -> MutableVecLockRef<'_, T>;
     }
     impl<T> MutableVecExt<T> for MutableVec<T> {
-        fn lock_mut(&self) -> MutableVecLockMut<T> {
+        fn lock_mut(&self) -> MutableVecLockMut<'_, T> {
             self.lock_mut()
         }
-        fn lock_ref(&self) -> MutableVecLockRef<T> {
+        fn lock_ref(&self) -> MutableVecLockRef<'_, T> {
             self.lock_ref()
         }
     }
